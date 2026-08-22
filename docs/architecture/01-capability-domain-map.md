@@ -300,7 +300,7 @@ Consumes approved knowledge/projections/contracts. Does not own source domains.
 
 ## E. Cross-Module Interaction Matrix
 
-Direct DB Join = FORBIDDEN for all rows.
+Direct DB Join = FORBIDDEN for all rows. Admin/public composites use projections/BFF, not joins.
 
 | Flow | Preferred style |
 | --- | --- |

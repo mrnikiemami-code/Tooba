@@ -23,7 +23,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | --- | --- | --- |
 | P00-01 | Repository/template technical inventory | COMPLETE |
 | P00-02 | Product capability/domain map | COMPLETE |
-| P00-03 | Edition/deployment/tenant model | IN_PROGRESS |
+| P00-03 | Edition/deployment/tenant model | COMPLETE |
+| P00-04 | Bounded-context/data-ownership rules | IN_PROGRESS |
 | P00-04 | Bounded-context/data-ownership rules | PLANNED |
 | P00-05 | Identity/authentication | PLANNED |
 | P00-06 | SpiceDB authorization | PLANNED |
@@ -46,7 +47,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 ## Notes
 
-- TB-P00-T000, TB-P00-T001, and TB-P00-T002 are Architect-accepted.
-- P00-01 and P00-02 are COMPLETE after Architect accept.
-- P00-03 is IN_PROGRESS under TB-P00-T003 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T004` is not authorized.
+- TB-P00-T000 through TB-P00-T003 are Architect-accepted.
+- P00-01, P00-02, and P00-03 are COMPLETE after Architect accept.
+- P00-04 is IN_PROGRESS under TB-P00-T004 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T005` is not authorized.

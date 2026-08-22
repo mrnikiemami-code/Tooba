@@ -33,19 +33,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T002
+TB-P00-T003
 ```
 
 Current Issued Task:
 
 ```text
-TB-P00-T003
+TB-P00-T004
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T003 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Known Blockers:
@@ -197,7 +197,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P00-T004` unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P00-T005` unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -205,12 +205,13 @@ P00 discovery inputs (not locked architecture):
 docs/architecture/00-technical-inventory.md
 docs/architecture/01-capability-domain-map.md
 docs/architecture/02-edition-tenant-deployment.md
+docs/architecture/03-data-ownership-and-module-contracts.md
 ```
 
 Authorized local envelope path for this issued task:
 
 ```text
-docs/ai/tasks/TB-P00-T003.task.md
+docs/ai/tasks/TB-P00-T004.task.md
 ```
 
-Resume: await Architect review of TB-P00-T003. Do not execute `TB-P00-T004` unless Architect issues that envelope.
+Resume: await Architect review of TB-P00-T004. Do not execute `TB-P00-T005` unless Architect issues that envelope.
