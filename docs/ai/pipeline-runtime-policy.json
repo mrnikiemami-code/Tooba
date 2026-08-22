@@ -1,0 +1,35 @@
+{
+  "protocolVersion": 1,
+  "projectPrefix": "TOOBA",
+  "defaultMode": "PIPELINE",
+  "supportedModes": [
+    "PIPELINE",
+    "HUMAN"
+  ],
+  "pipelinePollIntervalSeconds": 20,
+  "pipelinePollJitterSeconds": 3,
+  "maximumConsecutiveWatchFailures": 3,
+  "oneTaskAtATime": true,
+  "historicalChatExecutable": false,
+  "resultEnvelopeExecutable": false,
+  "repositoryIsSourceOfTruth": true,
+  "phaseHumanGateRequired": false,
+  "criticalTaskHumanGateRequired": false,
+  "autoContinueAfterTaskAccept": true,
+  "autoStartNextPhasePlanAfterGateAccept": true,
+  "recoveryDefaultMode": "PIPELINE",
+  "taskSource": "architect-markdown-file",
+  "mainBranch": "main",
+  "requireLocalCommit": true,
+  "requireRemotePush": true,
+  "requireHeadEqualsOriginMain": true,
+  "stopOnlyWhen": [
+    "architectural_choice_genuinely_required",
+    "source_of_truth_conflict",
+    "unsafe_or_unresolved_repository_state",
+    "material_data_loss_risk",
+    "security_critical_ambiguity",
+    "missing_external_business_fact",
+    "user_pause"
+  ]
+}
