@@ -174,9 +174,9 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Fulfillment
 
-- Purpose: delivering the order.
-- Owns: shipments/fulfillment units.
-- Must NOT own: payment or catalog.
+- Purpose: delivering the order. See `docs/architecture/21-fulfillment.md`.
+- Owns: shipments/fulfillment units, shipping method application, tracking refs — not Order money, Payment capture, or Inventory reservation write model.
+- Must NOT own: payment, catalog, carrier vendor SDK as domain.
 - Status: CANDIDATE.
 
 ### Promotion

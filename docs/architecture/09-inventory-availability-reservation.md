@@ -70,7 +70,7 @@ Same module. One implicit location/seller allowed. Do not merge Inventory into P
 
 ## M. Inventory vs Fulfillment
 
-Inventory: can we sell / hold. Fulfillment: pick/pack/ship of a **confirmed** order unit. Shipping a unit decrements/commits reservation via contract, not by Fulfillment writing Inventory tables.
+Inventory: can we sell / hold. Fulfillment: pick/pack/ship of a **confirmed** order unit. Shipping a unit decrements/commits reservation via contract, not by Fulfillment writing Inventory tables. See `docs/architecture/21-fulfillment.md`.
 
 ## N. Market / Channel Availability
 

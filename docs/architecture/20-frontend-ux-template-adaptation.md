@@ -574,7 +574,7 @@ Each composes multiple module-owned data/contracts into one user-goal-oriented s
 
 ## BT. Order Workspace
 
-Admin/Seller order view may compose Order, Payment, Fulfillment, Inventory events, Customer/Party, Audit, Support — without direct DB joins.
+Admin/Seller order view may compose Order, Payment, Fulfillment, Inventory events, Customer/Party, Audit, Support — without direct DB joins. Customer shipment timeline is Fulfillment UX, not Order status collapse. See `docs/architecture/21-fulfillment.md`.
 
 One coherent case/workspace.
 

@@ -46,7 +46,7 @@ Physical colocation in one process or even one database server does not imply lo
 | Checkout | Checkout process state | Cart, quotes, reservations | Long-term order after confirm | Order |
 | Order | Confirmed order + commercial snapshots | Payment refs, fulfillment refs | Live price books, PSP internals | Payment, Fulfillment, Analytics |
 | Payment | Payment attempts/results, PSP references | Order id | Order lines as catalog | Order, Admin |
-| Fulfillment | Shipments/fulfillment units | Order id | Payments, catalog | Order, Notifications |
+| Fulfillment | Shipments/fulfillment units (see `docs/architecture/21-fulfillment.md`) | Order id | Payments, catalog, Inventory reservations as write model | Order, Notifications, Customer timeline |
 | Promotion | Promotion definitions | Offer/catalog/market refs | Base price books | Pricing quotes |
 | Content | Semantic/editorial write model | Opaque product/brand ids | Layout trees as only model | Search, AI, Page Composition |
 | Page Composition | Layout/section instances | Content ids | Article body source | Storefront |

@@ -107,7 +107,7 @@ Candidate: one customer Order with seller partitions / sub-orders. Exact split: 
 
 ## S. Fulfillment Grouping
 
-Fulfillment units derived from partitions/locations via contract after Order exists. Order does not ship.
+Fulfillment units derived from partitions/locations via contract after Order exists. Order does not ship. See `docs/architecture/21-fulfillment.md`.
 
 ## T. Payment Initiation
 
