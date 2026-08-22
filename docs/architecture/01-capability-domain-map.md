@@ -217,23 +217,23 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Reviews
 
-- Purpose: ratings/reviews bound to product/offer/order eligibility (later).
-- Owns: review records.
+- Purpose: ratings/reviews bound to product/offer/order eligibility. See `docs/architecture/23-p00-capability-gap-review.md` (`DEDICATED_TASK_REQUIRED` before P00 Gate).
+- Owns: review records — not Catalog Product rating columns.
 - Must NOT own: catalog.
 - Status: CANDIDATE.
 
 ### Notifications
 
-- Purpose: outbound communication.
+- Purpose: outbound communication via intents + provider adapters. See gap review (`BOUNDARY_SUFFICIENT_FOR_P00`).
 - Owns: notification requests/templates dispatch, not order.
 - Status: CANDIDATE.
 
 ### Support
 
-- Purpose: tickets/customer service.
-- Owns: ticket records.
-- Template tickets are not a confirmed product requirement; keep FUTURE/SUPPORTING until USER confirms.
-- Status: NEEDS_FURTHER_P00_ANALYSIS.
+- Purpose: tickets/customer service **if USER confirms**. Template tickets are not a Tooba requirement. See gap review (`DEFER_POST_P00`). Do not stuff cases into Order notes.
+- Owns: ticket records **only if confirmed**.
+- Must NOT own: Order.
+- Status: NEEDS_FURTHER_P00_ANALYSIS / USER product decision for first sale.
 
 ### Analytics
 
