@@ -21,7 +21,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 | ID | Work package | Status |
 | --- | --- | --- |
-| P00-01 | Repository/template technical inventory | PLANNED |
+| P00-01 | Repository/template technical inventory | IN_PROGRESS |
 | P00-02 | Product capability/domain map | PLANNED |
 | P00-03 | Edition/deployment/tenant model | PLANNED |
 | P00-04 | Bounded-context/data-ownership rules | PLANNED |
@@ -46,5 +46,6 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 ## Notes
 
-- TB-P00-T000 bootstraps governance and records confirmed requirements. It does not complete P00-01..P00-22.
-- Next implementation objective requires a new Architect envelope. `TB-P00-T001` is not authorized.
+- TB-P00-T000 is Architect-accepted and recorded confirmed requirements.
+- P00-01 is IN_PROGRESS under TB-P00-T001 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T002` is not authorized.

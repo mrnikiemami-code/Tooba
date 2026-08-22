@@ -27,13 +27,13 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-NONE
+TB-P00-T000
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T000 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 ## Recovered Architect procedure
@@ -79,7 +79,7 @@ Never invent the next task from memory.
 - Locale != Market != Currency.
 - SpiceDB authorization direction; Keycloak-extensible identity without Keycloak coupling.
 - Catalog Product vs Seller Offer must be analyzed, not prematurely merged.
-- Purchased template `shopeiva.zip` is a later inventory input; not present in the repository at TB-P00-T000.
+- Purchased template `shopeiva.zip` is not in the repository; Architect-verified archive facts are recorded in `docs/architecture/00-technical-inventory.md`.
 
 ## Resume rule
 
@@ -88,4 +88,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. do not execute `TB-P00-T001` unless Architect issues it.
+6. await Architect review of `TB-P00-T001`; do not execute `TB-P00-T002` unless Architect issues it.
+7. P00 discovery input: `docs/architecture/00-technical-inventory.md` (not locked architecture).
