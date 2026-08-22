@@ -20,7 +20,8 @@ Do not execute packages without an Architect-authorized envelope.
 | ID | Work package | Status |
 | --- | --- | --- |
 | P01-01 | Platform foundation bootstrap | COMPLETE (Architect accepted TB-P01-T001) |
-| P01-02 | Observability & error handling foundation | IN_PROGRESS |
+| P01-02 | Observability & error handling foundation | COMPLETE (Architect accepted TB-P01-T002) |
+| P01-03 | Tenant, edition & database resolution foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -61,8 +62,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 - TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
 - P00 is COMPLETE after Architect ACCEPT of Gate.
-- P01 Platform Foundation is IN_PROGRESS under TB-P01-T002 (awaiting Architect accept).
-- `TB-P01-T003` is not authorized.
+- P01 Platform Foundation is IN_PROGRESS under TB-P01-T003 (awaiting Architect accept).
+- `TB-P01-T004` is not authorized.
 
 ## Mandatory future UX / template work (not authorized now)
 
