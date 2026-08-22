@@ -47,12 +47,25 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-24 | Capability gap closure review | COMPLETE |
 | P00-25 | Reviews / Ratings | COMPLETE |
 | P00-26 | Returns / RMA | COMPLETE |
-| P00-27 | Tax | IN_PROGRESS |
-| P00-28 | P00 gate | PLANNED |
+| P00-27 | Tax | COMPLETE |
+| P00-28 | P00 architecture gate | IN_PROGRESS |
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T026 are Architect-accepted.
-- P00-01 through P00-26 are COMPLETE after Architect accept.
-- P00-27 Tax is IN_PROGRESS under TB-P00-T027 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T028` and P00-GATE are not authorized.
+- TB-P00-T000 through TB-P00-T027 are Architect-accepted.
+- P00-01 through P00-27 are COMPLETE after Architect accept.
+- P00-28 P00 architecture gate is IN_PROGRESS under TB-P00-GATE (Cursor review may PASS; Architect ACCEPT required). Do not mark P00 COMPLETE from Cursor PASS.
+- P01 is NOT ISSUED.
+
+## Mandatory future UX / template work (not authorized now)
+
+These remain durable requirements. Do not execute without an Architect envelope. Shopeiva is UI/reference input, not architecture truth. Paths must not hard-code a local Windows folder.
+
+| Future package | Status |
+| --- | --- |
+| Deep Shopeiva Study (file/route/component/layout/dependency/responsive/RTL/docs; reuse map REUSE/ADAPT/REBUILD/DROP/DEFER) | PLANNED — before serious UI / template migration |
+| Template reuse map | PLANNED |
+| Design System extraction | PLANNED |
+| Professional Data Grid foundation | PLANNED |
+| Workspace interaction patterns | PLANNED |
+| Visual acceptance gates | PLANNED |

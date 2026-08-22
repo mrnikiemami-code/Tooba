@@ -195,7 +195,7 @@ Hard rule: do not create one menu item per backend entity/table.
 
 ## K. Product Workspace UX
 
-Mandatory unified product-authoring workspace. Possible areas: Overview, Core Information, Variants, Specifications, Categories/Brand, Media, Offers, Pricing, Inventory, SEO, Content/Editorial, Publishing, Audit/History.
+Mandatory unified product-authoring workspace. Possible areas: Overview, Core Information, Variants, Specifications, Categories/Brand, Media, Offers, Pricing, Tax classification, Inventory, SEO, Content/Editorial, Publishing, Audit/History.
 
 Backend modules stay separate. UI orchestrates them so the admin does not jump disconnected screens for one product.
 
@@ -292,7 +292,7 @@ Do not rely only on client validation.
 
 ## Z. Admin Data Grid
 
-Mandatory reusable professional Data Grid: sorting, column-type filters, global search where appropriate, reorder/show-hide columns, resize where useful, saved views, pagination, selection, bulk actions, export, sticky columns/header where useful, empty/loading/error, keyboard a11y, RTL/LTR, responsive strategy.
+Mandatory reusable professional Data Grid: sorting, column-type filters, global search where appropriate, reorder/show-hide columns, resize where useful, saved views, pagination, selection, bulk actions, export, sticky columns/header where useful, empty/loading/error, keyboard a11y, RTL/LTR, responsive strategy, **server-side large-dataset handling**.
 
 Column types need typed filters: text, number, money, date, enum, boolean, entity, status. Not a one-size-fits-all text filter.
 

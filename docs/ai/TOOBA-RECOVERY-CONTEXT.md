@@ -27,13 +27,15 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T026
+TB-P00-T027
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T027 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
+P00 Gate review = PASS BY CURSOR / AWAITING ARCHITECT ACCEPT
+P01: NOT ISSUED
 ```
 
 ## Recovered Architect procedure
@@ -88,5 +90,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P00-T027`; do not execute `TB-P00-T028` or P00-GATE unless Architect issues it.
-7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/26-tax-architecture.md` (not locked ADRs). P00 Gate is NOT AUTHORIZED.
+6. await Architect review of `TB-P00-GATE`; do not execute P01 unless Architect issues it.
+7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/27-p00-gate-review.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory future work before serious UI. P00 is not COMPLETE until Architect ACCEPT of Gate.
