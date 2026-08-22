@@ -96,7 +96,7 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 ### Catalog
 
 - Purpose: canonical product identity and descriptive/merchandisable attributes.
-- Owns: Catalog Product (and later variant/attribute design — deferred).
+- Owns: Catalog Product (and later variant/attribute design — see `docs/architecture/07-catalog-product-offer.md`).
 - Must NOT own: seller commercial terms, authored market prices, inventory quantities, search index internals.
 - Inbound: Media refs, Content refs by contract. Outbound: Search/AI/Media projections, Offer identity refs.
 - Editions: SHARED_CORE. Status: CANDIDATE.
