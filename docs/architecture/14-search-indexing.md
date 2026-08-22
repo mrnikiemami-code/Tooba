@@ -89,7 +89,7 @@ Relevance, price, newest — sort keys from projections. Price sort uses project
 
 ## P. Ranking
 
-Text relevance + business boosts (stock, rating) as **explicit ranking inputs**, not hidden Catalog queries.
+Text relevance + business boosts (stock, rating) as **explicit ranking inputs**, not hidden Catalog queries. Rating/count come from Reviews **projections**, not Catalog write-model (`docs/architecture/24-reviews-ratings.md`). Search does not own aggregate truth.
 
 ## Q. Business Rules vs Relevance
 

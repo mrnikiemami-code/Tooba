@@ -37,13 +37,11 @@ Shopeiva screens are **not** product requirements.
 
 ## C. Reviews / Ratings
 
-**Architecture-Classification:** `DEDICATED_TASK_REQUIRED`
+**Architecture-Classification:** `DEDICATED_TASK_REQUIRED` (architecture delivered under TB-P00-T025; awaiting Architect ACCEPT)
 
 **First-Sale-Criticality:** `SHOULD_HAVE_FIRST_SALE`
 
-Reason: `01-capability-domain-map.md` names a Reviews module (owns review records, not Catalog) but does not lock Product Review vs Seller Review, rating-aggregate SoT, verified-purchase via Order contract, moderation lifecycle, abuse/spam, Search/SEO/AI projections, or Seller response. Leakage if skipped: `rating`/`reviewCount` on Catalog Product, unverified reviews as Catalog truth, SEO JSON-LD without a contract.
-
-UX direction (not implementation): Moderation Workspace; PDP review composition via contract. `Backend/module boundary != UI boundary`.
+Reason: Decision-grade Reviews architecture is in `docs/architecture/24-reviews-ratings.md` (Product Review ≠ Seller Review; rebuildable rating projection; Order/Fulfillment contracts for verified purchase; published-only public/search/SEO/AI; Moderation Workspace + PDP composition). This gap row is not a Gate authorization. T025 Cursor PASS ≠ Architect ACCEPT.
 
 ## D. Notifications
 

@@ -326,6 +326,8 @@ Do not sacrifice SEO for client-only interaction. Facet URL policy follows SEO a
 
 Gallery, title/brand/category context, variants, price, availability, seller/offer selection, other sellers (Marketplace), delivery/fulfillment, CTA, specifications, content, reviews, related products, SEO semantic content.
 
+Reviews on PDP: aggregate, distribution, verified-purchase labels, cards, pagination — composition via Reviews contract, not Catalog CRUD (`docs/architecture/24-reviews-ratings.md`). Admin uses a Moderation Workspace, not a raw review grid.
+
 Clear visual hierarchy. Not a dense unstructured wall of modules.
 
 ## AG. Marketplace Offer UX

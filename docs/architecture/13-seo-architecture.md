@@ -141,7 +141,7 @@ Page-level index/noindex/nofollow from route policy + publish state. Preview/sta
 
 ## W. Structured Data
 
-JSON-LD composed by SEO layer from module projections. Invalid/partial data omitted rather than invented.
+JSON-LD composed by SEO layer from module projections. Invalid/partial data omitted rather than invented. AggregateRating/Review structured data only from **published** Reviews projections (`docs/architecture/24-reviews-ratings.md`); do not fabricate counts/ratings; must match visible PDP truth.
 
 ## X. Product Structured Data
 

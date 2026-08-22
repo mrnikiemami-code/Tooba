@@ -52,7 +52,7 @@ Physical colocation in one process or even one database server does not imply lo
 | Page Composition | Layout/section instances | Content ids | Article body source | Storefront |
 | Search | Index/query over feeds | None as business truth | Catalog writes | Storefront, Admin |
 | Media | Assets, originals, variants, delivery refs (see `docs/architecture/15-media-image-pipeline.md`) | None as product identity | Product identity, placement roles, vendor URLs as domain data | Catalog, Content, Page Composition, SEO, Search, Theme |
-| Reviews | Review records | Product/offer/order ids | Catalog | PDP RM |
+| Reviews | Review records, moderation, rebuildable rating projections (see `docs/architecture/24-reviews-ratings.md`) | Product/offer/order ids via contract | Catalog rating columns; Order tables | PDP RM, Search/SEO projections |
 | Notifications | Dispatch requests | Tenant/order/party ids | Order truth | — |
 | Support | Tickets if confirmed later | Party/order ids | Catalog | Admin |
 | Analytics | First-party observations, event contracts, rebuildable aggregates (see `docs/architecture/16-first-party-analytics.md`) | Opaque ids from owning modules | Order/Payment/Catalog/Inventory truth; audit; authn sessions | Dashboards, Search ranking feed, Recommendation/AI (controlled) |

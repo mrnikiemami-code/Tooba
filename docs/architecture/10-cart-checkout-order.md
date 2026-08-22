@@ -87,7 +87,7 @@ Order is created only after Checkout decides confirm policy (see U). Command: Pl
 
 ## N. Order Ownership
 
-Order owns confirmed header/lines **snapshots**, buyer/actor/payer refs, market/channel/currency, totals, quote/version refs, payment/fulfillment **refs** (not PSP internals, not live stock).
+Order owns confirmed header/lines **snapshots**, buyer/actor/payer refs, market/channel/currency, totals, quote/version refs, payment/fulfillment **refs** (not PSP internals, not live stock). Reviews consumes verified-purchase evidence via **contract/projection** only (`docs/architecture/24-reviews-ratings.md`); Reviews must not query Order tables or write Order/Fulfillment state.
 
 ## O. Order Snapshot Policy
 

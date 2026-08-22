@@ -217,9 +217,9 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Reviews
 
-- Purpose: ratings/reviews bound to product/offer/order eligibility. See `docs/architecture/23-p00-capability-gap-review.md` (`DEDICATED_TASK_REQUIRED` before P00 Gate).
-- Owns: review records — not Catalog Product rating columns.
-- Must NOT own: catalog.
+- Purpose: Product Review vs Seller Review, moderation, rebuildable rating projections. See `docs/architecture/24-reviews-ratings.md`.
+- Owns: review/rating submissions and moderation state — not Catalog Product rating columns.
+- Must NOT own: catalog, order, analytics.
 - Status: CANDIDATE.
 
 ### Notifications

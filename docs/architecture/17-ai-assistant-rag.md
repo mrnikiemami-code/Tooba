@@ -119,6 +119,8 @@ AI may retrieve **normalized Catalog projections**, not Catalog tables. Conceptu
 
 Catalog remains authoritative. The AI/vector store holds a **projection only**. Sellability, offer binding, and marketplace participation remain with their owning modules.
 
+Review summaries, if any, use **published** Reviews sources only, with provenance and no invented quotes; Product vs Seller reviews stay separate (`docs/architecture/24-reviews-ratings.md`).
+
 ## G. Pricing / Inventory Freshness
 
 Do not embed stale static price/stock and treat them as durable truth.

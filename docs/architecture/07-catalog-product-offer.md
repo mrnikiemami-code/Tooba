@@ -191,7 +191,7 @@ Canonical product URLs, variant/canonical policy, brand/category landings, hrefl
 
 ## Z. Reviews / Ratings
 
-Reviews module owns review records. Catalog/PDP consume projections. Reviews are not product identity.
+Reviews module owns review records and rating aggregates as rebuildable projections (`docs/architecture/24-reviews-ratings.md`). Catalog/PDP consume projections. Do not store canonical average/`reviewCount` on Product write-model. Product Review ≠ Seller Review. Reviews are not product identity.
 
 ## AA. Promotion / Merchandising
 
