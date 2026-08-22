@@ -40,13 +40,13 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-17 | First-party analytics | COMPLETE |
 | P00-18 | AI/RAG | COMPLETE |
 | P00-19 | Observability/Audit | COMPLETE |
-| P00-20 | Caching/infrastructure abstractions | IN_PROGRESS |
-| P00-21 | Frontend/template adaptation strategy | PLANNED |
+| P00-20 | Caching/infrastructure abstractions | COMPLETE |
+| P00-21 | Frontend/template adaptation strategy | IN_PROGRESS |
 | P00-22 | P00 gate | PLANNED |
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T019 are Architect-accepted.
-- P00-01 through P00-19 are COMPLETE after Architect accept.
-- P00-20 is IN_PROGRESS under TB-P00-T020 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T021` is not authorized.
+- TB-P00-T000 through TB-P00-T020 are Architect-accepted.
+- P00-01 through P00-20 are COMPLETE after Architect accept.
+- P00-21 is IN_PROGRESS under TB-P00-T021 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T022` is not authorized.
