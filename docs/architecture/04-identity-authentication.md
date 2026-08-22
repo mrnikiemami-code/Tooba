@@ -449,7 +449,7 @@ from:
 technical application log
 ```
 
-No passwords, OTPs, tokens, or secrets in either. Technical logs may include request ids and opaque Identity/Session ids. Audit events are identity-owned facts for security review, not a substitute for OpenTelemetry traces.
+No passwords, OTPs, tokens, or secrets in either. Technical logs may include request ids and opaque Identity/Session ids. Audit events are identity-owned facts for security review, not a substitute for OpenTelemetry traces. See `docs/architecture/18-observability-logging-audit.md`.
 
 ## R. Abuse Protection
 

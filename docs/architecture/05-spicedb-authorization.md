@@ -383,7 +383,7 @@ relationship mutation audit
 business audit
 ```
 
-Identity security events remain Identity-owned (T005). Authorization decision/mutation audit is authorization-owned.
+Identity security events remain Identity-owned (T005). Authorization decision/mutation audit is authorization-owned. Platform observability/audit architecture: `docs/architecture/18-observability-logging-audit.md`.
 
 ## S. Failure Behavior
 

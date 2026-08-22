@@ -277,7 +277,7 @@ Preserve: uploaded by, import source, supplier, seller, original filename, sourc
 
 ## AQ. Observability
 
-Telemetry: upload failures, processing latency, transform failures, cache hit/miss where observable, CDN errors, broken references, variant generation volume, storage growth, tenant usage. No sensitive metadata leakage.
+Telemetry: upload failures, processing latency, transform failures, cache hit/miss where observable, CDN errors, broken references, variant generation volume, storage growth, tenant usage. No sensitive metadata leakage. See `docs/architecture/18-observability-logging-audit.md`.
 
 ## AR. Quotas / Abuse
 

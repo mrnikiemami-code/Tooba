@@ -181,7 +181,7 @@ Compare source feed vs index counts. Repair jobs.
 
 ## AM. Search Observability
 
-Query latency, zero-result rate, index lag. Separate from SEO GSC.
+Query latency, zero-result rate, index lag. Separate from SEO GSC and from first-party Analytics product metrics. See `docs/architecture/18-observability-logging-audit.md`.
 
 ## AN. Engine Abstraction
 

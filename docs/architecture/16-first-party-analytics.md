@@ -262,7 +262,7 @@ Observable differences among Analytics Purchase count, Order count, Payment coun
 
 ## AZ. Observability of Analytics Pipeline
 
-Ingestion lag, drop rate, invalid events, duplicate rate, queue/backlog, consumer failures, aggregate freshness, event volume, tenant volume anomalies. Technical telemetry ≠ product analytics metrics.
+Ingestion lag, drop rate, invalid events, duplicate rate, queue/backlog, consumer failures, aggregate freshness, event volume, tenant volume anomalies. Technical telemetry ≠ product analytics metrics. See `docs/architecture/18-observability-logging-audit.md`.
 
 ## BA. Export / BI Readiness
 

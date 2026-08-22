@@ -211,4 +211,4 @@ Future: idempotent initiate, webhook replay, amount mismatch, auth vs capture, r
 
 - Implementation, SDK, PCI SAQ, accounting product, UI, ADR, Shopeiva
 
-PaymentSucceeded is a server-confirmed fact. Analytics purchase observations derive from Order/Payment; Analytics does not own capture/settlement. See `docs/architecture/16-first-party-analytics.md`.
+PaymentSucceeded is a server-confirmed fact. Analytics purchase observations derive from Order/Payment; Analytics does not own capture/settlement. See `docs/architecture/16-first-party-analytics.md`. Payment telemetry (latency, PSP errors) is technical observability, not Payment SoT. See `docs/architecture/18-observability-logging-audit.md`.

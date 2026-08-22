@@ -467,7 +467,7 @@ AI is an enhancement, not a single point of failure for core commerce.
 
 ## AT. Observability
 
-Need AI telemetry such as: request latency, model/provider, token usage, retrieval latency, retrieved source count, tool calls, error rate, fallback rate, grounding/citation coverage, cost, tenant usage.
+Need AI telemetry such as: request latency, model/provider, token usage, retrieval latency, retrieved source count, tool calls, error rate, fallback rate, grounding/citation coverage, cost, tenant usage. Technical telemetry ≠ product Analytics. See `docs/architecture/18-observability-logging-audit.md`.
 
 Do not log sensitive prompt/context indiscriminately. Technical AI telemetry ≠ product Analytics and ≠ audit of payments/authn.
 
