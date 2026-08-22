@@ -29,8 +29,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-06 | SpiceDB authorization | COMPLETE |
 | P00-07 | Party/Organization/B2B foundation | COMPLETE |
 | P00-08 | Catalog/Product/Variant/Offer/Seller | COMPLETE |
-| P00-09 | Pricing/Market/Currency | IN_PROGRESS |
-| P00-10 | Inventory | PLANNED |
+| P00-09 | Pricing/Market/Currency | COMPLETE |
+| P00-10 | Inventory | IN_PROGRESS |
 | P00-11 | Cart/Checkout/Order | PLANNED |
 | P00-12 | Payment | PLANNED |
 | P00-13 | Content + Page Composition | PLANNED |
@@ -46,7 +46,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T008 are Architect-accepted.
-- P00-01 through P00-08 are COMPLETE after Architect accept.
-- P00-09 is IN_PROGRESS under TB-P00-T009 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T010` is not authorized.
+- TB-P00-T000 through TB-P00-T009 are Architect-accepted.
+- P00-01 through P00-09 are COMPLETE after Architect accept.
+- P00-10 is IN_PROGRESS under TB-P00-T010 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T011` is not authorized.
