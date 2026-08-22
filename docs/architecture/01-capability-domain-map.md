@@ -87,11 +87,11 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Authorization
 
-- Purpose: relationship-based access (SpiceDB direction).
-- Owns: authorization relationships/tuples and checks.
-- Must NOT own: product catalog or prices.
-- Inbound: Party, Identity, Seller, Order, Admin. Outbound: allow/deny to all operations.
-- Editions: SHARED_CORE. Extraction: high.
+- Purpose: relationship-based access (SpiceDB direction). See `docs/architecture/05-spicedb-authorization.md`.
+- Owns: authorization decision graph / relationship tuples needed for checks; not business write models.
+- Must NOT own: product catalog, prices, order lines, Identity credentials. UI hiding is not the security boundary.
+- Inbound: Party, Identity, Seller, Order, Admin, Organization (future). Outbound: allow/deny at use-case boundaries; bulk/lookup for lists.
+- Editions: SHARED_CORE. Isolation: tenant/store and seller-scoped relations. Extraction: high (SDK hidden behind internal contract).
 
 ### Catalog
 

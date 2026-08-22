@@ -564,7 +564,7 @@ Authentication
 → SpiceDB authorization decision
 ```
 
-Identity must not contain a fixed role matrix that duplicates SpiceDB. Bootstrap/system roles may exist later only by explicit design (later P00 / SpiceDB task).
+Identity must not contain a fixed role matrix that duplicates SpiceDB. Bootstrap/system roles may exist later only by explicit design. Decision architecture: `docs/architecture/05-spicedb-authorization.md`.
 
 ## W. Relationship with B2B
 

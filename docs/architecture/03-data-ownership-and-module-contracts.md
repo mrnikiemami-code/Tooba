@@ -35,7 +35,7 @@ Physical colocation in one process or even one database server does not imply lo
 | --- | --- | --- | --- | --- |
 | Identity | Account lifecycle, typed login identifiers, credential references, method/MFA enrollment, sessions, external IdP bindings, identity security events (see `04-identity-authentication.md`) | Party subject id after explicit link | Party profile, prices, orders, SpiceDB graph | Authn traces / security audit |
 | Party | Person/org, membership, party addresses | Identity subject | Passwords, catalog | Order, Pricing, Authorization |
-| Authorization | Relationship tuples/checks | Party, resource ids | Catalog/prices | All gated operations |
+| Authorization | Authorization-relevant relationships/permissions and check/lookup contracts (SpiceDB behind `IAuthorizationService`; see `05-spicedb-authorization.md`) | Party, Identity, resource ids | Catalog/prices/order lines; Identity role matrix | All gated operations |
 | Catalog | Canonical product identity & descriptive attributes | Media ids, content ids | Seller terms, prices, stock | Search, AI, Offer, PDP RM |
 | Seller / Marketplace | Seller participation/profile | Party | Canonical product | Offer, Admin |
 | Offer | Listing binding seller↔catalog, listing flags | Catalog id, Seller id | Canonical description, global price books | Pricing, Inventory, Search |
