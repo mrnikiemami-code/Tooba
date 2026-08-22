@@ -27,13 +27,13 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T024
+TB-P00-T025
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T025 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T026 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 ## Recovered Architect procedure
@@ -88,5 +88,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P00-T025`; do not execute `TB-P00-T026` or P00-GATE unless Architect issues it.
-7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/24-reviews-ratings.md` (not locked ADRs). P00 Gate is NOT AUTHORIZED.
+6. await Architect review of `TB-P00-T026`; do not execute `TB-P00-T027`, Tax architecture, or P00-GATE unless Architect issues it.
+7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/25-returns-rma.md` (not locked ADRs). P00 Gate is NOT AUTHORIZED.

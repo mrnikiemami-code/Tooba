@@ -46,7 +46,8 @@ Physical colocation in one process or even one database server does not imply lo
 | Checkout | Checkout process state | Cart, quotes, reservations | Long-term order after confirm | Order |
 | Order | Confirmed order + commercial snapshots | Payment refs, fulfillment refs | Live price books, PSP internals | Payment, Fulfillment, Analytics |
 | Payment | Payment attempts/results, PSP references | Order id | Order lines as catalog | Order, Admin |
-| Fulfillment | Shipments/fulfillment units (see `docs/architecture/21-fulfillment.md`) | Order id | Payments, catalog, Inventory reservations as write model | Order, Notifications, Customer timeline |
+| Fulfillment | Shipments/fulfillment units (see `docs/architecture/21-fulfillment.md`) | Order id | Payments, catalog, Inventory reservations as write model; RMA cases | Order, Notifications, Customer timeline, Returns reverse-shipment commands |
+| Returns / RMA | Return cases, eligibility, inspection/disposition coordination (see `docs/architecture/25-returns-rma.md`) | Order/Fulfillment/Payment/Inventory ids via contract | Order tables; Payment refunds; Inventory increments; Fulfillment outbound writes | Admin/Seller/Customer workspaces |
 | Promotion | Promotion definitions, campaigns, coupon constructs (see `docs/architecture/22-promotion-discount.md`) | Offer/catalog/market refs | Base price books | Pricing quotes |
 | Content | Semantic/editorial write model | Opaque product/brand ids | Layout trees as only model | Search, AI, Page Composition |
 | Page Composition | Layout/section instances | Content ids | Article body source | Storefront |

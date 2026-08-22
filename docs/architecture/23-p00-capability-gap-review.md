@@ -65,13 +65,11 @@ UX direction if confirmed later: Case Workspace.
 
 ## F. Returns / RMA
 
-**Architecture-Classification:** `DEDICATED_TASK_REQUIRED`
+**Architecture-Classification:** `DEDICATED_TASK_REQUIRED` (architecture delivered under TB-P00-T026; awaiting Architect ACCEPT)
 
 **First-Sale-Criticality:** `SHOULD_HAVE_FIRST_SALE`
 
-Reason: T022 correctly kept Returns out of Fulfillment write-model, but commercial returns touch Order, Fulfillment, Payment refund, Inventory restock, seller vs customer responsibility, return shipment, inspection/disposition. Cancellation ≠ RMA. Leakage if skipped: return flags on Order, refunds invented in Fulfillment, restock written from shipment screens.
-
-UX direction later: Return Case / RMA Workflow (Customer request + Seller/Admin inspection), not Order-status collapse.
+Reason: Decision-grade Returns/RMA is in `docs/architecture/25-returns-rma.md` (Return ≠ Cancellation/Refund/Fulfillment/Inventory/Order; partial RMAs; Payment/Inventory instructions; reverse logistics adapter). This gap row is not a Gate authorization. T026 Cursor PASS ≠ Architect ACCEPT.
 
 ## G. Tax
 

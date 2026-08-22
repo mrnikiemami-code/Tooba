@@ -155,7 +155,7 @@ Order-owned cancellation policy + inventory release + payment void/refund comman
 
 ## AE. Returns / Refund Readiness
 
-Preserve later return units referencing Order lines. Not implemented. Payment refunds via Payment module.
+Preserve later return units referencing Order lines via Returns/RMA (`docs/architecture/25-returns-rma.md`). Cancellation remains Order-owned. Payment refunds via Payment module. Returns must not collapse into Order status.
 
 ## AF. Customer / Seller / Admin Views
 

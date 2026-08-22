@@ -432,7 +432,7 @@ Payment must not independently apply coupon or promotion. Refunds may later allo
 
 Promotions complicate partial cancellation, partial refund, and return.
 
-Need preserved **per-line/order adjustment allocation** so later financial workflows can compute refundable amounts.
+Need preserved **per-line/order adjustment allocation** so later financial workflows can compute refundable amounts. Returns consume that snapshot; they do not re-run current Promotion rules (`docs/architecture/25-returns-rma.md`).
 
 Exact refund allocation policy:
 
@@ -440,7 +440,7 @@ Exact refund allocation policy:
 NEEDS_LATER_P00_DETAIL
 ```
 
-Full Returns/RMA remains a separate capability (T022).
+Full Returns/RMA is designed in `docs/architecture/25-returns-rma.md` (awaiting Architect ACCEPT of TB-P00-T026).
 
 ## AC. Redemption / Usage
 

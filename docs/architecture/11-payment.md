@@ -89,7 +89,7 @@ Align T011: prefer durable Order/Intent id before capture. Sequence `NEEDS_LATER
 
 ## Q. Refund
 
-Refund is Payment command referencing original capture. Order/return process requests it; Payment executes via adapter. Snapshot refund amounts.
+Refund is Payment command referencing original capture. Returns/RMA may **instruct** a refund (`docs/architecture/25-returns-rma.md`); Payment executes via adapter. Return approved ≠ refund completed. Snapshot refund amounts.
 
 ## R. Void / Cancel Authorization
 

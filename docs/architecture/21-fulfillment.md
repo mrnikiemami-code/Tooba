@@ -252,9 +252,9 @@ Cancellation is **not** one boolean. Need orchestration/compensation. Exact poli
 
 ## AA. Return Readiness
 
-Do not fully design Returns here. Fulfillment must keep identity/history for future: return shipment, returnable quantity, delivery date, original shipment, seller, carrier, tracking.
+Fulfillment keeps identity/history for reverse logistics: return shipment, delivered quantity, delivery date, original shipment, seller, carrier, tracking.
 
-Full Returns/RMA: `DEFERRED`.
+Returns/RMA owns the case (`docs/architecture/25-returns-rma.md`). Fulfillment executes reverse-shipment commands; it does not own RMA eligibility, refund, or restock. Cancellation ≠ Return.
 
 ## AB. Failed Delivery
 

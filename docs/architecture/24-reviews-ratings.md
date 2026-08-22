@@ -424,7 +424,7 @@ Do not create a final ADR in this task.
 ## P00 Gap Status After Reviews
 
 ```text
-Returns / RMA = still requires dedicated architecture task
+Returns / RMA = architecture in docs/architecture/25-returns-rma.md (TB-P00-T026 awaiting Architect ACCEPT)
 Tax = still requires USER product decision before Gate
 Notifications = boundary sufficient for P00
 Fraud / Risk = boundary sufficient for P00

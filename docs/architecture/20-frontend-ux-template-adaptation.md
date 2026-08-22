@@ -348,6 +348,8 @@ Clear steps, progress, address, delivery, payment, review, validation, price/sto
 
 Do not expose internal module orchestration as user-visible complexity.
 
+Post-purchase returns: Return Case / RMA workflow (`docs/architecture/25-returns-rma.md`), not Order-status CRUD.
+
 ## AJ. Auth UX
 
 Extensible identifiers/methods: username/email/phone, password, OTP, MFA, recovery, external IdP future — without redesign.

@@ -179,6 +179,13 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 - Must NOT own: payment, catalog, carrier vendor SDK as domain.
 - Status: CANDIDATE.
 
+### Returns / RMA
+
+- Purpose: return request, eligibility, RMA lifecycle, inspection/disposition coordination. See `docs/architecture/25-returns-rma.md`.
+- Owns: RMA cases and instructions — not Order money, Payment refunds, Inventory restock writes, Fulfillment outbound truth.
+- Must NOT own: Order, Payment, Inventory, Fulfillment tables.
+- Status: CANDIDATE.
+
 ### Promotion
 
 - Purpose: campaigns and promotional modifiers. See `docs/architecture/22-promotion-discount.md`.
