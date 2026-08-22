@@ -149,7 +149,7 @@ Preview draft/scheduled against theme without publishing. Preview tokens fail cl
 
 ## AA. Media Integration
 
-Media ids on content/sections. Media owns binaries/derivatives.
+Media ids on content/sections. Media owns binaries/derivatives. Placement-level alt and composition presentation intent stay with Content/Page Composition. See `docs/architecture/15-media-image-pipeline.md`.
 
 ## AB. Link Management
 

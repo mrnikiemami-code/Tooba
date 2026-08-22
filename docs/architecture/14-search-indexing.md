@@ -37,7 +37,7 @@ In: projection documents, query + context (tenant, locale, market, currency, aut
 
 ## D. Search Document
 
-Documents are **assembled projections**: identity ids, searchable text, filter facets, sort keys (price, date), flags (in stock), locale, tenant. Not ORM entities.
+Documents are **assembled projections**: identity ids, searchable text, filter facets, sort keys (price, date), flags (in stock), locale, tenant. Not ORM entities. Thumbnail/primary image is a stable Media **delivery reference** (projection), not a vendor URL and not Media SoT. See `docs/architecture/15-media-image-pipeline.md`.
 
 ## E. Document Ownership
 

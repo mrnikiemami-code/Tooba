@@ -155,7 +155,7 @@ PDP copy blocks may **reference** Content ids. Content does not own Product tabl
 
 ## R. Media Separation
 
-Media owns asset lifecycle and derivatives. Catalog stores **media ids**, not binaries or CDN internals.
+Media owns asset lifecycle and derivatives. Catalog stores **media ids**, not binaries or CDN internals. See `docs/architecture/15-media-image-pipeline.md`. Product authoring UX may compose Catalog + Media without merging modules.
 
 ## S. Pricing Separation
 

@@ -51,7 +51,7 @@ Physical colocation in one process or even one database server does not imply lo
 | Content | Semantic/editorial write model | Opaque product/brand ids | Layout trees as only model | Search, AI, Page Composition |
 | Page Composition | Layout/section instances | Content ids | Article body source | Storefront |
 | Search | Index/query over feeds | None as business truth | Catalog writes | Storefront, Admin |
-| Media | Assets & derivatives | None as product identity | Product identity | Catalog, Content, PDP |
+| Media | Assets, originals, variants, delivery refs (see `docs/architecture/15-media-image-pipeline.md`) | None as product identity | Product identity, placement roles, vendor URLs as domain data | Catalog, Content, Page Composition, SEO, Search, Theme |
 | Reviews | Review records | Product/offer/order ids | Catalog | PDP RM |
 | Notifications | Dispatch requests | Tenant/order/party ids | Order truth | — |
 | Support | Tickets if confirmed later | Party/order ids | Catalog | Admin |

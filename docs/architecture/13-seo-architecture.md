@@ -181,7 +181,7 @@ Semantic headings, lang, alt (Media). a11y is production-grade, not optional.
 
 ## AG. Media SEO
 
-Alt/filename via Media; Open Graph images from Media derivatives. Catalog does not store binaries.
+Alt/filename via Media; Open Graph images from Media derivatives. Catalog does not store binaries. SEO consumes Media contracts/projections only. Placement-level localized alt may come from Content/Catalog. See `docs/architecture/15-media-image-pipeline.md`.
 
 ## AH. Locale Fallback
 

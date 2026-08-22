@@ -35,8 +35,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-12 | Payment | COMPLETE |
 | P00-13 | Content + Page Composition | COMPLETE |
 | P00-14 | SEO architecture | COMPLETE |
-| P00-15 | Search/indexing | IN_PROGRESS |
-| P00-16 | Media pipeline | PLANNED |
+| P00-15 | Search/indexing | COMPLETE |
+| P00-16 | Media pipeline | IN_PROGRESS |
 | P00-17 | First-party analytics | PLANNED |
 | P00-18 | AI/RAG | PLANNED |
 | P00-19 | Observability/Audit | PLANNED |
@@ -46,7 +46,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T014 are Architect-accepted.
-- P00-01 through P00-14 are COMPLETE after Architect accept.
-- P00-15 is IN_PROGRESS under TB-P00-T015 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T016` is not authorized.
+- TB-P00-T000 through TB-P00-T015 are Architect-accepted.
+- P00-01 through P00-15 are COMPLETE after Architect accept.
+- P00-16 is IN_PROGRESS under TB-P00-T016 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T017` is not authorized.

@@ -210,9 +210,9 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Media
 
-- Purpose: original + transformed variants, swappable storage/CDN.
-- Owns: media assets and derivative records.
-- Must NOT own: product identity.
+- Purpose: original + transformed variants, swappable storage/CDN. See `docs/architecture/15-media-image-pipeline.md`.
+- Owns: media assets, originals, derived variants, delivery references, processing state (not product identity or placement roles).
+- Must NOT own: product identity, editorial body, page layout, vendor SDKs.
 - Status: CANDIDATE.
 
 ### Reviews
