@@ -70,11 +70,11 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 ### Identity
 
 - Purpose: authenticate actors (password, OTP, optional MFA, future IdP/Keycloak).
-- Owns: credentials, login identifiers, sessions/tokens at identity layer.
-- Must NOT own: Party profile, prices, orders, SpiceDB relationship tuples as business graph (authorization is separate).
+- Owns: credentials, typed login identifiers, method enrollments, sessions, external `issuer+subject` bindings, identity security events (see `docs/architecture/04-identity-authentication.md`).
+- Must NOT own: Party profile, prices, orders, SpiceDB relationship tuples as business graph (authorization is separate). Login Identifier is not an Authentication Method.
 - Inbound: none as source of Party truth.
 - Outbound: authenticated subject IDs to Party/Authorization.
-- Editions: SHARED_CORE. B2B: delegated logins later. Extraction: high (Keycloak-extensible).
+- Editions: SHARED_CORE. B2B: one human Identity may act for multiple organizations via Party/SpiceDB, not via Identity roles. Extraction: high (Keycloak-extensible).
 
 ### Party
 

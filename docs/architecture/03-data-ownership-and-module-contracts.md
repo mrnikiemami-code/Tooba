@@ -33,7 +33,7 @@ Physical colocation in one process or even one database server does not imply lo
 
 | Module | Owns | References | Must not own | Projection consumers |
 | --- | --- | --- | --- | --- |
-| Identity | Credentials, login identifiers, session/token facts | Party subject id after link | Party profile, prices, orders | Authn traces |
+| Identity | Account lifecycle, typed login identifiers, credential references, method/MFA enrollment, sessions, external IdP bindings, identity security events (see `04-identity-authentication.md`) | Party subject id after explicit link | Party profile, prices, orders, SpiceDB graph | Authn traces / security audit |
 | Party | Person/org, membership, party addresses | Identity subject | Passwords, catalog | Order, Pricing, Authorization |
 | Authorization | Relationship tuples/checks | Party, resource ids | Catalog/prices | All gated operations |
 | Catalog | Canonical product identity & descriptive attributes | Media ids, content ids | Seller terms, prices, stock | Search, AI, Offer, PDP RM |

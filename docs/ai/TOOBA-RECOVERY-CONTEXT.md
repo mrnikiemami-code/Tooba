@@ -27,13 +27,13 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T003
+TB-P00-T004
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 ## Recovered Architect procedure
@@ -88,5 +88,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P00-T004`; do not execute `TB-P00-T005` unless Architect issues it.
-7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/03-data-ownership-and-module-contracts.md` (not locked ADRs).
+6. await Architect review of `TB-P00-T005`; do not execute `TB-P00-T006` unless Architect issues it.
+7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/04-identity-authentication.md` (not locked ADRs).

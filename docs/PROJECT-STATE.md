@@ -33,19 +33,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T003
+TB-P00-T004
 ```
 
 Current Issued Task:
 
 ```text
-TB-P00-T004
+TB-P00-T005
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Known Blockers:
@@ -135,6 +135,7 @@ Mandatory microservice-readiness:
 - tenant implementation code, control-plane storage, and ADR lock of the T003 candidate (see `docs/architecture/02-edition-tenant-deployment.md`);
 - initial locale list;
 - indexation / canonical / hreflang / structured data / sitemap ownership details;
+- Identity uniqueness policy per identifier type/edition and whether one Identity may span Single-Store tenants (see `docs/architecture/04-identity-authentication.md`);
 - SpiceDB relationship model;
 - Catalog Product vs Seller Offer design;
 - Pricing/Market/Currency model details (precision, rounding, FX provenance, history);
@@ -197,7 +198,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P00-T005` unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P00-T006` unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -206,12 +207,13 @@ docs/architecture/00-technical-inventory.md
 docs/architecture/01-capability-domain-map.md
 docs/architecture/02-edition-tenant-deployment.md
 docs/architecture/03-data-ownership-and-module-contracts.md
+docs/architecture/04-identity-authentication.md
 ```
 
 Authorized local envelope path for this issued task:
 
 ```text
-docs/ai/tasks/TB-P00-T004.task.md
+docs/ai/tasks/TB-P00-T005.task.md
 ```
 
-Resume: await Architect review of TB-P00-T004. Do not execute `TB-P00-T005` unless Architect issues that envelope.
+Resume: await Architect review of TB-P00-T005. Do not execute `TB-P00-T006` unless Architect issues that envelope.
