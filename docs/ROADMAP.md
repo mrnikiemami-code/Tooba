@@ -21,8 +21,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 | ID | Work package | Status |
 | --- | --- | --- |
-| P00-01 | Repository/template technical inventory | IN_PROGRESS |
-| P00-02 | Product capability/domain map | PLANNED |
+| P00-01 | Repository/template technical inventory | COMPLETE |
+| P00-02 | Product capability/domain map | IN_PROGRESS |
 | P00-03 | Edition/deployment/tenant model | PLANNED |
 | P00-04 | Bounded-context/data-ownership rules | PLANNED |
 | P00-05 | Identity/authentication | PLANNED |
@@ -46,6 +46,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 ## Notes
 
-- TB-P00-T000 is Architect-accepted and recorded confirmed requirements.
-- P00-01 is IN_PROGRESS under TB-P00-T001 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T002` is not authorized.
+- TB-P00-T000 and TB-P00-T001 are Architect-accepted.
+- P00-01 is COMPLETE after T001 accept.
+- P00-02 is IN_PROGRESS under TB-P00-T002 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T003` is not authorized.
