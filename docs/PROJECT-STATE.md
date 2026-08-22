@@ -33,19 +33,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T018
+TB-P00-T019
 ```
 
 Current Issued Task:
 
 ```text
-TB-P00-T019
+TB-P00-T020
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T019 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T020 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Known Blockers:
@@ -145,7 +145,7 @@ Mandatory microservice-readiness:
 - First-party analytics implementation (see `docs/architecture/16-first-party-analytics.md`);
 - AI/RAG retrieval contracts (see `docs/architecture/17-ai-assistant-rag.md`);
 - Observability/audit implementation (see `docs/architecture/18-observability-logging-audit.md`);
-- Caching/infrastructure abstractions;
+- Caching/infrastructure abstractions (see `docs/architecture/19-caching-infrastructure-abstractions.md`);
 - frontend/template adaptation strategy;
 - whether/how `shopeiva.zip` is present as a later inventory input.
 
@@ -198,7 +198,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P00-T020` unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P00-T021` unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -222,12 +222,13 @@ docs/architecture/15-media-image-pipeline.md
 docs/architecture/16-first-party-analytics.md
 docs/architecture/17-ai-assistant-rag.md
 docs/architecture/18-observability-logging-audit.md
+docs/architecture/19-caching-infrastructure-abstractions.md
 ```
 
 Authorized local envelope path for this issued task:
 
 ```text
-docs/ai/tasks/TB-P00-T019.task.md
+docs/ai/tasks/TB-P00-T020.task.md
 ```
 
-Resume: await Architect review of TB-P00-T019. Do not execute `TB-P00-T020` unless Architect issues that envelope.
+Resume: await Architect review of TB-P00-T020. Do not execute `TB-P00-T021` unless Architect issues that envelope.

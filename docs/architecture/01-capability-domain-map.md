@@ -341,7 +341,7 @@ No code in this task.
 | OpenTelemetry | All | No |
 | Technical Logging | All | No |
 | Audit Infrastructure | Identity, Authorization, Order, Admin | No (audit sink is platform; audit *events* raised by modules) |
-| Caching | Search, Catalog reads, Media | No |
+| Caching | Search, Catalog reads, Media, storefront composites | No — see `docs/architecture/19-caching-infrastructure-abstractions.md` |
 | Tenant / Host Resolution | Single-Store storefront (Marketplace uses Deployment Context, not Host→store DB) | No — PLATFORM; see `docs/architecture/02-edition-tenant-deployment.md` |
 | Database Connection Resolution | All modules | No — infrastructure; business modules must not pick connections |
 | Feature / Edition Configuration | Seller, Pricing policies | No |

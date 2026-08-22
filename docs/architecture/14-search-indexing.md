@@ -153,7 +153,7 @@ Offset or cursor; stable enough for UX. SEO pagination is T014.
 
 ## AF. Cache
 
-Query cache keyed by tenant+locale+market+currency+query+filters. Short TTL. No cross-tenant. Redis optional later.
+Query cache keyed by tenant+locale+market+currency+query+filters. Short TTL. No cross-tenant. Redis optional later behind cache ports. See `docs/architecture/19-caching-infrastructure-abstractions.md`.
 
 ## AG. Authorization-Aware Search
 
