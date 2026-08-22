@@ -25,7 +25,6 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-02 | Product capability/domain map | COMPLETE |
 | P00-03 | Edition/deployment/tenant model | COMPLETE |
 | P00-04 | Bounded-context/data-ownership rules | IN_PROGRESS |
-| P00-04 | Bounded-context/data-ownership rules | PLANNED |
 | P00-05 | Identity/authentication | PLANNED |
 | P00-06 | SpiceDB authorization | PLANNED |
 | P00-07 | Party/Organization/B2B foundation | PLANNED |
