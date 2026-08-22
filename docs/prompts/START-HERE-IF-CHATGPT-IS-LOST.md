@@ -2,25 +2,41 @@
 
 Cursor must NOT continue implementation automatically from ROADMAP.
 
-Read:
-
-```text
-docs/PROJECT-STATE.md
-docs/ROADMAP.md
-docs/ai/TOOBA-RECOVERY-CONTEXT.md
-docs/ai/TOOBA-PIPELINE-PROTOCOL.md
-docs/ai/TOOBA-PIPELINE-CONTROLLER.md
-```
+A recovered Architect must first recover from the repository.
 
 Run:
 
 ```bash
 git rev-parse --show-toplevel
 git fetch origin
+git branch --show-current
 git rev-parse HEAD
 git rev-parse origin/main
 git status --short --branch
 ```
+
+Then read:
+
+```text
+AGENTS.md
+docs/PROJECT-STATE.md
+docs/ROADMAP.md
+docs/ai/TOOBA-PIPELINE-PROTOCOL.md
+docs/ai/TOOBA-PIPELINE-CONTROLLER.md
+docs/ai/TOOBA-RECOVERY-CONTEXT.md
+```
+
+Then determine:
+
+- current phase;
+- last Architect accepted task;
+- issued-but-unaccepted task;
+- blockers;
+- locked / confirmed requirements;
+- unresolved decisions;
+- exact resume rule.
+
+Never invent the next task from memory.
 
 Produce a recovery packet containing:
 
@@ -33,9 +49,13 @@ Produce a recovery packet containing:
 - HEAD == origin/main;
 - working tree;
 - known blockers;
-- locked architecture;
+- locked architecture / confirmed requirements;
+- unresolved P00 decisions;
 - resume rule.
 
-Paste the recovery packet into a new ChatGPT Architect chat.
+Prefer the existing Tooba Architect conversation if it is still available. If Architect context is truly lost, paste the recovery packet into a new ChatGPT Architect chat.
 
 Do not implement until the Architect reconciles state and sends a new valid Tooba task/gate file.
+
+No Envelope = No Execution.
+Cursor PASS != Architect ACCEPT.

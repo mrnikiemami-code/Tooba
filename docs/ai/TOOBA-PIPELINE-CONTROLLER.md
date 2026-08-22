@@ -1,5 +1,21 @@
 # Tooba — Pipeline Controller V1
 
+## States
+
+```text
+RECOVERING
+READY
+TASK_ISSUED
+EXECUTING
+RESULT_SUBMITTED
+WAITING_ARCHITECT_REVIEW
+WAITING
+BLOCKED
+RECOVERY_CONFLICT
+```
+
+Only Architect authorization may advance to a new implementation objective.
+
 ## Resume
 
 ```text
@@ -24,9 +40,13 @@ docs/ai/TOOBA-PIPELINE-PROTOCOL.md
 docs/ai/TOOBA-PIPELINE-CONTROLLER.md
 docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md
 
-Read Architect Chat.
+Read Architect Chat (same conversation; do not start a new Architect chat).
 
 Check Architect ACCEPT / next authorized task file.
+
+Local inbox (fast path once saved):
+docs/ai/tasks/*.task.md
+docs/ai/tasks/*.gate.md
 
 If valid:
 BEGIN_TOOBA_CURSOR_TASK_V1
@@ -71,10 +91,22 @@ RECOVERY_CONFLICT on unsafe/irreconcilable repository state.
 TOOBA_AUTOMATION_PAUSE
 ```
 
+## Cycle (must not stop without cause)
+
+```text
+find authorized envelope in Architect chat
+→ save to docs/ai/tasks/
+→ execute in Cursor
+→ paste RESULT into the same chat
+→ Send
+→ wait for Architect reply
+→ repeat
+```
+
+A temporary empty task queue is not a reason to exit PIPELINE.
+
 ## Important
 
 Cursor PASS != Architect ACCEPT.
-
-A temporary empty task queue is not a reason to exit PIPELINE.
 
 Do not execute recommendations from ROADMAP without an Architect envelope.

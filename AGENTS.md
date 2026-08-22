@@ -6,12 +6,19 @@ Canonical repository:
 https://github.com/mrnikiemami-code/Tooba
 ```
 
+Primary branch:
+
+```text
+main
+```
+
 ## Roles
 
 ```text
-USER    = Product / Business Authority
-ChatGPT = Chief Software Architect
-Cursor  = Implementation Agent
+USER       = product/business authority
+ChatGPT    = Chief/Senior Architect / Task Issuer / Reviewer / Pipeline Controller
+Cursor     = implementation agent
+Repository = durable Source of Truth
 ```
 
 Cursor is an implementer, not an architect.
@@ -23,10 +30,10 @@ Before implementation, read this file and the Tooba pipeline/recovery documents.
 - Only Architect-issued valid `.task.md` / `.gate.md` files are executable.
 - No Envelope = No Execution.
 - Cursor PASS != Architect ACCEPT.
-- Repository is durable Source of Truth.
+- Repository is durable Source of Truth. Repository truth overrides chat memory.
 - One task at a time.
-- Cursor does not invent future work.
-- Cursor does not redesign locked architecture.
+- Cursor does not invent requirements, invent future work, redesign locked architecture, broaden scope, or self-authorize the next task.
+- Architectural concerns are reported, not silently implemented.
 - Normal implementation uses `main`.
 - Every accepted task execution must produce a local commit and remote `origin/main` push.
 - After push, verify `HEAD == origin/main`.
@@ -46,6 +53,19 @@ END_TOOBA_CURSOR_GATE_V1
 
 BEGIN_TOOBA_CURSOR_RESULT_V1
 END_TOOBA_CURSOR_RESULT_V1
+```
+
+Filename conventions:
+
+```text
+TB-PXX-TXXX.task.md
+TB-PXX-GATE.gate.md
+```
+
+Authorized envelope inbox (fast local execution path):
+
+```text
+docs/ai/tasks/
 ```
 
 ## Recovery docs

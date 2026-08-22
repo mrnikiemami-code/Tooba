@@ -11,6 +11,8 @@ ChatGPT Architect
   ↓
 downloadable Markdown task/gate
   ↓
+Cursor stores authorized file in docs/ai/tasks/ (fast local path)
+  ↓
 Cursor
   ↓
 implementation + tests + evidence + SoT
@@ -32,6 +34,30 @@ Chat is the architect communication/transport channel.
 
 Executable authority is a complete Architect-issued Markdown `.task.md` / `.gate.md` with valid envelope.
 
+Fast local execution path after an envelope is obtained from Architect chat:
+
+```text
+docs/ai/tasks/TB-PXX-TXXX.task.md
+docs/ai/tasks/TB-PXX-GATE.gate.md
+```
+
+## Governance
+
+```text
+USER       = product/business authority
+ChatGPT    = Chief/Senior Architect / Task Issuer / Reviewer / Pipeline Controller
+Cursor     = implementation agent
+Repository = durable Source of Truth
+```
+
+Cursor is not the architect.
+
+- Cursor PASS != Architect ACCEPT.
+- No Envelope = No Execution.
+- Cursor must not invent requirements, redesign locked architecture, broaden scope, or self-authorize the next task.
+- Architectural concerns are reported, not silently implemented.
+- Repository truth overrides chat memory.
+
 ## Mode
 
 ```text
@@ -49,6 +75,24 @@ WAITING
 
 means no invented work and keep checking for the next authorized Architect envelope.
 
+## Lifecycle
+
+```text
+Architect issues one complete authorized Markdown task
+→ Cursor validates repository + envelope
+→ Cursor executes only that task
+→ tests / validation / visual review if required
+→ SoT sync
+→ local commit
+→ push origin main
+→ git fetch origin
+→ verify HEAD == origin/main
+→ Cursor sends RESULT
+→ Architect reviews
+→ ACCEPT / REPAIR / BLOCKED
+→ if ACCEPT and no real blocker, Architect automatically issues the next task/gate
+```
+
 ## Task marker
 
 ```text
@@ -57,12 +101,24 @@ BEGIN_TOOBA_CURSOR_TASK_V1
 END_TOOBA_CURSOR_TASK_V1
 ```
 
+Filename:
+
+```text
+TB-PXX-TXXX.task.md
+```
+
 ## Gate marker
 
 ```text
 BEGIN_TOOBA_CURSOR_GATE_V1
 ...
 END_TOOBA_CURSOR_GATE_V1
+```
+
+Filename:
+
+```text
+TB-PXX-GATE.gate.md
 ```
 
 ## Result marker
@@ -97,10 +153,13 @@ Any unsafe divergence:
 RECOVERY_CONFLICT
 ```
 
+Never force-push or rewrite history.
+
 ## Automation
 
 - one task at a time;
 - auto-continue after Architect ACCEPT;
 - auto-start next planned phase after accepted gate when no real blocker;
 - stop for true architectural/business/recovery blockers only;
-- Cursor never invents tasks.
+- Cursor never invents tasks;
+- do not execute `TB-P00-T001` unless Architect issues that exact envelope.
