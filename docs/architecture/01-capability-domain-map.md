@@ -342,8 +342,8 @@ No code in this task.
 | Technical Logging | All | No |
 | Audit Infrastructure | Identity, Authorization, Order, Admin | No (audit sink is platform; audit *events* raised by modules) |
 | Caching | Search, Catalog reads, Media | No |
-| Tenant / Host Resolution | All storefront | No (edition overlay; design deferred) |
-| Database Connection Resolution | All modules | No |
+| Tenant / Host Resolution | Single-Store storefront (Marketplace uses Deployment Context, not Host→store DB) | No — PLATFORM; see `docs/architecture/02-edition-tenant-deployment.md` |
+| Database Connection Resolution | All modules | No — infrastructure; business modules must not pick connections |
 | Feature / Edition Configuration | Seller, Pricing policies | No |
 | Localization Infrastructure | Content, Experience | No (Locale codes may be kernel) |
 | Security Infrastructure | Identity, edge | No |
@@ -386,7 +386,7 @@ Do not fork into two product architectures.
 ```text
 exact bounded-context locks
 database/schema topology
-tenant resolution mechanics
+tenant resolution mechanics (candidate in 02-edition-tenant-deployment.md; not ADR-locked)
 catalog aggregate model
 variant/attribute model
 seller/offer ownership details

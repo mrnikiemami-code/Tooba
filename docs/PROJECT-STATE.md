@@ -33,19 +33,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T001
+TB-P00-T002
 ```
 
 Current Issued Task:
 
 ```text
-TB-P00-T002
+TB-P00-T003
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T003 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Known Blockers:
@@ -58,7 +58,7 @@ Architecture Status:
 
 ```text
 CONFIRMED: Modular Monolith with mandatory microservice-readiness
-UNRESOLVED: exact bounded contexts, tenant implementation, locale list, and other P00 design details listed below
+UNRESOLVED: exact bounded contexts, tenant implementation code/ADR lock, locale list, and other P00 design details listed below
 ```
 
 ## Confirmed Requirements
@@ -132,7 +132,7 @@ Mandatory microservice-readiness:
 ## Unresolved P00 Decisions
 
 - exact bounded contexts;
-- tenant implementation;
+- tenant implementation code, control-plane storage, and ADR lock of the T003 candidate (see `docs/architecture/02-edition-tenant-deployment.md`);
 - initial locale list;
 - indexation / canonical / hreflang / structured data / sitemap ownership details;
 - SpiceDB relationship model;
@@ -197,19 +197,20 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P00-T003` unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P00-T004` unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
 ```text
 docs/architecture/00-technical-inventory.md
 docs/architecture/01-capability-domain-map.md
+docs/architecture/02-edition-tenant-deployment.md
 ```
 
 Authorized local envelope path for this issued task:
 
 ```text
-docs/ai/tasks/TB-P00-T002.task.md
+docs/ai/tasks/TB-P00-T003.task.md
 ```
 
-Resume: await Architect review of TB-P00-T002. Do not execute `TB-P00-T003` unless Architect issues that envelope.
+Resume: await Architect review of TB-P00-T003. Do not execute `TB-P00-T004` unless Architect issues that envelope.
