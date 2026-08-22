@@ -210,3 +210,5 @@ Future: idempotent initiate, webhook replay, amount mismatch, auth vs capture, r
 ### DEFERRED
 
 - Implementation, SDK, PCI SAQ, accounting product, UI, ADR, Shopeiva
+
+PaymentSucceeded is a server-confirmed fact. Analytics purchase observations derive from Order/Payment; Analytics does not own capture/settlement. See `docs/architecture/16-first-party-analytics.md`.

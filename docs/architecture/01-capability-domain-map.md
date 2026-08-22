@@ -237,9 +237,9 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Analytics
 
-- Purpose: first-party PageView, Session, ProductView, Search, AddToCart, Checkout, Purchase.
-- Owns: event collection pipeline, not blocking storefront writes.
-- Must NOT own: Catalog.
+- Purpose: first-party PageView, Session, ProductView, Search, AddToCart, Checkout, Purchase. See `docs/architecture/16-first-party-analytics.md`.
+- Owns: event collection/ingestion, behavioral observations, rebuildable aggregates — not blocking storefront writes, not Order/Payment/Catalog truth.
+- Must NOT own: Catalog, Order revenue, Authorization, audit logs.
 - Status: CANDIDATE (platform+product).
 
 ### AI Knowledge / Assistant

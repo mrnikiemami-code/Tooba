@@ -55,7 +55,7 @@ Physical colocation in one process or even one database server does not imply lo
 | Reviews | Review records | Product/offer/order ids | Catalog | PDP RM |
 | Notifications | Dispatch requests | Tenant/order/party ids | Order truth | — |
 | Support | Tickets if confirmed later | Party/order ids | Catalog | Admin |
-| Analytics | First-party event facts | Opaque ids | Catalog write model | Dashboards |
+| Analytics | First-party observations, event contracts, rebuildable aggregates (see `docs/architecture/16-first-party-analytics.md`) | Opaque ids from owning modules | Order/Payment/Catalog/Inventory truth; audit; authn sessions | Dashboards, Search ranking feed, Recommendation/AI (controlled) |
 | AI Knowledge / Assistant | Retrieval orchestration/policy | Approved knowledge ids | Source DBs | Storefront assistant |
 
 ## C. Cross-Module Read Patterns

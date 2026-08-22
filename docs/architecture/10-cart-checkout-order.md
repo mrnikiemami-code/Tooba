@@ -236,3 +236,5 @@ Future: guest cart, multi-seller partition, revalidation races, idempotent place
 ### DEFERRED
 
 - Implementation, schemas, PSP, UI, return product, ADR, Shopeiva
+
+Checkout/Order emit server-confirmed facts Analytics may observe. Analytics does not own cart/order state. See `docs/architecture/16-first-party-analytics.md`.

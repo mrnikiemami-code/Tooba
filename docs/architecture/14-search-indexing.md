@@ -199,6 +199,8 @@ Same documents/events. Change adapter + mapping. No domain rewrite.
 
 Recommendations are not Search SoT. May consume similar documents; ranking personalization later.
 
+Search executes queries; first-party Analytics **observes** SearchPerformed / zero-result / CTR as projections. Search does not become analytics SoT. See `docs/architecture/16-first-party-analytics.md`. Ranking must not mutate weights from raw events without a versioned pipeline.
+
 ## AR. AI Integration
 
 AI retrieval uses approved knowledge (T013), not raw Search admin index. Search may feed product ids to assistant via contract.

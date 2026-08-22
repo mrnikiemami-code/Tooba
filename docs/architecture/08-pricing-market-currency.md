@@ -186,6 +186,7 @@ Two matching rules: later precedence policy. Never pick arbitrarily. If unresolv
 | Quantity on quote | Cart/Checkout input; Pricing applies tiers |
 | Order paid amounts | Order snapshot |
 | Search display price | Search projection |
+| Analytics revenue/GMV | Analytics observation/projection only; original Amount+Currency; Order remains money truth (see `docs/architecture/16-first-party-analytics.md`) |
 
 ## AD. Failure Matrix
 

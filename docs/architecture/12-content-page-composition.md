@@ -189,7 +189,7 @@ Composition must not imply unbounded nested widgets. Media uses transformed vari
 
 ## AK. Analytics
 
-Content/page ids as first-party events. Analytics does not own CMS.
+Content/page ids as first-party events. Analytics does not own CMS. See `docs/architecture/16-first-party-analytics.md`.
 
 ## AL. Content Import / Migration
 
