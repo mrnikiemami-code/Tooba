@@ -33,19 +33,26 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-GATE
+TB-P01-T001
 ```
 
 Current Issued Task:
 
 ```text
-TB-P01-T001
+TB-P01-T002
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T001 = ACCEPTED
+TB-P01-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+```
+
+Observability / Error Handling Foundation:
+
+```text
+IN_PROGRESS
 ```
 
 Known Blockers:
@@ -199,7 +206,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P01-T002` or P01-GATE unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P01-T003` or P01-GATE unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -233,12 +240,13 @@ docs/architecture/25-returns-rma.md
 docs/architecture/26-tax-architecture.md
 docs/architecture/27-p00-gate-review.md
 docs/architecture/28-platform-foundation-bootstrap.md
+docs/architecture/29-observability-error-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P01-T001.task.md
+docs/ai/tasks/TB-P01-T002.task.md
 ```
 
-Resume: await Architect review of TB-P01-T001. Do not execute `TB-P01-T002` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.
+Resume: await Architect review of TB-P01-T002. Do not execute `TB-P01-T003` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.
