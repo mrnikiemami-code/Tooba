@@ -203,7 +203,7 @@ Search executes queries; first-party Analytics **observes** SearchPerformed / ze
 
 ## AR. AI Integration
 
-AI retrieval uses approved knowledge (T013), not raw Search admin index. Search may feed product ids to assistant via contract.
+AI retrieval uses approved knowledge (T013), not raw Search admin index. Search may feed product ids to assistant via contract. Search != AI retrieval index. See `docs/architecture/17-ai-assistant-rag.md`.
 
 ## AS. Data Ownership Matrix
 

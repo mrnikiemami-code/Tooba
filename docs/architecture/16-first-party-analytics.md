@@ -194,7 +194,7 @@ May consume analytics signals with tenant, authorization, privacy, market, local
 
 ## AK. AI Boundary
 
-Future AI may consume **aggregated/approved** signals (popular queries, zero-result patterns, engagement, product interest trends). Do not expose raw sensitive behavioral history indiscriminately. AI authz/privacy remain separate.
+Future AI may consume **aggregated/approved** signals (popular queries, zero-result patterns, engagement, product interest trends). Do not expose raw sensitive behavioral history indiscriminately. AI authz/privacy remain separate. See `docs/architecture/17-ai-assistant-rag.md`.
 
 ## AL. Ranking Feedback
 

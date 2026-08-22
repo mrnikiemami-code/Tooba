@@ -56,7 +56,7 @@ Physical colocation in one process or even one database server does not imply lo
 | Notifications | Dispatch requests | Tenant/order/party ids | Order truth | — |
 | Support | Tickets if confirmed later | Party/order ids | Catalog | Admin |
 | Analytics | First-party observations, event contracts, rebuildable aggregates (see `docs/architecture/16-first-party-analytics.md`) | Opaque ids from owning modules | Order/Payment/Catalog/Inventory truth; audit; authn sessions | Dashboards, Search ranking feed, Recommendation/AI (controlled) |
-| AI Knowledge / Assistant | Retrieval orchestration/policy | Approved knowledge ids | Source DBs | Storefront assistant |
+| AI Knowledge / Assistant | Retrieval orchestration/policy, grounded RAG (see `docs/architecture/17-ai-assistant-rag.md`) | Approved knowledge ids, live commerce contracts | Source DBs; SpiceDB graph; unrestricted analytics/media dumps | Storefront assistant |
 
 ## C. Cross-Module Read Patterns
 

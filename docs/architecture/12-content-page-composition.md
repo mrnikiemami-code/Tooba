@@ -121,7 +121,7 @@ SEO engine owns technical SEO (canonical, sitemap contribution policy, structure
 
 ## T. Content & AI/RAG
 
-AI may retrieve **approved published** knowledge only. Draft/unpublished ineligible. No unrestricted DB access (T000).
+AI may retrieve **approved published** knowledge only. Draft/unpublished ineligible. No unrestricted DB access (T000). See `docs/architecture/17-ai-assistant-rag.md`.
 
 ## U. Catalog & AI Knowledge
 

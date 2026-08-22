@@ -480,6 +480,8 @@ Do not solve with hardcoded permanent superuser in application code. Bootstrap i
 13. Authorization audit/telemetry without secrets.
 14. Machine subjects distinct from human identities.
 
+AI retrieval and tools are authorization-aware: SpiceDB remains the decision system; the assistant must not bypass checks or query internal tables. See `docs/architecture/17-ai-assistant-rag.md`.
+
 ### NEEDS_LATER_P00_DETAIL
 
 - Exact SpiceDB object types, relations, and permission computation

@@ -244,7 +244,7 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### AI Knowledge / Assistant
 
-- Purpose: grounded answers via approved knowledge and authorization-aware retrieval.
+- Purpose: grounded answers via approved knowledge and authorization-aware retrieval. See `docs/architecture/17-ai-assistant-rag.md`.
 - Owns: assistant orchestration and retrieval policy, not source DBs.
 - Must NOT bypass Authorization or query internal tables unrestricted.
 - Inbound: Content, Catalog projections, contracts.
