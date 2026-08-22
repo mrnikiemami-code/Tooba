@@ -78,11 +78,11 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Party
 
-- Purpose: human and organization business identity, membership, buyer vs actor.
-- Owns: Party/Organization, memberships, addresses as party facts (not checkout snapshots).
-- Must NOT own: passwords, catalog, prices.
-- Inbound: Identity subject. Outbound: Authorization, Pricing context, Order buyer.
-- Editions: SHARED_CORE. B2B: FUTURE overlay on same Party module.
+- Purpose: human and organization business identity, membership, buyer vs actor (see `docs/architecture/06-party-organization-b2b-foundation.md`).
+- Owns: Party/Organization, membership lifecycle, party addresses/contacts as current facts (not order historical snapshots).
+- Must NOT own: passwords, catalog, prices, Tenant/Store platform identity, Seller commercial lifecycle, SpiceDB as profile store.
+- Inbound: optional Identity link. Outbound: Authorization (membership facts), Pricing context ids, Order buyer/payer refs.
+- Editions: SHARED_CORE. Actor != Buyer; Buyer != necessarily Payer. B2B overlay on same Party module.
 - Status: CANDIDATE (keep separate from Identity).
 
 ### Authorization
