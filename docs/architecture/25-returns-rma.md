@@ -183,11 +183,7 @@ Do not assume full original shipping refund. Policy inputs: reason, seller fault
 
 ## X. Tax Boundary
 
-Refund tax treatment depends on Tax policy. Do not invent.
-
-Preserve: tax snapshot/reference; refundable tax amount; jurisdiction policy hook.
-
-Tax decision remains pending (see P00 Tax Decision Inputs).
+Refund tax uses **historical Order tax snapshot** and Tax explanation (`docs/architecture/26-tax-architecture.md`). Do not re-run current Tax rules as default. Do not invent jurisdiction law.
 
 ## Y. Exchange
 

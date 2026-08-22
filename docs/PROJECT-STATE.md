@@ -33,19 +33,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T025
+TB-P00-T026
 ```
 
 Current Issued Task:
 
 ```text
-TB-P00-T026
+TB-P00-T027
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-T026 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P00-T027 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Known Blockers:
@@ -119,7 +119,8 @@ Mandatory microservice-readiness:
 - Authentication: password, OTP login, optional 2FA/MFA, future external identity providers; extensible to Keycloak without coupling core identity to Keycloak.
 - Authorization direction: SpiceDB; relationship-based; do not collapse into fixed role columns.
 - Full B2B is after first sellable release; P00 must preserve Party/Organization foundations.
-- Never model product price as one scalar. Locale != Market != Currency.
+- Never model product price as one scalar. Locale != Market != Currency != Tax Jurisdiction.
+- USER Tax policy (architecture input, not implemented law): Iran first-market emphasis; UK/other markets readiness; tax-exclusive base; Tooba calculates tax; configurable effective-dated percentage rules; context override only if enabled; tax-exempt supported; no hard-coded rate/date/law; B2B VAT/invoice out of initial phase. See `docs/architecture/26-tax-architecture.md`.
 - P00 must analyze Catalog Product vs Seller Offer / Listing; do not prematurely merge them.
 - Search: initial PostgreSQL Full Text Search; future Elasticsearch / OpenSearch; domain logic must not couple to PostgreSQL search internals.
 - Caching abstracted so Redis can be added later without redesign. Initial hosting may be public/shared; later dedicated.
@@ -198,7 +199,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P00-T027`, Tax architecture, or P00-GATE unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P00-T028` or P00-GATE unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -229,12 +230,13 @@ docs/architecture/22-promotion-discount.md
 docs/architecture/23-p00-capability-gap-review.md
 docs/architecture/24-reviews-ratings.md
 docs/architecture/25-returns-rma.md
+docs/architecture/26-tax-architecture.md
 ```
 
 Authorized local envelope path for this issued task:
 
 ```text
-docs/ai/tasks/TB-P00-T026.task.md
+docs/ai/tasks/TB-P00-T027.task.md
 ```
 
-Resume: await Architect review of TB-P00-T026. Do not execute `TB-P00-T027`, Tax architecture, or P00-GATE unless Architect issues that envelope. P00 Gate is NOT AUTHORIZED.
+Resume: await Architect review of TB-P00-T027. Do not execute `TB-P00-T028` or P00-GATE unless Architect issues that envelope. P00 Gate is NOT AUTHORIZED.

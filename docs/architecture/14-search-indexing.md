@@ -97,7 +97,7 @@ Must-match filters (market eligibility) are filters, not score hacks. Unsellable
 
 ## R. Price in Search
 
-Projected price for default/context key. Not Pricing write model. Currency in context.
+Projected price for default/context key. Not Pricing write model. Currency in context. If display is payable, consume Tax projection — Search does not own tax (`docs/architecture/26-tax-architecture.md`).
 
 ## S. Availability in Search
 

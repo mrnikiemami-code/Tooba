@@ -344,7 +344,9 @@ Long-lived stale cart state must be visible and recoverable.
 
 ## AI. Checkout UX
 
-Clear steps, progress, address, delivery, payment, review, validation, price/stock changes, recovery, mobile usability, guest checkout.
+Clear steps, progress, address, delivery, payment, review, validation, price/stock/tax changes, recovery, mobile usability, guest checkout.
+
+Tax presentation: exclusive base + tax + payable per policy (`docs/architecture/26-tax-architecture.md`). Fail closed if tax cannot be calculated.
 
 Do not expose internal module orchestration as user-visible complexity.
 

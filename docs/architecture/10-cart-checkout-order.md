@@ -52,7 +52,7 @@ Lines reference Offer/Variant ids. Stale catalog/offer (ended, unpublished) fail
 
 ## H. Cart Pricing
 
-Cart **displays** quotes via Pricing contract. Cart does not author prices. Stale display ≠ charge amount.
+Cart **displays** quotes via Pricing contract and tax **estimates** via Tax contract (`docs/architecture/26-tax-architecture.md`). Cart does not author prices or tax rules. Stale display ≠ charge amount.
 
 ## I. Cart Inventory
 
@@ -60,7 +60,7 @@ Optional reservation per T010 timing policy. Cart does not store ATS as truth.
 
 ## J. Checkout Responsibility
 
-Checkout owns the process: revalidate price/availability/eligibility, ensure reservations, collect addresses, start payment, place order **or** fail closed and compensate.
+Checkout owns the process: revalidate price/availability/eligibility/**tax**, ensure reservations, collect addresses, start payment, place order **or** fail closed and compensate. Missing tax rule does not place with silent zero (`docs/architecture/26-tax-architecture.md`).
 
 ## K. Checkout Session
 

@@ -133,7 +133,7 @@ Pricing records authored changes and quote provenance for audit. Not a substitut
 
 ## S. Tax / Fee Context
 
-Tax/fee may be quote-time or order-time. Do not bury tax inside Product. Exact tax engine: `NEEDS_LATER_P00_DETAIL`. Pricing may accept tax context; it does not become a tax SoT.
+Tax/fee is quote-time and order-time via Tax contract (`docs/architecture/26-tax-architecture.md`). Commercial/base price is **tax-exclusive**. Pricing does not own jurisdictional tax rules. Do not bury tax inside Product.
 
 ## T. Currency Conversion & Checkout
 

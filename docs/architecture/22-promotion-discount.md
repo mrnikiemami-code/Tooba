@@ -615,11 +615,9 @@ NEEDS_LATER_P00_DETAIL
 
 ## AW. Tax Interaction
 
-Tax ordering can materially affect totals. Do **not** guess jurisdictional rules.
+Tax ordering can materially affect totals. Do **not** guess jurisdictional rules. Tax is a separate module (`docs/architecture/26-tax-architecture.md`). Promotion is not a tax rate.
 
 Architecture must **allow** policies such as: discount before tax, discount allocation across taxable lines, shipping-discount tax treatment.
-
-Unresolved tax ordering is explicit. Detailed Tax architecture may be a separate P00/P01 package.
 
 ```text
 Tax ordering vs promotion: NEEDS_LATER_P00_DETAIL

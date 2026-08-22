@@ -46,12 +46,13 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-23 | Promotion / Discount | COMPLETE |
 | P00-24 | Capability gap closure review | COMPLETE |
 | P00-25 | Reviews / Ratings | COMPLETE |
-| P00-26 | Returns / RMA | IN_PROGRESS |
-| P00-27 | P00 gate | PLANNED |
+| P00-26 | Returns / RMA | COMPLETE |
+| P00-27 | Tax | IN_PROGRESS |
+| P00-28 | P00 gate | PLANNED |
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T025 are Architect-accepted.
-- P00-01 through P00-25 are COMPLETE after Architect accept.
-- P00-26 Returns / RMA is IN_PROGRESS under TB-P00-T026 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
-- `TB-P00-T027`, Tax architecture, and P00-GATE are not authorized.
+- TB-P00-T000 through TB-P00-T026 are Architect-accepted.
+- P00-01 through P00-26 are COMPLETE after Architect accept.
+- P00-27 Tax is IN_PROGRESS under TB-P00-T027 (awaiting Architect accept). Do not mark COMPLETE from Cursor PASS.
+- `TB-P00-T028` and P00-GATE are not authorized.

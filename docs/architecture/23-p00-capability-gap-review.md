@@ -73,13 +73,11 @@ Reason: Decision-grade Returns/RMA is in `docs/architecture/25-returns-rma.md` (
 
 ## G. Tax
 
-**Architecture-Classification:** `NEEDS_USER_PRODUCT_DECISION`
+**Architecture-Classification:** `DEDICATED_TASK_REQUIRED` (architecture delivered under TB-P00-T027; awaiting Architect ACCEPT)
 
 **First-Sale-Criticality:** `MUST_HAVE_FIRST_SALE`
 
-Reason: Tax-inclusive vs exclusive, first-market jurisdiction, shipping tax vs goods, B2B tax IDs, and invoice presentation **materially change** Pricing quote, Promotion ordering, and Order snapshots. P00 must **not** invent tax law. Accepted Pricing already forbids a product price scalar; that is not a Tax engine. Until USER states first-market tax policy (at least inclusive vs exclusive and whether a Tax module vs Pricing policy seam is in first sale), a dedicated Tax architecture task would guess the product.
-
-Do not claim compliance. Seam to preserve now: **no ad-hoc tax fields on Catalog Product**; quote/order money remains amount+currency; Tax is not Promotion.
+Reason: USER locked tax-exclusive base, Tooba-calculated configurable effective-dated percentage rules, Iran emphasis with UK/multi-market readiness, no hard-coded law. See `docs/architecture/26-tax-architecture.md`. T027 Cursor PASS ≠ Architect ACCEPT. B2B VAT/invoice remains out of initial phase.
 
 UX direction later: Commercial/Tax Configuration Workspace after USER policy.
 

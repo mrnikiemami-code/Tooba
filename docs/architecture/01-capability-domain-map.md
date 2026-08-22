@@ -122,9 +122,16 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 - Purpose: contextual authored and derived prices.
 - Owns: price books, market/currency authored prices, promotion hooks, contract price refs; effective-price **calculation service** (not Cart persistence).
-- Must NOT own: Locale, Catalog descriptive text, FX market data source as business truth (FX provenance is a pricing concern but source is integration).
+- Must NOT own: Locale, Catalog descriptive text, FX market data source as business truth (FX provenance is a pricing concern but source is integration). Must NOT own jurisdictional tax rules (`docs/architecture/26-tax-architecture.md`).
 - Inbound: Offer/Catalog IDs, Market, Currency, Party/Organization, Quantity, Contract, Promotion.
 - Outbound: Cart, Checkout, Order snapshot.
+- Status: CANDIDATE.
+
+### Tax
+
+- Purpose: tax determination/calculation from configurable effective-dated rules; tax-exclusive prices. See `docs/architecture/26-tax-architecture.md`.
+- Owns: tax rules/policy and tax calculation results — not base price books, not payable capture.
+- Must NOT own: Pricing, Promotion, Order, Payment, Invoice, jurisdiction law text.
 - Status: CANDIDATE.
 
 ### Market

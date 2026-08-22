@@ -145,7 +145,7 @@ JSON-LD composed by SEO layer from module projections. Invalid/partial data omit
 
 ## X. Product Structured Data
 
-Product + Offer (price/availability from Pricing/Inventory **projections** at render). Never scrape live foreign tables. Marketplace: offers array / selected offer per later PDP policy.
+Product + Offer (price/availability from Pricing/Inventory **projections** at render). Price in JSON-LD must match visible tax presentation policy (`docs/architecture/26-tax-architecture.md`). Never scrape live foreign tables. Marketplace: offers array / selected offer per later PDP policy.
 
 ## Y. Breadcrumbs
 
