@@ -3,7 +3,7 @@
 ## Current Phase
 
 ```text
-P00 — Architecture / Discovery
+P01 — Platform Foundation
 ```
 
 Status:
@@ -12,8 +12,14 @@ Status:
 IN_PROGRESS
 ```
 
-No product architecture beyond confirmed TB-P00-T000 requirements is locked.
-Do not execute these packages without an Architect-authorized envelope.
+P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
+Do not execute packages without an Architect-authorized envelope.
+
+## P01 Work Packages
+
+| ID | Work package | Status |
+| --- | --- | --- |
+| P01-01 | Platform foundation bootstrap | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -48,14 +54,14 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P00-25 | Reviews / Ratings | COMPLETE |
 | P00-26 | Returns / RMA | COMPLETE |
 | P00-27 | Tax | COMPLETE |
-| P00-28 | P00 architecture gate | IN_PROGRESS |
+| P00-28 | P00 architecture gate | COMPLETE |
 
 ## Notes
 
-- TB-P00-T000 through TB-P00-T027 are Architect-accepted.
-- P00-01 through P00-27 are COMPLETE after Architect accept.
-- P00-28 P00 architecture gate is IN_PROGRESS under TB-P00-GATE (Cursor review may PASS; Architect ACCEPT required). Do not mark P00 COMPLETE from Cursor PASS.
-- P01 is NOT ISSUED.
+- TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
+- P00 is COMPLETE after Architect ACCEPT of Gate.
+- P01 Platform Foundation is IN_PROGRESS under TB-P01-T001 (awaiting Architect accept).
+- `TB-P01-T002` is not authorized.
 
 ## Mandatory future UX / template work (not authorized now)
 

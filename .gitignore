@@ -1,0 +1,25 @@
+# Build
+bin/
+obj/
+*.user
+*.suo
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.local
+.env.*.local
+appsettings.*.local.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# External references — not product source
+shopeiva/
+help.pdf

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/BuildingBlocks/">
+    <Project Path="BuildingBlocks/Tooba.BuildingBlocks/Tooba.BuildingBlocks.csproj" />
+  </Folder>
+  <Folder Name="/Host/">
+    <Project Path="Host/Tooba.Host/Tooba.Host.csproj" />
+  </Folder>
+  <Folder Name="/Modules/">
+    <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
+  </Folder>
+</Solution>

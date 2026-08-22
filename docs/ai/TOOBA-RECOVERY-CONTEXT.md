@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P00 — Architecture / Discovery
+P01 — Platform Foundation
 ```
 
 Pipeline Mode:
@@ -27,15 +27,15 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P00-T027
+TB-P00-GATE
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P00-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
-P00 Gate review = PASS BY CURSOR / AWAITING ARCHITECT ACCEPT
-P01: NOT ISSUED
+TB-P01-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+P00 = COMPLETE
+P01 = IN_PROGRESS
 ```
 
 ## Recovered Architect procedure
@@ -90,5 +90,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P00-GATE`; do not execute P01 unless Architect issues it.
-7. P00 discovery inputs include `docs/architecture/00-technical-inventory.md` through `docs/architecture/27-p00-gate-review.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory future work before serious UI. P00 is not COMPLETE until Architect ACCEPT of Gate.
+6. await Architect review of `TB-P01-T001`; do not execute `TB-P01-T002` or P01-GATE unless Architect issues it.
+7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
