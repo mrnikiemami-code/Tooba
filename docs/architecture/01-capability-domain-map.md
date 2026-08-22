@@ -181,10 +181,10 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Promotion
 
-- Purpose: campaigns and promotional modifiers.
-- Owns: promotion definitions.
-- Must NOT own: base authored price books (Pricing).
-- Status: CANDIDATE (may later sit next to Pricing; keep named boundary).
+- Purpose: campaigns and promotional modifiers. See `docs/architecture/22-promotion-discount.md`.
+- Owns: promotion definitions, coupon/campaign constructs as Promotion facts — not base authored price books.
+- Must NOT own: Price Books, Order money truth, Payment capture.
+- Status: CANDIDATE (keep named boundary from Pricing).
 
 ### Content
 

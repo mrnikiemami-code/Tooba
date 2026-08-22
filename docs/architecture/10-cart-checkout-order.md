@@ -127,7 +127,7 @@ Checkout and reservations expire. Expired checkout cannot place. User restarts f
 
 ## X. Promotion Interaction
 
-Promotions via Pricing quote step; Order snapshots applied promotions. Cart stores selected codes/refs only.
+Promotions via Pricing quote step; Order snapshots applied promotions. Cart stores selected codes/refs only. See `docs/architecture/22-promotion-discount.md`.
 
 ## Y. Address Model
 

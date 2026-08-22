@@ -111,7 +111,7 @@ Tiers/breaks are Pricing rules on a book/contract, not Catalog attributes. Quote
 
 ## N. Promotion Separation
 
-Promotions modify a quote; they are not base authored price. Promotion module owns definitions; Pricing applies them as a **modifier step** in the quote pipeline, with snapshot of applied promotions on Order.
+Promotions modify a quote; they are not base authored price. Promotion module owns definitions; Pricing applies them as a **modifier step** in the quote pipeline, with snapshot of applied promotions on Order. See `docs/architecture/22-promotion-discount.md`.
 
 ## O. Effective Price / Quote
 
