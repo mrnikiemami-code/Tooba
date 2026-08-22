@@ -188,7 +188,7 @@ All statuses are `CANDIDATE` or `NEEDS_FURTHER_P00_ANALYSIS`. Not ADR-locked.
 
 ### Content
 
-- Purpose: semantic/editorial knowledge: articles, guides, FAQ, category/brand copy, campaign copy, multilingual metadata, publishing lifecycle, approved AI knowledge.
+- Purpose: semantic/editorial knowledge: articles, guides, FAQ, category/brand copy, campaign copy, multilingual metadata, publishing lifecycle, approved AI knowledge (see `docs/architecture/12-content-page-composition.md`).
 - Owns: content write model and publish state.
 - Must NOT own: page layout trees as the only model; must not be Blog-only.
 - Status: CANDIDATE.
