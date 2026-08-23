@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T003
+TB-P04-T004
 ```
 
 Last Architect Accepted Gate:
@@ -84,7 +84,8 @@ TB-P03-GATE = ACCEPTED
 TB-P04-T001 = ACCEPTED
 TB-P04-T002 = ACCEPTED
 TB-P04-T003 = ACCEPTED
-TB-P04-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T004 = ACCEPTED
+TB-P04-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -240,7 +241,7 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-IN_PROGRESS (TB-P04-T004 awaiting Architect ACCEPT)
+IN_PROGRESS (TB-P04-T005 awaiting Architect visual ACCEPT)
 ```
 
 Design System Foundation:
@@ -258,7 +259,13 @@ COMPLETE (Architect accepted TB-P04-T003)
 Workspace Interaction Patterns:
 
 ```text
-IN_PROGRESS (TB-P04-T004 / AWAITING_ARCHITECT_ACCEPT)
+COMPLETE (Architect accepted TB-P04-T004)
+```
+
+Admin Product Workspace:
+
+```text
+IN_PROGRESS (TB-P04-T005 / visual ACCEPT pending)
 ```
 
 ErrorState retry label i18n gap:
@@ -491,12 +498,13 @@ docs/architecture/51-shopeiva-study-reuse-map.md
 docs/architecture/52-design-system-foundation.md
 docs/architecture/53-professional-data-grid-foundation.md
 docs/architecture/54-workspace-interaction-patterns.md
+docs/architecture/55-admin-product-workspace.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-T004.task.md
+docs/ai/tasks/TB-P04-T005.task.md
 ```
 
-Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001, TB-P04-T002, and TB-P04-T003 are Architect-accepted. Current issued work is TB-P04-T004 (Workspace Interaction Patterns). Do not start real domain workspaces or serious UI. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.
+Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 through TB-P04-T004 are Architect-accepted. Current issued work is TB-P04-T005 (Admin Product Workspace). Visual ACCEPT is pending. Do not start Order/Seller/Customer workspaces or storefront overhaul. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.

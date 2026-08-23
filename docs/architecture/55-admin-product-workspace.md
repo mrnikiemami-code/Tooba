@@ -1,0 +1,34 @@
+# 55 — Admin Product Workspace
+
+Status: IN_PROGRESS (TB-P04-T005 / awaiting Architect visual ACCEPT)
+
+Product Workspace is a multi-domain UI composition. Backend/module boundary != UI boundary.
+
+## Route
+
+- `/admin/products` list entry using the accepted DataGrid
+- `/admin/products/[productId]` workspace
+
+## View-model composition
+
+Host `ProductWorkspaceComposer` queries Catalog, Offer, Pricing, Inventory, and Tax DbContexts separately and composes in memory. No SQL JOIN across module schemas. No frontend-direct DB.
+
+UI view-model != domain aggregate. Product has no Price and no Stock fields.
+
+The Next shell rewrites `/v1/*` to Host. If Host is unreachable or the catalog list is empty, the UI shows an explicit contract fixture banner; that is not claimed persistence.
+
+## Sections
+
+Overview, Variants, Media, Commercial, Inventory, SEO & Content, Publication, History.
+
+Commercial composes multi-seller Offers + authored prices (tax exclusive) + tax classification. Inventory is offer-scoped and multi-location.
+
+## Permissions and concurrency
+
+Generic UI components do not call SpiceDB. Host header `X-Tooba-Workspace-Scope: view` forces read-only flags. Catalog title PATCH uses `UpdatedAt` optimistic concurrency (`workspace.catalog.stale`).
+
+## Known gaps
+
+- Media binary upload, promotion write, and full content studio are explicit unsupported mutations.
+- Visual ACCEPT is pending Architect review. Cursor PASS is not visual ACCEPT.
+- Grid virtualization remains DEFERRED_NON_BLOCKING.

@@ -100,7 +100,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is IN_PROGRESS under TB-P04-T004 (Workspace Interaction Patterns). Data Grid is Architect-accepted. ErrorState retry i18n is RESOLVED; grid virtualization remains DEFERRED_NON_BLOCKING. Do not start real domain workspaces or serious UI.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T005 (Admin Product Workspace). Workspace Interaction Patterns are Architect-accepted. Visual ACCEPT is pending. ErrorState retry i18n is RESOLVED; grid virtualization remains DEFERRED_NON_BLOCKING. Do not start Order/Seller/Customer workspaces or storefront overhaul.
 
 ## P04 Work Packages
 
@@ -109,7 +109,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P04-01 | Deep Shopeiva study & reuse map | COMPLETE (Architect accepted TB-P04-T001) |
 | P04-02 | Design System extraction | COMPLETE (Architect accepted TB-P04-T002) |
 | P04-03 | Professional Data Grid foundation | COMPLETE (Architect accepted TB-P04-T003) |
-| P04-04 | Workspace interaction patterns | IN_PROGRESS (TB-P04-T004 / awaiting Architect ACCEPT) |
+| P04-04 | Workspace interaction patterns | COMPLETE (Architect accepted TB-P04-T004) |
+| P04-05 | Admin Product Workspace | IN_PROGRESS (TB-P04-T005 / visual ACCEPT pending) |
 
 ## Mandatory UX sequence (locked)
 
@@ -121,6 +122,7 @@ Do not skip. Later steps wait for new envelopes.
 | Template reuse map | COMPLETE (TB-P04-T001) |
 | Design System extraction | COMPLETE (TB-P04-T002) |
 | Professional Data Grid foundation | COMPLETE (TB-P04-T003) |
-| Workspace interaction patterns | IN_PROGRESS (TB-P04-T004) |
+| Workspace interaction patterns | COMPLETE (TB-P04-T004) |
+| Admin Product Workspace | IN_PROGRESS (TB-P04-T005) |
 | Serious UI implementation | PLANNED |
 | Visual evidence / Architect visual ACCEPT | PLANNED |
