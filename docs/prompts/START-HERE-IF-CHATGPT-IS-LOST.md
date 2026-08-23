@@ -6,7 +6,7 @@ Recorded repository state for recovery (do not invent the next envelope):
 Current Phase: P02 — Identity / Authorization
 Last Architect Accepted Task: TB-P02-T004
 Current Issued Task: TB-P02-T005
-Task State: AWAITING_ARCHITECT_ACCEPT
+Task State: REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 P01 = COMPLETE
 P02 is IN_PROGRESS; do not start TB-P02-T006 without a new envelope
 ```
