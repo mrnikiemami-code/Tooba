@@ -6,6 +6,7 @@ namespace Tooba.Inventory.Application;
 /// خلاصهٔ موجودی یک محل. موجودیت EF نیست.
 /// </summary>
 public sealed record LocationAvailability(
+    Guid StockItemId,
     Guid LocationId,
     string LocationCode,
     int OnHand,
@@ -31,7 +32,8 @@ public sealed record ReservationReceipt(
     Guid StockItemId,
     Guid OfferId,
     int Quantity,
-    StockReservationStatus Status);
+    StockReservationStatus Status,
+    DateTimeOffset? ExpiresAt);
 
 /// <summary>
 /// درز خواندن موجودی بدون نشت EF.
@@ -89,12 +91,18 @@ public interface IInventoryDirectory
         int quantity,
         string? externalReference,
         string? idempotencyKey,
+        DateTimeOffset? expiresAt,
         CancellationToken cancellationToken);
 
     /// <summary>
     /// رزرو Held را آزاد می‌کند.
     /// </summary>
     Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رزروهای Held منقضی‌شده را با زمان UTC سرور آزاد می‌کند؛ تایمر کلاینت نیست.
+    /// </summary>
+    Task ReleaseExpiredHoldsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken);
 
     /// <summary>
     /// رزرو Held را از OnHand کم می‌کند.

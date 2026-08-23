@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Tooba.Cart.Application</RootNamespace>
+    <AssemblyName>Tooba.Cart.Application</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Cart.Domain\Tooba.Cart.Domain.csproj" />
+    <ProjectReference Include="..\..\Offer\Tooba.Offer.Application\Tooba.Offer.Application.csproj" />
+    <ProjectReference Include="..\..\Pricing\Tooba.Pricing.Application\Tooba.Pricing.Application.csproj" />
+    <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
+  </ItemGroup>
+</Project>

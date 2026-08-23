@@ -302,7 +302,7 @@ public sealed class StockReservation
     /// <summary>
     /// کلید تکرارناپذیری اختیاری.
     /// </summary>
-    public string? IdempotencyKey { get; init; }
+    public string? IdempotencyKey { get; private set; }
 
     /// <summary>
     /// زمان ایجاد UTC.
@@ -315,6 +315,11 @@ public sealed class StockReservation
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>
+    /// مهلت UTC آزادسازی خودکار؛ تهی یعنی بدون انقضای زمانی در این رزرو.
+    /// </summary>
+    public DateTimeOffset? ExpiresAt { get; init; }
+
+    /// <summary>
     /// رزرو Held می‌سازد.
     /// </summary>
     public static StockReservation Hold(
@@ -322,11 +327,17 @@ public sealed class StockReservation
         int quantity,
         string? externalReference,
         string? idempotencyKey,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        DateTimeOffset? expiresAt)
     {
         if (quantity <= 0)
         {
             throw new InvalidOperationException("مقدار رزرو باید مثبت باشد.");
+        }
+
+        if (expiresAt is { } expiry && expiry <= now)
+        {
+            throw new InvalidOperationException("مهلت رزرو باید بعد از زمان ایجاد باشد.");
         }
 
         return new StockReservation
@@ -339,6 +350,7 @@ public sealed class StockReservation
             IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim(),
             CreatedAt = now,
             UpdatedAt = now,
+            ExpiresAt = expiresAt,
         };
     }
 
@@ -354,6 +366,7 @@ public sealed class StockReservation
 
         Status = status;
         UpdatedAt = now;
+        IdempotencyKey = null;
     }
 }
 

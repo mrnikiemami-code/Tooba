@@ -56,6 +56,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
 
         var locations = rows.Select(row => new LocationAvailability(
+            row.position.StockItemId,
             row.location.LocationId,
             row.location.Code,
             row.position.OnHand,
@@ -167,6 +168,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         int quantity,
         string? externalReference,
         string? idempotencyKey,
+        DateTimeOffset? expiresAt,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -174,10 +176,10 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         {
             var prior = await _db.Reservations.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey.Trim(), cancellationToken);
-            if (prior is not null)
+            if (prior is { Status: StockReservationStatus.Held })
             {
                 var known = await _db.Positions.AsNoTracking().SingleAsync(x => x.StockItemId == prior.StockItemId, cancellationToken);
-                return new ReservationReceipt(prior.ReservationId, prior.StockItemId, known.OfferId, prior.Quantity, prior.Status);
+                return new ReservationReceipt(prior.ReservationId, prior.StockItemId, known.OfferId, prior.Quantity, prior.Status, prior.ExpiresAt);
             }
         }
 
@@ -195,12 +197,26 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         }
 
         var position = await _db.Positions.SingleAsync(x => x.StockItemId == stockItemId, cancellationToken);
-        var hold = StockReservation.Hold(stockItemId, quantity, externalReference, idempotencyKey, now);
+        var hold = StockReservation.Hold(stockItemId, quantity, externalReference, idempotencyKey, now, expiresAt);
         _db.Reservations.Add(hold);
         position.RecordReserved(hold.ReservationId, quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
         await _db.SaveChangesAsync(cancellationToken);
-        return new ReservationReceipt(hold.ReservationId, stockItemId, position.OfferId, quantity, hold.Status);
+        return new ReservationReceipt(hold.ReservationId, stockItemId, position.OfferId, quantity, hold.Status, hold.ExpiresAt);
+    }
+
+    /// <inheritdoc />
+    public async Task ReleaseExpiredHoldsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var expiredIds = await _db.Reservations.AsNoTracking()
+            .Where(x => x.Status == StockReservationStatus.Held && x.ExpiresAt != null && x.ExpiresAt <= utcNow)
+            .Select(x => x.ReservationId)
+            .ToListAsync(cancellationToken);
+        foreach (var reservationId in expiredIds)
+        {
+            await ReleaseAsync(reservationId, cancellationToken);
+        }
     }
 
     /// <inheritdoc />

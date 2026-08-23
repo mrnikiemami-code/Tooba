@@ -2,140 +2,144 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Cart.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
+namespace Tooba.Cart.Infrastructure.Persistence.Migrations
 {
-    [DbContext(typeof(InventoryDbContext))]
-    partial class InventoryDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(CartDbContext))]
+    [Migration("20260823100150_InitialCart")]
+    partial class InitialCart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("inventory")
+                .HasDefaultSchema("cart")
                 .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Tooba.Inventory.Domain.InventoryLocation", b =>
+            modelBuilder.Entity("Tooba.Cart.Domain.CartLine", b =>
                 {
-                    b.Property<Guid>("LocationId")
+                    b.Property<Guid>("LineId")
                         .HasColumnType("uuid")
-                        .HasColumnName("location_id");
+                        .HasColumnName("line_id");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)")
-                        .HasColumnName("code");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)")
-                        .HasColumnName("status");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("LocationId")
-                        .HasName("pk_locations");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_locations_code");
-
-                    b.ToTable("locations", "inventory");
-                });
-
-            modelBuilder.Entity("Tooba.Inventory.Domain.StockPosition", b =>
-                {
-                    b.Property<Guid>("StockItemId")
+                    b.Property<Guid>("CartId")
                         .HasColumnType("uuid")
-                        .HasColumnName("stock_item_id");
+                        .HasColumnName("cart_id");
 
                     b.Property<Guid>("CatalogVariantId")
                         .HasColumnType("uuid")
                         .HasColumnName("catalog_variant_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("location_id");
-
                     b.Property<Guid>("OfferId")
                         .HasColumnType("uuid")
                         .HasColumnName("offer_id");
 
-                    b.Property<int>("OnHand")
-                        .HasColumnType("integer")
-                        .HasColumnName("on_hand");
+                    b.Property<Guid?>("PriceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("price_id");
 
-                    b.Property<int>("Reserved")
+                    b.Property<int>("Quantity")
                         .HasColumnType("integer")
-                        .HasColumnName("reserved");
+                        .HasColumnName("quantity");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
+                    b.Property<decimal?>("QuotedAmount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("quoted_amount");
+
+                    b.Property<DateTimeOffset>("QuotedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                        .HasColumnName("quoted_at");
 
-                    b.HasKey("StockItemId")
-                        .HasName("pk_stock_positions");
+                    b.Property<string>("QuotedCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("quoted_currency");
 
-                    b.HasIndex("OfferId", "LocationId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_stock_positions_offer_id_location_id");
+                    b.Property<bool>("QuotedTaxExclusive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("quoted_tax_exclusive");
 
-                    b.ToTable("stock_positions", "inventory");
-                });
-
-            modelBuilder.Entity("Tooba.Inventory.Domain.StockReservation", b =>
-                {
-                    b.Property<Guid>("ReservationId")
+                    b.Property<Guid?>("ReservationId")
                         .HasColumnType("uuid")
                         .HasColumnName("reservation_id");
+
+                    b.Property<Guid>("SellerPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("seller_party_id");
+
+                    b.HasKey("LineId")
+                        .HasName("pk_cart_lines");
+
+                    b.HasIndex("CartId", "OfferId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cart_lines_cart_id_offer_id");
+
+                    b.ToTable("cart_lines", "cart");
+                });
+
+            modelBuilder.Entity("Tooba.Cart.Domain.ShoppingCart", b =>
+                {
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cart_id");
+
+                    b.Property<string>("AccessKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("access_kind");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("channel");
+
+                    b.Property<string>("ConversionIntent")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("conversion_intent");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
 
                     b.Property<DateTimeOffset?>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
-                    b.Property<string>("ExternalReference")
+                    b.Property<string>("GuestCredentialHash")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
-                        .HasColumnName("external_reference");
+                        .HasColumnName("guest_credential_hash");
 
-                    b.Property<string>("IdempotencyKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("idempotency_key");
+                    b.Property<string>("Market")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("market");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
-                        .HasColumnName("quantity");
+                    b.Property<Guid?>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -143,23 +147,25 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("status");
 
-                    b.Property<Guid>("StockItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("stock_item_id");
-
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("ReservationId")
-                        .HasName("pk_reservations");
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
-                    b.HasIndex("IdempotencyKey")
-                        .IsUnique()
-                        .HasDatabaseName("ix_reservations_idempotency_key")
-                        .HasFilter("idempotency_key IS NOT NULL");
+                    b.HasKey("CartId")
+                        .HasName("pk_carts");
 
-                    b.ToTable("reservations", "inventory");
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_carts_expires_at");
+
+                    b.HasIndex("OwnerUserId")
+                        .HasDatabaseName("ix_carts_owner_user_id");
+
+                    b.ToTable("carts", "cart");
                 });
 
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
@@ -241,7 +247,22 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_outbox_messages_pending")
                         .HasFilter("processed_at IS NULL AND dead_lettered_at IS NULL");
 
-                    b.ToTable("outbox_messages", "inventory");
+                    b.ToTable("outbox_messages", "cart");
+                });
+
+            modelBuilder.Entity("Tooba.Cart.Domain.CartLine", b =>
+                {
+                    b.HasOne("Tooba.Cart.Domain.ShoppingCart", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_cart_lines_carts_cart_id");
+                });
+
+            modelBuilder.Entity("Tooba.Cart.Domain.ShoppingCart", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

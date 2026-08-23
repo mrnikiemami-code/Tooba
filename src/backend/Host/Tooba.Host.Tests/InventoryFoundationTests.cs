@@ -191,8 +191,8 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
 
         await using var inventoryA2 = CreateInventoryDb(csA, commerceA);
         var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
-        var first = inventoryDirA.ReserveAsync(stock1, 1, "cart-1", null, CancellationToken.None);
-        var second = inventoryDirA2.ReserveAsync(stock1, 1, "cart-2", null, CancellationToken.None);
+        var first = inventoryDirA.ReserveAsync(stock1, 1, "cart-1", null, null, CancellationToken.None);
+        var second = inventoryDirA2.ReserveAsync(stock1, 1, "cart-2", null, null, CancellationToken.None);
         var results = await Task.WhenAll(
             first.ContinueWith(t => t.Exception is null),
             second.ContinueWith(t => t.Exception is null));
@@ -211,8 +211,8 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
 
         await inventoryDirA.ReleaseAsync(held.ReservationId, CancellationToken.None);
         Assert.Equal(5, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
-        var again = await inventoryDirA.ReserveAsync(stock1, 1, "cart-3", "idem-1", CancellationToken.None);
-        var dup = await inventoryDirA.ReserveAsync(stock1, 1, "cart-3", "idem-1", CancellationToken.None);
+        var again = await inventoryDirA.ReserveAsync(stock1, 1, "cart-3", "idem-1", null, CancellationToken.None);
+        var dup = await inventoryDirA.ReserveAsync(stock1, 1, "cart-3", "idem-1", null, CancellationToken.None);
         Assert.Equal(again.ReservationId, dup.ReservationId);
         await inventoryDirA.ConsumeAsync(again.ReservationId, CancellationToken.None);
         Assert.Equal(4, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.OnHand);
