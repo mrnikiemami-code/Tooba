@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T008
+TB-P03-T009
 ```
 
 Last Architect Accepted Gate:
@@ -45,13 +45,13 @@ TB-P02-GATE
 Current Issued Task:
 
 ```text
-TB-P03-T009
+NONE
 ```
 
 Current Gate:
 
 ```text
-NONE
+TB-P03-GATE
 ```
 
 Gate State:
@@ -59,6 +59,7 @@ Gate State:
 ```text
 TB-P01-GATE = ACCEPTED
 TB-P02-GATE = ACCEPTED
+TB-P03-GATE = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Issued but not accepted:
@@ -78,7 +79,8 @@ TB-P03-T005 = ACCEPTED
 TB-P03-T006 = ACCEPTED
 TB-P03-T007 = ACCEPTED
 TB-P03-T008 = ACCEPTED
-TB-P03-T009 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T009 = ACCEPTED
+TB-P03-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -210,7 +212,25 @@ COMPLETE (Architect accepted TB-P03-T006)
 Tax Calculation Foundation:
 
 ```text
-IN_PROGRESS
+COMPLETE (Architect accepted TB-P03-T007)
+```
+
+Payment Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P03-T008)
+```
+
+Promotion & Discount Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P03-T009)
+```
+
+P03 Commerce Core Gate:
+
+```text
+IN_PROGRESS (TB-P03-GATE awaiting Architect ACCEPT; P03 is NOT COMPLETE)
 ```
 
 Project-wide documentation rule:
@@ -432,7 +452,7 @@ docs/architecture/50-promotion-discount-foundation.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-T009.task.md
+docs/ai/tasks/TB-P03-GATE.gate.md
 ```
 
-Resume: TB-P03-T008 is Architect-accepted. TB-P03-T009 Promotion & Discount Foundation is implemented and awaiting Architect ACCEPT. Do not start TB-P03-T010 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: TB-P03-T009 is Architect-accepted. TB-P03-GATE evidence is awaiting Architect ACCEPT. Do not mark P03 COMPLETE and do not invent the next phase. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.

@@ -55,7 +55,8 @@ Do not execute packages without an Architect-authorized envelope.
 | P03-06 | Checkout & order foundation | COMPLETE (Architect accepted TB-P03-T006) |
 | P03-07 | Tax calculation foundation | COMPLETE (Architect accepted TB-P03-T007) |
 | P03-08 | Payment foundation | COMPLETE (Architect accepted TB-P03-T008) |
-| P03-09 | Promotion & discount foundation | IN_PROGRESS |
+| P03-09 | Promotion & discount foundation | COMPLETE (Architect accepted TB-P03-T009) |
+| P03-GATE | Commerce core acceptance gate | IN_PROGRESS (awaiting Architect ACCEPT) |
 
 ## P00 Work Packages
 
@@ -98,8 +99,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
-- P03 Commerce Core is IN_PROGRESS under TB-P03-T009 (ISSUED / awaiting Architect accept). TB-P03-T008 is Architect-accepted.
-- `TB-P03-T009` and P03 Gate are not authorized until Architect issues those envelopes.
+- P03 Commerce Core is IN_PROGRESS under TB-P03-GATE (awaiting Architect ACCEPT). TB-P03-T009 is Architect-accepted. P03 is NOT COMPLETE.
+- Do not start a next phase or invent TB-P03-T010. Roadmap does not name a P04 execution phase.
 
 ## Mandatory future UX / template work (not authorized now)
 
