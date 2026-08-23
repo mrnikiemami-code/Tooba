@@ -38,3 +38,5 @@ export {
   StickyActionBar,
 } from "./primitives/commerce";
 export { drawerUsesLogicalStart, iconButtonRequiresLabel, moneyViewSchema } from "./invariants";
+export { DataGrid, createMemorySavedViewStore, enGridMessages, faGridMessages } from "./data-grid";
+export type { DataGridProps } from "./data-grid";

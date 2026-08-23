@@ -38,7 +38,8 @@ import {
   Tooltip,
   useTheme,
 } from "../../design-system";
-import { drawerUsesLogicalStart, iconButtonRequiresLabel } from "../../design-system/invariants";
+import { drawerUsesLogicalStart, iconButtonRequiresLabel } from "../../design-system";
+import { GridShowcase } from "./grid-showcase";
 
 const demoSchema = z.object({
   email: z.string().email(),
@@ -64,6 +65,7 @@ export function DesignSystemShowcase() {
       <Stack className="py-8">
         <h1 className="ds-display">Tooba Design System</h1>
         <p className="ds-caption text-muted">ویترین داخلی؛ ACCEPT بصری محصول نیست.</p>
+        <GridShowcase />
         <Cluster>
           <Button type="button" tone="secondary" onClick={() => setColorScheme(theme.colorScheme === "dark" ? "light" : "dark")}>
             {theme.colorScheme}
