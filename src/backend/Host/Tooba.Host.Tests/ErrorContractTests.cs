@@ -7,6 +7,9 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
+/// <summary>
+/// قرارداد ProblemDetails پلتفرم: traceId هست، جزئیات پیاده‌سازی و credential نیست.
+/// </summary>
 public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
@@ -64,6 +67,9 @@ public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Pro
     }
 }
 
+/// <summary>
+/// نگاشت استثنا باید در حالت غیر Development فیلد Detail را خالی بگذارد.
+/// </summary>
 public sealed class PlatformExceptionMapperTests
 {
     [Fact]

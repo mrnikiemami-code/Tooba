@@ -6,7 +6,10 @@ using NodaTime;
 
 namespace Tooba.PlatformProbe.Infrastructure.Persistence.Migrations
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// مهاجرت دستی اولیهٔ schema <c>platform_probe</c> و جدول <c>probe_records</c>.
+    /// snapshot/designer تولیدشده را فقط برای توضیح فارسی ویرایش نکنید.
+    /// </summary>
     public partial class InitialPlatformProbe : Migration
     {
         /// <inheritdoc />

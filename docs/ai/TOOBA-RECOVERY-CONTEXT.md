@@ -27,16 +27,17 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T003
+TB-P01-T004
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T003 = ACCEPTED
-TB-P01-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T004 = ACCEPTED
+TB-P01-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = IN_PROGRESS
+Persian Code Documentation Standard = IN_PROGRESS
 ```
 
 ## Recovered Architect procedure

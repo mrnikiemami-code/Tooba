@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * مرز خطای سطح-مسیر. جزئیات استثنا و stack به کاربر نشان داده نمی‌شود؛ فقط digest اختیاری برای همبستگی.
+ * ظاهر نهایی خطا پس از استخراج Design System و ACCEPT بصری Architect خواهد آمد.
+ */
 export default function Error({
   error,
   reset,

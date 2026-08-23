@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    مستندات فارسی اجباری برای APIهای عمومی Tooba (TB-P01-T005).
+    CS1591 فقط روی پروژه‌های غیرتست و با GenerateDocumentationFile فعال است.
+    کد تولیدشدهٔ EF در .editorconfig به‌صورت محدود مستثنی شده است.
+  -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <WarningsAsErrors></WarningsAsErrors>
+  </PropertyGroup>
+</Project>

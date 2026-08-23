@@ -1,3 +1,7 @@
+// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ثبت DbContext ماژول.
+// Host ورودی routing است نه TenantId. Forwarded headers فقط با TrustedProxies صریح.
+// مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
+// لاگ فنی جایگزین Audit نیست. DbContext برای /health و /ready باز نمی‌شود.
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
@@ -175,4 +179,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 
 app.Run();
 
+/// <summary>
+/// نقطهٔ ورود Host و لنگر WebApplicationFactory. منطق کسب‌وکار در این نوع نیست.
+/// </summary>
 public partial class Program;

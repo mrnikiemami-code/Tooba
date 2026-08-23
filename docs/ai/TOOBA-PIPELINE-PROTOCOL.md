@@ -162,4 +162,5 @@ Never force-push or rewrite history.
 - auto-start next planned phase after accepted gate when no real blocker;
 - stop for true architectural/business/recovery blockers only;
 - Cursor never invents tasks;
+- Persian documentation quality is part of implementation acceptance (see `docs/architecture/32-persian-code-documentation-standard.md`);
 - do not execute `TB-P00-T001` unless Architect issues that exact envelope.

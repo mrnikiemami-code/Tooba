@@ -1,3 +1,6 @@
+/**
+ * صفحهٔ خانهٔ موقت پلتفرم. این ظاهر تجاری قابل‌قبول محصول نیست و جایگزین Design System نمی‌شود.
+ */
 export default function HomePage() {
   return (
     <main>

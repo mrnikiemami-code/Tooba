@@ -33,20 +33,20 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T003
+TB-P01-T004
 ```
 
 Current Issued Task:
 
 ```text
-TB-P01-T004
+TB-P01-T005
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T003 = ACCEPTED
-TB-P01-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T004 = ACCEPTED
+TB-P01-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -64,7 +64,20 @@ COMPLETE (Architect accepted TB-P01-T003)
 PostgreSQL Persistence Foundation:
 
 ```text
+COMPLETE (Architect accepted TB-P01-T004)
+```
+
+Persian Code Documentation Standard:
+
+```text
 IN_PROGRESS
+```
+
+Project-wide documentation rule:
+
+```text
+All required Tooba-owned Classes / Interfaces / Methods / Properties
+must have strong Persian documentation.
 ```
 
 Known Blockers:
@@ -218,7 +231,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P01-T005` or P01-GATE unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P01-T006` or P01-GATE unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -255,12 +268,13 @@ docs/architecture/28-platform-foundation-bootstrap.md
 docs/architecture/29-observability-error-foundation.md
 docs/architecture/30-tenant-edition-database-foundation.md
 docs/architecture/31-postgresql-persistence-foundation.md
+docs/architecture/32-persian-code-documentation-standard.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P01-T004.task.md
+docs/ai/tasks/TB-P01-T005.task.md
 ```
 
-Resume: await Architect review of TB-P01-T004. Do not execute `TB-P01-T005` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.
+Resume: execute TB-P01-T005; then await Architect review. Do not execute `TB-P01-T006` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.

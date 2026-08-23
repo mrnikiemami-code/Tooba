@@ -1,0 +1,8 @@
+root = true
+
+# Generated EF artifacts: do not require Persian XML docs (TB-P01-T005).
+[**/Migrations/*.Designer.cs]
+dotnet_diagnostic.CS1591.severity = none
+
+[**/Migrations/*ModelSnapshot.cs]
+dotnet_diagnostic.CS1591.severity = none

@@ -6,6 +6,9 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
+/// <summary>
+/// جدا بودن اتصال Tenantها، نبود mega-DbContext، و UUID v7.
+/// </summary>
 public sealed class PersistenceFoundationTests
 {
     [Fact]
@@ -72,6 +75,9 @@ public sealed class PersistenceFoundationTests
         Assert.Equal(7, (id.ToByteArray(bigEndian: true)[6] & 0xF0) >> 4);
     }
 
+    /// <summary>
+    /// DbContext نمونه با connection string تزریقی، بدون باز کردن شبکه در این تست واحد.
+    /// </summary>
     private static PlatformProbeDbContext CreateContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<PlatformProbeDbContext>();
@@ -84,8 +90,14 @@ public sealed class PersistenceFoundationTests
     }
 }
 
+/// <summary>
+/// کارخانهٔ مشترک تست برای ساخت PlatformProbeDbContext روی اتصال واقعی یا تزریقی.
+/// </summary>
 internal static class PersistenceFoundationTestsHelpers
 {
+    /// <summary>
+    /// همان پیکربندی ماژول production با رشتهٔ داده‌شده.
+    /// </summary>
     public static PlatformProbeDbContext Create(string connectionString)
     {
         var options = new DbContextOptionsBuilder<PlatformProbeDbContext>();

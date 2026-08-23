@@ -77,12 +77,15 @@ Architect Chat → Composer → Send
 
 button[data-testid="send-button"]
 
-WAITING
+WAITING means only: no unauthorized self-advance while waiting for Architect review/envelope.
+WAITING does not mean stop the project, close the chat, or require a manual restart.
 
 If no new authorized envelope:
 WAITING
 Keep pipeline active/checking.
 Do not invent task.
+
+Persian documentation quality is part of implementation acceptance.
 
 STOP only for explicit pause or real hard conflict.
 

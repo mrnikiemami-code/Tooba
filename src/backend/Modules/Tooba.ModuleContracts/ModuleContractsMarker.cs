@@ -1,8 +1,8 @@
 namespace Tooba.ModuleContracts;
 
 /// <summary>
-/// Cross-module contracts only. Modules must not reference another module's persistence.
-/// Domain/Application/Infrastructure folders are added per module in later P01 tasks.
+/// نشانگر قراردادهای بین‌ماژولی. ماژول‌ها persistence یکدیگر را reference نمی‌کنند و join بین‌schema ندارند.
+/// پوشه‌های Domain/Application/Infrastructure هر ماژول در Taskهای بعدی اضافه می‌شوند، نه اینجا.
 /// </summary>
 public static class ModuleContractsMarker
 {

@@ -4,12 +4,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Tooba.Host;
 
+/// <summary>
+/// نگاشت استثنای مدیریت‌نشده به ProblemDetails. در Production جزئیات پیاده‌سازی و stack به کلاینت نمی‌رود.
+/// این handler جایگزین Audit کسب‌وکار نیست.
+/// </summary>
 internal sealed class ToobaExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<ToobaExceptionHandler> _logger;
     private readonly IHostEnvironment _environment;
     private readonly IProblemDetailsService _problemDetailsService;
 
+    /// <summary>
+    /// handler سراسری خطا را با محیط و ProblemDetails تزریق می‌کند.
+    /// </summary>
     public ToobaExceptionHandler(
         ILogger<ToobaExceptionHandler> logger,
         IHostEnvironment environment,
@@ -20,6 +27,9 @@ internal sealed class ToobaExceptionHandler : IExceptionHandler
         _problemDetailsService = problemDetailsService;
     }
 
+    /// <summary>
+    /// پاسخ استاندارد می‌نویسد و همیشه true برمی‌گرداند تا pipeline پیش‌فرض جزئیات را لو ندهد.
+    /// </summary>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,

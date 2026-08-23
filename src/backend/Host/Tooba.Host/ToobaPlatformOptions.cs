@@ -3,69 +3,217 @@ using Tooba.BuildingBlocks;
 
 namespace Tooba.Host;
 
+/// <summary>
+/// بایندینگ پیکربندی بخش <c>Tooba</c>. این registry کنترل‌پلین تولید نیست؛ فقط bootstrap پیکربندی است.
+/// کلیدهای dictionary اتصال نباید نویسهٔ <c>:</c> داشته باشند چون ASP.NET آن‌ها را تو در تو می‌کند.
+/// </summary>
 internal sealed class ToobaPlatformOptions
 {
+    /// <summary>
+    /// نام بخش پیکربندی ریشه.
+    /// </summary>
     public const string SectionName = "Tooba";
 
+    /// <summary>
+    /// Marketplace | SingleStore | Unset — یک فرآیند یک Edition.
+    /// </summary>
     public string Edition { get; set; } = "Unset";
+
+    /// <summary>
+    /// برچسب استقرار برای تله‌متری؛ TenantId نیست.
+    /// </summary>
     public string DeploymentId { get; set; } = "";
+
+    /// <summary>
+    /// IPهای proxy مورد اعتماد. خالی یعنی Forwarded Host اعمال نشود.
+    /// </summary>
     public List<string> TrustedProxies { get; set; } = [];
+
+    /// <summary>
+    /// تنظیمات اختصاصی Marketplace.
+    /// </summary>
     public MarketplaceOptions Marketplace { get; set; } = new();
+
+    /// <summary>
+    /// تنظیمات allowlist Single-Store.
+    /// </summary>
     public SingleStoreOptions SingleStore { get; set; } = new();
+
+    /// <summary>
+    /// نقشهٔ ConnectionReference به رشتهٔ اتصال. مقدار رشته لاگ نشود.
+    /// </summary>
     public PostgreSqlOptions PostgreSQL { get; set; } = new();
 }
 
+/// <summary>
+/// اتصال واحد marketplace؛ lookup فروشگاه از Host انجام نمی‌شود.
+/// </summary>
 internal sealed class MarketplaceOptions
 {
+    /// <summary>
+    /// کلید ConnectionReference پایگاه marketplace.
+    /// </summary>
     public string ConnectionReference { get; set; } = "";
 }
 
+/// <summary>
+/// فهرست Tenantهای Single-Store در پیکربندی محلی.
+/// </summary>
 internal sealed class SingleStoreOptions
 {
+    /// <summary>
+    /// رکوردهای Tenant؛ هر کدام حداقل یک Host نرمال‌شده نیاز دارند.
+    /// </summary>
     public List<TenantRecordOptions> Tenants { get; set; } = [];
 }
 
+/// <summary>
+/// شکل خام یک Tenant در پیکربندی قبل از نرمال‌سازی Host.
+/// </summary>
 internal sealed class TenantRecordOptions
 {
+    /// <summary>
+    /// هویت پایدار؛ hostname نیست.
+    /// </summary>
     public string TenantId { get; set; } = "";
+
+    /// <summary>
+    /// نام نمایشی اختیاری.
+    /// </summary>
     public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// Active / Disabled / Suspended.
+    /// </summary>
     public string Status { get; set; } = "Active";
+
+    /// <summary>
+    /// مرجع اتصال فروشگاه این Tenant.
+    /// </summary>
     public string ConnectionReference { get; set; } = "";
+
+    /// <summary>
+    /// ارجاع تم اختیاری.
+    /// </summary>
     public string? ThemeReference { get; set; }
+
+    /// <summary>
+    /// ارجاع بازار پیش‌فرض؛ با Locale یکی نیست.
+    /// </summary>
     public string? DefaultMarketReference { get; set; }
+
+    /// <summary>
+    /// دامنهٔ اصلی در صورت وجود.
+    /// </summary>
     public string? PrimaryDomain { get; set; }
+
+    /// <summary>
+    /// Hostهای مجاز برای routing به این Tenant.
+    /// </summary>
     public List<string> Hosts { get; set; } = [];
 }
 
+/// <summary>
+/// نقشهٔ مراجع اتصال به رشتهٔ Npgsql. ConnectionString ریشه فقط سازگاری قدیمی است و مرجع منطقی نیست.
+/// </summary>
 internal sealed class PostgreSqlOptions
 {
+    /// <summary>
+    /// رشتهٔ تکی اختیاری؛ مسیر اصلی resolve از ConnectionReferences است.
+    /// </summary>
     public string ConnectionString { get; set; } = "";
+
+    /// <summary>
+    /// کلید = ConnectionReference، مقدار = connection string. هرگز در ProblemDetails نیاید.
+    /// </summary>
     public Dictionary<string, string> ConnectionReferences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
+/// <summary>
+/// رکورد immutable پس از اعتبارسنجی پیکربندی؛ مبنای resolve درخواست.
+/// </summary>
 internal sealed class TenantRecord
 {
+    /// <summary>
+    /// هویت پایدار Tenant.
+    /// </summary>
     public required TenantId TenantId { get; init; }
+
+    /// <summary>
+    /// نام نمایشی.
+    /// </summary>
     public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// وضعیت عملیاتی پس از parse.
+    /// </summary>
     public required TenantStatus Status { get; init; }
+
+    /// <summary>
+    /// مرجع اتصال فروشگاه.
+    /// </summary>
     public required ConnectionReference ConnectionReference { get; init; }
+
+    /// <summary>
+    /// ارجاع تم.
+    /// </summary>
     public string? ThemeReference { get; init; }
+
+    /// <summary>
+    /// ارجاع بازار پیش‌فرض.
+    /// </summary>
     public string? DefaultMarketReference { get; init; }
+
+    /// <summary>
+    /// دامنهٔ اصلی نرمال‌شده در صورت وجود.
+    /// </summary>
     public string? PrimaryDomain { get; init; }
+
+    /// <summary>
+    /// Hostهای نرمال‌شدهٔ این Tenant.
+    /// </summary>
     public required IReadOnlyList<string> Hosts { get; init; }
 }
 
+/// <summary>
+/// تصویر فقط‌خواندنی control plane پیکربندی‌شده برای یک فرآیند. منبع تولید Tenant نیست.
+/// </summary>
 internal sealed class ControlPlaneRegistry
 {
+    /// <summary>
+    /// Edition قفل‌شدهٔ فرآیند.
+    /// </summary>
     public required ToobaEdition Edition { get; init; }
+
+    /// <summary>
+    /// برچسب استقرار.
+    /// </summary>
     public required string DeploymentId { get; init; }
+
+    /// <summary>
+    /// مرجع اتصال marketplace؛ در Single-Store تهی است.
+    /// </summary>
     public ConnectionReference? MarketplaceConnectionReference { get; init; }
+
+    /// <summary>
+    /// نگاشت Host نرمال‌شده → Tenant. کلید هویت نیست.
+    /// </summary>
     public required IReadOnlyDictionary<string, TenantRecord> Hosts { get; init; }
+
+    /// <summary>
+    /// نگاشت TenantId → رکورد.
+    /// </summary>
     public required IReadOnlyDictionary<string, TenantRecord> Tenants { get; init; }
 }
 
+/// <summary>
+/// اعتبارسنجی پیکربندی در شروع فرآیند تا Edition نامعتبر یا Host تکراری fail-fast شود.
+/// </summary>
 internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformOptions>
 {
+    /// <summary>
+    /// پیکربندی را parse و registry می‌سازد؛ شکست یعنی فرآیند بالا نیاید.
+    /// </summary>
     public ValidateOptionsResult Validate(string? name, ToobaPlatformOptions options)
     {
         if (!TryParseEdition(options.Edition, out _))
@@ -85,6 +233,9 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
         return ValidateOptionsResult.Success;
     }
 
+    /// <summary>
+    /// مقدار متنی Edition را به enum تبدیل می‌کند. مقدار ناشناخته false است نه Unset خاموش.
+    /// </summary>
     public static bool TryParseEdition(string? value, out ToobaEdition edition)
     {
         edition = ToobaEdition.Unset;
@@ -109,6 +260,9 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
         return false;
     }
 
+    /// <summary>
+    /// وضعیت Tenant را parse می‌کند. مقدار ناشناخته استثنا است تا پیکربندی غلط silent نشود.
+    /// </summary>
     public static TenantStatus ParseStatus(string? value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Equals("Active", StringComparison.OrdinalIgnoreCase))
@@ -129,6 +283,9 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
         throw new InvalidOperationException($"Unsupported tenant status '{value}'.");
     }
 
+    /// <summary>
+    /// registry immutable را از options می‌سازد. Host تکراری یا Tenant بدون Host رد می‌شود.
+    /// </summary>
     public static ControlPlaneRegistry BuildRegistry(ToobaPlatformOptions options)
     {
         if (!TryParseEdition(options.Edition, out var edition))

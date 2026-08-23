@@ -4,11 +4,17 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
+/// <summary>
+/// دود PostgreSQL واقعی با Testcontainers؛ در نبود Docker تست skip می‌شود نه fail کاذب.
+/// </summary>
 public sealed class PostgresIntegrationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
     private bool _dockerAvailable;
 
+    /// <summary>
+    /// کانتینر Postgres را در صورت دسترسی Docker بالا می‌آورد.
+    /// </summary>
     public async Task InitializeAsync()
     {
         try
@@ -28,6 +34,9 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// کانتینر را آزاد می‌کند.
+    /// </summary>
     public async Task DisposeAsync()
     {
         if (_container is not null)

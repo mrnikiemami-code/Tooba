@@ -3,25 +3,42 @@ using Tooba.BuildingBlocks;
 
 namespace Tooba.Host;
 
+/// <summary>
+/// نگهداشت <see cref="CommerceContext"/> روی HttpContext.Items. هدر Tenant منبع حقیقت نیست.
+/// </summary>
 internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICurrentEdition, ICurrentTenant
 {
+    /// <summary>
+    /// کلید Items برای زمینهٔ تثبیت‌شدهٔ همین درخواست.
+    /// </summary>
     internal const string ItemKey = "Tooba.CommerceContext";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
 
+    /// <summary>
+    /// accessor را به HttpContext درخواست وصل می‌کند.
+    /// </summary>
     public HttpCommerceContextAccessor(IHttpContextAccessor httpContextAccessor)
     {
         _httpContextAccessor = httpContextAccessor;
     }
 
+    /// <inheritdoc />
     public CommerceContext? Current =>
         _httpContextAccessor.HttpContext?.Items[ItemKey] as CommerceContext;
 
+    /// <inheritdoc />
     EditionContext? ICurrentEdition.Current => Current?.Edition;
 
+    /// <inheritdoc />
     TenantContext? ICurrentTenant.Current => Current?.Tenant;
 }
 
+/// <summary>
+/// Resolve امن Host → Tenant (Single-Store) یا اتصال marketplace. ناشناخته/غیرفعال = ۴۰۴ بدون نشت وجود.
+/// Forwarded Host فقط اگر proxy در allowlist باشد در pipeline فعال شده است.
+/// مسیرهای health/ready و probeهای dev از resolve رد می‌شوند تا DB برای liveness باز نشود.
+/// </summary>
 internal sealed class TenantResolutionMiddleware
 {
     private static readonly PathString[] SkipPrefixes =
@@ -38,6 +55,9 @@ internal sealed class TenantResolutionMiddleware
     private readonly ILogger<TenantResolutionMiddleware> _logger;
     private readonly IProblemDetailsService _problemDetails;
 
+    /// <summary>
+    /// میان‌افزار resolve را با registry پیکربندی و resolver اتصال می‌سازد.
+    /// </summary>
     public TenantResolutionMiddleware(
         RequestDelegate next,
         ControlPlaneRegistry registry,
@@ -52,6 +72,9 @@ internal sealed class TenantResolutionMiddleware
         _problemDetails = problemDetails;
     }
 
+    /// <summary>
+    /// زمینه را می‌سازد یا ProblemDetails fail-closed می‌نویسد. جزئیات اتصال در پاسخ نیست.
+    /// </summary>
     public async Task InvokeAsync(HttpContext httpContext)
     {
         if (ShouldSkip(httpContext.Request.Path))
@@ -94,6 +117,9 @@ internal sealed class TenantResolutionMiddleware
         }
     }
 
+    /// <summary>
+    /// Host نرمال‌شده را با allowlist تطبیق می‌دهد. Marketplace Tenant نمی‌سازد.
+    /// </summary>
     private CommerceContext Resolve(HttpContext httpContext, string traceId)
     {
         var editionContext = new EditionContext(_registry.Edition, _registry.DeploymentId);
@@ -144,12 +170,21 @@ internal sealed class TenantResolutionMiddleware
         return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
     }
 
+    /// <summary>
+    /// ۴۰۴ یکسان برای Host ناشناخته، Disabled و Suspended تا enumeration نشود.
+    /// </summary>
     private static PlatformHttpException FailClosed() =>
         new(StatusCodes.Status404NotFound, "Not Found", "platform.resolution.failed");
 
+    /// <summary>
+    /// health/ready و probeهای تشخیصی از resolve و باز شدن DB معاف‌اند.
+    /// </summary>
     private static bool ShouldSkip(PathString path) =>
         SkipPrefixes.Any(prefix => path.StartsWithSegments(prefix));
 
+    /// <summary>
+    /// ProblemDetails بدون جزئیات پیکربندی می‌نویسد.
+    /// </summary>
     private async Task WriteProblemAsync(HttpContext httpContext, PlatformHttpException exception, string traceId)
     {
         var mapped = PlatformExceptionMapper.Map(exception);

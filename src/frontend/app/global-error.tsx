@@ -1,5 +1,8 @@
 "use client";
 
+/**
+ * مرز خطای ریشه که باید html/body خودش را رندر کند. اطلاعات داخلی سرور را لو نمی‌دهد.
+ */
 export default function GlobalError({
   error,
   reset,

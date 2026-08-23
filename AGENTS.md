@@ -40,7 +40,8 @@ Before implementation, read this file and the Tooba pipeline/recovery documents.
 - No force push or history rewrite.
 - Preserve unrelated/unknown working-tree artifacts.
 - On conflict: `RECOVERY_CONFLICT`.
-- After RESULT: remain PIPELINE / WAITING for the next authorized envelope.
+- After RESULT: remain PIPELINE. `WAITING` means no unauthorized self-advance while the Architect reviews or issues the next envelope — not “stop the project”, close the chat, or wait for a ceremonial user restart.
+- Persian documentation is part of implementation acceptance. All required Tooba-owned Classes, Interfaces, Methods, and Properties must have strong Persian documentation (C# XML `/// <summary>`; reusable frontend APIs via TSDoc/JSDoc). Name-echo comments fail review. See `docs/architecture/32-persian-code-documentation-standard.md`.
 
 ## Envelope markers
 

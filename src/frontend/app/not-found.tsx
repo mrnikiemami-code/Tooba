@@ -1,3 +1,6 @@
+/**
+ * پاسخ ۴۰۴ پوسته. سیاست fail-closed بک‌اند برای Tenant ناشناخته را شبیه‌سازی تجاری نمی‌کند.
+ */
 export default function NotFound() {
   return (
     <main>

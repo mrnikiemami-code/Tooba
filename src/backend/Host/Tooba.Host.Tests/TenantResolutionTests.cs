@@ -9,6 +9,9 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
+/// <summary>
+/// نرمال‌سازی Host فقط برای routing است و TenantId تولید نمی‌کند.
+/// </summary>
 public sealed class HostNormalizerTests
 {
     [Theory]
@@ -29,6 +32,9 @@ public sealed class HostNormalizerTests
     }
 }
 
+/// <summary>
+/// پیکربندی نامعتبر (Host/Tenant تکراری) باید در شروع رد شود.
+/// </summary>
 public sealed class PlatformOptionsValidatorTests
 {
     [Fact]
@@ -71,6 +77,9 @@ public sealed class PlatformOptionsValidatorTests
         Assert.False(result.Succeeded);
     }
 
+    /// <summary>
+    /// نمونهٔ حداقل Single-Store برای تست اعتبارسنجی، نه control plane تولید.
+    /// </summary>
     private static ToobaPlatformOptions SampleSingleStore() => new()
     {
         Edition = "SingleStore",
@@ -89,6 +98,9 @@ public sealed class PlatformOptionsValidatorTests
     };
 }
 
+/// <summary>
+/// رفتار fail-closed Single-Store در برابر Host ناشناخته و تمایز Marketplace.
+/// </summary>
 public sealed class TenantResolutionTests
 {
     [Fact]
@@ -173,6 +185,9 @@ public sealed class TenantResolutionTests
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/ready")).StatusCode);
     }
 
+    /// <summary>
+    /// Host تست با دو Tenant جدا و اتصال‌های متمایز.
+    /// </summary>
     private sealed class SingleStoreFactory : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -205,6 +220,9 @@ public sealed class TenantResolutionTests
         }
     }
 
+    /// <summary>
+    /// Host تست Marketplace بدون lookup فروشگاه از Host.
+    /// </summary>
     private sealed class MarketplaceFactory : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
