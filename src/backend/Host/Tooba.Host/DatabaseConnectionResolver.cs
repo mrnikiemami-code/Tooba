@@ -3,11 +3,6 @@ using Tooba.BuildingBlocks;
 
 namespace Tooba.Host;
 
-internal interface IDatabaseConnectionResolver
-{
-    string Resolve(ConnectionReference reference);
-}
-
 internal sealed class DatabaseConnectionResolver : IDatabaseConnectionResolver
 {
     private readonly ToobaPlatformOptions _options;

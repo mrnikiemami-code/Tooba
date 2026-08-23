@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Tooba.BuildingBlocks/Tooba.BuildingBlocks.csproj" />
+    <Project Path="BuildingBlocks/Tooba.Persistence/Tooba.Persistence.csproj" />
   </Folder>
   <Folder Name="/Host/">
     <Project Path="Host/Tooba.Host/Tooba.Host.csproj" />
@@ -8,5 +9,6 @@
   </Folder>
   <Folder Name="/Modules/">
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
+    <Project Path="Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Tooba.PlatformProbe.Infrastructure.csproj" />
   </Folder>
 </Solution>

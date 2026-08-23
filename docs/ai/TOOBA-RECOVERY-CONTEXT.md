@@ -27,14 +27,14 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T002
+TB-P01-T003
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T002 = ACCEPTED
-TB-P01-T003 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T003 = ACCEPTED
+TB-P01-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = IN_PROGRESS
 ```
@@ -91,5 +91,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P01-T003`; do not execute `TB-P01-T004` or P01-GATE unless Architect issues it.
-7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
+6. await Architect review of `TB-P01-T004`; do not execute `TB-P01-T005` or P01-GATE unless Architect issues it.
+7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
@@ -40,6 +41,17 @@ builder.Services.AddScoped<HttpCommerceContextAccessor>();
 builder.Services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+builder.Services.AddDbContext<Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext>((sp, options) =>
+{
+    var connectionString = Tooba.Persistence.ToobaNpgsql.ResolveForContext(
+        sp.GetRequiredService<ICurrentCommerceContext>(),
+        sp.GetRequiredService<IDatabaseConnectionResolver>());
+    Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
+        options,
+        connectionString,
+        Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.Schema,
+        typeof(Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext));
+});
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
