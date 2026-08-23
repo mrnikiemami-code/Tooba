@@ -262,6 +262,26 @@ public interface IIdentityAuthenticationService
 }
 
 /// <summary>
+/// اصل احرازشده پس از اعتبارسنجی نشست. رابطهٔ مجوز کسب‌وکار اینجا حل نمی‌شود.
+/// </summary>
+public sealed record AuthenticatedIdentity(
+    Guid UserId,
+    Guid SessionId,
+    string Edition,
+    string? TenantId);
+
+/// <summary>
+/// خواندن نشست برای مرز HTTP. Host نباید EF را مستقیم بخواند.
+/// </summary>
+public interface IIdentitySessionResolver
+{
+    /// <summary>
+    /// نشست زنده را به اصل تبدیل می‌کند. لغو/انقضا/مهر ناهماهنگ/حساب غیرفعال تهی برمی‌گرداند.
+    /// </summary>
+    Task<AuthenticatedIdentity?> ResolveAsync(Guid sessionId, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// هش استاندارد رمز؛ الگوریتم سفارشی نیست.
 /// </summary>
 public interface IPasswordHashingService

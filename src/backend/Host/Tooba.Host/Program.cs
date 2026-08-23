@@ -60,6 +60,8 @@ builder.Services.AddOptions<AuthorizationHostOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<AuthorizationHostOptions>, AuthorizationOptionsValidator>();
 builder.Services.AddToobaAuthorization();
+builder.Services.AddScoped<CurrentAuthenticatedSession>();
+builder.Services.AddSingleton<IAuthenticationThrottleSeam, NoOpAuthenticationThrottleSeam>();
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
@@ -161,6 +163,9 @@ if (trustedProxies.Length > 0)
 }
 
 app.UseMiddleware<TenantResolutionMiddleware>();
+app.UseMiddleware<SessionAuthenticationMiddleware>();
+
+app.MapAuthenticationBoundary();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

@@ -36,6 +36,7 @@ public sealed class IdentityModule : IToobaModule
         services.AddScoped<IdentityLifecycleService>();
         services.AddScoped<IOtpChallengeService>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityCredentialLifecycle>(sp => sp.GetRequiredService<IdentityLifecycleService>());
+        services.AddScoped<IIdentitySessionResolver>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityAuthenticationService, IdentityAuthenticationService>();
         services.AddScoped<IExternalIdentityDirectory, EfExternalIdentityDirectory>();
         services.AddScoped<IMfaEnrollmentStore, EfMfaEnrollmentStore>();

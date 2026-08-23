@@ -60,7 +60,7 @@ public sealed class SessionAccessCredentialBoundary : IAccessCredentialBoundary
 /// <summary>
 /// نشست، چرخش Refresh، چالش پایدار و تغییر اعتبار روی schema Identity. Host parse نمی‌شود.
 /// </summary>
-public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOtpChallengeService
+public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOtpChallengeService, IIdentitySessionResolver
 {
     private readonly IdentityDbContext _db;
     private readonly IPasswordHashingService _hasher;
@@ -125,6 +125,27 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
             RefreshToken = raw,
             AuthenticatedAt = now,
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<AuthenticatedIdentity?> ResolveAsync(Guid sessionId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var session = await _db.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.SessionId == sessionId, cancellationToken);
+        if (session is null || session.RevokedAt is not null || now >= session.ExpiresAt)
+        {
+            return null;
+        }
+
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == session.UserId, cancellationToken);
+        if (user is null
+            || user.Status is UserAccountStatus.Disabled or UserAccountStatus.Locked
+            || session.CredentialVersion != user.SecurityStamp)
+        {
+            return null;
+        }
+
+        return new AuthenticatedIdentity(user.UserId, session.SessionId, session.Edition.ToString(), session.TenantId);
     }
 
     /// <summary>
