@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P02-T004
+TB-P02-T005
 ```
 
 Last Architect Accepted Gate:
@@ -45,19 +45,20 @@ TB-P01-GATE
 Current Issued Task:
 
 ```text
-TB-P02-T005
+NONE
 ```
 
 Current Gate:
 
 ```text
-NONE
+TB-P02-GATE
 ```
 
 Gate State:
 
 ```text
 TB-P01-GATE = ACCEPTED
+TB-P02-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Issued but not accepted:
@@ -67,7 +68,8 @@ TB-P02-T001 = ACCEPTED
 TB-P02-T002 = ACCEPTED
 TB-P02-T003 = ACCEPTED
 TB-P02-T004 = ACCEPTED
-TB-P02-T005 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
+TB-P02-T005 = ACCEPTED
+TB-P02-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -149,6 +151,12 @@ COMPLETE (Architect accepted TB-P02-T004)
 ```
 
 Authentication HTTP Boundary:
+
+```text
+COMPLETE (Architect accepted TB-P02-T005)
+```
+
+P02 Identity / Authorization Gate:
 
 ```text
 IN_PROGRESS
@@ -312,7 +320,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute TB-P02-T006 or a new Gate unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute P03 work or a new Gate unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -364,7 +372,7 @@ docs/architecture/41-authentication-http-boundary.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P02-T005-REPAIR.task.md
+docs/ai/tasks/TB-P02-GATE.gate.md
 ```
 
-Resume: execute TB-P02-T005; then wait in the same Architect chat for the next valid envelope. Do not start TB-P02-T006 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.
+Resume: execute TB-P02-GATE; then wait in the same Architect chat for the next valid envelope. Do not start P03 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.
