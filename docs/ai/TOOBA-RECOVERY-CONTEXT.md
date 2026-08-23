@@ -27,20 +27,20 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T008
+TB-P01-T009
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T008 = ACCEPTED
-TB-P01-T009 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T009 = ACCEPTED
+TB-P01-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
-P01 = IN_PROGRESS
+P01 = IN_PROGRESS (not COMPLETE until Architect ACCEPT of Gate)
 Outbox / Domain Events / Background Foundation = COMPLETE
 MassTransit PostgreSQL SQL Transport Alignment = COMPLETE
 Cache Abstraction Foundation = COMPLETE
-Module Composition & Boundary Enforcement = IN_PROGRESS
+Module Composition & Boundary Enforcement = COMPLETE
 ```
 
 ## Recovered Architect procedure
@@ -95,5 +95,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P01-T009`; do not execute `TB-P01-T010` or P01-GATE unless Architect issues it.
-7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
+6. await Architect review of `TB-P01-GATE`; do not start P02 unless Architect issues that envelope.
+7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
