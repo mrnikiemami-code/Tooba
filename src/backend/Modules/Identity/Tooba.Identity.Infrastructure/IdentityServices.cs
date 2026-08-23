@@ -17,6 +17,7 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
     private readonly IPasswordHashingService _hasher;
     private readonly IOptions<IdentityPasswordPolicyOptions> _policy;
     private readonly IIdentitySecurityEventSink _security;
+    private readonly IdentityLifecycleService _lifecycle;
 
     /// <summary>
     /// سرویس را با وابستگی‌های ماژول می‌سازد.
@@ -25,12 +26,14 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
         IdentityDbContext db,
         IPasswordHashingService hasher,
         IOptions<IdentityPasswordPolicyOptions> policy,
-        IIdentitySecurityEventSink security)
+        IIdentitySecurityEventSink security,
+        IdentityLifecycleService lifecycle)
     {
         _db = db;
         _hasher = hasher;
         _policy = policy;
         _security = security;
+        _lifecycle = lifecycle;
     }
 
     /// <inheritdoc />
@@ -128,12 +131,7 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        var ticket = new AuthenticationTicket
-        {
-            UserId = user.UserId,
-            SessionHandle = UuidV7.New(),
-            AuthenticatedAt = now,
-        };
+        var ticket = await _lifecycle.EstablishSessionAsync(user, cancellationToken);
         await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_success", UserId = user.UserId, OccurredAt = now }, cancellationToken);
         return AuthenticationResult.Success(ticket);
     }
@@ -152,7 +150,8 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
     {
         var user = await _db.Users.FirstAsync(x => x.UserId == userId, cancellationToken);
         user.Status = UserAccountStatus.Disabled;
-        user.UpdatedAt = DateTimeOffset.UtcNow;
+        user.BumpSecurityStamp(DateTimeOffset.UtcNow);
+        await _lifecycle.RevokeAllSessionsAsync(userId, "account_disable", cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         await _security.RecordAsync(
             new IdentitySecurityEvent { EventName = "account_disable", UserId = userId, OccurredAt = user.UpdatedAt },
@@ -164,12 +163,29 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
     {
         var user = await _db.Users.FirstAsync(x => x.UserId == userId, cancellationToken);
         user.Status = UserAccountStatus.Locked;
-        user.UpdatedAt = DateTimeOffset.UtcNow;
+        user.BumpSecurityStamp(DateTimeOffset.UtcNow);
+        await _lifecycle.RevokeAllSessionsAsync(userId, "account_lock", cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
         await _security.RecordAsync(
             new IdentitySecurityEvent { EventName = "account_lock", UserId = userId, OccurredAt = user.UpdatedAt },
             cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken) =>
+        _lifecycle.ChangePasswordAsync(userId, currentPassword, newPassword, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AuthenticationResult> RefreshSessionAsync(Guid sessionId, string refreshToken, CancellationToken cancellationToken) =>
+        _lifecycle.RefreshSessionAsync(sessionId, refreshToken, cancellationToken);
+
+    /// <inheritdoc />
+    public Task RevokeSessionAsync(Guid sessionId, string reason, CancellationToken cancellationToken) =>
+        _lifecycle.RevokeSessionAsync(sessionId, reason, cancellationToken);
+
+    /// <inheritdoc />
+    public Task RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken) =>
+        _lifecycle.RevokeAllSessionsAsync(userId, reason, cancellationToken);
 
     private void ValidatePassword(string password)
     {

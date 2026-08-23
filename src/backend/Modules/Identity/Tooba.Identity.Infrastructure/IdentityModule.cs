@@ -26,12 +26,16 @@ public sealed class IdentityModule : IToobaModule
         ArgumentNullException.ThrowIfNull(environment);
 
         services.Configure<IdentityPasswordPolicyOptions>(configuration.GetSection("Identity:PasswordPolicy"));
+        services.Configure<IdentityLifecycleOptions>(configuration.GetSection("Identity:Lifecycle"));
         services.AddSingleton<IOutboxModuleRegistration, IdentityOutboxRegistration>();
         services.AddSingleton<IPasswordHashingService, AspNetPasswordHashingService>();
         services.AddSingleton<CapturingOtpSender>();
         services.AddSingleton<IOtpSender>(sp => sp.GetRequiredService<CapturingOtpSender>());
-        services.AddSingleton<IOtpChallengeService, InMemoryOtpChallengeService>();
         services.AddSingleton<IIdentitySecurityEventSink, InMemoryIdentitySecurityEventSink>();
+        services.AddSingleton<IAccessCredentialBoundary, SessionAccessCredentialBoundary>();
+        services.AddScoped<IdentityLifecycleService>();
+        services.AddScoped<IOtpChallengeService>(sp => sp.GetRequiredService<IdentityLifecycleService>());
+        services.AddScoped<IIdentityCredentialLifecycle>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityAuthenticationService, IdentityAuthenticationService>();
         services.AddScoped<IExternalIdentityDirectory, EfExternalIdentityDirectory>();
         services.AddScoped<IMfaEnrollmentStore, EfMfaEnrollmentStore>();

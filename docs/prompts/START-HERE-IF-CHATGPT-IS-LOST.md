@@ -4,11 +4,11 @@ Recorded repository state for recovery (do not invent the next envelope):
 
 ```text
 Current Phase: P02 — Identity / Authorization
-Last Architect Accepted Task: TB-P02-T002
-Current Issued Task: TB-P02-T003
+Last Architect Accepted Task: TB-P02-T003
+Current Issued Task: TB-P02-T004
 Task State: AWAITING_ARCHITECT_ACCEPT
 P01 = COMPLETE
-P02 is IN_PROGRESS; do not start TB-P02-T004 without a new envelope
+P02 is IN_PROGRESS; do not start TB-P02-T005 without a new envelope
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

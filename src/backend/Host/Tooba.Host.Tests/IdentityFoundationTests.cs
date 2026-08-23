@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
+using Tooba.BuildingBlocks;
 using Tooba.Identity.Application;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
@@ -174,11 +175,7 @@ public sealed class IdentityPostgresTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
         var hasher = new AspNetPasswordHashingService();
         var sink = new InMemoryIdentitySecurityEventSink();
-        var auth = new IdentityAuthenticationService(
-            db,
-            hasher,
-            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
-            sink);
+        var auth = IdentityTestFactory.CreateAuth(db, hasher, sink);
 
         var created = await auth.RegisterAsync(
             new RegisterUserCommand
@@ -256,11 +253,7 @@ public sealed class IdentityPostgresTests : IAsyncLifetime
         var stored = await db.Users.Include(x => x.Password).FirstAsync(x => x.UserId == rehashUser.UserId);
         stored.Password!.PasswordHash = "legacy-format";
         await db.SaveChangesAsync();
-        var rehashAuth = new IdentityAuthenticationService(
-            db,
-            new ForcedRehashPasswordHashingService(hasher),
-            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
-            sink);
+        var rehashAuth = IdentityTestFactory.CreateAuth(db, new ForcedRehashPasswordHashingService(hasher), sink);
         var rehashed = await rehashAuth.AuthenticateWithPasswordAsync(LoginIdentifierKind.Username, "rehash-user", "correct-horse", CancellationToken.None);
         Assert.True(rehashed.Succeeded);
         await db.Entry(stored).ReloadAsync();
@@ -302,4 +295,57 @@ internal sealed class ForcedRehashPasswordHashingService : IPasswordHashingServi
 
         return _inner.Verify(hash, password);
     }
+}
+
+/// <summary>
+/// ساخت سرویس احراز برای تست بدون Host HTTP.
+/// </summary>
+internal static class IdentityTestFactory
+{
+    /// <summary>
+    /// Authentication و lifecycle را روی یک DbContext و فرستندهٔ حافظه می‌سازد.
+    /// </summary>
+    public static IdentityAuthenticationService CreateAuth(
+        IdentityDbContext db,
+        IPasswordHashingService hasher,
+        InMemoryIdentitySecurityEventSink sink,
+        ICurrentCommerceContext? commerce = null,
+        IdentityLifecycleOptions? lifecycle = null,
+        CapturingOtpSender? sender = null)
+    {
+        sender ??= new CapturingOtpSender();
+        var life = new IdentityLifecycleService(
+            db,
+            hasher,
+            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
+            Options.Create(lifecycle ?? new IdentityLifecycleOptions()),
+            sink,
+            commerce ?? new FixedCommerceContext(),
+            sender);
+        return new IdentityAuthenticationService(
+            db,
+            hasher,
+            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
+            sink,
+            life);
+    }
+
+    /// <summary>
+    /// فقط lifecycle را برای چالش/بازنشانی می‌سازد.
+    /// </summary>
+    public static IdentityLifecycleService CreateLifecycle(
+        IdentityDbContext db,
+        IPasswordHashingService hasher,
+        InMemoryIdentitySecurityEventSink sink,
+        CapturingOtpSender sender,
+        ICurrentCommerceContext? commerce = null,
+        IdentityLifecycleOptions? lifecycle = null) =>
+        new(
+            db,
+            hasher,
+            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
+            Options.Create(lifecycle ?? new IdentityLifecycleOptions()),
+            sink,
+            commerce ?? new FixedCommerceContext(),
+            sender);
 }

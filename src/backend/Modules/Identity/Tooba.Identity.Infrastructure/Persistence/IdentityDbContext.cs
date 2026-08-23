@@ -44,6 +44,16 @@ public sealed class IdentityDbContext : DbContext
     public DbSet<MfaFactorEnrollment> MfaEnrollments => Set<MfaFactorEnrollment>();
 
     /// <summary>
+    /// نشست‌های احراز هویت. راز Refresh فقط به‌صورت هش ذخیره می‌شود.
+    /// </summary>
+    public DbSet<AuthSession> Sessions => Set<AuthSession>();
+
+    /// <summary>
+    /// چالش‌های یک‌بارمصرف پایدار. کد OTP plaintext اینجا نیست.
+    /// </summary>
+    public DbSet<AuthChallenge> Challenges => Set<AuthChallenge>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -103,6 +113,31 @@ public sealed class IdentityDbContext : DbContext
             entity.Property(x => x.Id).ValueGeneratedNever();
             entity.Property(x => x.FactorKind).HasConversion<string>().HasMaxLength(32);
             entity.HasIndex(x => new { x.UserId, x.FactorKind }).IsUnique();
+        });
+
+        modelBuilder.Entity<AuthSession>(entity =>
+        {
+            entity.ToTable("auth_sessions");
+            entity.HasKey(x => x.SessionId);
+            entity.Property(x => x.SessionId).ValueGeneratedNever();
+            entity.Property(x => x.Edition).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.TenantId).HasMaxLength(128);
+            entity.Property(x => x.ClientLabel).HasMaxLength(128);
+            entity.Property(x => x.RevocationReason).HasMaxLength(64);
+            entity.Property(x => x.RefreshSecretHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PreviousRefreshSecretHash).HasMaxLength(128);
+            entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<AuthChallenge>(entity =>
+        {
+            entity.ToTable("auth_challenges");
+            entity.HasKey(x => x.ChallengeId);
+            entity.Property(x => x.ChallengeId).ValueGeneratedNever();
+            entity.Property(x => x.Purpose).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.IdentifierHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SecretHash).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.UserId);
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

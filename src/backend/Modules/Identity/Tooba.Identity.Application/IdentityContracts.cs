@@ -29,6 +29,27 @@ public sealed class IdentityPasswordPolicyOptions
 }
 
 /// <summary>
+/// عمر نشست، چالش و حد تلاش. antifraud تجاری اینجا نیست.
+/// </summary>
+public sealed class IdentityLifecycleOptions
+{
+    /// <summary>
+    /// عمر Refresh نشست به ساعت.
+    /// </summary>
+    public int SessionLifetimeHours { get; set; } = 336;
+
+    /// <summary>
+    /// عمر چالش OTP/بازنشانی به دقیقه.
+    /// </summary>
+    public int ChallengeLifetimeMinutes { get; set; } = 15;
+
+    /// <summary>
+    /// حداکثر تلاش نادرست روی یک چالش قبل از قفل همان چالش.
+    /// </summary>
+    public int MaxChallengeAttempts { get; set; } = 5;
+}
+
+/// <summary>
 /// نتیجهٔ داخلی احراز. برخی مقادیر نباید عیناً به سطح عمومی بروند.
 /// </summary>
 public enum AuthenticationOutcome
@@ -57,6 +78,16 @@ public enum AuthenticationOutcome
     /// سیاست تأیید شناسه برقرار است و شناسه تأیید نشده.
     /// </summary>
     IdentifierNotVerified = 4,
+
+    /// <summary>
+    /// نشست لغو شده یا منقضی است.
+    /// </summary>
+    RevokedSession = 5,
+
+    /// <summary>
+    /// راز Refresh قبلی پس از چرخش دوباره استفاده شد.
+    /// </summary>
+    RefreshReuse = 6,
 }
 
 /// <summary>
@@ -73,7 +104,7 @@ public enum PublicAuthenticationError
 /// <summary>
 /// مرز نشست/توکن. JWT سفارشی در این تسک ساخته نمی‌شود.
 /// </summary>
-public sealed class AuthenticationTicket
+public sealed record AuthenticationTicket
 {
     /// <summary>
     /// اصل پایدار برای تحویل به لایهٔ Authorization بعدی.
@@ -84,6 +115,11 @@ public sealed class AuthenticationTicket
     /// دستهٔ نشست داخلی؛ cookie/access/refresh بعداً روی همین مرز سوار می‌شود.
     /// </summary>
     public required Guid SessionHandle { get; init; }
+
+    /// <summary>
+    /// راز Refresh خام فقط در مرز صدور/چرخش. persist نمی‌شود و JWT سفارشی نیست.
+    /// </summary>
+    public string? RefreshToken { get; init; }
 
     /// <summary>
     /// زمان احراز.
@@ -203,6 +239,26 @@ public interface IIdentityAuthenticationService
     /// حساب را Locked می‌کند تا ورود ممکن نباشد.
     /// </summary>
     Task LockAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رمز را پس از اثبات رمز جاری عوض می‌کند، مهر امنیتی را جلو می‌برد و نشست‌ها را لغو می‌کند.
+    /// </summary>
+    Task ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Refresh را با راز خام می‌چرخاند. راز قبلی پس از موفقیت دیگر معتبر نیست.
+    /// </summary>
+    Task<AuthenticationResult> RefreshSessionAsync(Guid sessionId, string refreshToken, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یک نشست را لغو می‌کند.
+    /// </summary>
+    Task RevokeSessionAsync(Guid sessionId, string reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// همهٔ نشست‌های User را لغو می‌کند.
+    /// </summary>
+    Task RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -283,6 +339,85 @@ public sealed class OtpChallengeHandle
     /// هدف چالش.
     /// </summary>
     public required OtpPurpose Purpose { get; init; }
+}
+
+/// <summary>
+/// نتیجهٔ داخلی مصرف چالش. سطح عمومی enumeration حساب را لو نمی‌دهد.
+/// </summary>
+public enum ChallengeConsumeOutcome
+{
+    /// <summary>
+    /// راز درست بود و چالش مصرف شد.
+    /// </summary>
+    Succeeded = 0,
+
+    /// <summary>
+    /// راز نادرست، منقضی، یا چالش ناموجود.
+    /// </summary>
+    InvalidOrExpired = 1,
+
+    /// <summary>
+    /// چالش قبلاً مصرف شده (single-use).
+    /// </summary>
+    Consumed = 2,
+
+    /// <summary>
+    /// حد تلاش تمام شده و چالش قفل است.
+    /// </summary>
+    TooManyAttempts = 3,
+}
+
+/// <summary>
+/// بازنشانی/تأیید شناسه روی چالش پایدار PostgreSQL. ارائه‌دهندهٔ ایمیل/SMS واقعی نیست.
+/// </summary>
+public interface IIdentityCredentialLifecycle
+{
+    /// <summary>
+    /// درخواست بازنشانی. وجود یا نبود حساب در پاسخ عمومی یکسان است تا enumeration آشکار نشود.
+    /// </summary>
+    Task<PasswordResetRequestResult> RequestPasswordResetAsync(LoginIdentifierKind kind, string identifier, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// بازنشانی را با راز یک‌بارمصرف کامل می‌کند و نشست‌ها را ung معتبر می‌کند.
+    /// </summary>
+    Task<ChallengeConsumeOutcome> CompletePasswordResetAsync(Guid challengeId, string secret, string newPassword, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// چالش تأیید ایمیل/تلفن می‌سازد. صدور کد به‌تنهایی شناسه را Verified نمی‌کند.
+    /// </summary>
+    Task<OtpChallengeHandle> IssueIdentifierVerificationAsync(Guid userId, LoginIdentifierKind kind, string identifier, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// کد تأیید را مصرف می‌کند و در صورت موفقیت وضعیت شناسه را Verified می‌کند.
+    /// </summary>
+    Task<ChallengeConsumeOutcome> CompleteIdentifierVerificationAsync(Guid challengeId, string secret, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// پاسخ عمومی درخواست بازنشانی؛ همیشه پذیرفته‌شده نمایش داده می‌شود.
+/// </summary>
+public sealed class PasswordResetRequestResult
+{
+    /// <summary>
+    /// پذیرش عمومی بدون افشای وجود حساب.
+    /// </summary>
+    public bool Accepted { get; init; } = true;
+
+    /// <summary>
+    /// شناسهٔ چالش فقط وقتی حساب پیدا شده؛ تست داخلی نه سطح عمومی.
+    /// </summary>
+    public Guid? ChallengeId { get; init; }
+}
+
+/// <summary>
+/// مرز access credential. JWT سفارشی اختراع نمی‌شود؛ cookie/BFF/IdP بعداً روی همین نشست سوار می‌شوند.
+/// </summary>
+public interface IAccessCredentialBoundary
+{
+    /// <summary>
+    /// بلیت کوتاه‌عمر آزمایشی از نشست صادر می‌کند بدون JWT اختصاصی.
+    /// </summary>
+    AuthenticationTicket ToAccessTicket(AuthenticationTicket sessionTicket);
 }
 
 /// <summary>

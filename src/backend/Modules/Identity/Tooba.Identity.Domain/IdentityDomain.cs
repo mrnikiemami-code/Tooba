@@ -398,6 +398,11 @@ public sealed class UserAccount : IHasDomainEvents
     public DateTimeOffset UpdatedAt { get; set; }
 
     /// <summary>
+    /// مهر امنیتی حساب. با تغییر رمز/بازنشانی/قفل افزایش می‌یابد تا نشست‌های قبلی Refresh نشوند. ماتریس مجوز محصول نیست.
+    /// </summary>
+    public int SecurityStamp { get; set; }
+
+    /// <summary>
     /// اعتبار رمز در صورت ثبت؛ نبودن یعنی ورود رمزی ممکن نیست.
     /// </summary>
     public PasswordCredential? Password { get; set; }
@@ -436,6 +441,15 @@ public sealed class UserAccount : IHasDomainEvents
         });
         user.Raise(new UserRegisteredDomainEvent(user.UserId));
         return user;
+    }
+
+    /// <summary>
+    /// مهر امنیتی را جلو می‌برد تا Refresh نشست‌های قبلی با همان نسخه نامعتبر شود.
+    /// </summary>
+    public void BumpSecurityStamp(DateTimeOffset now)
+    {
+        SecurityStamp++;
+        UpdatedAt = now;
     }
 
     /// <summary>
@@ -489,4 +503,144 @@ public sealed class UserRegisteredDomainEvent : IDomainEvent
 
     /// <inheritdoc />
     public EventMetadata Metadata { get; }
+}
+
+/// <summary>
+/// نشست احراز هویت. User نیست، بلیت مجوز محصول نیست، و راز Refresh را plaintext نگه نمی‌دارد.
+/// </summary>
+public sealed class AuthSession
+{
+    /// <summary>
+    /// شناسهٔ پایدار نشست؛ همان SessionHandle بلیت است.
+    /// </summary>
+    public Guid SessionId { get; init; }
+
+    /// <summary>
+    /// اصل ورود مالک نشست. FK به Party نیست.
+    /// </summary>
+    public Guid UserId { get; init; }
+
+    /// <summary>
+    /// زمان ایجاد نشست.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// پایان اعتبار Refresh؛ پس از آن چرخش مجاز نیست.
+    /// </summary>
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>
+    /// آخرین استفادهٔ موفق (صدور یا چرخش).
+    /// </summary>
+    public DateTimeOffset LastUsedAt { get; set; }
+
+    /// <summary>
+    /// زمان لغو؛ تهی یعنی هنوز قابل Refresh است اگر مهر و انقضا درست باشند.
+    /// </summary>
+    public DateTimeOffset? RevokedAt { get; set; }
+
+    /// <summary>
+    /// علت لغو برای audit؛ راز نیست.
+    /// </summary>
+    public string? RevocationReason { get; set; }
+
+    /// <summary>
+    /// نسخهٔ مهر امنیتی در زمان صدور. اگر از User.SecurityStamp عقب بماند Refresh شکست می‌خورد.
+    /// </summary>
+    public int CredentialVersion { get; init; }
+
+    /// <summary>
+    /// Edition فرآیند در زمان صدور؛ از Host پارس نمی‌شود.
+    /// </summary>
+    public ToobaEdition Edition { get; init; }
+
+    /// <summary>
+    /// Tenant پایدار فقط در Single-Store؛ در Marketplace تهی است.
+    /// </summary>
+    public string? TenantId { get; init; }
+
+    /// <summary>
+    /// برچسب اختیاری دستگاه/کلاینت؛ User-Agent خام نیست.
+    /// </summary>
+    public string? ClientLabel { get; init; }
+
+    /// <summary>
+    /// هش SHA-256 راز Refresh جاری. plaintext هرگز persist نمی‌شود.
+    /// </summary>
+    public string RefreshSecretHash { get; set; } = "";
+
+    /// <summary>
+    /// هش راز قبلی پس از چرخش برای تشخیص reuse. اگر ارائه شود خانواده لغو می‌شود.
+    /// </summary>
+    public string? PreviousRefreshSecretHash { get; set; }
+
+    /// <summary>
+    /// خانوادهٔ چرخش برای تشخیص replay.
+    /// </summary>
+    public Guid RefreshFamilyId { get; init; }
+
+    /// <summary>
+    /// نشست هنوز برای چرخش زنده است.
+    /// </summary>
+    public bool IsRefreshable(DateTimeOffset now, int userSecurityStamp) =>
+        RevokedAt is null
+        && now < ExpiresAt
+        && CredentialVersion == userSecurityStamp;
+}
+
+/// <summary>
+/// چالش یک‌بارمصرف هویت (ورود OTP، تأیید شناسه، بازنشانی رمز، MFA). راز plaintext ذخیره نمی‌شود.
+/// </summary>
+public sealed class AuthChallenge
+{
+    /// <summary>
+    /// شناسهٔ پایدار چالش.
+    /// </summary>
+    public Guid ChallengeId { get; init; }
+
+    /// <summary>
+    /// User در صورت شناخته بودن. برای enumeration عمومی ممکن است تهی نماند فقط وقتی حساب پیدا شده.
+    /// </summary>
+    public Guid? UserId { get; init; }
+
+    /// <summary>
+    /// هش شناسه/مقصد؛ مقدار خام ایمیل/تلفن persist نمی‌شود.
+    /// </summary>
+    public string IdentifierHash { get; init; } = "";
+
+    /// <summary>
+    /// هدف کنترل‌شده. کلاینت نمی‌تواند رشتهٔ آزاد بفرستد.
+    /// </summary>
+    public OtpPurpose Purpose { get; init; }
+
+    /// <summary>
+    /// هش راز یک‌بارمصرف.
+    /// </summary>
+    public string SecretHash { get; init; } = "";
+
+    /// <summary>
+    /// زمان صدور.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// انقضا؛ پس از آن Verify شکست می‌خورد.
+    /// </summary>
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>
+    /// زمان مصرف موفق؛ پس از آن چالش single-use است.
+    /// </summary>
+    public DateTimeOffset? ConsumedAt { get; set; }
+
+    /// <summary>
+    /// زمان قفل پس از حد تلاش.
+    /// </summary>
+    public DateTimeOffset? LockedAt { get; set; }
+
+    /// <summary>
+    /// شمار تلاش ناموفق. برای محدود کردن brute-force روی همین چالش است نه antifraud تجاری.
+    /// </summary>
+    public int AttemptCount { get; set; }
 }

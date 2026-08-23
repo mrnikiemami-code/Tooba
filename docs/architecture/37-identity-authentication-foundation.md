@@ -66,7 +66,8 @@ Policy is `Identity:PasswordPolicy` (minimum length now; complexity / breach / h
 
 ## OTP / MFA / external IdP / session
 
-- `IOtpChallengeService` + `IOtpSender` with `OtpPurpose` (login, identifier verification, password reset, MFA). In-memory/fake sender only.
+- `IOtpChallengeService` + `IOtpSender` with `OtpPurpose` (login, identifier verification, password reset, MFA). Production implementation is PostgreSQL-backed (`auth_challenges`); in-memory remains only as a test seam.
+- Session/refresh/reset lifecycle is `docs/architecture/40-session-token-credential-lifecycle.md`.
 - `IMfaEnrollmentStore` records OTP/TOTP/WebAuthn/external step-up enrollments without UI.
 - `IExternalIdentityDirectory` maps `issuer + subject` → internal `UserId`. No Keycloak package.
 - `AuthenticationTicket` is an internal session handle (UserId + SessionHandle). No custom JWT.
