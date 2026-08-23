@@ -3,7 +3,7 @@
 Status:
 
 ```text
-IN_PROGRESS — TB-P02-T002 REPAIR awaiting Architect ACCEPT
+COMPLETE — Architect accepted TB-P02-T002; schema v2 used by TB-P02-T003
 ```
 
 Task:
@@ -61,7 +61,7 @@ No fail-open. Transport failure is not rewritten to DENY in a way that hides una
 
 ## Schema bootstrap
 
-`IAuthorizationSchemaProvider.SchemaVersion` is explicit (`1`). Minimal foundation schema is user + tenant `member`/`view` only.
+`IAuthorizationSchemaProvider.SchemaVersion` is explicit (`2`). Foundation schema is user + tenant `member`/`view`, plus `party` `member`/`view` for Party membership projection (TB-P02-T003). Catalog/Order permissions are not included.
 
 `AuthorizationSchemaHostedService` calls `IAuthorizationSchemaBootstrapper` on Host start. Live `WriteSchema` runs only when `Mode=SpiceDb` and `ApplySchemaOnStartup=true`. Development/test may apply explicitly; production must not blindly overwrite schema every start.
 
@@ -72,10 +72,10 @@ Isolated Testcontainers run uses image `authzed/spicedb:v1.56.0` (not `latest`).
 ## Subject / resource / relation
 
 - Subject now: `user:{UserId}` (`AuthorizationSubject.ForUser`).
-- Foundation resource: `tenant:{TenantId}` (neutral, not Catalog).
+- Foundation resource: `tenant:{TenantId}` (neutral, not Catalog) and `party:{PartyId}` for membership projection.
 - Relation `member`, permission `view`. Names are snake_case constants, not CLR namespaces.
 
-Future organization/group/seller subjects are not implemented.
+Organization/group/seller *subjects* are not implemented; Party is a resource for projected membership only.
 
 ## Tenant isolation
 

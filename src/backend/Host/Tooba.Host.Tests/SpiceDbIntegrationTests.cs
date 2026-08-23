@@ -80,6 +80,24 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
         Assert.Equal(AuthorizationDecisionKind.Allow, allow.Kind);
         Assert.Equal(AuthorizationDecisionKind.Deny, denyOtherTenant.Kind);
 
+        var party = new AuthorizationResource
+        {
+            Type = AuthorizationObjectTypes.Party,
+            Id = Guid.Parse("22222222-2222-2222-2222-222222222222").ToString("D"),
+        };
+        await adapter.WriteAsync(
+            new AuthorizationRelationshipWrite { Subject = user, Resource = party, Relation = AuthorizationRelations.Member },
+            CancellationToken.None);
+        var partyAllow = await adapter.CanAsync(
+            new AuthorizationCheck { Subject = user, Resource = party, Permission = AuthorizationRelations.View, CallContext = ctxA },
+            CancellationToken.None);
+        var stranger = AuthorizationSubject.ForUser(Guid.Parse("33333333-3333-3333-3333-333333333333"));
+        var partyDeny = await adapter.CanAsync(
+            new AuthorizationCheck { Subject = stranger, Resource = party, Permission = AuthorizationRelations.View, CallContext = ctxA },
+            CancellationToken.None);
+        Assert.Equal(AuthorizationDecisionKind.Allow, partyAllow.Kind);
+        Assert.Equal(AuthorizationDecisionKind.Deny, partyDeny.Kind);
+
         await _container.StopAsync();
         var unavailable = await adapter.CanAsync(
             new AuthorizationCheck { Subject = user, Resource = tenantA, Permission = AuthorizationRelations.View, CallContext = ctxA },

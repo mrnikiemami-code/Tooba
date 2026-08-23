@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using Tooba.Identity.Infrastructure;
 using Tooba.ModuleContracts;
+using Tooba.Party.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure;
 using Xunit;
 
@@ -17,6 +18,7 @@ public sealed class ArchitectureBoundaryTests
     {
         Assert.Contains(ToobaModuleComposition.Modules, module => module is PlatformProbeModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is IdentityModule);
+        Assert.Contains(ToobaModuleComposition.Modules, module => module is PartyModule);
         Assert.All(ToobaModuleComposition.Modules, module => Assert.False(string.IsNullOrWhiteSpace(module.Name)));
         Assert.Contains(typeof(IToobaModule).Assembly.GetExportedTypes(), t => t == typeof(IToobaModule));
     }

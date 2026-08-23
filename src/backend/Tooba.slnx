@@ -10,5 +10,11 @@
   <Folder Name="/Modules/">
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />
     <Project Path="Modules/PlatformProbe/Tooba.PlatformProbe.Infrastructure/Tooba.PlatformProbe.Infrastructure.csproj" />
+    <Project Path="Modules/Identity/Tooba.Identity.Domain/Tooba.Identity.Domain.csproj" />
+    <Project Path="Modules/Identity/Tooba.Identity.Application/Tooba.Identity.Application.csproj" />
+    <Project Path="Modules/Identity/Tooba.Identity.Infrastructure/Tooba.Identity.Infrastructure.csproj" />
+    <Project Path="Modules/Party/Tooba.Party.Domain/Tooba.Party.Domain.csproj" />
+    <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
+    <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
   </Folder>
 </Solution>

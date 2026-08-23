@@ -36,7 +36,8 @@ Do not execute packages without an Architect-authorized envelope.
 | ID | Work package | Status |
 | --- | --- | --- |
 | P02-01 | Identity / authentication foundation | COMPLETE (Architect accepted TB-P02-T001) |
-| P02-02 | SpiceDB authorization foundation | IN_PROGRESS |
+| P02-02 | SpiceDB authorization foundation | COMPLETE (Architect accepted TB-P02-T002) |
+| P02-03 | Party / organization / membership foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -78,9 +79,9 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
-- P02 Identity / Authorization is IN_PROGRESS under TB-P02-T002 repair (awaiting Architect accept).
+- P02 Identity / Authorization is IN_PROGRESS under TB-P02-T003 (awaiting Architect accept).
 - Locked messaging: MassTransit 8.5.10, PostgreSQL SQL Transport, RabbitMQ not used, one transport DB per deployment.
-- `TB-P02-T003` is not authorized until Architect issues that envelope.
+- `TB-P02-T004` is not authorized until Architect issues that envelope.
 
 ## Mandatory future UX / template work (not authorized now)
 

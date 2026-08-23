@@ -200,6 +200,11 @@ public static class AuthorizationObjectTypes
     /// منبع خنثی Tenant برای اثبات isolation؛ مدل Catalog نیست.
     /// </summary>
     public const string Tenant = "tenant";
+
+    /// <summary>
+    /// منبع کسب‌وکار Party برای تصویرسازی عضویت؛ Catalog/Order نیست.
+    /// </summary>
+    public const string Party = "party";
 }
 
 /// <summary>
@@ -208,7 +213,7 @@ public static class AuthorizationObjectTypes
 public static class AuthorizationRelations
 {
     /// <summary>
-    /// عضویت خنثی در Tenant.
+    /// رابطهٔ member برای تصویرسازی عضویت در Tenant یا Party؛ ماتریس مجوز محصول نیست.
     /// </summary>
     public const string Member = "member";
 

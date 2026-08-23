@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P02-T001
+TB-P02-T002
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P01-GATE
 Current Issued Task:
 
 ```text
-TB-P02-T002
+TB-P02-T003
 ```
 
 Current Gate:
@@ -64,7 +64,8 @@ Issued but not accepted:
 
 ```text
 TB-P02-T001 = ACCEPTED
-TB-P02-T002 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
+TB-P02-T002 = ACCEPTED
+TB-P02-T003 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -128,6 +129,12 @@ COMPLETE (Architect accepted TB-P02-T001)
 ```
 
 SpiceDB Authorization Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P02-T002)
+```
+
+Party / Organization / Membership Foundation:
 
 ```text
 IN_PROGRESS
@@ -291,7 +298,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute TB-P02-T003 or a new Gate unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute TB-P02-T004 or a new Gate unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -335,12 +342,13 @@ docs/architecture/35-cache-abstraction-foundation.md
 docs/architecture/36-module-composition-boundary-enforcement.md
 docs/architecture/37-identity-authentication-foundation.md
 docs/architecture/38-spicedb-authorization-foundation.md
+docs/architecture/39-party-organization-membership-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P02-T002-REPAIR.task.md
+docs/ai/tasks/TB-P02-T003.task.md
 ```
 
-Resume: complete TB-P02-T002 repair and wait in the same Architect chat for ACCEPT / next envelope. Do not start TB-P02-T003 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.
+Resume: execute TB-P02-T003; then wait in the same Architect chat for the next valid envelope. Do not start TB-P02-T004 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.

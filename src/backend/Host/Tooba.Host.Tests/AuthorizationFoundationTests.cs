@@ -110,7 +110,8 @@ public sealed class AuthorizationFoundationTests
     public async Task Schema_bootstrap_is_versioned_and_opt_in()
     {
         var schema = new FoundationAuthorizationSchemaProvider();
-        Assert.Equal(1, schema.SchemaVersion);
+        Assert.Equal(2, schema.SchemaVersion);
+        Assert.Contains("definition party", schema.SchemaText, StringComparison.Ordinal);
         Assert.Contains("definition user", schema.SchemaText, StringComparison.Ordinal);
         var logger = LoggerFactory.Create(b => { }).CreateLogger<ConfiguredAuthorizationSchemaBootstrapper>();
         var skipped = new ConfiguredAuthorizationSchemaBootstrapper(
@@ -125,7 +126,7 @@ public sealed class AuthorizationFoundationTests
             schema,
             logger);
         await applied.BootstrapIfConfiguredAsync(CancellationToken.None);
-        Assert.Equal(1, applied.AppliedVersion);
+        Assert.Equal(2, applied.AppliedVersion);
     }
 
     [Fact]

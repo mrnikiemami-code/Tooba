@@ -6,12 +6,12 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Host;
 
 /// <summary>
-/// schema خنثی foundation برای اثبات user+tenant. مدل Catalog/Order نیست.
+/// schema خنثی foundation برای اثبات user+tenant و تصویر عضویت Party. مدل Catalog/Order نیست.
 /// </summary>
 internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSchemaProvider
 {
     /// <inheritdoc />
-    public int SchemaVersion => 1;
+    public int SchemaVersion => 2;
 
     /// <inheritdoc />
     public string SchemaText =>
@@ -19,6 +19,11 @@ internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSche
         definition user {}
 
         definition tenant {
+          relation member: user
+          permission view = member
+        }
+
+        definition party {
           relation member: user
           permission view = member
         }
