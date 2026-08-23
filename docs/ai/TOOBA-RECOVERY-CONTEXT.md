@@ -27,18 +27,19 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T006
+TB-P01-T007
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T006 = ACCEPTED
-TB-P01-T007 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T007 = ACCEPTED
+TB-P01-T008 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = IN_PROGRESS
 Outbox / Domain Events / Background Foundation = COMPLETE
-MassTransit PostgreSQL SQL Transport Alignment = IN_PROGRESS
+MassTransit PostgreSQL SQL Transport Alignment = COMPLETE
+Cache Abstraction Foundation = IN_PROGRESS
 ```
 
 ## Recovered Architect procedure
@@ -93,5 +94,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P01-T007`; do not execute `TB-P01-T008` or P01-GATE unless Architect issues it.
-7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
+6. await Architect review of `TB-P01-T008`; do not execute `TB-P01-T009` or P01-GATE unless Architect issues it.
+7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

@@ -33,20 +33,20 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T006
+TB-P01-T007
 ```
 
 Current Issued Task:
 
 ```text
-TB-P01-T007
+TB-P01-T008
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T006 = ACCEPTED
-TB-P01-T007 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T007 = ACCEPTED
+TB-P01-T008 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -80,6 +80,12 @@ COMPLETE (Architect accepted TB-P01-T006)
 ```
 
 MassTransit PostgreSQL SQL Transport Alignment:
+
+```text
+COMPLETE (Architect accepted TB-P01-T007)
+```
+
+Cache Abstraction Foundation:
 
 ```text
 IN_PROGRESS
@@ -190,7 +196,7 @@ Mandatory microservice-readiness:
 - First-party analytics implementation (see `docs/architecture/16-first-party-analytics.md`);
 - AI/RAG retrieval contracts (see `docs/architecture/17-ai-assistant-rag.md`);
 - Observability/audit implementation (see `docs/architecture/18-observability-logging-audit.md`);
-- Caching/infrastructure abstractions (see `docs/architecture/19-caching-infrastructure-abstractions.md`);
+- Caching/infrastructure abstractions (see `docs/architecture/19-caching-infrastructure-abstractions.md` and P01 foundation `docs/architecture/35-cache-abstraction-foundation.md`);
 - frontend/template adaptation strategy (see `docs/architecture/20-frontend-ux-template-adaptation.md`);
 - whether/how `shopeiva.zip` is present as a later inventory input.
 
@@ -243,7 +249,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P01-T008` or P01-GATE unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P01-T009` or P01-GATE unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -281,13 +287,15 @@ docs/architecture/29-observability-error-foundation.md
 docs/architecture/30-tenant-edition-database-foundation.md
 docs/architecture/31-postgresql-persistence-foundation.md
 docs/architecture/32-persian-code-documentation-standard.md
+docs/architecture/33-outbox-domain-events-background-foundation.md
 docs/architecture/34-masstransit-postgresql-sql-transport.md
+docs/architecture/35-cache-abstraction-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P01-T007.task.md
+docs/ai/tasks/TB-P01-T008.task.md
 ```
 
-Resume: execute TB-P01-T007; then await Architect review. Do not execute `TB-P01-T008` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.
+Resume: execute TB-P01-T008; then await Architect review. Do not execute `TB-P01-T009` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.

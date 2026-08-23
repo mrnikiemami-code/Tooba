@@ -1,4 +1,4 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، DbContext ماژول، Outbox dispatcher، MassTransit SQL Transport.
+// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، DbContext ماژول، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
@@ -53,6 +53,11 @@ builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<MessagingHostOptions>, MessagingOptionsValidator>();
+builder.Services.AddOptions<CacheHostOptions>()
+    .Bind(builder.Configuration.GetSection("Tooba:Cache"))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>();
+builder.Services.AddToobaCache();
 builder.Services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
