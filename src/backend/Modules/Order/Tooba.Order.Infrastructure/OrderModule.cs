@@ -31,6 +31,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
+        services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

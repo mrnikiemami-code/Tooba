@@ -394,7 +394,13 @@ public sealed class CustomerPayment : IHasDomainEvents
         Status = PaymentStatus.Succeeded;
         CompletedAt = at;
         UpdatedAt = at;
-        _domainEvents.Add(new PaymentSucceededDomainEvent(PaymentId, CheckoutId, Amount, Currency, transactionReference));
+        _domainEvents.Add(new PaymentSucceededDomainEvent(
+            PaymentId,
+            CheckoutId,
+            Amount,
+            Currency,
+            transactionReference,
+            _allocations.Select(x => x.SellerOrderId).ToArray()));
         return true;
     }
 
@@ -432,6 +438,22 @@ public sealed class CustomerPayment : IHasDomainEvents
         if (_attempts.All(x => x.AttemptId != attempt.AttemptId))
         {
             _attempts.Add(attempt);
+        }
+    }
+
+    /// <summary>
+    /// تخصیص‌های بارگذاری‌شده از DbSet را به ریشه وصل می‌کند چون navigation در EF نادیده گرفته شده است.
+    /// بدون این اتصال، رویداد موفقیت SellerOrderIds خالی می‌سازد و تصویر Paid سفارش هرگز اعمال نمی‌شود.
+    /// </summary>
+    public void AttachLoadedAllocations(IEnumerable<PaymentAllocation> allocations)
+    {
+        ArgumentNullException.ThrowIfNull(allocations);
+        foreach (var allocation in allocations)
+        {
+            if (_allocations.All(x => x.AllocationId != allocation.AllocationId))
+            {
+                _allocations.Add(allocation);
+            }
         }
     }
 }
@@ -513,13 +535,15 @@ public sealed class PaymentSucceededDomainEvent : IDomainEvent
         Guid checkoutId,
         decimal amount,
         string currency,
-        string providerTransactionReference)
+        string providerTransactionReference,
+        IReadOnlyList<Guid> sellerOrderIds)
     {
         PaymentId = paymentId;
         CheckoutId = checkoutId;
         Amount = amount;
         Currency = currency;
         ProviderTransactionReference = providerTransactionReference;
+        SellerOrderIds = sellerOrderIds;
         Metadata = EventMetadataFactory.ForDomain("payment.succeeded.v1");
     }
 
@@ -550,6 +574,11 @@ public sealed class PaymentSucceededDomainEvent : IDomainEvent
     /// مرجع تراکنش تأییدشده.
     /// </summary>
     public string ProviderTransactionReference { get; }
+
+    /// <summary>
+    /// سفارش‌های فروشندهٔ تخصیص‌یافته. تصویر Paid فقط روی همین‌ها اعمال می‌شود.
+    /// </summary>
+    public IReadOnlyList<Guid> SellerOrderIds { get; }
 }
 
 /// <summary>

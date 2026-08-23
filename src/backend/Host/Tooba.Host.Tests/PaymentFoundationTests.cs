@@ -1,7 +1,11 @@
 using System.Reflection;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.Host;
 using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure;
@@ -115,7 +119,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
 
         var csB = new Npgsql.NpgsqlConnectionStringBuilder(csA) { Database = "tooba_payment_b" }.ConnectionString;
         var commerceA = new FixedCommerceContext();
-        commerceA.Assign(OutboxTestContextFactory.SingleStore("tenant-pay-a", "tenant-pay-a"));
+        commerceA.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         var commerceB = new FixedCommerceContext();
         commerceB.Assign(OutboxTestContextFactory.SingleStore("tenant-pay-b", "tenant-pay-b"));
 
@@ -139,7 +143,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
 
         var bridge = new OrderPaymentBridge(orderA);
         var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new FakeFailingPaymentGateway()]);
-        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, bridge, gateways);
+        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways);
 
         var reserveEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             directory.InitiateAsync(new InitiatePaymentCommand(reserve.CheckoutId, actor, buyer, "idem-reserve", "fake"), CancellationToken.None));
@@ -176,8 +180,27 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
             CancellationToken.None);
         Assert.False(duplicate.NewlySucceeded);
 
-        var paid = await orderA.SellerOrders.AsNoTracking().Where(x => x.CheckoutId == online.CheckoutId).ToListAsync();
+        var afterVerify = await orderA.SellerOrders.AsNoTracking().Where(x => x.CheckoutId == online.CheckoutId).ToListAsync();
+        Assert.All(afterVerify, x => Assert.Equal(SellerOrderStatus.PendingPayment, x.Status));
+
+        await DispatchPaymentOutboxAsync(csA, CancellationToken.None);
+        await using var orderReload = CreateOrderDb(csA, commerceA);
+        var paid = await orderReload.SellerOrders.AsNoTracking().Where(x => x.CheckoutId == online.CheckoutId).ToListAsync();
         Assert.All(paid, x => Assert.Equal(SellerOrderStatus.Paid, x.Status));
+        Assert.Equal(1, await orderReload.PaymentInbox.CountAsync());
+
+        foreach (var row in paymentA.OutboxMessages.Where(x => x.EventType == PaymentSucceededIntegrationEvent.EventTypeName))
+        {
+            row.ProcessedAt = null;
+            row.LockedUntil = null;
+            row.NextAttemptAt = null;
+        }
+
+        await paymentA.SaveChangesAsync();
+        await DispatchPaymentOutboxAsync(csA, CancellationToken.None);
+        Assert.Equal(1, await orderReload.PaymentInbox.AsNoTracking().CountAsync());
+        var stillPaid = await orderReload.SellerOrders.AsNoTracking().Where(x => x.CheckoutId == online.CheckoutId).ToListAsync();
+        Assert.All(stillPaid, x => Assert.Equal(SellerOrderStatus.Paid, x.Status));
 
         var failCheckout = SeedCheckout(orderA, OrderMode.OnlinePurchase, buyer, actor, seller1, seller2, 50000m, 40000m, now);
         await orderA.SaveChangesAsync();
@@ -193,7 +216,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
             row => row.EventType.Contains("succeeded", StringComparison.OrdinalIgnoreCase)
                 && row.Payload.Contains(failedInit.PaymentId.ToString(), StringComparison.OrdinalIgnoreCase));
 
-        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, bridge, gateways);
+        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, gateways);
         Assert.Null(await isolated.GetAsync(initiated.PaymentId, actor, buyer, CancellationToken.None));
 
         var mismatch = new StubPayableReader
@@ -204,9 +227,32 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
                 "IRR",
                 [new PayableSellerOrderSnapshot(Guid.NewGuid(), 10m, "USD")]),
         };
-        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, new NoopProjection(), gateways);
+        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, gateways);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mismatchDir.InitiateAsync(new InitiatePaymentCommand(mismatch.Snapshot.CheckoutId, actor, buyer, "idem-fx", "fake"), CancellationToken.None));
+
+        var amountLie = SeedCheckout(orderA, OrderMode.OnlinePurchase, buyer, actor, seller1, seller2, 30000m, 20000m, now);
+        await orderA.SaveChangesAsync();
+        var lieInit = await directory.InitiateAsync(
+            new InitiatePaymentCommand(amountLie.CheckoutId, actor, buyer, "idem-amount-lie", "fake"),
+            CancellationToken.None);
+        var lieVerify = await directory.VerifyAsync(
+            new VerifyPaymentCommand(lieInit.PaymentId, lieInit.AttemptId, lieInit.ProviderRequestReference, true),
+            CancellationToken.None);
+        Assert.True(lieVerify.NewlySucceeded);
+        var liePaymentId = lieInit.PaymentId.ToString();
+        var succeededRow = (await paymentA.OutboxMessages.AsNoTracking().ToListAsync())
+            .Single(x => x.EventType == PaymentSucceededIntegrationEvent.EventTypeName
+                && x.Payload.Contains(liePaymentId, StringComparison.Ordinal));
+        var trackedRow = await paymentA.OutboxMessages.SingleAsync(x => x.Id == succeededRow.Id);
+        var payload = JsonNode.Parse(trackedRow.Payload)!;
+        payload["amount"] = 1;
+        trackedRow.Payload = payload.ToJsonString();
+        await paymentA.SaveChangesAsync();
+        await DispatchPaymentOutboxAsync(csA, CancellationToken.None);
+        var notPaid = await orderA.SellerOrders.AsNoTracking().Where(x => x.CheckoutId == amountLie.CheckoutId).ToListAsync();
+        Assert.All(notPaid, x => Assert.Equal(SellerOrderStatus.PendingPayment, x.Status));
+        Assert.DoesNotContain(await orderA.PaymentInbox.AsNoTracking().ToListAsync(), x => x.PaymentId == lieInit.PaymentId);
     }
 
     private static CheckoutGroup SeedCheckout(
@@ -270,6 +316,50 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         }
 
         throw new InvalidOperationException("Repository root not found.");
+    }
+
+    private static async Task DispatchPaymentOutboxAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        var platform = OutboxTestPlatform.TwoTenants(connectionString, connectionString);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IOptions<ToobaPlatformOptions>>(Options.Create(platform));
+        services.AddSingleton(PlatformOptionsValidator.BuildRegistry(platform));
+        services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();
+        services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
+        services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
+        services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
+        services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
+        services.AddSingleton<WorkerCommerceContextFactory>();
+        services.AddSingleton<IOptions<OutboxHostOptions>>(Options.Create(new OutboxHostOptions
+        {
+            Enabled = true,
+            BatchSize = 20,
+            MaxAttempts = 5,
+            RetryBaseDelaySeconds = 1,
+            LockSeconds = 30,
+            PollIntervalSeconds = 60,
+        }));
+        services.AddSingleton<OutboxDispatcher>();
+        services.AddScoped<HttpCommerceContextAccessor>();
+        services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+        services.AddHttpContextAccessor();
+        services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
+        services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
+        services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
+        services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
+        services.AddDbContext<OrderDbContext>((sp, options) =>
+        {
+            var cs = ToobaNpgsql.ResolveForContext(
+                sp.GetRequiredService<ICurrentCommerceContext>(),
+                sp.GetRequiredService<IDatabaseConnectionResolver>());
+            ToobaNpgsql.ConfigureModuleContext(options, cs, OrderDbContext.Schema, typeof(OrderDbContext));
+        });
+        await using var provider = services.BuildServiceProvider();
+        await provider.GetRequiredService<OutboxDispatcher>().DispatchOnceAsync(cancellationToken);
     }
 
     private sealed class StubPayableReader : IPayableCheckoutReader

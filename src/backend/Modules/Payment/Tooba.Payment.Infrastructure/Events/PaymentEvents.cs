@@ -53,46 +53,6 @@ public sealed class PaymentInitiatedIntegrationEvent : IIntegrationEvent
 }
 
 /// <summary>
-/// موفقیت فقط پس از Verify درگاه. متن callback این رویداد را نمی‌سازد.
-/// </summary>
-public sealed class PaymentSucceededIntegrationEvent : IIntegrationEvent
-{
-    /// <summary>
-    /// نام پایدار قرارداد.
-    /// </summary>
-    public const string EventTypeName = "payment.succeeded.v1";
-
-    /// <inheritdoc />
-    [System.Text.Json.Serialization.JsonIgnore]
-    public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
-
-    /// <summary>
-    /// پرداخت تأییدشده.
-    /// </summary>
-    public Guid PaymentId { get; set; }
-
-    /// <summary>
-    /// checkout برای تصویر سفارش.
-    /// </summary>
-    public Guid CheckoutId { get; set; }
-
-    /// <summary>
-    /// مبلغ تصویر؛ انتخاب مشتری نیست.
-    /// </summary>
-    public decimal Amount { get; set; }
-
-    /// <summary>
-    /// ارز تصویر سفارش.
-    /// </summary>
-    public string Currency { get; set; } = string.Empty;
-
-    /// <summary>
-    /// مرجع تراکنش تأییدشدهٔ درگاه.
-    /// </summary>
-    public string ProviderTransactionReference { get; set; } = string.Empty;
-}
-
-/// <summary>
 /// شکست Verify. سفارش را Paid نمی‌کند.
 /// </summary>
 public sealed class PaymentFailedIntegrationEvent : IIntegrationEvent

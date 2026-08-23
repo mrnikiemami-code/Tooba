@@ -43,6 +43,11 @@ public sealed class OrderDbContext : DbContext
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>
+    /// Inbox مصرف payment.succeeded.v1. تکراری بودن delivery را پایدار نگه می‌دارد نه در حافظه.
+    /// </summary>
+    public DbSet<OrderPaymentInboxRecord> PaymentInbox => Set<OrderPaymentInboxRecord>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +95,14 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.TaxRateSnapshot).HasPrecision(19, 8);
             entity.Property(x => x.TaxAmountSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.TaxInclusiveSnapshot).HasPrecision(19, 4);
+        });
+        modelBuilder.Entity<OrderPaymentInboxRecord>(entity =>
+        {
+            entity.ToTable("payment_inbox");
+            entity.HasKey(x => x.EventId);
+            entity.Property(x => x.EventId).ValueGeneratedNever();
+            entity.Property(x => x.PaymentId).IsRequired();
+            entity.Property(x => x.ProcessedAt).IsRequired();
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

@@ -63,7 +63,7 @@ Initiate is keyed by `IdempotencyKey`. Duplicate verify of an already-Succeeded 
 
 ## Order projection
 
-Preferred later path is Outbox `payment.succeeded.v1` consumed by Order. This foundation also applies `IOrderPaymentProjection` in-process after the Payment transaction commits so Order is not updated from Payment Infrastructure types. That is a contract seam, not a foreign DbContext.
+Paid Order state is a recoverable projection. After Verify, Payment persists locally and writes Outbox `payment.succeeded.v1`. An Order-owned consumer applies Paid and records a durable inbox row in the same Order transaction. In-process projection after Payment `SaveChanges` is not a source of truth and is not used. Duplicate delivery is ignored by inbox EventId. Amount/currency mismatch must not mark Paid.
 
 ## Multi-seller allocation
 

@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Payment.Domain;
 
 namespace Tooba.Payment.Application;
@@ -51,12 +52,12 @@ public interface IPayableCheckoutReader
 }
 
 /// <summary>
-/// اعمال موفقیت تأییدشدهٔ پرداخت روی سفارش. DbContext پرداخت اینجا نیست.
+/// اعمال موفقیت تأییدشدهٔ پرداخت روی سفارش. فقط مصرف‌کنندهٔ Outbox این درز را صدا می‌زند؛ دایرکتوری Payment پس از SaveChanges آن را صدا نمی‌زند.
 /// </summary>
 public interface IOrderPaymentProjection
 {
     /// <summary>
-    /// سفارش‌های واجد شرایط خرید آنلاین را پس از Verify به Paid می‌برد. شروع درگاه کافی نیست.
+    /// سفارش‌های واجد شرایط خرید آنلاین را پس از Verify به Paid می‌برد. شروع درگاه کافی نیست و این متد به‌تنهایی منبع حقیقت Verify نیست.
     /// </summary>
     Task ApplyVerifiedSuccessAsync(
         Guid checkoutId,
@@ -201,4 +202,49 @@ public interface IPaymentDirectory
     /// پرداخت را پس از احراز هویت می‌خواند.
     /// </summary>
     Task<PaymentSnapshot?> GetAsync(Guid paymentId, Guid actorUserId, Guid? buyerPartyId, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// رویداد پایدار موفقیت Verify. تصویر Paid سفارش فقط از مصرف این قرارداد ساخته می‌شود نه از تراکنش همزمان Payment.
+/// </summary>
+public sealed class PaymentSucceededIntegrationEvent : IIntegrationEvent
+{
+    /// <summary>
+    /// نام پایدار قرارداد Outbox.
+    /// </summary>
+    public const string EventTypeName = "payment.succeeded.v1";
+
+    /// <inheritdoc />
+    [System.Text.Json.Serialization.JsonIgnore]
+    public EventMetadata Metadata { get; set; } = EventMetadataFactory.ForDomain(EventTypeName);
+
+    /// <summary>
+    /// پرداخت تأییدشده.
+    /// </summary>
+    public Guid PaymentId { get; set; }
+
+    /// <summary>
+    /// checkout مرجع بدون FK.
+    /// </summary>
+    public Guid CheckoutId { get; set; }
+
+    /// <summary>
+    /// مبلغ تصویر سفارش.
+    /// </summary>
+    public decimal Amount { get; set; }
+
+    /// <summary>
+    /// ارز تصویر سفارش.
+    /// </summary>
+    public string Currency { get; set; } = string.Empty;
+
+    /// <summary>
+    /// مرجع تراکنش تأییدشدهٔ درگاه.
+    /// </summary>
+    public string ProviderTransactionReference { get; set; } = string.Empty;
+
+    /// <summary>
+    /// سفارش‌های فروشندهٔ هدف تخصیص.
+    /// </summary>
+    public Guid[] SellerOrderIds { get; set; } = [];
 }

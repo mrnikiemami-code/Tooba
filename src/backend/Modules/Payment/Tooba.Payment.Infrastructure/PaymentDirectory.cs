@@ -22,23 +22,20 @@ public sealed class PaymentDirectory : IPaymentDirectory
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
     private readonly IPayableCheckoutReader _orders;
-    private readonly IOrderPaymentProjection _orderProjection;
     private readonly IPaymentGatewayRegistry _gateways;
 
     /// <summary>
-    /// دایرکتوری را به schema payment، درز سفارش و رجیستری درگاه وصل می‌کند.
+    /// دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
     /// </summary>
     public PaymentDirectory(
         PaymentDbContext db,
         IPaymentUseCaseGuard guard,
         IPayableCheckoutReader orders,
-        IOrderPaymentProjection orderProjection,
         IPaymentGatewayRegistry gateways)
     {
         _db = db;
         _guard = guard;
         _orders = orders;
-        _orderProjection = orderProjection;
         _gateways = gateways;
     }
 
@@ -129,6 +126,8 @@ public sealed class PaymentDirectory : IPaymentDirectory
         var gateway = _gateways.Resolve(payment.ProviderCode);
         var verified = await gateway.VerifyAsync(command.ProviderRequestReference, command.CallbackClaimsSuccess, cancellationToken);
         payment.AttachLoadedAttempt(attempt);
+        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken);
+        payment.AttachLoadedAllocations(allocations);
         if (!verified.VerifiedSuccess || string.IsNullOrWhiteSpace(verified.ProviderTransactionReference))
         {
             payment.ApplyVerifiedFailure(attempt.AttemptId, verified.FailureCode, DateTimeOffset.UtcNow);
@@ -146,16 +145,6 @@ public sealed class PaymentDirectory : IPaymentDirectory
 
         var firstSuccess = payment.ApplyVerifiedSuccess(attempt.AttemptId, verified.ProviderTransactionReference, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
-        if (firstSuccess)
-        {
-            var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken);
-            await _orderProjection.ApplyVerifiedSuccessAsync(
-                payment.CheckoutId,
-                payment.PaymentId,
-                allocations.Select(x => x.SellerOrderId).ToArray(),
-                cancellationToken);
-        }
-
         return new PaymentVerificationResult(payment.PaymentId, payment.Status, firstSuccess);
     }
 

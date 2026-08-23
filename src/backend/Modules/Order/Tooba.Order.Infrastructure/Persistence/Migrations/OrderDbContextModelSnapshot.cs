@@ -221,6 +221,26 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                     b.ToTable("seller_orders", "order");
                 });
 
+            modelBuilder.Entity("Tooba.Order.Infrastructure.OrderPaymentInboxRecord", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_id");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.HasKey("EventId")
+                        .HasName("pk_payment_inbox");
+
+                    b.ToTable("payment_inbox", "order");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

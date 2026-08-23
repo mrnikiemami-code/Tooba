@@ -431,6 +431,7 @@ Authorized local envelope path for this issued work:
 
 ```text
 docs/ai/tasks/TB-P03-T008.task.md
+docs/ai/tasks/TB-P03-T008-REPAIR.task.md
 ```
 
-Resume: execute TB-P03-T008 then wait in the same Architect chat for ACCEPT or the next valid envelope. Do not start TB-P03-T009 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: durable Payment→Order projection repair for TB-P03-T008 is implemented; wait in the same Architect chat for ACCEPT or the next valid envelope. Do not start TB-P03-T009 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.

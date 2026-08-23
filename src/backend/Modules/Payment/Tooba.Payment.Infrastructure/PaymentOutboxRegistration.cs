@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure.Events;
 using Tooba.Payment.Infrastructure.Persistence;
@@ -45,6 +46,7 @@ public sealed class PaymentOutboxRegistration : IOutboxModuleRegistration
                 Amount = succeeded.Amount,
                 Currency = succeeded.Currency,
                 ProviderTransactionReference = succeeded.ProviderTransactionReference,
+                SellerOrderIds = succeeded.SellerOrderIds.ToArray(),
             },
             PaymentFailedDomainEvent failed => new PaymentFailedIntegrationEvent
             {
