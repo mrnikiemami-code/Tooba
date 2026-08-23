@@ -82,6 +82,10 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                     b.HasKey("CheckoutId")
                         .HasName("pk_checkouts");
 
+                    b.HasIndex("CartId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_checkouts_cart_id");
+
                     b.HasIndex("IdempotencyKey")
                         .IsUnique()
                         .HasDatabaseName("ix_checkouts_idempotency_key");

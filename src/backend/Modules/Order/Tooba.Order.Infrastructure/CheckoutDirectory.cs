@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
@@ -60,13 +61,13 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     public async Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        var existing = await _db.Checkouts
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.IdempotencyKey == command.IdempotencyKey.Trim(), cancellationToken);
+        var existing = await FindCheckoutAsync(
+            x => x.IdempotencyKey == command.IdempotencyKey.Trim() || x.CartId == command.CartId,
+            cancellationToken);
         if (existing is not null)
         {
             EnsureAccess(existing, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
+            await ReconcileCartConversionAsync(existing, command, cancellationToken);
             return ToSnapshot(existing);
         }
 
@@ -171,12 +172,30 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             sellerOrders,
             now);
         _db.Checkouts.Add(group);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            foreach (var entry in _db.ChangeTracker.Entries().Where(e =>
+                         ReferenceEquals(e.Entity, group)
+                         || group.SellerOrders.Any(order => ReferenceEquals(order, e.Entity))
+                         || group.SellerOrders.SelectMany(order => order.Lines).Any(line => ReferenceEquals(line, e.Entity))))
+            {
+                entry.State = EntityState.Detached;
+            }
 
-        var intent = command.Mode == OrderMode.RequestToReserve
-            ? CartConversionIntent.RequestToReserve
-            : CartConversionIntent.OnlinePurchase;
-        await _cartMutations.ConvertAsync(cart.CartId, command.CartAccess, cart.Version, intent, cancellationToken);
+            var winner = await FindCheckoutAsync(
+                x => x.IdempotencyKey == command.IdempotencyKey.Trim() || x.CartId == command.CartId,
+                cancellationToken)
+                ?? throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
+            EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
+            await ReconcileCartConversionAsync(winner, command, cancellationToken);
+            return ToSnapshot(winner);
+        }
+
+        await ReconcileCartConversionAsync(group, command, cancellationToken);
         return ToSnapshot(group);
     }
 
@@ -240,6 +259,45 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
 
         order.Cancel();
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// checkout موجود را با کلید idempotency یا CartId پیدا می‌کند تا سبد یک‌بار بیشتر سفارش نشود.
+    /// </summary>
+    private Task<CheckoutGroup?> FindCheckoutAsync(
+        Expression<Func<CheckoutGroup, bool>> predicate,
+        CancellationToken cancellationToken) =>
+        _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .SingleOrDefaultAsync(predicate, cancellationToken);
+
+    /// <summary>
+    /// اگر Order ذخیره شده و Cart هنوز Active است، تبدیل سبد را بدون تراکنش توزیع‌شده و بدون قیمت‌گذاری دوباره تکرار می‌کند.
+    /// شکست موقت تبدیل، checkout ذخیره‌شده را حذف نمی‌کند.
+    /// </summary>
+    private async Task ReconcileCartConversionAsync(
+        CheckoutGroup group,
+        SubmitCheckoutCommand command,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _carts.GetCartAsync(group.CartId, command.CartAccess, cancellationToken);
+        if (latest is null || latest.Status == CartStatus.Converted)
+        {
+            return;
+        }
+
+        var intent = group.Mode == OrderMode.RequestToReserve
+            ? CartConversionIntent.RequestToReserve
+            : CartConversionIntent.OnlinePurchase;
+        try
+        {
+            await _cartMutations.ConvertAsync(group.CartId, command.CartAccess, latest.Version, intent, cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            // تبدیل سبد بعداً با همان checkout دوباره تلاش می‌شود؛ رزرو موجودی دوباره گرفته نمی‌شود.
+        }
     }
 
     private static void EnsureAccess(CheckoutGroup group, OrderAccess access)

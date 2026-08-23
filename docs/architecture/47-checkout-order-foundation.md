@@ -74,7 +74,20 @@ Line and order totals are historical snapshots (tax-exclusive base). Tax and dis
 
 ## Inventory handoff
 
-Cart owns the temporary hold. Checkout copies the opaque `ReservationId` onto order lines. Inserting an Order row does not consume stock. Cancel calls `IInventoryDirectory.ReleaseAsync`. Duplicate submit with the same `IdempotencyKey` returns the existing checkout and does not create a second handoff.
+Cart owns the temporary hold. Checkout copies the opaque `ReservationId` onto order lines. Inserting an Order row does not consume stock. Cancel calls `IInventoryDirectory.ReleaseAsync`.
+
+## Cart conversion invariant
+
+A Cart that already produced a durable `CheckoutGroup` cannot create a second checkout.
+
+- Unique `CartId` on `order.checkouts` is the persistence invariant.
+- Unique `IdempotencyKey` remains for retry of the same request.
+- Same key returns the existing checkout and retries Cart conversion.
+- A different key for the same Cart returns the existing checkout (`ALREADY_CONVERTED` by reuse). It does not insert a second group.
+- If Order persist succeeds and `ConvertAsync` fails, the checkout row stays. The next submit reconciles Cart to `Converted` without repricing and without a second inventory reserve.
+- Concurrent submits are serialized by the unique CartId index; the loser reloads the winner.
+
+There is no distributed transaction and no cross-module DbContext access.
 
 ## Events
 

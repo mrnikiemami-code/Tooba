@@ -220,6 +220,11 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var cart = await LoadRequiredAsync(cartId, cancellationToken);
         EnsureAccess(cart, access);
+        if (cart.Status == CartStatus.Converted)
+        {
+            return ToSnapshot(cart);
+        }
+
         cart.EnsureVersion(expectedVersion);
         cart.MarkConverted(intent, DateTimeOffset.UtcNow);
         await SaveCartAsync(cancellationToken);

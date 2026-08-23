@@ -59,6 +59,8 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
+            entity.HasIndex(x => x.CartId).IsUnique();
+            entity.HasIndex(x => x.CartId).IsUnique();
             entity.HasMany(x => x.SellerOrders).WithOne().HasForeignKey(x => x.CheckoutId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<SellerOrder>(entity =>

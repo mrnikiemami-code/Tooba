@@ -334,6 +334,45 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, inventoryDirB);
         Assert.Null(await checkoutB.GetCheckoutAsync(submitted.CheckoutId, orderAccess, CancellationToken.None));
         Assert.Null(await checkoutA.GetCheckoutAsync(Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), orderAccess, CancellationToken.None));
+
+        var repairCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
+        var repairLined = await cartDirA.AddOrIncreaseLineAsync(repairCart.CartId, access, repairCart.Version, offer2.OfferId, 1, CancellationToken.None);
+        var failOnce = new FailOnceCartDirectory(cartDirA);
+        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, inventoryDirA);
+        var repairCommand = new SubmitCheckoutCommand(
+            repairLined.CartId,
+            access,
+            repairLined.Version,
+            OrderMode.OnlinePurchase,
+            buyer.PartyId,
+            actor,
+            "idem-repair-fail");
+        var persistedWithoutConvert = await checkoutFail.SubmitAsync(repairCommand, CancellationToken.None);
+        Assert.Equal(CartStatus.Active, (await cartDirA.GetCartAsync(repairLined.CartId, access, CancellationToken.None))!.Status);
+        var reconciled = await checkoutA.SubmitAsync(repairCommand, CancellationToken.None);
+        Assert.Equal(persistedWithoutConvert.CheckoutId, reconciled.CheckoutId);
+        Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(repairLined.CartId, access, CancellationToken.None))!.Status);
+        Assert.Equal(90000m, persistedWithoutConvert.SellerOrders.SelectMany(x => x.Lines).First().UnitPriceSnapshot);
+
+        var differentKey = repairCommand with { IdempotencyKey = "idem-repair-other-key" };
+        var reused = await checkoutA.SubmitAsync(differentKey, CancellationToken.None);
+        Assert.Equal(persistedWithoutConvert.CheckoutId, reused.CheckoutId);
+        Assert.Equal(1, await orderA.Checkouts.CountAsync(x => x.CartId == repairLined.CartId));
+
+        var concCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
+        var concLined = await cartDirA.AddOrIncreaseLineAsync(concCart.CartId, access, concCart.Version, offer2.OfferId, 1, CancellationToken.None);
+        await using var orderA2 = CreateOrderDb(csA, commerceA);
+        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, inventoryDirA);
+        var concLeft = checkoutA.SubmitAsync(
+            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a"),
+            CancellationToken.None);
+        var concRight = checkoutA2.SubmitAsync(
+            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-b"),
+            CancellationToken.None);
+        var concResults = await Task.WhenAll(concLeft, concRight);
+        Assert.Equal(concResults[0].CheckoutId, concResults[1].CheckoutId);
+        Assert.Equal(1, await orderA.Checkouts.CountAsync(x => x.CartId == concLined.CartId));
+        Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(concLined.CartId, access, CancellationToken.None))!.Status);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
@@ -427,5 +466,47 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         }
 
         throw new InvalidOperationException("Repository root not found.");
+    }
+
+    /// <summary>
+    /// یک‌بار تبدیل سبد را شکست می‌دهد تا پنجرهٔ Order ذخیره‌شده و Cart هنوز Active پوشش داده شود.
+    /// </summary>
+    private sealed class FailOnceCartDirectory : ICartDirectory
+    {
+        private readonly ICartDirectory _inner;
+        private int _converts;
+
+        public FailOnceCartDirectory(ICartDirectory inner) => _inner = inner;
+
+        public Task<CartSnapshot> CreateAuthenticatedAsync(Guid userId, string market, string currency, SalesChannel channel, CancellationToken cancellationToken) =>
+            _inner.CreateAuthenticatedAsync(userId, market, currency, channel, cancellationToken);
+
+        public Task<GuestCartCreated> CreateGuestAsync(string market, string currency, SalesChannel channel, CancellationToken cancellationToken) =>
+            _inner.CreateGuestAsync(market, currency, channel, cancellationToken);
+
+        public Task<CartSnapshot> AddOrIncreaseLineAsync(Guid cartId, CartAccess access, int expectedVersion, Guid offerId, int quantity, CancellationToken cancellationToken) =>
+            _inner.AddOrIncreaseLineAsync(cartId, access, expectedVersion, offerId, quantity, cancellationToken);
+
+        public Task<CartSnapshot> ChangeLineQuantityAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, int quantity, CancellationToken cancellationToken) =>
+            _inner.ChangeLineQuantityAsync(cartId, access, expectedVersion, lineId, quantity, cancellationToken);
+
+        public Task<CartSnapshot> RemoveLineAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, CancellationToken cancellationToken) =>
+            _inner.RemoveLineAsync(cartId, access, expectedVersion, lineId, cancellationToken);
+
+        public Task AbandonAsync(Guid cartId, CartAccess access, int expectedVersion, CancellationToken cancellationToken) =>
+            _inner.AbandonAsync(cartId, access, expectedVersion, cancellationToken);
+
+        public Task ExpireDueCartsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken) =>
+            _inner.ExpireDueCartsAsync(utcNow, cancellationToken);
+
+        public Task<CartSnapshot> ConvertAsync(Guid cartId, CartAccess access, int expectedVersion, CartConversionIntent intent, CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref _converts) == 1)
+            {
+                throw new InvalidOperationException("تبدیل سبد عمداً برای آزمون آشتی شکست خورد.");
+            }
+
+            return _inner.ConvertAsync(cartId, access, expectedVersion, intent, cancellationToken);
+        }
     }
 }
