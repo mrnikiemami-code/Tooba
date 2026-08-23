@@ -16,8 +16,14 @@
     <ProjectReference Include="..\..\Modules\PlatformProbe\Tooba.PlatformProbe.Infrastructure\Tooba.PlatformProbe.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Tooba.Identity.Infrastructure\Tooba.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Infrastructure\Tooba.Party.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Infrastructure\Tooba.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Application\Tooba.Offer.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Infrastructure\Tooba.Offer.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Application\Tooba.Party.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Tooba.Pricing.Application\Tooba.Pricing.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Tax\Tooba.Tax.Application\Tooba.Tax.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Pricing\Tooba.Pricing.Infrastructure\Tooba.Pricing.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\Tooba.Inventory.Infrastructure\Tooba.Inventory.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Cart\Tooba.Cart.Infrastructure\Tooba.Cart.Infrastructure.csproj" />

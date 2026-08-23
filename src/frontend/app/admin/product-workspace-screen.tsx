@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { WorkspaceShell, useTheme } from "../../design-system";
+import { ErrorState, WorkspaceShell, faWorkspaceMessages, useTheme } from "../../design-system";
 import { loadProductWorkspace, patchCatalogTitle, type HostReadSource } from "./host-client";
 import { groupOffersBySeller, type ProductWorkspaceView } from "./workspace-model";
 
@@ -23,7 +23,7 @@ const sections = [
 export function ProductWorkspaceScreen({ productId, viewScope = false }: { productId: string; viewScope?: boolean }) {
   const { theme, setColorScheme, setDirection } = useTheme();
   const [view, setView] = useState<ProductWorkspaceView | null>(null);
-  const [source, setSource] = useState<HostReadSource>("fixture");
+  const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [sectionId, setSectionId] = useState("overview");
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [narrow, setNarrow] = useState(false);
@@ -36,9 +36,9 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     void loadProductWorkspace(productId, viewScope).then((result) => {
       setSource(result.source);
       setView(result.view);
-      setTitleDraft(result.view.title);
+      setTitleDraft(result.view?.title ?? "");
       setConflict(null);
-      setError(null);
+      setError(result.message ?? null);
     });
   }, [productId, viewScope]);
 
@@ -52,6 +52,13 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const dirtySections = useMemo(() => dirty, [dirty]);
 
   if (!view) {
+    if (source === "error") {
+      return (
+        <div className="p-4">
+          <ErrorState title="Workspace از Host خوانده نشد" detail={error ?? undefined} onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
+        </div>
+      );
+    }
     return <p className="p-4">در حال بارگذاری Workspace…</p>;
   }
 
@@ -92,7 +99,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   return (
     <div className="p-4" dir={theme.direction}>
       <p className="mb-2 text-sm" data-testid="workspace-source">
-        منبع: {source === "host" ? "Host" : "fixture قرارداد"} · scope={viewScope ? "view" : "edit"}
+        منبع: {source === "host" ? "Host" : "خطای Host — فیکسچر فعال نشد"} · scope={viewScope ? "view" : "edit"}
       </p>
       <div className="mb-3 flex flex-wrap gap-2">
         <button type="button" className="rounded-ds border px-3 py-2" onClick={() => setNarrow((value) => !value)}>

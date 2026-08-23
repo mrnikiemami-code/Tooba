@@ -1,9 +1,9 @@
-import { demoProductWorkspace, type ProductWorkspaceView } from "./workspace-model.ts";
+import type { ProductWorkspaceView } from "./workspace-model.ts";
 
 /**
- * منبع خواندن UI. fixture یعنی Host در دسترس نبود یا فهرست خالی بود؛ persistence جعل نمی‌شود.
+ * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
  */
-export type HostReadSource = "host" | "fixture";
+export type HostReadSource = "host" | "error";
 
 /**
  * ردیف فهرست Admin. قیمت و موجودی روی هویت Product نیستند.
@@ -43,15 +43,6 @@ function asRecordArray(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => !!item && typeof item === "object") : [];
 }
 
-function fixtureListRow(): AdminProductListRow {
-  return {
-    id: demoProductWorkspace.productId,
-    title: demoProductWorkspace.title,
-    status: demoProductWorkspace.status,
-    variantCount: demoProductWorkspace.variants.length,
-    offerCount: demoProductWorkspace.offers.length,
-  };
-}
 
 /**
  * ردیف فهرست را از JSON ترکیب Host می‌خواند. فیلد Price روی Product وجود ندارد.
@@ -179,19 +170,16 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
 /**
  * فهرست Host را می‌خواند. قطع ارتباط یا فهرست خالی با بنر fixture اعلام می‌شود.
  */
-export async function loadAdminProductList(): Promise<{ source: HostReadSource; rows: AdminProductListRow[] }> {
+export async function loadAdminProductList(): Promise<{ source: HostReadSource; rows: AdminProductListRow[]; message?: string }> {
   try {
     const response = await fetch("/v1/admin/products", { headers: { Accept: "application/json" } });
     if (!response.ok) {
-      return { source: "fixture", rows: [fixtureListRow()] };
+      return { source: "error", rows: [], message: "host-list-http-" + String(response.status) };
     }
     const rows = mapAdminProductList(await response.json());
-    if (rows.length === 0) {
-      return { source: "fixture", rows: [fixtureListRow()] };
-    }
     return { source: "host", rows };
   } catch {
-    return { source: "fixture", rows: [fixtureListRow()] };
+    return { source: "error", rows: [], message: "host-unreachable" };
   }
 }
 
@@ -201,7 +189,7 @@ export async function loadAdminProductList(): Promise<{ source: HostReadSource; 
 export async function loadProductWorkspace(
   productId: string,
   viewScope: boolean,
-): Promise<{ source: HostReadSource; view: ProductWorkspaceView }> {
+): Promise<{ source: HostReadSource; view: ProductWorkspaceView | null; message?: string }> {
   try {
     const headers: Record<string, string> = { Accept: "application/json" };
     if (viewScope) {
@@ -213,27 +201,12 @@ export async function loadProductWorkspace(
       if (view) {
         return { source: "host", view };
       }
+      return { source: "error", view: null, message: "host-workspace-invalid" };
     }
+    return { source: "error", view: null, message: "host-workspace-http-" + String(response.status) };
   } catch {
-    // Host unreachable: contract fixture below.
+    return { source: "error", view: null, message: "host-unreachable" };
   }
-  const view = { ...demoProductWorkspace, productId };
-  if (viewScope) {
-    return {
-      source: "fixture",
-      view: {
-        ...view,
-        permissions: {
-          canView: true,
-          canEditCatalog: false,
-          canEditCommercial: false,
-          canEditInventory: false,
-          canPublish: false,
-        },
-      },
-    };
-  }
-  return { source: "fixture", view };
 }
 
 /**

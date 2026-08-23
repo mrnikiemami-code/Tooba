@@ -100,7 +100,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is IN_PROGRESS under TB-P04-T005 (Admin Product Workspace). Workspace Interaction Patterns are Architect-accepted. Visual ACCEPT is pending. ErrorState retry i18n is RESOLVED; grid virtualization remains DEFERRED_NON_BLOCKING. Do not start Order/Seller/Customer workspaces or storefront overhaul.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T005 REPAIR (live visual evidence). Workspace Interaction Patterns are Architect-accepted. Visual ACCEPT is pending. Do not start TB-P04-T006.
 
 ## P04 Work Packages
 

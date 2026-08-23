@@ -15,7 +15,7 @@ Host `ProductWorkspaceComposer` queries Catalog, Offer, Pricing, Inventory, and 
 
 UI view-model != domain aggregate. Product has no Price and no Stock fields.
 
-The Next shell rewrites `/v1/*` to Host. If Host is unreachable or the catalog list is empty, the UI shows an explicit contract fixture banner; that is not claimed persistence.
+The Next shell rewrites `/v1/*` to Host. Production Admin routes (`/admin/products`, `/admin/products/[productId]`) read that Host composition by default. If Host is unreachable, the UI shows an error/retry state; fixture JSON is not substituted on those routes. Development Host may insert representative Catalog/Offer/Price/Tax/Inventory rows through module directories, then the same HTTP APIs are read back.
 
 ## Sections
 

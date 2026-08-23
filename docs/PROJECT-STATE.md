@@ -45,7 +45,7 @@ TB-P03-GATE
 Current Issued Task:
 
 ```text
-TB-P04-T004
+TB-P04-T005 REPAIR / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -85,7 +85,7 @@ TB-P04-T001 = ACCEPTED
 TB-P04-T002 = ACCEPTED
 TB-P04-T003 = ACCEPTED
 TB-P04-T004 = ACCEPTED
-TB-P04-T005 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T005 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -507,4 +507,4 @@ Authorized local envelope path for this issued work:
 docs/ai/tasks/TB-P04-T005.task.md
 ```
 
-Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 through TB-P04-T004 are Architect-accepted. Current issued work is TB-P04-T005 (Admin Product Workspace). Visual ACCEPT is pending. Do not start Order/Seller/Customer workspaces or storefront overhaul. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.
+Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 through TB-P04-T004 are Architect-accepted. Current issued work is TB-P04-T005 REPAIR (live visual evidence). Visual ACCEPT is pending. Do not start TB-P04-T006. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.

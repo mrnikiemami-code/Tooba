@@ -157,6 +157,10 @@ builder.Services.AddOpenTelemetry()
     });
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
+}
 
 app.UseExceptionHandler();
 if (trustedProxies.Length > 0)

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { DataGrid } from "../../design-system";
+import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
 import { executeGridQuery } from "../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import { loadAdminProductList, type AdminProductListRow, type HostReadSource } from "./host-client";
@@ -57,14 +57,20 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
  * فهرست Admin با DataGrid پذیرفته‌شده. داده از Host خوانده می‌شود؛ در قطع ارتباط fixture با بنر صریح است.
  */
 export function ProductListScreen() {
-  const [source, setSource] = useState<HostReadSource>("fixture");
+  const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [rows, setRows] = useState<AdminProductListRow[]>([]);
+  const [message, setMessage] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
+  function refresh() {
     void loadAdminProductList().then((result) => {
       setSource(result.source);
       setRows(result.rows);
+      setMessage(result.message);
     });
+  }
+
+  useEffect(() => {
+    refresh();
   }, []);
 
   const queryAdapter = useMemo(
@@ -77,9 +83,13 @@ export function ProductListScreen() {
       <h1 className="mb-3 text-xl font-semibold">فهرست محصول Admin</h1>
       <p className="mb-2 text-sm text-muted">ورود به Workspace ترکیبی؛ CRUD ماژولی نیست. Price/Stock روی Product نیستند.</p>
       <p className="mb-4 text-sm" data-testid="list-source">
-        منبع داده: {source === "host" ? "Host ترکیب‌شده" : "fixture قرارداد (Host در دسترس نبود یا فهرست خالی بود)"}
+        منبع داده: {source === "host" ? "Host ترکیب‌شده" : source === "loading" ? "در حال خواندن Host" : "خطای Host — فیکسچر فعال نشد"}
       </p>
-      <DataGrid columns={columns} queryAdapter={queryAdapter} />
+      {source === "error" ? (
+        <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+      ) : (
+        <DataGrid columns={columns} queryAdapter={queryAdapter} />
+      )}
       <ul className="mt-4 space-y-2">
         {rows.map((row) => (
           <li key={row.id}>
