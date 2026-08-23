@@ -109,12 +109,12 @@ public sealed class OutboxFoundationTests
     }
 
     [Fact]
-    public void Publisher_and_host_have_no_broker_package()
+    public void Building_blocks_and_persistence_have_no_broker_package()
     {
         var root = FindRepoRoot();
-        var hostCsproj = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Tooba.Host.csproj"));
         var persistenceCsproj = File.ReadAllText(Path.Combine(root, "src", "backend", "BuildingBlocks", "Tooba.Persistence", "Tooba.Persistence.csproj"));
-        foreach (var text in new[] { hostCsproj, persistenceCsproj })
+        var blocksCsproj = File.ReadAllText(Path.Combine(root, "src", "backend", "BuildingBlocks", "Tooba.BuildingBlocks", "Tooba.BuildingBlocks.csproj"));
+        foreach (var text in new[] { persistenceCsproj, blocksCsproj })
         {
             Assert.DoesNotContain("MassTransit", text, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("RabbitMQ", text, StringComparison.OrdinalIgnoreCase);

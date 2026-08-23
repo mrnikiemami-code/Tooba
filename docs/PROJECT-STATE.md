@@ -33,20 +33,20 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P01-T005
+TB-P01-T006
 ```
 
 Current Issued Task:
 
 ```text
-TB-P01-T006
+TB-P01-T007
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P01-T005 = ACCEPTED
-TB-P01-T006 = REPAIR IN PROGRESS / AWAITING ARCHITECT ACCEPT
+TB-P01-T006 = ACCEPTED
+TB-P01-T007 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -74,6 +74,12 @@ COMPLETE (Architect accepted TB-P01-T005)
 ```
 
 Outbox / Domain Events / Background Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P01-T006)
+```
+
+MassTransit PostgreSQL SQL Transport Alignment:
 
 ```text
 IN_PROGRESS
@@ -237,7 +243,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute `TB-P01-T007` or P01-GATE unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute `TB-P01-T008` or P01-GATE unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -275,13 +281,13 @@ docs/architecture/29-observability-error-foundation.md
 docs/architecture/30-tenant-edition-database-foundation.md
 docs/architecture/31-postgresql-persistence-foundation.md
 docs/architecture/32-persian-code-documentation-standard.md
-docs/architecture/33-outbox-domain-events-background-foundation.md
+docs/architecture/34-masstransit-postgresql-sql-transport.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P01-T006.task.md
+docs/ai/tasks/TB-P01-T007.task.md
 ```
 
-Resume: execute TB-P01-T006; then await Architect review. Do not execute `TB-P01-T007` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.
+Resume: execute TB-P01-T007; then await Architect review. Do not execute `TB-P01-T008` unless Architect issues that envelope. P00 = COMPLETE (Architect accepted Gate). P01 IN_PROGRESS.

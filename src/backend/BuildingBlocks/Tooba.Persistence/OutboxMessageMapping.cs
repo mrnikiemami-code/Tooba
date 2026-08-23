@@ -35,6 +35,11 @@ public static class OutboxMessageMapping
             entity.Property(x => x.DeploymentId).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Edition).HasMaxLength(32).IsRequired();
             entity.Property(x => x.LastError).HasMaxLength(256);
+            entity.Property(x => x.OccurredAt).MapAsTimestamp();
+            entity.Property(x => x.ProcessedAt).MapAsTimestamp();
+            entity.Property(x => x.NextAttemptAt).MapAsTimestamp();
+            entity.Property(x => x.DeadLetteredAt).MapAsTimestamp();
+            entity.Property(x => x.LockedUntil).MapAsTimestamp();
             entity.HasIndex(x => x.OccurredAt)
                 .HasDatabaseName("ix_outbox_messages_pending")
                 .HasFilter("processed_at IS NULL AND dead_lettered_at IS NULL");

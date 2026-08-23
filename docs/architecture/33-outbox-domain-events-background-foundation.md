@@ -28,7 +28,7 @@ Worker tenant is not Host
 - Module-owned `outbox_messages` mapped per schema via `OutboxMessage` CLR type + `OutboxMessageMapping` (not one global physical table for all modules).
 - `OutboxSaveChangesInterceptor`: collect domain events, translate only registered mappings, insert outbox rows in the same `SaveChanges` transaction, never invoke consumers.
 - `IOutboxDispatcherStore` with PostgreSQL `FOR UPDATE SKIP LOCKED`.
-- In-process `IIntegrationEventPublisher` (no MassTransit / RabbitMQ / broker package).
+- `IIntegrationEventPublisher` boundary (T006 in-process publisher is now an explicit Testing double; production default is MassTransit SQL Transport in T007).
 - `IIntegrationEventHandler<T>` consumed after claim.
 - Hosted dispatcher from `Tooba:Outbox` (poll interval, batch size, retry base delay, max attempts).
 - `IOutboxModuleRegistration` so PlatformProbe registers as sample DI; generic interceptor/store do not hard-code probe names.
@@ -86,8 +86,8 @@ Explicit type mapping (`platform_probe.record_created.v1` → CLR type). No `Typ
 
 ## Deferred
 
-- Full Inbox table and consumer idempotency store
-- Message broker / MassTransit
+- Full Inbox table and consumer idempotency store (seam only; T007 did not add MassTransit EF inbox)
+- RabbitMQ / MassTransit v9 / per-tenant bus
 - Business modules, Identity, SpiceDB, Catalog
 - Tenant migration orchestrator
 - Exactly-once and global ordering (explicitly out of scope)

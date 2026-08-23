@@ -120,12 +120,12 @@ public interface IIntegrationEventHandler<in TEvent>
 }
 
 /// <summary>
-/// ناشر Integration Event پس از persist. پیاده‌سازی این مرحله درون‌فرآیندی است نه broker.
+/// مرز Tooba برای انتشار Integration Event پس از persist در Outbox. پیاده‌سازی پیش‌فرض تولید MassTransit است؛ کد کسب‌وکار به IBus وابسته نمی‌شود.
 /// </summary>
 public interface IIntegrationEventPublisher
 {
     /// <summary>
-    /// همهٔ handlerهای ثبت‌شده برای نوع واقعی رویداد را صدا می‌زند. شکست یعنی retry/dead-letter در dispatcher.
+    /// رویداد را به transport پایدار می‌سپارد. شکست اینجا یعنی retry/dead-letter Outbox، نه retry مصرف‌کننده.
     /// </summary>
     /// <param name="integrationEvent">رویداد از type map؛ deserialization چندریختی CLR نیست.</param>
     /// <param name="cancellationToken">لغو انتشار.</param>

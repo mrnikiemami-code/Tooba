@@ -6,6 +6,8 @@ namespace Tooba.Persistence;
 /// <summary>
 /// کمک‌های مشترک Npgsql/EF برای DbContextهای ماژول: یک schema، تاریخچهٔ مهاجرت جدا، بدون mega-DbContext.
 /// اتصال از <see cref="ICurrentCommerceContext"/> و <see cref="IDatabaseConnectionResolver"/> می‌آید نه از Host خام در ماژول.
+/// DataSource/NodaTime سراسری روی Npgsql ثبت نمی‌شود تا Dapper MassTransit timestamptz را Instant نبیند.
+/// Instantهای ماژول با تبدیل DateTimeOffset نگاشت می‌شوند.
 /// </summary>
 public static class ToobaNpgsql
 {
@@ -38,7 +40,6 @@ public static class ToobaNpgsql
         {
             npgsql.MigrationsHistoryTable("__ef_migrations_history", schema);
             npgsql.MigrationsAssembly(migrationsAssemblyMarker.Assembly.GetName().Name);
-            npgsql.UseNodaTime();
         });
         options.UseSnakeCaseNamingConvention();
         options.EnableSensitiveDataLogging(false);

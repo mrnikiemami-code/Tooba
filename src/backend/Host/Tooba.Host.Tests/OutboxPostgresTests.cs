@@ -15,6 +15,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// تست‌های PostgreSQL برای تراکنش Outbox، dispatcher، retry، isolation و SKIP LOCKED.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class OutboxPostgresTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

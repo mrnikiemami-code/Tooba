@@ -82,6 +82,7 @@ public sealed class PlatformProbeDbContext : DbContext
             entity.ToTable("probe_records");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).ValueGeneratedNever();
+            entity.Property(x => x.CreatedAt).MapAsTimestamp();
             entity.Property(x => x.ExternalReference);
             entity.Ignore(x => x.DomainEvents);
         });

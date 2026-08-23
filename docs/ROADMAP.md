@@ -24,7 +24,8 @@ Do not execute packages without an Architect-authorized envelope.
 | P01-03 | Tenant, edition & database resolution foundation | COMPLETE (Architect accepted TB-P01-T003) |
 | P01-04 | PostgreSQL persistence & module data ownership | COMPLETE (Architect accepted TB-P01-T004) |
 | P01-05 | Persian code documentation & quality guardrails | COMPLETE (Architect accepted TB-P01-T005) |
-| P01-06 | Outbox, domain/integration events & background dispatcher | IN_PROGRESS |
+| P01-06 | Outbox, domain/integration events & background dispatcher | COMPLETE (Architect accepted TB-P01-T006) |
+| P01-07 | MassTransit PostgreSQL SQL Transport alignment | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -65,8 +66,9 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 - TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
 - P00 is COMPLETE after Architect ACCEPT of Gate.
-- P01 Platform Foundation is IN_PROGRESS under TB-P01-T006 (awaiting Architect accept).
-- `TB-P01-T007` is not authorized.
+- P01 Platform Foundation is IN_PROGRESS under TB-P01-T007 (awaiting Architect accept).
+- Locked messaging: MassTransit 8.5.10, PostgreSQL SQL Transport, RabbitMQ not used, one transport DB per deployment.
+- `TB-P01-T008` is not authorized.
 
 ## Mandatory future UX / template work (not authorized now)
 

@@ -54,7 +54,7 @@ public sealed class OutboxMessage
     public string Edition { get; set; } = "";
 
     /// <summary>
-    /// زمان موفقیت انتشار درون‌فرآیندی؛ تهی یعنی هنوز pending.
+    /// زمان موفقیت انتشار به transport پایدار؛ تهی یعنی هنوز pending. موفقیت مصرف‌کننده نیست.
     /// </summary>
     public Instant? ProcessedAt { get; set; }
 

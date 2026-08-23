@@ -5,7 +5,7 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Host;
 
 /// <summary>
-/// ناشر درون‌فرآیندی: handlerها را از DI همان scope صدا می‌زند. بستهٔ broker ندارد و از SaveChanges جدا است.
+/// دابل تست صریح: handlerها را همان‌جا صدا می‌زند. پیش‌فرض تولید نیست و جایگزین SQL Transport نمی‌شود.
 /// </summary>
 internal sealed class InProcessIntegrationEventPublisher : IIntegrationEventPublisher
 {
