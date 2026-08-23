@@ -51,7 +51,8 @@ Do not execute packages without an Architect-authorized envelope.
 | P03-02 | Seller offer & listing foundation | COMPLETE (Architect accepted TB-P03-T002) |
 | P03-03 | Pricing foundation | COMPLETE (Architect accepted TB-P03-T003) |
 | P03-04 | Inventory foundation | COMPLETE (Architect accepted TB-P03-T004) |
-| P03-05 | Cart foundation | IN_PROGRESS |
+| P03-05 | Cart foundation | COMPLETE (Architect accepted TB-P03-T005) |
+| P03-06 | Checkout & order foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -94,8 +95,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
-- P03 Commerce Core is IN_PROGRESS under TB-P03-T005 (awaiting Architect accept). TB-P03-T004 is Architect-accepted.
-- `TB-P03-T006` is not authorized until Architect issues that envelope.
+- P03 Commerce Core is IN_PROGRESS under TB-P03-T006 (awaiting Architect accept). TB-P03-T005 is Architect-accepted.
+- `TB-P03-T007` and P03 Gate are not authorized until Architect issues those envelopes.
 
 ## Mandatory future UX / template work (not authorized now)
 

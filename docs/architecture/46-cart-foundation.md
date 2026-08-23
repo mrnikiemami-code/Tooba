@@ -3,7 +3,7 @@
 Status:
 
 ```text
-IN_PROGRESS — TB-P03-T005 awaiting Architect ACCEPT
+COMPLETE — Architect accepted TB-P03-T005
 ```
 
 Task:
@@ -50,7 +50,7 @@ Cart does not hold more reserved quantity than the current line quantity.
 
 ## Marketplace
 
-One cart may contain offers from multiple sellers. Seller-order split is out of scope.
+One cart may contain offers from multiple sellers. Seller-order split is owned by Checkout/Order (`docs/architecture/47-checkout-order-foundation.md`).
 
 ## Events
 
@@ -63,4 +63,4 @@ One cart may contain offers from multiple sellers. Seller-order split is out of 
 
 ## Out of scope
 
-Checkout, Order, Payment, shipping, promotions, tax calculation, commercial UI, TB-P03-T006, P03 Gate.
+Payment, shipping, promotions, tax calculation, commercial UI, P03 Gate. Checkout/Order foundation is a later envelope (`TB-P03-T006`).

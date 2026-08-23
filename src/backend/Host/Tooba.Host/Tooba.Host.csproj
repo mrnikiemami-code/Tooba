@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\Modules\Pricing\Tooba.Pricing.Infrastructure\Tooba.Pricing.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\Tooba.Inventory.Infrastructure\Tooba.Inventory.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Cart\Tooba.Cart.Infrastructure\Tooba.Cart.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Infrastructure\Tooba.Order.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Authzed.Net" Version="1.6.0" />
