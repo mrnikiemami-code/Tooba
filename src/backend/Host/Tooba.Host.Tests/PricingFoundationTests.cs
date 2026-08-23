@@ -26,6 +26,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// پوشش foundation Pricing: مبلغ نوشته‌شده جدا از Product/Offer، بازار/ارز/کانال صریح، و ایزولهٔ Tenant.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class PricingFoundationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

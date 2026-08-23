@@ -24,6 +24,7 @@ namespace Tooba.Host.Tests;
 /// پوشش foundation Offer: listing فروشنده جدا از Product/قیمت/موجودی و ایزولهٔ Tenant.
 /// Single-Store هم از Offer استفاده می‌کند و Price را روی CatalogProduct نمی‌گذارد.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class OfferFoundationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

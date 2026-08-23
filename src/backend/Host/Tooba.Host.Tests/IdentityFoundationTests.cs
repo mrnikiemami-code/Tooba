@@ -132,6 +132,7 @@ public sealed class IdentityFoundationTests
 /// <summary>
 /// تست PostgreSQL واقعی برای یکتایی شناسه و ورود رمز.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class IdentityPostgresTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

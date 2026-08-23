@@ -7,6 +7,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// دود PostgreSQL واقعی با Testcontainers؛ در نبود Docker تست skip می‌شود نه fail کاذب.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class PostgresIntegrationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

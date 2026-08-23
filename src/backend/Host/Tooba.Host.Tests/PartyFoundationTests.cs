@@ -15,6 +15,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// پوشش foundation Party بدون UI تجاری و بدون نقش ثابت Seller/Agency روی User.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class PartyFoundationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

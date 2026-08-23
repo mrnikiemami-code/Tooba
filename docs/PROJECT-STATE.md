@@ -72,7 +72,7 @@ TB-P02-T005 = ACCEPTED
 TB-P02-GATE = ACCEPTED
 TB-P03-T001 = ACCEPTED
 TB-P03-T002 = ACCEPTED
-TB-P03-T003 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T003 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -397,6 +397,7 @@ Authorized local envelope path for this issued work:
 
 ```text
 docs/ai/tasks/TB-P03-T003.task.md
+docs/ai/tasks/TB-P03-T003-REPAIR.task.md
 ```
 
-Resume: execute TB-P03-T003; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T004 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: execute TB-P03-T003-REPAIR (deterministic postgres/docker suite; Skipped=0). Do not start TB-P03-T004. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.

@@ -11,6 +11,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// یکپارچگی واقعی SpiceDB با تصویر قفل‌شده. PASS از InMemory به‌عنوان یکپارچگی گزارش نمی‌شود.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class SpiceDbIntegrationTests : IAsyncLifetime
 {
     private const string TestPresharedKey = "tooba-spicedb-test-key";

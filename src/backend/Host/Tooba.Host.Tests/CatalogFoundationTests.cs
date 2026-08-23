@@ -15,6 +15,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// پوشش foundation Catalog: محصول توصیفی جدا از Offer/قیمت/موجودی و ایزولهٔ Tenant.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class CatalogFoundationTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;

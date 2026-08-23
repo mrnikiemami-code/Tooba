@@ -12,6 +12,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// پوشش نشست، چرخش Refresh، چالش پایدار و isolation بدون UI ورود.
 /// </summary>
+[Collection("PostgresSerial")]
 public sealed class IdentityLifecycleTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
