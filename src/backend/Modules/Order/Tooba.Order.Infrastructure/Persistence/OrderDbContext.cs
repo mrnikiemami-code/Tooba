@@ -95,6 +95,12 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.TaxRateSnapshot).HasPrecision(19, 8);
             entity.Property(x => x.TaxAmountSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.TaxInclusiveSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.DiscountAmountSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.PromotionNameSnapshot).HasMaxLength(256);
+            entity.Property(x => x.PromotionCodeSnapshot).HasMaxLength(64);
+            entity.Property(x => x.DiscountKindSnapshot).HasMaxLength(32);
+            entity.Property(x => x.PreDiscountTaxExclusiveSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.PostDiscountTaxExclusiveSnapshot).HasPrecision(19, 4);
         });
         modelBuilder.Entity<OrderPaymentInboxRecord>(entity =>
         {

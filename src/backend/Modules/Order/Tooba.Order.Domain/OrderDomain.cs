@@ -148,7 +148,47 @@ public sealed class OrderLine
     public Guid? TaxRuleIdSnapshot { get; init; }
 
     /// <summary>
-    /// خط را از نقل‌قول تازه و نتیجهٔ مالیات می‌سازد.
+    /// مبلغ تخفیف اعمال‌شده روی خط در لحظهٔ checkout. قیمت تألیف‌شده نیست.
+    /// </summary>
+    public decimal DiscountAmountSnapshot { get; init; }
+
+    /// <summary>
+    /// شناسهٔ پروموشن اعمال‌شده؛ FK به schema promotion نیست.
+    /// </summary>
+    public Guid? PromotionIdSnapshot { get; init; }
+
+    /// <summary>
+    /// نام پروموشن در لحظهٔ اعمال.
+    /// </summary>
+    public string? PromotionNameSnapshot { get; init; }
+
+    /// <summary>
+    /// کد کوپن نرمال‌شده در تصویر تاریخی.
+    /// </summary>
+    public string? PromotionCodeSnapshot { get; init; }
+
+    /// <summary>
+    /// گونهٔ تخفیف در تصویر.
+    /// </summary>
+    public string? DiscountKindSnapshot { get; init; }
+
+    /// <summary>
+    /// مبلغ بدون مالیات قبل از تخفیف.
+    /// </summary>
+    public decimal PreDiscountTaxExclusiveSnapshot { get; init; }
+
+    /// <summary>
+    /// مبلغ بدون مالیات بعد از تخفیف؛ پایهٔ Tax.
+    /// </summary>
+    public decimal PostDiscountTaxExclusiveSnapshot { get; init; }
+
+    /// <summary>
+    /// زمان اعمال پروموشن در تسویه.
+    /// </summary>
+    public DateTimeOffset? PromotionAppliedAtSnapshot { get; init; }
+
+    /// <summary>
+    /// خط را از نقل‌قول تازه، تخفیف ارزیابی‌شده و نتیجهٔ مالیات می‌سازد.
     /// </summary>
     public static OrderLine FromCheckout(
         Guid sellerOrderId,
@@ -165,7 +205,15 @@ public sealed class OrderLine
         decimal taxRate,
         decimal taxAmount,
         decimal taxInclusive,
-        Guid? taxRuleId)
+        Guid? taxRuleId,
+        decimal discountAmount = 0m,
+        Guid? promotionId = null,
+        string? promotionName = null,
+        string? promotionCode = null,
+        string? discountKind = null,
+        decimal? preDiscountTaxExclusive = null,
+        decimal? postDiscountTaxExclusive = null,
+        DateTimeOffset? promotionAppliedAt = null)
     {
         if (quantity <= 0)
         {
@@ -196,6 +244,14 @@ public sealed class OrderLine
             TaxAmountSnapshot = taxAmount,
             TaxInclusiveSnapshot = taxInclusive,
             TaxRuleIdSnapshot = taxRuleId,
+            DiscountAmountSnapshot = discountAmount,
+            PromotionIdSnapshot = promotionId,
+            PromotionNameSnapshot = promotionName,
+            PromotionCodeSnapshot = promotionCode,
+            DiscountKindSnapshot = discountKind,
+            PreDiscountTaxExclusiveSnapshot = preDiscountTaxExclusive ?? decimal.Multiply(unitPrice, quantity),
+            PostDiscountTaxExclusiveSnapshot = postDiscountTaxExclusive ?? decimal.Multiply(unitPrice, quantity) - discountAmount,
+            PromotionAppliedAtSnapshot = promotionAppliedAt,
         };
     }
 }
@@ -253,7 +309,7 @@ public sealed class SellerOrder
     public decimal TaxSnapshot { get; private set; }
 
     /// <summary>
-    /// تخفیف موتور پروموشن هنوز نیست.
+    /// جمع تخفیف تصویر خطوط در لحظهٔ checkout. پروموشن بعدی این عدد را عوض نمی‌کند.
     /// </summary>
     public decimal DiscountSnapshot { get; private set; }
 
@@ -301,8 +357,8 @@ public sealed class SellerOrder
 
         order.SubtotalSnapshot = lines.Sum(x => x.LineTotalSnapshot);
         order.TaxSnapshot = lines.Sum(x => x.TaxAmountSnapshot);
-        order.DiscountSnapshot = 0m;
-        order.GrandTotalSnapshot = order.SubtotalSnapshot + order.TaxSnapshot;
+        order.DiscountSnapshot = lines.Sum(x => x.DiscountAmountSnapshot);
+        order.GrandTotalSnapshot = order.SubtotalSnapshot - order.DiscountSnapshot + order.TaxSnapshot;
         return order;
     }
 

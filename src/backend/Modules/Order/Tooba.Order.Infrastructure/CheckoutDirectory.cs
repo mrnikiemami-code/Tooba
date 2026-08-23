@@ -10,6 +10,8 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
+using Tooba.Promotion.Application;
+using Tooba.Promotion.Domain;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 
@@ -38,6 +40,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IPriceLookupGateway _prices;
     private readonly IInventoryDirectory _inventory;
     private readonly ITaxCalculator _taxes;
+    private readonly IPromotionEvaluator _promotions;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -50,7 +53,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
         IInventoryDirectory inventory,
-        ITaxCalculator taxes)
+        ITaxCalculator taxes,
+        IPromotionEvaluator promotions)
     {
         _db = db;
         _guard = guard;
@@ -60,6 +64,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _prices = prices;
         _inventory = inventory;
         _taxes = taxes;
+        _promotions = promotions;
     }
 
     /// <inheritdoc />
@@ -142,14 +147,32 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     throw new InvalidOperationException("خط سبد بدون رزرو موجودی به سفارش تبدیل نمی‌شود.");
                 }
 
+                var lineExclusive = quote.Amount * cartLine.Quantity;
+                var promotion = await _promotions.EvaluateAsync(
+                    new PromotionEvaluationRequest(
+                        cartLine.OfferId,
+                        cartLine.CatalogVariantId,
+                        null,
+                        cartLine.SellerPartyId,
+                        cart.Market,
+                        cart.Channel.ToString(),
+                        quote.Currency,
+                        cartLine.Quantity,
+                        lineExclusive,
+                        command.BuyerPartyId,
+                        null,
+                        command.CouponCode,
+                        now),
+                    cancellationToken);
+
                 var tax = await _taxes.CalculateAsync(
                     new TaxCalculationRequest(
                         cartLine.OfferId,
                         command.TaxJurisdiction,
                         cart.Market,
                         quote.Currency,
-                        quote.Amount,
-                        cartLine.Quantity,
+                        promotion.PostDiscountTaxExclusiveAmount,
+                        1,
                         now,
                         command.BuyerPartyId,
                         AllowTrustedOverride: false,
@@ -180,7 +203,15 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     tax.TaxRate,
                     tax.TaxAmount,
                     tax.TaxInclusiveAmount,
-                    tax.RuleId));
+                    tax.RuleId,
+                    promotion.DiscountAmount,
+                    promotion.Applied.FirstOrDefault()?.PromotionId,
+                    promotion.Applied.FirstOrDefault()?.Name,
+                    promotion.Applied.FirstOrDefault()?.CouponCode,
+                    promotion.Applied.FirstOrDefault()?.DiscountKind.ToString(),
+                    promotion.DiscountAmount == 0 ? lineExclusive : lineExclusive,
+                    promotion.PostDiscountTaxExclusiveAmount,
+                    promotion.Applied.Count == 0 ? null : now));
             }
 
             sellerOrders.Add(SellerOrder.Open(
@@ -190,6 +221,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 command.Mode,
                 cart.Currency,
                 lines));
+        }
+
+        if (command.QuotedDiscountAmount is { } quotedDiscount
+            && quotedDiscount != sellerOrders.Sum(x => x.DiscountSnapshot))
+        {
+            throw new InvalidOperationException("PROMOTION_CHANGED");
         }
 
         var group = CheckoutGroup.Submit(
@@ -384,5 +421,13 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 line.TaxRateSnapshot,
                 line.TaxAmountSnapshot,
                 line.TaxInclusiveSnapshot,
-                line.TaxRuleIdSnapshot)).ToList());
+                line.TaxRuleIdSnapshot,
+                line.DiscountAmountSnapshot,
+                line.PromotionIdSnapshot,
+                line.PromotionNameSnapshot,
+                line.PromotionCodeSnapshot,
+                line.DiscountKindSnapshot,
+                line.PreDiscountTaxExclusiveSnapshot,
+                line.PostDiscountTaxExclusiveSnapshot,
+                line.PromotionAppliedAtSnapshot)).ToList());
 }

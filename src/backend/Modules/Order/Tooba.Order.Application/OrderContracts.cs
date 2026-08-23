@@ -23,7 +23,15 @@ public sealed record OrderLineSnapshot(
     decimal TaxRateSnapshot,
     decimal TaxAmountSnapshot,
     decimal TaxInclusiveSnapshot,
-    Guid? TaxRuleIdSnapshot);
+    Guid? TaxRuleIdSnapshot,
+    decimal DiscountAmountSnapshot,
+    Guid? PromotionIdSnapshot,
+    string? PromotionNameSnapshot,
+    string? PromotionCodeSnapshot,
+    string? DiscountKindSnapshot,
+    decimal PreDiscountTaxExclusiveSnapshot,
+    decimal PostDiscountTaxExclusiveSnapshot,
+    DateTimeOffset? PromotionAppliedAtSnapshot);
 
 /// <summary>
 /// سفارش یک فروشنده داخل checkout. چرخهٔ ارسال نیست.
@@ -66,7 +74,9 @@ public sealed record SubmitCheckoutCommand(
     Guid? BuyerPartyId,
     Guid PlacedByUserId,
     string IdempotencyKey,
-    string TaxJurisdiction);
+    string TaxJurisdiction,
+    string? CouponCode = null,
+    decimal? QuotedDiscountAmount = null);
 
 /// <summary>
 /// هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.

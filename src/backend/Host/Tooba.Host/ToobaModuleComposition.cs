@@ -9,6 +9,7 @@ using Tooba.Inventory.Infrastructure;
 using Tooba.Cart.Infrastructure;
 using Tooba.Order.Infrastructure;
 using Tooba.Tax.Infrastructure;
+using Tooba.Promotion.Infrastructure;
 using Tooba.Payment.Infrastructure;
 
 namespace Tooba.Host;
@@ -34,6 +35,7 @@ internal static class ToobaModuleComposition
         new CartModule(),
         new OrderModule(),
         new TaxModule(),
+        new PromotionModule(),
         new PaymentModule(),
     ];
 

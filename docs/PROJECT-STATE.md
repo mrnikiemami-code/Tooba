@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T007
+TB-P03-T008
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P02-GATE
 Current Issued Task:
 
 ```text
-TB-P03-T008
+TB-P03-T009
 ```
 
 Current Gate:
@@ -77,7 +77,8 @@ TB-P03-T004 = ACCEPTED
 TB-P03-T005 = ACCEPTED
 TB-P03-T006 = ACCEPTED
 TB-P03-T007 = ACCEPTED
-TB-P03-T008 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T008 = ACCEPTED
+TB-P03-T009 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -425,13 +426,13 @@ docs/architecture/46-cart-foundation.md
 docs/architecture/47-checkout-order-foundation.md
 docs/architecture/48-tax-calculation-foundation.md
 docs/architecture/49-payment-foundation.md
+docs/architecture/50-promotion-discount-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-T008.task.md
-docs/ai/tasks/TB-P03-T008-REPAIR.task.md
+docs/ai/tasks/TB-P03-T009.task.md
 ```
 
-Resume: durable Payment→Order projection repair for TB-P03-T008 is implemented; wait in the same Architect chat for ACCEPT or the next valid envelope. Do not start TB-P03-T009 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: TB-P03-T008 is Architect-accepted. TB-P03-T009 Promotion & Discount Foundation is implemented and awaiting Architect ACCEPT. Do not start TB-P03-T010 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
