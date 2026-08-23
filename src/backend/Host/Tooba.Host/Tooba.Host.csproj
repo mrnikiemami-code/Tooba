@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
     <ProjectReference Include="..\..\Modules\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\Modules\PlatformProbe\Tooba.PlatformProbe.Infrastructure\Tooba.PlatformProbe.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Tooba.Identity.Infrastructure\Tooba.Identity.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MassTransit" Version="8.5.10" />

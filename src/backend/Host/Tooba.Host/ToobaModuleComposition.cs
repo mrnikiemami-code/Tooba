@@ -1,3 +1,4 @@
+using Tooba.Identity.Infrastructure;
 using Tooba.ModuleContracts;
 using Tooba.PlatformProbe.Infrastructure;
 
@@ -15,6 +16,7 @@ internal static class ToobaModuleComposition
     public static IReadOnlyList<IToobaModule> Modules { get; } =
     [
         new PlatformProbeModule(),
+        new IdentityModule(),
     ];
 
     /// <summary>

@@ -3,7 +3,7 @@
 ## Current Phase
 
 ```text
-P01 — Platform Foundation
+P02 — Identity / Authorization
 ```
 
 Status:
@@ -13,6 +13,7 @@ IN_PROGRESS
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
+P01 Platform Foundation is COMPLETE (Architect accepted TB-P01-GATE).
 Do not execute packages without an Architect-authorized envelope.
 
 ## P01 Work Packages
@@ -28,7 +29,13 @@ Do not execute packages without an Architect-authorized envelope.
 | P01-07 | MassTransit PostgreSQL SQL Transport alignment | COMPLETE (Architect accepted TB-P01-T007) |
 | P01-08 | Cache abstraction & tenant-aware caching foundation | COMPLETE (Architect accepted TB-P01-T008) |
 | P01-09 | Module composition & boundary enforcement | COMPLETE (Architect accepted TB-P01-T009) |
-| P01-GATE | Platform foundation acceptance gate | IN_PROGRESS |
+| P01-GATE | Platform foundation acceptance gate | COMPLETE (Architect accepted TB-P01-GATE) |
+
+## P02 Work Packages
+
+| ID | Work package | Status |
+| --- | --- | --- |
+| P02-01 | Identity / authentication foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -69,9 +76,10 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 - TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
 - P00 is COMPLETE after Architect ACCEPT of Gate.
-- P01 Platform Foundation is IN_PROGRESS under TB-P01-GATE (awaiting Architect accept). Do not mark P01 COMPLETE yet.
+- P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
+- P02 Identity / Authorization is IN_PROGRESS under TB-P02-T001 (awaiting Architect accept).
 - Locked messaging: MassTransit 8.5.10, PostgreSQL SQL Transport, RabbitMQ not used, one transport DB per deployment.
-- P02 is not authorized until Architect ACCEPT of TB-P01-GATE and a new envelope.
+- `TB-P02-T002` is not authorized until Architect issues that envelope.
 
 ## Mandatory future UX / template work (not authorized now)
 
