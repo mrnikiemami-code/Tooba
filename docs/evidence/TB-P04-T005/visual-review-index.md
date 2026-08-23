@@ -19,4 +19,6 @@ Live evidence is under `docs/evidence/TB-P04-T005/live/`. Captured from Next `ht
 
 Also verified: `?scope=view` disables Save/Publish (`منبع: Host · scope= view`). Native unsaved dialog remains DEFERRED_NON_BLOCKING.
 
+Architect contact sheet (labels 01–10, originals unchanged): `live/architect-visual-contact-sheet.png`.
+
 Cursor PASS != Architect visual ACCEPT. TB-P04-T006 is not issued.
