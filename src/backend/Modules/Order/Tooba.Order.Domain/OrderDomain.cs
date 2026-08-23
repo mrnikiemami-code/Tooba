@@ -118,7 +118,32 @@ public sealed class OrderLine
     public Guid? ReservationId { get; init; }
 
     /// <summary>
-    /// خط را از نقل‌قول تازه می‌سازد.
+    /// نتیجهٔ مالیات در لحظهٔ checkout. از قاعدهٔ بعدی بازمحاسبه نمی‌شود.
+    /// </summary>
+    public string TaxOutcomeSnapshot { get; init; } = string.Empty;
+
+    /// <summary>
+    /// نرخ اعمال‌شده در تصویر تاریخی.
+    /// </summary>
+    public decimal TaxRateSnapshot { get; init; }
+
+    /// <summary>
+    /// مبلغ مالیات خط در تصویر تاریخی.
+    /// </summary>
+    public decimal TaxAmountSnapshot { get; init; }
+
+    /// <summary>
+    /// مبلغ با مالیات خط در تصویر تاریخی.
+    /// </summary>
+    public decimal TaxInclusiveSnapshot { get; init; }
+
+    /// <summary>
+    /// قاعدهٔ اعمال‌شده؛ FK به schema tax نیست.
+    /// </summary>
+    public Guid? TaxRuleIdSnapshot { get; init; }
+
+    /// <summary>
+    /// خط را از نقل‌قول تازه و نتیجهٔ مالیات می‌سازد.
     /// </summary>
     public static OrderLine FromCheckout(
         Guid sellerOrderId,
@@ -130,11 +155,21 @@ public sealed class OrderLine
         string currency,
         bool taxExclusive,
         Guid priceId,
-        Guid? reservationId)
+        Guid? reservationId,
+        string taxOutcome,
+        decimal taxRate,
+        decimal taxAmount,
+        decimal taxInclusive,
+        Guid? taxRuleId)
     {
         if (quantity <= 0)
         {
             throw new InvalidOperationException("تعداد خط سفارش باید مثبت باشد.");
+        }
+
+        if (!taxExclusive)
+        {
+            throw new InvalidOperationException("قیمت پایه باید بدون مالیات باشد؛ Tax مبلغ را داخل Pricing دفن نمی‌کند.");
         }
 
         return new OrderLine
@@ -151,6 +186,11 @@ public sealed class OrderLine
             TaxExclusive = taxExclusive,
             PriceId = priceId,
             ReservationId = reservationId,
+            TaxOutcomeSnapshot = taxOutcome,
+            TaxRateSnapshot = taxRate,
+            TaxAmountSnapshot = taxAmount,
+            TaxInclusiveSnapshot = taxInclusive,
+            TaxRuleIdSnapshot = taxRuleId,
         };
     }
 }
@@ -203,7 +243,7 @@ public sealed class SellerOrder
     public decimal SubtotalSnapshot { get; private set; }
 
     /// <summary>
-    /// مالیات هنوز اعمال نشده؛ صفر به‌معنای محاسبه‌شده نیست.
+    /// جمع مالیات تصویر خطوط در لحظهٔ checkout. قاعدهٔ بعدی این عدد را عوض نمی‌کند.
     /// </summary>
     public decimal TaxSnapshot { get; private set; }
 
@@ -255,9 +295,9 @@ public sealed class SellerOrder
         }
 
         order.SubtotalSnapshot = lines.Sum(x => x.LineTotalSnapshot);
-        order.TaxSnapshot = 0m;
+        order.TaxSnapshot = lines.Sum(x => x.TaxAmountSnapshot);
         order.DiscountSnapshot = 0m;
-        order.GrandTotalSnapshot = order.SubtotalSnapshot;
+        order.GrandTotalSnapshot = order.SubtotalSnapshot + order.TaxSnapshot;
         return order;
     }
 

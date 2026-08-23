@@ -10,6 +10,8 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
+using Tooba.Tax.Application;
+using Tooba.Tax.Domain;
 
 namespace Tooba.Order.Infrastructure;
 
@@ -35,6 +37,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IOfferLookupGateway _offers;
     private readonly IPriceLookupGateway _prices;
     private readonly IInventoryDirectory _inventory;
+    private readonly ITaxCalculator _taxes;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -46,7 +49,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         ICartDirectory cartMutations,
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
-        IInventoryDirectory inventory)
+        IInventoryDirectory inventory,
+        ITaxCalculator taxes)
     {
         _db = db;
         _guard = guard;
@@ -55,6 +59,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _offers = offers;
         _prices = prices;
         _inventory = inventory;
+        _taxes = taxes;
     }
 
     /// <inheritdoc />
@@ -137,6 +142,29 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     throw new InvalidOperationException("خط سبد بدون رزرو موجودی به سفارش تبدیل نمی‌شود.");
                 }
 
+                var tax = await _taxes.CalculateAsync(
+                    new TaxCalculationRequest(
+                        cartLine.OfferId,
+                        command.TaxJurisdiction,
+                        cart.Market,
+                        quote.Currency,
+                        quote.Amount,
+                        cartLine.Quantity,
+                        now,
+                        command.BuyerPartyId,
+                        AllowTrustedOverride: false,
+                        TrustedOverrideRate: null),
+                    cancellationToken);
+                if (tax.Outcome is TaxOutcome.NoApplicableRule)
+                {
+                    throw new InvalidOperationException("TAX_NO_APPLICABLE_RULE");
+                }
+
+                if (tax.Outcome is TaxOutcome.CalculationError)
+                {
+                    throw new InvalidOperationException("TAX_CALCULATION_ERROR");
+                }
+
                 lines.Add(OrderLine.FromCheckout(
                     sellerOrderId,
                     cartLine.OfferId,
@@ -147,7 +175,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     quote.Currency,
                     quote.TaxExclusive,
                     quote.PriceId,
-                    cartLine.ReservationId));
+                    cartLine.ReservationId,
+                    tax.Outcome.ToString(),
+                    tax.TaxRate,
+                    tax.TaxAmount,
+                    tax.TaxInclusiveAmount,
+                    tax.RuleId));
             }
 
             sellerOrders.Add(SellerOrder.Open(
@@ -346,5 +379,10 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 line.Currency,
                 line.TaxExclusive,
                 line.PriceId,
-                line.ReservationId)).ToList());
+                line.ReservationId,
+                line.TaxOutcomeSnapshot,
+                line.TaxRateSnapshot,
+                line.TaxAmountSnapshot,
+                line.TaxInclusiveSnapshot,
+                line.TaxRuleIdSnapshot)).ToList());
 }

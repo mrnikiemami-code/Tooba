@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Tooba.Tax.Application</RootNamespace>
+    <AssemblyName>Tooba.Tax.Application</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Tax.Domain\Tooba.Tax.Domain.csproj" />
+  </ItemGroup>
+</Project>

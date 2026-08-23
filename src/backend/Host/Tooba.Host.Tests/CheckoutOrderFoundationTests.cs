@@ -29,6 +29,10 @@ using Tooba.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Tax.Application;
+using Tooba.Tax.Domain;
+using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Infrastructure.Persistence;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -113,6 +117,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             Assert.DoesNotContain("Tooba.Offer.Infrastructure", csproj, StringComparison.Ordinal);
             Assert.DoesNotContain("Tooba.Inventory.Infrastructure", csproj, StringComparison.Ordinal);
             Assert.DoesNotContain("Tooba.Pricing.Infrastructure", csproj, StringComparison.Ordinal);
+            Assert.DoesNotContain("Tooba.Tax.Infrastructure", csproj, StringComparison.Ordinal);
             Assert.DoesNotContain("Tooba.Identity", csproj, StringComparison.Ordinal);
         }
 
@@ -121,6 +126,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Contains("Tooba.Offer.Application", application);
         Assert.Contains("Tooba.Pricing.Application", application);
         Assert.Contains("Tooba.Inventory.Application", application);
+        Assert.Contains("Tooba.Tax.Application", application);
+        Assert.DoesNotContain("Tooba.Tax.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
         Assert.Equal("order", OrderDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(CheckoutGroup).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(ICheckoutDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));
@@ -169,6 +176,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         await using var inventoryA = CreateInventoryDb(csA, commerceA);
         await using var cartA = CreateCartDb(csA, commerceA);
         await using var orderA = CreateOrderDb(csA, commerceA);
+        await using var taxA = CreateTaxDb(csA, commerceA);
         await using var catalogB = CreateCatalogDb(csB, commerceB);
         await using var partyB = CreatePartyDb(csB, commerceB);
         await using var offerB = CreateOfferDb(csB, commerceB);
@@ -176,6 +184,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         await using var inventoryB = CreateInventoryDb(csB, commerceB);
         await using var cartB = CreateCartDb(csB, commerceB);
         await using var orderB = CreateOrderDb(csB, commerceB);
+        await using var taxB = CreateTaxDb(csB, commerceB);
         await catalogA.Database.MigrateAsync();
         await partyA.Database.MigrateAsync();
         await offerA.Database.MigrateAsync();
@@ -183,6 +192,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         await inventoryA.Database.MigrateAsync();
         await cartA.Database.MigrateAsync();
         await orderA.Database.MigrateAsync();
+        await taxA.Database.MigrateAsync();
         await catalogB.Database.MigrateAsync();
         await partyB.Database.MigrateAsync();
         await offerB.Database.MigrateAsync();
@@ -190,6 +200,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         await inventoryB.Database.MigrateAsync();
         await cartB.Database.MigrateAsync();
         await orderB.Database.MigrateAsync();
+        await taxB.Database.MigrateAsync();
 
         var catalogDirA = new CatalogDirectory(catalogA, new OpenCatalogUseCaseGuard());
         var partyDirA = new PartyDirectory(partyA);
@@ -197,7 +208,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var priceDirA = new PriceDirectory(pricingA, new OpenPricingUseCaseGuard(), offerDirA);
         var inventoryDirA = new InventoryDirectory(inventoryA, new OpenInventoryUseCaseGuard(), offerDirA, catalogDirA);
         var cartDirA = new CartDirectory(cartA, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
-        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, inventoryDirA);
+        var taxDirA = new TaxDirectory(taxA, new OpenTaxUseCaseGuard());
+        var checkoutA = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, inventoryDirA, taxDirA);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "پیراهن سفارش", ["en-US"] = "Order shirt" };
         var product = await catalogDirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-order", null, names, CancellationToken.None);
@@ -223,6 +235,21 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var price2 = await priceDirA.CreatePriceAsync(offer2.OfferId, "IR", SalesChannel.Marketplace, 90000, "IRR", start, null, CancellationToken.None);
         await priceDirA.ActivateAsync(price1.PriceId, CancellationToken.None);
         await priceDirA.ActivateAsync(price2.PriceId, CancellationToken.None);
+        var standard = await taxDirA.CreateCategoryAsync("standard", "استاندارد", CancellationToken.None);
+        var taxRule = await taxDirA.CreateRuleAsync(
+            "IR-NAT",
+            "IR",
+            standard.CategoryId,
+            TaxRuleKind.Percentage,
+            0.09m,
+            start,
+            null,
+            10,
+            TaxOverridePolicy.Disabled,
+            CancellationToken.None);
+        await taxDirA.ActivateRuleAsync(taxRule.RuleId, CancellationToken.None);
+        await taxDirA.AssignOfferCategoryAsync(offer1.OfferId, standard.CategoryId, CancellationToken.None);
+        await taxDirA.AssignOfferCategoryAsync(offer2.OfferId, standard.CategoryId, CancellationToken.None);
         var loc = await inventoryDirA.CreateLocationAsync("WH-O", "انبار سفارش", CancellationToken.None);
         var stock1 = await inventoryDirA.OpenPositionAsync(offer1.OfferId, loc, CancellationToken.None);
         var stock2 = await inventoryDirA.OpenPositionAsync(offer2.OfferId, loc, CancellationToken.None);
@@ -243,7 +270,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             OrderMode.OnlinePurchase,
             buyer.PartyId,
             actor,
-            "idem-online-1");
+            "idem-online-1",
+            "IR-NAT");
         var submitted = await checkoutA.SubmitAsync(command, CancellationToken.None);
         Assert.Equal(OrderMode.OnlinePurchase, submitted.Mode);
         Assert.Equal(buyer.PartyId, submitted.BuyerPartyId);
@@ -255,6 +283,9 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.All(submitted.SellerOrders, x => Assert.Equal(SellerOrderStatus.PendingPayment, x.Status));
         Assert.DoesNotContain("Paid", submitted.SellerOrders.Select(x => x.Status.ToString()));
         Assert.Equal(2, submitted.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count());
+        Assert.Equal(9000m, submitted.SellerOrders.Single(x => x.SellerPartyId == sellerA.PartyId).TaxSnapshot);
+        Assert.Equal(8100m, submitted.SellerOrders.Single(x => x.SellerPartyId == sellerB.PartyId).TaxSnapshot);
+        Assert.Equal(109000m, submitted.SellerOrders.Single(x => x.SellerPartyId == sellerA.PartyId).GrandTotalSnapshot);
         Assert.All(submitted.SellerOrders.SelectMany(x => x.Lines), line =>
         {
             Assert.True(line.ReservationId.HasValue);
@@ -280,6 +311,10 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var sellerALine = afterPriceChange!.SellerOrders.Single(x => x.SellerPartyId == sellerA.PartyId).Lines.Single();
         Assert.Equal(100000m, sellerALine.UnitPriceSnapshot);
         Assert.Equal(100000m, sellerALine.LineTotalSnapshot);
+        Assert.Equal(9000m, afterPriceChange.SellerOrders.Single(x => x.SellerPartyId == sellerA.PartyId).TaxSnapshot);
+        await taxDirA.ChangeRuleRateAsync(taxRule.RuleId, 0.20m, CancellationToken.None);
+        var afterTaxRuleChange = await checkoutA.GetCheckoutAsync(submitted.CheckoutId, orderAccess, CancellationToken.None);
+        Assert.Equal(9000m, afterTaxRuleChange!.SellerOrders.Single(x => x.SellerPartyId == sellerA.PartyId).TaxSnapshot);
 
         Assert.Null(await checkoutA.GetCheckoutAsync(submitted.CheckoutId, new OrderAccess(null, stranger), CancellationToken.None));
         var number = submitted.SellerOrders[0].OrderNumber;
@@ -295,7 +330,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
                     OrderMode.OnlinePurchase,
                     buyer.PartyId,
                     actor,
-                    "idem-price-changed"),
+                    "idem-price-changed",
+                    "IR-NAT"),
                 CancellationToken.None));
         Assert.Equal("PRICE_CHANGED", priceChanged.Message);
 
@@ -309,7 +345,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
                 OrderMode.RequestToReserve,
                 buyer.PartyId,
                 actor,
-                "idem-reserve-1"),
+                "idem-reserve-1",
+                "IR-NAT"),
             CancellationToken.None);
         Assert.Equal(OrderMode.RequestToReserve, reserved.Mode);
         Assert.All(reserved.SellerOrders, x => Assert.Equal(SellerOrderStatus.ReservationRequested, x.Status));
@@ -331,14 +368,15 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var priceDirB = new PriceDirectory(pricingB, new OpenPricingUseCaseGuard(), offerDirB);
         var inventoryDirB = new InventoryDirectory(inventoryB, new OpenInventoryUseCaseGuard(), offerDirB, catalogDirB);
         var cartDirB = new CartDirectory(cartB, new OpenCartUseCaseGuard(), offerDirB, priceDirB, inventoryDirB, inventoryDirB);
-        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, inventoryDirB);
+        var taxDirB = new TaxDirectory(taxB, new OpenTaxUseCaseGuard());
+        var checkoutB = new CheckoutDirectory(orderB, new OpenOrderUseCaseGuard(), cartDirB, cartDirB, offerDirB, priceDirB, inventoryDirB, taxDirB);
         Assert.Null(await checkoutB.GetCheckoutAsync(submitted.CheckoutId, orderAccess, CancellationToken.None));
         Assert.Null(await checkoutA.GetCheckoutAsync(Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), orderAccess, CancellationToken.None));
 
         var repairCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var repairLined = await cartDirA.AddOrIncreaseLineAsync(repairCart.CartId, access, repairCart.Version, offer2.OfferId, 1, CancellationToken.None);
         var failOnce = new FailOnceCartDirectory(cartDirA);
-        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, inventoryDirA);
+        var checkoutFail = new CheckoutDirectory(orderA, new OpenOrderUseCaseGuard(), cartDirA, failOnce, offerDirA, priceDirA, inventoryDirA, taxDirA);
         var repairCommand = new SubmitCheckoutCommand(
             repairLined.CartId,
             access,
@@ -346,7 +384,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             OrderMode.OnlinePurchase,
             buyer.PartyId,
             actor,
-            "idem-repair-fail");
+            "idem-repair-fail",
+            "IR-NAT");
         var persistedWithoutConvert = await checkoutFail.SubmitAsync(repairCommand, CancellationToken.None);
         Assert.Equal(CartStatus.Active, (await cartDirA.GetCartAsync(repairLined.CartId, access, CancellationToken.None))!.Status);
         var reconciled = await checkoutA.SubmitAsync(repairCommand, CancellationToken.None);
@@ -362,12 +401,16 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var concCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var concLined = await cartDirA.AddOrIncreaseLineAsync(concCart.CartId, access, concCart.Version, offer2.OfferId, 1, CancellationToken.None);
         await using var orderA2 = CreateOrderDb(csA, commerceA);
-        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA, cartDirA, offerDirA, priceDirA, inventoryDirA);
+        await using var cartA2 = CreateCartDb(csA, commerceA);
+        await using var taxA2 = CreateTaxDb(csA, commerceA);
+        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
+        var taxDirA2 = new TaxDirectory(taxA2, new OpenTaxUseCaseGuard());
+        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA, priceDirA, inventoryDirA, taxDirA2);
         var concLeft = checkoutA.SubmitAsync(
-            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a"),
+            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a", "IR-NAT"),
             CancellationToken.None);
         var concRight = checkoutA2.SubmitAsync(
-            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-b"),
+            new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-b", "IR-NAT"),
             CancellationToken.None);
         var concResults = await Task.WhenAll(concLeft, concRight);
         Assert.Equal(concResults[0].CheckoutId, concResults[1].CheckoutId);
@@ -450,6 +493,17 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         ToobaNpgsql.ConfigureModuleContext(options, connectionString, OrderDbContext.Schema, typeof(OrderDbContext));
         options.AddInterceptors(interceptor);
         return new OrderDbContext(options.Options);
+    }
+
+    private static TaxDbContext CreateTaxDb(string connectionString, ICurrentCommerceContext commerce)
+    {
+        var modules = new IOutboxModuleRegistration[] { new TaxOutboxRegistration() };
+        var serializer = new JsonIntegrationEventSerializer(modules);
+        var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
+        var options = new DbContextOptionsBuilder<TaxDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(options, connectionString, TaxDbContext.Schema, typeof(TaxDbContext));
+        options.AddInterceptors(interceptor);
+        return new TaxDbContext(options.Options);
     }
 
     private static string FindRepoRoot()

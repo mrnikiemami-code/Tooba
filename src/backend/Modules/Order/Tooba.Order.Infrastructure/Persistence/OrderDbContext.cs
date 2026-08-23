@@ -86,6 +86,10 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(3);
             entity.Property(x => x.UnitPriceSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.LineTotalSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.TaxOutcomeSnapshot).HasMaxLength(32);
+            entity.Property(x => x.TaxRateSnapshot).HasPrecision(19, 8);
+            entity.Property(x => x.TaxAmountSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.TaxInclusiveSnapshot).HasPrecision(19, 4);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

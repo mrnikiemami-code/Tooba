@@ -18,7 +18,12 @@ public sealed record OrderLineSnapshot(
     string Currency,
     bool TaxExclusive,
     Guid PriceId,
-    Guid? ReservationId);
+    Guid? ReservationId,
+    string TaxOutcomeSnapshot,
+    decimal TaxRateSnapshot,
+    decimal TaxAmountSnapshot,
+    decimal TaxInclusiveSnapshot,
+    Guid? TaxRuleIdSnapshot);
 
 /// <summary>
 /// سفارش یک فروشنده داخل checkout. چرخهٔ ارسال نیست.
@@ -60,7 +65,8 @@ public sealed record SubmitCheckoutCommand(
     OrderMode Mode,
     Guid? BuyerPartyId,
     Guid PlacedByUserId,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    string TaxJurisdiction);
 
 /// <summary>
 /// هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.
