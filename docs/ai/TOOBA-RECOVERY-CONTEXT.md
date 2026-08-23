@@ -34,7 +34,7 @@ Issued but not accepted:
 
 ```text
 TB-P02-T001 = ACCEPTED
-TB-P02-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P02-T002 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = COMPLETE
 P02 = IN_PROGRESS
@@ -94,5 +94,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. await Architect review of `TB-P02-T002`; do not start `TB-P02-T003` unless Architect issues that envelope.
+6. await Architect review of `TB-P02-T002` repair; do not start `TB-P02-T003` unless Architect issues that envelope.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

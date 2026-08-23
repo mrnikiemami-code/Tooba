@@ -35,32 +35,54 @@ internal sealed class ConfiguredAuthorizationSchemaBootstrapper : IAuthorization
     private readonly ILogger<ConfiguredAuthorizationSchemaBootstrapper> _logger;
     private int? _appliedVersion;
 
+    private readonly IServiceProvider? _services;
+
     /// <summary>
-    /// bootstrap را با پیکربندی صریح می‌سازد.
+    /// bootstrap را با پیکربندی صریح می‌سازد. بدون SpiceDB زنده schema شبکه نمی‌نویسد.
     /// </summary>
     public ConfiguredAuthorizationSchemaBootstrapper(
         IOptions<AuthorizationHostOptions> options,
         IAuthorizationSchemaProvider schema,
         ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger)
+        : this(options, schema, logger, services: null)
+    {
+    }
+
+    /// <summary>
+    /// در Host، adapter واقعی فقط وقتی Mode=SpiceDb و ApplySchemaOnStartup روشن باشد resolve می‌شود تا کانال بی‌دلیل ساخته نشود.
+    /// </summary>
+    public ConfiguredAuthorizationSchemaBootstrapper(
+        IOptions<AuthorizationHostOptions> options,
+        IAuthorizationSchemaProvider schema,
+        ILogger<ConfiguredAuthorizationSchemaBootstrapper> logger,
+        IServiceProvider? services)
     {
         _options = options;
         _schema = schema;
         _logger = logger;
+        _services = services;
     }
 
     /// <inheritdoc />
-    public Task BootstrapIfConfiguredAsync(CancellationToken cancellationToken)
+    public async Task BootstrapIfConfiguredAsync(CancellationToken cancellationToken)
     {
         if (!_options.Value.ApplySchemaOnStartup)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         _appliedVersion = _schema.SchemaVersion;
         _logger.LogInformation(
             "Authorization schema bootstrap requested. Version {SchemaVersion}. Token is not logged.",
             _schema.SchemaVersion);
-        return Task.CompletedTask;
+
+        if (!string.Equals(_options.Value.Mode, "SpiceDb", StringComparison.Ordinal) || _services is null)
+        {
+            return;
+        }
+
+        var adapter = _services.GetRequiredService<SpiceDbAuthorizationAdapter>();
+        await adapter.WriteSchemaAsync(_schema.SchemaText, cancellationToken);
     }
 
     /// <summary>
@@ -207,28 +229,4 @@ internal sealed class InMemoryAuthorizationSecurityEventSink : IAuthorizationSec
 
         return Task.CompletedTask;
     }
-}
-
-/// <summary>
-/// adapter آمادهٔ یکپارچگی SpiceDB. تا وقتی سرویس واقعی بالا نباشد ALLOW جعلی برنمی‌گرداند.
-/// </summary>
-internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuthorizationTupleWriter
-{
-    private readonly FailClosedAuthorizationAdapter _unavailable;
-
-    /// <summary>
-    /// تا اتصال واقعی SpiceDB در این محیط برقرار نشود، همهٔ عملیات Unavailable هستند.
-    /// </summary>
-    public SpiceDbAuthorizationAdapter(AuthorizationInstrumentation telemetry)
-    {
-        _unavailable = new FailClosedAuthorizationAdapter("spicedb.unavailable", telemetry);
-    }
-
-    /// <inheritdoc />
-    public Task<AuthorizationDecision> CanAsync(AuthorizationCheck check, CancellationToken cancellationToken) =>
-        _unavailable.CanAsync(check, cancellationToken);
-
-    /// <inheritdoc />
-    public Task WriteAsync(AuthorizationRelationshipWrite write, CancellationToken cancellationToken) =>
-        _unavailable.WriteAsync(write, cancellationToken);
 }

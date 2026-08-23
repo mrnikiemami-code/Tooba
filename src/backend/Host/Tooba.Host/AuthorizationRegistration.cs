@@ -24,6 +24,7 @@ internal static class AuthorizationRegistration
         services.AddSingleton<IAuthorizationService>(ResolveEngine);
         services.AddSingleton<IAuthorizationTupleWriter>(sp => (IAuthorizationTupleWriter)sp.GetRequiredService<IAuthorizationService>());
         services.AddSingleton<IAuthorizationGuard, AuthorizationGuard>();
+        services.AddHostedService<AuthorizationSchemaHostedService>();
         return services;
     }
 

@@ -64,7 +64,7 @@ Issued but not accepted:
 
 ```text
 TB-P02-T001 = ACCEPTED
-TB-P02-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P02-T002 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -340,7 +340,7 @@ docs/architecture/38-spicedb-authorization-foundation.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P02-T002.task.md
+docs/ai/tasks/TB-P02-T002-REPAIR.task.md
 ```
 
-Resume: execute TB-P02-T002; then wait in the same Architect chat for the next valid envelope. Do not start TB-P02-T003 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.
+Resume: complete TB-P02-T002 repair and wait in the same Architect chat for ACCEPT / next envelope. Do not start TB-P02-T003 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.

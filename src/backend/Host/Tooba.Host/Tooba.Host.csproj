@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\Modules\Identity\Tooba.Identity.Infrastructure\Tooba.Identity.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Authzed.Net" Version="1.6.0" />
     <PackageReference Include="MassTransit" Version="8.5.10" />
     <PackageReference Include="MassTransit.SqlTransport.PostgreSQL" Version="8.5.10" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />

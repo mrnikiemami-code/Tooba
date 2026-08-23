@@ -147,7 +147,21 @@ public sealed class AuthorizationFoundationTests
     [Fact]
     public async Task SpiceDb_adapter_does_not_claim_allow_without_a_running_server()
     {
-        IAuthorizationService adapter = new SpiceDbAuthorizationAdapter(new AuthorizationInstrumentation());
+        IAuthorizationService adapter = new SpiceDbAuthorizationAdapter(
+            Options.Create(new AuthorizationHostOptions
+            {
+                Mode = "SpiceDb",
+                SpiceDb = new SpiceDbHostOptions
+                {
+                    Endpoint = "127.0.0.1:1",
+                    Token = "test-only-not-for-production",
+                    UseTls = false,
+                    TimeoutSeconds = 2,
+                },
+            }),
+            new AuthorizationInstrumentation(),
+            new InMemoryAuthorizationSecurityEventSink(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<SpiceDbAuthorizationAdapter>.Instance);
         var decision = await adapter.CanAsync(
             new AuthorizationCheck
             {
