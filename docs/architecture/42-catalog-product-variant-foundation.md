@@ -3,7 +3,7 @@
 Status:
 
 ```text
-IN_PROGRESS — TB-P03-T001 awaiting Architect ACCEPT
+COMPLETE — Architect accepted TB-P03-T001
 ```
 
 Task:

@@ -1,6 +1,7 @@
 using Tooba.Catalog.Infrastructure;
 using Tooba.Identity.Infrastructure;
 using Tooba.ModuleContracts;
+using Tooba.Offer.Infrastructure;
 using Tooba.Party.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure;
 
@@ -21,6 +22,7 @@ internal static class ToobaModuleComposition
         new IdentityModule(),
         new PartyModule(),
         new CatalogModule(),
+        new OfferModule(),
     ];
 
     /// <summary>

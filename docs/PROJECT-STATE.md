@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P02-T005
+TB-P03-T001
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P02-GATE
 Current Issued Task:
 
 ```text
-TB-P03-T001
+TB-P03-T002
 ```
 
 Current Gate:
@@ -70,7 +70,8 @@ TB-P02-T003 = ACCEPTED
 TB-P02-T004 = ACCEPTED
 TB-P02-T005 = ACCEPTED
 TB-P02-GATE = ACCEPTED
-TB-P03-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T001 = ACCEPTED
+TB-P03-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -164,6 +165,12 @@ COMPLETE (Architect accepted TB-P02-GATE)
 ```
 
 Catalog Product & Variant Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P03-T001)
+```
+
+Seller Offer & Listing Foundation:
 
 ```text
 IN_PROGRESS
@@ -375,12 +382,13 @@ docs/architecture/39-party-organization-membership-foundation.md
 docs/architecture/40-session-token-credential-lifecycle.md
 docs/architecture/41-authentication-http-boundary.md
 docs/architecture/42-catalog-product-variant-foundation.md
+docs/architecture/43-seller-offer-listing-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-T001.task.md
+docs/ai/tasks/TB-P03-T002.task.md
 ```
 
-Resume: execute TB-P03-T001; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T002 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: execute TB-P03-T002; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T003 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
