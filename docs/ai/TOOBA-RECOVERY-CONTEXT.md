@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P03 — Commerce Core
+P04 — Experience Foundation
 ```
 
 Pipeline Mode:
@@ -27,7 +27,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T009
+TB-P03-GATE
 ```
 
 Issued but not accepted:
@@ -47,11 +47,13 @@ TB-P03-T005 = ACCEPTED
 TB-P03-T006 = ACCEPTED
 TB-P03-T008 = ACCEPTED
 TB-P03-T009 = ACCEPTED
-TB-P03-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-GATE = ACCEPTED
+TB-P04-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = COMPLETE
 P02 = COMPLETE
-P03 = IN_PROGRESS
+P03 = COMPLETE
+P04 = IN_PROGRESS
 Identity & Authentication Foundation = COMPLETE
 SpiceDB Authorization Foundation = COMPLETE
 Party / Organization / Membership Foundation = COMPLETE
@@ -66,7 +68,8 @@ Checkout & Order Foundation = COMPLETE
 Tax Calculation Foundation = COMPLETE
 Payment Foundation = COMPLETE
 Promotion & Discount Foundation = COMPLETE
-P03 Commerce Core Gate = IN_PROGRESS (not COMPLETE)
+P03 Commerce Core Gate = COMPLETE
+P04 Experience Foundation = IN_PROGRESS
 ```
 
 ## Recovered Architect procedure
@@ -121,5 +124,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. TB-P03-T009 is Architect-accepted. Current envelope is TB-P03-GATE awaiting Architect ACCEPT. Do not invent TB-P03-T010 or a next phase. P03 is NOT COMPLETE.
+6. TB-P03-GATE is Architect-accepted. Current envelope is TB-P04-T001 awaiting Architect ACCEPT. Do not start Design System extraction, Data Grid, or serious UI.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P03 — Commerce Core
+P04 — Experience Foundation
 ```
 
 Pipeline Mode:
@@ -33,25 +33,25 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T009
+TB-P03-GATE
 ```
 
 Last Architect Accepted Gate:
 
 ```text
-TB-P02-GATE
+TB-P03-GATE
 ```
 
 Current Issued Task:
 
 ```text
-NONE
+TB-P04-T001
 ```
 
 Current Gate:
 
 ```text
-TB-P03-GATE
+NONE
 ```
 
 Gate State:
@@ -59,7 +59,7 @@ Gate State:
 ```text
 TB-P01-GATE = ACCEPTED
 TB-P02-GATE = ACCEPTED
-TB-P03-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P03-GATE = ACCEPTED
 ```
 
 Issued but not accepted:
@@ -80,7 +80,8 @@ TB-P03-T006 = ACCEPTED
 TB-P03-T007 = ACCEPTED
 TB-P03-T008 = ACCEPTED
 TB-P03-T009 = ACCEPTED
-TB-P03-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P03-GATE = ACCEPTED
+TB-P04-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -230,7 +231,13 @@ COMPLETE (Architect accepted TB-P03-T009)
 P03 Commerce Core Gate:
 
 ```text
-IN_PROGRESS (TB-P03-GATE awaiting Architect ACCEPT; P03 is NOT COMPLETE)
+COMPLETE (Architect accepted TB-P03-GATE)
+```
+
+P04 Experience Foundation:
+
+```text
+IN_PROGRESS (TB-P04-T001 awaiting Architect ACCEPT)
 ```
 
 Project-wide documentation rule:
@@ -447,12 +454,13 @@ docs/architecture/47-checkout-order-foundation.md
 docs/architecture/48-tax-calculation-foundation.md
 docs/architecture/49-payment-foundation.md
 docs/architecture/50-promotion-discount-foundation.md
+docs/architecture/51-shopeiva-study-reuse-map.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-GATE.gate.md
+docs/ai/tasks/TB-P04-T001.task.md
 ```
 
-Resume: TB-P03-T009 is Architect-accepted. TB-P03-GATE evidence is awaiting Architect ACCEPT. Do not mark P03 COMPLETE and do not invent the next phase. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. Current issued task is TB-P04-T001 (Deep Shopeiva Study & Reuse Map), awaiting Architect ACCEPT. Do not start Design System, Data Grid, or serious UI. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.

@@ -3,7 +3,7 @@
 ## Current Phase
 
 ```text
-P03 — Commerce Core
+P04 — Experience Foundation
 ```
 
 Status:
@@ -15,7 +15,7 @@ IN_PROGRESS
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
 P01 Platform Foundation is COMPLETE (Architect accepted TB-P01-GATE).
 P02 Identity / Authorization is COMPLETE (Architect accepted TB-P02-GATE).
-Do not execute packages without an Architect-authorized envelope.
+P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
 
 ## P01 Work Packages
 
@@ -56,7 +56,7 @@ Do not execute packages without an Architect-authorized envelope.
 | P03-07 | Tax calculation foundation | COMPLETE (Architect accepted TB-P03-T007) |
 | P03-08 | Payment foundation | COMPLETE (Architect accepted TB-P03-T008) |
 | P03-09 | Promotion & discount foundation | COMPLETE (Architect accepted TB-P03-T009) |
-| P03-GATE | Commerce core acceptance gate | IN_PROGRESS (awaiting Architect ACCEPT) |
+| P03-GATE | Commerce core acceptance gate | COMPLETE (Architect accepted TB-P03-GATE) |
 
 ## P00 Work Packages
 
@@ -99,18 +99,25 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
-- P03 Commerce Core is IN_PROGRESS under TB-P03-GATE (awaiting Architect ACCEPT). TB-P03-T009 is Architect-accepted. P03 is NOT COMPLETE.
-- Do not start a next phase or invent TB-P03-T010. Roadmap does not name a P04 execution phase.
+- P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T001 (awaiting Architect ACCEPT). Do not start Design System extraction, Data Grid, or serious UI.
 
-## Mandatory future UX / template work (not authorized now)
+## P04 Work Packages
 
-These remain durable requirements. Do not execute without an Architect envelope. Shopeiva is UI/reference input, not architecture truth. Paths must not hard-code a local Windows folder.
+| ID | Work package | Status |
+| --- | --- | --- |
+| P04-01 | Deep Shopeiva study & reuse map | IN_PROGRESS (TB-P04-T001 awaiting Architect ACCEPT) |
+
+## Mandatory UX sequence (locked)
+
+Do not skip. Later steps wait for new envelopes.
 
 | Future package | Status |
 | --- | --- |
-| Deep Shopeiva Study (file/route/component/layout/dependency/responsive/RTL/docs; reuse map REUSE/ADAPT/REBUILD/DROP/DEFER) | PLANNED — before serious UI / template migration |
-| Template reuse map | PLANNED |
+| Deep Shopeiva Study | IN_PROGRESS |
+| Template reuse map | IN_PROGRESS (this task) |
 | Design System extraction | PLANNED |
 | Professional Data Grid foundation | PLANNED |
 | Workspace interaction patterns | PLANNED |
-| Visual acceptance gates | PLANNED |
+| Serious UI implementation | PLANNED |
+| Visual evidence / Architect visual ACCEPT | PLANNED |
