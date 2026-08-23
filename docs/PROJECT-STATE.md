@@ -46,7 +46,7 @@ Issued but not accepted:
 
 ```text
 TB-P01-T005 = ACCEPTED
-TB-P01-T006 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P01-T006 = REPAIR IN PROGRESS / AWAITING ARCHITECT ACCEPT
 ```
 
 Observability / Error Handling Foundation:
