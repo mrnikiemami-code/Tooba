@@ -38,7 +38,7 @@ Increase / Decrease / Set with an operational reason. External callers do not as
 
 ## Reservations
 
-Hold / Release / Consume with durable `ReservationId` and optional external/idempotency keys. Not a Cart or Order module.
+Hold / Release / Consume with durable `ReservationId`, optional external/idempotency keys, and optional UTC `ExpiresAt`. Released or consumed holds clear the idempotency key so a later hold can reuse the same client key. Not a Cart or Order module.
 
 ## Concurrency
 
