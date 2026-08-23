@@ -48,7 +48,8 @@ Do not execute packages without an Architect-authorized envelope.
 | ID | Work package | Status |
 | --- | --- | --- |
 | P03-01 | Catalog product & variant foundation | COMPLETE (Architect accepted TB-P03-T001) |
-| P03-02 | Seller offer & listing foundation | IN_PROGRESS |
+| P03-02 | Seller offer & listing foundation | COMPLETE (Architect accepted TB-P03-T002) |
+| P03-03 | Pricing foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -91,9 +92,9 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
-- P03 Commerce Core is IN_PROGRESS under TB-P03-T002 (awaiting Architect accept). TB-P03-T001 is Architect-accepted.
+- P03 Commerce Core is IN_PROGRESS under TB-P03-T003 (awaiting Architect accept). TB-P03-T002 is Architect-accepted.
 - Locked messaging: MassTransit 8.5.10, PostgreSQL SQL Transport, RabbitMQ not used, one transport DB per deployment.
-- `TB-P03-T003` is not authorized until Architect issues that envelope.
+- `TB-P03-T004` is not authorized until Architect issues that envelope.
 
 ## Mandatory future UX / template work (not authorized now)
 

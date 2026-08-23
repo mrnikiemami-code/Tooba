@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\Modules\Party\Tooba.Party.Infrastructure\Tooba.Party.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Tooba.Catalog.Infrastructure\Tooba.Catalog.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Offer\Tooba.Offer.Infrastructure\Tooba.Offer.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Tooba.Pricing.Infrastructure\Tooba.Pricing.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Authzed.Net" Version="1.6.0" />
