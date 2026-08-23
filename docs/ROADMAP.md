@@ -3,7 +3,7 @@
 ## Current Phase
 
 ```text
-P02 — Identity / Authorization
+P03 — Commerce Core
 ```
 
 Status:
@@ -14,6 +14,7 @@ IN_PROGRESS
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
 P01 Platform Foundation is COMPLETE (Architect accepted TB-P01-GATE).
+P02 Identity / Authorization is COMPLETE (Architect accepted TB-P02-GATE).
 Do not execute packages without an Architect-authorized envelope.
 
 ## P01 Work Packages
@@ -40,7 +41,13 @@ Do not execute packages without an Architect-authorized envelope.
 | P02-03 | Party / organization / membership foundation | COMPLETE (Architect accepted TB-P02-T003) |
 | P02-04 | Session / token / credential lifecycle | COMPLETE (Architect accepted TB-P02-T004) |
 | P02-05 | Authentication HTTP / API boundary | COMPLETE (Architect accepted TB-P02-T005) |
-| P02-GATE | Identity / authorization acceptance gate | IN_PROGRESS |
+| P02-GATE | Identity / authorization acceptance gate | COMPLETE (Architect accepted TB-P02-GATE) |
+
+## P03 Work Packages
+
+| ID | Work package | Status |
+| --- | --- | --- |
+| P03-01 | Catalog product & variant foundation | IN_PROGRESS |
 
 ## P00 Work Packages
 
@@ -82,9 +89,10 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - TB-P00-T000 through TB-P00-T027 and TB-P00-GATE are Architect-accepted.
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
-- P02 Identity / Authorization is IN_PROGRESS under TB-P02-GATE (awaiting Architect accept).
+- P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
+- P03 Commerce Core is IN_PROGRESS under TB-P03-T001 (awaiting Architect accept).
 - Locked messaging: MassTransit 8.5.10, PostgreSQL SQL Transport, RabbitMQ not used, one transport DB per deployment.
-- P03 Commerce Core is not authorized until Architect ACCEPT of TB-P02-GATE and a new envelope.
+- `TB-P03-T002` is not authorized until Architect issues that envelope.
 
 ## Mandatory future UX / template work (not authorized now)
 

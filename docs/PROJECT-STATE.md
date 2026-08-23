@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P02 — Identity / Authorization
+P03 — Commerce Core
 ```
 
 Pipeline Mode:
@@ -39,26 +39,26 @@ TB-P02-T005
 Last Architect Accepted Gate:
 
 ```text
-TB-P01-GATE
+TB-P02-GATE
 ```
 
 Current Issued Task:
 
 ```text
-NONE
+TB-P03-T001
 ```
 
 Current Gate:
 
 ```text
-TB-P02-GATE
+NONE
 ```
 
 Gate State:
 
 ```text
 TB-P01-GATE = ACCEPTED
-TB-P02-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P02-GATE = ACCEPTED
 ```
 
 Issued but not accepted:
@@ -69,7 +69,8 @@ TB-P02-T002 = ACCEPTED
 TB-P02-T003 = ACCEPTED
 TB-P02-T004 = ACCEPTED
 TB-P02-T005 = ACCEPTED
-TB-P02-GATE = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P02-GATE = ACCEPTED
+TB-P03-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -157,6 +158,12 @@ COMPLETE (Architect accepted TB-P02-T005)
 ```
 
 P02 Identity / Authorization Gate:
+
+```text
+COMPLETE (Architect accepted TB-P02-GATE)
+```
+
+Catalog Product & Variant Foundation:
 
 ```text
 IN_PROGRESS
@@ -320,7 +327,7 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 4. Execute only a complete Architect-authorized envelope (`BEGIN_TOOBA_CURSOR_TASK_V1` / `BEGIN_TOOBA_CURSOR_GATE_V1`).
 
-5. Never invent the next task from memory. Do not execute P03 work or a new Gate unless Architect issues that exact envelope.
+5. Never invent the next task from memory. Do not execute TB-P03-T002 or a P03 Gate unless Architect issues that exact envelope.
 
 P00 discovery inputs (not locked architecture):
 
@@ -367,12 +374,13 @@ docs/architecture/38-spicedb-authorization-foundation.md
 docs/architecture/39-party-organization-membership-foundation.md
 docs/architecture/40-session-token-credential-lifecycle.md
 docs/architecture/41-authentication-http-boundary.md
+docs/architecture/42-catalog-product-variant-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P02-GATE.gate.md
+docs/ai/tasks/TB-P03-T001.task.md
 ```
 
-Resume: execute TB-P02-GATE; then wait in the same Architect chat for the next valid envelope. Do not start P03 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 IN_PROGRESS.
+Resume: execute TB-P03-T001; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T002 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.

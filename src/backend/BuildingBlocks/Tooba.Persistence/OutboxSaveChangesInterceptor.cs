@@ -88,7 +88,7 @@ public sealed class OutboxSaveChangesInterceptor : SaveChangesInterceptor
         var commerce = _commerce.Current
             ?? throw new PlatformHttpException(503, "Service Unavailable", "platform.edition.unconfigured");
 
-        foreach (var domain in domainEvents)
+        foreach (var domain in domainEvents.DistinctBy(item => item.Metadata.EventId))
         {
             var metadata = new EventMetadata(
                 EventId: domain.Metadata.EventId,
@@ -118,6 +118,11 @@ public sealed class OutboxSaveChangesInterceptor : SaveChangesInterceptor
 
             var writable = integration.GetType().GetProperty(nameof(IIntegrationEvent.Metadata));
             writable?.SetValue(integration, finalMetadata);
+
+            if (context.Set<OutboxMessage>().Local.Any(row => row.Id == finalMetadata.EventId))
+            {
+                continue;
+            }
 
             context.Set<OutboxMessage>().Add(new OutboxMessage
             {

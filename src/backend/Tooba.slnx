@@ -16,5 +16,8 @@
     <Project Path="Modules/Party/Tooba.Party.Domain/Tooba.Party.Domain.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Application/Tooba.Party.Application.csproj" />
     <Project Path="Modules/Party/Tooba.Party.Infrastructure/Tooba.Party.Infrastructure.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Domain/Tooba.Catalog.Domain.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Application/Tooba.Catalog.Application.csproj" />
+    <Project Path="Modules/Catalog/Tooba.Catalog.Infrastructure/Tooba.Catalog.Infrastructure.csproj" />
   </Folder>
 </Solution>
