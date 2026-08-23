@@ -113,7 +113,9 @@ Sensitive EF logging off. Do not log connection strings or SQL parameters by def
 
 ## Deferred
 
-Outbox, audit timestamps product, optimistic concurrency product, NodaTime domain-wide EF conventions beyond probe, tenant provisioning/migration orchestrator, Identity/Catalog/Pricing schemas, SpiceDB, cache, bus, jobs, UI.
+Audit timestamps product, optimistic concurrency product, NodaTime domain-wide EF conventions beyond probe, tenant provisioning/migration orchestrator, Identity/Catalog/Pricing schemas, SpiceDB, cache, bus, jobs, UI.
+
+Outbox / domain+integration events / in-process dispatcher: see `docs/architecture/33-outbox-domain-events-background-foundation.md` (TB-P01-T006).
 
 ## Carry-forward
 

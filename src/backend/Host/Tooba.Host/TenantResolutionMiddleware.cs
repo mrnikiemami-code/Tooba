@@ -6,7 +6,7 @@ namespace Tooba.Host;
 /// <summary>
 /// نگهداشت <see cref="CommerceContext"/> روی HttpContext.Items. هدر Tenant منبع حقیقت نیست.
 /// </summary>
-internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICurrentEdition, ICurrentTenant
+internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICurrentEdition, ICurrentTenant, ICommerceContextAssigner
 {
     /// <summary>
     /// کلید Items برای زمینهٔ تثبیت‌شدهٔ همین درخواست.
@@ -14,9 +14,10 @@ internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICu
     internal const string ItemKey = "Tooba.CommerceContext";
 
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private CommerceContext? _assigned;
 
     /// <summary>
-    /// accessor را به HttpContext درخواست وصل می‌کند.
+    /// accessor را به HttpContext درخواست وصل می‌کند. کارگر می‌تواند بدون Host مقدار بگذارد.
     /// </summary>
     public HttpCommerceContextAccessor(IHttpContextAccessor httpContextAccessor)
     {
@@ -25,7 +26,14 @@ internal sealed class HttpCommerceContextAccessor : ICurrentCommerceContext, ICu
 
     /// <inheritdoc />
     public CommerceContext? Current =>
-        _httpContextAccessor.HttpContext?.Items[ItemKey] as CommerceContext;
+        _assigned ?? _httpContextAccessor.HttpContext?.Items[ItemKey] as CommerceContext;
+
+    /// <inheritdoc />
+    public void Assign(CommerceContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        _assigned = context;
+    }
 
     /// <inheritdoc />
     EditionContext? ICurrentEdition.Current => Current?.Edition;

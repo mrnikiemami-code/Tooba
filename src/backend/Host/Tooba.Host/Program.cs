@@ -1,7 +1,7 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ثبت DbContext ماژول.
-// Host ورودی routing است نه TenantId. Forwarded headers فقط با TrustedProxies صریح.
+// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، DbContext ماژول، Outbox dispatcher.
+// Host ورودی routing است نه TenantId. کارگر Outbox Tenant را از Host نمی‌خواند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
-// لاگ فنی جایگزین Audit نیست. DbContext برای /health و /ready باز نمی‌شود.
+// لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
@@ -12,6 +12,8 @@ using System.Net;
 using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
+using Tooba.Persistence;
+using Tooba.PlatformProbe.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,16 +47,28 @@ builder.Services.AddScoped<HttpCommerceContextAccessor>();
 builder.Services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
+builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
+builder.Services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
+builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
+builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
+builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
+builder.Services.AddSingleton<WorkerCommerceContextFactory>();
+builder.Services.AddSingleton<OutboxDispatcher>();
+builder.Services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
+builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
+builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddDbContext<Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext>((sp, options) =>
 {
-    var connectionString = Tooba.Persistence.ToobaNpgsql.ResolveForContext(
+    var connectionString = ToobaNpgsql.ResolveForContext(
         sp.GetRequiredService<ICurrentCommerceContext>(),
         sp.GetRequiredService<IDatabaseConnectionResolver>());
-    Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(
+    ToobaNpgsql.ConfigureModuleContext(
         options,
         connectionString,
         Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.Schema,
         typeof(Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext));
+    options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
 });
 
 builder.Services.ConfigureHttpJsonOptions(options =>

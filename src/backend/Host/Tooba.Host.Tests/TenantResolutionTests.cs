@@ -215,6 +215,7 @@ public sealed class TenantResolutionTests
                     ["Tooba:PostgreSQL:ConnectionReferences:tenant-alpha"] = "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_alpha",
                     ["Tooba:PostgreSQL:ConnectionReferences:tenant-bravo"] = "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_bravo",
                     ["Tooba:PostgreSQL:ConnectionReferences:tenant-disabled"] = "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_disabled",
+                    ["Tooba:Outbox:Enabled"] = "false",
                 });
             });
         }
@@ -236,6 +237,7 @@ public sealed class TenantResolutionTests
                     ["Tooba:DeploymentId"] = "test-marketplace",
                     ["Tooba:Marketplace:ConnectionReference"] = "marketplace",
                     ["Tooba:PostgreSQL:ConnectionReferences:marketplace"] = "Host=127.0.0.1;Username=tooba;Password=dev-placeholder;Database=tooba_marketplace",
+                    ["Tooba:Outbox:Enabled"] = "false",
                 });
             });
         }

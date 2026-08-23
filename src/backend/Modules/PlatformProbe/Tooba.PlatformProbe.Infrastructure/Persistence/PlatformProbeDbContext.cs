@@ -3,14 +3,18 @@ using Microsoft.EntityFrameworkCore.Design;
 using NodaTime;
 using Tooba.BuildingBlocks;
 using Tooba.Persistence;
+using Tooba.PlatformProbe.Infrastructure.Events;
 
 namespace Tooba.PlatformProbe.Infrastructure.Persistence;
 
 /// <summary>
 /// ردیف نمونهٔ خنثی در schema <c>platform_probe</c>. قرارداد Catalog/Identity نیست و FK به ماژول دیگر ندارد.
+/// رویداد دامنه را نگه می‌دارد تا interceptor همان تراکنش Outbox را پر کند؛ صف DomainEvents ستون جدول نیست.
 /// </summary>
-public sealed class PlatformProbeRecord
+public sealed class PlatformProbeRecord : IHasDomainEvents
 {
+    private readonly DomainEventCollector _domainEvents = new();
+
     /// <summary>
     /// کلید UUID v7 تولیدشده در دامنه؛ پایگاه مقدار را تولید نمی‌کند.
     /// </summary>
@@ -25,6 +29,17 @@ public sealed class PlatformProbeRecord
     /// ارجاع اختیاری UUID بدون رابطهٔ دیتابیس؛ برای اثبات «بدون FK بین‌ماژول».
     /// </summary>
     public Guid? ExternalReference { get; set; }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
+
+    /// <summary>
+    /// واقعیت دامنه را صف می‌کند؛ انتشار Integration نیست.
+    /// </summary>
+    public void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+
+    /// <inheritdoc />
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }
 
 /// <summary>
@@ -52,7 +67,12 @@ public sealed class PlatformProbeDbContext : DbContext
     public DbSet<PlatformProbeRecord> Records => Set<PlatformProbeRecord>();
 
     /// <summary>
-    /// نگاشت جدول <c>probe_records</c> بدون رابطه به schema دیگر.
+    /// Outbox همین ماژول در schema <c>platform_probe</c>؛ جدول سراسری همهٔ ماژول‌ها نیست.
+    /// </summary>
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+
+    /// <summary>
+    /// نگاشت جدول <c>probe_records</c> و <c>outbox_messages</c> بدون رابطه به schema دیگر.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,7 +83,9 @@ public sealed class PlatformProbeDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).ValueGeneratedNever();
             entity.Property(x => x.ExternalReference);
+            entity.Ignore(x => x.DomainEvents);
         });
+        OutboxMessageMapping.Map(modelBuilder, Schema);
     }
 }
 
@@ -94,10 +116,15 @@ public static class PlatformProbePersistence
     /// یک <see cref="PlatformProbeRecord"/> جدید با شناسهٔ v7 می‌سازد.
     /// </summary>
     /// <param name="externalReference">ارجاع اختیاری بدون FK.</param>
-    public static PlatformProbeRecord NewRecord(Guid? externalReference = null) => new()
+    public static PlatformProbeRecord NewRecord(Guid? externalReference = null)
     {
-        Id = UuidV7.New(),
-        CreatedAt = SystemClock.Instance.GetCurrentInstant(),
-        ExternalReference = externalReference,
-    };
+        var record = new PlatformProbeRecord
+        {
+            Id = UuidV7.New(),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            ExternalReference = externalReference,
+        };
+        record.Raise(new ProbeRecordCreatedDomainEvent(record.Id));
+        return record;
+    }
 }
