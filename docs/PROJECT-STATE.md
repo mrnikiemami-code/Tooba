@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T006
+TB-P03-T007
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P02-GATE
 Current Issued Task:
 
 ```text
-TB-P03-T007
+TB-P03-T008
 ```
 
 Current Gate:
@@ -76,7 +76,8 @@ TB-P03-T003 = ACCEPTED
 TB-P03-T004 = ACCEPTED
 TB-P03-T005 = ACCEPTED
 TB-P03-T006 = ACCEPTED
-TB-P03-T007 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T007 = ACCEPTED
+TB-P03-T008 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -423,13 +424,13 @@ docs/architecture/45-inventory-foundation.md
 docs/architecture/46-cart-foundation.md
 docs/architecture/47-checkout-order-foundation.md
 docs/architecture/48-tax-calculation-foundation.md
+docs/architecture/49-payment-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-T007.task.md
-docs/ai/tasks/TB-P03-T007-REPAIR.task.md
+docs/ai/tasks/TB-P03-T008.task.md
 ```
 
-Resume: execute TB-P03-T007 repair validation evidence; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T008 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: execute TB-P03-T008 then wait in the same Architect chat for ACCEPT or the next valid envelope. Do not start TB-P03-T009 or P03 Gate without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.

@@ -37,5 +37,8 @@
     <Project Path="Modules/Tax/Tooba.Tax.Domain/Tooba.Tax.Domain.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Application/Tooba.Tax.Application.csproj" />
     <Project Path="Modules/Tax/Tooba.Tax.Infrastructure/Tooba.Tax.Infrastructure.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Domain/Tooba.Payment.Domain.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Application/Tooba.Payment.Application.csproj" />
+    <Project Path="Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj" />
   </Folder>
 </Solution>

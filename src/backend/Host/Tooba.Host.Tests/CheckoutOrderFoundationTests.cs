@@ -128,6 +128,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Contains("Tooba.Inventory.Application", application);
         Assert.Contains("Tooba.Tax.Application", application);
         Assert.DoesNotContain("Tooba.Tax.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
+        Assert.DoesNotContain("Tooba.Payment.Infrastructure", File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "Tooba.Order.Infrastructure.csproj")), StringComparison.Ordinal);
         Assert.Equal("order", OrderDbContext.Schema);
         Assert.DoesNotContain("MassTransit", typeof(CheckoutGroup).Assembly.GetReferencedAssemblies().Select(a => a.Name));
         Assert.DoesNotContain("MassTransit", typeof(ICheckoutDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));

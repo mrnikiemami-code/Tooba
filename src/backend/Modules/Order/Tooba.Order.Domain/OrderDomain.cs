@@ -43,6 +43,11 @@ public enum SellerOrderStatus
     /// لغو شده.
     /// </summary>
     Cancelled = 3,
+
+    /// <summary>
+    /// پرداخت تأییدشده از ماژول Payment؛ شروع درگاه این وضعیت را نمی‌سازد.
+    /// </summary>
+    Paid = 4,
 }
 
 /// <summary>
@@ -312,6 +317,24 @@ public sealed class SellerOrder
         }
 
         Status = SellerOrderStatus.Cancelled;
+    }
+
+    /// <summary>
+    /// پرداخت تأییدشده را روی سفارش خرید آنلاین ثبت می‌کند. متن callback این متد را صدا نمی‌زند.
+    /// </summary>
+    public void RecordVerifiedPayment()
+    {
+        if (Status == SellerOrderStatus.Paid)
+        {
+            return;
+        }
+
+        if (Status != SellerOrderStatus.PendingPayment)
+        {
+            throw new InvalidOperationException("فقط سفارش در انتظار پرداخت پس از Verify درگاه Paid می‌شود.");
+        }
+
+        Status = SellerOrderStatus.Paid;
     }
 }
 

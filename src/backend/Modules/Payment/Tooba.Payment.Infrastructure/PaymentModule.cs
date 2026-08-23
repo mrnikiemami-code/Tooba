@@ -4,20 +4,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Tooba.ModuleContracts;
-using Tooba.Order.Application;
 using Tooba.Payment.Application;
-using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Persistence;
 
-namespace Tooba.Order.Infrastructure;
+namespace Tooba.Payment.Infrastructure;
 
 /// <summary>
-/// ماژول Order: checkout و سفارش فروشنده‌محور. سبد، پرداخت و ارسال اینجا نیستند.
+/// ماژول Payment: درگاه انتزاعی و تلاش تأییدشده. سفارش و ذخیره کارت اینجا نیستند.
 /// </summary>
-public sealed class OrderModule : IToobaModule
+public sealed class PaymentModule : IToobaModule
 {
     /// <inheritdoc />
-    public string Name => "Order";
+    public string Name => "Payment";
 
     /// <inheritdoc />
     public void AddServices(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
@@ -26,12 +25,13 @@ public sealed class OrderModule : IToobaModule
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(environment);
 
-        services.AddSingleton<IOutboxModuleRegistration, OrderOutboxRegistration>();
-        services.AddScoped<IOrderUseCaseGuard, OpenOrderUseCaseGuard>();
-        services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
-        services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
-        services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
-        services.AddDbContext<OrderDbContext>((sp, options) =>
+        services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
+        services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
+        services.AddScoped<IPaymentGateway, FakePaymentGateway>();
+        services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
+        services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
+        services.AddScoped<IPaymentDirectory, PaymentDirectory>();
+        services.AddDbContext<PaymentDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(
                 sp.GetRequiredService<ICurrentCommerceContext>(),
@@ -39,8 +39,8 @@ public sealed class OrderModule : IToobaModule
             ToobaNpgsql.ConfigureModuleContext(
                 options,
                 connectionString,
-                OrderDbContext.Schema,
-                typeof(OrderDbContext));
+                PaymentDbContext.Schema,
+                typeof(PaymentDbContext));
             options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
         });
     }
