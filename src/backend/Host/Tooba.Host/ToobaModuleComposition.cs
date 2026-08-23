@@ -5,6 +5,7 @@ using Tooba.Offer.Infrastructure;
 using Tooba.Party.Infrastructure;
 using Tooba.PlatformProbe.Infrastructure;
 using Tooba.Pricing.Infrastructure;
+using Tooba.Inventory.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -25,6 +26,7 @@ internal static class ToobaModuleComposition
         new CatalogModule(),
         new OfferModule(),
         new PricingModule(),
+        new InventoryModule(),
     ];
 
     /// <summary>

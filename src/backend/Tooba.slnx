@@ -25,5 +25,8 @@
     <Project Path="Modules/Pricing/Tooba.Pricing.Domain/Tooba.Pricing.Domain.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Application/Tooba.Pricing.Application.csproj" />
     <Project Path="Modules/Pricing/Tooba.Pricing.Infrastructure/Tooba.Pricing.Infrastructure.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Domain/Tooba.Inventory.Domain.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Application/Tooba.Inventory.Application.csproj" />
+    <Project Path="Modules/Inventory/Tooba.Inventory.Infrastructure/Tooba.Inventory.Infrastructure.csproj" />
   </Folder>
 </Solution>

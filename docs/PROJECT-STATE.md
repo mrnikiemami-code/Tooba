@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-T002
+TB-P03-T003
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P02-GATE
 Current Issued Task:
 
 ```text
-TB-P03-T003
+TB-P03-T004
 ```
 
 Current Gate:
@@ -72,7 +72,8 @@ TB-P02-T005 = ACCEPTED
 TB-P02-GATE = ACCEPTED
 TB-P03-T001 = ACCEPTED
 TB-P03-T002 = ACCEPTED
-TB-P03-T003 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
+TB-P03-T003 = ACCEPTED
+TB-P03-T004 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -178,6 +179,12 @@ COMPLETE (Architect accepted TB-P03-T002)
 ```
 
 Pricing Foundation:
+
+```text
+COMPLETE (Architect accepted TB-P03-T003)
+```
+
+Inventory Foundation:
 
 ```text
 IN_PROGRESS
@@ -391,13 +398,13 @@ docs/architecture/41-authentication-http-boundary.md
 docs/architecture/42-catalog-product-variant-foundation.md
 docs/architecture/43-seller-offer-listing-foundation.md
 docs/architecture/44-pricing-foundation.md
+docs/architecture/45-inventory-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P03-T003.task.md
-docs/ai/tasks/TB-P03-T003-REPAIR.task.md
+docs/ai/tasks/TB-P03-T004.task.md
 ```
 
-Resume: execute TB-P03-T003-REPAIR (deterministic postgres/docker suite; Skipped=0). Do not start TB-P03-T004. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
+Resume: execute TB-P03-T004; then wait in the same Architect chat for the next valid envelope. Do not start TB-P03-T005 without a new envelope. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 IN_PROGRESS.
