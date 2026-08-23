@@ -4,15 +4,15 @@ Recorded repository state for recovery (do not invent the next envelope):
 
 ```text
 Current Phase: P04 — Experience Foundation
-Last Architect Accepted Task: TB-P03-GATE
+Last Architect Accepted Task: TB-P04-T001
 Last Architect Accepted Gate: TB-P03-GATE
-Current Issued Task: TB-P04-T001
+Current Issued Task: TB-P04-T002
 Task State: ISSUED / AWAITING_ARCHITECT_ACCEPT
 Current Gate: NONE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; do not start Design System, Data Grid, or serious UI without a new envelope
+P04 is IN_PROGRESS; Design System Foundation is IN_PROGRESS; do not start Data Grid or serious UI without a new envelope
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

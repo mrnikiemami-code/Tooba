@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AppProviders } from "./providers";
 import "./globals.css";
 
 /**
- * فرادادهٔ پوستهٔ Next برای bootstrap پلتفرم.
- * UI تجاری، Design System و Data Grid اینجا تعریف نمی‌شوند.
+ * فرادادهٔ پوسته. Design System مالک تجربه است نه ماژول بک‌اند.
  */
 export const metadata: Metadata = {
   title: "Tooba",
-  description: "Tooba storefront shell",
+  description: "Tooba experience shell",
 };
 
 /**
- * لایهٔ ریشهٔ App Router. مرز ماژول بک‌اند را نشان نمی‌دهد و تم فروشگاه را اعمال نمی‌کند.
- * @param children خروجی مسیر جاری.
+ * لایهٔ ریشه. جهت و تم از Design System روی html اعمال می‌شود.
  */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

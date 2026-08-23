@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P03-GATE
+TB-P04-T001
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P03-GATE
 Current Issued Task:
 
 ```text
-TB-P04-T001
+TB-P04-T002
 ```
 
 Current Gate:
@@ -81,7 +81,8 @@ TB-P03-T007 = ACCEPTED
 TB-P03-T008 = ACCEPTED
 TB-P03-T009 = ACCEPTED
 TB-P03-GATE = ACCEPTED
-TB-P04-T001 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T001 = ACCEPTED
+TB-P04-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -237,7 +238,13 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-IN_PROGRESS (TB-P04-T001 awaiting Architect ACCEPT)
+IN_PROGRESS (TB-P04-T002 awaiting Architect ACCEPT)
+```
+
+Design System Foundation:
+
+```text
+IN_PROGRESS
 ```
 
 Project-wide documentation rule:
@@ -455,12 +462,13 @@ docs/architecture/48-tax-calculation-foundation.md
 docs/architecture/49-payment-foundation.md
 docs/architecture/50-promotion-discount-foundation.md
 docs/architecture/51-shopeiva-study-reuse-map.md
+docs/architecture/52-design-system-foundation.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-T001.task.md
+docs/ai/tasks/TB-P04-T002.task.md
 ```
 
-Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. Current issued task is TB-P04-T001 (Deep Shopeiva Study & Reuse Map), awaiting Architect ACCEPT. Do not start Design System, Data Grid, or serious UI. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.
+Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 is Architect-accepted. Current issued task is TB-P04-T002 (Design System Extraction), awaiting Architect ACCEPT. Do not start Data Grid, workspaces, or serious UI. Design System Foundation = IN_PROGRESS. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.

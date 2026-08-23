@@ -100,13 +100,14 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is IN_PROGRESS under TB-P04-T001 (awaiting Architect ACCEPT). Do not start Design System extraction, Data Grid, or serious UI.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T002 (awaiting Architect ACCEPT). Design System Foundation is IN_PROGRESS. Do not start Data Grid or serious UI.
 
 ## P04 Work Packages
 
 | ID | Work package | Status |
 | --- | --- | --- |
-| P04-01 | Deep Shopeiva study & reuse map | IN_PROGRESS (TB-P04-T001 awaiting Architect ACCEPT) |
+| P04-01 | Deep Shopeiva study & reuse map | COMPLETE (Architect accepted TB-P04-T001) |
+| P04-02 | Design System extraction | IN_PROGRESS (TB-P04-T002 awaiting Architect ACCEPT) |
 
 ## Mandatory UX sequence (locked)
 
@@ -114,9 +115,9 @@ Do not skip. Later steps wait for new envelopes.
 
 | Future package | Status |
 | --- | --- |
-| Deep Shopeiva Study | IN_PROGRESS |
-| Template reuse map | IN_PROGRESS (this task) |
-| Design System extraction | PLANNED |
+| Deep Shopeiva Study | COMPLETE |
+| Template reuse map | COMPLETE (TB-P04-T001) |
+| Design System extraction | IN_PROGRESS |
 | Professional Data Grid foundation | PLANNED |
 | Workspace interaction patterns | PLANNED |
 | Serious UI implementation | PLANNED |
