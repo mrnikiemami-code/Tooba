@@ -7,7 +7,7 @@ Current Phase: P03 — Commerce Core
 Last Architect Accepted Task: TB-P03-T006
 Last Architect Accepted Gate: TB-P02-GATE
 Current Issued Task: TB-P03-T007
-Task State: AWAITING_ARCHITECT_ACCEPT
+Task State: REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 P01 = COMPLETE
 P02 = COMPLETE
 P03 is IN_PROGRESS; do not start TB-P03-T008 or P03 Gate without a new envelope

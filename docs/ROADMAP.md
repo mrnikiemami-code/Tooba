@@ -96,7 +96,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P00 is COMPLETE after Architect ACCEPT of Gate.
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
-- P03 Commerce Core is IN_PROGRESS under TB-P03-T007 (awaiting Architect accept). TB-P03-T006 is Architect-accepted.
+- P03 Commerce Core is IN_PROGRESS under TB-P03-T007 (REPAIR IN PROGRESS / awaiting Architect accept). TB-P03-T006 is Architect-accepted.
 - `TB-P03-T008` and P03 Gate are not authorized until Architect issues those envelopes.
 
 ## Mandatory future UX / template work (not authorized now)
