@@ -86,6 +86,7 @@ A Cart that already produced a durable `CheckoutGroup` cannot create a second ch
 - A different key for the same Cart returns the existing checkout (`ALREADY_CONVERTED` by reuse). It does not insert a second group.
 - If Order persist succeeds and `ConvertAsync` fails, the checkout row stays. The next submit reconciles Cart to `Converted` without repricing and without a second inventory reserve.
 - Concurrent submits are serialized by the unique CartId index; the loser reloads the winner.
+- Migration `UniqueCheckoutCartId` must be registered with `[Migration]` so EF applies `ix_checkouts_cart_id`. A Migration subclass without that attribute is ignored and two concurrent inserts can both succeed.
 
 There is no distributed transaction and no cross-module DbContext access.
 

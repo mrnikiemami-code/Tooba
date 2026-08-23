@@ -82,7 +82,7 @@ TB-P03-T008 = ACCEPTED
 TB-P03-T009 = ACCEPTED
 TB-P03-GATE = ACCEPTED
 TB-P04-T001 = ACCEPTED
-TB-P04-T002 = ISSUED / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T002 = REPAIR IN PROGRESS / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -469,6 +469,7 @@ Authorized local envelope path for this issued work:
 
 ```text
 docs/ai/tasks/TB-P04-T002.task.md
+docs/ai/tasks/TB-P04-T002-REPAIR.task.md
 ```
 
-Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 is Architect-accepted. Current issued task is TB-P04-T002 (Design System Extraction), awaiting Architect ACCEPT. Do not start Data Grid, workspaces, or serious UI. Design System Foundation = IN_PROGRESS. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.
+Resume: P03 is COMPLETE after Architect ACCEPT of TB-P03-GATE. TB-P04-T001 is Architect-accepted. Current issued work is TB-P04-T002 REPAIR (checkout concurrency regression). Design System foundation remains in place; do not start Data Grid or workspaces. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 IN_PROGRESS.

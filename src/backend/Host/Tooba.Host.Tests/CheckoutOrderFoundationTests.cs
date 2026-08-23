@@ -414,14 +414,25 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
 
         var concCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var concLined = await cartDirA.AddOrIncreaseLineAsync(concCart.CartId, access, concCart.Version, offer2.OfferId, 1, CancellationToken.None);
+        var availableBeforeConc = (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available;
         await using var orderA2 = CreateOrderDb(csA, commerceA);
         await using var cartA2 = CreateCartDb(csA, commerceA);
         await using var taxA2 = CreateTaxDb(csA, commerceA);
         await using var promotionA2 = CreatePromotionDb(csA, commerceA);
-        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA, priceDirA, inventoryDirA, inventoryDirA);
+        await using var catalogA2 = CreateCatalogDb(csA, commerceA);
+        await using var partyA2 = CreatePartyDb(csA, commerceA);
+        await using var offerA2 = CreateOfferDb(csA, commerceA);
+        await using var pricingA2 = CreatePricingDb(csA, commerceA);
+        await using var inventoryA2 = CreateInventoryDb(csA, commerceA);
+        var catalogDirA2 = new CatalogDirectory(catalogA2, new OpenCatalogUseCaseGuard());
+        var partyDirA2 = new PartyDirectory(partyA2);
+        var offerDirA2 = new OfferDirectory(offerA2, new OpenOfferUseCaseGuard(), catalogDirA2, partyDirA2);
+        var priceDirA2 = new PriceDirectory(pricingA2, new OpenPricingUseCaseGuard(), offerDirA2);
+        var inventoryDirA2 = new InventoryDirectory(inventoryA2, new OpenInventoryUseCaseGuard(), offerDirA2, catalogDirA2);
+        var cartDirA2 = new CartDirectory(cartA2, new OpenCartUseCaseGuard(), offerDirA2, priceDirA2, inventoryDirA2, inventoryDirA2);
         var taxDirA2 = new TaxDirectory(taxA2, new OpenTaxUseCaseGuard());
         var promoDirA2 = new PromotionDirectory(promotionA2, new OpenPromotionUseCaseGuard(), new DeferredPromotionRedemptionLedger());
-        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA, priceDirA, inventoryDirA, taxDirA2, promoDirA2);
+        var checkoutA2 = new CheckoutDirectory(orderA2, new OpenOrderUseCaseGuard(), cartDirA2, cartDirA2, offerDirA2, priceDirA2, inventoryDirA2, taxDirA2, promoDirA2);
         var concLeft = checkoutA.SubmitAsync(
             new SubmitCheckoutCommand(concLined.CartId, access, concLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-a", "IR-NAT"),
             CancellationToken.None);
@@ -430,8 +441,26 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             CancellationToken.None);
         var concResults = await Task.WhenAll(concLeft, concRight);
         Assert.Equal(concResults[0].CheckoutId, concResults[1].CheckoutId);
-        Assert.Equal(1, await orderA.Checkouts.CountAsync(x => x.CartId == concLined.CartId));
+        Assert.Equal(1, await orderA.Checkouts.AsNoTracking().CountAsync(x => x.CartId == concLined.CartId));
+        Assert.Equal(1, await orderA.SellerOrders.AsNoTracking().CountAsync(x => x.CheckoutId == concResults[0].CheckoutId));
         Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(concLined.CartId, access, CancellationToken.None))!.Status);
+        Assert.Equal(availableBeforeConc, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
+
+        var sameKeyCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
+        var sameKeyLined = await cartDirA.AddOrIncreaseLineAsync(sameKeyCart.CartId, access, sameKeyCart.Version, offer2.OfferId, 1, CancellationToken.None);
+        var availableBeforeSame = (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available;
+        var sameLeft = checkoutA.SubmitAsync(
+            new SubmitCheckoutCommand(sameKeyLined.CartId, access, sameKeyLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-same", "IR-NAT"),
+            CancellationToken.None);
+        var sameRight = checkoutA2.SubmitAsync(
+            new SubmitCheckoutCommand(sameKeyLined.CartId, access, sameKeyLined.Version, OrderMode.OnlinePurchase, buyer.PartyId, actor, "idem-conc-same", "IR-NAT"),
+            CancellationToken.None);
+        var sameResults = await Task.WhenAll(sameLeft, sameRight);
+        Assert.Equal(sameResults[0].CheckoutId, sameResults[1].CheckoutId);
+        Assert.Equal(1, await orderA.Checkouts.AsNoTracking().CountAsync(x => x.CartId == sameKeyLined.CartId));
+        Assert.Equal(1, await orderA.SellerOrders.AsNoTracking().CountAsync(x => x.CheckoutId == sameResults[0].CheckoutId));
+        Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(sameKeyLined.CartId, access, CancellationToken.None))!.Status);
+        Assert.Equal(availableBeforeSame, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

@@ -248,17 +248,15 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         }
         catch (DbUpdateException)
         {
-            foreach (var entry in _db.ChangeTracker.Entries().Where(e =>
-                         ReferenceEquals(e.Entity, group)
-                         || group.SellerOrders.Any(order => ReferenceEquals(order, e.Entity))
-                         || group.SellerOrders.SelectMany(order => order.Lines).Any(line => ReferenceEquals(line, e.Entity))))
-            {
-                entry.State = EntityState.Detached;
-            }
-
-            var winner = await FindCheckoutAsync(
-                x => x.IdempotencyKey == command.IdempotencyKey.Trim() || x.CartId == command.CartId,
-                cancellationToken)
+            // بازندهٔ رقابت unique(cart_id) نباید موجودیت ردیابی‌شدهٔ خودش را برگرداند.
+            _db.ChangeTracker.Clear();
+            var winner = await _db.Checkouts
+                .AsNoTracking()
+                .Include(x => x.SellerOrders)
+                .ThenInclude(x => x.Lines)
+                .Where(x => x.CartId == command.CartId)
+                .OrderBy(x => x.SubmittedAt)
+                .FirstOrDefaultAsync(cancellationToken)
                 ?? throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
             EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
             await ReconcileCartConversionAsync(winner, command, cancellationToken);
