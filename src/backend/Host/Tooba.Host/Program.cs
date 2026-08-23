@@ -1,8 +1,7 @@
-// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، DbContext ماژول، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
+// ریشهٔ ترکیب Host: Observability، resolve Edition/Tenant، ماژول‌های صریح، Outbox dispatcher، MassTransit SQL Transport، کش درون‌فرآیندی.
 // Host ورودی routing است نه TenantId. کارگر Outbox و مصرف‌کننده Tenant را از Host نمی‌خوانند.
 // مسیرهای /__platform-* فقط Development/Testing هستند و قبل از استقرار عمومی باید محدود شوند.
 // لاگ فنی جایگزین Audit نیست. DbContext و Outbox برای /health و /ready باز نمی‌شوند.
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
@@ -13,7 +12,6 @@ using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Persistence;
-using Tooba.PlatformProbe.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +56,6 @@ builder.Services.AddOptions<CacheHostOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>();
 builder.Services.AddToobaCache();
-builder.Services.AddSingleton<IOutboxModuleRegistration, PlatformProbeOutboxRegistration>();
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
@@ -69,18 +66,7 @@ builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);
 builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOptions);
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
-builder.Services.AddDbContext<Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext>((sp, options) =>
-{
-    var connectionString = ToobaNpgsql.ResolveForContext(
-        sp.GetRequiredService<ICurrentCommerceContext>(),
-        sp.GetRequiredService<IDatabaseConnectionResolver>());
-    ToobaNpgsql.ConfigureModuleContext(
-        options,
-        connectionString,
-        Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.Schema,
-        typeof(Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext));
-    options.AddInterceptors(sp.GetRequiredService<OutboxSaveChangesInterceptor>());
-});
+builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
