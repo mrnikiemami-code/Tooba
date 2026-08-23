@@ -55,7 +55,11 @@ builder.Services.AddOptions<CacheHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Cache"))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<CacheHostOptions>, CacheOptionsValidator>();
-builder.Services.AddToobaCache();
+builder.Services.AddOptions<AuthorizationHostOptions>()
+    .Bind(builder.Configuration.GetSection("Tooba:Authorization"))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<AuthorizationHostOptions>, AuthorizationOptionsValidator>();
+builder.Services.AddToobaAuthorization();
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
