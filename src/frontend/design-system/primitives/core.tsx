@@ -178,15 +178,25 @@ export function EmptyState({ title, detail }: { title: string; detail?: string }
   );
 }
 
-/** حالت خطا با امکان تلاش مجدد در لایهٔ مصرف‌کننده. */
-export function ErrorState({ title, detail, onRetry }: { title: string; detail?: string; onRetry?: () => void }) {
+/** حالت خطا با برچسب تلاش مجدد از درز i18n، نه متن فارسی سخت‌کد. */
+export function ErrorState({
+  title,
+  detail,
+  onRetry,
+  retryLabel = "Retry",
+}: {
+  title: string;
+  detail?: string;
+  onRetry?: () => void;
+  retryLabel?: string;
+}) {
   return (
     <div className="rounded-ds border border-danger/40 p-6">
       <p className="font-medium text-danger">{title}</p>
       {detail ? <p className="mt-1 text-sm text-muted">{detail}</p> : null}
       {onRetry ? (
         <Button className="mt-3" tone="secondary" type="button" onClick={onRetry}>
-          تلاش دوباره
+          {retryLabel}
         </Button>
       ) : null}
     </div>

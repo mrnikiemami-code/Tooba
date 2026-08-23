@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
-    "test:grid": "node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts"
+    "test:grid": "node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts",
+    "test:workspace": "node --experimental-strip-types --test design-system/workspace/state.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

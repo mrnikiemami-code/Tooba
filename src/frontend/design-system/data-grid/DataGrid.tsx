@@ -280,7 +280,7 @@ export function DataGrid<T extends { id: string }>({
           <Skeleton className="h-12 w-full" />
         </div>
       ) : null}
-      {status === "error" ? <ErrorState title={messages.error} onRetry={() => void reload()} /> : null}
+      {status === "error" ? <ErrorState title={messages.error} retryLabel={messages.retry} onRetry={() => void reload()} /> : null}
       {status === "ready" && rows.length === 0 ? (
         <EmptyState title={activeFilters || query.search ? messages.emptyFiltered : messages.empty} />
       ) : null}

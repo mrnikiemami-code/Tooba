@@ -40,3 +40,5 @@ export {
 export { drawerUsesLogicalStart, iconButtonRequiresLabel, moneyViewSchema } from "./invariants";
 export { DataGrid, createMemorySavedViewStore, enGridMessages, faGridMessages } from "./data-grid";
 export type { DataGridProps } from "./data-grid";
+export { WorkspaceShell, enWorkspaceMessages, faWorkspaceMessages } from "./workspace";
+export type { WorkspaceShellProps } from "./workspace";

@@ -4,15 +4,15 @@ Recorded repository state for recovery (do not invent the next envelope):
 
 ```text
 Current Phase: P04 — Experience Foundation
-Last Architect Accepted Task: TB-P04-T002
+Last Architect Accepted Task: TB-P04-T003
 Last Architect Accepted Gate: TB-P03-GATE
-Current Issued Task: TB-P04-T003
+Current Issued Task: TB-P04-T004
 Task State: ISSUED / AWAITING_ARCHITECT_ACCEPT
 Current Gate: NONE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; Design System Foundation is COMPLETE; Professional Data Grid Foundation is IN_PROGRESS; do not start workspaces or serious UI without a new envelope
+P04 is IN_PROGRESS; Design System Foundation is COMPLETE; Professional Data Grid Foundation is COMPLETE; Workspace Interaction Patterns are IN_PROGRESS (TB-P04-T004 awaiting Architect ACCEPT); ErrorState retry i18n is RESOLVED; grid virtualization remains DEFERRED_NON_BLOCKING; do not start real domain workspaces or serious UI without a new envelope
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.
