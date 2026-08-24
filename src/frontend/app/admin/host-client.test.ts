@@ -8,6 +8,8 @@ test("list mapper keeps offer counts off the Product price field", () => {
   ]);
   assert.equal(rows[0]?.id, "p1");
   assert.equal(rows[0]?.offerCount, 2);
+  assert.equal(rows[0]?.sellableUnits, 0);
+  assert.equal(rows[0]?.categorySummary, "بدون دسته");
   assert.equal("price" in (rows[0] ?? {}), false);
 });
 

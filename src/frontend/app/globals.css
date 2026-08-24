@@ -44,20 +44,20 @@
   --z-modal: 50;
   --motion-fast: 120ms;
   --font-sans: tahoma, "Segoe UI", system-ui, sans-serif;
-  --type-display: 2rem;
-  --type-title: 1.5rem;
-  --type-body: 1rem;
-  --type-caption: 0.8125rem;
+  --type-display: 2.5rem;
+  --type-title: 1.875rem;
+  --type-body: 1.125rem;
+  --type-caption: 0.9375rem;
   --density-control: 2.75rem;
 }
 
 .dark {
-  --color-background: 9 9 11;
-  --color-surface: 24 24 27;
-  --color-surface-elevated: 39 39 42;
+  --color-background: 12 12 14;
+  --color-surface: 28 28 32;
+  --color-surface-elevated: 44 44 50;
   --color-foreground: 250 250 250;
-  --color-muted: 161 161 170;
-  --color-border: 63 63 70;
+  --color-muted: 180 180 188;
+  --color-border: 72 72 80;
   --color-primary: 45 212 191;
   --color-primary-foreground: 9 9 11;
   --color-secondary: 39 39 42;

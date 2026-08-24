@@ -103,14 +103,14 @@ export function WorkspaceShell({
   const overflow = actions.filter((action) => (action.kind === "overflow" || action.kind === "contextual") && action.permission !== "hidden");
 
   return (
-    <div className="flex flex-col gap-5 rounded-ds border border-border bg-surface p-5 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-ds border border-border bg-surface p-6 shadow-md md:p-8">
       <header>
         <nav aria-label="breadcrumb" className="text-sm text-muted">
           {breadcrumbs.join(" / ")}
         </nav>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+            <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
             {subtitle ? <p className="mt-1 text-base text-muted">{subtitle}</p> : null}
             {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
           </div>
@@ -188,19 +188,26 @@ export function WorkspaceShell({
       ) : null}
       {error ? <ErrorState title={error} onRetry={onRetry} retryLabel={messages.retry} /> : null}
       {conflict ? (
-        <div className="rounded-ds border border-warning bg-warning/10 p-4" role="alert">
-          <p className="text-base font-medium">این محصول را کاربر دیگری تغییر داده است.</p>
+        <div className="rounded-ds border border-warning bg-warning/10 p-5" role="alert">
+          <p className="text-lg font-semibold">این محصول را کاربر دیگری تغییر داده است.</p>
+          <p className="mt-1 text-base">نسخهٔ تازه را بارگذاری کنید، تغییرات را بازبینی کنید، یا پیش‌نویس محلی را کنار بگذارید.</p>
           <p className="mt-1 text-sm text-muted">{conflict}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" tone="secondary" onClick={onReloadConflict}>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" onClick={onReloadConflict}>
               بارگذاری نسخهٔ تازه
+            </Button>
+            <Button type="button" tone="secondary" onClick={onReloadConflict}>
+              بازبینی تغییرات
+            </Button>
+            <Button type="button" tone="ghost" onClick={onReloadConflict}>
+              صرف‌نظر از پیش‌نویس محلی
             </Button>
           </div>
         </div>
       ) : null}
       {emptyKind ? <EmptyState title={emptyKind === "no-permission" ? messages.permissionDenied : emptyKind === "not-found" ? messages.notFound : emptyKind} /> : null}
       {!loading && !error && !emptyKind ? (
-        <div className={cn("grid gap-3", narrow ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_16rem]")}>
+        <div className={cn("grid gap-4", narrow ? "grid-cols-1" : "xl:grid-cols-[minmax(0,1fr)_24rem]")}>
           <div className="flex flex-col gap-3">
             {summary ? <section className="rounded-ds border border-border p-3">{summary}</section> : null}
             <section className="rounded-ds border border-border p-3">{children}</section>
@@ -213,7 +220,7 @@ export function WorkspaceShell({
             <aside className="flex flex-col gap-3">
               {inspector}
               <Feed title={messages.history} items={activity.map((item) => ({ id: item.id, body: item.summary, meta: `${item.actor} · ${item.at}` }))} />
-              <Feed title="audit" items={audit.map((item) => ({ id: item.id, body: item.event, meta: `${item.actor} · ${item.at}` }))} />
+              <Feed title="حسابرسی" items={audit.map((item) => ({ id: item.id, body: item.event, meta: `${item.actor} · ${item.at}` }))} />
             </aside>
           )}
         </div>

@@ -11,7 +11,7 @@ public sealed record ProductWorkspacePermissions(
     bool CanPublish);
 
 /// <summary>
-/// ردیف فهرست Admin. قیمت و موجودی روی Product نیستند.
+/// ردیف فهرست Admin. مبلغ و واحد قابل‌فروش از Offer/Price/Inventory ترکیب می‌شوند؛ روی هویت Product نیستند.
 /// </summary>
 public sealed record AdminProductListItem(
     Guid ProductId,
@@ -19,6 +19,10 @@ public sealed record AdminProductListItem(
     string Status,
     int VariantCount,
     int OfferCount,
+    string CategorySummary,
+    string OfferAmountRange,
+    int SellableUnits,
+    int LocationCount,
     DateTimeOffset UpdatedAt);
 
 /// <summary>

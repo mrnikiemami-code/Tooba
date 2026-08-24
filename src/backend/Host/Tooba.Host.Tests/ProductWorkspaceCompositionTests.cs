@@ -28,9 +28,21 @@ public sealed class ProductWorkspaceCompositionTests
     [Fact]
     public void Serialized_list_item_json_has_no_product_price_field()
     {
-        var item = new AdminProductListItem(Guid.Parse("11111111-1111-7111-8111-111111111111"), "shirt", "Published", 1, 2, DateTimeOffset.UnixEpoch);
+        var item = new AdminProductListItem(
+            Guid.Parse("11111111-1111-7111-8111-111111111111"),
+            "shirt",
+            "Published",
+            1,
+            2,
+            "پوشاک",
+            "1790000–1850000 IRR",
+            12,
+            3,
+            DateTimeOffset.UnixEpoch);
         var json = JsonSerializer.Serialize(item, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         Assert.DoesNotContain("\"price\"", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"offerCount\":2", json, StringComparison.Ordinal);
+        Assert.Contains("\"offerAmountRange\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"sellableUnits\":12", json, StringComparison.Ordinal);
     }
 }

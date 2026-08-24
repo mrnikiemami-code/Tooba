@@ -17,9 +17,9 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
         {row.title}
       </Link>
     ),
-    width: 280,
-    minWidth: 180,
-    maxWidth: 480,
+    width: 360,
+    minWidth: 220,
+    maxWidth: 560,
     filterKind: "text",
     sortable: true,
   },
@@ -59,6 +59,69 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     filterKind: "number",
     sortable: true,
   },
+  {
+    id: "categorySummary",
+    header: "دسته",
+    accessor: (row) => row.categorySummary,
+    width: 180,
+    minWidth: 120,
+    maxWidth: 280,
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "offerAmountRange",
+    header: "بازهٔ مبلغ پیشنهاد",
+    accessor: (row) => row.offerAmountRange,
+    width: 200,
+    minWidth: 140,
+    maxWidth: 280,
+    sortable: true,
+  },
+  {
+    id: "sellableUnits",
+    header: "قابل‌فروش",
+    accessor: (row) => row.sellableUnits,
+    width: 120,
+    minWidth: 90,
+    maxWidth: 160,
+    filterKind: "number",
+    sortable: true,
+  },
+  {
+    id: "locationCount",
+    header: "محل",
+    accessor: (row) => row.locationCount,
+    width: 90,
+    minWidth: 70,
+    maxWidth: 120,
+    filterKind: "number",
+    sortable: true,
+  },
+  {
+    id: "updatedAt",
+    header: "به‌روزرسانی",
+    accessor: (row) => row.updatedAt,
+    cell: (row) => <span className="text-sm tabular-nums">{row.updatedAt ? row.updatedAt.slice(0, 10) : "—"}</span>,
+    width: 130,
+    minWidth: 110,
+    maxWidth: 180,
+    sortable: true,
+  },
+  {
+    id: "open",
+    header: "عملیات",
+    accessor: (row) => row.id,
+    cell: (row) => (
+      <Link className="text-primary underline-offset-4 hover:underline" href={`/admin/products/${row.id}`}>
+        باز کردن
+      </Link>
+    ),
+    width: 110,
+    minWidth: 90,
+    maxWidth: 140,
+    sortable: false,
+  },
 ];
 
 /**
@@ -87,18 +150,18 @@ export function ProductListScreen() {
   );
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <main className="w-full p-6 md:p-8">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">محصولات</h1>
-          <p className="mt-1 text-base text-muted">قیمت و موجودی روی هویت Product نیستند؛ ورود به Workspace ترکیبی است.</p>
+          <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محصولات</h1>
+          <p className="mt-1 text-[length:var(--type-body)] text-muted">قیمت و موجودی روی هویت Product نیستند؛ ورود به Workspace ترکیبی است.</p>
         </div>
-        <button type="button" disabled className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground opacity-50">
+        <button type="button" disabled className="min-h-11 rounded-ds bg-primary px-4 text-base font-medium text-primary-foreground opacity-50">
           محصول جدید
         </button>
       </div>
-      <p className="mb-4 text-sm text-muted" data-testid="list-source">
-        {source === "host" ? "داده از Host زنده" : source === "loading" ? "در حال خواندن Host" : "Host در دسترس نیست"}
+      <p className="mb-4 text-base text-muted" data-testid="list-source">
+        {source === "host" ? "فهرست عملیاتی فروشگاه" : source === "loading" ? "در حال بارگذاری فهرست" : "اتصال فروشگاه برقرار نیست"}
       </p>
       {source === "error" ? (
         <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />

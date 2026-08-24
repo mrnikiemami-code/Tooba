@@ -24,12 +24,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-e border-border bg-surface md:flex">
+      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-e border-border bg-surface-elevated shadow-sm md:flex">
         <div className="border-b border-border px-5 py-5">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">Tooba</p>
-          <p className="mt-1 text-lg font-semibold">عملیات فروش</p>
+          <p className="text-sm font-semibold tracking-wide text-primary">TOOBA</p>
+          <p className="mt-1 text-xl font-semibold">عملیات فروش</p>
+          <p className="mt-2 text-sm text-muted">کاتالوگ چندفروشنده‌ای</p>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Admin">
+        <nav className="flex flex-1 flex-col gap-1 p-3 text-base" aria-label="Admin">
           {nav.map((item) => {
             const active = item.enabled && path.startsWith(item.href);
             if (!item.enabled) {
@@ -56,11 +57,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-3 border-b border-border bg-surface px-4 md:px-6">
-          <p className="text-sm text-muted">کاتالوگ · Workspace محصول</p>
+        <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-surface px-5 md:px-8">
+          <div>
+            <p className="text-base font-medium">کاتالوگ · Workspace محصول</p>
+            <p className="text-sm text-muted">فروشگاه store-alpha</p>
+          </div>
           <div className="flex items-center gap-2">
             <AppearanceControls />
-            <span className="rounded-ds bg-secondary px-2 py-1 text-xs text-secondary-foreground">store-alpha</span>
+            <span className="rounded-ds bg-secondary px-3 py-1.5 text-sm text-secondary-foreground">اپراتور کاتالوگ</span>
           </div>
         </header>
         <div className="flex-1">{children}</div>

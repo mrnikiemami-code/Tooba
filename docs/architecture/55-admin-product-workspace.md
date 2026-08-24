@@ -23,6 +23,8 @@ Admin routes use a persistent operations shell (sidebar placeholders for future 
 
 List and workspace copy is operator-facing Persian. Seller and location labels come from Party/Inventory display names composed in Host memory, not raw UUIDs as primary labels.
 
+The Admin product list may show composed operational summaries (category labels, offer amount range, sellable units, location count). Those columns are Host memory composition from Catalog/Offer/Pricing/Inventory queries, not Product.Price or Product.Stock fields and not cross-schema SQL JOIN.
+
 ## Sections
 
 Overview, Variants, Media, Commercial, Inventory, SEO & Content, Publication, History.

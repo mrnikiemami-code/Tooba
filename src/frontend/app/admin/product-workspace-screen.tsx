@@ -93,7 +93,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
+    <div className="w-full p-5 md:p-8">
       <WorkspaceShell
         title={view.title}
         subtitle={`${view.brandName ?? "بدون برند"} · ${view.categoryNames.join("، ") || "بدون دسته"}`}
@@ -126,18 +126,22 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         onRetry={reload}
         dirtySections={dirtySections}
         summary={
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
             <Summary label="گونه‌ها" value={String(view.variants.length)} />
-            <Summary label="فروشندگان" value={String(sellers.size)} />
-            <Summary label="پیشنهادها" value={String(view.offers.length)} />
+            <Summary label="پیشنهاد فعال" value={String(view.offers.filter((row) => row.status === "Active").length)} />
             <Summary label="بازهٔ قیمت" value={priceRange} />
+            <Summary label="قابل‌فروش" value={String(available)} />
+            <Summary label="محل‌ها" value={String(view.stock.length)} />
+            <Summary label="انتشار" value={view.status === "Published" ? "منتشرشده" : view.status} />
+            <Summary label="SEO" value={view.seo.slugSeam ? "آماده" : "ناقص"} />
+            <Summary label="فروشندگان" value={String(sellers.size)} />
           </div>
         }
         inspector={
           <div className="space-y-2 text-sm">
             <p className="font-medium">آمادگی عملیات</p>
             <p>طبقهٔ مالیات جدا از نرخ است.</p>
-            <p data-testid="workspace-source">{source === "host" ? "همگام با Host" : "Host در دسترس نیست"}</p>
+            <p data-testid="workspace-source">{source === "host" ? "آمادگی فروشگاه به‌روز است" : "اتصال فروشگاه برقرار نیست"}</p>
           </div>
         }
         activity={view.activity.map((item) => ({ id: item.summary, at: item.at, actor: "ops", summary: item.summary }))}
@@ -205,64 +209,75 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         ) : null}
         {sectionId === "commercial" ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted">یک گونه می‌تواند چند پیشنهاد فروشنده با قیمت و موجودی جدا داشته باشد.</p>
-            {view.offers.map((offer) => {
-              const price = view.prices.find((row) => row.offerId === offer.offerId);
-              const tax = view.taxClassifications.find((row) => row.offerId === offer.offerId);
-              const stockRows = view.stock.filter((row) => row.offerId === offer.offerId);
-              return (
-                <Card key={offer.offerId}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-lg font-semibold">{offer.sellerDisplayName}</p>
-                      <p className="text-sm text-muted">SKU {offer.sellerSku} · {offer.channel}</p>
-                    </div>
-                    <Badge tone={offer.status === "Active" ? "success" : "neutral"}>{offer.status === "Active" ? "فعال" : offer.status}</Badge>
-                  </div>
-                  <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div>
-                      <dt className="text-sm text-muted">قیمت بدون مالیات</dt>
-                      <dd className="text-base font-medium">{money(price?.amountExclusiveOfTax, price?.currency)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted">طبقهٔ مالیات</dt>
-                      <dd>{tax?.displayName ?? tax?.categoryCode ?? "—"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm text-muted">موجودی پیشنهاد</dt>
-                      <dd>{stockRows.reduce((sum, row) => sum + row.available, 0)} قابل‌فروش</dd>
-                    </div>
-                  </dl>
-                </Card>
-              );
-            })}
+            <p className="text-base text-muted">ساختار بازار: گونه → پیشنهاد فروشنده → قیمت بدون مالیات و موجودی محل‌دار.</p>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[64rem] text-right text-base">
+                <thead className="border-b border-border text-sm text-muted">
+                  <tr>
+                    <th className="py-3">فروشنده</th>
+                    <th>SKU فروشنده</th>
+                    <th>کانال</th>
+                    <th>وضعیت</th>
+                    <th>قیمت بدون مالیات</th>
+                    <th>طبقهٔ مالیات</th>
+                    <th>قابل‌فروش</th>
+                    <th>محل‌ها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {view.offers.map((offer) => {
+                    const price = view.prices.find((row) => row.offerId === offer.offerId);
+                    const tax = view.taxClassifications.find((row) => row.offerId === offer.offerId);
+                    const stockRows = view.stock.filter((row) => row.offerId === offer.offerId);
+                    return (
+                      <tr key={offer.offerId} className="border-b border-border/70">
+                        <td className="py-4 text-lg font-semibold">{offer.sellerDisplayName}</td>
+                        <td className="font-medium">{offer.sellerSku ?? "—"}</td>
+                        <td>{offer.channel}</td>
+                        <td>
+                          <Badge tone={offer.status === "Active" ? "success" : "neutral"}>{offer.status === "Active" ? "فعال" : offer.status}</Badge>
+                        </td>
+                        <td className="text-lg font-semibold">{money(price?.amountExclusiveOfTax, price?.currency)}</td>
+                        <td>{tax?.displayName ?? tax?.categoryCode ?? "—"}</td>
+                        <td className="font-medium">{stockRows.reduce((sum, row) => sum + row.available, 0)}</td>
+                        <td>{stockRows.length}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : null}
         {sectionId === "inventory" ? (
           <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <Summary label="موجود" value={String(onHand)} />
               <Summary label="رزرو" value={String(reserved)} />
               <Summary label="قابل‌فروش" value={String(available)} />
+              <Summary label="محل‌ها" value={String(view.stock.length)} />
+              <Summary label="سلامت" value={available > 0 ? "سالم" : "کم‌موجود"} />
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[40rem] text-right text-base">
+              <table className="w-full min-w-[48rem] text-right text-base">
                 <thead className="border-b border-border text-sm text-muted">
                   <tr>
-                    <th className="py-2">محل</th>
-                    <th>فروشنده / SKU</th>
+                    <th className="py-3">محل</th>
+                    <th>فروشنده / پیشنهاد</th>
                     <th>موجود</th>
                     <th>رزرو</th>
                     <th>قابل‌فروش</th>
+                    <th>سلامت</th>
                   </tr>
                 </thead>
                 <tbody>
                   {view.stock.map((row) => {
                     const offer = view.offers.find((item) => item.offerId === row.offerId);
+                    const healthy = row.available > 0;
                     return (
                       <tr key={`${row.offerId}:${row.locationId}`} className="border-b border-border/70">
                         <td className="py-3">
-                          <p className="font-medium">{row.locationName}</p>
+                          <p className="text-base font-semibold">{row.locationName}</p>
                           <p className="text-sm text-muted">{row.locationCode}</p>
                         </td>
                         <td>
@@ -270,7 +285,10 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                         </td>
                         <td>{row.onHand}</td>
                         <td>{row.reserved}</td>
-                        <td className="font-medium">{row.available}</td>
+                        <td className="text-lg font-semibold">{row.available}</td>
+                        <td>
+                          <Badge tone={healthy ? "success" : "warning"}>{healthy ? "سالم" : "کم‌موجود"}</Badge>
+                        </td>
                       </tr>
                     );
                   })}
@@ -280,32 +298,72 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
           </div>
         ) : null}
         {sectionId === "seo" ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-3">
             <Card>
-              <p className="font-medium">محتوای معنایی</p>
-              <p className="mt-2 text-sm text-muted">Slug</p>
-              <p className="font-medium">{view.seo.slugSeam ?? "—"}</p>
-              <p className="mt-3 text-sm text-muted">عنوان SEO</p>
-              <p>{view.seo.seoTitleSeam ?? "—"}</p>
+              <p className="text-sm text-muted">آمادگی SEO</p>
+              <p className="mt-2 text-xl font-semibold">{view.seo.slugSeam && view.seo.seoTitleSeam ? "آماده" : "ناقص"}</p>
+              <p className="mt-2 text-sm text-muted">slug و عنوان جستجو باید هر دو پر باشند.</p>
             </Card>
             <Card>
-              <p className="font-medium">ترکیب صفحه</p>
-              <p className="mt-2 text-sm text-muted">{view.seo.semanticNote}</p>
+              <p className="text-sm text-muted">نشانی و عنوان</p>
+              <p className="mt-3 text-sm text-muted">Slug / canonical seam</p>
+              <p className="text-lg font-medium">{view.seo.slugSeam ?? "—"}</p>
+              <p className="mt-3 text-sm text-muted">عنوان SEO</p>
+              <p className="text-lg font-medium">{view.seo.seoTitleSeam ?? "—"}</p>
+            </Card>
+            <Card>
+              <p className="text-sm text-muted">محتوا و ترکیب صفحه</p>
+              <p className="mt-3 text-base">{view.seo.semanticNote}</p>
+              <p className="mt-3 text-sm text-muted">پیش‌نمایش صفحه فروشگاه در این Task ساخته نمی‌شود.</p>
             </Card>
           </div>
         ) : null}
         {sectionId === "publication" ? (
-          <ul className="space-y-3">
-            <Check ok={Boolean(view.title)} label="عنوان" />
-            <Check ok={view.media.length > 0} label="رسانه" />
-            <Check ok={view.offers.some((row) => row.status === "Active")} label="پیشنهاد فعال" />
-            <Check ok={view.prices.length > 0} label="قیمت" />
-            <Check ok={available > 0} label="موجودی" />
-            <Check ok={Boolean(view.seo.slugSeam)} label="سئو" />
-            <p className="text-sm text-muted">منتشرشده با قابل‌خرید یکی نیست.</p>
-          </ul>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="mb-2 font-semibold">آمادگی محتوا</p>
+              <ul className="space-y-2">
+                <Check ok={Boolean(view.title)} label="عنوان" />
+                <Check ok={view.media.length > 0} label="رسانه" />
+              </ul>
+            </div>
+            <div>
+              <p className="mb-2 font-semibold">آمادگی فروش</p>
+              <ul className="space-y-2">
+                <Check ok={view.offers.some((row) => row.status === "Active")} label="پیشنهاد فعال" />
+                <Check ok={view.prices.length > 0} label="قیمت" />
+              </ul>
+            </div>
+            <div>
+              <p className="mb-2 font-semibold">آمادگی موجودی و سئو</p>
+              <ul className="space-y-2">
+                <Check ok={available > 0} label="موجودی" />
+                <Check ok={Boolean(view.seo.slugSeam)} label="سئو" />
+              </ul>
+            </div>
+            <div>
+              <p className="mb-2 font-semibold">وضعیت انتشار</p>
+              <p className="text-lg font-semibold">{view.status === "Published" ? "منتشرشده" : view.status}</p>
+              <p className="mt-2 text-sm text-muted">منتشرشده با قابل‌خرید یکی نیست.</p>
+            </div>
+          </div>
         ) : null}
-        {sectionId === "history" ? <p className="text-sm text-muted">رویدادها در ستون کناری آمده‌اند.</p> : null}
+        {sectionId === "history" ? (
+          <ol className="space-y-3 border-s-2 border-border ps-4">
+            {view.activity.map((item) => (
+              <li key={`${item.summary}:${item.at}`}>
+                <p className="font-medium">{item.summary}</p>
+                <p className="text-sm text-muted">عملیات · {item.at}</p>
+              </li>
+            ))}
+            {view.audit.map((item) => (
+              <li key={`${item.summary}-audit`}>
+                <p className="font-medium">{item.summary}</p>
+                <p className="text-sm text-muted">حسابرسی · {item.at}</p>
+              </li>
+            ))}
+          </ol>
+        ) : null}
       </WorkspaceShell>
     </div>
   );

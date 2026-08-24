@@ -116,7 +116,7 @@ export function DataGrid<T extends { id: string }>({
 
   const pageCount = Math.max(1, Math.ceil(total / query.pageSize));
   const activeFilters = Object.values(query.filters).filter(isFilterActive).length;
-  const rowClass = density === "compact" ? "h-11" : "h-14";
+  const rowClass = density === "compact" ? "h-12" : "h-16";
   const exportIds = columns.filter((column) => column.exportable !== false).map((column) => column.id);
 
   function download(content: string, name: string) {
@@ -301,7 +301,7 @@ export function DataGrid<T extends { id: string }>({
       ) : null}
       {status === "ready" && rows.length > 0 && !narrow ? (
         <div className="overflow-x-auto rounded-ds border border-border">
-          <table className="min-w-full border-separate border-spacing-0 text-sm">
+          <table className="min-w-full border-separate border-spacing-0 text-base">
             <thead className="sticky top-0 z-10 bg-surface">
               <tr>
                 <th className="sticky start-0 z-20 bg-surface p-2">
@@ -348,7 +348,7 @@ export function DataGrid<T extends { id: string }>({
                         insetInlineStart: side === "inline-start" ? 48 : undefined,
                         insetInlineEnd: side === "inline-end" ? 0 : undefined,
                       }}
-                      className="border-b border-border bg-surface p-2 text-start"
+                      className="border-b border-border bg-surface p-3 text-start"
                     >
                       <button
                         type="button"
@@ -396,7 +396,7 @@ export function DataGrid<T extends { id: string }>({
                     return (
                       <td
                         key={column.id}
-                        className="border-b border-border p-2"
+                        className="border-b border-border p-3"
                         style={{ position: column.sticky ? "sticky" : undefined, insetInlineStart: side === "inline-start" ? 48 : undefined }}
                       >
                         {(column.cell ?? ((item: T) => String(column.accessor(item))))(row)}

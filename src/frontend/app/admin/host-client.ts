@@ -14,6 +14,11 @@ export interface AdminProductListRow {
   status: string;
   variantCount: number;
   offerCount: number;
+  categorySummary: string;
+  offerAmountRange: string;
+  sellableUnits: number;
+  locationCount: number;
+  updatedAt: string;
 }
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -59,6 +64,11 @@ export function mapAdminProductList(payload: unknown): AdminProductListRow[] {
         status: asString(readProp(item, "status", "Status")),
         variantCount: asNumber(readProp(item, "variantCount", "VariantCount")),
         offerCount: asNumber(readProp(item, "offerCount", "OfferCount")),
+        categorySummary: asString(readProp(item, "categorySummary", "CategorySummary"), "بدون دسته"),
+        offerAmountRange: asString(readProp(item, "offerAmountRange", "OfferAmountRange"), "بدون مبلغ"),
+        sellableUnits: asNumber(readProp(item, "sellableUnits", "SellableUnits")),
+        locationCount: asNumber(readProp(item, "locationCount", "LocationCount")),
+        updatedAt: asString(readProp(item, "updatedAt", "UpdatedAt")),
       };
     })
     .filter((row) => row.id.length > 0);

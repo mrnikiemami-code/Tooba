@@ -48,18 +48,56 @@ public sealed class ProductWorkspaceComposer
     public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken)
     {
         var products = await _catalog.Products.AsNoTracking().OrderByDescending(x => x.UpdatedAt).Take(100).ToListAsync(cancellationToken);
-        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, products.Select(x => x.ProductId).ToList(), cancellationToken);
+        var productIds = products.Select(x => x.ProductId).ToList();
+        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, productIds, cancellationToken);
         var variantRows = await _catalog.Variants.AsNoTracking().Select(x => new { x.ProductId, x.VariantId }).ToListAsync(cancellationToken);
-        var offers = await _offers.Offers.AsNoTracking().Select(x => x.CatalogVariantId).ToListAsync(cancellationToken);
+        var offerRows = await _offers.Offers.AsNoTracking().Select(x => new { x.OfferId, x.CatalogVariantId }).ToListAsync(cancellationToken);
+        var offerIds = offerRows.Select(x => x.OfferId).ToList();
+        var amountRows = offerIds.Count == 0
+            ? []
+            : await _prices.Prices.AsNoTracking()
+                .Where(x => offerIds.Contains(x.OfferId))
+                .Select(x => new { x.OfferId, x.Amount, x.Currency })
+                .ToListAsync(cancellationToken);
+        var unitRows = offerIds.Count == 0
+            ? []
+            : await _inventory.Positions.AsNoTracking()
+                .Where(x => offerIds.Contains(x.OfferId))
+                .Select(x => new { x.OfferId, x.OnHand, x.Reserved, x.LocationId })
+                .ToListAsync(cancellationToken);
+        var categoryLinks = productIds.Count == 0
+            ? []
+            : await _catalog.ProductCategories.AsNoTracking()
+                .Where(x => productIds.Contains(x.ProductId))
+                .ToListAsync(cancellationToken);
+        var categoryNames = await LoadNamesAsync(
+            CatalogLocalizedOwnerKind.Category,
+            categoryLinks.Select(x => x.CategoryId).Distinct().ToList(),
+            cancellationToken);
         return products.Select(product =>
         {
             var variantIds = variantRows.Where(v => v.ProductId == product.ProductId).Select(v => v.VariantId).ToList();
+            var productOffers = offerRows.Where(row => variantIds.Contains(row.CatalogVariantId)).ToList();
+            var productOfferIds = productOffers.Select(row => row.OfferId).ToHashSet();
+            var amounts = amountRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
+            var units = unitRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
+            var categories = categoryLinks
+                .Where(link => link.ProductId == product.ProductId)
+                .Select(link => categoryNames.GetValueOrDefault(link.CategoryId))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!)
+                .Distinct()
+                .ToList();
             return new AdminProductListItem(
                 product.ProductId,
                 names.GetValueOrDefault(product.ProductId) ?? product.SlugSeam ?? product.ProductId.ToString("N")[..8],
                 product.Status.ToString(),
                 variantIds.Count,
-                offers.Count(id => variantIds.Contains(id)),
+                productOffers.Count,
+                categories.Count == 0 ? "بدون دسته" : string.Join("، ", categories),
+                FormatOfferAmountRange(amounts.Select(row => (row.Amount, row.Currency)).ToList()),
+                units.Sum(row => row.OnHand - row.Reserved),
+                units.Select(row => row.LocationId).Distinct().Count(),
                 product.UpdatedAt);
         }).ToList();
     }
@@ -261,6 +299,27 @@ public sealed class ProductWorkspaceComposer
         product.UpdatedAt = DateTimeOffset.UtcNow;
         await _catalog.SaveChangesAsync(cancellationToken);
         return (await GetAsync(productId, permissions, cancellationToken))!;
+    }
+
+    /// <summary>
+    /// بازهٔ مبلغ پیشنهادها را برای فهرست می‌سازد. مبلغ روی هویت Product ذخیره نمی‌شود.
+    /// </summary>
+    private static string FormatOfferAmountRange(IReadOnlyList<(decimal Amount, string Currency)> rows)
+    {
+        if (rows.Count == 0)
+        {
+            return "بدون مبلغ";
+        }
+
+        var min = rows.Min(x => x.Amount);
+        var max = rows.Max(x => x.Amount);
+        var currency = rows[0].Currency;
+        if (min == max)
+        {
+            return $"{min:0} {currency}".Trim();
+        }
+
+        return $"{min:0}–{max:0} {currency}".Trim();
     }
 
     private async Task<Dictionary<Guid, string>> LoadNamesAsync(

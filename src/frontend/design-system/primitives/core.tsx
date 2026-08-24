@@ -20,7 +20,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-11 items-center justify-center rounded-ds px-4 text-sm font-medium disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center rounded-ds px-4 text-base font-medium disabled:opacity-50",
         tones[tone],
         className,
       )}
@@ -135,7 +135,7 @@ const statusClass: Record<StatusTone, string> = {
  * نشان وضعیت. نگاشت وضعیت دامنه باید در لایهٔ ویو انجام شود نه اینجا.
  */
 export function Badge({ tone = "neutral", children }: { tone?: StatusTone; children: ReactNode }) {
-  return <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs", statusClass[tone])}>{children}</span>;
+  return <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-sm", statusClass[tone])}>{children}</span>;
 }
 
 /** برچسب فیلتر/کلمهٔ کلیدی. */
@@ -150,7 +150,7 @@ export function Separator() {
 
 /** سطح کارت برای ترکیب workspace نه CRUD ماژول. */
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cn("rounded-ds border border-border bg-surface p-4 shadow-ds", className)}>{children}</section>;
+  return <section className={cn("rounded-ds border border-border bg-surface p-5 shadow-ds", className)}>{children}</section>;
 }
 
 /** اسکلتون بارگذاری بدون timeout جعلی. */
