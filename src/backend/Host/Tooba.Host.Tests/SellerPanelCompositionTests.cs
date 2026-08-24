@@ -69,6 +69,7 @@ public sealed class SellerPanelCompositionTests
     public void Endpoints_require_seller_party_header_constant()
     {
         Assert.Equal("X-Tooba-Seller-Party-Id", SellerPanelEndpoints.SellerPartyHeader);
+        Assert.Equal("X-Tooba-Dev-Actor-User-Id", SellerPanelEndpoints.DevActorHeader);
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(),
             "src",
@@ -80,6 +81,17 @@ public sealed class SellerPanelCompositionTests
         Assert.Contains("x.SellerPartyId == sellerPartyId", source, StringComparison.Ordinal);
         Assert.DoesNotContain(".Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
+
+        var endpoints = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "src",
+            "backend",
+            "Host",
+            "Tooba.Host",
+            "Seller",
+            "SellerPanelEndpoints.cs"));
+        Assert.Contains("RequireAuthorizedAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("IAuthorizationGuard", endpoints, StringComparison.Ordinal);
     }
 
     private static string FindRepoRoot()

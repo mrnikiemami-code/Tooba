@@ -6,6 +6,8 @@ import { DataGrid, ErrorState, faWorkspaceMessages } from "../../../design-syste
 import { executeGridQuery } from "../../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
 import {
+  formatMoney,
+  formatPaymentState,
   loadSellerOrders,
   readSellerPartyId,
   type HostReadSource,
@@ -53,6 +55,7 @@ const columns: GridColumnDef<SellerOrderListRow>[] = [
     id: "lineCount",
     header: "خطوط",
     accessor: (row) => row.lineCount,
+    cell: (row) => <span className="tabular-nums">{row.lineCount.toLocaleString("fa-IR")}</span>,
     width: 80,
     minWidth: 64,
     maxWidth: 100,
@@ -64,11 +67,7 @@ const columns: GridColumnDef<SellerOrderListRow>[] = [
     id: "payableAmount",
     header: "مبلغ",
     accessor: (row) => row.payableAmount,
-    cell: (row) => (
-      <span className="tabular-nums">
-        {row.payableAmount.toLocaleString("fa-IR")} {row.currency}
-      </span>
-    ),
+    cell: (row) => <span className="tabular-nums">{formatMoney(row.payableAmount, row.currency)}</span>,
     width: 140,
     minWidth: 110,
     maxWidth: 180,
@@ -79,18 +78,28 @@ const columns: GridColumnDef<SellerOrderListRow>[] = [
     id: "paymentState",
     header: "پرداخت",
     accessor: (row) => row.paymentState,
-    width: 110,
-    minWidth: 96,
-    maxWidth: 140,
+    cell: (row) => (
+      <span className="inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+        {formatPaymentState(row.paymentState)}
+      </span>
+    ),
+    width: 130,
+    minWidth: 110,
+    maxWidth: 160,
     filterKind: "status",
   },
   {
     id: "status",
     header: "وضعیت",
     accessor: (row) => row.status,
-    width: 110,
-    minWidth: 96,
-    maxWidth: 140,
+    cell: (row) => (
+      <span className="inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+        {formatPaymentState(row.status)}
+      </span>
+    ),
+    width: 130,
+    minWidth: 110,
+    maxWidth: 160,
     filterKind: "status",
   },
   {
@@ -98,24 +107,28 @@ const columns: GridColumnDef<SellerOrderListRow>[] = [
     header: "عملیات",
     accessor: (row) => row.sellerOrderId,
     cell: (row) => (
-      <Link className="text-primary underline-offset-4 hover:underline" href={`/vendor-panel/orders/${row.sellerOrderId}`}>
+      <Link
+        className="inline-flex min-h-9 items-center rounded-ds bg-primary px-3 text-sm text-primary-foreground"
+        href={`/vendor-panel/orders/${row.sellerOrderId}`}
+      >
         جزئیات
       </Link>
     ),
-    width: 88,
-    minWidth: 80,
+    width: 96,
+    minWidth: 88,
     maxWidth: 120,
     sortable: false,
   },
 ];
 
 /**
- * فهرست سفارش‌های فقط همین فروشنده با Data Grid.
+ * فهرست سفارش‌های فقط همین فروشنده با Data Grid داخل پوستهٔ Vendor.
  */
 export default function VendorOrdersPage() {
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [rows, setRows] = useState<SellerOrderListRow[]>([]);
   const [message, setMessage] = useState<string | undefined>(undefined);
+  const [denied, setDenied] = useState(false);
 
   function refresh() {
     const sellerPartyId = readSellerPartyId(window.location.search);
@@ -128,6 +141,7 @@ export default function VendorOrdersPage() {
       setSource(result.source);
       setRows(result.rows);
       setMessage(result.message);
+      setDenied(Boolean(result.denied));
     });
   }
 
@@ -140,20 +154,45 @@ export default function VendorOrdersPage() {
     [rows],
   );
 
+  if (denied) {
+    return (
+      <main data-testid="seller-auth-denied">
+        <ErrorState
+          title="دسترسی مجاز نیست"
+          detail="این Actor مجوز مشاهدهٔ سفارش‌های این فروشنده را ندارد."
+          onRetry={refresh}
+          retryLabel={faWorkspaceMessages.retry}
+        />
+      </main>
+    );
+  }
+
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <div className="mb-5">
-        <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">سفارش‌های فروشنده</h1>
-        <p className="mt-1 text-[length:var(--type-body)] text-muted">فقط برش سفارش همین فروشنده</p>
+        <p className="text-sm text-muted">خانه / سفارش‌ها</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">سفارش‌های فروشنده</h1>
+        <p className="mt-1 text-base text-muted">فقط برش سفارش همین فروشنده</p>
       </div>
-      <p className="mb-4 text-base text-muted" data-testid="seller-orders-source">
-        {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری" : "اتصال Host برقرار نیست"}
-      </p>
-      {source === "error" ? (
-        <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-      ) : (
-        <DataGrid columns={columns} queryAdapter={queryAdapter} />
-      )}
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
+          <p className="text-sm text-muted" data-testid="seller-orders-source">
+            {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری" : "اتصال Host برقرار نیست"}
+          </p>
+          <span className="rounded-full bg-secondary px-3 py-1 text-xs tabular-nums">
+            {rows.length.toLocaleString("fa-IR")} سفارش
+          </span>
+        </div>
+        <div className="p-2 md:p-4">
+          {source === "error" ? (
+            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : (
+            <div className="overflow-x-auto">
+              <DataGrid columns={columns} queryAdapter={queryAdapter} />
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   );
 }

@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 REPAIR / AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -102,7 +102,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS with TB-P05-T001 (Seller Panel Products/Orders) AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS with TB-P05-T001 REPAIR (seller authorization + Shopeiva fidelity) AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -123,7 +123,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 | ID | Work package | Status |
 | --- | --- | --- |
-| P05-01 | Seller Panel Products & Orders live slice | AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
+| P05-01 | Seller Panel Products & Orders live slice | REPAIR / AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
 
 ## Mandatory UX sequence (locked)
 
@@ -142,5 +142,5 @@ Do not skip. Later steps wait for new envelopes.
 | Live Checkout | COMPLETE (TB-P04-T009) |
 | Live Payment | COMPLETE (TB-P04-T010) |
 | P04 Gate | COMPLETE (Architect accepted TB-P04-GATE) |
-| P05 Seller Products/Orders | AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
+| P05 Seller Products/Orders | REPAIR / AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
 | P05 remaining operational/customer surfaces | NOT YET ISSUED |

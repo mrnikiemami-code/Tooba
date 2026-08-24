@@ -5,6 +5,9 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ErrorState, faWorkspaceMessages } from "../../../../design-system";
 import {
+  formatMoney,
+  formatPaymentState,
+  formatUnits,
   loadSellerOrderDetail,
   readSellerPartyId,
   type HostReadSource,
@@ -54,7 +57,7 @@ export default function VendorOrderDetailPage() {
 
   if (denied) {
     return (
-      <main className="w-full p-6 md:p-8" data-testid="seller-order-auth-denied">
+      <main data-testid="seller-auth-denied">
         <ErrorState
           title="دسترسی مجاز نیست"
           detail="این سفارش متعلق به فروشندهٔ دیگری است یا پیدا نشد."
@@ -69,11 +72,12 @@ export default function VendorOrderDetailPage() {
   }
 
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">جزئیات سفارش</h1>
-          <p className="mt-1 text-[length:var(--type-body)] text-muted">{detail?.orderNumber ?? "…"}</p>
+          <p className="text-sm text-muted">خانه / سفارش‌ها / جزئیات</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">جزئیات سفارش</h1>
+          <p className="mt-1 text-base text-muted">{detail?.orderNumber ?? "…"}</p>
         </div>
         <Link className="text-sm text-primary underline-offset-4 hover:underline" href="/vendor-panel/orders">
           بازگشت
@@ -83,19 +87,19 @@ export default function VendorOrderDetailPage() {
         <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : detail ? (
         <div className="grid max-w-4xl gap-6">
-          <section className="rounded-ds border border-border bg-surface-elevated p-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <dl className="grid gap-3 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-muted">وضعیت</dt>
-                <dd className="mt-1 font-medium">{detail.status}</dd>
+                <dd className="mt-1 font-medium">{formatPaymentState(detail.status)}</dd>
               </div>
               <div>
                 <dt className="text-muted">پرداخت</dt>
-                <dd className="mt-1 font-medium">{detail.paymentState}</dd>
+                <dd className="mt-1 font-medium">{formatPaymentState(detail.paymentState)}</dd>
               </div>
               <div>
                 <dt className="text-muted">تاریخ</dt>
-                <dd className="mt-1 tabular-nums font-medium">{detail.submittedAt.slice(0, 19)}</dd>
+                <dd className="mt-1 tabular-nums font-medium">{detail.submittedAt.slice(0, 10)}</dd>
               </div>
               <div>
                 <dt className="text-muted">گیرنده</dt>
@@ -116,7 +120,7 @@ export default function VendorOrderDetailPage() {
               {detail.provinceName} {detail.cityName} — {detail.postalAddress} {detail.postalCode}
             </p>
           </section>
-          <section className="rounded-ds border border-border bg-surface-elevated p-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="text-base font-semibold">خطوط این فروشنده</h2>
             <ul className="mt-4 divide-y divide-border">
               {detail.lines.map((line) => (
@@ -124,39 +128,29 @@ export default function VendorOrderDetailPage() {
                   <div className="min-w-0">
                     <p className="font-medium">{line.title}</p>
                     <p className="text-muted">
-                      {line.quantity} × {line.unitAmount.toLocaleString("fa-IR")} {line.currency}
+                      {formatUnits(line.quantity)} × {formatMoney(line.unitAmount, line.currency)}
                     </p>
                   </div>
-                  <p className="tabular-nums font-semibold">
-                    {line.linePayable.toLocaleString("fa-IR")} {line.currency}
-                  </p>
+                  <p className="tabular-nums font-semibold">{formatMoney(line.linePayable, line.currency)}</p>
                 </li>
               ))}
             </ul>
             <dl className="mt-4 grid gap-2 border-t border-border pt-4 text-sm sm:grid-cols-2">
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">جمع</dt>
-                <dd className="tabular-nums">
-                  {detail.subtotal.toLocaleString("fa-IR")} {detail.currency}
-                </dd>
+                <dd className="tabular-nums">{formatMoney(detail.subtotal, detail.currency)}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">مالیات</dt>
-                <dd className="tabular-nums">
-                  {detail.taxAmount.toLocaleString("fa-IR")} {detail.currency}
-                </dd>
+                <dd className="tabular-nums">{formatMoney(detail.taxAmount, detail.currency)}</dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted">تخفیف</dt>
-                <dd className="tabular-nums">
-                  {detail.discountAmount.toLocaleString("fa-IR")} {detail.currency}
-                </dd>
+                <dd className="tabular-nums">{formatMoney(detail.discountAmount, detail.currency)}</dd>
               </div>
               <div className="flex justify-between gap-3 font-semibold">
                 <dt>قابل‌پرداخت</dt>
-                <dd className="tabular-nums">
-                  {detail.payableAmount.toLocaleString("fa-IR")} {detail.currency}
-                </dd>
+                <dd className="tabular-nums">{formatMoney(detail.payableAmount, detail.currency)}</dd>
               </div>
             </dl>
           </section>

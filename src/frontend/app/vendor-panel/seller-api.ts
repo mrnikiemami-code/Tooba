@@ -1,13 +1,24 @@
 /**
- * کلاینت Host برای پنل فروشنده. هویت Seller فقط از هدر می‌رود؛ فیلتر UI مرجع نیست.
+ * کلاینت Host برای پنل فروشنده.
+ * Actor و SellerPartyId جدا هستند؛ مجوز فقط در Host/SpiceDB حل می‌شود.
  */
 
 export type HostReadSource = "host" | "error";
 
 export const SELLER_PARTY_HEADER = "X-Tooba-Seller-Party-Id";
+export const DEV_ACTOR_HEADER = "X-Tooba-Dev-Actor-User-Id";
 export const SELLER_PARTY_STORAGE_KEY = "tooba.sellerPartyId";
+export const ACTOR_STORAGE_KEY = "tooba.sellerActorUserId";
+
 /** فروشندهٔ پیش‌فرض seed برای ورود اولیه قبل از انتخاب کاربر. */
 export const DEFAULT_SELLER_PARTY_ID = "01a030d1-40cb-7000-8abe-6d31739956c5";
+
+export interface SellerDevContext {
+  actorUserId: string;
+  actorLabel: string;
+  sellerPartyId: string;
+  sellerLabel: string;
+}
 
 export interface SellerDashboardSummary {
   sellerPartyId: string;
@@ -130,7 +141,63 @@ function asNullableNumber(value: unknown): number | null {
 }
 
 /**
- * شناسهٔ Party فروشنده را از storage یا query می‌خواند؛ در نبود، seed پیش‌فرض.
+ * برچسب فارسی وضعیت Offer برای اپراتور.
+ */
+export function formatOfferStatus(status: string): string {
+  switch (status) {
+    case "Active":
+      return "فعال";
+    case "Suspended":
+      return "معلق";
+    case "Draft":
+      return "پیش‌نویس";
+    case "Archived":
+      return "بایگانی";
+    default:
+      return status;
+  }
+}
+
+/**
+ * برچسب فارسی وضعیت پرداخت/سفارش.
+ */
+export function formatPaymentState(state: string): string {
+  switch (state) {
+    case "Paid":
+      return "پرداخت‌شده";
+    case "PendingPayment":
+    case "Submitted":
+    case "ReservationRequested":
+      return "در انتظار پرداخت";
+    case "Cancelled":
+      return "لغو شده";
+    case "Failed":
+      return "ناموفق";
+    default:
+      return state;
+  }
+}
+
+/**
+ * مبلغ ریالی با ارقام فارسی.
+ */
+export function formatMoney(amount: number | null | undefined, currency = "IRR"): string {
+  if (amount == null || !Number.isFinite(amount)) {
+    return "—";
+  }
+  const digits = amount.toLocaleString("fa-IR");
+  return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency}`;
+}
+
+/**
+ * موجودی با واحد فارسی.
+ */
+export function formatUnits(units: number): string {
+  return `${units.toLocaleString("fa-IR")} عدد`;
+}
+
+/**
+ * شناسهٔ Party فروشنده را از storage یا query می‌خواند.
  */
 export function readSellerPartyId(search?: string): string | null {
   if (typeof window !== "undefined") {
@@ -150,7 +217,17 @@ export function readSellerPartyId(search?: string): string | null {
 }
 
 /**
- * شناسهٔ فروشندهٔ فعال را برای درخواست‌های بعدی ذخیره می‌کند.
+ * شناسهٔ Actor را از storage می‌خواند.
+ */
+export function readActorUserId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.localStorage.getItem(ACTOR_STORAGE_KEY);
+}
+
+/**
+ * شناسهٔ فروشندهٔ فعال را ذخیره می‌کند.
  */
 export function writeSellerPartyId(sellerPartyId: string): void {
   if (typeof window !== "undefined") {
@@ -158,12 +235,54 @@ export function writeSellerPartyId(sellerPartyId: string): void {
   }
 }
 
-function sellerHeaders(sellerPartyId: string, extra?: Record<string, string>): Record<string, string> {
-  return {
+/**
+ * شناسهٔ Actor فعال را ذخیره می‌کند؛ با SellerPartyId یکی نیست.
+ */
+export function writeActorUserId(actorUserId: string): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(ACTOR_STORAGE_KEY, actorUserId);
+  }
+}
+
+function sellerHeaders(sellerPartyId: string, actorUserId: string | null, extra?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = {
     Accept: "application/json",
     [SELLER_PARTY_HEADER]: sellerPartyId,
     ...(extra ?? {}),
   };
+  if (actorUserId) {
+    headers[DEV_ACTOR_HEADER] = actorUserId;
+  }
+  return headers;
+}
+
+function isDeniedStatus(status: number): boolean {
+  return status === 401 || status === 403;
+}
+
+/**
+ * جفت‌های demo Actor↔Seller را از Host می‌خواند.
+ */
+export async function loadSellerDevContexts(): Promise<SellerDevContext[]> {
+  try {
+    const response = await fetch("/v1/seller/dev-contexts", { headers: { Accept: "application/json" } });
+    if (!response.ok) {
+      return [];
+    }
+    const payload = (await response.json()) as { actors?: unknown };
+    const items = Array.isArray(payload.actors) ? payload.actors : [];
+    return items
+      .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+      .map((item) => ({
+        actorUserId: asString(readProp(item, "actorUserId", "ActorUserId")),
+        actorLabel: asString(readProp(item, "actorLabel", "ActorLabel")),
+        sellerPartyId: asString(readProp(item, "sellerPartyId", "SellerPartyId")),
+        sellerLabel: asString(readProp(item, "sellerLabel", "SellerLabel")),
+      }))
+      .filter((row) => row.actorUserId.length > 0 && row.sellerPartyId.length > 0);
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -322,14 +441,23 @@ async function readJson(response: Response): Promise<unknown> {
   return response.json();
 }
 
+function currentActor(): string | null {
+  return readActorUserId();
+}
+
 /**
  * داشبورد فروشنده را از Host می‌خواند.
  */
 export async function loadSellerDashboard(
   sellerPartyId: string,
-): Promise<{ source: HostReadSource; summary: SellerDashboardSummary | null; message?: string }> {
+): Promise<{ source: HostReadSource; summary: SellerDashboardSummary | null; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch("/v1/seller/dashboard", { headers: sellerHeaders(sellerPartyId) });
+    const response = await fetch("/v1/seller/dashboard", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", summary: null, message: "seller.authorization.denied", denied: true };
+    }
     if (!response.ok) {
       return { source: "error", summary: null, message: "seller-dashboard-http-" + String(response.status) };
     }
@@ -345,9 +473,14 @@ export async function loadSellerDashboard(
  */
 export async function loadSellerOffers(
   sellerPartyId: string,
-): Promise<{ source: HostReadSource; rows: SellerOfferListRow[]; message?: string }> {
+): Promise<{ source: HostReadSource; rows: SellerOfferListRow[]; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch("/v1/seller/offers", { headers: sellerHeaders(sellerPartyId) });
+    const response = await fetch("/v1/seller/offers", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", rows: [], message: "seller.authorization.denied", denied: true };
+    }
     if (!response.ok) {
       return { source: "error", rows: [], message: "seller-offers-http-" + String(response.status) };
     }
@@ -365,8 +498,10 @@ export async function loadSellerOfferDetail(
   offerId: string,
 ): Promise<{ source: HostReadSource; detail: SellerOfferDetail | null; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch(`/v1/seller/offers/${offerId}`, { headers: sellerHeaders(sellerPartyId) });
-    if (response.status === 404) {
+    const response = await fetch(`/v1/seller/offers/${offerId}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) {
       return { source: "error", detail: null, message: "seller.offer.missing", denied: true };
     }
     if (!response.ok) {
@@ -386,13 +521,16 @@ export async function patchSellerOffer(
   sellerPartyId: string,
   offerId: string,
   patch: { sellerSku?: string | null; status?: string | null },
-): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string }> {
+): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}`, {
       method: "PATCH",
-      headers: sellerHeaders(sellerPartyId, { "Content-Type": "application/json" }),
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
       body: JSON.stringify({ sellerSku: patch.sellerSku, status: patch.status }),
     });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
       return { ok: false, errorCode: body?.errorCode ?? "seller.offer.patch-failed" };
@@ -412,9 +550,14 @@ export async function patchSellerOffer(
  */
 export async function loadSellerOrders(
   sellerPartyId: string,
-): Promise<{ source: HostReadSource; rows: SellerOrderListRow[]; message?: string }> {
+): Promise<{ source: HostReadSource; rows: SellerOrderListRow[]; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch("/v1/seller/orders", { headers: sellerHeaders(sellerPartyId) });
+    const response = await fetch("/v1/seller/orders", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", rows: [], message: "seller.authorization.denied", denied: true };
+    }
     if (!response.ok) {
       return { source: "error", rows: [], message: "seller-orders-http-" + String(response.status) };
     }
@@ -432,8 +575,10 @@ export async function loadSellerOrderDetail(
   sellerOrderId: string,
 ): Promise<{ source: HostReadSource; detail: SellerOrderDetail | null; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch(`/v1/seller/orders/${sellerOrderId}`, { headers: sellerHeaders(sellerPartyId) });
-    if (response.status === 404) {
+    const response = await fetch(`/v1/seller/orders/${sellerOrderId}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) {
       return { source: "error", detail: null, message: "seller.order.missing", denied: true };
     }
     if (!response.ok) {

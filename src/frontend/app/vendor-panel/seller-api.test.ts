@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  DEV_ACTOR_HEADER,
+  formatMoney,
+  formatOfferStatus,
+  formatPaymentState,
   mapSellerDashboard,
   mapSellerOfferDetail,
   mapSellerOfferList,
@@ -107,4 +111,17 @@ test("dashboard mapper and seller header constant", () => {
   });
   assert.equal(summary?.activeOffers, 1);
   assert.equal(SELLER_PARTY_HEADER, "X-Tooba-Seller-Party-Id");
+  assert.equal(DEV_ACTOR_HEADER, "X-Tooba-Dev-Actor-User-Id");
+});
+
+test("persian operator formatting for status and money", () => {
+  assert.equal(formatOfferStatus("Active"), "فعال");
+  assert.equal(formatPaymentState("PendingPayment"), "در انتظار پرداخت");
+  assert.equal(formatPaymentState("Paid"), "پرداخت‌شده");
+  assert.match(formatMoney(1850000, "IRR"), /ریال/);
+});
+
+test("authorized route context keeps actor distinct from seller party", () => {
+  assert.notEqual(DEV_ACTOR_HEADER, SELLER_PARTY_HEADER);
+  assert.equal(formatOfferStatus("Suspended"), "معلق");
 });

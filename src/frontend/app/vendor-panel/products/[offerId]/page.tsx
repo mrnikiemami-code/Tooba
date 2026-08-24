@@ -5,6 +5,9 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ErrorState, faWorkspaceMessages } from "../../../../design-system";
 import {
+  formatMoney,
+  formatOfferStatus,
+  formatUnits,
   loadSellerOfferDetail,
   patchSellerOffer,
   readSellerPartyId,
@@ -76,7 +79,7 @@ export default function VendorProductDetailPage() {
     const result = await patchSellerOffer(sellerPartyId, offerId, { sellerSku, status });
     setSaving(false);
     if (!result.ok) {
-      setSaveError(result.errorCode);
+      setSaveError(result.denied ? "دسترسی مجاز نیست" : result.errorCode);
       return;
     }
     setDetail(result.detail);
@@ -84,7 +87,7 @@ export default function VendorProductDetailPage() {
 
   if (denied) {
     return (
-      <main className="w-full p-6 md:p-8" data-testid="seller-auth-denied">
+      <main data-testid="seller-auth-denied">
         <ErrorState
           title="دسترسی مجاز نیست"
           detail="این پیشنهاد متعلق به فروشندهٔ دیگری است یا پیدا نشد."
@@ -99,11 +102,12 @@ export default function VendorProductDetailPage() {
   }
 
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">ویرایش پیشنهاد</h1>
-          <p className="mt-1 text-[length:var(--type-body)] text-muted">{detail?.productTitle ?? "…"}</p>
+          <p className="text-sm text-muted">خانه / محصولات / ویرایش</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">ویرایش پیشنهاد</h1>
+          <p className="mt-1 text-base text-muted">{detail?.productTitle ?? "…"}</p>
         </div>
         <Link className="text-sm text-primary underline-offset-4 hover:underline" href="/vendor-panel/products">
           بازگشت
@@ -113,7 +117,7 @@ export default function VendorProductDetailPage() {
         <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : detail ? (
         <div className="grid max-w-3xl gap-6">
-          <section className="rounded-ds border border-border bg-surface-elevated p-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="text-base font-semibold">زمینهٔ Catalog (فقط‌خواندنی)</h2>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <div>
@@ -126,15 +130,15 @@ export default function VendorProductDetailPage() {
               </div>
               <div>
                 <dt className="text-muted">کانال</dt>
-                <dd className="mt-1 font-medium">{detail.channel}</dd>
+                <dd className="mt-1 font-medium">{detail.channel === "Marketplace" ? "بازارگاه" : detail.channel}</dd>
               </div>
               <div>
-                <dt className="text-muted">CatalogReadOnly</dt>
-                <dd className="mt-1 font-medium">{detail.catalogReadOnly ? "بله" : "خیر"}</dd>
+                <dt className="text-muted">وضعیت Catalog</dt>
+                <dd className="mt-1 font-medium">{detail.catalogReadOnly ? "فقط‌خواندنی" : "قابل ویرایش"}</dd>
               </div>
             </dl>
           </section>
-          <section className="rounded-ds border border-border bg-surface-elevated p-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="text-base font-semibold">seam تجاری فروشنده</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
@@ -153,27 +157,25 @@ export default function VendorProductDetailPage() {
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
                 >
-                  <option value="Active">Active</option>
-                  <option value="Suspended">Suspended</option>
+                  <option value="Active">فعال</option>
+                  <option value="Suspended">معلق</option>
                 </select>
               </label>
             </div>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
               <div>
-                <dt className="text-muted">قیمت جاری</dt>
-                <dd className="mt-1 tabular-nums font-medium">
-                  {detail.amount == null ? "—" : `${detail.amount.toLocaleString("fa-IR")} ${detail.currency}`}
-                </dd>
+                <dt className="text-muted">قیمت جاری Offer</dt>
+                <dd className="mt-1 tabular-nums font-medium">{formatMoney(detail.amount, detail.currency)}</dd>
               </div>
               <div>
                 <dt className="text-muted">موجودی قابل‌فروش</dt>
-                <dd className="mt-1 tabular-nums font-medium">{detail.availableUnits}</dd>
+                <dd className="mt-1 tabular-nums font-medium">
+                  {detail.availableUnits <= 0 ? "ناموجود" : formatUnits(detail.availableUnits)}
+                </dd>
               </div>
               <div>
-                <dt className="text-muted">رزرو / OnHand</dt>
-                <dd className="mt-1 tabular-nums font-medium">
-                  {detail.reserved} / {detail.onHand}
-                </dd>
+                <dt className="text-muted">وضعیت</dt>
+                <dd className="mt-1 font-medium">{formatOfferStatus(detail.status)}</dd>
               </div>
             </dl>
             <p className="mt-3 text-sm text-muted">قیمت و موجودی در این slice فقط‌خواندنی نمایش داده می‌شوند.</p>
@@ -182,9 +184,9 @@ export default function VendorProductDetailPage() {
               type="button"
               disabled={saving}
               onClick={() => void onSave()}
-              className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50"
             >
-              {saving ? "در حال ذخیره…" : "ذخیره"}
+              {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
             </button>
           </section>
         </div>

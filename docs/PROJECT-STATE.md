@@ -51,7 +51,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-T001 / AWAITING_ARCHITECT_ACCEPT
+TB-P05-T001 / REPAIR / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -78,7 +78,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T001 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T001 = REPAIR / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -272,7 +272,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 AWAITING_ARCHITECT_ACCEPT)
+IN_PROGRESS (TB-P05-T001 REPAIR / AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Design System Foundation:
@@ -536,7 +536,9 @@ docs/architecture/56-storefront-live-slice.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P05-T001.task.md
+docs/ai/tasks/TB-P05-T001-REPAIR.task.md
 ```
 
-Resume: TB-P04-GATE is Architect ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001 Seller Panel Products/Orders live slice is locally complete and AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Preserve Shopeiva with minimum change; connect Tooba live backend; sell quickly. Persian RTL first. Tooba Professional Data Grid on seller products/orders. Core API integration by end of P06. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.
+Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
+
+Resume: TB-P04-GATE is Architect ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001 REPAIR (real seller authorization + Shopeiva vendor fidelity) is locally complete and AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Preserve Shopeiva with minimum change; connect Tooba live backend; sell quickly. Persian RTL first. Tooba Professional Data Grid on seller products/orders. Core API integration by end of P06. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.
