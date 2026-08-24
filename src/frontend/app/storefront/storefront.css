@@ -1,0 +1,261 @@
+.sf-shell {
+  min-height: 100vh;
+  background: #f3f5f8;
+  color: #1f2937;
+}
+
+.sf-topbar {
+  background: rgb(var(--color-primary));
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 0.4rem 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.sf-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.sf-header-row {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+}
+
+.sf-logo {
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: rgb(var(--color-primary));
+  text-decoration: none;
+}
+
+.sf-search {
+  display: flex;
+  border: 2px solid rgb(var(--color-primary));
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.sf-search input {
+  flex: 1;
+  border: 0;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+  background: transparent;
+}
+
+.sf-search button {
+  background: rgb(var(--color-primary));
+  color: #fff;
+  border: 0;
+  padding: 0 1.1rem;
+  font-weight: 700;
+}
+
+.sf-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.sf-cats {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.75rem;
+  overflow: auto;
+  padding: 0.55rem 1rem 0.85rem;
+}
+
+.sf-cats a {
+  white-space: nowrap;
+  text-decoration: none;
+  color: #374151;
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.sf-cats a:hover,
+.sf-cats a.is-active {
+  background: rgb(var(--color-primary));
+  color: #fff;
+}
+
+.sf-hero {
+  max-width: 1200px;
+  margin: 1rem auto;
+  background: linear-gradient(135deg, rgb(var(--color-primary)), #1d4ed8 55%, #0f172a);
+  color: #fff;
+  border-radius: 1.25rem;
+  padding: 2.4rem 2rem;
+  min-height: 220px;
+}
+
+.sf-hero h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 0 0 0.5rem;
+}
+
+.sf-section {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+}
+
+.sf-section h2 {
+  font-size: 1.2rem;
+  margin: 1.2rem 0 0.8rem;
+}
+
+.sf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.sf-card {
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.sf-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: #dbeafe;
+}
+
+.sf-card-body {
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sf-card-title {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  min-height: 3.1rem;
+}
+
+.sf-price {
+  color: rgb(var(--color-primary));
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.sf-meta {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.sf-pdp {
+  max-width: 1200px;
+  margin: 1rem auto 2rem;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.5rem;
+}
+
+.sf-gallery {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+.sf-gallery img {
+  width: 100%;
+  border-radius: 0.75rem;
+  background: #dbeafe;
+}
+
+.sf-buy {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.sf-buy h1 {
+  font-size: 1.45rem;
+  margin: 0 0 0.75rem;
+}
+
+.sf-cta {
+  width: 100%;
+  margin-top: 1rem;
+  background: rgb(var(--color-primary));
+  color: #fff;
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  font-weight: 800;
+}
+
+.sf-cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sf-sellers {
+  margin-top: 1rem;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 0.8rem;
+}
+
+.sf-footer {
+  background: #111827;
+  color: #e5e7eb;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+}
+
+.sf-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.sf-empty,
+.sf-error {
+  max-width: 720px;
+  margin: 3rem auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .sf-header-row,
+  .sf-grid,
+  .sf-pdp,
+  .sf-footer-inner {
+    grid-template-columns: 1fr;
+  }
+}

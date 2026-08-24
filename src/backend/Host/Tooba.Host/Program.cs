@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Host.Admin;
+using Tooba.Host.Storefront;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,6 +76,7 @@ builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -173,6 +175,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 
 app.MapAuthenticationBoundary();
 app.MapProductWorkspaceEndpoints();
+app.MapStorefrontEndpoints();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

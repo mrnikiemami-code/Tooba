@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:grid": "node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts",
     "test:workspace": "node --experimental-strip-types --test design-system/workspace/state.test.ts",
-    "test:product-workspace": "node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts"
+    "test:product-workspace": "node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts",
+    "test:storefront": "node --experimental-strip-types --test app/storefront/storefront-api.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

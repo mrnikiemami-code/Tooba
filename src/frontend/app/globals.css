@@ -7,7 +7,7 @@
   قرمز مرجع Shopeiva رنگ خطر Tooba نیست.
 */
 :root {
-  --ref-brand: 13 92 88;
+  --ref-brand: 37 99 235;
   --ref-ink: 24 24 27;
   --ref-paper: 250 250 249;
   --ref-danger: 185 28 28;
@@ -18,7 +18,7 @@
   --color-foreground: 24 24 27;
   --color-muted: 113 113 122;
   --color-border: 228 228 231;
-  --color-primary: 13 92 88;
+  --color-primary: 37 99 235;
   --color-primary-foreground: 255 255 255;
   --color-secondary: 244 244 245;
   --color-secondary-foreground: 24 24 27;
@@ -26,7 +26,7 @@
   --color-warning: 180 83 9;
   --color-danger: 185 28 28;
   --color-info: 29 78 216;
-  --color-focus: 13 92 88;
+  --color-focus: 37 99 235;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -58,7 +58,7 @@
   --color-foreground: 250 250 250;
   --color-muted: 180 180 188;
   --color-border: 72 72 80;
-  --color-primary: 45 212 191;
+  --color-primary: 96 165 250;
   --color-primary-foreground: 9 9 11;
   --color-secondary: 39 39 42;
   --color-secondary-foreground: 250 250 250;
@@ -66,7 +66,7 @@
   --color-warning: 251 191 36;
   --color-danger: 248 113 113;
   --color-info: 147 197 253;
-  --color-focus: 45 212 191;
+  --color-focus: 96 165 250;
 }
 
 html,

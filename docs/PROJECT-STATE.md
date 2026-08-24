@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T005
+TB-P04-T006
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P03-GATE
 Current Issued Task:
 
 ```text
-TB-P04-T006 / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T007 / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -86,7 +86,8 @@ TB-P04-T002 = ACCEPTED
 TB-P04-T003 = ACCEPTED
 TB-P04-T004 = ACCEPTED
 TB-P04-T005 = ACCEPTED
-TB-P04-T006 = AWAITING_ARCHITECT_ACCEPT
+TB-P04-T006 = ACCEPTED
+TB-P04-T007 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -242,7 +243,7 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-IN_PROGRESS (TB-P04-T006 awaiting Architect ACCEPT; T005 ACCEPTED as live functional/interaction foundation)
+IN_PROGRESS (TB-P04-T007 awaiting Architect ACCEPT; T006 ACCEPTED; T005 ACCEPTED as live functional/interaction foundation)
 ```
 
 Design System Foundation:
@@ -500,12 +501,13 @@ docs/architecture/52-design-system-foundation.md
 docs/architecture/53-professional-data-grid-foundation.md
 docs/architecture/54-workspace-interaction-patterns.md
 docs/architecture/55-admin-product-workspace.md
+docs/architecture/56-storefront-live-slice.md
 ```
 
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-T006.task.md
+docs/ai/tasks/TB-P04-T007.task.md
 ```
 
-Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T005 are Architect-accepted (T005 as live functional/interaction foundation; its custom Admin visual language is not the final Tooba target). Current issued work is TB-P04-T006 (Shopeiva runtime visual atlas / delivery accelerator). P04 IN_PROGRESS. Locked UI rule: Shopeiva-first REUSE/ADAPT, keep Tooba Professional Data Grid, core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.
+Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T006 are Architect-accepted (T005 as live functional/interaction foundation; T006 Shopeiva runtime atlas). Current issued work is TB-P04-T007 (Shopeiva storefront live Home/Listing/PDP). P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.
