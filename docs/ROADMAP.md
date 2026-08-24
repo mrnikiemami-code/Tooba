@@ -3,20 +3,21 @@
 ## Current Phase
 
 ```text
-P04 — Experience Foundation
+P05 — Operational Surface Integration
 ```
 
 Status:
 
 ```text
-COMPLETE (TB-P04-GATE awaiting Architect ACCEPT; Next Phase P05; Next Task NOT YET ISSUED)
+IN_PROGRESS (TB-P05-T001 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
 P01 Platform Foundation is COMPLETE (Architect accepted TB-P01-GATE).
 P02 Identity / Authorization is COMPLETE (Architect accepted TB-P02-GATE).
 P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-P04 Experience Foundation implementation is COMPLETE pending Architect ACCEPT of TB-P04-GATE.
+P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE.
+P05 Operational Surface Integration is IN_PROGRESS.
 
 ## P01 Work Packages
 
@@ -101,7 +102,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation implementation is COMPLETE under TB-P04-GATE (awaiting Architect ACCEPT). TB-P04-T010 is Architect-accepted. Next Phase is P05; Next Task is NOT YET ISSUED. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS with TB-P05-T001 (Seller Panel Products/Orders) AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -116,7 +117,13 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P04-07 | Live Cart integration | COMPLETE (Architect accepted TB-P04-T008) |
 | P04-08 | Live Checkout → Order | COMPLETE (Architect accepted TB-P04-T009) |
 | P04-09 | Live Payment boundary | COMPLETE (Architect accepted TB-P04-T010) |
-| P04-GATE | Experience foundation acceptance gate | AWAITING_ARCHITECT_ACCEPT |
+| P04-GATE | Experience foundation acceptance gate | COMPLETE (Architect accepted TB-P04-GATE) |
+
+## P05 Work Packages
+
+| ID | Work package | Status |
+| --- | --- | --- |
+| P05-01 | Seller Panel Products & Orders live slice | AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
 
 ## Mandatory UX sequence (locked)
 
@@ -134,5 +141,6 @@ Do not skip. Later steps wait for new envelopes.
 | Live Cart | COMPLETE (TB-P04-T008) |
 | Live Checkout | COMPLETE (TB-P04-T009) |
 | Live Payment | COMPLETE (TB-P04-T010) |
-| P04 Gate | AWAITING_ARCHITECT_ACCEPT |
-| P05 operational/customer surfaces | NOT YET ISSUED |
+| P04 Gate | COMPLETE (Architect accepted TB-P04-GATE) |
+| P05 Seller Products/Orders | AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
+| P05 remaining operational/customer surfaces | NOT YET ISSUED |

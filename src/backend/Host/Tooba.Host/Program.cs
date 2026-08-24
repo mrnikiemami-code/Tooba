@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Host.Admin;
+using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Persistence;
 
@@ -81,6 +82,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCheckoutComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
+builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -180,6 +182,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.MapAuthenticationBoundary();
 app.MapProductWorkspaceEndpoints();
 app.MapStorefrontEndpoints();
+app.MapSellerPanelEndpoints();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

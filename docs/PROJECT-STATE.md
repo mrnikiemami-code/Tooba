@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P04 — Experience Foundation (implementation COMPLETE; Gate awaiting Architect ACCEPT)
+P05 — Operational Surface Integration
 ```
 
 Pipeline Mode:
@@ -39,31 +39,31 @@ TB-P04-T010
 Last Implementation Task:
 
 ```text
-TB-P04-T010
+TB-P05-T001
 ```
 
 Last Architect Accepted Gate:
 
 ```text
-TB-P03-GATE
+TB-P04-GATE
 ```
 
 Current Issued Task:
 
 ```text
-NONE — Next Task NOT YET ISSUED
+TB-P05-T001 / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
 
 ```text
-TB-P04-GATE / AWAITING_ARCHITECT_ACCEPT
+NONE
 ```
 
 Next Phase:
 
 ```text
-P05
+P05 (in progress)
 ```
 
 Gate State:
@@ -72,10 +72,16 @@ Gate State:
 TB-P01-GATE = ACCEPTED
 TB-P02-GATE = ACCEPTED
 TB-P03-GATE = ACCEPTED
-TB-P04-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P04-GATE = ACCEPTED
 ```
 
 Issued but not accepted:
+
+```text
+TB-P05-T001 = AWAITING_ARCHITECT_ACCEPT
+```
+
+Accepted ledger (selected):
 
 ```text
 TB-P02-T001 = ACCEPTED
@@ -104,7 +110,7 @@ TB-P04-T007 = ACCEPTED
 TB-P04-T008 = ACCEPTED
 TB-P04-T009 = ACCEPTED
 TB-P04-T010 = ACCEPTED
-TB-P04-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P04-GATE = ACCEPTED
 ```
 
 Observability / Error Handling Foundation:
@@ -260,7 +266,13 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-COMPLETE (implementation closed locally via TB-P04-GATE; Architect ACCEPT of Gate pending)
+COMPLETE (Architect accepted TB-P04-GATE)
+```
+
+P05 Operational Surface Integration:
+
+```text
+IN_PROGRESS (TB-P05-T001 AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Design System Foundation:
@@ -524,7 +536,7 @@ docs/architecture/56-storefront-live-slice.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-GATE.gate.md
+docs/ai/tasks/TB-P05-T001.task.md
 ```
 
-Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T010 are Architect-accepted. P04 implementation is COMPLETE pending Architect ACCEPT of TB-P04-GATE. Next Phase is P05. Next Task is NOT YET ISSUED — do not invent TB-P05-T001. Shopeiva purchased source is Next.js 16.2.6 / React 19.2.4 / Tailwind 4; Tooba storefront is a Next 15 / Tailwind 3 port. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. Cart replace-hold release→reserve window remains deferred. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE. P04 = COMPLETE (Gate awaiting Architect ACCEPT).
+Resume: TB-P04-GATE is Architect ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001 Seller Panel Products/Orders live slice is locally complete and AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Preserve Shopeiva with minimum change; connect Tooba live backend; sell quickly. Persian RTL first. Tooba Professional Data Grid on seller products/orders. Core API integration by end of P06. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.
