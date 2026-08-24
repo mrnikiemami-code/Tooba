@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, CreditCard, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
-  StorefrontCartApiError,
   changeCartLineQuantity,
   loadStorefrontCart,
   removeCartLine,

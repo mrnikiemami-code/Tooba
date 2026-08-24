@@ -3,16 +3,18 @@
 Recorded repository state for recovery (do not invent the next envelope):
 
 ```text
-Current Phase: P04 — Experience Foundation
-Last Architect Accepted Task: TB-P04-T009
+Current Phase: P04 — Experience Foundation (COMPLETE pending Gate Architect ACCEPT)
+Last Architect Accepted Task: TB-P04-T010
+Last Implementation Task: TB-P04-T010
 Last Architect Accepted Gate: TB-P03-GATE
-Current Issued Task: TB-P04-T010
-Task State: AWAITING_ARCHITECT_ACCEPT
-Current Gate: NONE
+Current Issued Task: NONE
+Task State: Next Task NOT YET ISSUED
+Current Gate: TB-P04-GATE / AWAITING_ARCHITECT_ACCEPT
+Next Phase: P05
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; T001–T009 Architect-accepted; current envelope is TB-P04-T010 live Payment boundary; T011 NOT ISSUED; purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4; Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
+P04 = COMPLETE (Gate awaiting Architect ACCEPT); T001–T010 Architect-accepted; do not invent TB-P05-T001; purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4; Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

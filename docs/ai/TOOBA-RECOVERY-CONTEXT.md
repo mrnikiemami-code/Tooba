@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P04 — Experience Foundation
+P04 — Experience Foundation (COMPLETE pending Gate Architect ACCEPT)
 ```
 
 Pipeline Mode:
@@ -27,7 +27,13 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T008
+TB-P04-T010
+```
+
+Last Implementation Task:
+
+```text
+TB-P04-T010
 ```
 
 Issued but not accepted:
@@ -57,12 +63,15 @@ TB-P04-T006 = ACCEPTED
 TB-P04-T007 = ACCEPTED
 TB-P04-T008 = ACCEPTED
 TB-P04-T009 = ACCEPTED
-TB-P04-T010 = AWAITING_ARCHITECT_ACCEPT
+TB-P04-T010 = ACCEPTED
+TB-P04-GATE = AWAITING_ARCHITECT_ACCEPT
 P00 = COMPLETE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 = IN_PROGRESS
+P04 = COMPLETE (Gate awaiting Architect ACCEPT)
+Next Phase = P05
+Next Task = NOT YET ISSUED
 Identity & Authentication Foundation = COMPLETE
 SpiceDB Authorization Foundation = COMPLETE
 Party / Organization / Membership Foundation = COMPLETE
@@ -78,7 +87,7 @@ Tax Calculation Foundation = COMPLETE
 Payment Foundation = COMPLETE
 Promotion & Discount Foundation = COMPLETE
 P03 Commerce Core Gate = COMPLETE
-P04 Experience Foundation = IN_PROGRESS
+P04 Experience Foundation = COMPLETE (TB-P04-GATE AWAITING_ARCHITECT_ACCEPT)
 ```
 
 ## Recovered Architect procedure
@@ -133,5 +142,5 @@ Never invent the next task from memory.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/issued task from the repository;
 5. execute only a complete authorized envelope;
-6. TB-P04-T009 is Architect-accepted. Current envelope is TB-P04-T010 live Payment boundary. Do not invent TB-P04-T011. Purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change and connect Tooba live APIs. Architecture: `docs/architecture/56-storefront-live-slice.md`. Cart replace-hold release→reserve window remains a deferred hardening concern.
+6. TB-P04-T010 is Architect-accepted. Current envelope is TB-P04-GATE. Do not invent TB-P05-T001. Purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change and connect Tooba live APIs. Architecture: `docs/architecture/56-storefront-live-slice.md`. Cart replace-hold release→reserve window remains a deferred hardening concern. P05 recommended focus after Gate ACCEPT: Seller/Admin/Customer operational surfaces via Shopeiva reuse.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
