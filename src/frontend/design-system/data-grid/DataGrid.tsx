@@ -58,6 +58,7 @@ export function DataGrid<T extends { id: string }>({
     defaultLayout(
       columns.map((column) => column.id),
       Object.fromEntries(columns.map((column) => [column.id, column.width])),
+      Object.fromEntries(columns.map((column) => [column.id, column.defaultVisible !== false])),
     ),
   );
   const [query, setQuery] = useState<GridServerQuery>({ page: 1, pageSize: 10, sorts: [], filters: {} });
@@ -300,8 +301,8 @@ export function DataGrid<T extends { id: string }>({
         </ul>
       ) : null}
       {status === "ready" && rows.length > 0 && !narrow ? (
-        <div className="overflow-x-auto rounded-ds border border-border">
-          <table className="min-w-full border-separate border-spacing-0 text-base">
+        <div className="min-w-0 overflow-x-auto rounded-ds border border-border">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-base">
             <thead className="sticky top-0 z-10 bg-surface">
               <tr>
                 <th className="sticky start-0 z-20 bg-surface p-2">
@@ -348,7 +349,7 @@ export function DataGrid<T extends { id: string }>({
                         insetInlineStart: side === "inline-start" ? 48 : undefined,
                         insetInlineEnd: side === "inline-end" ? 0 : undefined,
                       }}
-                      className="border-b border-border bg-surface p-3 text-start"
+                      className="relative border-b border-border bg-surface p-3 text-start"
                     >
                       <button
                         type="button"
@@ -363,21 +364,34 @@ export function DataGrid<T extends { id: string }>({
                         {query.sorts[0]?.columnId === column.id ? (query.sorts[0].direction === "asc" ? " ↑" : " ↓") : ""}
                       </button>
                       {column.resizable !== false ? (
-                        <input
+                        <span
+                          role="separator"
+                          aria-orientation="vertical"
                           aria-label={`${column.header} width`}
-                          type="range"
-                          min={column.minWidth}
-                          max={column.maxWidth}
-                          value={layout.widths[column.id] ?? column.width}
-                          onChange={(event) =>
-                            setLayout((current) => ({
-                              ...current,
-                              widths: {
-                                ...current.widths,
-                                [column.id]: clampWidth(Number(event.target.value), column.minWidth, column.maxWidth),
-                              },
-                            }))
-                          }
+                          className="absolute end-0 top-0 z-10 h-full w-2 cursor-col-resize after:absolute after:inset-y-3 after:end-0 after:w-px after:bg-border hover:after:bg-primary"
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const origin = event.clientX;
+                            const initial = layout.widths[column.id] ?? column.width;
+                            const rtl = document.documentElement.dir === "rtl";
+                            const onMove = (move: PointerEvent) => {
+                              const delta = rtl ? origin - move.clientX : move.clientX - origin;
+                              setLayout((current) => ({
+                                ...current,
+                                widths: {
+                                  ...current.widths,
+                                  [column.id]: clampWidth(initial + delta, column.minWidth, column.maxWidth),
+                                },
+                              }));
+                            };
+                            const onUp = () => {
+                              window.removeEventListener("pointermove", onMove);
+                              window.removeEventListener("pointerup", onUp);
+                            };
+                            window.addEventListener("pointermove", onMove);
+                            window.addEventListener("pointerup", onUp);
+                          }}
                         />
                       ) : null}
                     </th>
@@ -499,6 +513,7 @@ export function DataGrid<T extends { id: string }>({
                 defaultLayout(
                   columns.map((column) => column.id),
                   Object.fromEntries(columns.map((column) => [column.id, column.width])),
+                  Object.fromEntries(columns.map((column) => [column.id, column.defaultVisible !== false])),
                 ),
               )
             }

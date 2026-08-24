@@ -13,13 +13,20 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     header: "محصول",
     accessor: (row) => row.title,
     cell: (row) => (
-      <Link className="font-medium text-foreground hover:underline" href={`/admin/products/${row.id}`}>
-        {row.title}
+      <Link className="flex min-w-0 items-center gap-3 hover:underline" href={`/admin/products/${row.id}`}>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-ds bg-secondary text-xs text-muted">تصویر</span>
+        <span className="min-w-0">
+          <span className="block truncate font-semibold">{row.title}</span>
+          <span className="block truncate text-sm text-muted" dir="ltr">
+            {row.id.slice(0, 8)}
+          </span>
+        </span>
       </Link>
     ),
-    width: 360,
-    minWidth: 220,
-    maxWidth: 560,
+    width: 240,
+    minWidth: 180,
+    maxWidth: 320,
+    sticky: "start",
     filterKind: "text",
     sortable: true,
   },
@@ -30,9 +37,9 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     cell: (row) => (
       <span className="rounded-ds bg-success/15 px-2 py-1 text-sm text-success">{row.status === "Published" ? "منتشرشده" : row.status}</span>
     ),
-    width: 140,
-    minWidth: 120,
-    maxWidth: 200,
+    width: 110,
+    minWidth: 96,
+    maxWidth: 140,
     filterKind: "status",
     enumOptions: [
       { value: "Published", label: "منتشرشده" },
@@ -43,19 +50,19 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     id: "variantCount",
     header: "گونه",
     accessor: (row) => row.variantCount,
-    width: 100,
-    minWidth: 80,
-    maxWidth: 140,
+    width: 72,
+    minWidth: 64,
+    maxWidth: 100,
     filterKind: "number",
     sortable: true,
   },
   {
     id: "offerCount",
-    header: "پیشنهاد فروشنده",
+    header: "پیشنهاد",
     accessor: (row) => row.offerCount,
-    width: 140,
-    minWidth: 100,
-    maxWidth: 180,
+    width: 80,
+    minWidth: 64,
+    maxWidth: 110,
     filterKind: "number",
     sortable: true,
   },
@@ -63,28 +70,29 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     id: "categorySummary",
     header: "دسته",
     accessor: (row) => row.categorySummary,
-    width: 180,
-    minWidth: 120,
-    maxWidth: 280,
+    width: 130,
+    minWidth: 100,
+    maxWidth: 180,
     filterKind: "text",
     sortable: true,
   },
   {
     id: "offerAmountRange",
-    header: "بازهٔ مبلغ پیشنهاد",
+    header: "قیمت",
     accessor: (row) => row.offerAmountRange,
-    width: 200,
-    minWidth: 140,
-    maxWidth: 280,
+    width: 150,
+    minWidth: 120,
+    maxWidth: 200,
     sortable: true,
   },
   {
     id: "sellableUnits",
-    header: "قابل‌فروش",
+    header: "موجود",
     accessor: (row) => row.sellableUnits,
-    width: 120,
-    minWidth: 90,
-    maxWidth: 160,
+    width: 88,
+    minWidth: 72,
+    maxWidth: 120,
+    align: "end",
     filterKind: "number",
     sortable: true,
   },
@@ -92,20 +100,21 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
     id: "locationCount",
     header: "محل",
     accessor: (row) => row.locationCount,
-    width: 90,
-    minWidth: 70,
-    maxWidth: 120,
+    width: 72,
+    minWidth: 64,
+    maxWidth: 100,
     filterKind: "number",
     sortable: true,
+    defaultVisible: false,
   },
   {
     id: "updatedAt",
     header: "به‌روزرسانی",
     accessor: (row) => row.updatedAt,
     cell: (row) => <span className="text-sm tabular-nums">{row.updatedAt ? row.updatedAt.slice(0, 10) : "—"}</span>,
-    width: 130,
-    minWidth: 110,
-    maxWidth: 180,
+    width: 108,
+    minWidth: 96,
+    maxWidth: 140,
     sortable: true,
   },
   {
@@ -117,9 +126,9 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
         باز کردن
       </Link>
     ),
-    width: 110,
-    minWidth: 90,
-    maxWidth: 140,
+    width: 88,
+    minWidth: 80,
+    maxWidth: 120,
     sortable: false,
   },
 ];
@@ -154,7 +163,7 @@ export function ProductListScreen() {
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محصولات</h1>
-          <p className="mt-1 text-[length:var(--type-body)] text-muted">قیمت و موجودی روی هویت Product نیستند؛ ورود به Workspace ترکیبی است.</p>
+          <p className="mt-1 text-[length:var(--type-body)] text-muted">فهرست عملیاتی کاتالوگ فروشگاه</p>
         </div>
         <button type="button" disabled className="min-h-11 rounded-ds bg-primary px-4 text-base font-medium text-primary-foreground opacity-50">
           محصول جدید

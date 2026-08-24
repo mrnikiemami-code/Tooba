@@ -57,10 +57,14 @@ export function deserializeSavedView(raw: string): SavedGridView {
   return JSON.parse(raw) as SavedGridView;
 }
 
-export function defaultLayout(columnIds: string[], widths: Record<string, number>): GridColumnLayout {
+export function defaultLayout(
+  columnIds: string[],
+  widths: Record<string, number>,
+  visibility?: Record<string, boolean>,
+): GridColumnLayout {
   return {
     order: [...columnIds],
-    visibility: Object.fromEntries(columnIds.map((id) => [id, true])),
+    visibility: Object.fromEntries(columnIds.map((id) => [id, visibility?.[id] !== false])),
     widths: { ...widths },
   };
 }

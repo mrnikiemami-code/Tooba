@@ -44,10 +44,10 @@
   --z-modal: 50;
   --motion-fast: 120ms;
   --font-sans: tahoma, "Segoe UI", system-ui, sans-serif;
-  --type-display: 2.5rem;
-  --type-title: 1.875rem;
-  --type-body: 1.125rem;
-  --type-caption: 0.9375rem;
+  --type-display: 2.75rem;
+  --type-title: 2rem;
+  --type-body: 1.1875rem;
+  --type-caption: 1rem;
   --density-control: 2.75rem;
 }
 

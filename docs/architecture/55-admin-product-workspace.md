@@ -25,6 +25,8 @@ List and workspace copy is operator-facing Persian. Seller and location labels c
 
 The Admin product list may show composed operational summaries (category labels, offer amount range, sellable units, location count). Those columns are Host memory composition from Catalog/Offer/Pricing/Inventory queries, not Product.Price or Product.Stock fields and not cross-schema SQL JOIN.
 
+Production Admin copy is operator-facing. Architecture explanations, Host query mechanics, and debug labels do not belong on `/admin/products` routes. Visual evidence must use real browser viewports (about 1440×900 desktop and 390×844 mobile); a shrunk desktop frame is not mobile evidence. DataGrid column resize uses header-edge handles, not visible range sliders in the default product list. Host display names prefer `fa*` locales over English fallbacks. Development seed refresh may rewrite leftover demo labels (category/brand/seller) without changing module schema.
+
 ## Sections
 
 Overview, Variants, Media, Commercial, Inventory, SEO & Content, Publication, History.

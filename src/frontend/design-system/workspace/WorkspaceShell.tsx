@@ -23,7 +23,7 @@ import type {
 export interface WorkspaceShellProps {
   title: string;
   subtitle?: string;
-  breadcrumbs: string[];
+  breadcrumbs?: string[];
   statusItems?: WorkspaceStatusItem[];
   sections: WorkspaceSection[];
   activeSectionId: string;
@@ -48,6 +48,8 @@ export interface WorkspaceShellProps {
   onDiscardNavigation?: () => void;
   onStay?: () => void;
   forceNarrow?: boolean;
+  leading?: ReactNode;
+  flush?: boolean;
 }
 
 /**
@@ -56,7 +58,7 @@ export interface WorkspaceShellProps {
 export function WorkspaceShell({
   title,
   subtitle,
-  breadcrumbs,
+  breadcrumbs = [],
   statusItems = [],
   sections,
   activeSectionId,
@@ -81,6 +83,8 @@ export function WorkspaceShell({
   onDiscardNavigation,
   onStay,
   forceNarrow,
+  leading,
+  flush,
 }: WorkspaceShellProps) {
   const [narrow, setNarrow] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -103,16 +107,19 @@ export function WorkspaceShell({
   const overflow = actions.filter((action) => (action.kind === "overflow" || action.kind === "contextual") && action.permission !== "hidden");
 
   return (
-    <div className="flex flex-col gap-5 rounded-ds border border-border bg-surface p-6 shadow-md md:p-8">
+    <div className={cn("flex w-full flex-col gap-5 bg-background", flush ? "p-4 md:p-6" : "rounded-ds border border-border bg-surface p-6 shadow-md md:p-8")}>
       <header>
         <nav aria-label="breadcrumb" className="text-sm text-muted">
           {breadcrumbs.join(" / ")}
         </nav>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
-            {subtitle ? <p className="mt-1 text-base text-muted">{subtitle}</p> : null}
-            {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
+          <div className="flex min-w-0 items-start gap-4">
+            {leading}
+            <div className="min-w-0">
+              <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
+              {subtitle ? <p className="mt-1 text-base text-muted">{subtitle}</p> : null}
+              {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {primary ? (
@@ -154,7 +161,13 @@ export function WorkspaceShell({
                 key={item.id}
                 className={cn(
                   "rounded-ds px-2 py-1 text-xs",
-                  item.tone === "danger" ? "bg-danger/15 text-danger" : item.tone === "warning" ? "bg-warning/15" : item.tone === "success" ? "bg-success/15" : "bg-secondary",
+                  item.tone === "danger"
+                    ? "bg-danger/15 text-danger"
+                    : item.tone === "warning"
+                      ? "bg-warning/15"
+                      : item.tone === "success"
+                        ? "bg-success/15"
+                        : "bg-secondary",
                 )}
               >
                 {item.label}
@@ -207,7 +220,7 @@ export function WorkspaceShell({
       ) : null}
       {emptyKind ? <EmptyState title={emptyKind === "no-permission" ? messages.permissionDenied : emptyKind === "not-found" ? messages.notFound : emptyKind} /> : null}
       {!loading && !error && !emptyKind ? (
-        <div className={cn("grid gap-4", narrow ? "grid-cols-1" : "xl:grid-cols-[minmax(0,1fr)_24rem]")}>
+        <div className={cn("grid gap-4", narrow ? "grid-cols-1" : "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
           <div className="flex flex-col gap-3">
             {summary ? <section className="rounded-ds border border-border p-3">{summary}</section> : null}
             <section className="rounded-ds border border-border p-3">{children}</section>

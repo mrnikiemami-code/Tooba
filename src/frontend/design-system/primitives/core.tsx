@@ -150,7 +150,7 @@ export function Separator() {
 
 /** سطح کارت برای ترکیب workspace نه CRUD ماژول. */
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cn("rounded-ds border border-border bg-surface p-5 shadow-ds", className)}>{children}</section>;
+  return <section className={cn("rounded-ds border border-border bg-surface p-6 shadow-ds", className)}>{children}</section>;
 }
 
 /** اسکلتون بارگذاری بدون timeout جعلی. */

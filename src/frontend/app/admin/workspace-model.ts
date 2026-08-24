@@ -171,7 +171,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
     purchasableHint: true,
     checks: [],
   },
-  activity: [{ kind: "activity", summary: "Workspace opened", at: "2026-08-24T00:00:00Z" }],
+  activity: [{ kind: "activity", summary: "محصول از فهرست باز شد", at: "2026-08-24T00:00:00Z" }],
   audit: [{ kind: "audit", summary: "Catalog loaded separately from Offer/Price/Stock", at: "2026-08-24T00:00:00Z" }],
   permissions: {
     canView: true,

@@ -219,17 +219,17 @@ public sealed class ProductWorkspaceComposer
 
         if (priceViews.Count == 0)
         {
-            warnings.Add("no-price");
+            warnings.Add("قیمت فروشنده ثبت نشده است");
         }
 
         if (stockViews.All(s => s.Available <= 0))
         {
-            warnings.Add("no-inventory");
+            warnings.Add("موجودی قابل‌فروش وجود ندارد");
         }
 
         if (string.IsNullOrWhiteSpace(product.SeoTitleSeam) || string.IsNullOrWhiteSpace(product.SlugSeam))
         {
-            warnings.Add("seo-incomplete");
+            warnings.Add("عنوان جستجو یا نشانی صفحه ناقص است");
         }
 
         var purchasable = offers.Any(o => o.Status == OfferStatus.Active)
@@ -251,10 +251,10 @@ public sealed class ProductWorkspaceComposer
             priceViews,
             taxViews,
             stockViews,
-            new ProductSeoView(product.SlugSeam, product.SeoTitleSeam, "Semantic Content != Page Composition"),
+            new ProductSeoView(product.SlugSeam, product.SeoTitleSeam, ""),
             publication,
-            [new ProductHistoryItem("activity", "Workspace opened from Catalog identity.", product.UpdatedAt)],
-            [new ProductHistoryItem("audit", "Catalog row loaded; Offer/Price/Stock queried separately.", product.UpdatedAt)],
+            [new ProductHistoryItem("activity", "محصول از فهرست کاتالوگ باز شد.", product.UpdatedAt)],
+            [new ProductHistoryItem("audit", "آخرین ذخیرهٔ مشخصات کاتالوگ ثبت شد.", product.UpdatedAt)],
             permissions,
             product.UpdatedAt,
             warnings,
@@ -337,6 +337,8 @@ public sealed class ProductWorkspaceComposer
             .ToListAsync(cancellationToken);
         return rows
             .GroupBy(x => x.OwnerId)
-            .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Locale == "fa" ? 0 : 1).First().Value);
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
     }
 }

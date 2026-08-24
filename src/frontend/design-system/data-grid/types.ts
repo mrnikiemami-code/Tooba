@@ -75,6 +75,8 @@ export interface GridColumnDef<T> {
   maxWidth: number;
   exportable?: boolean;
   enumOptions?: { value: string; label: string }[];
+  /** اگر false باشد ستون در نمای پیش‌فرض مخفی است و از انتخابگر ستون برمی‌گردد. */
+  defaultVisible?: boolean;
 }
 
 export interface GridColumnLayout {
