@@ -12,7 +12,7 @@ Current Gate: NONE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; T001–T008 Architect-accepted; current issued work is TB-P04-T009 live Checkout → Order; purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4; Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
+P04 is IN_PROGRESS; T001–T008 Architect-accepted; T009 code is on main; current envelope is TB-P04-T009-REPAIR live screenshots plus full validation; purchased Shopeiva is Next 16.2.6 / React 19.2.4 / Tailwind 4; Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

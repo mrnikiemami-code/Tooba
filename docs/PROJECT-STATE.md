@@ -510,6 +510,7 @@ Authorized local envelope path for this issued work:
 
 ```text
 docs/ai/tasks/TB-P04-T009.task.md
+docs/ai/tasks/TB-P04-T009-REPAIR.task.md
 ```
 
 Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T008 are Architect-accepted. Current issued work is TB-P04-T009 live Checkout → Order. Shopeiva purchased source is Next.js 16.2.6 / React 19.2.4 / Tailwind 4; Tooba storefront is a Next 15 / Tailwind 3 port. P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.
