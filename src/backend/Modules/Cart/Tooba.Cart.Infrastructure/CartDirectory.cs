@@ -195,7 +195,6 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     public async Task ExpireDueCartsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        await _inventory.ReleaseExpiredHoldsAsync(utcNow, cancellationToken);
         var due = await _db.Carts
             .Include(x => x.Lines)
             .Where(x => x.Status == CartStatus.Active && x.ExpiresAt != null && x.ExpiresAt <= utcNow)
@@ -207,6 +206,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         await SaveCartAsync(cancellationToken);
+        await _inventory.ReleaseExpiredHoldsAsync(utcNow, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -241,7 +241,6 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         if (previousReservation is { } oldId)
         {
             await _inventory.ReleaseAsync(oldId, cancellationToken);
-            line.ClearReservation();
         }
 
         try

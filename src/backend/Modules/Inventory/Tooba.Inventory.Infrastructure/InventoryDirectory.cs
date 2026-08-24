@@ -225,6 +225,11 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
             ?? throw new InvalidOperationException("رزرو پیدا نشد.");
+        if (reservation.Status == StockReservationStatus.Released)
+        {
+            return;
+        }
+
         var now = DateTimeOffset.UtcNow;
         var released = await _db.Positions
             .Where(x => x.StockItemId == reservation.StockItemId && x.Reserved >= reservation.Quantity)

@@ -162,7 +162,9 @@ public static class StorefrontEndpoints
         catch (InvalidOperationException exception)
         {
             var mapped = MapCartException(exception);
-            return Results.Json(new { title = mapped.Title, errorCode = mapped.Code, detail = exception.Message }, statusCode: mapped.Status);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapCartCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
         }
     }
 
@@ -184,6 +186,13 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status409Conflict, "Conflict", "cart.version.conflict");
         }
 
+        if (text.Contains("Held", StringComparison.Ordinal)
+            || text.Contains("رزرو", StringComparison.Ordinal)
+            || text.Contains("آزادسازی", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "cart.inventory.stale");
+        }
+
         if (text.Contains("موجودی", StringComparison.Ordinal))
         {
             return (StatusCodes.Status409Conflict, "Conflict", "cart.inventory.insufficient");
@@ -201,4 +210,20 @@ public static class StorefrontEndpoints
 
         return (StatusCodes.Status400BadRequest, "Bad Request", "cart.rejected");
     }
+
+    /// <summary>
+    /// متن مشتری را از کد ماشین می‌سازد؛ واژگان Held/رزرو داخلی را به ویترین نمی‌برد.
+    /// </summary>
+    private static string MapCartCustomerDetail(string code) => code switch
+    {
+        "cart.inventory.insufficient" => "تعداد انتخاب‌شده بیشتر از موجودی قابل فروش است.",
+        "cart.inventory.stale" => "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.",
+        "cart.quantity.invalid" => "تعداد انتخاب‌شده معتبر نیست.",
+        "cart.offer.unavailable" => "این کالا در حال حاضر قابل افزودن به سبد نیست.",
+        "cart.version.conflict" => "سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.",
+        "cart.guest.invalid" => "دسترسی به سبد مهمان معتبر نیست.",
+        "cart.missing" => "سبد پیدا نشد.",
+        "cart.rejected" => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
+        _ => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
+    };
 }

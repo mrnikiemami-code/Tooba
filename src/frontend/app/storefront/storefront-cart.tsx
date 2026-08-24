@@ -9,6 +9,7 @@ import {
   changeCartLineQuantity,
   loadStorefrontCart,
   removeCartLine,
+  toCustomerCartMessage,
   type StorefrontCartPage,
 } from "./storefront-cart-api.ts";
 
@@ -27,7 +28,7 @@ export function StorefrontShopeivaCart() {
         setError(null);
       })
       .catch((cause: unknown) => {
-        setError(cause instanceof Error ? cause.message : "سبد خوانده نشد.");
+        setError(toCustomerCartMessage(cause));
       });
   }, []);
 
@@ -37,13 +38,7 @@ export function StorefrontShopeivaCart() {
     try {
       setCart(await action());
     } catch (cause) {
-      const message =
-        cause instanceof StorefrontCartApiError
-          ? cause.detail ?? cause.message
-          : cause instanceof Error
-            ? cause.message
-            : "عملیات سبد شکست خورد.";
-      setError(message);
+      setError(toCustomerCartMessage(cause));
     } finally {
       setBusy(false);
     }

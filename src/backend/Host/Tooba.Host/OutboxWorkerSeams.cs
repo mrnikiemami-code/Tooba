@@ -106,4 +106,35 @@ internal sealed class WorkerCommerceContextFactory
 
         return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
     }
+
+    /// <summary>
+    /// زمینهٔ کارگر انقضای سبد را از هدف poll می‌سازد؛ هدر HTTP خوانده نمی‌شود.
+    /// </summary>
+    public CommerceContext FromPollTarget(OutboxPollTarget target, string traceId)
+    {
+        var editionContext = new EditionContext(target.Edition, target.DeploymentId);
+        if (target.Edition == ToobaEdition.Marketplace)
+        {
+            return new CommerceContext(editionContext, Tenant: null, target.ConnectionReference, traceId);
+        }
+
+        if (string.IsNullOrWhiteSpace(target.TenantId)
+            || !_registry.Tenants.TryGetValue(target.TenantId, out var record)
+            || record.Status != TenantStatus.Active)
+        {
+            throw new InvalidOperationException("زمینهٔ کارگر انقضای سبد از registry بازسازی نشد.");
+        }
+
+        var resolvedHost = record.PrimaryDomain ?? record.Hosts[0];
+        var tenant = new TenantContext(
+            record.TenantId,
+            record.Status,
+            record.ConnectionReference,
+            record.DisplayName,
+            record.ThemeReference,
+            record.DefaultMarketReference,
+            resolvedHost,
+            record.PrimaryDomain);
+        return new CommerceContext(editionContext, tenant, record.ConnectionReference, traceId);
+    }
 }

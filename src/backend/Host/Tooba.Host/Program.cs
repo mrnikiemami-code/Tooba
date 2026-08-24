@@ -74,6 +74,7 @@ builder.Configuration.GetSection("Tooba:Messaging").Bind(messagingOptions);
 builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOptions);
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
+builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();

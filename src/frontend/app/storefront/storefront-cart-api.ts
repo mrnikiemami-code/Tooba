@@ -163,6 +163,37 @@ export class StorefrontCartApiError extends Error {
   }
 }
 
+const TECHNICAL_CART_ERROR = /Held|reservation|رزرو|آزادسازی/i;
+
+/**
+ * پیام قابل‌نمایش مشتری. واژگان فنی رزرو موجودی را پنهان می‌کند.
+ */
+export function toCustomerCartMessage(error: unknown): string {
+  if (error instanceof StorefrontCartApiError) {
+    if (error.detail && !TECHNICAL_CART_ERROR.test(error.detail)) {
+      return error.detail;
+    }
+    switch (error.errorCode) {
+      case "cart.inventory.insufficient":
+        return "تعداد انتخاب‌شده بیشتر از موجودی قابل فروش است.";
+      case "cart.inventory.stale":
+        return "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.";
+      case "cart.quantity.invalid":
+        return "تعداد انتخاب‌شده معتبر نیست.";
+      case "cart.offer.unavailable":
+        return "این کالا در حال حاضر قابل افزودن به سبد نیست.";
+      default:
+        return "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.";
+    }
+  }
+  if (error instanceof Error) {
+    return TECHNICAL_CART_ERROR.test(error.message)
+      ? "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید."
+      : error.message;
+  }
+  return "عملیات سبد شکست خورد.";
+}
+
 async function parseCartResponse(response: Response): Promise<StorefrontCartPage> {
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {

@@ -1,6 +1,6 @@
 # 56 — Storefront live slice (Home / Listing / PDP)
 
-Status: IN_PROGRESS (TB-P04-T008 live cart; TB-P04-T007 Architect ACCEPTED)
+Status: IN_PROGRESS (TB-P04-T008 REPAIR; TB-P04-T007 Architect ACCEPTED)
 
 This slice mounts purchased Shopeiva chrome (header, mega menu, cards, home merchandising, PDP 3-column, footer) onto live Tooba Host composition. Frontend visual reuse is not domain-model reuse. Accent token is Tooba blue; semantic success/warning/danger stay.
 

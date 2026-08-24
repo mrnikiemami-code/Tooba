@@ -112,7 +112,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P04-04 | Workspace interaction patterns | COMPLETE (Architect accepted TB-P04-T004) |
 | P04-05 | Admin Product Workspace | COMPLETE (TB-P04-T005 ACCEPTED as functional/interaction foundation) |
 | P04-06 | Shopeiva storefront live Home/Listing/PDP | COMPLETE (Architect accepted TB-P04-T007) |
-| P04-07 | Live Cart integration | IN_PROGRESS (TB-P04-T008 awaiting Architect ACCEPT) |
+| P04-07 | Live Cart integration | IN_PROGRESS (TB-P04-T008 REPAIR awaiting Architect ACCEPT) |
 
 ## Mandatory UX sequence (locked)
 

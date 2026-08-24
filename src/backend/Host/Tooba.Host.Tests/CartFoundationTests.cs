@@ -264,6 +264,10 @@ public sealed class CartFoundationTests : IAsyncLifetime
         await cartA.SaveChangesAsync();
         await cartDirA.ExpireDueCartsAsync(DateTimeOffset.UtcNow, CancellationToken.None);
         Assert.Equal(CartStatus.Expired, (await cartDirA.GetCartAsync(withLine.CartId, shortAccess, CancellationToken.None))!.Status);
+        Assert.Equal(4, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
+        var expiredHoldId = withLine.Lines.Single().ReservationId!.Value;
+        await inventoryDirA.ReleaseAsync(expiredHoldId, CancellationToken.None);
+        await inventoryDirA.ReleaseAsync(expiredHoldId, CancellationToken.None);
 
         var outbox = await cartA.OutboxMessages.AsNoTracking().ToListAsync();
         Assert.Contains(outbox, row => row.EventType == CartCreatedIntegrationEvent.EventTypeName);

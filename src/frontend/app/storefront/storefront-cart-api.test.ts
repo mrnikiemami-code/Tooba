@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapStorefrontCart } from "./storefront-cart-api.ts";
+import { mapStorefrontCart, toCustomerCartMessage, StorefrontCartApiError } from "./storefront-cart-api.ts";
 
 test("cart mapper keeps offer identity and ignores product price fields", () => {
   const cart = mapStorefrontCart({
@@ -36,4 +36,12 @@ test("cart mapper keeps offer identity and ignores product price fields", () => 
   assert.equal(cart?.lines[0]?.offerId, "offer-primary");
   assert.equal(cart?.subtotalExclusiveOfTax, 3580000);
   assert.equal("price" in (cart?.lines[0] ?? {}), false);
+});
+
+test("customer cart message hides Held reservation wording", () => {
+  const hidden = toCustomerCartMessage(
+    new StorefrontCartApiError(409, "cart.inventory.stale", "فقط رزرو Held قابل آزادسازی یا مصرف است."),
+  );
+  assert.equal(hidden.includes("Held"), false);
+  assert.match(hidden, /موجودی/);
 });
