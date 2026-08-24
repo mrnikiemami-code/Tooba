@@ -100,6 +100,168 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
 
         var now = DateTimeOffset.UtcNow;
         var checkoutId = UuidV7.New();
+        var sellerOrders = await QuoteSellerOrdersAsync(cart, command, checkoutId, now, cancellationToken);
+
+        var group = CheckoutGroup.Submit(
+            checkoutId,
+            command.IdempotencyKey,
+            cart.CartId,
+            command.Mode,
+            command.BuyerPartyId,
+            command.PlacedByUserId,
+            cart.Market,
+            cart.Currency,
+            cart.Channel,
+            sellerOrders,
+            now,
+            command.RecipientName,
+            command.ContactMobile,
+            command.ProvinceName,
+            command.CityName,
+            command.PostalAddress,
+            command.PostalCode,
+            command.ShippingMethodCode,
+            command.ShippingMethodLabel);
+        _db.Checkouts.Add(group);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // بازندهٔ رقابت unique(cart_id) نباید موجودیت ردیابی‌شدهٔ خودش را برگرداند.
+            _db.ChangeTracker.Clear();
+            var winner = await _db.Checkouts
+                .AsNoTracking()
+                .Include(x => x.SellerOrders)
+                .ThenInclude(x => x.Lines)
+                .Where(x => x.CartId == command.CartId)
+                .OrderBy(x => x.SubmittedAt)
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
+            EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
+            await ReconcileCartConversionAsync(winner, command, cancellationToken);
+            return ToSnapshot(winner);
+        }
+
+        await ReconcileCartConversionAsync(group, command, cancellationToken);
+        return ToSnapshot(group);
+    }
+
+    /// <inheritdoc />
+    public async Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var cart = await _carts.GetCartAsync(command.CartId, command.CartAccess, cancellationToken)
+            ?? throw new InvalidOperationException("سبد برای checkout پیدا نشد؛ CartId Bearer نیست.");
+        if (cart.Status != CartStatus.Active)
+        {
+            throw new InvalidOperationException("فقط سبد Active به سفارش تبدیل می‌شود.");
+        }
+
+        if (cart.Lines.Count == 0)
+        {
+            throw new InvalidOperationException("سبد خالی به سفارش تبدیل نمی‌شود.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var checkoutId = UuidV7.New();
+        var sellerOrders = await QuoteSellerOrdersAsync(cart, command, checkoutId, now, cancellationToken);
+        var group = CheckoutGroup.Submit(
+            checkoutId,
+            command.IdempotencyKey.Length == 0 ? "preview" : command.IdempotencyKey,
+            cart.CartId,
+            command.Mode,
+            command.BuyerPartyId,
+            command.PlacedByUserId,
+            cart.Market,
+            cart.Currency,
+            cart.Channel,
+            sellerOrders,
+            now,
+            command.RecipientName,
+            command.ContactMobile,
+            command.ProvinceName,
+            command.CityName,
+            command.PostalAddress,
+            command.PostalCode,
+            command.ShippingMethodCode,
+            command.ShippingMethodLabel);
+        return ToSnapshot(group);
+    }
+
+    /// <inheritdoc />
+    public async Task<CheckoutSnapshot?> GetCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken)
+    {
+        var group = await _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+        if (group is null)
+        {
+            return null;
+        }
+
+        if (!group.CanBeViewedBy(access.BuyerPartyId, access.PlacedByUserId))
+        {
+            return null;
+        }
+
+        return ToSnapshot(group);
+    }
+
+    /// <inheritdoc />
+    public async Task<SellerOrderSnapshot?> GetSellerOrderByNumberAsync(string orderNumber, OrderAccess access, CancellationToken cancellationToken)
+    {
+        var order = await _db.SellerOrders
+            .Include(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.OrderNumber == orderNumber, cancellationToken);
+        if (order is null)
+        {
+            return null;
+        }
+
+        var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
+        if (!group.CanBeViewedBy(access.BuyerPartyId, access.PlacedByUserId))
+        {
+            return null;
+        }
+
+        return ToSellerSnapshot(order);
+    }
+
+    /// <inheritdoc />
+    public async Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var order = await _db.SellerOrders
+            .Include(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, cancellationToken)
+            ?? throw new InvalidOperationException("سفارش فروشنده پیدا نشد.");
+        var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
+        EnsureAccess(group, access);
+        foreach (var line in order.Lines)
+        {
+            if (line.ReservationId is { } reservationId)
+            {
+                await _inventory.ReleaseAsync(reservationId, cancellationToken);
+            }
+        }
+
+        order.Cancel();
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.
+    /// </summary>
+    private async Task<List<SellerOrder>> QuoteSellerOrdersAsync(
+        CartSnapshot cart,
+        SubmitCheckoutCommand command,
+        Guid checkoutId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
         var sellerOrders = new List<SellerOrder>();
         var sequence = 0;
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
@@ -209,7 +371,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     promotion.Applied.FirstOrDefault()?.Name,
                     promotion.Applied.FirstOrDefault()?.CouponCode,
                     promotion.Applied.FirstOrDefault()?.DiscountKind.ToString(),
-                    promotion.DiscountAmount == 0 ? lineExclusive : lineExclusive,
+                    lineExclusive,
                     promotion.PostDiscountTaxExclusiveAmount,
                     promotion.Applied.Count == 0 ? null : now));
             }
@@ -229,104 +391,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             throw new InvalidOperationException("PROMOTION_CHANGED");
         }
 
-        var group = CheckoutGroup.Submit(
-            checkoutId,
-            command.IdempotencyKey,
-            cart.CartId,
-            command.Mode,
-            command.BuyerPartyId,
-            command.PlacedByUserId,
-            cart.Market,
-            cart.Currency,
-            cart.Channel,
-            sellerOrders,
-            now);
-        _db.Checkouts.Add(group);
-        try
-        {
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException)
-        {
-            // بازندهٔ رقابت unique(cart_id) نباید موجودیت ردیابی‌شدهٔ خودش را برگرداند.
-            _db.ChangeTracker.Clear();
-            var winner = await _db.Checkouts
-                .AsNoTracking()
-                .Include(x => x.SellerOrders)
-                .ThenInclude(x => x.Lines)
-                .Where(x => x.CartId == command.CartId)
-                .OrderBy(x => x.SubmittedAt)
-                .FirstOrDefaultAsync(cancellationToken)
-                ?? throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
-            EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
-            await ReconcileCartConversionAsync(winner, command, cancellationToken);
-            return ToSnapshot(winner);
-        }
-
-        await ReconcileCartConversionAsync(group, command, cancellationToken);
-        return ToSnapshot(group);
-    }
-
-    /// <inheritdoc />
-    public async Task<CheckoutSnapshot?> GetCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken)
-    {
-        var group = await _db.Checkouts
-            .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken);
-        if (group is null)
-        {
-            return null;
-        }
-
-        if (!group.CanBeViewedBy(access.BuyerPartyId, access.PlacedByUserId))
-        {
-            return null;
-        }
-
-        return ToSnapshot(group);
-    }
-
-    /// <inheritdoc />
-    public async Task<SellerOrderSnapshot?> GetSellerOrderByNumberAsync(string orderNumber, OrderAccess access, CancellationToken cancellationToken)
-    {
-        var order = await _db.SellerOrders
-            .Include(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.OrderNumber == orderNumber, cancellationToken);
-        if (order is null)
-        {
-            return null;
-        }
-
-        var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
-        if (!group.CanBeViewedBy(access.BuyerPartyId, access.PlacedByUserId))
-        {
-            return null;
-        }
-
-        return ToSellerSnapshot(order);
-    }
-
-    /// <inheritdoc />
-    public async Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var order = await _db.SellerOrders
-            .Include(x => x.Lines)
-            .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("سفارش فروشنده پیدا نشد.");
-        var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
-        EnsureAccess(group, access);
-        foreach (var line in order.Lines)
-        {
-            if (line.ReservationId is { } reservationId)
-            {
-                await _inventory.ReleaseAsync(reservationId, cancellationToken);
-            }
-        }
-
-        order.Cancel();
-        await _db.SaveChangesAsync(cancellationToken);
+        return sellerOrders;
     }
 
     /// <summary>
@@ -390,7 +455,15 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             group.Currency,
             group.Channel,
             group.SubmittedAt,
-            group.SellerOrders.Select(ToSellerSnapshot).ToList());
+            group.SellerOrders.Select(ToSellerSnapshot).ToList(),
+            group.RecipientName,
+            group.ContactMobile,
+            group.ProvinceName,
+            group.CityName,
+            group.PostalAddress,
+            group.PostalCode,
+            group.ShippingMethodCode,
+            group.ShippingMethodLabel);
 
     private static SellerOrderSnapshot ToSellerSnapshot(SellerOrder order) =>
         new(

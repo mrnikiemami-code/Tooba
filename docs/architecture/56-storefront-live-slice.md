@@ -1,6 +1,6 @@
 # 56 — Storefront live slice (Home / Listing / PDP)
 
-Status: IN_PROGRESS (TB-P04-T008 REPAIR; TB-P04-T007 Architect ACCEPTED)
+Status: IN_PROGRESS (TB-P04-T009; TB-P04-T008 Architect ACCEPTED)
 
 This slice mounts purchased Shopeiva chrome (header, mega menu, cards, home merchandising, PDP 3-column, footer) onto live Tooba Host composition. Frontend visual reuse is not domain-model reuse. Accent token is Tooba blue; semantic success/warning/danger stay.
 
@@ -33,12 +33,13 @@ Catalog stores opaque `MediaAssetId` values only. `/v1/storefront/media/{id}` re
 
 ## Cart
 
-Guest cart HTTP is public under `/v1/storefront/cart*`. `CartMutationEnabled` is true. Line identity is OfferId. Presentation (title, seller, image) is composed in Host from separate Catalog/Party reads. Totals are tax-exclusive cart estimates from Pricing quotes, not Checkout snapshots.
+Guest cart HTTP is public under `/v1/storefront/cart*`. Checkout HTTP is `/v1/storefront/checkout/preview`, `POST /v1/storefront/checkout`, and `GET /v1/storefront/checkout/{id}`. Frontend must not author final payable totals. Created seller orders stay `PendingPayment`.
 
 Routes:
 
 - `/cart` (noindex)
-- `/checkout` (noindex shell; no fake payment success)
+- `/checkout` (noindex live checkout; totals from Host Order/Tax)
+- `/order/confirmation` (noindex; PendingPayment only)
 
 
 ## SEO baseline

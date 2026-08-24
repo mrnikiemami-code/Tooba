@@ -23,6 +23,9 @@ public static class StorefrontEndpoints
         group.MapPost("/cart/{cartId:guid}/lines", AddCartLineAsync);
         group.MapPatch("/cart/{cartId:guid}/lines/{lineId:guid}", ChangeCartLineAsync);
         group.MapDelete("/cart/{cartId:guid}/lines/{lineId:guid}", RemoveCartLineAsync);
+        group.MapPost("/checkout/preview", PreviewCheckoutAsync);
+        group.MapPost("/checkout", SubmitCheckoutAsync);
+        group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
     }
 
     private static async Task<IResult> GetHomeAsync(StorefrontComposer composer, CancellationToken cancellationToken)
@@ -127,6 +130,108 @@ public static class StorefrontEndpoints
             ReadExpectedVersion(request, expectedVersion),
             lineId,
             cancellationToken));
+
+    private static Task<IResult> PreviewCheckoutAsync(
+        Guid cartId,
+        StorefrontCheckoutComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteCheckoutAsync(() => composer.PreviewAsync(cartId, ReadGuestSecret(request), cancellationToken));
+
+    private static Task<IResult> SubmitCheckoutAsync(
+        StorefrontSubmitCheckoutRequest body,
+        StorefrontCheckoutComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteCheckoutAsync(() => composer.SubmitAsync(
+            body.CartId,
+            ReadGuestSecret(request),
+            body.ExpectedCartVersion,
+            body.IdempotencyKey,
+            body.Shipping,
+            cancellationToken));
+
+    private static async Task<IResult> GetCheckoutAsync(
+        Guid checkoutId,
+        Guid cartId,
+        StorefrontCheckoutComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+    {
+        return await ExecuteCheckoutAsync(async () =>
+        {
+            var page = await composer.GetAsync(checkoutId, cartId, ReadGuestSecret(request), cancellationToken);
+            return page ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+        });
+    }
+
+    private static async Task<IResult> ExecuteCheckoutAsync(Func<Task<StorefrontCheckoutPage>> action)
+    {
+        try
+        {
+            return Results.Json(await action());
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapCheckoutException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapCheckoutCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
+
+    private static (int Status, string Title, string Code) MapCheckoutException(InvalidOperationException exception)
+    {
+        var text = exception.Message;
+        if (text.Contains("پیدا نشد", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status404NotFound, "Not Found", "checkout.missing");
+        }
+
+        if (text.Contains("PRICE_CHANGED", StringComparison.Ordinal) || text.Contains("قیمت", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.price.changed");
+        }
+
+        if (text.Contains("TAX_", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.tax.unavailable");
+        }
+
+        if (text.Contains("منقضی", StringComparison.Ordinal) || text.Contains("Active", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.cart.expired");
+        }
+
+        if (text.Contains("ارسال", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "checkout.shipping.incomplete");
+        }
+
+        if (text.Contains("خالی", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "checkout.cart.empty");
+        }
+
+        if (text.Contains("کهنه", StringComparison.Ordinal) || text.Contains("همزمان", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.version.conflict");
+        }
+
+        return (StatusCodes.Status400BadRequest, "Bad Request", "checkout.rejected");
+    }
+
+    private static string MapCheckoutCustomerDetail(string code) => code switch
+    {
+        "checkout.price.changed" => "قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید.",
+        "checkout.tax.unavailable" => "محاسبهٔ مالیات این سفارش الان ممکن نیست. لطفاً دوباره تلاش کنید.",
+        "checkout.cart.expired" => "سبد خرید منقضی شده است.",
+        "checkout.shipping.incomplete" => "اطلاعات ارسال کامل نیست.",
+        "checkout.cart.empty" => "سبد خرید خالی است.",
+        "checkout.version.conflict" => "سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.",
+        "checkout.missing" => "سفارش پیدا نشد.",
+        _ => "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.",
+    };
 
     private static string? ReadGuestSecret(HttpRequest request)
     {

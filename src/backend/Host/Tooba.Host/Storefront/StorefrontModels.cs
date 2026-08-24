@@ -133,3 +133,80 @@ public sealed record StorefrontAddCartLineRequest(Guid OfferId, int Quantity);
 /// ورودی تغییر تعداد خط. صفر یعنی حذف.
 /// </summary>
 public sealed record StorefrontChangeCartLineRequest(int Quantity);
+
+/// <summary>
+/// تصویر ارسال فروشگاهی. دفترچهٔ آدرس مشتری پایدار نیست.
+/// </summary>
+public sealed record StorefrontCheckoutShippingInput(
+    string RecipientName,
+    string ContactMobile,
+    string ProvinceName,
+    string CityName,
+    string PostalAddress,
+    string PostalCode);
+
+/// <summary>
+/// ورودی ارسال checkout از سبد زنده.
+/// </summary>
+public sealed record StorefrontSubmitCheckoutRequest(
+    Guid CartId,
+    int ExpectedCartVersion,
+    string IdempotencyKey,
+    StorefrontCheckoutShippingInput Shipping);
+
+/// <summary>
+/// خط بازبینی checkout. مبلغ از Order/Tax است نه جمع React.
+/// </summary>
+public sealed record StorefrontCheckoutLineView(
+    Guid OfferId,
+    Guid SellerPartyId,
+    string Title,
+    string SellerDisplayName,
+    int Quantity,
+    decimal LineExclusiveOfTax,
+    decimal DiscountAmount,
+    decimal TaxAmount,
+    decimal LinePayable,
+    string Currency);
+
+/// <summary>
+/// سفارش فروشنده داخل checkout. پرداخت‌شده نیست.
+/// </summary>
+public sealed record StorefrontSellerOrderView(
+    Guid SellerOrderId,
+    string OrderNumber,
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    string Status,
+    decimal SubtotalExclusiveOfTax,
+    decimal TaxAmount,
+    decimal DiscountAmount,
+    decimal PayableAmount,
+    string Currency,
+    IReadOnlyList<StorefrontCheckoutLineView> Lines);
+
+/// <summary>
+/// صفحهٔ checkout/تأیید. جمع نهایی از backend است.
+/// </summary>
+public sealed record StorefrontCheckoutPage(
+    Guid? CheckoutId,
+    Guid CartId,
+    int CartVersion,
+    string Market,
+    string Currency,
+    string Channel,
+    string PaymentState,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    string RecipientName,
+    string ContactMobile,
+    string ProvinceName,
+    string CityName,
+    string PostalAddress,
+    string PostalCode,
+    decimal SubtotalExclusiveOfTax,
+    decimal DiscountAmount,
+    decimal TaxAmount,
+    decimal ShippingAmount,
+    decimal PayableAmount,
+    IReadOnlyList<StorefrontSellerOrderView> SellerOrders);

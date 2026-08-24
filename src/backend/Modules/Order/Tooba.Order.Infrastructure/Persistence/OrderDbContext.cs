@@ -62,6 +62,14 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Currency).HasMaxLength(3);
             entity.Property(x => x.Mode).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.RecipientName).HasMaxLength(128);
+            entity.Property(x => x.ContactMobile).HasMaxLength(32);
+            entity.Property(x => x.ProvinceName).HasMaxLength(64);
+            entity.Property(x => x.CityName).HasMaxLength(64);
+            entity.Property(x => x.PostalAddress).HasMaxLength(512);
+            entity.Property(x => x.PostalCode).HasMaxLength(16);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(32);
+            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(64);
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
             entity.HasIndex(x => x.CartId).IsUnique();

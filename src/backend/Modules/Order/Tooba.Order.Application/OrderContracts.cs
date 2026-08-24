@@ -61,7 +61,15 @@ public sealed record CheckoutSnapshot(
     string Currency,
     SalesChannel Channel,
     DateTimeOffset SubmittedAt,
-    IReadOnlyList<SellerOrderSnapshot> SellerOrders);
+    IReadOnlyList<SellerOrderSnapshot> SellerOrders,
+    string RecipientName = "",
+    string ContactMobile = "",
+    string ProvinceName = "",
+    string CityName = "",
+    string PostalAddress = "",
+    string PostalCode = "",
+    string ShippingMethodCode = "",
+    string ShippingMethodLabel = "");
 
 /// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
@@ -76,7 +84,15 @@ public sealed record SubmitCheckoutCommand(
     string IdempotencyKey,
     string TaxJurisdiction,
     string? CouponCode = null,
-    decimal? QuotedDiscountAmount = null);
+    decimal? QuotedDiscountAmount = null,
+    string RecipientName = "",
+    string ContactMobile = "",
+    string ProvinceName = "",
+    string CityName = "",
+    string PostalAddress = "",
+    string PostalCode = "",
+    string ShippingMethodCode = "",
+    string ShippingMethodLabel = "");
 
 /// <summary>
 /// هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.
@@ -103,6 +119,11 @@ public interface ICheckoutDirectory
     /// سبد را به گروه checkout و سفارش‌های فروشنده تبدیل می‌کند. تکرار با همان کلید سفارش تکراری نمی‌سازد.
     /// </summary>
     Task<CheckoutSnapshot> SubmitAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// همان ارزیابی تجاری Submit را بدون ماندگاری CheckoutGroup برمی‌گرداند تا ویترین مبلغ را از React حساب نکند.
+    /// </summary>
+    Task<CheckoutSnapshot> PreviewAsync(SubmitCheckoutCommand command, CancellationToken cancellationToken);
 
     /// <summary>
     /// checkout را پس از احراز هویت خریدار یا کاربر عامل برمی‌گرداند.

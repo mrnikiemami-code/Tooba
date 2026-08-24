@@ -37,6 +37,18 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("cart_id");
 
+                    b.Property<string>("CityName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("city_name");
+
+                    b.Property<string>("ContactMobile")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("contact_mobile");
+
                     b.Property<string>("Channel")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -74,6 +86,42 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PlacedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("placed_by_user_id");
+
+                    b.Property<string>("PostalAddress")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("postal_address");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("ProvinceName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("province_name");
+
+                    b.Property<string>("RecipientName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("recipient_name");
+
+                    b.Property<string>("ShippingMethodCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("shipping_method_code");
+
+                    b.Property<string>("ShippingMethodLabel")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("shipping_method_label");
 
                     b.Property<DateTimeOffset>("SubmittedAt")
                         .HasColumnType("timestamp with time zone")

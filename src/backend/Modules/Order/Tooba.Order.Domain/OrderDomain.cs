@@ -464,6 +464,46 @@ public sealed class CheckoutGroup : IHasDomainEvents
     public DateTimeOffset SubmittedAt { get; init; }
 
     /// <summary>
+    /// نام گیرنده در تصویر ارسال checkout. دفترچهٔ آدرس مشتری نیست.
+    /// </summary>
+    public string RecipientName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// تماس گیرنده در تصویر checkout.
+    /// </summary>
+    public string ContactMobile { get; init; } = string.Empty;
+
+    /// <summary>
+    /// استان تصویر ارسال.
+    /// </summary>
+    public string ProvinceName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// شهر تصویر ارسال.
+    /// </summary>
+    public string CityName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// نشانی پستی تصویر ارسال.
+    /// </summary>
+    public string PostalAddress { get; init; } = string.Empty;
+
+    /// <summary>
+    /// کد پستی تصویر ارسال.
+    /// </summary>
+    public string PostalCode { get; init; } = string.Empty;
+
+    /// <summary>
+    /// کد روش ارسال اولیه؛ موتور حمل‌ونقل جدا نیست.
+    /// </summary>
+    public string ShippingMethodCode { get; init; } = string.Empty;
+
+    /// <summary>
+    /// برچسب روش ارسال اولیه.
+    /// </summary>
+    public string ShippingMethodLabel { get; init; } = string.Empty;
+
+    /// <summary>
     /// سفارش‌های فروشندهٔ این checkout. یک فروشنده کل checkout را مالک نمی‌شود.
     /// </summary>
     public List<SellerOrder> SellerOrders { get; } = [];
@@ -488,7 +528,15 @@ public sealed class CheckoutGroup : IHasDomainEvents
         string currency,
         SalesChannel channel,
         IReadOnlyList<SellerOrder> sellerOrders,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string recipientName = "",
+        string contactMobile = "",
+        string provinceName = "",
+        string cityName = "",
+        string postalAddress = "",
+        string postalCode = "",
+        string shippingMethodCode = "",
+        string shippingMethodLabel = "")
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -518,6 +566,14 @@ public sealed class CheckoutGroup : IHasDomainEvents
             Channel = channel,
             CreatedAt = now,
             SubmittedAt = now,
+            RecipientName = recipientName.Trim(),
+            ContactMobile = contactMobile.Trim(),
+            ProvinceName = provinceName.Trim(),
+            CityName = cityName.Trim(),
+            PostalAddress = postalAddress.Trim(),
+            PostalCode = postalCode.Trim(),
+            ShippingMethodCode = shippingMethodCode.Trim(),
+            ShippingMethodLabel = shippingMethodLabel.Trim(),
         };
         foreach (var order in sellerOrders)
         {

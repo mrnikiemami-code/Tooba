@@ -216,7 +216,7 @@ async function parseCartResponse(response: Response): Promise<StorefrontCartPage
   return cart;
 }
 
-function cartHeaders(version?: number): HeadersInit {
+export function cartHeaders(version?: number): HeadersInit {
   const headers: Record<string, string> = { "content-type": "application/json" };
   const { guestSecret } = readCartSession();
   if (guestSecret) {
