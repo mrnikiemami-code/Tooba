@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T008
+TB-P04-T009
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P03-GATE
 Current Issued Task:
 
 ```text
-TB-P04-T009 / FUNCTIONAL_ACCEPTED / VISUAL_AWAITING_ARCHITECT_ACCEPT
+TB-P04-T010 / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -89,7 +89,8 @@ TB-P04-T005 = ACCEPTED
 TB-P04-T006 = ACCEPTED
 TB-P04-T007 = ACCEPTED
 TB-P04-T008 = ACCEPTED
-TB-P04-T009 = FUNCTIONAL_ACCEPTED / VISUAL_AWAITING_ARCHITECT_ACCEPT
+TB-P04-T009 = ACCEPTED
+TB-P04-T010 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -245,7 +246,7 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-IN_PROGRESS (TB-P04-T009 FUNCTIONAL_ACCEPTED; visual mobile evidence awaiting Architect ACCEPT; T010 NOT ISSUED; T008 ACCEPTED)
+IN_PROGRESS (TB-P04-T010 live payment boundary awaiting Architect ACCEPT; T009 ACCEPTED; T008 ACCEPTED)
 ```
 
 Design System Foundation:
@@ -509,9 +510,7 @@ docs/architecture/56-storefront-live-slice.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-T009.task.md
-docs/ai/tasks/TB-P04-T009-REPAIR.task.md
-docs/ai/tasks/TB-P04-T009-REPAIR-2.task.md
+docs/ai/tasks/TB-P04-T010.task.md
 ```
 
-Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T008 are Architect-accepted. TB-P04-T009 is FUNCTIONALLY ACCEPTED; visual mobile evidence is PENDING (repair-2). TB-P04-T010 is NOT ISSUED. Shopeiva purchased source is Next.js 16.2.6 / React 19.2.4 / Tailwind 4; Tooba storefront is a Next 15 / Tailwind 3 port. P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.
+Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T009 are Architect-accepted. Current issued work is TB-P04-T010 live Payment boundary. TB-P04-T011 is NOT issued. Shopeiva purchased source is Next.js 16.2.6 / React 19.2.4 / Tailwind 4; Tooba storefront is a Next 15 / Tailwind 3 port. P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.

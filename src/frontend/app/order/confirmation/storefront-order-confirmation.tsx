@@ -10,6 +10,7 @@ import {
   toCustomerCheckoutMessage,
   type StorefrontCheckoutPage,
 } from "../../storefront/storefront-checkout-api.ts";
+import { startStorefrontPayment, toCustomerPaymentMessage } from "../../storefront/storefront-payment-api.ts";
 
 /**
  * تأیید سفارش زنده. Paid نمایش داده نمی‌شود.
@@ -27,6 +28,7 @@ function ConfirmationBody() {
   const checkoutId = params.get("checkoutId");
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     if (!checkoutId) {
@@ -49,14 +51,47 @@ function ConfirmationBody() {
     );
   }
 
-  const reference = page.sellerOrders.map((order) => order.orderNumber).join("، ");
+  const current = page;
+  const reference = current.sellerOrders.map((order) => order.orderNumber).join("، ");
+  const paid = current.paymentState === "Paid";
+
+  async function pay() {
+    if (!current.checkoutId) {
+      return;
+    }
+    setPaying(true);
+    setError(null);
+    try {
+      const initiated = await startStorefrontPayment(current.checkoutId);
+      window.location.assign(initiated.redirectUrl);
+    } catch (cause: unknown) {
+      setError(toCustomerPaymentMessage(cause));
+      setPaying(false);
+    }
+  }
+
   return (
     <div className="py-8 md:py-12 max-w-3xl mx-auto space-y-4">
       <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center shadow-sm">
-        <h1 className="text-xl font-black mb-2">سفارش ثبت شد</h1>
-        <p className="text-sm text-gray-500 mb-4">پرداخت هنوز انجام نشده است.</p>
-        <p className="text-sm font-bold">شمارهٔ مرجع: {reference || page.checkoutId}</p>
-        <p className="text-xs text-amber-700 mt-3 bg-amber-50 rounded-xl p-3">وضعیت فعلی: در انتظار پرداخت. این صفحه پرداخت موفق نیست.</p>
+        <h1 className="text-xl font-black mb-2">{paid ? "پرداخت تأیید شد" : "سفارش ثبت شد"}</h1>
+        <p className="text-sm text-gray-500 mb-4">
+          {paid ? "وضعیت از تصویر سفارش Host است." : "پرداخت هنوز انجام نشده است."}
+        </p>
+        <p className="text-sm font-bold">شمارهٔ مرجع: {reference || current.checkoutId}</p>
+        <p className={`text-xs mt-3 rounded-xl p-3 ${paid ? "text-emerald-800 bg-emerald-50" : "text-amber-700 bg-amber-50"}`}>
+          {paid ? "سفارش Paid است." : "وضعیت فعلی: در انتظار پرداخت. این صفحه پرداخت موفق نیست."}
+        </p>
+        {!paid ? (
+          <button
+            type="button"
+            disabled={paying}
+            onClick={() => void pay()}
+            className="mt-4 px-6 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-bold disabled:opacity-50"
+          >
+            {paying ? "در حال انتقال…" : "پرداخت سفارش"}
+          </button>
+        ) : null}
+        {error ? <p className="text-sm text-red-600 mt-3">{error}</p> : null}
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-5 text-sm space-y-2">
         <p>

@@ -26,6 +26,9 @@ public static class StorefrontEndpoints
         group.MapPost("/checkout/preview", PreviewCheckoutAsync);
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
+        group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
+        group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
     }
 
     private static async Task<IResult> GetHomeAsync(StorefrontComposer composer, CancellationToken cancellationToken)
@@ -164,6 +167,92 @@ public static class StorefrontEndpoints
             return page ?? throw new InvalidOperationException("سفارش پیدا نشد.");
         });
     }
+
+    private static Task<IResult> InitiatePaymentAsync(
+        Guid checkoutId,
+        StorefrontInitiatePaymentRequest body,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.InitiateAsync(
+            checkoutId,
+            body.CartId,
+            ReadGuestSecret(request),
+            body.IdempotencyKey,
+            cancellationToken));
+
+    private static async Task<IResult> GetPaymentAsync(
+        Guid paymentId,
+        Guid cartId,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+    {
+        return await ExecutePaymentAsync(async () =>
+        {
+            var page = await composer.GetAsync(paymentId, cartId, ReadGuestSecret(request), cancellationToken);
+            return page ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        });
+    }
+
+    private static Task<IResult> CompleteSandboxPaymentAsync(
+        Guid paymentId,
+        StorefrontSandboxPaymentRequest body,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.CompleteSandboxAsync(
+            paymentId,
+            body.CartId,
+            ReadGuestSecret(request),
+            body.AttemptId,
+            body.ProviderRequestReference,
+            body.Outcome,
+            cancellationToken));
+
+    private static async Task<IResult> ExecutePaymentAsync<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            return Results.Json(await action());
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapPaymentException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
+
+    private static (int Status, string Title, string Code) MapPaymentException(InvalidOperationException exception)
+    {
+        var text = exception.Message;
+        if (text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "payment.already-paid");
+        }
+
+        if (text.Contains("پیدا نشد", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status404NotFound, "Not Found", "payment.missing");
+        }
+
+        if (text.Contains("دسترسی", StringComparison.Ordinal) || text.Contains("راز", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "payment.guest.invalid");
+        }
+
+        return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
+    }
+
+    private static string MapPaymentCustomerDetail(string code) => code switch
+    {
+        "payment.already-paid" => "این سفارش قبلاً پرداخت شده است.",
+        "payment.missing" => "پرداخت پیدا نشد.",
+        "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
+        _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
+    };
 
     private static async Task<IResult> ExecuteCheckoutAsync(Func<Task<StorefrontCheckoutPage>> action)
     {

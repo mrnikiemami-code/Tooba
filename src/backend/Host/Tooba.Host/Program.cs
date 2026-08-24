@@ -80,6 +80,7 @@ builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCheckoutComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

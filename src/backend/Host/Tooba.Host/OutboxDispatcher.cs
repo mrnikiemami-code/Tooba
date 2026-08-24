@@ -78,13 +78,28 @@ internal sealed class OutboxDispatcher
         var connectionString = _connections.Resolve(target.ConnectionReference);
         foreach (var module in _modules)
         {
-            var claimed = await _store.ClaimAsync(
-                connectionString,
-                module.Schema,
-                module.TableName,
-                _options.BatchSize,
-                _options.LockSeconds,
-                cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<OutboxMessage> claimed;
+            try
+            {
+                claimed = await _store.ClaimAsync(
+                    connectionString,
+                    module.Schema,
+                    module.TableName,
+                    _options.BatchSize,
+                    _options.LockSeconds,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                TenantFailures.Add(1);
+                _logger.LogWarning(
+                    ex,
+                    "Outbox claim failed for one module. TenantId={TenantId} Schema={Schema} ErrorType={ErrorType}",
+                    target.TenantId ?? string.Empty,
+                    module.Schema,
+                    ex.GetType().Name);
+                continue;
+            }
 
             foreach (var message in claimed)
             {

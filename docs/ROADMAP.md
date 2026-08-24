@@ -100,7 +100,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is IN_PROGRESS under TB-P04-T009 (FUNCTIONAL_ACCEPTED; visual mobile evidence PENDING). TB-P04-T010 is NOT ISSUED. TB-P04-T008 is Architect-accepted. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T010 (live Payment boundary). TB-P04-T009 is Architect-accepted. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -113,7 +113,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P04-05 | Admin Product Workspace | COMPLETE (TB-P04-T005 ACCEPTED as functional/interaction foundation) |
 | P04-06 | Shopeiva storefront live Home/Listing/PDP | COMPLETE (Architect accepted TB-P04-T007) |
 | P04-07 | Live Cart integration | ACCEPTED (TB-P04-T008) |
-| P04-08 | Live Checkout → Order | IN_PROGRESS (TB-P04-T009 FUNCTIONAL_ACCEPTED; visual PENDING) |
+| P04-08 | Live Checkout → Order | COMPLETE (TB-P04-T009 ACCEPTED) |
+| P04-09 | Live Payment boundary | IN_PROGRESS (TB-P04-T010 awaiting Architect ACCEPT) |
 
 ## Mandatory UX sequence (locked)
 
@@ -129,5 +130,6 @@ Do not skip. Later steps wait for new envelopes.
 | Admin Product Workspace | COMPLETE (TB-P04-T005 functional/interaction foundation) |
 | Shopeiva storefront live slice | COMPLETE (TB-P04-T007) |
 | Live Cart | ACCEPTED (TB-P04-T008) |
-| Live Checkout | IN_PROGRESS (TB-P04-T009) |
+| Live Checkout | COMPLETE (TB-P04-T009 ACCEPTED) |
+| Live Payment | IN_PROGRESS (TB-P04-T010 awaiting Architect ACCEPT) |
 | Visual evidence / Architect visual ACCEPT | PLANNED |

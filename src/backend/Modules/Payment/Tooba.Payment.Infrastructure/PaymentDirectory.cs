@@ -58,7 +58,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
                 existing.Status,
                 existing.ProviderCode,
                 prior.ProviderRequestReference,
-                null,
+                ComposeSandboxRedirect(existing.PaymentId, prior.AttemptId, prior.ProviderRequestReference),
                 existing.Amount,
                 existing.Currency);
         }
@@ -70,13 +70,19 @@ public sealed class PaymentDirectory : IPaymentDirectory
             throw new InvalidOperationException("درخواست رزرو در ثبت اولیه پرداخت نمی‌خواهد.");
         }
 
-        if (payable.SellerOrders.Select(x => x.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1
-            || !string.Equals(payable.Currency, payable.SellerOrders[0].Currency, StringComparison.OrdinalIgnoreCase))
+        var pending = payable.SellerOrders.Where(x => x.PendingPayment).ToArray();
+        if (pending.Length == 0)
+        {
+            throw new InvalidOperationException("این سفارش قبلاً پرداخت شده است.");
+        }
+
+        if (pending.Select(x => x.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1
+            || !string.Equals(payable.Currency, pending[0].Currency, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("ارز پرداخت باید با تصویر سفارش یکی باشد؛ تبدیل ارز در Payment نیست.");
         }
 
-        var amount = payable.SellerOrders.Sum(x => x.PayableAmount);
+        var amount = pending.Sum(x => x.PayableAmount);
         var gateway = _gateways.Resolve(command.ProviderCode);
         var payment = CustomerPayment.Open(
             payable.CheckoutId,
@@ -84,7 +90,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
             payable.Currency,
             gateway.ProviderCode,
             key,
-            payable.SellerOrders.Select(x => (x.SellerOrderId, x.PayableAmount)).ToArray(),
+            pending.Select(x => (x.SellerOrderId, x.PayableAmount)).ToArray(),
             DateTimeOffset.UtcNow);
         var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
         var attempt = payment.RecordInitiation(initiation.ProviderRequestReference, DateTimeOffset.UtcNow);
@@ -98,7 +104,7 @@ public sealed class PaymentDirectory : IPaymentDirectory
             payment.Status,
             payment.ProviderCode,
             attempt.ProviderRequestReference,
-            initiation.RedirectUrl,
+            ComposeSandboxRedirect(payment.PaymentId, attempt.AttemptId, attempt.ProviderRequestReference),
             payment.Amount,
             payment.Currency);
     }
@@ -181,4 +187,9 @@ public sealed class PaymentDirectory : IPaymentDirectory
             throw new InvalidOperationException("دسترسی به پرداخت بدون هویت سفارش رد شد.");
         }
     }
+
+    private static string ComposeSandboxRedirect(Guid paymentId, Guid attemptId, string providerRequestReference) =>
+        "/payment/sandbox?paymentId=" + paymentId.ToString("D")
+        + "&attemptId=" + attemptId.ToString("D")
+        + "&ref=" + Uri.EscapeDataString(providerRequestReference);
 }

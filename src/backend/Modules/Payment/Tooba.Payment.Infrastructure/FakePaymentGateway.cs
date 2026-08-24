@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Tooba.Payment.Application;
 
 namespace Tooba.Payment.Infrastructure;
@@ -12,6 +13,11 @@ public sealed class FakePaymentGateway : IPaymentGateway
     /// </summary>
     public const string FailOnVerifySuffix = "-FAIL-VERIFY";
 
+    /// <summary>
+    /// مراجع sandbox که Host برای شکست کنترل‌شده علامت زده است. PSP واقعی نیست.
+    /// </summary>
+    public static ConcurrentDictionary<string, byte> SandboxDeclinedReferences { get; } = new(StringComparer.Ordinal);
+
     /// <inheritdoc />
     public string ProviderCode => "fake";
 
@@ -25,7 +31,7 @@ public sealed class FakePaymentGateway : IPaymentGateway
         _ = amount;
         _ = currency;
         var reference = $"fake-{paymentId:N}";
-        return Task.FromResult(new GatewayInitiation(reference, $"https://payments.test/tooba/{reference}", DateTimeOffset.UtcNow.AddMinutes(15)));
+        return Task.FromResult(new GatewayInitiation(reference, $"/payment/sandbox?ref={Uri.EscapeDataString(reference)}", DateTimeOffset.UtcNow.AddMinutes(15)));
     }
 
     /// <inheritdoc />
@@ -35,7 +41,8 @@ public sealed class FakePaymentGateway : IPaymentGateway
         CancellationToken cancellationToken)
     {
         _ = callbackClaimsSuccess;
-        if (providerRequestReference.Contains(FailOnVerifySuffix, StringComparison.Ordinal))
+        if (providerRequestReference.Contains(FailOnVerifySuffix, StringComparison.Ordinal)
+            || SandboxDeclinedReferences.ContainsKey(providerRequestReference))
         {
             return Task.FromResult(new GatewayVerification(false, null, "GATEWAY_REJECTED"));
         }

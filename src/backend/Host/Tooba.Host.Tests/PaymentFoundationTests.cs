@@ -156,11 +156,13 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
         Assert.NotEqual(PaymentStatus.Succeeded, initiated.Status);
         Assert.Equal(207100m, initiated.Amount);
         Assert.Equal("IRR", initiated.Currency);
+        Assert.Contains("/payment/sandbox", initiated.RedirectUrl ?? string.Empty, StringComparison.Ordinal);
 
         var replay = await directory.InitiateAsync(
             new InitiatePaymentCommand(online.CheckoutId, actor, buyer, "idem-online", "fake"),
             CancellationToken.None);
         Assert.Equal(initiated.PaymentId, replay.PaymentId);
+        Assert.Equal(initiated.RedirectUrl, replay.RedirectUrl);
 
         var snapshot = await directory.GetAsync(initiated.PaymentId, actor, buyer, CancellationToken.None);
         Assert.Equal(2, snapshot!.Allocations.Count);

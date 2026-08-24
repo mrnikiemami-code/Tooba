@@ -48,7 +48,8 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             group.SellerOrders.Select(order => new PayableSellerOrderSnapshot(
                 order.SellerOrderId,
                 order.GrandTotalSnapshot,
-                order.Currency)).ToArray());
+                order.Currency,
+                order.Status == SellerOrderStatus.PendingPayment)).ToArray());
     }
 
     /// <inheritdoc />

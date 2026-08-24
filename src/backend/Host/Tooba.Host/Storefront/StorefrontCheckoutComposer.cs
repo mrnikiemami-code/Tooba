@@ -168,7 +168,9 @@ public sealed class StorefrontCheckoutComposer
             snapshot.Market,
             snapshot.Currency,
             snapshot.Channel.ToString(),
-            "PendingPayment",
+            sellers.Count > 0 && sellers.All(x => string.Equals(x.Status, "Paid", StringComparison.Ordinal))
+                ? "Paid"
+                : "PendingPayment",
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode,
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodLabel) ? DefaultShippingLabel : snapshot.ShippingMethodLabel,
             snapshot.RecipientName,

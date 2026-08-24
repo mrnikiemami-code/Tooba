@@ -210,3 +210,48 @@ public sealed record StorefrontCheckoutPage(
     decimal ShippingAmount,
     decimal PayableAmount,
     IReadOnlyList<StorefrontSellerOrderView> SellerOrders);
+
+/// <summary>
+/// ورودی شروع پرداخت فروشگاهی. مبلغ در بدنه نیست.
+/// </summary>
+public sealed record StorefrontInitiatePaymentRequest(Guid CartId, string IdempotencyKey);
+
+/// <summary>
+/// نتیجهٔ شروع پرداخت. Redirect به صفحهٔ sandbox/dev است نه بانک واقعی.
+/// </summary>
+public sealed record StorefrontPaymentInitiationPage(
+    Guid PaymentId,
+    Guid AttemptId,
+    Guid CheckoutId,
+    string Status,
+    string ProviderCode,
+    string ProviderRequestReference,
+    string RedirectUrl,
+    decimal Amount,
+    string Currency);
+
+/// <summary>
+/// تصویر خواندنی پرداخت برای صفحهٔ نتیجه. Paid بودن سفارش از همین JSON استنتاج نمی‌شود مگر وضعیت سفارش جدا خوانده شود.
+/// </summary>
+public sealed record StorefrontPaymentPage(
+    Guid PaymentId,
+    Guid CheckoutId,
+    decimal Amount,
+    string Currency,
+    string Status,
+    string ProviderCode,
+    IReadOnlyList<StorefrontPaymentAllocationView> Allocations);
+
+/// <summary>
+/// تخصیص نمایشی پرداخت به سفارش فروشنده. تسویه فروشنده نیست.
+/// </summary>
+public sealed record StorefrontPaymentAllocationView(Guid SellerOrderId, decimal AllocatedAmount, string Currency);
+
+/// <summary>
+/// تکمیل sandbox/dev. Outcome موفقیت درگاه نیست؛ Host هنوز Verify می‌کند.
+/// </summary>
+public sealed record StorefrontSandboxPaymentRequest(
+    Guid CartId,
+    Guid AttemptId,
+    string ProviderRequestReference,
+    string Outcome);

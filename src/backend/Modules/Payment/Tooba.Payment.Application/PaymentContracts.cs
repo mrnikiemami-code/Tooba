@@ -34,7 +34,8 @@ public enum OrderPaymentMode
 public sealed record PayableSellerOrderSnapshot(
     Guid SellerOrderId,
     decimal PayableAmount,
-    string Currency);
+    string Currency,
+    bool PendingPayment = true);
 
 /// <summary>
 /// خواندن تصویر مالی سفارش بدون DbContext سفارش.
