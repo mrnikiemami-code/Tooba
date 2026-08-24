@@ -90,3 +90,46 @@ public sealed record StorefrontProductDetailPage(
 /// </summary>
 public sealed record StorefrontOfferResolutionInput(
     IReadOnlyList<StorefrontOfferCandidate> Candidates);
+
+/// <summary>
+/// خط نمایشی سبد. مبلغ نقل‌قول‌شده از Pricing روی Offer است نه فیلد قیمت Product.
+/// </summary>
+public sealed record StorefrontCartLineView(
+    Guid LineId,
+    Guid OfferId,
+    Guid CatalogVariantId,
+    Guid SellerPartyId,
+    Guid? ProductId,
+    string? ProductSlug,
+    string Title,
+    string SellerDisplayName,
+    Guid? MediaAssetId,
+    int Quantity,
+    decimal? UnitAmountExclusiveOfTax,
+    decimal? LineAmountExclusiveOfTax,
+    string Currency,
+    bool QuotedTaxExclusive);
+
+/// <summary>
+/// صفحهٔ سبد زنده. جمع‌ها برآورد بدون مالیات از نقل‌قول سبد هستند نه تسویهٔ Checkout.
+/// </summary>
+public sealed record StorefrontCartPage(
+    Guid CartId,
+    int Version,
+    string Market,
+    string Currency,
+    string Channel,
+    int ItemCount,
+    decimal SubtotalExclusiveOfTax,
+    IReadOnlyList<StorefrontCartLineView> Lines,
+    string? GuestSecret);
+
+/// <summary>
+/// ورودی افزودن خط از PDP. هویت خط Offer است.
+/// </summary>
+public sealed record StorefrontAddCartLineRequest(Guid OfferId, int Quantity);
+
+/// <summary>
+/// ورودی تغییر تعداد خط. صفر یعنی حذف.
+/// </summary>
+public sealed record StorefrontChangeCartLineRequest(int Quantity);

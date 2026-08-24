@@ -1,14 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatOfferAmount } from "./storefront-api.ts";
+import { StorefrontCartApiError, addOfferToCart } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 
 /**
  * جعبه خرید PDP. جهش Cart را جعل نمی‌کند و تا API سبد فقط آمادهٔ اتصال است.
  */
 export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPage }) {
+  const router = useRouter();
   const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const offer = detail.primaryOffer;
   return (
     <div className="sf-buy">
@@ -28,8 +32,21 @@ export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPa
       <button
         className="sf-cta"
         type="button"
-        disabled={!detail.cartMutationEnabled || offer.availableUnits <= 0}
-        onClick={() => setNote("سبد خرید هنوز به API سبد Tooba وصل نشده است.")}
+        disabled={!detail.cartMutationEnabled || offer.availableUnits <= 0 || busy}
+        onClick={() => {
+          void (async () => {
+            setBusy(true);
+            setNote(null);
+            try {
+              await addOfferToCart(offer.offerId, 1);
+              router.push("/cart");
+            } catch (cause) {
+              setNote(cause instanceof StorefrontCartApiError ? cause.detail ?? cause.message : "افزودن به سبد شکست خورد.");
+            } finally {
+              setBusy(false);
+            }
+          })();
+        }}
       >
         افزودن به سبد
       </button>

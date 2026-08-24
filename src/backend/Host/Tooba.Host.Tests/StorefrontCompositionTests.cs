@@ -74,7 +74,7 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
-    public void Detail_contract_keeps_cart_mutation_disabled()
+    public void Detail_contract_exposes_cart_mutation_flag()
     {
         var names = typeof(StorefrontProductDetailPage).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.Ordinal);
         Assert.Contains("PrimaryOffer", names);
@@ -82,5 +82,41 @@ public sealed class StorefrontCompositionTests
         Assert.Contains("CartMutationEnabled", names);
         Assert.DoesNotContain("Price", names);
         Assert.DoesNotContain("Stock", names);
+    }
+
+    [Fact]
+    public void Cart_page_json_keeps_offer_identity_and_has_no_product_price()
+    {
+        var page = new StorefrontCartPage(
+            Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"),
+            3,
+            "IR",
+            "IRR",
+            "Marketplace",
+            2,
+            3580000m,
+            [
+                new StorefrontCartLineView(
+                    Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1"),
+                    Guid.Parse("cccccccc-cccc-4ccc-8ccc-ccccccccccc1"),
+                    Guid.Parse("dddddddd-dddd-4ddd-8ddd-ddddddddddd1"),
+                    Guid.Parse("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1"),
+                    Guid.Parse("ffffffff-ffff-4fff-8fff-fffffffffff1"),
+                    "linen-shirt",
+                    "پیراهن",
+                    "دیجی‌استایل نمونه",
+                    Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                    2,
+                    1790000m,
+                    3580000m,
+                    "IRR",
+                    true)
+            ],
+            "guest-secret-once");
+        var json = JsonSerializer.Serialize(page, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        Assert.Contains("\"offerId\":\"cccccccc-cccc-4ccc-8ccc-ccccccccccc1\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"productPrice\"", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"subtotalExclusiveOfTax\":3580000", json, StringComparison.Ordinal);
     }
 }

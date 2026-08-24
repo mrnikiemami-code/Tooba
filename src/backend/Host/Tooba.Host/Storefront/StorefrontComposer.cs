@@ -136,7 +136,7 @@ public sealed class StorefrontComposer
             others,
             seoTitle!,
             seoDescription,
-            CartMutationEnabled: false);
+            CartMutationEnabled: true);
     }
 
     private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(CancellationToken cancellationToken)

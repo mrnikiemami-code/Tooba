@@ -18,16 +18,20 @@ import {
   Tag,
   Truck,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
+import { StorefrontCartApiError, addOfferToCart } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 
 /**
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
  */
 export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDetailPage }) {
+  const router = useRouter();
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews">("intro");
   const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const offer = detail.primaryOffer;
   const images = detail.mediaAssetIds.length > 0 ? detail.mediaAssetIds : [null];
   const [active, setActive] = useState(0);
@@ -176,8 +180,28 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             ) : (
               <button
                 type="button"
-                disabled={!detail.cartMutationEnabled}
-                onClick={() => setNote("سبد خرید هنوز به API سبد Tooba وصل نشده است.")}
+                disabled={!detail.cartMutationEnabled || busy}
+                onClick={() => {
+                  void (async () => {
+                    setBusy(true);
+                    setNote(null);
+                    try {
+                      await addOfferToCart(offer.offerId, qty);
+                      setNote("به سبد زنده اضافه شد.");
+                      router.push("/cart");
+                    } catch (cause) {
+                      const message =
+                        cause instanceof StorefrontCartApiError
+                          ? cause.detail ?? cause.message
+                          : cause instanceof Error
+                            ? cause.message
+                            : "افزودن به سبد شکست خورد.";
+                      setNote(message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
+                }}
                 className="w-full py-3 rounded-xl font-bold text-sm bg-[#2563EB] text-white hover:bg-[#1d4ed8] disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" /> افزودن به سبد خرید

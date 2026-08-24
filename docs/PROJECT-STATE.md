@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T006
+TB-P04-T007
 ```
 
 Last Architect Accepted Gate:
@@ -45,7 +45,7 @@ TB-P03-GATE
 Current Issued Task:
 
 ```text
-TB-P04-T007 / REPAIR / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T008 / AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -87,7 +87,8 @@ TB-P04-T003 = ACCEPTED
 TB-P04-T004 = ACCEPTED
 TB-P04-T005 = ACCEPTED
 TB-P04-T006 = ACCEPTED
-TB-P04-T007 = REPAIR / AWAITING_ARCHITECT_ACCEPT
+TB-P04-T007 = ACCEPTED
+TB-P04-T008 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Observability / Error Handling Foundation:
@@ -243,7 +244,7 @@ COMPLETE (Architect accepted TB-P03-GATE)
 P04 Experience Foundation:
 
 ```text
-IN_PROGRESS (TB-P04-T007 REPAIR / awaiting Architect ACCEPT; T006 ACCEPTED; T005 ACCEPTED as live functional/interaction foundation)
+IN_PROGRESS (TB-P04-T008 live cart awaiting Architect ACCEPT; T007 ACCEPTED; T006 ACCEPTED; T005 ACCEPTED as live functional/interaction foundation)
 ```
 
 Design System Foundation:
@@ -507,7 +508,7 @@ docs/architecture/56-storefront-live-slice.md
 Authorized local envelope path for this issued work:
 
 ```text
-docs/ai/tasks/TB-P04-T007-REPAIR.task.md
+docs/ai/tasks/TB-P04-T008.task.md
 ```
 
-Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T006 are Architect-accepted (T005 as live functional/interaction foundation; T006 Shopeiva runtime atlas). Current issued work is TB-P04-T007 REPAIR (real Shopeiva preservation on live Tooba data). P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.
+Resume: P03 is COMPLETE. TB-P04-T001 through TB-P04-T007 are Architect-accepted (T005 as live functional/interaction foundation; T006 Shopeiva runtime atlas; T007 live Home/Listing/PDP chrome). Current issued work is TB-P04-T008 live Cart. Shopeiva purchased source is Next.js 16.2.6 / React 19.2.4 / Tailwind 4; Tooba storefront is a Next 15 / Tailwind 3 port. P04 IN_PROGRESS. Locked UI rule: preserve Shopeiva with minimum change, connect Tooba live backend, sell quickly, enhance later. Persian RTL first. Tooba Professional Data Grid remains. Core API integration by end of P06. P00 = COMPLETE. P01 = COMPLETE. P02 = COMPLETE. P03 = COMPLETE.

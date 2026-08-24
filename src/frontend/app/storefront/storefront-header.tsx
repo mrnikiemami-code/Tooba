@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
+import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 
 type MegaCategory = {
   id: number;
@@ -36,9 +37,20 @@ export function StorefrontShopeivaHeader({
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [chromeCategories, setChromeCategories] = useState<MegaCategory[]>([]);
   const [selectedMega, setSelectedMega] = useState<MegaCategory | null>(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    const refreshBadge = () => {
+      void loadStorefrontCart()
+        .then((cart) => setCartCount(cart?.itemCount ?? 0))
+        .catch(() => setCartCount(0));
+    };
+    refreshBadge();
+    window.addEventListener(CART_CHANGED_EVENT, refreshBadge);
+    return () => window.removeEventListener(CART_CHANGED_EVENT, refreshBadge);
+  }, []);
 
   useEffect(() => {
     void fetch("/jsons/menuCategories.json")
@@ -132,17 +144,16 @@ export function StorefrontShopeivaHeader({
               <User className="w-4 h-4" />
               میزکار
             </Link>
-            <button
-              type="button"
-              onClick={() => setCartOpen(true)}
+            <Link
+              href="/cart"
               className="relative w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600"
               aria-label="سبد خرید"
             >
               <ShoppingBag className="w-5 h-5" />
               <span className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2563EB] text-white text-[10px] font-bold flex items-center justify-center">
-                ۰
+                {cartCount.toLocaleString("fa-IR")}
               </span>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -260,21 +271,6 @@ export function StorefrontShopeivaHeader({
         </div>
       ) : null}
 
-      {cartOpen ? (
-        <div className="fixed inset-0 z-[90] bg-black/40" onClick={() => setCartOpen(false)}>
-          <div className="absolute left-0 top-0 bottom-0 w-full max-w-sm bg-white flex flex-col" onClick={(event) => event.stopPropagation()}>
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="font-bold flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-[#2563EB]" /> سبد خرید (۰)
-              </h2>
-              <button type="button" onClick={() => setCartOpen(false)} aria-label="بستن سبد">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 p-6 text-center text-gray-500 text-sm">سبد خرید هنوز به API سبد Tooba وصل نشده است.</div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

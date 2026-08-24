@@ -77,6 +77,7 @@ builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
