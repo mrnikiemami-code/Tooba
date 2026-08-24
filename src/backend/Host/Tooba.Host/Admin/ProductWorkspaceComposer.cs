@@ -6,6 +6,7 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Party.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Admin;
@@ -20,22 +21,25 @@ public sealed class ProductWorkspaceComposer
     private readonly PricingDbContext _prices;
     private readonly InventoryDbContext _inventory;
     private readonly TaxDbContext _tax;
+    private readonly IPartyLookupGateway _parties;
 
     /// <summary>
-    /// سازندهٔ ترکیب Host.
+    /// سازندهٔ ترکیب Host. جستجوی نام فروشنده جدا از Offer است و JOIN بین‌schema نیست.
     /// </summary>
     public ProductWorkspaceComposer(
         CatalogDbContext catalog,
         OfferDbContext offers,
         PricingDbContext prices,
         InventoryDbContext inventory,
-        TaxDbContext tax)
+        TaxDbContext tax,
+        IPartyLookupGateway parties)
     {
         _catalog = catalog;
         _offers = offers;
         _prices = prices;
         _inventory = inventory;
         _tax = tax;
+        _parties = parties;
     }
 
     /// <summary>
@@ -107,13 +111,19 @@ public sealed class ProductWorkspaceComposer
             ? []
             : await _tax.Categories.AsNoTracking().Where(x => taxRows.Select(r => r.CategoryId).Contains(x.CategoryId)).ToListAsync(cancellationToken);
 
-        var offerViews = offers.Select(o => new ProductOfferView(
-            o.OfferId,
-            o.CatalogVariantId,
-            o.SellerPartyId,
-            o.Status.ToString(),
-            o.Channel.ToString(),
-            o.SellerSku)).ToList();
+        var offerViews = new List<ProductOfferView>(offers.Count);
+        foreach (var offer in offers)
+        {
+            var seller = await _parties.FindByIdAsync(offer.SellerPartyId, cancellationToken);
+            offerViews.Add(new ProductOfferView(
+                offer.OfferId,
+                offer.CatalogVariantId,
+                offer.SellerPartyId,
+                seller?.DisplayName ?? "فروشنده",
+                offer.Status.ToString(),
+                offer.Channel.ToString(),
+                offer.SellerSku));
+        }
         var priceViews = prices.Select(p => new ProductPriceView(
             p.PriceId,
             p.OfferId,
@@ -131,7 +141,7 @@ public sealed class ProductWorkspaceComposer
         var stockViews = positions.Select(pos =>
         {
             var loc = locations.Single(l => l.LocationId == pos.LocationId);
-            return new ProductStockView(pos.OfferId, loc.LocationId, loc.Code, pos.OnHand, pos.Reserved, pos.Available);
+            return new ProductStockView(pos.OfferId, loc.LocationId, loc.Code, loc.Name, pos.OnHand, pos.Reserved, pos.Available);
         }).ToList();
 
         var variantViews = variants.Select(v => new ProductVariantView(

@@ -87,11 +87,15 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
 }
 
 /** چک‌باکس با برچسب مجاور. */
-export function Checkbox({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+export function Checkbox({
+  label,
+  hideLabel,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; hideLabel?: boolean }) {
   return (
     <label className="inline-flex items-center gap-2 text-sm">
-      <input type="checkbox" className="h-4 w-4" {...props} />
-      {label}
+      <input type="checkbox" className="h-4 w-4" aria-label={label} {...props} />
+      {hideLabel ? <span className="sr-only">{label}</span> : label}
     </label>
   );
 }

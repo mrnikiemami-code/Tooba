@@ -130,7 +130,7 @@ export function rowsToCsv<T>(rows: T[], columns: GridColumnDef<T>[], columnIds: 
   const header = selected.map((column) => csvCell(column.header)).join(",");
   const body = rows.map((row) =>
     selected
-      .map((column) => csvCell((column.cell ?? ((item: T) => String(column.accessor(item))))(row)))
+      .map((column) => csvCell(String(column.accessor(row) ?? "")))
       .join(","),
   );
   return [header, ...body].join("\n");

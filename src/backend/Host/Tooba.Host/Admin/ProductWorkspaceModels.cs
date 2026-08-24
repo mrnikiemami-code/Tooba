@@ -56,11 +56,12 @@ public sealed record ProductVariantView(Guid VariantId, string Fingerprint, stri
 /// <summary>مرجع رسانهٔ مات.</summary>
 public sealed record ProductMediaView(Guid MediaAssetId, bool Primary);
 
-/// <summary>Offer فروشنده جدا از Product.</summary>
+/// <summary>Offer فروشنده جدا از Product. SellerDisplayName برچسب انسانی است نه کلید دامنه.</summary>
 public sealed record ProductOfferView(
     Guid OfferId,
     Guid CatalogVariantId,
     Guid SellerPartyId,
+    string SellerDisplayName,
     string Status,
     string Channel,
     string? SellerSku);
@@ -79,11 +80,12 @@ public sealed record ProductPriceView(
 /// <summary>طبقهٔ مالیاتی Offer.</summary>
 public sealed record ProductTaxView(Guid OfferId, Guid CategoryId, string CategoryCode, string DisplayName);
 
-/// <summary>موجودی محل‌دار روی Offer.</summary>
+/// <summary>موجودی محل‌دار روی Offer. LocationName برچسب عملیاتی است؛ حقیقت موجودی روی Offer می‌ماند.</summary>
 public sealed record ProductStockView(
     Guid OfferId,
     Guid LocationId,
     string LocationCode,
+    string LocationName,
     int OnHand,
     int Reserved,
     int Available);

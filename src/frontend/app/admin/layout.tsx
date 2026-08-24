@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AdminShell } from "./admin-shell";
 
 export const metadata: Metadata = {
   title: "Tooba Admin Product Workspace",
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
  * پوستهٔ Admin. این layout فروشگاه یا پنل Seller نیست.
  */
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen bg-background text-foreground">{children}</div>;
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <AdminShell>{children}</AdminShell>
+    </div>
+  );
 }

@@ -103,15 +103,15 @@ export function WorkspaceShell({
   const overflow = actions.filter((action) => (action.kind === "overflow" || action.kind === "contextual") && action.permission !== "hidden");
 
   return (
-    <div className="flex flex-col gap-3 rounded-ds border border-border bg-surface p-3">
+    <div className="flex flex-col gap-5 rounded-ds border border-border bg-surface p-5 shadow-sm">
       <header>
-        <nav aria-label="breadcrumb" className="text-xs text-muted">
+        <nav aria-label="breadcrumb" className="text-sm text-muted">
           {breadcrumbs.join(" / ")}
         </nav>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {subtitle ? <p className="text-sm text-muted">{subtitle}</p> : null}
+            <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
+            {subtitle ? <p className="mt-1 text-base text-muted">{subtitle}</p> : null}
             {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -188,11 +188,14 @@ export function WorkspaceShell({
       ) : null}
       {error ? <ErrorState title={error} onRetry={onRetry} retryLabel={messages.retry} /> : null}
       {conflict ? (
-        <div className="rounded-ds border border-warning/40 p-3" role="alert">
-          <p>{conflict}</p>
-          <Button type="button" tone="secondary" className="mt-2" onClick={onReloadConflict}>
-            {messages.reload}
-          </Button>
+        <div className="rounded-ds border border-warning bg-warning/10 p-4" role="alert">
+          <p className="text-base font-medium">این محصول را کاربر دیگری تغییر داده است.</p>
+          <p className="mt-1 text-sm text-muted">{conflict}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button type="button" tone="secondary" onClick={onReloadConflict}>
+              بارگذاری نسخهٔ تازه
+            </Button>
+          </div>
         </div>
       ) : null}
       {emptyKind ? <EmptyState title={emptyKind === "no-permission" ? messages.permissionDenied : emptyKind === "not-found" ? messages.notFound : emptyKind} /> : null}

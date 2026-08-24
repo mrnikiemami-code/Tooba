@@ -10,44 +10,52 @@ import { loadAdminProductList, type AdminProductListRow, type HostReadSource } f
 const columns: GridColumnDef<AdminProductListRow>[] = [
   {
     id: "title",
-    header: "عنوان",
+    header: "محصول",
     accessor: (row) => row.title,
-    width: 240,
-    minWidth: 160,
+    cell: (row) => (
+      <Link className="font-medium text-foreground hover:underline" href={`/admin/products/${row.id}`}>
+        {row.title}
+      </Link>
+    ),
+    width: 280,
+    minWidth: 180,
     maxWidth: 480,
     filterKind: "text",
     sortable: true,
   },
   {
     id: "status",
-    header: "وضعیت Catalog",
+    header: "انتشار",
     accessor: (row) => row.status,
-    width: 160,
+    cell: (row) => (
+      <span className="rounded-ds bg-success/15 px-2 py-1 text-sm text-success">{row.status === "Published" ? "منتشرشده" : row.status}</span>
+    ),
+    width: 140,
     minWidth: 120,
-    maxWidth: 240,
+    maxWidth: 200,
     filterKind: "status",
     enumOptions: [
-      { value: "Published", label: "Published" },
-      { value: "Draft", label: "Draft" },
+      { value: "Published", label: "منتشرشده" },
+      { value: "Draft", label: "پیش‌نویس" },
     ],
   },
   {
     id: "variantCount",
-    header: "Variants",
+    header: "گونه",
     accessor: (row) => row.variantCount,
-    width: 120,
+    width: 100,
     minWidth: 80,
-    maxWidth: 160,
+    maxWidth: 140,
     filterKind: "number",
     sortable: true,
   },
   {
     id: "offerCount",
-    header: "Offers",
+    header: "پیشنهاد فروشنده",
     accessor: (row) => row.offerCount,
-    width: 120,
-    minWidth: 80,
-    maxWidth: 160,
+    width: 140,
+    minWidth: 100,
+    maxWidth: 180,
     filterKind: "number",
     sortable: true,
   },
@@ -79,26 +87,24 @@ export function ProductListScreen() {
   );
 
   return (
-    <main className="p-4">
-      <h1 className="mb-3 text-xl font-semibold">فهرست محصول Admin</h1>
-      <p className="mb-2 text-sm text-muted">ورود به Workspace ترکیبی؛ CRUD ماژولی نیست. Price/Stock روی Product نیستند.</p>
-      <p className="mb-4 text-sm" data-testid="list-source">
-        منبع داده: {source === "host" ? "Host ترکیب‌شده" : source === "loading" ? "در حال خواندن Host" : "خطای Host — فیکسچر فعال نشد"}
+    <main className="mx-auto max-w-6xl p-6">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">محصولات</h1>
+          <p className="mt-1 text-base text-muted">قیمت و موجودی روی هویت Product نیستند؛ ورود به Workspace ترکیبی است.</p>
+        </div>
+        <button type="button" disabled className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground opacity-50">
+          محصول جدید
+        </button>
+      </div>
+      <p className="mb-4 text-sm text-muted" data-testid="list-source">
+        {source === "host" ? "داده از Host زنده" : source === "loading" ? "در حال خواندن Host" : "Host در دسترس نیست"}
       </p>
       {source === "error" ? (
         <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : (
         <DataGrid columns={columns} queryAdapter={queryAdapter} />
       )}
-      <ul className="mt-4 space-y-2">
-        {rows.map((row) => (
-          <li key={row.id}>
-            <Link className="underline" href={`/admin/products/${row.id}`}>
-              گشودن Workspace: {row.title}
-            </Link>
-          </li>
-        ))}
-      </ul>
     </main>
   );
 }

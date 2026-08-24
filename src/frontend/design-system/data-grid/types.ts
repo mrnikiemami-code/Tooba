@@ -61,7 +61,7 @@ export interface GridColumnDef<T> {
   id: string;
   header: string;
   accessor: (row: T) => unknown;
-  cell?: (row: T) => string;
+  cell?: (row: T) => import("react").ReactNode;
   sortable?: boolean;
   filterKind?: GridFilterKind;
   filterable?: boolean;

@@ -288,7 +288,7 @@ export function DataGrid<T extends { id: string }>({
         <ul className="flex flex-col gap-2">
           {rows.map((row) => (
             <li key={row.id} className="rounded-ds border border-border bg-surface p-3">
-              <Checkbox label={messages.selectPage} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
+              <Checkbox hideLabel label={messages.selectPage} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
               {visibleColumns.map((column) => (
                 <p key={column.id} className="text-sm">
                   <span className="text-muted">{column.header}: </span>
@@ -389,7 +389,7 @@ export function DataGrid<T extends { id: string }>({
               {rows.map((row) => (
                 <tr key={row.id} className={cn(rowClass, "bg-surface")}>
                   <td className="sticky start-0 bg-surface p-2">
-                    <Checkbox label={row.id} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
+                    <Checkbox hideLabel label="انتخاب ردیف" checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
                   </td>
                   {visibleColumns.map((column) => {
                     const side = column.sticky ? stickyLogicalSide(column.sticky) : undefined;

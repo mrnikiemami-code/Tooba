@@ -17,6 +17,12 @@ UI view-model != domain aggregate. Product has no Price and no Stock fields.
 
 The Next shell rewrites `/v1/*` to Host. Production Admin routes (`/admin/products`, `/admin/products/[productId]`) read that Host composition by default. If Host is unreachable, the UI shows an error/retry state; fixture JSON is not substituted on those routes. Development Host may insert representative Catalog/Offer/Price/Tax/Inventory rows through module directories, then the same HTTP APIs are read back.
 
+## Admin chrome
+
+Admin routes use a persistent operations shell (sidebar placeholders for future modules, header context). Header appearance controls change direction and color scheme for the operator; they are not debug chrome. Debug stale-save / fixture-scope toggles are not part of the production Admin route. Theme and direction follow the Design System html contract.
+
+List and workspace copy is operator-facing Persian. Seller and location labels come from Party/Inventory display names composed in Host memory, not raw UUIDs as primary labels.
+
 ## Sections
 
 Overview, Variants, Media, Commercial, Inventory, SEO & Content, Publication, History.
@@ -25,7 +31,7 @@ Commercial composes multi-seller Offers + authored prices (tax exclusive) + tax 
 
 ## Permissions and concurrency
 
-Generic UI components do not call SpiceDB. Host header `X-Tooba-Workspace-Scope: view` forces read-only flags. Catalog title PATCH uses `UpdatedAt` optimistic concurrency (`workspace.catalog.stale`).
+Generic UI components do not call SpiceDB. Host header `X-Tooba-Workspace-Scope: view` forces read-only flags. Catalog title PATCH uses `UpdatedAt` optimistic concurrency (`workspace.catalog.stale`). A 409 is shown as a concurrent-edit operator state, not a debug control.
 
 ## Known gaps
 

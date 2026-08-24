@@ -14,6 +14,7 @@ export interface ProductOfferRow {
   offerId: string;
   catalogVariantId: string;
   sellerPartyId: string;
+  sellerDisplayName: string;
   status: string;
   channel: string;
   sellerSku: string | null;
@@ -32,6 +33,7 @@ export interface ProductStockRow {
   offerId: string;
   locationId: string;
   locationCode: string;
+  locationName: string;
   onHand: number;
   reserved: number;
   available: number;
@@ -103,6 +105,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
       offerId: "44111111-1111-7111-8111-111111111111",
       catalogVariantId: "22111111-1111-7111-8111-111111111111",
       sellerPartyId: "seller-north",
+      sellerDisplayName: "بازار اطلس",
       status: "Active",
       channel: "Web",
       sellerSku: "NORTH-LINEN-M",
@@ -111,6 +114,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
       offerId: "44111111-1111-7111-8111-111111111112",
       catalogVariantId: "22111111-1111-7111-8111-111111111111",
       sellerPartyId: "seller-south",
+      sellerDisplayName: "خانهٔ پارچهٔ شمال",
       status: "Active",
       channel: "Web",
       sellerSku: "SOUTH-LINEN-M",
@@ -142,6 +146,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
       offerId: "44111111-1111-7111-8111-111111111111",
       locationId: "loc-tehran",
       locationCode: "THR-1",
+      locationName: "انبار تهران",
       onHand: 12,
       reserved: 2,
       available: 10,
@@ -150,6 +155,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
       offerId: "44111111-1111-7111-8111-111111111112",
       locationId: "loc-shiraz",
       locationCode: "SHZ-1",
+      locationName: "انبار شیراز",
       onHand: 4,
       reserved: 0,
       available: 4,
