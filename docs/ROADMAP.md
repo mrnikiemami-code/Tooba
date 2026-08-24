@@ -100,7 +100,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is IN_PROGRESS under TB-P04-T005 REPAIR (live visual evidence). Workspace Interaction Patterns are Architect-accepted. Visual ACCEPT is pending. Do not start TB-P04-T006.
+- P04 Experience Foundation is IN_PROGRESS under TB-P04-T006 (Shopeiva runtime visual atlas). TB-P04-T005 is Architect-accepted as live functional/interaction foundation. Custom Admin visual language from T005 is not the final Tooba target. Shopeiva-first REUSE/ADAPT. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -110,7 +110,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P04-02 | Design System extraction | COMPLETE (Architect accepted TB-P04-T002) |
 | P04-03 | Professional Data Grid foundation | COMPLETE (Architect accepted TB-P04-T003) |
 | P04-04 | Workspace interaction patterns | COMPLETE (Architect accepted TB-P04-T004) |
-| P04-05 | Admin Product Workspace | IN_PROGRESS (TB-P04-T005 / visual ACCEPT pending) |
+| P04-05 | Admin Product Workspace | COMPLETE (TB-P04-T005 ACCEPTED as functional/interaction foundation) |
 
 ## Mandatory UX sequence (locked)
 
@@ -123,6 +123,6 @@ Do not skip. Later steps wait for new envelopes.
 | Design System extraction | COMPLETE (TB-P04-T002) |
 | Professional Data Grid foundation | COMPLETE (TB-P04-T003) |
 | Workspace interaction patterns | COMPLETE (TB-P04-T004) |
-| Admin Product Workspace | IN_PROGRESS (TB-P04-T005) |
+| Admin Product Workspace | COMPLETE (TB-P04-T005 functional/interaction foundation) |
 | Serious UI implementation | PLANNED |
 | Visual evidence / Architect visual ACCEPT | PLANNED |

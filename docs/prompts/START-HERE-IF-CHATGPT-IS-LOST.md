@@ -4,15 +4,15 @@ Recorded repository state for recovery (do not invent the next envelope):
 
 ```text
 Current Phase: P04 — Experience Foundation
-Last Architect Accepted Task: TB-P04-T004
+Last Architect Accepted Task: TB-P04-T005
 Last Architect Accepted Gate: TB-P03-GATE
-Current Issued Task: TB-P04-T005
+Current Issued Task: TB-P04-T006
 Task State: ISSUED / AWAITING_ARCHITECT_ACCEPT
 Current Gate: NONE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; Design System, Data Grid, and Workspace Interaction Patterns are Architect-accepted; Admin Product Workspace is IN_PROGRESS (TB-P04-T005 / visual ACCEPT pending); ErrorState retry i18n is RESOLVED; grid virtualization remains DEFERRED_NON_BLOCKING; do not start Order/Seller/Customer workspaces or storefront overhaul
+P04 is IN_PROGRESS; Design System, Data Grid, Workspace Interaction Patterns, and Admin Product Workspace functional/interaction foundation are Architect-accepted (TB-P04-T005); current issued work is TB-P04-T006 Shopeiva runtime visual atlas; Shopeiva-first REUSE/ADAPT; Tooba Data Grid remains; core API integration by end of P06
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.
