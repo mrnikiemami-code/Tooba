@@ -1,0 +1,592 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "موبایل",
+      "icon": "Smartphone",
+      "banner": "/images/categories/1.png",
+      "subcategories": [
+        {
+          "id": 101,
+          "name": "گوشی موبایل",
+          "image": "/images/categories/1.png",
+          "items": ["اپل", "سامسونگ", "شیائومی", "نوکیا"]
+        },
+        {
+          "id": 102,
+          "name": "لوازم جانبی موبایل",
+          "image": "/images/categories/2.png",
+          "items": ["قاب و کاور", "محافظ صفحه", "پاوربانک", "کابل و شارژر"]
+        }
+      ],
+      "accessories": [
+        { "id": 1001, "name": "هندزفری" },
+        { "id": 1002, "name": "پایه نگهدارنده" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ساعت هوشمند",
+      "icon": "Watch",
+      "banner": "/images/categories/2.png",
+      "subcategories": [
+        {
+          "id": 201,
+          "name": "ساعت اپل",
+          "image": "/images/categories/2.png",
+          "items": ["سری ۸", "سری ۹", "اولترا"]
+        },
+        {
+          "id": 202,
+          "name": "ساعت سامسونگ",
+          "image": "/images/categories/3.png",
+          "items": ["گلکسی واچ ۵", "گلکسی واچ ۶"]
+        }
+      ],
+      "accessories": [
+        { "id": 2001, "name": "بند ساعت" },
+        { "id": 2002, "name": "شارژر" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "لپ‌تاپ",
+      "icon": "Home",
+      "banner": "/images/categories/3.png",
+      "subcategories": [
+        {
+          "id": 301,
+          "name": "لپ‌تاپ‌های گیمینگ",
+          "image": "/images/categories/3.png",
+          "items": ["ایسوس", "ام‌اس‌آی", "لنوو"]
+        },
+        {
+          "id": 302,
+          "name": "لپ‌تاپ‌های اداری",
+          "image": "/images/categories/4.png",
+          "items": ["مک‌بوک", "سرفیس", "دل"]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "لوازم خانگی",
+      "icon": "Coffee",
+      "banner": "/images/categories/4.png",
+      "subcategories": [
+        {
+          "id": 401,
+          "name": "یخچال و فریزر",
+          "image": "/images/categories/4.png",
+          "items": ["سامسونگ", "الجی", "اسنوا"]
+        },
+        {
+          "id": 402,
+          "name": "ماشین لباسشویی",
+          "image": "/images/categories/5.png",
+          "items": ["بوش", "پاکشوما", "دوو"]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "ابزارآلات",
+      "icon": "Tool",
+      "banner": "/images/categories/5.png",
+      "subcategories": [
+        {
+          "id": 501,
+          "name": "دریل و پیچ‌گوشتی",
+          "image": "/images/categories/5.png",
+          "items": ["رونیکس", "آاگ", "ماکیتا"]
+        },
+        {
+          "id": 502,
+          "name": "ابزار باغبانی",
+          "image": "/images/categories/6.png",
+          "items": ["اره برقی", "چمن‌زن", "قیچی باغبانی"]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "مد و پوشاک",
+      "icon": "BagIcon",
+      "banner": "/images/categories/6.png",
+      "subcategories": [
+        {
+          "id": 601,
+          "name": "مردانه",
+          "image": "/images/categories/6.png",
+          "items": ["تی‌شرت", "شلوار", "کتونی"]
+        },
+        {
+          "id": 602,
+          "name": "زنانه",
+          "image": "/images/categories/7.png",
+          "items": ["مانتو", "شومیز", "کیف"]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "کتاب و لوازم‌التحریر",
+      "icon": "Grid",
+      "banner": "/images/categories/7.png",
+      "subcategories": [
+        {
+          "id": 701,
+          "name": "کتاب چاپی",
+          "image": "/images/categories/7.png",
+          "items": ["رمان", "علمی", "تاریخی"]
+        },
+        {
+          "id": 702,
+          "name": "لوازم‌التحریر",
+          "image": "/images/categories/8.png",
+          "items": ["دفتر", "خودکار", "مداد"]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "اسباب‌بازی",
+      "icon": "Smartphone",
+      "banner": "/images/categories/8.png",
+      "subcategories": [
+        {
+          "id": 801,
+          "name": "لگو",
+          "image": "/images/categories/8.png",
+          "items": ["شهرسازی", "فضایی", "ماشین"]
+        },
+        {
+          "id": 802,
+          "name": "عروسک",
+          "image": "/images/categories/9.png",
+          "items": ["باربی", "خرس", "شخصیت‌های کارتونی"]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "زیبایی و سلامت",
+      "icon": "Watch",
+      "banner": "/images/categories/9.png",
+      "subcategories": [
+        {
+          "id": 901,
+          "name": "آرایشی",
+          "image": "/images/categories/9.png",
+          "items": ["کرم پودر", "رژ لب", "سایه"]
+        },
+        {
+          "id": 902,
+          "name": "مراقبت پوست",
+          "image": "/images/categories/10.png",
+          "items": ["ضدآفتاب", "مرطوب‌کننده", "سرم"]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "ورزش و سفر",
+      "icon": "Home",
+      "banner": "/images/categories/10.jpg",
+      "subcategories": [
+        {
+          "id": 1001,
+          "name": "کفش ورزشی",
+          "image": "/images/categories/10.jpg",
+          "items": ["نایک", "آدیداس", "ریبوک"]
+        },
+        {
+          "id": 1002,
+          "name": "کوله‌پشتی",
+          "image": "/images/categories/10.jpg",
+          "items": ["کوهنوردی", "شهری", "مسافرتی"]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "کنسول بازی",
+      "icon": "Coffee",
+      "banner": "/images/categories/11.png",
+      "subcategories": [
+        {
+          "id": 1101,
+          "name": "کنسول",
+          "image": "/images/categories/11.png",
+          "items": ["پلی‌استیشن", "ایکس‌باکس", "نینتندو"]
+        },
+        {
+          "id": 1102,
+          "name": "بازی",
+          "image": "/images/categories/12.png",
+          "items": ["FIFA", "God of War", "Minecraft"]
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "صوتی و تصویری",
+      "icon": "Tool",
+      "banner": "/images/categories/12.png",
+      "subcategories": [
+        {
+          "id": 1201,
+          "name": "تلویزیون",
+          "image": "/images/categories/12.png",
+          "items": ["سامسونگ", "ال‌جی", "سونی"]
+        },
+        {
+          "id": 1202,
+          "name": "هدفون و هندزفری",
+          "image": "/images/categories/13.png",
+          "items": ["جبرا", "انکر", "سونی"]
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "name": "خودرو",
+      "icon": "BagIcon",
+      "banner": "/images/categories/13.png",
+      "subcategories": [
+        {
+          "id": 1301,
+          "name": "لوازم یدکی",
+          "image": "/images/categories/13.png",
+          "items": ["فیلتر", "لنت", "روغن"]
+        },
+        {
+          "id": 1302,
+          "name": "لوازم تزئینی",
+          "image": "/images/categories/14.png",
+          "items": ["رکاب", "باربند", "روکش صندلی"]
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "تجهیزات اداری",
+      "icon": "Grid",
+      "banner": "/images/categories/14.png",
+      "subcategories": [
+        {
+          "id": 1401,
+          "name": "میز و صندلی",
+          "image": "/images/categories/14.png",
+          "items": ["صندلی مدیریت", "میز کامپیوتر", "صندلی کارمندی"]
+        },
+        {
+          "id": 1402,
+          "name": "لوازم جانبی اداری",
+          "image": "/images/categories/15.png",
+          "items": ["ماوس", "کیبورد", "چاپگر"]
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "طلا و جواهرات",
+      "icon": "Smartphone",
+      "banner": "/images/categories/15.png",
+      "subcategories": [
+        {
+          "id": 1501,
+          "name": "انگشتر",
+          "image": "/images/categories/15.png",
+          "items": ["طلا", "نقره", "پلاتین"]
+        },
+        {
+          "id": 1502,
+          "name": "گردنبند",
+          "image": "/images/categories/16.png",
+          "items": ["مروارید", "طلا", "نقره"]
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "مواد غذایی",
+      "icon": "Watch",
+      "banner": "/images/categories/1.png",
+      "subcategories": [
+        {
+          "id": 1601,
+          "name": "تنقلات",
+          "image": "/images/categories/11.png",
+          "items": ["چیپس", "پفک", "شکلات"]
+        },
+        {
+          "id": 1602,
+          "name": "نوشیدنی",
+          "image": "/images/categories/12.png",
+          "items": ["نوشابه", "دلستر", "آبمیوه"]
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "name": "مبلمان",
+      "icon": "Home",
+      "banner": "/images/categories/1.png",
+      "subcategories": [
+        {
+          "id": 1701,
+          "name": "مبل راحتی",
+          "image": "/images/categories/1.png",
+          "items": ["ال", "راحتی", "تخت‌خواب‌شو"]
+        },
+        {
+          "id": 1702,
+          "name": "میز تلویزیون",
+          "image": "/images/categories/2.png",
+          "items": ["دیواری", "سلطنتی", "مدرن"]
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "دوربین",
+      "icon": "Coffee",
+      "banner": "/images/categories/2.png",
+      "subcategories": [
+        {
+          "id": 1801,
+          "name": "دوربین عکاسی",
+          "image": "/images/categories/2.png",
+          "items": ["کانن", "نیکون", "سونی"]
+        },
+        {
+          "id": 1802,
+          "name": "دوربین فیلمبرداری",
+          "image": "/images/categories/3.png",
+          "items": ["گپرو", "سونی", "پاناسونیک"]
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "name": "لوازم تحریر فانتزی",
+      "icon": "Tool",
+      "banner": "/images/categories/3.png",
+      "subcategories": [
+        {
+          "id": 1901,
+          "name": "دفتر فانتزی",
+          "image": "/images/categories/3.png",
+          "items": ["طرح حیوانات", "شخصیت‌های معروف", "گلدار"]
+        },
+        {
+          "id": 1902,
+          "name": "خودکار فانتزی",
+          "image": "/images/categories/4.png",
+          "items": ["شمعی", "اکلیلی", "طرح دار"]
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "پوشاک بچگانه",
+      "icon": "BagIcon",
+      "banner": "/images/categories/4.png",
+      "subcategories": [
+        {
+          "id": 2001,
+          "name": "نوزاد",
+          "image": "/images/categories/4.png",
+          "items": ["سرهمی", "کلاه", "جوراب"]
+        },
+        {
+          "id": 2002,
+          "name": "کودک",
+          "image": "/images/categories/5.png",
+          "items": ["شلوار", "تیشرت", "لباس خواب"]
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "کالای خواب",
+      "icon": "Grid",
+      "banner": "/images/categories/5.png",
+      "subcategories": [
+        {
+          "id": 2101,
+          "name": "تشک",
+          "image": "/images/categories/5.png",
+          "items": ["طبی", "فنری", "مموری فوم"]
+        },
+        {
+          "id": 2102,
+          "name": "بالش",
+          "image": "/images/categories/6.png",
+          "items": ["پر", "طبی", "مسافرتی"]
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "name": "لوازم جانبی کامپیوتر",
+      "icon": "Smartphone",
+      "banner": "/images/categories/6.png",
+      "subcategories": [
+        {
+          "id": 2201,
+          "name": "قطعات",
+          "image": "/images/categories/6.png",
+          "items": ["کارت گرافیک", "پردازنده", "رم"]
+        },
+        {
+          "id": 2202,
+          "name": "تجهیزات جانبی",
+          "image": "/images/categories/7.png",
+          "items": ["ماوس", "کیبورد", "هدست"]
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "موسیقی",
+      "icon": "Watch",
+      "banner": "/images/categories/7.png",
+      "subcategories": [
+        {
+          "id": 2301,
+          "name": "گیتار",
+          "image": "/images/categories/7.png",
+          "items": ["آکوستیک", "الکتریک", "کلاسیک"]
+        },
+        {
+          "id": 2302,
+          "name": "پیانو",
+          "image": "/images/categories/8.png",
+          "items": ["دیجیتال", "آکوستیک", "کیبورد"]
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "لوازم پخت و پز",
+      "icon": "Home",
+      "banner": "/images/categories/8.png",
+      "subcategories": [
+        {
+          "id": 2401,
+          "name": "قابلمه و تابه",
+          "image": "/images/categories/8.png",
+          "items": ["گرانیتی", "چدن", "استیل"]
+        },
+        {
+          "id": 2402,
+          "name": "لوازم برقی آشپزخانه",
+          "image": "/images/categories/9.png",
+          "items": ["مخلوط‌کن", "آبمیوه‌گیری", "سرخ‌کن"]
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "name": "تجهیزات شبکه",
+      "icon": "Coffee",
+      "banner": "/images/categories/9.png",
+      "subcategories": [
+        {
+          "id": 2501,
+          "name": "مودم",
+          "image": "/images/categories/9.png",
+          "items": ["ADSL", "VDSL", "4G"]
+        },
+        {
+          "id": 2502,
+          "name": "مسیریاب",
+          "image": "/images/categories/10.png",
+          "items": ["ایسوس", "تی‌پی‌لینک", "دی‌لینک"]
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "name": "لوازم حیوانات خانگی",
+      "icon": "BagIcon",
+      "banner": "/images/categories/11.png",
+      "subcategories": [
+        {
+          "id": 2701,
+          "name": "غذای سگ",
+          "image": "/images/categories/11.png",
+          "items": ["خشک", "تر", "تشویقی"]
+        },
+        {
+          "id": 2702,
+          "name": "غذای گربه",
+          "image": "/images/categories/12.png",
+          "items": ["کنسرو", "خشک", "پوچ"]
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "name": "سفر و کمپینگ",
+      "icon": "Grid",
+      "banner": "/images/categories/12.png",
+      "subcategories": [
+        {
+          "id": 2801,
+          "name": "چادر",
+          "image": "/images/categories/12.png",
+          "items": ["کوهنوردی", "خانوادگی", "ساحلی"]
+        },
+        {
+          "id": 2802,
+          "name": "کیسه خواب",
+          "image": "/images/categories/13.png",
+          "items": ["پر", "الیاف", "زمستانی"]
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "name": "لوازم الکتریکی",
+      "icon": "Smartphone",
+      "banner": "/images/categories/13.png",
+      "subcategories": [
+        {
+          "id": 2901,
+          "name": "سیم و کابل",
+          "image": "/images/categories/13.png",
+          "items": ["برق", "شبکه", "آنتن"]
+        },
+        {
+          "id": 2902,
+          "name": "کلید و پریز",
+          "image": "/images/categories/14.png",
+          "items": ["روکار", "توکار", "هوشمند"]
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "name": "صنایع دستی",
+      "icon": "Watch",
+      "banner": "/images/categories/14.png",
+      "subcategories": [
+        {
+          "id": 3001,
+          "name": "قالی و گلیم",
+          "image": "/images/categories/14.png",
+          "items": ["دستباف", "ماشینی", "گبه"]
+        },
+        {
+          "id": 3002,
+          "name": "سفال",
+          "image": "/images/categories/15.png",
+          "items": ["گلدان", "ظروف", "تزئینی"]
+        }
+      ]
+    }
+  ]
+}

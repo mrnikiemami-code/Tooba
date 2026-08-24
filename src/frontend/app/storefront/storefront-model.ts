@@ -46,7 +46,7 @@ export interface StorefrontListingPage {
 }
 
 /**
- * Offer نمایشی PDP.
+ * Offer نمایشی PDP. مبلغ Exclusive از Pricing است.
  */
 export interface StorefrontOfferCandidate {
   offerId: string;
@@ -74,7 +74,7 @@ export interface StorefrontAlternateOffer {
 }
 
 /**
- * جزئیات محصول زنده.
+ * جزئیات محصول زنده. موجودی از Inventory روی Offer است.
  */
 export interface StorefrontProductDetailPage {
   productId: string;

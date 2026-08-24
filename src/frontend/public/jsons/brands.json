@@ -1,0 +1,60 @@
+{
+  "brands": [
+    {
+      "id": 1,
+      "name": "سامسونگ",
+      "logo": "/images/brand/brand1-1.png",
+      "image": "/images/brand/brand1-1.png",
+      "productsCount": 45
+    },
+    {
+      "id": 2,
+      "name": "اپل",
+      "logo": "/images/brand/brand1-2.png",
+      "image": "/images/brand/brand1-2.png",
+      "productsCount": 32
+    },
+    {
+      "id": 3,
+      "name": "ایسوس",
+      "logo": "/images/brand/brand1-3.png",
+      "image": "/images/brand/brand1-3.png",
+      "productsCount": 28
+    },
+    {
+      "id": 4,
+      "name": "سونی",
+      "logo": "/images/brand/brand1-4.png",
+      "image": "/images/brand/brand1-4.png",
+      "productsCount": 23
+    },
+    {
+      "id": 5,
+      "name": "شیائومی",
+      "logo": "/images/brand/brand1-1.png",
+      "image": "/images/brand/brand1-1.png",
+      "productsCount": 38
+    },
+    {
+      "id": 6,
+      "name": "ال‌جی",
+      "logo": "/images/brand/brand1-2.png",
+      "image": "/images/brand/brand1-2.png",
+      "productsCount": 19
+    },
+    {
+      "id": 7,
+      "name": "لاجیتک",
+      "logo": "/images/brand/brand1-3.png",
+      "image": "/images/brand/brand1-3.png",
+      "productsCount": 15
+    },
+    {
+      "id": 8,
+      "name": "ریزر",
+      "logo": "/images/brand/brand1-4.png",
+      "image": "/images/brand/brand1-4.png",
+      "productsCount": 12
+    }
+  ]
+}

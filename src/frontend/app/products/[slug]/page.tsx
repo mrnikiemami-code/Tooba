@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { StorefrontBuyBox } from "../../storefront/storefront-buy-box.tsx";
+import { StorefrontShopeivaPdp } from "../../storefront/storefront-pdp.tsx";
 import { StorefrontShell } from "../../storefront/storefront-shell.tsx";
-import { loadStorefrontDetail, loadStorefrontHome, storefrontMediaUrl } from "../../storefront/storefront-api.ts";
+import { loadStorefrontDetail, loadStorefrontHome } from "../../storefront/storefront-api.ts";
 
 /**
  * فرادادهٔ SEO از ترکیب Host؛ محتوا را از دمو نمی‌سازد.
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 /**
- * PDP زنده با گالری، Offer اصلی و فروشندگان دیگر.
+ * PDP زنده با گالری، Offer اصلی و فروشندگان دیگر روی ترکیب Shopeiva.
  */
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -47,17 +47,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <StorefrontShell categories={home?.categories ?? []}>
+    <StorefrontShell categories={home?.categories ?? []} searchCatalog={home?.featuredProducts ?? []}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="sf-pdp">
-        <div className="sf-gallery">
-          {/* تصویر نمایشی Host خارج از بهینه‌ساز Next است و حقیقت Catalog نیست. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={storefrontMediaUrl(detail.mediaAssetIds[0])} alt={detail.title} />
-          {detail.description ? <p className="sf-meta">{detail.description}</p> : null}
-        </div>
-        <StorefrontBuyBox detail={detail} />
-      </div>
+      <StorefrontShopeivaPdp detail={detail} />
     </StorefrontShell>
   );
 }

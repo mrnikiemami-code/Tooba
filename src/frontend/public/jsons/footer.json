@@ -1,0 +1,94 @@
+{
+  "brand": {
+    "name": "شاپیوا",
+    "description": "بزرگترین فروشگاه آنلاین محصولات دیجیتال و الکترونیک با بهترین قیمت‌ها و ضمانت اصالت کالا",
+    "email": "support@shopeiva.com",
+    "phone": "۰۲۱-۱۲۳۴۵۶۷۸",
+    "address": "تهران، خیابان ولیعصر، پلاک ۱۲۳"
+  },
+  "socialLinks": [
+    { "name": "اینستاگرام", "icon": "Instagram", "url": "https://instagram.com", "color": "#E4405F" },
+    { "name": "تلگرام", "icon": "Telegram", "url": "https://telegram.org", "color": "#26A5E4" },
+    { "name": "توییتر", "icon": "Twitter", "url": "https://twitter.com", "color": "#1DA1F2" },
+    { "name": "لینکدین", "icon": "Linkedin", "url": "https://linkedin.com", "color": "#0077B5" },
+    { "name": "یوتیوب", "icon": "Youtube", "url": "https://youtube.com", "color": "#FF0000" },
+    { "name": "واتساپ", "icon": "Whatsapp", "url": "https://wa.me", "color": "#25D366" }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "محصولات دیجیتال",
+      "links": [
+        { "name": "لپ‌تاپ و اولترابوک", "href": "/category/laptop" },
+        { "name": "گوشی موبایل", "href": "/category/mobile" },
+        { "name": "تبلت و کتابخوان", "href": "/category/tablet" },
+        { "name": "میزانیتور", "href": "/category/monitor" },
+        { "name": "کیس و قطعات", "href": "/category/pc-parts" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "لوازم جانبی",
+      "links": [
+        { "name": "هدفون و هدست", "href": "/category/headphone" },
+        { "name": "کیبورد و ماوس", "href": "/category/keyboard-mouse" },
+        { "name": "اسپیکر و ساندبار", "href": "/category/speaker" },
+        { "name": "کاور و محافظ", "href": "/category/case" },
+        { "name": "شارژر و کابل", "href": "/category/charger" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "خانه و آشپزخانه",
+      "links": [
+        { "name": "لوازم برقی", "href": "/category/kitchen-appliances" },
+        { "name": "ظروف و سرویس", "href": "/category/dishes" },
+        { "name": "دکوراسیون", "href": "/category/decoration" },
+        { "name": "نورپردازی", "href": "/category/lighting" },
+        { "name": "تمیزکاری", "href": "/category/cleaning" }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "مد و پوشاک",
+      "links": [
+        { "name": "مردانه", "href": "/category/men" },
+        { "name": "زنانه", "href": "/category/women" },
+        { "name": "بچگانه", "href": "/category/kids" },
+        { "name": "اکسسوری", "href": "/category/accessories" },
+        { "name": "کفش و کیف", "href": "/category/shoes-bags" }
+      ]
+    }
+  ],
+  "services": [
+    { "icon": "Truck", "title": "ارسال سریع", "description": "ارسال در کمترین زمان ممکن", "color": "#E53935" },
+    { "icon": "Shield", "title": "ضمانت اصالت", "description": "تضمین اصالت کالا", "color": "#4CAF50" },
+    { "icon": "RefreshCw", "title": "۷ روز ضمانت بازگشت", "description": "بازگشت کالا بدون قید و شرط", "color": "#2196F3" },
+    { "icon": "Headphones", "title": "پشتیبانی ۲۴/۷", "description": "پاسخگویی شبانه روزی", "color": "#9C27B0" },
+    { "icon": "CreditCard", "title": "پرداخت امن", "description": "پرداخت مطمئن و امن", "color": "#FF9800" },
+    { "icon": "Award", "title": "کیفیت برتر", "description": "محصولات با کیفیت بالا", "color": "#00BCD4" }
+  ],
+  "usefulLinks": [
+    { "name": "درباره ما", "href": "/about" },
+    { "name": "تماس با ما", "href": "/contact" },
+    { "name": "سوالات متداول", "href": "/faq" },
+    { "name": "قوانین و مقررات", "href": "/rules" },
+    { "name": "حریم خصوصی", "href": "/privacy" },
+    { "name": "همکاری با ما", "href": "/cooperation" }
+  ],
+  "newsletter": {
+    "title": "خبرنامه",
+    "description": "با عضویت در خبرنامه، از تخفیف‌ها و محصولات جدید باخبر شوید",
+    "placeholder": "ایمیل خود را وارد کنید"
+  },
+  "paymentMethods": [
+    { "name": "ویزا", "icon": "CreditCard" },
+    { "name": "مسترکارت", "icon": "CreditCard" },
+    { "name": "پی‌پال", "icon": "CreditCard" },
+    { "name": "زرین‌پال", "icon": "CreditCard" }
+  ],
+  "footerBottom": {
+    "copyright": "© ۱۴۰۳ تمامی حقوق برای شاپیوا محفوظ است.",
+    "developer": "طراحی و توسعه توسط تیم شاپیوا"
+  }
+}

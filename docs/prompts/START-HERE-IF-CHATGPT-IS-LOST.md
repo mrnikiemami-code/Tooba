@@ -7,12 +7,12 @@ Current Phase: P04 — Experience Foundation
 Last Architect Accepted Task: TB-P04-T006
 Last Architect Accepted Gate: TB-P03-GATE
 Current Issued Task: TB-P04-T007
-Task State: ISSUED / AWAITING_ARCHITECT_ACCEPT
+Task State: REPAIR / AWAITING_ARCHITECT_ACCEPT
 Current Gate: NONE
 P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
-P04 is IN_PROGRESS; T001–T006 Architect-accepted; current issued work is TB-P04-T007 Shopeiva storefront live Home/Listing/PDP; preserve Shopeiva, connect Tooba backend, Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
+P04 is IN_PROGRESS; T001–T006 Architect-accepted; current issued work is TB-P04-T007 REPAIR (preserve real Shopeiva chrome on live Tooba APIs); Persian RTL first; Tooba Data Grid remains; core API integration by end of P06
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

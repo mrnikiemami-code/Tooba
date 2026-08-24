@@ -1,67 +1,28 @@
-import Link from "next/link";
 import "./storefront.css";
 import type { ReactNode } from "react";
-import type { StorefrontCategoryItem } from "./storefront-model.ts";
+import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
+import { StorefrontShopeivaFooter } from "./storefront-footer.tsx";
+import { StorefrontShopeivaHeader } from "./storefront-header.tsx";
 
 /**
- * پوستهٔ فروشگاهی با ساختار هدر/جستجو/رده/فوتر شبیه Shopeiva و توکن آبی Tooba.
+ * پوستهٔ فروشگاه با هدر/مگامنو/فوتر Shopeiva و عرض محتوای قالب.
  */
 export function StorefrontShell({
   categories,
   children,
-  activeCategoryId,
+  searchCatalog = [],
 }: {
   categories: StorefrontCategoryItem[];
   children: ReactNode;
-  activeCategoryId?: string;
+  searchCatalog?: StorefrontProductCard[];
 }) {
   return (
-    <div className="sf-shell">
-      <div className="sf-topbar">ارسال سریع سفارش‌های فروشگاهی · پشتیبانی خرید</div>
-      <header className="sf-header">
-        <div className="sf-header-row">
-          <Link className="sf-logo" href="/">
-            توبا
-          </Link>
-          <form className="sf-search" action="/products" method="get">
-            <input name="q" placeholder="جستجو در کالاهای فروشگاه" aria-label="جستجوی کالا" />
-            <button type="submit">جستجو</button>
-          </form>
-          <div className="sf-actions">
-            <span>سبد خرید</span>
-            <Link href="/admin/products">میزکار</Link>
-          </div>
-        </div>
-        <nav className="sf-cats" aria-label="رده‌ها">
-          <Link href="/products">همه کالاها</Link>
-          {categories.map((category) => (
-            <Link
-              key={category.categoryId}
-              href={`/products?categoryId=${category.categoryId}`}
-              className={activeCategoryId === category.categoryId ? "is-active" : undefined}
-            >
-              {category.name}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      {children}
-      <footer className="sf-footer">
-        <div className="sf-footer-inner">
-          <div>
-            <strong>فروشگاه توبا</strong>
-            <p>تجربهٔ ویترین از الگوی Shopeiva با دادهٔ زندهٔ Catalog، Offer، قیمت و موجودی.</p>
-          </div>
-          <div>
-            <p>درباره فروشگاه</p>
-            <p>راهنمای خرید</p>
-          </div>
-          <div>
-            <p>تماس با پشتیبانی</p>
-            <p>قوانین انتشار کالا</p>
-          </div>
-        </div>
-      </footer>
+    <div className="min-h-screen bg-[#f3f5f8] text-gray-900 flex flex-col">
+      <StorefrontShopeivaHeader categories={categories} searchCatalog={searchCatalog} />
+      <main className="flex-1 w-full">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6">{children}</div>
+      </main>
+      <StorefrontShopeivaFooter categories={categories} />
     </div>
   );
 }

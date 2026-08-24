@@ -40,10 +40,13 @@ export function storefrontHostOrigin(): string {
 }
 
 /**
- * نشانی تصویر نمایشی توسعه برای مرجع مات Media.
+ * نشانی تصویر نمایشی توسعه برای مرجع مات Media. حقیقت Catalog نیست.
  */
 export function storefrontMediaUrl(assetId: string | null | undefined): string {
-  const id = assetId && assetId !== "00000000-0000-0000-0000-000000000000" ? assetId : "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const id =
+    assetId && assetId !== "00000000-0000-0000-0000-000000000000"
+      ? assetId
+      : "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   return `${storefrontHostOrigin()}/v1/storefront/media/${id}`;
 }
 
@@ -77,11 +80,20 @@ function mapCard(value: unknown): StorefrontProductCard | null {
     mediaAssetId: mediaRaw == null ? null : asString(mediaRaw),
     primaryOfferId,
     sellerDisplayName: asString(readProp(item, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
-    offerAmountExclusiveOfTax: asNumber(readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax")),
+    offerAmountExclusiveOfTax: asNumber(
+      readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax") ??
+        readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax"),
+    ),
     currency: asString(readProp(item, "currency", "Currency"), "IRR"),
     availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
-    inStock: asBoolean(readProp(item, "inStock", "InStock")),
-    promotionLabel: promoRaw == null ? null : asString(promoRaw),
+    inStock: asBoolean(readProp(item, "inStock", "InStock") ?? readProp(item, "inStock", "InStock")),
+    promotionLabel:
+      promoRaw == null
+        ? (() => {
+            const hostPromo = readProp(item, "promotionLabel", "PromotionLabel");
+            return hostPromo == null ? null : asString(hostPromo);
+          })()
+        : asString(promoRaw),
   };
 }
 
@@ -126,15 +138,15 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
   if (!item) {
     return null;
   }
-  const products = Array.isArray(readProp(item, "featuredProducts", "FeaturedProducts"))
-    ? (readProp(item, "featuredProducts", "FeaturedProducts") as unknown[]).map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
-    : [];
-  const categories = Array.isArray(readProp(item, "categories", "Categories"))
-    ? (readProp(item, "categories", "Categories") as unknown[]).map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
-    : [];
+  const productsRaw = readProp(item, "featuredProducts", "FeaturedProducts");
+  const categoriesRaw = readProp(item, "categories", "Categories");
   return {
-    categories,
-    featuredProducts: products,
+    categories: Array.isArray(categoriesRaw)
+      ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+      : [],
+    featuredProducts: Array.isArray(productsRaw)
+      ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
     heroTitle: asString(readProp(item, "heroTitle", "HeroTitle"), "فروشگاه توبا"),
     heroSubtitle: asString(readProp(item, "heroSubtitle", "HeroSubtitle")),
   };
@@ -148,17 +160,17 @@ export function mapStorefrontListing(payload: unknown): StorefrontListingPage | 
   if (!item) {
     return null;
   }
-  const products = Array.isArray(readProp(item, "products", "Products"))
-    ? (readProp(item, "products", "Products") as unknown[]).map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
-    : [];
-  const categories = Array.isArray(readProp(item, "categories", "Categories"))
-    ? (readProp(item, "categories", "Categories") as unknown[]).map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
-    : [];
+  const productsRaw = readProp(item, "products", "Products");
+  const categoriesRaw = readProp(item, "categories", "Categories");
   const queryRaw = readProp(item, "query", "Query");
   const categoryRaw = readProp(item, "categoryId", "CategoryId");
   return {
-    categories,
-    products,
+    categories: Array.isArray(categoriesRaw)
+      ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+      : [],
+    products: Array.isArray(productsRaw)
+      ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
     query: queryRaw == null ? null : asString(queryRaw),
     categoryId: categoryRaw == null ? null : asString(categoryRaw),
   };
