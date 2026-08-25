@@ -106,6 +106,7 @@ public sealed class StorefrontCompositionTests
         var names = typeof(StorefrontProductDetailPage).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.Ordinal);
         Assert.Contains("PrimaryOffer", names);
         Assert.Contains("OtherSellers", names);
+        Assert.Contains("RelatedProducts", names);
         Assert.Contains("CartMutationEnabled", names);
         Assert.DoesNotContain("Price", names);
         Assert.DoesNotContain("Stock", names);
@@ -122,6 +123,38 @@ public sealed class StorefrontCompositionTests
         Assert.Contains("TotalCount", names);
         Assert.DoesNotContain("PriceFacet", names);
         Assert.DoesNotContain("BrandFacet", names);
+    }
+
+    [Fact]
+    public void Related_products_exclude_current_product_and_prefer_same_category()
+    {
+        var current = Guid.Parse("11111111-1111-7111-8111-111111111111");
+        var category = Guid.Parse("22222222-2222-7222-8222-222222222222");
+        var otherCategory = Guid.Parse("33333333-3333-7333-8333-333333333333");
+        StorefrontProductCard Card(Guid id, string slug, Guid? categoryId) => new(
+            id,
+            slug,
+            slug,
+            "رده",
+            categoryId,
+            null,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "فروشنده",
+            100m,
+            null,
+            "IRR",
+            1,
+            true,
+            null);
+
+        var related = StorefrontComposer.SelectRelatedProducts(
+            [Card(current, "current", category), Card(Guid.NewGuid(), "other", otherCategory), Card(Guid.NewGuid(), "same", category)],
+            current,
+            category);
+
+        Assert.Equal(["same", "other"], related.Select(item => item.Slug));
+        Assert.DoesNotContain(related, item => item.ProductId == current);
     }
 
     [Fact]

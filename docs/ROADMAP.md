@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001/T002/T003/T004/T005 ACCEPTED; TB-P05-T006 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001/T002/T003/T004/T005/T006 ACCEPTED; TB-P05-T007 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -128,7 +128,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-03 | Shopeiva Customer Panel live customer data | ACCEPTED (TB-P05-T003) |
 | P05-04 | Shopeiva-derived Admin operational surfaces | ACCEPTED (TB-P05-T004) |
 | P05-05 | Shopeiva commercial content and campaign surfaces | ACCEPTED (TB-P05-T005) |
-| P05-06 | Shopeiva storefront search and discovery | AWAITING_ARCHITECT_ACCEPT (TB-P05-T006) |
+| P05-06 | Shopeiva storefront search and discovery | ACCEPTED (TB-P05-T006) |
+| P05-07 | Shopeiva PDP live purchase experience | AWAITING_ARCHITECT_ACCEPT (TB-P05-T007) |
 
 ## Mandatory UX sequence (locked)
 
@@ -152,4 +153,5 @@ Do not skip. Later steps wait for new envelopes.
 | P05 Shopeiva Customer Panel | ACCEPTED (TB-P05-T003) |
 | P05 Admin Fast Connect | ACCEPTED (TB-P05-T004) |
 | P05 Commercial Content Fast Connect | ACCEPTED (TB-P05-T005) |
-| P05 Search and Discovery Fast Connect | AWAITING_ARCHITECT_ACCEPT (TB-P05-T006) |
+| P05 Search and Discovery Fast Connect | ACCEPTED (TB-P05-T006) |
+| P05 Product Detail Purchase Fast Connect | AWAITING_ARCHITECT_ACCEPT (TB-P05-T007) |

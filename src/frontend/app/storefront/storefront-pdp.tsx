@@ -20,8 +20,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
-import { StorefrontCartApiError, addOfferToCart } from "./storefront-cart-api.ts";
+import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
+import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 
 /**
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
@@ -131,8 +132,8 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                 <p className="text-xs font-medium truncate">{detail.brandName ?? "-"}</p>
               </div>
               <div className="p-2 bg-gray-50 rounded-xl">
-                <p className="text-[9px] text-gray-500">کد Offer</p>
-                <p className="text-xs font-medium truncate">{offer.offerId.slice(0, 8)}</p>
+                <p className="text-[9px] text-gray-500">فروشنده</p>
+                <p className="text-xs font-medium truncate">{offer.sellerDisplayName}</p>
               </div>
               <div className="p-2 bg-gray-50 rounded-xl">
                 <p className="text-[9px] text-gray-500">موجودی Offer</p>
@@ -168,7 +169,13 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                 <Minus className="w-4 h-4" />
               </button>
               <span className="text-sm font-bold">{qty.toLocaleString("fa-IR")}</span>
-              <button type="button" className="px-3 py-2" onClick={() => setQty((value) => value + 1)} aria-label="افزایش">
+              <button
+                type="button"
+                className="px-3 py-2 disabled:opacity-40"
+                disabled={qty >= offer.availableUnits}
+                onClick={() => setQty((value) => Math.min(offer.availableUnits, value + 1))}
+                aria-label="افزایش"
+              >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -190,13 +197,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                       setNote("به سبد زنده اضافه شد.");
                       router.push("/cart");
                     } catch (cause) {
-                      const message =
-                        cause instanceof StorefrontCartApiError
-                          ? cause.detail ?? cause.message
-                          : cause instanceof Error
-                            ? cause.message
-                            : "افزودن به سبد شکست خورد.";
-                      setNote(message);
+                      setNote(toCustomerCartMessage(cause));
                     } finally {
                       setBusy(false);
                     }
@@ -207,7 +208,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                 <ShoppingBag className="w-4 h-4" /> افزودن به سبد خرید
               </button>
             )}
-            {note ? <p className="text-xs text-gray-500">{note}</p> : null}
+            {note ? <p className="text-xs text-gray-500" role="status" aria-live="polite">{note}</p> : null}
             {detail.otherSellers.length > 0 ? (
               <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
                 <strong className="text-xs">فروشندگان دیگر همین کالا</strong>
@@ -248,6 +249,17 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
           )}
         </div>
       </div>
+      {detail.relatedProducts.length > 0 ? (
+        <section className="space-y-3" aria-labelledby="related-products-title">
+          <div className="flex items-center justify-between">
+            <h2 id="related-products-title" className="text-lg font-extrabold text-gray-900">محصولات مرتبط</h2>
+            <Link href="/products" className="text-xs font-bold text-[#2563EB]">مشاهده همه</Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {detail.relatedProducts.map((card) => <StorefrontProductCardView key={card.slug} card={card} />)}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

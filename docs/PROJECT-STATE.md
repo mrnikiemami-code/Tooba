@@ -541,4 +541,4 @@ docs/ai/tasks/TB-P05-T001-REPAIR.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: TB-P04-GATE ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005 ACCEPTED. TB-P05-T006 = AWAITING_ARCHITECT_ACCEPT: backend-owned storefront search/discovery with live category, seller, availability, sorting and pagination bindings in the locked Shopeiva UI. Do not invent TB-P05-T007; return RESULT and wait in the same Architect chat. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.
+Resume: TB-P04-GATE ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006 ACCEPTED. TB-P05-T007 = AWAITING_ARCHITECT_ACCEPT: locked Shopeiva PDP bound to live product/offer/seller/availability, OfferId cart flow, related products and ID-safe SEO. Do not invent TB-P05-T008; return RESULT and wait in the same Architect chat. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.

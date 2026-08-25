@@ -105,6 +105,7 @@ public sealed record StorefrontProductDetailPage(
     Guid SelectedVariantId,
     StorefrontOfferCandidate PrimaryOffer,
     IReadOnlyList<StorefrontAlternateOffer> OtherSellers,
+    IReadOnlyList<StorefrontProductCard> RelatedProducts,
     string SeoTitle,
     string SeoDescription,
     bool CartMutationEnabled);

@@ -131,6 +131,7 @@ export interface StorefrontProductDetailPage {
   selectedVariantId: string;
   primaryOffer: StorefrontOfferCandidate;
   otherSellers: StorefrontAlternateOffer[];
+  relatedProducts: StorefrontProductCard[];
   seoTitle: string;
   seoDescription: string;
   cartMutationEnabled: boolean;

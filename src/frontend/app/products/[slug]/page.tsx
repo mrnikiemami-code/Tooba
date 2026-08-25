@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { StorefrontShopeivaPdp } from "../../storefront/storefront-pdp.tsx";
 import { StorefrontShell } from "../../storefront/storefront-shell.tsx";
 import { loadStorefrontDetail, loadStorefrontHome } from "../../storefront/storefront-api.ts";
+import { buildProductStructuredData } from "../../storefront/storefront-product-seo.ts";
 
 /**
  * فرادادهٔ SEO از ترکیب Host؛ محتوا را از دمو نمی‌سازد.
@@ -31,20 +32,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: detail.title,
-    description: detail.seoDescription,
-    brand: detail.brandName,
-    offers: {
-      "@type": "Offer",
-      price: detail.primaryOffer.amountExclusiveOfTax,
-      priceCurrency: detail.primaryOffer.currency,
-      availability: detail.primaryOffer.availableUnits > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: detail.primaryOffer.sellerDisplayName },
-    },
-  };
+  const canonicalPath = `/products/${detail.slug}`;
+  const jsonLd = buildProductStructuredData(detail, canonicalPath);
 
   return (
     <StorefrontShell categories={home?.categories ?? []} searchCatalog={home?.featuredProducts ?? []}>

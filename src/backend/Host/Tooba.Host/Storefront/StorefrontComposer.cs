@@ -226,6 +226,10 @@ public sealed class StorefrontComposer
         }
 
         var (card, primary, others, description, brand, media, variantId) = bundle.Value;
+        var relatedProducts = SelectRelatedProducts(
+            await BuildProductCardsAsync(cancellationToken),
+            product.ProductId,
+            card.CategoryId);
         var seoTitle = string.IsNullOrWhiteSpace(product.SeoTitleSeam) ? card.Title : product.SeoTitleSeam;
         var seoDescription = string.IsNullOrWhiteSpace(description)
             ? $"{card.Title} از {card.SellerDisplayName}"
@@ -241,10 +245,24 @@ public sealed class StorefrontComposer
             variantId,
             primary,
             others,
+            relatedProducts,
             seoTitle!,
             seoDescription,
             CartMutationEnabled: true);
     }
+
+    /// <summary>
+    /// کارت‌های زندهٔ دیگر را با اولویت ردهٔ همان Product انتخاب می‌کند؛ شناسهٔ Product جاری هرگز در rail تکرار نمی‌شود.
+    /// </summary>
+    internal static IReadOnlyList<StorefrontProductCard> SelectRelatedProducts(
+        IReadOnlyList<StorefrontProductCard> cards,
+        Guid currentProductId,
+        Guid? categoryId)
+        => cards
+            .Where(item => item.ProductId != currentProductId)
+            .OrderByDescending(item => categoryId is Guid selected && item.CategoryId == selected)
+            .Take(10)
+            .ToList();
 
     private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(CancellationToken cancellationToken)
     {

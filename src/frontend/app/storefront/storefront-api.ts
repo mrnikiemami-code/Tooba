@@ -253,6 +253,7 @@ export function mapStorefrontDetail(payload: unknown): StorefrontProductDetailPa
     return null;
   }
   const othersRaw = readProp(item, "otherSellers", "OtherSellers");
+  const relatedRaw = readProp(item, "relatedProducts", "RelatedProducts");
   const mediaRaw = readProp(item, "mediaAssetIds", "MediaAssetIds");
   const brandRaw = readProp(item, "brandName", "BrandName");
   const descriptionRaw = readProp(item, "description", "Description");
@@ -278,6 +279,9 @@ export function mapStorefrontDetail(payload: unknown): StorefrontProductDetailPa
             inStock: asBoolean(readProp(other, "inStock", "InStock")),
           } satisfies StorefrontAlternateOffer;
         })
+      : [],
+    relatedProducts: Array.isArray(relatedRaw)
+      ? relatedRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
       : [],
     seoTitle: asString(readProp(item, "seoTitle", "SeoTitle")),
     seoDescription: asString(readProp(item, "seoDescription", "SeoDescription")),

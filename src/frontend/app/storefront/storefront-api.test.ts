@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { formatOfferAmount, mapStorefrontDetail, mapStorefrontHome, mapStorefrontListing } from "./storefront-api.ts";
+import { buildProductStructuredData } from "./storefront-product-seo.ts";
 
 test("home mapper keeps offer amount off a product price field", () => {
   const home = mapStorefrontHome({
@@ -87,14 +88,36 @@ test("detail mapper reads amount from primary offer only", () => {
         inStock: true,
       },
     ],
+    relatedProducts: [
+      {
+        productId: "internal-related-product",
+        slug: "related-shirt",
+        title: "پیراهن مرتبط",
+        categoryName: "پوشاک",
+        primaryOfferId: "internal-related-offer",
+        sellerPartyId: "internal-related-seller",
+        sellerDisplayName: "فروشگاه آرمان",
+        offerAmountExclusiveOfTax: 1850000,
+        currency: "IRR",
+        availableUnits: 2,
+        inStock: true,
+      },
+    ],
     seoTitle: "پیراهن",
     seoDescription: "کالای زنده",
     cartMutationEnabled: false,
   });
   assert.equal(detail?.primaryOffer.amountExclusiveOfTax, 1790000);
   assert.equal(detail?.otherSellers.length, 1);
+  assert.equal(detail?.relatedProducts[0]?.slug, "related-shirt");
   assert.equal(detail?.cartMutationEnabled, false);
   assert.equal(formatOfferAmount(1790000, "IRR").includes("ریال"), true);
+  assert.ok(detail);
+  const structuredData = JSON.stringify(buildProductStructuredData(detail, "/products/shirt"));
+  assert.equal(structuredData.includes("p1"), false);
+  assert.equal(structuredData.includes("o-cheap"), false);
+  assert.equal(structuredData.includes("s2"), false);
+  assert.match(structuredData, /"url":"\/products\/shirt"/);
 });
 
 test("listing mapper keeps backend discovery facets and pagination", () => {
