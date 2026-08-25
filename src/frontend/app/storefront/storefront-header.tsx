@@ -1,20 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Award,
+  Coffee,
   ChevronDown,
+  ChevronLeft,
+  Gift,
   Grid3X3,
   Heart,
   Menu,
+  Package,
   Search,
+  Shirt,
   ShoppingBag,
+  Smartphone,
   Sparkles,
+  Star,
+  Store,
   Tag,
+  TrendingUp,
+  Truck,
   User,
+  Watch,
+  Wrench,
   X,
 } from "lucide-react";
-import type { StorefrontCategoryItem } from "./storefront-model.ts";
+import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 
 /**
@@ -31,8 +44,11 @@ export function StorefrontShopeivaHeader({
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenCategories, setMobileOpenCategories] = useState<Record<string, boolean>>({ main: true });
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(navigationRoots[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
+  const [brands, setBrands] = useState<StorefrontBrandItem[]>([]);
+  const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const refreshBadge = () => {
@@ -46,6 +62,37 @@ export function StorefrontShopeivaHeader({
   }, []);
 
   useEffect(() => {
+    void fetch("/v1/storefront/brands", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as unknown : null)
+      .then((payload) => {
+        if (!Array.isArray(payload)) return setBrands([]);
+        setBrands(payload.flatMap((item): StorefrontBrandItem[] => {
+          if (!item || typeof item !== "object") return [];
+          const row = item as Record<string, unknown>;
+          const brandId = String(row.brandId ?? row.BrandId ?? "");
+          const slug = String(row.slug ?? row.Slug ?? "");
+          const name = String(row.name ?? row.Name ?? "");
+          if (!brandId || !slug || !name) return [];
+          return [{ brandId, slug, name, productCount: Number(row.productCount ?? row.ProductCount ?? 0) }];
+        }));
+      })
+      .catch(() => setBrands([]));
+  }, []);
+
+  const closeMegaMenu = useCallback(() => {
+    setMegaOpen(false);
+    setSelectedCategoryId(null);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", closeMegaMenu, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", closeMegaMenu);
+      if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    };
+  }, [closeMegaMenu]);
+
+  useEffect(() => {
     if (categories.length === 0) {
       setSelectedCategoryId(null);
       return;
@@ -57,6 +104,39 @@ export function StorefrontShopeivaHeader({
 
   const selectedCategory = navigationRoots.find((item) => item.categoryId === selectedCategoryId) ?? navigationRoots[0] ?? null;
   const childCategories = categories.filter((item) => item.parentCategoryId === selectedCategory?.categoryId);
+
+  const categoryIcon = (name: string) => {
+    if (name.includes("دیجیتال") || name.includes("موبایل")) return Smartphone;
+    if (name.includes("اکسسوری")) return Watch;
+    if (name.includes("خانه")) return Coffee;
+    if (name.includes("خودرو")) return Truck;
+    if (name.includes("ابزار")) return Wrench;
+    if (name.includes("مد") || name.includes("پوشاک")) return Shirt;
+    return Package;
+  };
+
+  const openMegaMenu = () => {
+    if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    setMegaOpen(true);
+    setSelectedCategoryId((current) => current ?? navigationRoots[0]?.categoryId ?? null);
+  };
+
+  const scheduleMegaClose = () => {
+    if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    megaCloseTimer.current = setTimeout(closeMegaMenu, 150);
+  };
+
+  const toggleMobileCategory = (categoryId: string) => {
+    setMobileOpenCategories((current) => ({ ...current, [categoryId]: !current[categoryId] }));
+  };
+
+  const navItems = [
+    { name: "حراجی", href: "/offers", icon: Tag },
+    { name: "پرطرفدار", href: "/trending", icon: TrendingUp },
+    { name: "جدیدترین", href: "/new-products", icon: Sparkles },
+    { name: "برندها", href: "/brands", icon: Award },
+    { name: "فروشندگان", href: "/sellers", icon: Store },
+  ];
 
   return (
     <div className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -127,11 +207,11 @@ export function StorefrontShopeivaHeader({
           </div>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-1 pb-3" aria-label="ناوبری اصلی فروشگاه">
-          <div className="relative" onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)}>
+        <nav className="hidden lg:flex items-center gap-1 pb-2" aria-label="ناوبری اصلی فروشگاه">
+          <div onMouseEnter={openMegaMenu} onMouseLeave={scheduleMegaClose}>
             <button
               type="button"
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                 megaOpen ? "bg-[#2563EB]/15 text-[#2563EB]" : "text-gray-600 hover:bg-gray-50"
               }`}
               aria-expanded={megaOpen}
@@ -145,151 +225,228 @@ export function StorefrontShopeivaHeader({
             {megaOpen ? (
               <div
                 id="storefront-mega-menu"
-                className="absolute right-0 top-full z-50 w-[min(1100px,90vw)] bg-white shadow-2xl border border-gray-200 rounded-2xl p-5"
+                onMouseEnter={openMegaMenu}
+                onMouseLeave={scheduleMegaClose}
+                className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border-t border-gray-200"
               >
-                <div className="grid grid-cols-12 gap-5">
-                  <div className="col-span-3 space-y-1 max-h-[380px] overflow-auto">
-                    {categories.length === 0 ? (
-                      <p className="text-xs text-gray-400 px-3 py-2">رده‌ای از Catalog نیست.</p>
-                    ) : (
-                      navigationRoots.map((cat) => (
-                        <button
-                          key={cat.categoryId}
-                          type="button"
-                          onMouseEnter={() => setSelectedCategoryId(cat.categoryId)}
-                          className={`w-full text-right px-3 py-2 rounded-lg text-xs ${
-                            selectedCategory?.categoryId === cat.categoryId
-                              ? "bg-[#2563EB] text-white"
-                              : "text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          {cat.name}
-                        </button>
-                      ))
-                    )}
-                  </div>
-                  <div className="col-span-6 border-x border-gray-100 px-4 max-h-[380px] overflow-auto">
-                    <p className="font-bold text-sm mb-3">{selectedCategory?.name ?? "یک رده را انتخاب کنید"}</p>
-                    {selectedCategory ? (
-                      <Link
-                        href={`/products?categoryId=${selectedCategory.categoryId}`}
-                        className="inline-flex mb-4 text-[11px] font-bold text-[#2563EB]"
-                      >
-                        مشاهده همهٔ این رده
-                      </Link>
-                    ) : null}
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                      {childCategories.map((sub) => (
-                        <div key={sub.categoryId}>
-                          <Link
-                            href={`/products?categoryId=${sub.categoryId}`}
-                            className="text-xs font-bold text-gray-800 hover:text-[#2563EB]"
-                          >
-                            {sub.name}
+                <style>{`
+                  .mm-scroll::-webkit-scrollbar { width: 5px; }
+                  .mm-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+                  .mm-scroll::-webkit-scrollbar-thumb { background: #2563EB; border-radius: 10px; }
+                  .mm-scroll { scrollbar-width: thin; scrollbar-color: #2563EB #f1f1f1; }
+                `}</style>
+                <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-5">
+                  <div className="grid grid-cols-12 gap-6">
+                    <div className="col-span-3 flex flex-col max-h-[460px]">
+                      <div className="shrink-0 pb-2.5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-0.5 h-4 bg-[#2563EB] rounded-full" />
+                          <span className="font-bold text-xs text-gray-500 tracking-wider">دسته‌بندی‌ها</span>
+                        </div>
+                        <Link href="/products" onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
+                          همه
+                        </Link>
+                      </div>
+                      <div className="flex-1 overflow-y-auto mm-scroll space-y-0.5 min-h-0 pl-0.5">
+                        {navigationRoots.map((cat) => {
+                          const Icon = categoryIcon(cat.name);
+                          const selected = selectedCategory?.categoryId === cat.categoryId;
+                          return (
+                            <button
+                              key={cat.categoryId}
+                              type="button"
+                              onMouseEnter={() => setSelectedCategoryId(cat.categoryId)}
+                              onClick={() => {
+                                window.location.href = `/products?categoryId=${cat.categoryId}`;
+                                closeMegaMenu();
+                              }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-right transition-all ${
+                                selected ? "bg-[#2563EB] text-white shadow-sm" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5">
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${selected ? "bg-white/20" : "bg-gray-100 text-gray-500"}`}>
+                                  <Icon className="w-4 h-4" />
+                                </span>
+                                <span className="text-xs">{cat.name}</span>
+                              </span>
+                              {selected ? <ChevronDown className="w-3 h-3 rotate-90 text-white/50" /> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="col-span-6 flex flex-col border-x border-gray-100 px-5 max-h-[460px]">
+                      {selectedCategory ? (
+                        <>
+                          <div className="shrink-0 pb-2.5 flex items-center justify-between pt-0.5">
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const Icon = categoryIcon(selectedCategory.name);
+                                return <span className="w-5 h-5 rounded-lg bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB]"><Icon className="w-3.5 h-3.5" /></span>;
+                              })()}
+                              <span className="font-bold text-sm text-gray-800">{selectedCategory.name}</span>
+                            </div>
+                            <Link href={`/products?categoryId=${selectedCategory.categoryId}`} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
+                              مشاهده همه
+                            </Link>
+                          </div>
+                          <div className="flex-1 overflow-y-auto mm-scroll min-h-0">
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                              {childCategories.map((sub) => {
+                                const descendants = categories.filter((category) => category.parentCategoryId === sub.categoryId);
+                                return (
+                                  <div key={sub.categoryId}>
+                                    <Link
+                                      href={`/products?categoryId=${sub.categoryId}`}
+                                      onClick={closeMegaMenu}
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-[#2563EB] transition-colors mb-1.5"
+                                    >
+                                      <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                      {sub.name}
+                                    </Link>
+                                    {descendants.length > 0 ? (
+                                      <div className="space-y-1 mr-3.5">
+                                        {descendants.slice(0, 4).map((child) => (
+                                          <Link
+                                            key={child.categoryId}
+                                            href={`/products?categoryId=${child.categoryId}`}
+                                            onClick={closeMegaMenu}
+                                            className="block text-[11px] text-gray-400 hover:text-[#2563EB] transition-colors truncate py-0.5"
+                                          >
+                                            {child.name}
+                                          </Link>
+                                        ))}
+                                        {descendants.length > 4 ? (
+                                          <Link href={`/products?categoryId=${sub.categoryId}`} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] font-semibold hover:underline">
+                                            + {(descendants.length - 4).toLocaleString("fa-IR")} بیشتر
+                                          </Link>
+                                        ) : null}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                          <p className="text-sm font-medium">دسته‌ای انتخاب نشده</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="col-span-3 space-y-3 max-h-[460px]">
+                      <div className="bg-gradient-to-br from-[#2563EB] via-[#1d4ed8] to-[#1e40af] rounded-2xl p-4 text-white text-center shadow-lg shadow-[#2563EB]/20 relative overflow-hidden">
+                        <div className="relative z-10">
+                          <div className="w-10 h-10 mx-auto mb-2.5 rounded-xl bg-white/15 flex items-center justify-center">
+                            <Gift className="w-5 h-5 text-amber-300" />
+                          </div>
+                          <h4 className="font-bold text-sm">پیشنهادهای فروشگاه</h4>
+                          <p className="text-[11px] mt-1 opacity-80">کالاهای دارای پیشنهاد فعال</p>
+                          <Link href="/offers" onClick={closeMegaMenu} className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-white text-[#2563EB] rounded-xl text-[11px] font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
+                            مشاهده <ChevronLeft className="w-3 h-3" />
                           </Link>
-                          <div className="mt-1 space-y-1">
-                            {categories
-                              .filter((category) => category.parentCategoryId === sub.categoryId)
-                              .map((child) => (
-                                <Link
-                                  key={child.categoryId}
-                                  href={`/products?categoryId=${child.categoryId}`}
-                                  className="block text-[11px] text-gray-400 hover:text-[#2563EB]"
-                                >
-                                  {child.name}
-                                </Link>
-                              ))}
+                        </div>
+                      </div>
+                      {brands.length > 0 ? (
+                        <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                          <div className="flex items-center gap-1.5 mb-2.5">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            <span className="font-bold text-xs text-gray-700">برندهای محبوب</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {brands.slice(0, 6).map((brand) => (
+                              <Link
+                                key={brand.brandId}
+                                href={`/brand/${brand.slug}`}
+                                onClick={closeMegaMenu}
+                                className="px-2.5 py-1 bg-white text-gray-500 rounded-lg text-[10px] font-medium hover:bg-[#2563EB] hover:text-white transition-all border border-gray-100"
+                              >
+                                {brand.name}
+                              </Link>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {childCategories.map((category) => (
-                        <Link
-                          key={category.categoryId}
-                          href={`/products?categoryId=${category.categoryId}`}
-                          className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#2563EB] text-[11px] font-medium"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#2563EB] to-[#1e40af] text-white p-4 text-center">
-                      <Tag className="w-5 h-5 mx-auto mb-2" />
-                      <p className="font-bold text-sm">پیشنهادهای فروشگاه</p>
-                      <p className="text-[11px] opacity-80 mt-1">رده‌های زنده Catalog در پوستهٔ Shopeiva</p>
-                      <Link href="/products" className="mt-3 inline-block px-4 py-1.5 bg-white text-[#2563EB] rounded-xl text-[11px] font-bold">
-                        مشاهده کالاها
-                      </Link>
+                      ) : null}
                     </div>
                   </div>
                 </div>
               </div>
             ) : null}
           </div>
-          {navigationRoots.map((category) => (
-            <Link
-              key={category.categoryId}
-              href={`/products?categoryId=${category.categoryId}`}
-              className="px-2.5 py-1.5 rounded-lg text-xs text-gray-600 hover:bg-gray-50 whitespace-nowrap"
-            >
-              {category.name}
-            </Link>
-          ))}
-          <Link href="/products" className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#2563EB]">
-            همه کالاها
-          </Link>
+          <div className="flex items-center gap-0.5 mr-1.5 pr-1.5 border-r border-gray-200">
+            {navItems.map((item) => (
+              <Link key={item.name} href={item.href} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all">
+                <item.icon className="w-3.5 h-3.5" />
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </div>
         </nav>
       </div>
 
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-[80] bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute right-0 top-0 bottom-0 w-80 bg-white p-4" onClick={(event) => event.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <strong>منو</strong>
-              <button type="button" onClick={() => setMobileOpen(false)} aria-label="بستن">
-                <X className="w-5 h-5" />
-              </button>
+      <div className={`fixed inset-0 z-[150] transition-all lg:hidden ${mobileOpen ? "visible" : "invisible"}`}>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+        <div className={`absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl transform transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "translate-x-full"} flex flex-col`}>
+          <div className="flex pr-3 justify-between items-center border-b border-gray-200">
+            <div className="relative w-24 h-16 flex items-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/logos/logo.svg" alt="توبا" className="w-24 h-auto" />
             </div>
-            <form action="/products" method="get" className="mb-4">
+            <button type="button" onClick={() => setMobileOpen(false)} className="text-gray-500 p-4" aria-label="بستن">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-1">
+            <form action="/products" method="get" className="mb-2">
               <div className="relative">
-                <input
-                  name="q"
-                  placeholder="جستجو در کالاها..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-10 pl-3 text-sm"
-                  aria-label="جستجوی کالا در موبایل"
-                />
+                <input name="q" placeholder="جستجو در کالاها..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-10 pl-3 text-sm" aria-label="جستجوی کالا در موبایل" />
                 <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
               </div>
             </form>
-            {navigationRoots.map((category) => (
-              <div key={category.categoryId} className="border-b py-2">
-                <Link
-                  href={`/products?categoryId=${category.categoryId}`}
-                  className="block text-sm font-bold"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {category.name}
-                </Link>
-                {categories
-                  .filter((child) => child.parentCategoryId === category.categoryId)
-                  .map((child) => (
-                    <Link
-                      key={child.categoryId}
-                      href={`/products?categoryId=${child.categoryId}`}
-                      className="block py-1 pe-3 text-xs text-gray-500"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {child.name}
-                    </Link>
-                  ))}
-              </div>
+            <div className="border-b border-gray-100 pb-2">
+              <button type="button" onClick={() => toggleMobileCategory("main")} className="flex justify-between items-center w-full p-3 rounded-xl hover:bg-gray-100 text-gray-800 font-medium">
+                <span className="flex items-center gap-2"><Grid3X3 className="w-5 h-5" /> دسته‌بندی‌ها</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileOpenCategories.main ? "rotate-180" : ""}`} />
+              </button>
+              {mobileOpenCategories.main ? (
+                <div className="pr-3 mt-1 space-y-3">
+                  {navigationRoots.slice(0, 8).map((category) => {
+                    const children = categories.filter((child) => child.parentCategoryId === category.categoryId);
+                    const Icon = categoryIcon(category.name);
+                    return (
+                      <div key={category.categoryId} className="border-b border-gray-100 pb-2 last:border-0">
+                        <button type="button" onClick={() => toggleMobileCategory(category.categoryId)} className="flex justify-between items-center w-full p-2 rounded-xl hover:bg-gray-100">
+                          <span className="flex items-center gap-2 text-sm font-semibold text-gray-800"><Icon className="w-4 h-4 text-gray-400" />{category.name}</span>
+                          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${mobileOpenCategories[category.categoryId] ? "rotate-180" : ""}`} />
+                        </button>
+                        {mobileOpenCategories[category.categoryId] ? (
+                          <div className="grid grid-cols-2 gap-1 pr-3 mt-1">
+                            {children.slice(0, 10).map((child) => (
+                              <Link key={child.categoryId} href={`/products?categoryId=${child.categoryId}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 p-2 text-xs text-gray-500 hover:text-[#2563EB] rounded-xl hover:bg-gray-100 transition">
+                                <Icon className="w-3.5 h-3.5" /> {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+            {navItems.map((item) => (
+              <Link key={item.name} href={item.href} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
+                <item.icon className="w-5 h-5 text-gray-400" />
+                <span>{item.name}</span>
+              </Link>
             ))}
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

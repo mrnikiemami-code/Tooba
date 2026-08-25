@@ -52,7 +52,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-T010 (Bridge-V2) = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T011 (Bridge-V2) = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -79,7 +79,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T010 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T011 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -542,4 +542,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 are Architect-accepted. TB-P05-T010 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT: locked Shopeiva PDP now maps distinct Catalog descriptions, selected-variant axes and specifications, selected Offer/seller/Pricing/Inventory/Promotion truth, other sellers, media, related products, and SEO; fixed PDP/card ratings are removed because Review/Rating is not available in backend, and AggregateRating is absent. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009, TB-P05-T009-REPAIR-01, TB-P05-GOV-MIGRATION-BRIDGE-V2, and TB-P05-T010 are Architect-accepted. TB-P05-T011 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT: Mega Menu now ports the actual purchased Shopeiva full-width 3/6/3 desktop structure, icon category rail, hierarchy pane, honest promo/live-brand region, stable hover behavior, and mobile accordion while retaining live Catalog categories and Tooba blue. No product, price, stock, seller, rating, or fabricated discount data appears in navigation. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
