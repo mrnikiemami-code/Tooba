@@ -14,7 +14,7 @@ P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
 P04 = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004/T005/T006 ACCEPTED; TB-P05-T007 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; live backend-composed PDP, OfferId cart flow, related products and ID-safe SEO; Persian RTL; do not invent TB-P05-T008
+P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004/T005/T006/T007 ACCEPTED; TB-P05-T008 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; backend-authoritative customer orders, payment states and purchase continuity; Persian RTL; do not invent TB-P05-T009
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

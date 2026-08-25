@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CUSTOMER_DEV_ACTOR_HEADER,
+  customerStatusClasses,
+  formatCustomerOrderStatus,
   mapCustomerDashboard,
   mapCustomerOrder,
   mapCustomerOrderDetail,
@@ -19,6 +21,13 @@ test("customer mapper keeps checkout identity and snapshot amount", () => {
   assert.equal(order?.checkoutId, "checkout-1");
   assert.equal(order?.payableAmount, 1_850_000);
   assert.equal("price" in (order ?? {}), false);
+});
+
+test("customer payment presentation preserves backend pending paid and failed states", () => {
+  assert.equal(formatCustomerOrderStatus("PendingPayment"), "در انتظار پرداخت");
+  assert.equal(formatCustomerOrderStatus("Paid"), "پرداخت‌شده");
+  assert.equal(formatCustomerOrderStatus("Failed"), "پرداخت ناموفق");
+  assert.match(customerStatusClasses("Failed"), /red/);
 });
 
 test("customer dashboard exposes capability availability without fake counts", () => {
@@ -41,6 +50,7 @@ test("customer detail maps seller and shipping snapshots", () => {
   const page = mapCustomerOrderDetail({
     checkoutId: "checkout-1",
     reference: "ORD-1",
+    paymentState: "Failed",
     recipientName: "مشتری",
     postalAddress: "تهران",
     sellerOrders: [{
@@ -52,6 +62,7 @@ test("customer detail maps seller and shipping snapshots", () => {
   assert.equal(page?.sellerOrders[0]?.sellerDisplayName, "فروشگاه آرمان");
   assert.equal(page?.sellerOrders[0]?.lines[0]?.quantity, 2);
   assert.equal(page?.postalAddress, "تهران");
+  assert.equal(page?.paymentState, "Failed");
 });
 
 test("customer profile remains read-only when backend has no write capability", () => {

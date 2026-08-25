@@ -92,6 +92,17 @@ function ConfirmationBody() {
           </button>
         ) : null}
         {error ? <p className="text-sm text-red-600 mt-3">{error}</p> : null}
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Link
+            href={`/customer-panel/orders/${current.checkoutId}`}
+            className="px-5 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] text-sm font-bold"
+          >
+            مشاهده در سفارش‌های من
+          </Link>
+          <Link href="/products" className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold">
+            ادامه خرید
+          </Link>
+        </div>
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-5 text-sm space-y-2">
         <p>

@@ -203,6 +203,16 @@ public interface IPaymentDirectory
     /// پرداخت را پس از احراز هویت می‌خواند.
     /// </summary>
     Task<PaymentSnapshot?> GetAsync(Guid paymentId, Guid actorUserId, Guid? buyerPartyId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آخرین پرداخت checkout را پس از احراز مالکیت سفارش برمی‌گرداند تا مصرف‌کننده وضعیت واقعی
+    /// `PendingPayment`، `Paid` یا `Failed` را از ماژول Payment بخواند و از وضعیت Order حدس نزند.
+    /// </summary>
+    Task<PaymentSnapshot?> GetLatestForCheckoutAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -4,6 +4,8 @@ using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
+using Tooba.Payment.Application;
+using Tooba.Payment.Domain;
 
 namespace Tooba.Host.Customer;
 
@@ -16,6 +18,7 @@ public sealed class CustomerPanelComposer
     private readonly OrderDbContext _orders;
     private readonly CatalogDbContext _catalog;
     private readonly IPartyLookupGateway _parties;
+    private readonly IPaymentDirectory _payments;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -23,11 +26,13 @@ public sealed class CustomerPanelComposer
     public CustomerPanelComposer(
         OrderDbContext orders,
         CatalogDbContext catalog,
-        IPartyLookupGateway parties)
+        IPartyLookupGateway parties,
+        IPaymentDirectory payments)
     {
         _orders = orders;
         _catalog = catalog;
         _parties = parties;
+        _payments = payments;
     }
 
     /// <summary>
@@ -36,7 +41,11 @@ public sealed class CustomerPanelComposer
     public async Task<CustomerDashboardPage> GetDashboardAsync(Guid actorUserId, CancellationToken cancellationToken)
     {
         var groups = await LoadGroupsAsync(actorUserId, cancellationToken);
-        var orders = groups.Select(MapListItem).ToList();
+        var orders = new List<CustomerOrderListItem>(groups.Count);
+        foreach (var group in groups)
+        {
+            orders.Add(await MapListItemAsync(group, actorUserId, cancellationToken));
+        }
         var displayName = groups
             .OrderByDescending(x => x.SubmittedAt)
             .Select(x => x.RecipientName)
@@ -79,8 +88,17 @@ public sealed class CustomerPanelComposer
     /// </summary>
     public async Task<IReadOnlyList<CustomerOrderListItem>> ListOrdersAsync(
         Guid actorUserId,
-        CancellationToken cancellationToken) =>
-        (await LoadGroupsAsync(actorUserId, cancellationToken)).Select(MapListItem).ToList();
+        CancellationToken cancellationToken)
+    {
+        var groups = await LoadGroupsAsync(actorUserId, cancellationToken);
+        var orders = new List<CustomerOrderListItem>(groups.Count);
+        foreach (var group in groups)
+        {
+            orders.Add(await MapListItemAsync(group, actorUserId, cancellationToken));
+        }
+
+        return orders;
+    }
 
     /// <summary>
     /// جزئیات checkout را فقط در صورت مالکیت User نشست ترکیب می‌کند.
@@ -100,6 +118,13 @@ public sealed class CustomerPanelComposer
         {
             return null;
         }
+
+        var payment = await _payments.GetLatestForCheckoutAsync(
+            group.CheckoutId,
+            actorUserId,
+            group.BuyerPartyId,
+            cancellationToken);
+        var paymentState = PaymentState(payment);
 
         var variantIds = group.SellerOrders
             .SelectMany(x => x.Lines)
@@ -153,13 +178,13 @@ public sealed class CustomerPanelComposer
                 sellerOrder.SellerPartyId,
                 sellerName,
                 sellerOrder.Status.ToString(),
-                PaymentState(sellerOrder.Status),
+                PaymentState(payment, sellerOrder.SellerOrderId),
                 sellerOrder.GrandTotalSnapshot,
                 sellerOrder.Currency,
                 lineViews));
         }
 
-        var listItem = MapListItem(group);
+        var listItem = MapListItem(group, paymentState);
         return new CustomerOrderDetailPage(
             group.CheckoutId,
             listItem.Reference,
@@ -192,14 +217,22 @@ public sealed class CustomerPanelComposer
             .Take(200)
             .ToListAsync(cancellationToken);
 
-    private static CustomerOrderListItem MapListItem(CheckoutGroup group)
+    private async Task<CustomerOrderListItem> MapListItemAsync(
+        CheckoutGroup group,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _payments.GetLatestForCheckoutAsync(
+            group.CheckoutId,
+            actorUserId,
+            group.BuyerPartyId,
+            cancellationToken);
+        return MapListItem(group, PaymentState(payment));
+    }
+
+    private static CustomerOrderListItem MapListItem(CheckoutGroup group, string payment)
     {
         var orders = group.SellerOrders;
-        var payment = orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
-            ? "Paid"
-            : orders.Any(x => x.Status == SellerOrderStatus.Cancelled)
-                ? "Cancelled"
-                : "PendingPayment";
         var statuses = orders.Select(x => x.Status).Distinct().ToList();
         var status = statuses.Count == 1 ? statuses[0].ToString() : "Mixed";
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
@@ -215,10 +248,16 @@ public sealed class CustomerPanelComposer
             status);
     }
 
-    private static string PaymentState(SellerOrderStatus status) =>
-        status == SellerOrderStatus.Paid
-            ? "Paid"
-            : status == SellerOrderStatus.Cancelled
-                ? "Cancelled"
-                : "PendingPayment";
+    private static string PaymentState(PaymentSnapshot? payment) =>
+        payment?.Status switch
+        {
+            PaymentStatus.Succeeded => "Paid",
+            PaymentStatus.Failed or PaymentStatus.Cancelled => "Failed",
+            _ => "PendingPayment",
+        };
+
+    private static string PaymentState(PaymentSnapshot? payment, Guid sellerOrderId) =>
+        payment is null || payment.Allocations.Any(x => x.SellerOrderId == sellerOrderId)
+            ? PaymentState(payment)
+            : "PendingPayment";
 }

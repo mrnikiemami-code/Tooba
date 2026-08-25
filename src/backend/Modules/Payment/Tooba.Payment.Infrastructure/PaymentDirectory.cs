@@ -175,6 +175,41 @@ public sealed class PaymentDirectory : IPaymentDirectory
             allocations.Select(x => new PaymentAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency)).ToArray());
     }
 
+    /// <inheritdoc />
+    public async Task<PaymentSnapshot?> GetLatestForCheckoutAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        CancellationToken cancellationToken)
+    {
+        var payable = await _orders.GetPayableAsync(checkoutId, actorUserId, buyerPartyId, cancellationToken);
+        if (payable is null)
+        {
+            return null;
+        }
+
+        var payment = await _db.Payments.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (payment is null)
+        {
+            return null;
+        }
+
+        var allocations = await _db.Allocations.AsNoTracking()
+            .Where(x => x.PaymentId == payment.PaymentId)
+            .ToListAsync(cancellationToken);
+        return new PaymentSnapshot(
+            payment.PaymentId,
+            payment.CheckoutId,
+            payment.Amount,
+            payment.Currency,
+            payment.Status,
+            payment.ProviderCode,
+            allocations.Select(x => new PaymentAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency)).ToArray());
+    }
+
     private async Task EnsureActorCanSeeAsync(
         CustomerPayment payment,
         Guid actorUserId,

@@ -116,6 +116,8 @@ export function formatCustomerOrderStatus(status: string): string {
     case "PendingPayment":
     case "Submitted":
       return "در انتظار پرداخت";
+    case "Failed":
+      return "پرداخت ناموفق";
     case "ReservationRequested":
       return "در انتظار بررسی";
     case "Cancelled":
@@ -124,6 +126,19 @@ export function formatCustomerOrderStatus(status: string): string {
       return "در حال پردازش";
     default:
       return status || "نامشخص";
+  }
+}
+
+/** رنگ وضعیت backend را بدون استنتاج وضعیت تجاری در UI برمی‌گرداند. */
+export function customerStatusClasses(status: string): string {
+  switch (status) {
+    case "Paid":
+      return "bg-emerald-50 text-emerald-700";
+    case "Failed":
+    case "Cancelled":
+      return "bg-red-50 text-red-700";
+    default:
+      return "bg-amber-50 text-amber-700";
   }
 }
 

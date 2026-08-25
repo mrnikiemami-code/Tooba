@@ -5,12 +5,13 @@ import { ChevronLeft, Package, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   type CustomerOrderListItem,
+  customerStatusClasses,
   formatCustomerMoney,
   formatCustomerOrderStatus,
   loadCustomerOrders,
 } from "../customer-api";
 
-const filters = ["همه", "پرداخت‌شده", "در انتظار پرداخت", "لغو شده"] as const;
+const filters = ["همه", "پرداخت‌شده", "در انتظار پرداخت", "پرداخت ناموفق"] as const;
 
 /**
  * فهرست سفارش Shopeiva با تب‌ها و ردیف‌های جمع‌شوندهٔ متصل به Host.
@@ -44,7 +45,7 @@ export default function CustomerOrdersPage() {
       <section className="bg-white rounded-2xl border border-gray-100 p-3 md:p-5 shadow-sm">
         <div className="grid grid-cols-3 gap-2 mb-4">
           <StatusSummary label="کل سفارش‌ها" value={rows?.length ?? 0} color="blue" />
-          <StatusSummary label="در انتظار پرداخت" value={rows?.filter((x) => x.paymentState !== "Paid").length ?? 0} color="amber" />
+          <StatusSummary label="در انتظار پرداخت" value={rows?.filter((x) => x.paymentState === "PendingPayment").length ?? 0} color="amber" />
           <StatusSummary label="پرداخت‌شده" value={rows?.filter((x) => x.paymentState === "Paid").length ?? 0} color="green" />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-3 border-b border-gray-100">
@@ -85,9 +86,10 @@ export default function CustomerOrdersPage() {
                     {new Date(order.submittedAt).toLocaleDateString("fa-IR")} · {order.itemCount.toLocaleString("fa-IR")} کالا
                   </p>
                 </div>
-                <span className="text-xs font-bold text-[#2563EB] bg-blue-50 rounded-lg px-3 py-1.5">
+                <span className={`text-xs font-bold rounded-lg px-3 py-1.5 ${customerStatusClasses(order.paymentState)}`}>
                   {formatCustomerOrderStatus(order.paymentState)}
                 </span>
+                <span className="text-xs text-gray-500">سفارش: {formatCustomerOrderStatus(order.status)}</span>
                 <strong className="text-sm min-w-36 text-left">{formatCustomerMoney(order.payableAmount, order.currency)}</strong>
                 <ChevronLeft className="w-4 h-4 text-gray-400" />
               </Link>

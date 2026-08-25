@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   type CustomerOrderDetailPage,
+  customerStatusClasses,
   formatCustomerMoney,
   formatCustomerOrderStatus,
   loadCustomerOrderDetail,
@@ -53,9 +54,14 @@ export default function CustomerOrderDetail() {
             <h1 className="text-lg font-black mt-1">{page.reference}</h1>
             <p className="text-xs text-gray-500 mt-1">{new Date(page.submittedAt).toLocaleString("fa-IR")}</p>
           </div>
-          <span className="bg-blue-50 text-[#2563EB] rounded-xl px-4 py-2 text-sm font-bold">
-            {formatCustomerOrderStatus(page.paymentState)}
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span className={`rounded-xl px-4 py-2 text-sm font-bold ${customerStatusClasses(page.paymentState)}`}>
+              پرداخت: {formatCustomerOrderStatus(page.paymentState)}
+            </span>
+            <span className="bg-blue-50 text-[#2563EB] rounded-xl px-4 py-2 text-sm font-bold">
+              سفارش: {formatCustomerOrderStatus(page.status)}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-5">
@@ -72,7 +78,10 @@ export default function CustomerOrderDetail() {
                 <Store className="w-5 h-5 text-[#2563EB]" />
                 <strong className="text-sm">{seller.sellerDisplayName}</strong>
                 <span className="text-xs text-gray-400">{seller.orderNumber}</span>
-                <span className="me-auto text-xs font-bold">{formatCustomerOrderStatus(seller.status)}</span>
+                <span className="me-auto text-xs font-bold">سفارش: {formatCustomerOrderStatus(seller.status)}</span>
+                <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${customerStatusClasses(seller.paymentState)}`}>
+                  پرداخت: {formatCustomerOrderStatus(seller.paymentState)}
+                </span>
               </div>
               <div className="divide-y divide-gray-100">
                 {seller.lines.map((line) => (

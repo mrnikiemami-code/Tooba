@@ -107,8 +107,23 @@ function ResultBody() {
           </Link>
         ) : null}
         {paid ? (
-          <Link href="/" className="inline-flex px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold">
-            ادامه خرید
+          <div className="flex flex-wrap justify-center gap-2">
+            {checkout?.checkoutId ? (
+              <Link
+                href={`/customer-panel/orders/${checkout.checkoutId}`}
+                className="inline-flex px-5 py-2.5 rounded-xl bg-[#2563EB] text-white text-sm font-bold"
+              >
+                مشاهده سفارش
+              </Link>
+            ) : null}
+            <Link href="/products" className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] text-sm font-bold">
+              ادامه خرید
+            </Link>
+          </div>
+        ) : null}
+        {!paid && checkout?.checkoutId ? (
+          <Link href="/customer-panel/orders" className="inline-flex text-sm font-bold text-[#2563EB]">
+            مشاهده سفارش‌های من
           </Link>
         ) : null}
       </div>
