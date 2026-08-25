@@ -2,4 +2,11 @@
 
 Canonical repository: `https://github.com/mrnikiemami-code/Tooba`
 
-Single-agent ChatGPT Architect ↔ Cursor pipeline bootstrap.
+Bridge-V2 governed development pipeline:
+
+```text
+Architect → downloadable task.md → Bridge → Coding Agent Worker
+→ Result → Bridge → Architect → ACCEPT / REPAIR / BLOCK
+```
+
+Current channel: `tooba-main`. Worker execution is agent-neutral.

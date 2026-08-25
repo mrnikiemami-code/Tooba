@@ -1,73 +1,48 @@
-BEGIN_TOOBA_CURSOR_GATE_V1
+PIPELINE-PROTOCOL: BRIDGE-V2
 
-Protocol-Version:
-1
+TASK-ID: TB-PXX-GATE
+PHASE: PXX — <Phase Name>
+CHANNEL: tooba-main
+STATUS: ISSUED
+TASK-TYPE: GATE
+WORKER-POLICY: ONE WORKER = ONE ACTIVE TASK
 
-Task-ID:
-TB-PXX-GATE
+## Objective
 
-Phase:
-PXX — <Phase Name>
-
-Objective:
 Perform phase gate review only.
 
-Required Reading:
-- ...
+## Gate checks
 
-Gate Checks:
-- architecture
-- product
-- implementation
-- tests
-- evidence
-- SoT
-- known limitations
-- next phase recommendation
+- architecture;
+- product;
+- implementation;
+- tests;
+- evidence;
+- Source of Truth;
+- known limitations;
+- next-phase recommendation.
 
-No feature implementation unless explicitly authorized.
+No feature implementation is permitted unless explicitly authorized.
 
-Validation:
-- git diff --check
-- relevant tests/build if needed
-- HEAD == origin/main after push
-- Working Tree status
+## Validation
 
-Deliverable:
-Create a human-readable gate review Markdown under:
-docs/evidence/<Task-ID>/GATE-REVIEW.md
+- `git diff --check`;
+- relevant tests/build only when needed;
+- `HEAD == origin/main` and working-tree status after push.
 
-Result Contract:
+## Deliverable
 
-BEGIN_TOOBA_CURSOR_RESULT_V1
+Create a human-readable review under:
 
-Protocol-Version:
-1
+```text
+docs/evidence/<TASK-ID>/GATE-REVIEW.md
+```
 
-Task-ID:
-TB-PXX-GATE
+Return the complete Result through Bridge. `Worker PASS != Architect ACCEPT`.
+`SYSTEM-BRIDGE-ALERT` is not a Result.
 
-Status:
-PASS / PASS WITH KNOWN LIMITATIONS / FAIL / BLOCKED
+After successful Result delivery, call the appropriate Bridge task
+complete/fail endpoint. Return to `Waiting` and resume polling only after the
+active lifecycle completes.
 
-Include:
-- gate verdict
-- assessments
-- known limitations
-- next recommendation
-- evidence path
-- commit
-- HEAD == origin/main
-- Working Tree
-
-Next-State:
-AWAITING_ARCHITECT_REVIEW
-
-END_TOOBA_CURSOR_RESULT_V1
-
-Pipeline Continuity:
-- remain PIPELINE
-- WAITING after RESULT
-- no invented next work
-
-END_TOOBA_CURSOR_GATE_V1
+END_TASK

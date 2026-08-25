@@ -1,25 +1,20 @@
-# Tooba — Start Here If ChatGPT Architect Context Is Lost
-
-Recorded repository state for recovery (do not invent the next envelope):
+# Tooba — Bridge-V2 Recovery Start
 
 ```text
+PIPELINE-PROTOCOL: BRIDGE-V2
+CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Task: TB-P04-T010
-Last Implementation Task: TB-P05-T001
-Last Architect Accepted Gate: TB-P04-GATE
-Current Issued Task: TB-P05-T001
-Task State: TB-P05-T001 = AWAITING_ARCHITECT_ACCEPT
-Current Gate: NONE
-P01 = COMPLETE
-P02 = COMPLETE
-P03 = COMPLETE
-P04 = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; TB-P05-T009-REPAIR-01 COMPLETED_BY_CURSOR (Development demo seed: 8 top-level categories, 24 child categories, 72 published products, 8 brands); preserve Shopeiva; live truthful public merchandising, brands and opaque public sellers; Persian RTL; locked follow-up = map backend capability onto correct Shopeiva PDP sections; do not invent TB-P05-T010
+Last Architect Accepted Product Task: TB-P05-T009 + TB-P05-T009-REPAIR-01
+Current Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
+Legacy TB-P05-T010: HELD / NOT EXECUTED
+Next product action after governance migration ACCEPT:
+reissue TB-P05-T010 through Bridge-V2 with unchanged product scope and acceptance intent
 ```
 
-Cursor must NOT continue implementation automatically from ROADMAP.
+Do not mark TB-P05-T010 issued before Architect ACCEPT of the governance
+migration. Do not execute roadmap prose or historical task archives.
 
-A recovered Architect must first recover from the repository.
+## Recovery procedure
 
 Run:
 
@@ -32,7 +27,7 @@ git rev-parse origin/main
 git status --short --branch
 ```
 
-Then read:
+Read:
 
 ```text
 AGENTS.md
@@ -43,36 +38,30 @@ docs/ai/TOOBA-PIPELINE-CONTROLLER.md
 docs/ai/TOOBA-RECOVERY-CONTEXT.md
 ```
 
-Then determine:
+Then recover:
 
-- current phase;
-- last Architect accepted task;
-- issued-but-unaccepted task;
-- blockers;
-- locked / confirmed requirements;
-- unresolved decisions;
-- exact resume rule.
+- current phase and accepted product history;
+- current Bridge channel and Worker lifecycle;
+- active or reviewed Task from Bridge;
+- blockers and locked architecture/product decisions;
+- `HEAD`, `origin/main`, and working-tree safety.
 
-Never invent the next task from memory.
+The sole current operational Task source is Bridge. The user does not paste
+Tasks into a Worker.
 
-Produce a recovery packet containing:
+```text
+ONE WORKER = ONE ACTIVE TASK
+Worker PASS != Architect ACCEPT
+SYSTEM-BRIDGE-ALERT != Result
+```
 
-- project status;
-- current phase;
-- last Architect accepted task;
-- issued but not accepted task;
-- HEAD;
-- origin/main;
-- HEAD == origin/main;
-- working tree;
-- known blockers;
-- locked architecture / confirmed requirements;
-- unresolved P00 decisions;
-- resume rule.
+An alert does not advance state, mark a Task PASS/FAIL, or authorize another
+Task. Wait for Worker/Bridge recovery.
 
-Prefer the existing Tooba Architect conversation if it is still available. If Architect context is truly lost, paste the recovery packet into a new ChatGPT Architect chat.
+Historical Task and Result artifacts may contain legacy Cursor/chat pipeline
+syntax. Preserve them as prior-execution evidence; they are not current
+operational instructions.
 
-Do not implement until the Architect reconciles state and sends a new valid Tooba task/gate file.
-
-No Envelope = No Execution.
-Cursor PASS != Architect ACCEPT.
+P00–P04 remain complete. P05 remains in progress. Shopeiva decisions, module
+boundaries, accepted architecture, deferred Payment/Cart concerns, and the
+locked PDP follow-up remain unchanged.

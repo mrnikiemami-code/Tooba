@@ -21,19 +21,20 @@ P05 — Operational Surface Integration
 Pipeline Mode:
 
 ```text
-PIPELINE
+BRIDGE-V2
+Channel: tooba-main
 ```
 
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T010
+TB-P05-T009 + TB-P05-T009-REPAIR-01
 ```
 
 Last Implementation Task:
 
 ```text
-TB-P05-T001
+TB-P05-T009-REPAIR-01
 ```
 
 Issued but not accepted:
@@ -73,9 +74,11 @@ P03 = COMPLETE
 P04 = COMPLETE
 P05 = IN_PROGRESS
 TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 = ACCEPTED
-TB-P05-T009 = AWAITING_ARCHITECT_ACCEPT
-TB-P05-T009-REPAIR-01 = COMPLETED_BY_CURSOR
-Next Task = return TB-P05-T009-REPAIR-01 RESULT and wait in the same Architect chat
+TB-P05-T009 = ACCEPTED
+TB-P05-T009-REPAIR-01 = ACCEPTED
+TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T010 legacy version = HELD / NOT EXECUTED
+Next product action after governance migration ACCEPT = reissue TB-P05-T010 through Bridge-V2 with unchanged product scope and acceptance intent
 Identity & Authentication Foundation = COMPLETE
 SpiceDB Authorization Foundation = COMPLETE
 Party / Organization / Membership Foundation = COMPLETE
@@ -92,7 +95,7 @@ Payment Foundation = COMPLETE
 Promotion & Discount Foundation = COMPLETE
 P03 Commerce Core Gate = COMPLETE
 P04 Experience Foundation = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 Operational Surface Integration = IN_PROGRESS (TB-P05-T001 ACCEPTED; waiting Fast Connect envelope)
+P05 Operational Surface Integration = IN_PROGRESS
 ```
 
 ## Recovered Architect procedure
@@ -119,7 +122,7 @@ docs/ai/TOOBA-PIPELINE-CONTROLLER.md
 docs/ai/TOOBA-RECOVERY-CONTEXT.md
 ```
 
-Then determine from the repository, not from chat memory:
+Then determine from the repository and Bridge, not from chat memory:
 
 - current phase;
 - last accepted task;
@@ -129,7 +132,8 @@ Then determine from the repository, not from chat memory:
 - unresolved decisions;
 - exact resume rule.
 
-Never invent the next task from memory.
+Never invent the next task from memory. Execute only a Task actually dispatched
+by Bridge on channel `tooba-main`.
 
 ## Confirmed (not implemented)
 
@@ -145,7 +149,7 @@ Never invent the next task from memory.
 1. fetch origin and compare HEAD with origin/main;
 2. inspect working tree; do not destroy unknown work;
 3. read Project State / Roadmap / Pipeline docs;
-4. recover latest accepted/issued task from the repository;
-5. execute only a complete authorized envelope;
-6. TB-P04-GATE is Architect-accepted. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED. TB-P05-T009 is AWAITING_ARCHITECT_ACCEPT after honest live public merchandising, brand and seller routes. TB-P05-T009-REPAIR-01 is COMPLETED_BY_CURSOR: a Development-only demo seed (`src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs` plus `StorefrontDemoCatalogMatrix.cs`) writes 8 top-level categories, 24 child categories, 72 published products, 8 published brands and 96 offers with Pricing and Inventory truth through owning-module directory contracts, and `ICatalogDirectory` gained `PublishCategoryAsync`/`PublishBrandAsync` because Storefront reads only Published rows. Do not invent TB-P05-T010; send RESULT and wait in the same Architect chat. Locked follow-up: PDP completeness must place real backend capability in the correct Shopeiva PDP section — variants/options, short/summary description, full/detailed description, media/gallery, specifications/attributes, seller/offers, pricing, availability, reviews/ratings when capability exists, and related products. Adding the minimum Shopeiva-compatible section is an approved exception to strict no-structure-change, but only when an important real backend capability has no section. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; storefront product card star rating is fixed template decoration, not a backend rating signal.
+4. recover latest accepted/active task from the repository and Bridge;
+5. follow `PIPELINE-PROTOCOL: BRIDGE-V2`; one Worker has one active Task; Worker PASS is not Architect ACCEPT; `SYSTEM-BRIDGE-ALERT` is not a Result;
+6. TB-P04-GATE is Architect-accepted. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009 and TB-P05-T009-REPAIR-01 are ACCEPTED. The repair added a Development-only demo seed (`src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs` plus `StorefrontDemoCatalogMatrix.cs`) with 8 top-level categories, 24 child categories, 72 published products, 8 published brands and 96 offers through owning-module contracts. TB-P05-GOV-MIGRATION-BRIDGE-V2 is AWAITING_ARCHITECT_ACCEPT. Legacy TB-P05-T010 is HELD / NOT EXECUTED. After migration ACCEPT, reissue TB-P05-T010 through Bridge-V2 preserving product scope and acceptance intent; do not mark it issued in advance. Locked follow-up: PDP completeness must place real backend capability in the correct Shopeiva PDP section — variants/options, short/summary description, full/detailed description, media/gallery, specifications/attributes, seller/offers, pricing, availability, reviews/ratings when capability exists, and related products. Adding the minimum Shopeiva-compatible section is an approved exception to strict no-structure-change, but only when an important real backend capability has no section. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; storefront product card star rating is fixed template decoration, not a backend rating signal.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

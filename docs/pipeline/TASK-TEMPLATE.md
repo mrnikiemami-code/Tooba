@@ -1,98 +1,73 @@
-BEGIN_TOOBA_CURSOR_TASK_V1
+PIPELINE-PROTOCOL: BRIDGE-V2
 
-Protocol-Version:
-1
+TASK-ID: TB-PXX-TXXX
+PHASE: PXX — <Phase Name>
+CHANNEL: tooba-main
+STATUS: ISSUED
+TASK-TYPE: IMPLEMENTATION
+WORKER-POLICY: ONE WORKER = ONE ACTIVE TASK
 
-Task-ID:
-TB-PXX-TXXX
+## Objective
 
-Phase:
-PXX — <Phase Name>
-
-Objective:
 <one focused objective>
 
-Accepted Baseline:
+## Accepted baseline
+
 - ...
 
-Required Reading:
-- AGENTS.md
-- docs/PROJECT-STATE.md
-- docs/ROADMAP.md
-- docs/ai/TOOBA-RECOVERY-CONTEXT.md
-- ...
+## Required reading
 
-Scope:
+- `AGENTS.md`
+- `docs/PROJECT-STATE.md`
+- `docs/ROADMAP.md`
+- `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
+
+## Scope
+
 1. ...
 
-Out of Scope:
+## Out of scope
+
 - ...
 
-Architecture / Product Guardrails:
+## Architecture and product guardrails
+
 - ...
 
-Repository Safety:
-Before work:
-- git rev-parse --show-toplevel
-- git fetch origin
-- verify branch main
-- verify HEAD == origin/main
-- inspect working tree
+## Repository safety
 
-Validation:
-- relevant build/tests
-- git diff --check
-- visual self-review if UI
-- HEAD == origin/main after push
-- Working Tree status
+- recover `main`;
+- require `HEAD == origin/main`;
+- inspect the working tree;
+- no force push, destructive reset, silent stash, or history rewrite.
 
-Evidence:
-- docs/evidence/<Task-ID>/...
+## Validation and evidence
 
-SoT Sync:
-Update as appropriate:
-- docs/PROJECT-STATE.md
-- docs/ROADMAP.md
-- docs/ai/TOOBA-RECOVERY-CONTEXT.md
+- run relevant build/tests;
+- run `git diff --check`;
+- perform visual review when UI is in scope;
+- create `docs/evidence/<TASK-ID>/...`;
+- require `HEAD == origin/main` and a clean working tree after push.
 
-Result Contract:
+## Source-of-Truth sync
 
-BEGIN_TOOBA_CURSOR_RESULT_V1
+Update only as authorized:
 
-Protocol-Version:
-1
+- `docs/PROJECT-STATE.md`
+- `docs/ROADMAP.md`
+- `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
 
-Task-ID:
-TB-PXX-TXXX
+## Result contract
 
-Phase:
-PXX — <Phase Name>
+Return the complete Task-specific Result through Bridge.
 
-Status:
-PASS / PARTIAL / BLOCKED / FAIL
+```text
+Worker PASS != Architect ACCEPT
+SYSTEM-BRIDGE-ALERT != Result
+```
 
-Include:
-- summary
-- tests
-- evidence
-- changed files
-- commit
-- HEAD
-- origin/main
-- HEAD == origin/main
-- Working Tree
-- Architectural Concerns
-- recommended next authorized task
+After successful Result delivery, call the appropriate Bridge task
+complete/fail endpoint. Only after the active lifecycle completes may the Worker
+return to `Waiting` and resume polling `tooba-main`.
 
-Next-State:
-AWAITING_ARCHITECT_REVIEW
-
-END_TOOBA_CURSOR_RESULT_V1
-
-Pipeline Continuity:
-- remain in PIPELINE mode
-- enter WAITING mode after RESULT
-- do not invent/execute next task
-- wait/check for next authorized Architect Markdown envelope
-
-END_TOOBA_CURSOR_TASK_V1
+END_TASK

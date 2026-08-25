@@ -1,166 +1,147 @@
-# Tooba — Pipeline Protocol V1
-
-## Model
-
-Controlled single-agent pipeline:
+# Tooba — Pipeline Protocol
 
 ```text
-USER
-  ↓
-ChatGPT Architect
-  ↓
-downloadable Markdown task/gate
-  ↓
-Cursor stores authorized file in docs/ai/tasks/ (fast local path)
-  ↓
-Cursor
-  ↓
-implementation + tests + evidence + SoT
-  ↓
-local commit + push origin main
-  ↓
-Cursor RESULT to Architect chat
-  ↓
-Architect ACCEPT / REPAIR / BLOCK
-  ↓
-automatic next task when safe
+PIPELINE-PROTOCOL: BRIDGE-V2
+CHANNEL: tooba-main
 ```
 
-## Source of Truth
+This document is the canonical operational protocol. Pipeline V1 and its
+ChatGPT/Cursor same-conversation transport are **RETIRED / HISTORICAL ONLY**.
+Historical task and result artifacts may retain legacy syntax as evidence of
+prior execution; they are not current operational instructions.
 
-Repository is durable Source of Truth.
-
-Chat is the architect communication/transport channel.
-
-Executable authority is a complete Architect-issued Markdown `.task.md` / `.gate.md` with valid envelope.
-
-Fast local execution path after an envelope is obtained from Architect chat:
+## Roles and flow
 
 ```text
-docs/ai/tasks/TB-PXX-TXXX.task.md
-docs/ai/tasks/TB-PXX-GATE.gate.md
+USER                = product/business authority
+ARCHITECT           = task issuer and result reviewer
+BRIDGE              = transport/orchestration boundary
+CODING AGENT WORKER = agent-neutral implementation worker
+REPOSITORY          = durable technical Source of Truth
 ```
 
-## Governance
+The Worker may be Cursor, OpenAI Codex, Claude Code, Hermes, or another
+compatible agent. Repository governance must not depend on one agent product.
 
 ```text
-USER       = product/business authority
-ChatGPT    = Chief/Senior Architect / Task Issuer / Reviewer / Pipeline Controller
-Cursor     = implementation agent
-Repository = durable Source of Truth
+ARCHITECT
+→ downloadable <TASK-ID>.task.md
+→ Bridge
+→ Coding Agent Worker
+→ Result
+→ Bridge
+→ ARCHITECT
+→ ACCEPT / REPAIR / BLOCK
+→ next <TASK-ID>.task.md
 ```
 
-Cursor is not the architect.
+The user is not expected to paste Tasks into a Coding Agent. Bridge detects and
+dispatches the actual downloadable task artifact on its assigned channel.
 
-- Cursor PASS != Architect ACCEPT.
-- No Envelope = No Execution.
-- Cursor must not invent requirements, redesign locked architecture, broaden scope, or self-authorize the next task.
+## Worker contract
+
+```text
+ONE WORKER = ONE ACTIVE TASK
+Worker PASS != Architect ACCEPT
+```
+
+- A Worker polls only its configured Bridge channel while `Waiting`.
+- On delivery it verifies `receivedTask.channelId`, acquires its busy/mutex
+  protection, changes to `Working`, continues `Working` heartbeats, and stops
+  task polling.
+- It executes only the received Task and does not claim parallel work.
+- It validates, commits, pushes, and returns the complete Result through Bridge.
+- It calls the Bridge completion/failure endpoint only after Result delivery.
+- It resumes `Waiting` heartbeats and polling only after the active lifecycle is
+  complete.
+- It never invents requirements, broadens scope, redesigns locked architecture,
+  or self-authorizes the next Task.
 - Architectural concerns are reported, not silently implemented.
-- Repository truth overrides chat memory.
 
-## Mode
+## Result review lifecycle
+
+Every real Worker Result is reviewed by the Architect:
 
 ```text
-TOOBA_AUTOMATION_RESUME
-PIPELINE
+Result → review evidence → ACCEPT / REPAIR / BLOCK
 ```
 
-Pipeline continues until explicit pause or a real stop condition.
+- `ACCEPT`: Architect issues the next safe downloadable Task artifact.
+- `REPAIR`: Architect issues a focused repair Task artifact.
+- `BLOCK`: processing stops only for a genuine human, product, architectural,
+  security, data-loss, or repository-recovery blocker.
 
-After RESULT:
+Automatic continuation occurs only after Architect review. A Worker Result,
+including `PASS`, does not itself advance accepted project state.
+
+## SYSTEM-BRIDGE-ALERT
 
 ```text
-WAITING
+SYSTEM-BRIDGE-ALERT != Result
 ```
 
-means no invented work and keep checking for the next authorized Architect envelope.
+On an alert:
 
-## Lifecycle
+- do not advance project state;
+- do not mark the active Task `PASS` or `FAIL`;
+- do not issue or claim another Task;
+- wait for Worker/Bridge recovery.
+
+An alert must never be substituted for the Task's Result contract.
+
+## Task and result artifacts
+
+Every implementation Task is an actual downloadable:
 
 ```text
-Architect issues one complete authorized Markdown task
-→ Cursor validates repository + envelope
-→ Cursor executes only that task
-→ tests / validation / visual review if required
-→ SoT sync
-→ local commit
-→ push origin main
-→ git fetch origin
-→ verify HEAD == origin/main
-→ Cursor sends RESULT
-→ Architect reviews
-→ ACCEPT / REPAIR / BLOCKED
-→ if ACCEPT and no real blocker, Architect automatically issues the next task/gate
+<TASK-ID>.task.md
 ```
 
-## Task marker
+Bridge dispatch is the sole operational Task transport. The Worker persists the
+received artifact under `docs/ai/tasks/` for durable audit after receipt; that
+directory is not a queue and old files must never be replayed.
+
+Bridge-V2 Results use the contract defined by the received Task and are posted
+to Bridge. Legacy `BEGIN_TOOBA_CURSOR_*` markers inside historical files are
+preserved as evidence and compatibility records, not current transport.
+
+## Source of Truth and Git
+
+The repository is durable technical Source of Truth. Bridge carries Tasks,
+Results, and lifecycle state; it does not replace repository truth.
+
+Before normal execution:
 
 ```text
-BEGIN_TOOBA_CURSOR_TASK_V1
-...
-END_TOOBA_CURSOR_TASK_V1
-```
-
-Filename:
-
-```text
-TB-PXX-TXXX.task.md
-```
-
-## Gate marker
-
-```text
-BEGIN_TOOBA_CURSOR_GATE_V1
-...
-END_TOOBA_CURSOR_GATE_V1
-```
-
-Filename:
-
-```text
-TB-PXX-GATE.gate.md
-```
-
-## Result marker
-
-```text
-BEGIN_TOOBA_CURSOR_RESULT_V1
-...
-END_TOOBA_CURSOR_RESULT_V1
-```
-
-## Git
-
-Before task:
-
-```text
-main
+branch = main
 HEAD == origin/main
+known/safe working tree
 ```
 
-After task:
+After successful execution:
 
 ```text
 local commit
 push origin main
-fetch
+git fetch origin
 HEAD == origin/main
+clean working tree
 ```
 
-Any unsafe divergence:
+Unsafe divergence is `RECOVERY_CONFLICT`. Never force-push, rewrite history,
+silently stash, or destroy unrelated work.
 
-```text
-RECOVERY_CONFLICT
-```
+## Retired behavior
 
-Never force-push or rewrite history.
+The following are historical only and must not be used operationally:
 
-## Automation
+- manual Architect envelopes pasted into a Coding Agent;
+- same-session or same-chat continuation;
+- `WAITING_FOR_ARCHITECT_IN_SAME_SESSION`;
+- HUMAN/PIPELINE conversational handoff;
+- Cursor browser/composer/send-button transport;
+- requiring one specific agent product;
+- chat-session `No Envelope = No Execution` mechanics.
 
-- one task at a time;
-- auto-continue after Architect ACCEPT;
-- auto-start next planned phase after accepted gate when no real blocker;
-- stop for true architectural/business/recovery blockers only;
-- Cursor never invents tasks;
-- Persian documentation quality is part of implementation acceptance (see `docs/architecture/32-persian-code-documentation-standard.md`);
-- do not execute `TB-P00-T001` unless Architect issues that exact envelope.
+Current authority is a valid Task actually received from Bridge on the Worker's
+configured channel. Historical task/result records remain unchanged.

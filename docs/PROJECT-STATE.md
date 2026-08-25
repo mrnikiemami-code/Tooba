@@ -27,19 +27,20 @@ P05 — Operational Surface Integration
 Pipeline Mode:
 
 ```text
-PIPELINE
+BRIDGE-V2
+Channel: tooba-main
 ```
 
 Last Architect Accepted Task:
 
 ```text
-TB-P05-T001
+TB-P05-T009 + TB-P05-T009-REPAIR-01
 ```
 
 Last Implementation Task:
 
 ```text
-TB-P05-T001
+TB-P05-T009-REPAIR-01
 ```
 
 Last Architect Accepted Gate:
@@ -51,7 +52,8 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-NONE — wait for next Architect envelope (FAST CONNECT)
+TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T010 (legacy form) = HELD / NOT EXECUTED
 ```
 
 Current Gate:
@@ -78,7 +80,8 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T001 = ACCEPTED
+TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T010 = HELD / NOT EXECUTED
 ```
 
 Accepted ledger (selected):
@@ -533,12 +536,12 @@ docs/architecture/55-admin-product-workspace.md
 docs/architecture/56-storefront-live-slice.md
 ```
 
-Authorized local envelope path for this issued work:
+Bridge-V2 task audit artifact for the current governance work:
 
 ```text
-docs/ai/tasks/TB-P05-T001-REPAIR.task.md
+docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 ```
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: TB-P04-GATE ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED. TB-P05-T009 = AWAITING_ARCHITECT_ACCEPT and TB-P05-T009-REPAIR-01 = COMPLETED_BY_CURSOR: locked Shopeiva public merchandising routes connected to live data, plus a Development-only demo seed giving 8 top-level categories, 24 child categories, 72 published products and 8 published brands so mega menu, category landings and brand surfaces are visually verifiable; unsupported analytics remain honest/noindex. Do not invent TB-P05-T010; return RESULT and wait in the same Architect chat. Locked follow-up: PDP completeness must map backend capability onto the correct Shopeiva PDP sections (variants/options, short and full description, media gallery, specifications, seller offers, pricing, availability, reviews when capability exists, related products); adding a minimum Shopeiva-compatible section is the only approved structure exception, and only for a real backend capability with no existing section. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; storefront product card star rating is fixed template decoration, not a backend rating signal. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009 and TB-P05-T009-REPAIR-01 are Architect-accepted. TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT. Legacy-form TB-P05-T010 is HELD / NOT EXECUTED; after governance migration ACCEPT, the next product action is to reissue TB-P05-T010 through Bridge-V2 while preserving its product scope and acceptance intent. Do not mark the reissue issued before Architect ACCEPT. Locked follow-up: PDP completeness must map backend capability onto the correct Shopeiva PDP sections (variants/options, short and full description, media gallery, specifications, seller offers, pricing, availability, reviews when capability exists, related products); adding a minimum Shopeiva-compatible section is the only approved structure exception, and only for a real backend capability with no existing section. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; storefront product card star rating is fixed template decoration, not a backend rating signal. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

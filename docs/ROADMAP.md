@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; TB-P05-T009-REPAIR-01 COMPLETED_BY_CURSOR; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T009 and TB-P05-T009-REPAIR-01 ACCEPTED; TB-P05-GOV-MIGRATION-BRIDGE-V2 AWAITING_ARCHITECT_ACCEPT; legacy TB-P05-T010 HELD / NOT EXECUTED; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -102,7 +102,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS with TB-P05-T001 REPAIR (seller authorization + Shopeiva fidelity) AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS. TB-P05-T001 through T009 and TB-P05-T009-REPAIR-01 are accepted. Bridge-V2 governance migration awaits Architect review. Legacy-form TB-P05-T010 is held and not executed; after migration ACCEPT it is reissued through Bridge-V2 with unchanged product scope and acceptance intent. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -131,8 +131,10 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-06 | Shopeiva storefront search and discovery | ACCEPTED (TB-P05-T006) |
 | P05-07 | Shopeiva PDP live purchase experience | ACCEPTED (TB-P05-T007) |
 | P05-08 | Customer purchase continuity and order history | ACCEPTED (TB-P05-T008) |
-| P05-09 | Public merchandising and discovery routes | AWAITING_ARCHITECT_ACCEPT (TB-P05-T009) |
-| P05-09R | Demo catalog depth, brand seed and mega menu evidence | COMPLETED_BY_CURSOR (TB-P05-T009-REPAIR-01) |
+| P05-09 | Public merchandising and discovery routes | ACCEPTED (TB-P05-T009) |
+| P05-09R | Demo catalog depth, brand seed and mega menu evidence | ACCEPTED (TB-P05-T009-REPAIR-01) |
+| P05-GOV | Bridge-V2 governance migration | AWAITING_ARCHITECT_ACCEPT (TB-P05-GOV-MIGRATION-BRIDGE-V2) |
+| P05-10 | Legacy product Task scope | HELD / NOT EXECUTED; reissue through Bridge-V2 only after migration ACCEPT |
 
 ## Mandatory UX sequence (locked)
 
@@ -159,5 +161,7 @@ Do not skip. Later steps wait for new envelopes.
 | P05 Search and Discovery Fast Connect | ACCEPTED (TB-P05-T006) |
 | P05 Product Detail Purchase Fast Connect | ACCEPTED (TB-P05-T007) |
 | P05 Customer Purchase Continuity | ACCEPTED (TB-P05-T008) |
-| P05 Public Merchandising Fast Connect | AWAITING_ARCHITECT_ACCEPT (TB-P05-T009) |
-| P05 Demo Catalog Depth Repair | COMPLETED_BY_CURSOR (TB-P05-T009-REPAIR-01) |
+| P05 Public Merchandising Fast Connect | ACCEPTED (TB-P05-T009) |
+| P05 Demo Catalog Depth Repair | ACCEPTED (TB-P05-T009-REPAIR-01) |
+| P05 Bridge-V2 Governance Migration | AWAITING_ARCHITECT_ACCEPT |
+| P05-10 legacy product Task | HELD / NOT EXECUTED; Bridge-V2 reissue follows migration ACCEPT |

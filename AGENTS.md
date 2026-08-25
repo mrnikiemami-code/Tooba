@@ -17,22 +17,26 @@ main
 ```text
 USER       = product/business authority
 ChatGPT    = Chief/Senior Architect / Task Issuer / Reviewer / Pipeline Controller
-Cursor     = implementation agent
+Bridge     = transport/orchestration boundary
+Worker     = agent-neutral Coding Agent Worker
 Repository = durable Source of Truth
 ```
 
-Cursor is an implementer, not an architect.
+The Worker is an implementer, not an architect. It may be Cursor, OpenAI Codex,
+Claude Code, Hermes, or another compatible agent.
 
 Before implementation, read this file and the Tooba pipeline/recovery documents.
 
 ## Core rules
 
-- Only Architect-issued valid `.task.md` / `.gate.md` files are executable.
-- No Envelope = No Execution.
-- Cursor PASS != Architect ACCEPT.
+- Current operational protocol: `BRIDGE-V2`; current channel: `tooba-main`.
+- Only Tasks actually dispatched by Bridge on the Worker's configured channel are executable.
+- Every implementation Task is an actual downloadable `<TASK-ID>.task.md`.
+- The user is not expected to paste Tasks into the Worker.
+- `ONE WORKER = ONE ACTIVE TASK`.
+- Worker PASS != Architect ACCEPT.
 - Repository is durable Source of Truth. Repository truth overrides chat memory.
-- One task at a time.
-- Cursor does not invent requirements, invent future work, redesign locked architecture, broaden scope, or self-authorize the next task.
+- Worker does not invent requirements, invent future work, redesign locked architecture, broaden scope, or self-authorize the next task.
 - Architectural concerns are reported, not silently implemented.
 - Normal implementation uses `main`.
 - Every accepted task execution must produce a local commit and remote `origin/main` push.
@@ -40,20 +44,16 @@ Before implementation, read this file and the Tooba pipeline/recovery documents.
 - No force push or history rewrite.
 - Preserve unrelated/unknown working-tree artifacts.
 - On conflict: `RECOVERY_CONFLICT`.
-- After RESULT: remain PIPELINE. `WAITING` means no unauthorized self-advance while the Architect reviews or issues the next envelope — not “stop the project”, close the chat, or wait for a ceremonial user restart.
+- While `Working`, heartbeat continues and task polling remains stopped.
+- After successful Result delivery and task completion, return to `Waiting` and resume polling.
+- `SYSTEM-BRIDGE-ALERT` is not a Result: do not advance state, mark PASS/FAIL, or claim another Task.
 - Persian documentation is part of implementation acceptance. All required Tooba-owned Classes, Interfaces, Methods, and Properties must have strong Persian documentation (C# XML `/// <summary>`; reusable frontend APIs via TSDoc/JSDoc). Name-echo comments fail review. See `docs/architecture/32-persian-code-documentation-standard.md`.
 
-## Envelope markers
+## Task and Result artifacts
 
 ```text
-BEGIN_TOOBA_CURSOR_TASK_V1
-END_TOOBA_CURSOR_TASK_V1
-
-BEGIN_TOOBA_CURSOR_GATE_V1
-END_TOOBA_CURSOR_GATE_V1
-
-BEGIN_TOOBA_CURSOR_RESULT_V1
-END_TOOBA_CURSOR_RESULT_V1
+ARCHITECT → downloadable .task.md → Bridge → Coding Agent Worker
+→ Result → Bridge → ARCHITECT → ACCEPT / REPAIR / BLOCK → next .task.md
 ```
 
 Filename conventions:
@@ -63,11 +63,15 @@ TB-PXX-TXXX.task.md
 TB-PXX-GATE.gate.md
 ```
 
-Authorized envelope inbox (fast local execution path):
+Received Task audit archive:
 
 ```text
 docs/ai/tasks/
 ```
+
+This directory is not an operational queue. Historical task/result artifacts may
+contain legacy Cursor/chat syntax; they are evidence of prior execution and are
+not current operational instructions.
 
 ## Recovery docs
 

@@ -1,4 +1,4 @@
-# Tooba Pipeline Setup
+# Tooba Bridge-V2 Pipeline Setup
 
 1. Extract this pack into the root of:
 
@@ -19,7 +19,7 @@ git status --short --branch
 
 ```bash
 git add AGENTS.md README.md SETUP.md docs
-git commit -m "docs: bootstrap Tooba architect-cursor pipeline"
+git commit -m "docs: configure Tooba Bridge-V2 governance"
 git push origin main
 git fetch origin
 git rev-parse HEAD
@@ -32,18 +32,22 @@ Required:
 HEAD == origin/main
 ```
 
-4. New ChatGPT chat:
-paste the full content of:
+4. Configure Bridge and the Coding Agent Worker for:
 
 ```text
-docs/prompts/TOOBA-ARCHITECT-NEW-CHAT.md
+PIPELINE-PROTOCOL: BRIDGE-V2
+CHANNEL: tooba-main
 ```
 
-5. Cursor:
-give it the full content of:
+5. Start the Worker with `Waiting` heartbeat and poll only:
 
 ```text
-docs/prompts/TOOBA-CURSOR-PIPELINE-START.md
+GET /api/tasks/next?channelId=tooba-main
 ```
 
-6. Do not start product implementation until you explain the Tooba product/template in the new Architect chat and P00 discovery is complete.
+Tasks are downloadable `.task.md` artifacts dispatched by Bridge. The user does
+not manually paste Tasks into a Worker. Follow
+`docs/ai/TOOBA-PIPELINE-PROTOCOL.md` and
+`docs/ai/TOOBA-PIPELINE-CONTROLLER.md`.
+
+6. Do not start product implementation unless Bridge dispatches the Task.
