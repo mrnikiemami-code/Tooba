@@ -1,5 +1,6 @@
 import type {
   StorefrontAlternateOffer,
+  StorefrontBrandItem,
   StorefrontCategoryItem,
   StorefrontHomePage,
   StorefrontListingPage,
@@ -130,6 +131,15 @@ function mapOffer(value: unknown): StorefrontOfferCandidate | null {
   };
 }
 
+function mapBrand(value: unknown): StorefrontBrandItem | null {
+  const item = asRecord(value);
+  if (!item) {
+    return null;
+  }
+  const brandId = asString(readProp(item, "brandId", "BrandId"));
+  return brandId ? { brandId, name: asString(readProp(item, "name", "Name"), "برند") } : null;
+}
+
 /**
  * JSON خانه را به مدل UI تبدیل می‌کند. فیلد price روی محصول پذیرفته نمی‌شود.
  */
@@ -140,12 +150,16 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
   }
   const productsRaw = readProp(item, "featuredProducts", "FeaturedProducts");
   const categoriesRaw = readProp(item, "categories", "Categories");
+  const brandsRaw = readProp(item, "brands", "Brands");
   return {
     categories: Array.isArray(categoriesRaw)
       ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
       : [],
     featuredProducts: Array.isArray(productsRaw)
       ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    brands: Array.isArray(brandsRaw)
+      ? brandsRaw.map(mapBrand).filter((row): row is StorefrontBrandItem => row !== null)
       : [],
     heroTitle: asString(readProp(item, "heroTitle", "HeroTitle"), "فروشگاه توبا"),
     heroSubtitle: asString(readProp(item, "heroSubtitle", "HeroSubtitle")),

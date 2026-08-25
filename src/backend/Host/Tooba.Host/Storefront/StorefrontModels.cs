@@ -39,11 +39,17 @@ public sealed record StorefrontProductCard(
 public sealed record StorefrontCategoryItem(Guid CategoryId, string Name);
 
 /// <summary>
+/// برند Catalog برای نوار برند خانه؛ رسانهٔ CMS نیست.
+/// </summary>
+public sealed record StorefrontBrandItem(Guid BrandId, string Name);
+
+/// <summary>
 /// صفحهٔ خانه با بنر نمایشی ایستا و کارت‌های زندهٔ Catalog/Offer.
 /// </summary>
 public sealed record StorefrontHomePage(
     IReadOnlyList<StorefrontCategoryItem> Categories,
     IReadOnlyList<StorefrontProductCard> FeaturedProducts,
+    IReadOnlyList<StorefrontBrandItem> Brands,
     string HeroTitle,
     string HeroSubtitle);
 

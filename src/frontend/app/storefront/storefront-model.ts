@@ -26,11 +26,20 @@ export interface StorefrontCategoryItem {
 }
 
 /**
+ * برند Catalog برای نوار برند خانه.
+ */
+export interface StorefrontBrandItem {
+  brandId: string;
+  name: string;
+}
+
+/**
  * خانهٔ زنده.
  */
 export interface StorefrontHomePage {
   categories: StorefrontCategoryItem[];
   featuredProducts: StorefrontProductCard[];
+  brands: StorefrontBrandItem[];
   heroTitle: string;
   heroSubtitle: string;
 }

@@ -123,7 +123,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 
 | ID | Work package | Status |
 | --- | --- | --- |
-| P05-01 | Seller Panel Products & Orders live slice | REPAIR / AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
+| P05-01 | Seller Panel Products & Orders live slice | ACCEPTED (TB-P05-T001) |
+| P05-02 | Storefront Home Fast Connect | IN_PROGRESS (TB-P05-T002) |
 
 ## Mandatory UX sequence (locked)
 
@@ -142,5 +143,6 @@ Do not skip. Later steps wait for new envelopes.
 | Live Checkout | COMPLETE (TB-P04-T009) |
 | Live Payment | COMPLETE (TB-P04-T010) |
 | P04 Gate | COMPLETE (Architect accepted TB-P04-GATE) |
-| P05 Seller Products/Orders | REPAIR / AWAITING_ARCHITECT_ACCEPT (TB-P05-T001) |
+| P05 Seller Products/Orders | ACCEPTED (TB-P05-T001) |
+| P05 Storefront Home Fast Connect | IN_PROGRESS (TB-P05-T002) |
 | P05 remaining operational/customer surfaces | NOT YET ISSUED |

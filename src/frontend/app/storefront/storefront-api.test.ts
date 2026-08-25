@@ -7,6 +7,7 @@ test("home mapper keeps offer amount off a product price field", () => {
     heroTitle: "خانه",
     heroSubtitle: "زنده",
     categories: [{ categoryId: "c1", name: "پوشاک" }],
+    brands: [{ brandId: "b1", name: "آرمان" }],
     featuredProducts: [
       {
         productId: "p1",
@@ -23,6 +24,7 @@ test("home mapper keeps offer amount off a product price field", () => {
     ],
   });
   assert.equal(home?.featuredProducts[0]?.offerAmountExclusiveOfTax, 1850000);
+  assert.equal(home?.brands[0]?.name, "آرمان");
   assert.equal("price" in (home?.featuredProducts[0] ?? {}), false);
 });
 

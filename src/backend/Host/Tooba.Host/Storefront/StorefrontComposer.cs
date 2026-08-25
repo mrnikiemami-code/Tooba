@@ -50,11 +50,29 @@ public sealed class StorefrontComposer
     {
         var categories = await ListCategoriesAsync(cancellationToken);
         var listing = await GetListingAsync(null, null, cancellationToken);
+        var brands = await ListBrandsAsync(cancellationToken);
         return new StorefrontHomePage(
             categories,
             listing.Products,
+            brands,
             "فروشگاه توبا",
             "کالای واقعی از Catalog با قیمت Offer و موجودی انبار");
+    }
+
+    /// <summary>
+    /// برندهای Catalog را برای نوار برند خانه برمی‌گرداند.
+    /// </summary>
+    public async Task<IReadOnlyList<StorefrontBrandItem>> ListBrandsAsync(CancellationToken cancellationToken)
+    {
+        var brands = await _catalog.Brands.AsNoTracking().ToListAsync(cancellationToken);
+        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brands.Select(x => x.BrandId).ToList(), cancellationToken);
+        return brands
+            .Select(brand => new StorefrontBrandItem(
+                brand.BrandId,
+                names.GetValueOrDefault(brand.BrandId) ?? brand.SlugSeam ?? "برند"))
+            .OrderBy(item => item.Name, StringComparer.Ordinal)
+            .Take(24)
+            .ToList();
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   Grid3X3,
@@ -18,14 +18,8 @@ import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront
 import { formatOfferAmount } from "./storefront-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 
-type MegaCategory = {
-  id: number;
-  name: string;
-  subcategories?: { id: number; name: string; items?: string[] }[];
-};
-
 /**
- * هدر Shopeiva با نوار پرومو، جستجو، مگامنو و سبد خالی. رده و پیشنهاد جستجو از Tooba زنده است.
+ * هدر Shopeiva با نوار پرومو، جستجو، مگامنوی زنده Catalog و سبد.
  */
 export function StorefrontShopeivaHeader({
   categories,
@@ -37,8 +31,7 @@ export function StorefrontShopeivaHeader({
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [chromeCategories, setChromeCategories] = useState<MegaCategory[]>([]);
-  const [selectedMega, setSelectedMega] = useState<MegaCategory | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(categories[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
@@ -53,20 +46,23 @@ export function StorefrontShopeivaHeader({
   }, []);
 
   useEffect(() => {
-    void fetch("/jsons/menuCategories.json")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload: { categories?: Array<MegaCategory & { subcategories?: MegaCategory["subcategories"] }> } | MegaCategory[] | null) => {
-        const raw = Array.isArray(payload) ? payload : payload?.categories ?? [];
-        const list = raw.map((cat) => ({
-          id: cat.id,
-          name: cat.name,
-          subcategories: cat.subcategories ?? (cat as { subcategories?: MegaCategory["subcategories"] }).subcategories,
-        }));
-        setChromeCategories(list);
-        setSelectedMega(list[0] ?? null);
-      })
-      .catch(() => undefined);
-  }, []);
+    if (categories.length === 0) {
+      setSelectedCategoryId(null);
+      return;
+    }
+    if (!selectedCategoryId || !categories.some((item) => item.categoryId === selectedCategoryId)) {
+      setSelectedCategoryId(categories[0]!.categoryId);
+    }
+  }, [categories, selectedCategoryId]);
+
+  const selectedCategory = categories.find((item) => item.categoryId === selectedCategoryId) ?? categories[0] ?? null;
+  const megaProducts = useMemo(() => {
+    if (!selectedCategory) {
+      return searchCatalog.slice(0, 8);
+    }
+    const filtered = searchCatalog.filter((item) => item.categoryId === selectedCategory.categoryId);
+    return (filtered.length > 0 ? filtered : searchCatalog).slice(0, 8);
+  }, [searchCatalog, selectedCategory]);
 
   const matches = query.trim()
     ? searchCatalog.filter((item) => item.title.includes(query.trim())).slice(0, 6)
@@ -157,54 +153,69 @@ export function StorefrontShopeivaHeader({
           </div>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-1 pb-3">
+        <nav className="hidden lg:flex items-center gap-1 pb-3" aria-label="ناوبری اصلی فروشگاه">
           <div className="relative" onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)}>
             <button
               type="button"
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium ${
                 megaOpen ? "bg-[#2563EB]/15 text-[#2563EB]" : "text-gray-600 hover:bg-gray-50"
               }`}
+              aria-expanded={megaOpen}
+              aria-controls="storefront-mega-menu"
+              onClick={() => setMegaOpen((open) => !open)}
             >
               <Grid3X3 className="w-4 h-4" />
               دسته‌بندی‌ها
               <ChevronDown className={`w-3.5 h-3.5 ${megaOpen ? "rotate-180" : ""}`} />
             </button>
             {megaOpen ? (
-              <div className="absolute right-0 top-full z-50 w-[min(1100px,90vw)] bg-white shadow-2xl border border-gray-200 rounded-2xl p-5">
+              <div
+                id="storefront-mega-menu"
+                className="absolute right-0 top-full z-50 w-[min(1100px,90vw)] bg-white shadow-2xl border border-gray-200 rounded-2xl p-5"
+              >
                 <div className="grid grid-cols-12 gap-5">
                   <div className="col-span-3 space-y-1 max-h-[380px] overflow-auto">
-                    {(chromeCategories.length > 0
-                      ? chromeCategories
-                      : categories.map((item, index) => ({ id: index, name: item.name }))
-                    ).map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onMouseEnter={() => setSelectedMega(cat)}
-                        className={`w-full text-right px-3 py-2 rounded-lg text-xs ${
-                          selectedMega?.id === cat.id ? "bg-[#2563EB] text-white" : "text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
+                    {categories.length === 0 ? (
+                      <p className="text-xs text-gray-400 px-3 py-2">رده‌ای از Catalog نیست.</p>
+                    ) : (
+                      categories.map((cat) => (
+                        <button
+                          key={cat.categoryId}
+                          type="button"
+                          onMouseEnter={() => setSelectedCategoryId(cat.categoryId)}
+                          className={`w-full text-right px-3 py-2 rounded-lg text-xs ${
+                            selectedCategory?.categoryId === cat.categoryId
+                              ? "bg-[#2563EB] text-white"
+                              : "text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {cat.name}
+                        </button>
+                      ))
+                    )}
                   </div>
                   <div className="col-span-6 border-x border-gray-100 px-4 max-h-[380px] overflow-auto">
-                    <p className="font-bold text-sm mb-3">{selectedMega?.name ?? "یک رده را انتخاب کنید"}</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(selectedMega?.subcategories ?? []).slice(0, 8).map((sub) => (
-                        <div key={sub.id}>
-                          <Link href="/products" className="text-xs font-bold text-gray-800 hover:text-[#2563EB]">
-                            {sub.name}
-                          </Link>
-                          <div className="mt-1 space-y-1">
-                            {(sub.items ?? []).slice(0, 4).map((item) => (
-                              <Link key={item} href="/products" className="block text-[11px] text-gray-400 hover:text-[#2563EB]">
-                                {item}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
+                    <p className="font-bold text-sm mb-3">{selectedCategory?.name ?? "یک رده را انتخاب کنید"}</p>
+                    {selectedCategory ? (
+                      <Link
+                        href={`/products?categoryId=${selectedCategory.categoryId}`}
+                        className="inline-flex mb-3 text-[11px] font-bold text-[#2563EB]"
+                      >
+                        مشاهده همهٔ این رده
+                      </Link>
+                    ) : null}
+                    <div className="grid grid-cols-2 gap-2">
+                      {megaProducts.map((item) => (
+                        <Link
+                          key={item.productId}
+                          href={`/products/${item.slug}`}
+                          className="rounded-xl border border-gray-100 px-3 py-2 hover:border-[#2563EB]/40"
+                        >
+                          <p className="text-xs font-bold text-gray-800 line-clamp-2">{item.title}</p>
+                          <p className="text-[11px] text-[#2563EB] font-bold mt-1">
+                            {formatOfferAmount(item.offerAmountExclusiveOfTax, item.currency)}
+                          </p>
+                        </Link>
                       ))}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -270,7 +281,6 @@ export function StorefrontShopeivaHeader({
           </div>
         </div>
       ) : null}
-
     </div>
   );
 }
