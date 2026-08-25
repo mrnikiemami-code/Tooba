@@ -1,39 +1,38 @@
 {
-  "pipelineProtocol": "BRIDGE-V2",
-  "projectPrefix": "TOOBA",
+  "protocol": "BRIDGE-WAKE-V1",
   "channelId": "tooba-main",
-  "workerRole": "Coding Agent Worker",
-  "taskSource": "bridge-dispatched-downloadable-task-md",
-  "resultDestination": "bridge",
-  "workerStatusWhileIdle": "Waiting",
-  "workerStatusWhileActive": "Working",
-  "heartbeatIntervalSeconds": 5,
-  "pollEndpoint": "/api/tasks/next?channelId=tooba-main",
+  "bridgeBaseUrl": "http://127.0.0.1:17321",
+  "healthEndpoint": "/health",
+  "taskClaimEndpoint": "/api/tasks/next?channelId=tooba-main",
+  "resultEndpoint": "/api/results",
+  "workerId": "tooba-worker-01",
+  "workerStatusWhileIdle": "Idle",
+  "workerStatusWhileWorking": "Working",
+  "wakeControlMessage": "BRIDGE-WAKE",
+  "watchdog": {
+    "enabled": true,
+    "observePendingTasks": true,
+    "wakeOncePerPendingTask": true,
+    "mustNotCreateTasks": true,
+    "mustNotModifyScope": true,
+    "mustNotReviewResults": true
+  },
+  "idleSemantics": {
+    "continuousPollingRequired": false,
+    "idleHeartbeatRequired": false,
+    "permanentlyOnlineWorkerRequired": false,
+    "offlineBetweenTasksIsNormal": true
+  },
+  "retiredBridgeV2Semantics": {
+    "continuousPollingWhileIdle": "RETIRED",
+    "idleHeartbeatWhileWaiting": "RETIRED",
+    "workerWaitingLoop": "RETIRED",
+    "alertOnWorkerOfflineBetweenTasks": "RETIRED"
+  },
   "oneWorkerOneActiveTask": true,
-  "pollingStoppedWhileWorking": true,
-  "workingHeartbeatContinues": true,
-  "workerPassIsArchitectAccept": false,
-  "systemBridgeAlertIsResult": false,
-  "historicalChatExecutable": false,
-  "historicalTaskArchiveExecutable": false,
-  "repositoryIsSourceOfTruth": true,
-  "automaticContinuationRequiresArchitectReview": true,
-  "architectDecisions": [
-    "ACCEPT",
-    "REPAIR",
-    "BLOCK"
-  ],
-  "mainBranch": "main",
-  "requireLocalCommit": true,
-  "requireRemotePush": true,
-  "requireHeadEqualsOriginMain": true,
-  "stopOnlyWhen": [
-    "architectural_choice_genuinely_required",
-    "source_of_truth_conflict",
-    "unsafe_or_unresolved_repository_state",
-    "material_data_loss_risk",
-    "security_critical_ambiguity",
-    "missing_external_business_fact",
-    "user_pause"
-  ]
+  "workerPassNotArchitectAccept": true,
+  "systemBridgeAlertIsNotResult": true,
+  "taskArtifactExtension": ".task.md",
+  "persistReceivedTaskArtifactUnder": "docs/ai/tasks/",
+  "notes": "Worker remains IDLE between Tasks. External Watchdog sends BRIDGE-WAKE when a Pending Task appears. BRIDGE-WAKE is control traffic, not Task/Result."
 }

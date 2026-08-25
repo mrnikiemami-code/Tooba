@@ -1,4 +1,4 @@
-# Tooba Bridge-V2 Pipeline Setup
+# Tooba Bridge-Wake-V1 Pipeline Setup
 
 1. Extract this pack into the root of:
 
@@ -19,7 +19,7 @@ git status --short --branch
 
 ```bash
 git add AGENTS.md README.md SETUP.md docs
-git commit -m "docs: configure Tooba Bridge-V2 governance"
+git commit -m "docs: configure Tooba Bridge-Wake-V1 governance"
 git push origin main
 git fetch origin
 git rev-parse HEAD
@@ -32,14 +32,24 @@ Required:
 HEAD == origin/main
 ```
 
-4. Configure Bridge and the Coding Agent Worker for:
+4. Configure Bridge, External Watchdog, and the Coding Agent Worker for:
 
 ```text
-PIPELINE-PROTOCOL: BRIDGE-V2
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 ```
 
-5. Start the Worker with `Waiting` heartbeat and poll only:
+5. Between Tasks the Worker remains **IDLE / OFFLINE**. No continuous polling
+   or idle heartbeat is required.
+
+6. When Tampermonkey dispatches a downloadable `.task.md` to Bridge and the Task
+   becomes Pending, the External Watchdog sends:
+
+```text
+BRIDGE-WAKE
+```
+
+7. On wake, the Worker claims exactly one Task:
 
 ```text
 GET /api/tasks/next?channelId=tooba-main
@@ -50,4 +60,5 @@ not manually paste Tasks into a Worker. Follow
 `docs/ai/TOOBA-PIPELINE-PROTOCOL.md` and
 `docs/ai/TOOBA-PIPELINE-CONTROLLER.md`.
 
-6. Do not start product implementation unless Bridge dispatches the Task.
+8. After Result delivery, the Worker returns to **IDLE** and stops. Do not
+   resume continuous polling.

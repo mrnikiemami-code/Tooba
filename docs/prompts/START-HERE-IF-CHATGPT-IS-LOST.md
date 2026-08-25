@@ -1,12 +1,12 @@
-# Tooba — Bridge-V2 Recovery Start
+# Tooba — Bridge-Wake-V1 Recovery Start
 
 ```text
-PIPELINE-PROTOCOL: BRIDGE-V2
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T013
+Last Architect Accepted Product Task: TB-P05-T014
 Governance: TB-P05-GOV-MIGRATION-BRIDGE-V2 = ACCEPTED
-Current Product Task: TB-P05-T014 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT
+Current Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -45,25 +45,26 @@ Then recover:
 - blockers and locked architecture/product decisions;
 - `HEAD`, `origin/main`, and working-tree safety.
 
-The sole current operational Task source is Bridge. The user does not paste
-Tasks into a Worker.
+The sole current operational Task source is Bridge after `BRIDGE-WAKE`. The user
+does not paste Tasks into a Worker.
 
 ```text
 ONE WORKER = ONE ACTIVE TASK
 Worker PASS != Architect ACCEPT
 SYSTEM-BRIDGE-ALERT != Result
+Worker offline between Tasks = NORMAL
+No continuous polling while idle
 ```
 
 An alert does not advance state, mark a Task PASS/FAIL, or authorize another
-Task. Wait for Worker/Bridge recovery.
+Task. Do not emit or interpret an alert merely because the Worker is offline
+between Tasks. Wait for Worker/Bridge recovery on real transport failures.
 
 Historical Task and Result artifacts may contain legacy Cursor/chat pipeline
 syntax. Preserve them as prior-execution evidence; they are not current
 operational instructions.
 
-P00–P04 remain complete. P05 remains in progress. TB-P05-T010 through TB-P05-T013
-are ACCEPTED. TB-P05-T014 is AWAITING_ARCHITECT_ACCEPT with private AddressBook
-ownership, actor isolation, CRUD, one-default invariant, checkout saved-address
-snapshotting, guest inline regression retained, Shopeiva address/checkout UI
-binding, and evidence under `docs/evidence/TB-P05-T014/`. Shopeiva decisions, module boundaries, accepted
-architecture, and deferred Payment/Cart concerns remain unchanged.
+P00–P04 remain complete. P05 remains in progress. TB-P05-T010 through TB-P05-T014
+are ACCEPTED. TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 is AWAITING_ARCHITECT_ACCEPT.
+Shopeiva decisions, module boundaries, accepted architecture, and deferred
+Payment/Cart concerns remain unchanged.

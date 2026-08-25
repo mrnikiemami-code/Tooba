@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T013, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-T014 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T014, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -134,11 +134,12 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-09 | Public merchandising and discovery routes | ACCEPTED (TB-P05-T009) |
 | P05-09R | Demo catalog depth, brand seed and mega menu evidence | ACCEPTED (TB-P05-T009-REPAIR-01) |
 | P05-GOV | Bridge-V2 governance migration | ACCEPTED (TB-P05-GOV-MIGRATION-BRIDGE-V2) |
+| P05-GOV-WAKE | Bridge-Wake-V1 governance migration | AWAITING_ARCHITECT_ACCEPT (TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |
 | P05-12 | Reviews & Ratings behind Shopeiva review UI | ACCEPTED (TB-P05-T012) |
 | P05-13 | Wishlist behind Shopeiva customer/PDP/card UI | ACCEPTED (TB-P05-T013) |
-| P05-14 | Customer Address Book + checkout saved-address selection | AWAITING_ARCHITECT_ACCEPT (TB-P05-T014) |
+| P05-14 | Customer Address Book + checkout saved-address selection | ACCEPTED (TB-P05-T014) |
 
 ## Mandatory UX sequence (locked)
 

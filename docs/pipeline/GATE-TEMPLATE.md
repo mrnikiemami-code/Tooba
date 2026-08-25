@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-V2
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 TASK-ID: TB-PXX-GATE
 PHASE: PXX — <Phase Name>
@@ -42,7 +42,7 @@ Return the complete Result through Bridge. `Worker PASS != Architect ACCEPT`.
 `SYSTEM-BRIDGE-ALERT` is not a Result.
 
 After successful Result delivery, call the appropriate Bridge task
-complete/fail endpoint. Return to `Waiting` and resume polling only after the
-active lifecycle completes.
+complete/fail endpoint. Return to **IDLE** and stop. Do **not** resume
+continuous polling.
 
 END_TASK

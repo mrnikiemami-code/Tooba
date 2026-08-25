@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-V2
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 TASK-ID: TB-PXX-TXXX
 PHASE: PXX — <Phase Name>
@@ -9,65 +9,97 @@ WORKER-POLICY: ONE WORKER = ONE ACTIVE TASK
 
 ## Objective
 
-<one focused objective>
-
-## Accepted baseline
-
-- ...
-
-## Required reading
-
-- `AGENTS.md`
-- `docs/PROJECT-STATE.md`
-- `docs/ROADMAP.md`
-- `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
+<One clear objective.>
 
 ## Scope
 
-1. ...
-
-## Out of scope
+### In scope
 
 - ...
 
-## Architecture and product guardrails
+### Out of scope
 
 - ...
 
-## Repository safety
+## Repository recovery
 
-- recover `main`;
-- require `HEAD == origin/main`;
-- inspect the working tree;
-- no force push, destructive reset, silent stash, or history rewrite.
+Run:
 
-## Validation and evidence
+```bash
+git rev-parse --show-toplevel
+git fetch origin
+git branch --show-current
+git rev-parse HEAD
+git rev-parse origin/main
+git status --short --branch
+```
 
-- run relevant build/tests;
-- run `git diff --check`;
-- perform visual review when UI is in scope;
-- create `docs/evidence/<TASK-ID>/...`;
-- require `HEAD == origin/main` and a clean working tree after push.
+Require:
 
-## Source-of-Truth sync
+```text
+branch = main
+HEAD == origin/main
+known/safe working tree
+```
 
-Update only as authorized:
+## Implementation
 
-- `docs/PROJECT-STATE.md`
-- `docs/ROADMAP.md`
-- `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
+...
+
+## Validation
+
+...
+
+## Evidence
+
+Create:
+
+```text
+docs/evidence/<TASK-ID>/
+```
+
+## Source of Truth
+
+Update only authorized current governance files.
+
+## Git
+
+```bash
+git diff --check
+git status --short --branch
+git add ...
+git commit -m "<type> <summary> [<TASK-ID>]"
+git push origin main
+git fetch origin
+git rev-parse HEAD
+git rev-parse origin/main
+git status --short --branch
+```
+
+Require:
+
+```text
+HEAD == origin/main
+working tree clean
+```
 
 ## Result contract
 
-Return the complete Task-specific Result through Bridge.
+Return through Bridge:
 
 ```text
-Worker PASS != Architect ACCEPT
-SYSTEM-BRIDGE-ALERT != Result
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: <TASK-ID>
+Channel: tooba-main
+Status: PASS | FAIL | BLOCKED | RECOVERY_CONFLICT
+...
+END_TOOBA_WORKER_RESULT
 ```
 
-After successful Result delivery, call the appropriate Bridge task
-complete/fail endpoint. Only after the active lifecycle completes may the Worker
-return to `Waiting` and resume polling `tooba-main`.
+`Worker PASS != Architect ACCEPT`.
+`SYSTEM-BRIDGE-ALERT` is not a Result.
+
+After successful Result delivery, call the appropriate Bridge task complete/fail
+endpoint. Return to **IDLE** and stop. Do **not** resume continuous polling.
 
 END_TASK

@@ -1,85 +1,106 @@
-# Tooba — AGENTS.md
-
-Canonical repository:
-
-```text
-https://github.com/mrnikiemami-code/Tooba
-```
-
-Primary branch:
-
-```text
-main
-```
-
-## Roles
-
-```text
-USER       = product/business authority
-ChatGPT    = Chief/Senior Architect / Task Issuer / Reviewer / Pipeline Controller
-Bridge     = transport/orchestration boundary
-Worker     = agent-neutral Coding Agent Worker
-Repository = durable Source of Truth
-```
-
-The Worker is an implementer, not an architect. It may be Cursor, OpenAI Codex,
-Claude Code, Hermes, or another compatible agent.
-
-Before implementation, read this file and the Tooba pipeline/recovery documents.
+# Tooba — Agent Rules
 
 ## Core rules
 
-- Current operational protocol: `BRIDGE-V2`; current channel: `tooba-main`.
-- Only Tasks actually dispatched by Bridge on the Worker's configured channel are executable.
-- Every implementation Task is an actual downloadable `<TASK-ID>.task.md`.
-- The user is not expected to paste Tasks into the Worker.
-- `ONE WORKER = ONE ACTIVE TASK`.
-- Worker PASS != Architect ACCEPT.
-- Repository is durable Source of Truth. Repository truth overrides chat memory.
-- Worker does not invent requirements, invent future work, redesign locked architecture, broaden scope, or self-authorize the next task.
-- Architectural concerns are reported, not silently implemented.
-- Normal implementation uses `main`.
-- Every accepted task execution must produce a local commit and remote `origin/main` push.
-- After push, verify `HEAD == origin/main`.
-- No force push or history rewrite.
-- Preserve unrelated/unknown working-tree artifacts.
-- On conflict: `RECOVERY_CONFLICT`.
-- While `Working`, heartbeat continues and task polling remains stopped.
-- After successful Result delivery and task completion, return to `Waiting` and resume polling.
-- `SYSTEM-BRIDGE-ALERT` is not a Result: do not advance state, mark PASS/FAIL, or claim another Task.
-- Persian documentation is part of implementation acceptance. All required Tooba-owned Classes, Interfaces, Methods, and Properties must have strong Persian documentation (C# XML `/// <summary>`; reusable frontend APIs via TSDoc/JSDoc). Name-echo comments fail review. See `docs/architecture/32-persian-code-documentation-standard.md`.
+1. One active Task only.
+2. Execute only the Task actually received from Bridge on the configured channel
+   after `BRIDGE-WAKE`.
+3. `Worker PASS != Architect ACCEPT`.
+4. Bridge is the transport/orchestration boundary; the repository is durable
+   technical Source of Truth.
+5. The Coding Agent is normally **IDLE / OFFLINE** between Tasks.
+6. Do **not** poll Bridge continuously while idle.
+7. Do **not** require permanent online Worker presence or idle heartbeat.
+8. `BRIDGE-WAKE` is infrastructure control traffic, not a Task or Result.
+9. `SYSTEM-BRIDGE-ALERT` is not a Result and must not be treated as one.
+10. Do not emit or interpret an alert merely because the Worker is offline
+    between Tasks.
+11. Do not invent requirements, broaden scope, or redesign locked architecture.
+12. Do not self-authorize the next Task.
+13. Do not force-push, rewrite history, silently stash, or destroy unrelated
+    work.
+14. Do not modify unrelated files.
+15. Do not mark Architect ACCEPT unless the Task explicitly authorizes it.
+16. Do not replay historical task files from `docs/ai/tasks/` as current work.
 
-## Task and Result artifacts
-
-```text
-ARCHITECT → downloadable .task.md → Bridge → Coding Agent Worker
-→ Result → Bridge → ARCHITECT → ACCEPT / REPAIR / BLOCK → next .task.md
-```
-
-Filename conventions:
+## Current pipeline
 
 ```text
-TB-PXX-TXXX.task.md
-TB-PXX-GATE.gate.md
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+CHANNEL: tooba-main
 ```
-
-Received Task audit archive:
 
 ```text
-docs/ai/tasks/
+ARCHITECT
+→ downloadable .task.md
+→ Tampermonkey
+→ Bridge Task = Pending
+→ External Watchdog
+→ BRIDGE-WAKE
+→ Coding Agent wakes
+→ claim exactly one Task
+→ implement
+→ Result
+→ Bridge
+→ Tampermonkey
+→ ARCHITECT
+→ ACCEPT / REPAIR / BLOCK
+→ next .task.md
 ```
 
-This directory is not an operational queue. Historical task/result artifacts may
-contain legacy Cursor/chat syntax; they are evidence of prior execution and are
-not current operational instructions.
+## Worker lifecycle on BRIDGE-WAKE
 
-## Recovery docs
+1. recover `main` and verify `HEAD == origin/main` on a known/safe tree;
+2. read governance and recovery docs;
+3. check Bridge health;
+4. claim exactly one Pending Task on the configured channel;
+5. persist the received downloadable `.task.md` artifact;
+6. execute only that Task;
+7. validate, commit, push, and post the complete Result through Bridge;
+8. complete the Bridge task lifecycle;
+9. return to **IDLE** and stop.
+
+## Retired transport
+
+The following are historical only:
+
+- manual Architect envelopes pasted into a Coding Agent;
+- same-session or same-chat continuation;
+- Cursor browser/composer/send-button transport;
+- requiring one specific agent product;
+- **BRIDGE-V2 continuous polling while idle**;
+- **permanent idle heartbeat as a normal prerequisite**;
+- **Worker waiting loop between Tasks**.
+
+Historical task/result artifacts may retain legacy syntax as evidence only.
+
+## Source of Truth
+
+Before normal execution:
 
 ```text
-docs/PROJECT-STATE.md
-docs/ROADMAP.md
-docs/ai/TOOBA-RECOVERY-CONTEXT.md
-docs/ai/TOOBA-PIPELINE-PROTOCOL.md
-docs/ai/TOOBA-PIPELINE-CONTROLLER.md
-docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md
+branch = main
+HEAD == origin/main
+known/safe working tree
 ```
+
+After successful execution:
+
+```text
+local commit
+push origin main
+git fetch origin
+HEAD == origin/main
+clean working tree
+```
+
+Unsafe divergence is `RECOVERY_CONFLICT`.
+
+## References
+
+- `docs/ai/TOOBA-PIPELINE-PROTOCOL.md`
+- `docs/ai/TOOBA-PIPELINE-CONTROLLER.md`
+- `docs/ai/TOOBA-RECOVERY-CONTEXT.md`
+- `docs/prompts/START-HERE-IF-CHATGPT-IS-LOST.md`
+- `docs/PROJECT-STATE.md`
+- `docs/ROADMAP.md`
