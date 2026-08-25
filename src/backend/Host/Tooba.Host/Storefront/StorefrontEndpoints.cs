@@ -87,9 +87,13 @@ public static class StorefrontEndpoints
             pageSize,
             cancellationToken));
 
-    private static async Task<IResult> GetDetailAsync(string slug, StorefrontComposer composer, CancellationToken cancellationToken)
+    private static async Task<IResult> GetDetailAsync(
+        string slug,
+        Guid? variantId,
+        StorefrontComposer composer,
+        CancellationToken cancellationToken)
     {
-        var page = await composer.GetDetailAsync(slug, cancellationToken);
+        var page = await composer.GetDetailAsync(slug, variantId, cancellationToken);
         return page is null
             ? Results.Json(new { title = "Not Found", errorCode = "storefront.product.missing" }, statusCode: StatusCodes.Status404NotFound)
             : Results.Json(page);

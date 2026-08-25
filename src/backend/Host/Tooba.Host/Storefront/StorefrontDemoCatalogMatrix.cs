@@ -282,7 +282,7 @@ internal static class StorefrontDemoCatalogMatrix
     internal static int ProductCount => Families.Sum(family => family.Children.Sum(child => child.Products.Count));
 
     /// <summary>
-    /// تعداد Offer قطعی ماتریس: یک Offer برای هر محصول و یک Offer فروشندهٔ دوم برای نخستین محصول هر ردهٔ فرزند.
+    /// تعداد Offer قطعی ماتریس: Offer پایه، فروشندهٔ دوم رده‌ها و سه Offer برای گونه‌های نمایشی اضافه.
     /// </summary>
-    internal static int ExpectedOfferCount => ProductCount + ChildCategoryCount;
+    internal static int ExpectedOfferCount => ProductCount + ChildCategoryCount + 3;
 }

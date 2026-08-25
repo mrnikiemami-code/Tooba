@@ -125,6 +125,27 @@ public sealed record StorefrontAlternateOffer(
     bool InStock);
 
 /// <summary>
+/// یک مشخصهٔ عمومی و خوانا از Catalog؛ شناسهٔ تعریف یا گزینه را افشا نمی‌کند.
+/// </summary>
+public sealed record StorefrontProductSpecification(string Label, string Value);
+
+/// <summary>
+/// مقدار نمایشی یک محور گونه، مانند «رنگ: مشکی»، بدون افشای شناسهٔ داخلی گزینه.
+/// </summary>
+public sealed record StorefrontVariantAxis(string Label, string Value);
+
+/// <summary>
+/// گونهٔ قابل انتخاب محصول و خلاصهٔ حقیقت خرید آن که در backend از Offer، Pricing و Inventory ترکیب شده است.
+/// </summary>
+public sealed record StorefrontProductVariant(
+    Guid VariantId,
+    IReadOnlyList<StorefrontVariantAxis> Axes,
+    bool Purchasable,
+    StorefrontOfferCandidate? PrimaryOffer,
+    decimal? PromotionalAmountExclusiveOfTax,
+    string? PromotionLabel);
+
+/// <summary>
 /// صفحهٔ جزئیات محصول. گالری از مرجع مات Media است نه باینری Catalog.
 /// </summary>
 public sealed record StorefrontProductDetailPage(
@@ -132,11 +153,17 @@ public sealed record StorefrontProductDetailPage(
     string Slug,
     string Title,
     string? Description,
+    string? ShortDescription,
+    string? FullDescription,
     string CategoryName,
     string? BrandName,
     IReadOnlyList<Guid> MediaAssetIds,
+    IReadOnlyList<StorefrontProductSpecification> Specifications,
+    IReadOnlyList<StorefrontProductVariant> Variants,
     Guid SelectedVariantId,
     StorefrontOfferCandidate PrimaryOffer,
+    decimal? PromotionalAmountExclusiveOfTax,
+    string? PromotionLabel,
     IReadOnlyList<StorefrontAlternateOffer> OtherSellers,
     IReadOnlyList<StorefrontProductCard> RelatedProducts,
     string SeoTitle,

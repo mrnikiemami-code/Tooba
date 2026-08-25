@@ -52,8 +52,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
-TB-P05-T010 (legacy form) = HELD / NOT EXECUTED
+TB-P05-T010 (Bridge-V2) = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -80,8 +79,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
-TB-P05-T010 = HELD / NOT EXECUTED
+TB-P05-T010 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -544,4 +542,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009 and TB-P05-T009-REPAIR-01 are Architect-accepted. TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT. Legacy-form TB-P05-T010 is HELD / NOT EXECUTED; after governance migration ACCEPT, the next product action is to reissue TB-P05-T010 through Bridge-V2 while preserving its product scope and acceptance intent. Do not mark the reissue issued before Architect ACCEPT. Locked follow-up: PDP completeness must map backend capability onto the correct Shopeiva PDP sections (variants/options, short and full description, media gallery, specifications, seller offers, pricing, availability, reviews when capability exists, related products); adding a minimum Shopeiva-compatible section is the only approved structure exception, and only for a real backend capability with no existing section. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; storefront product card star rating is fixed template decoration, not a backend rating signal. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001/T002/T003/T004/T005/T006/T007/T008/T009, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 are Architect-accepted. TB-P05-T010 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT: locked Shopeiva PDP now maps distinct Catalog descriptions, selected-variant axes and specifications, selected Offer/seller/Pricing/Inventory/Promotion truth, other sellers, media, related products, and SEO; fixed PDP/card ratings are removed because Review/Rating is not available in backend, and AggregateRating is absent. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

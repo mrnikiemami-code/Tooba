@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   formatOfferAmount,
+  loadStorefrontDetail,
   mapStorefrontDetail,
   mapStorefrontHome,
   mapStorefrontListing,
@@ -69,6 +70,15 @@ test("detail mapper reads amount from primary offer only", () => {
     productId: "p1",
     slug: "shirt",
     title: "پیراهن مردانه لینن",
+    shortDescription: "خلاصهٔ واقعی",
+    fullDescription: "شرح کامل واقعی",
+    specifications: [{ label: "جنس", value: "لینن" }],
+    variants: [{
+      variantId: "v1",
+      axes: [{ label: "رنگ", value: "آبی" }],
+      primaryOffer: null,
+      otherSellers: [],
+    }],
     categoryName: "پوشاک",
     brandName: "آرمان",
     mediaAssetIds: [],
@@ -112,9 +122,17 @@ test("detail mapper reads amount from primary offer only", () => {
     ],
     seoTitle: "پیراهن",
     seoDescription: "کالای زنده",
+    rating: 4.5,
+    reviewCount: 12,
     cartMutationEnabled: false,
   });
   assert.equal(detail?.primaryOffer.amountExclusiveOfTax, 1790000);
+  assert.equal(detail?.shortDescription, "خلاصهٔ واقعی");
+  assert.equal(detail?.fullDescription, "شرح کامل واقعی");
+  assert.deepEqual(detail?.specifications, [{ label: "جنس", value: "لینن" }]);
+  assert.equal(detail?.variants[0]?.options[0]?.value, "آبی");
+  assert.equal("rating" in (detail ?? {}), false);
+  assert.equal("reviewCount" in (detail ?? {}), false);
   assert.equal(detail?.otherSellers.length, 1);
   assert.equal(detail?.relatedProducts[0]?.slug, "related-shirt");
   assert.equal(detail?.cartMutationEnabled, false);
@@ -124,7 +142,24 @@ test("detail mapper reads amount from primary offer only", () => {
   assert.equal(structuredData.includes("p1"), false);
   assert.equal(structuredData.includes("o-cheap"), false);
   assert.equal(structuredData.includes("s2"), false);
+  assert.equal(structuredData.includes("AggregateRating"), false);
+  assert.equal(structuredData.includes("reviewCount"), false);
   assert.match(structuredData, /"url":"\/products\/shirt"/);
+});
+
+test("detail loader sends selected variant only to the authoritative endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = (async (input) => {
+    requestedUrl = String(input);
+    return new Response(null, { status: 404 });
+  }) as typeof fetch;
+  try {
+    await loadStorefrontDetail("پیراهن آبی", "variant/blue");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assert.match(requestedUrl, /\/v1\/storefront\/products\/%D9%BE%DB%8C%D8%B1%D8%A7%D9%87%D9%86%20%D8%A2%D8%A8%DB%8C\?variantId=variant%2Fblue$/);
 });
 
 test("listing mapper keeps backend discovery facets and pagination", () => {

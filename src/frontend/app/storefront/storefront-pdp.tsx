@@ -8,18 +8,12 @@ import {
   Heart,
   LineChart,
   Minus,
-  Package,
   Plus,
   Share2,
-  Shield,
   ShoppingBag,
-  Sparkles,
-  Star,
-  Tag,
-  Truck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
+import { formatOfferAmount, loadStorefrontDetail, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
@@ -29,12 +23,13 @@ import { StorefrontProductCardView } from "./storefront-product-card.tsx";
  */
 export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDetailPage }) {
   const router = useRouter();
+  const [currentDetail, setCurrentDetail] = useState(detail);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews">("intro");
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const offer = detail.primaryOffer;
-  const images = detail.mediaAssetIds.length > 0 ? detail.mediaAssetIds : [null];
+  const offer = currentDetail.primaryOffer;
+  const images = currentDetail.mediaAssetIds.length > 0 ? currentDetail.mediaAssetIds : [null];
   const [active, setActive] = useState(0);
 
   const tabs = [
@@ -52,10 +47,10 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </Link>
         <span>/</span>
         <Link href="/products" className="hover:text-[#2563EB]">
-          {detail.categoryName}
+          {currentDetail.categoryName}
         </Link>
         <span>/</span>
-        <span className="text-gray-800">{detail.title}</span>
+        <span className="text-gray-800">{currentDetail.title}</span>
       </nav>
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
@@ -63,7 +58,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
           <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-l border-gray-200 p-4">
             <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={storefrontMediaUrl(images[active])} alt={detail.title} className="w-full h-full object-contain p-6" />
+              <img src={storefrontMediaUrl(images[active])} alt={currentDetail.title} className="w-full h-full object-contain p-6" />
             </div>
             <div className="flex gap-2 mt-3 overflow-x-auto">
               {images.map((id, index) => (
@@ -83,53 +78,60 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
           <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-gray-200 p-4 lg:p-5 space-y-4">
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Link href="/products" className="text-[#2563EB] font-medium hover:underline">
-                {detail.categoryName}
+                {currentDetail.categoryName}
               </Link>
               <span>/</span>
-              <span className="bg-gray-100 px-2 py-0.5 rounded-lg">{detail.brandName ?? "برند"}</span>
+              <span className="bg-gray-100 px-2 py-0.5 rounded-lg">{currentDetail.brandName ?? "برند ثبت‌نشده"}</span>
             </div>
-            <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 leading-9">{detail.title}</h1>
-            <p className="text-sm text-gray-500 leading-6">{detail.description ?? "شرح تکمیلی از Catalog."}</p>
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-gray-100 rounded-xl px-3 py-1.5">
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-sm font-bold">۴٫۵</span>
-                <span className="text-xs text-gray-500">از ۵</span>
+            <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 leading-9">{currentDetail.title}</h1>
+            <p className="text-sm text-gray-500 leading-6">{currentDetail.shortDescription ?? "معرفی اجمالی برای این کالا ثبت نشده است."}</p>
+            {currentDetail.variants.some((variant) => variant.options.length > 0) ? (
+              <div className="space-y-2 min-w-0">
+                <p className="text-sm font-bold text-gray-700">انتخاب گزینه</p>
+                <div className="flex flex-wrap gap-2 max-w-full">
+                  {currentDetail.variants.filter((variant) => variant.options.length > 0).map((variant) => (
+                    <button
+                      key={variant.variantId}
+                      type="button"
+                      disabled={busy}
+                      aria-pressed={variant.variantId === currentDetail.selectedVariantId}
+                      className={`max-w-full rounded-xl border px-3 py-2 text-xs break-words ${
+                        variant.variantId === currentDetail.selectedVariantId
+                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                          : "border-gray-200 bg-white text-gray-700"
+                      }`}
+                      onClick={() => {
+                        void (async () => {
+                          setBusy(true);
+                          setNote(null);
+                          const selected = await loadStorefrontDetail(currentDetail.slug, variant.variantId);
+                          if (selected) {
+                            setCurrentDetail(selected);
+                            setQty(1);
+                          } else {
+                            setNote("دریافت اطلاعات این گزینه ممکن نشد.");
+                          }
+                          setBusy(false);
+                        })();
+                      }}
+                    >
+                      {variant.options.map((option) => `${option.label}: ${option.value}`).join(" · ")}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <span className="text-xs text-gray-500">درز امتیاز نمایشی قالب است نه ماژول Review.</span>
-            </div>
-            <div className="bg-gray-50 rounded-2xl p-4">
-              <p className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#2563EB]" />
-                ویژگی‌های کلیدی
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: Truck, title: "ارسال سریع" },
-                  { icon: Shield, title: "ضمانت اصالت" },
-                  { icon: Package, title: "بسته‌بندی استاندارد" },
-                  { icon: Tag, title: "قیمت از Offer" },
-                ].map((item) => (
-                  <div key={item.title} className="flex items-center gap-2 p-2 bg-white rounded-xl">
-                    <div className="p-1.5 rounded-lg bg-[#2563EB]/10 text-[#2563EB]">
-                      <item.icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs text-gray-700">{item.title}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ) : null}
           </div>
 
           <div className="lg:col-span-3 p-4 lg:p-5 space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 bg-gray-50 rounded-xl">
                 <p className="text-[9px] text-gray-500">دسته</p>
-                <p className="text-xs font-medium truncate">{detail.categoryName}</p>
+                <p className="text-xs font-medium truncate">{currentDetail.categoryName}</p>
               </div>
               <div className="p-2 bg-gray-50 rounded-xl">
                 <p className="text-[9px] text-gray-500">برند</p>
-                <p className="text-xs font-medium truncate">{detail.brandName ?? "-"}</p>
+                <p className="text-xs font-medium truncate">{currentDetail.brandName ?? "-"}</p>
               </div>
               <div className="p-2 bg-gray-50 rounded-xl">
                 <p className="text-[9px] text-gray-500">فروشنده</p>
@@ -179,7 +181,15 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                 <Plus className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-2xl font-black text-[#2563EB]">{formatOfferAmount(offer.amountExclusiveOfTax, offer.currency)}</p>
+            {currentDetail.promotionLabel ?? offer.promotionLabel ? (
+              <p className="text-xs font-bold text-[#2563EB]">{currentDetail.promotionLabel ?? offer.promotionLabel}</p>
+            ) : null}
+            <p className="text-2xl font-black text-[#2563EB]">
+              {formatOfferAmount(
+                currentDetail.promotionalAmountExclusiveOfTax ?? offer.promotionalAmountExclusiveOfTax ?? offer.amountExclusiveOfTax,
+                offer.currency,
+              )}
+            </p>
             {offer.availableUnits <= 0 ? (
               <button type="button" className="w-full py-3 rounded-xl font-bold text-sm bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center gap-2">
                 <Bell className="w-4 h-4" /> موجود شد خبرم کن
@@ -187,7 +197,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             ) : (
               <button
                 type="button"
-                disabled={!detail.cartMutationEnabled || busy}
+                disabled={!currentDetail.cartMutationEnabled || busy}
                 onClick={() => {
                   void (async () => {
                     setBusy(true);
@@ -209,10 +219,10 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               </button>
             )}
             {note ? <p className="text-xs text-gray-500" role="status" aria-live="polite">{note}</p> : null}
-            {detail.otherSellers.length > 0 ? (
+            {currentDetail.otherSellers.length > 0 ? (
               <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
                 <strong className="text-xs">فروشندگان دیگر همین کالا</strong>
-                {detail.otherSellers.map((seller) => (
+                {currentDetail.otherSellers.map((seller) => (
                   <p key={seller.offerId} className="text-xs text-gray-600">
                     {seller.sellerDisplayName} · {formatOfferAmount(seller.amountExclusiveOfTax, seller.currency)} ·{" "}
                     {seller.inStock ? "موجود" : "ناموجود"}
@@ -241,22 +251,33 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
         <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700">
           {tab === "specs" ? (
-            <p>مشخصات فنی از ماژول جدا می‌آید؛ این زبانه فعلاً پوستهٔ قالب است.</p>
+            currentDetail.specifications.length > 0 ? (
+              <dl className="divide-y divide-gray-100">
+                {currentDetail.specifications.map((specification) => (
+                  <div key={`${specification.label}-${specification.value}`} className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2">
+                    <dt className="font-bold text-gray-600">{specification.label}</dt>
+                    <dd className="sm:col-span-2 break-words">{specification.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : <p>مشخصاتی برای این کالا ثبت نشده است.</p>
           ) : tab === "reviews" ? (
-            <p>ماژول Review هنوز به این برش وصل نیست. درز امتیاز نمایشی است.</p>
+            <p>امکان ثبت و نمایش نظر برای این کالا در حال حاضر در دسترس نیست.</p>
+          ) : tab === "full" ? (
+            <p>{currentDetail.fullDescription ?? "معرفی تکمیلی برای این کالا ثبت نشده است."}</p>
           ) : (
-            <p>{detail.description ?? "برای این کالا شرح Catalog ثبت نشده است."}</p>
+            <p>{currentDetail.shortDescription ?? "معرفی اجمالی برای این کالا ثبت نشده است."}</p>
           )}
         </div>
       </div>
-      {detail.relatedProducts.length > 0 ? (
+      {currentDetail.relatedProducts.length > 0 ? (
         <section className="space-y-3" aria-labelledby="related-products-title">
           <div className="flex items-center justify-between">
             <h2 id="related-products-title" className="text-lg font-extrabold text-gray-900">محصولات مرتبط</h2>
             <Link href="/products" className="text-xs font-bold text-[#2563EB]">مشاهده همه</Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {detail.relatedProducts.map((card) => <StorefrontProductCardView key={card.slug} card={card} />)}
+            {currentDetail.relatedProducts.map((card) => <StorefrontProductCardView key={card.slug} card={card} />)}
           </div>
         </section>
       ) : null}

@@ -113,6 +113,48 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
+    public void Detail_contract_exposes_descriptions_specifications_and_backend_resolved_variants_without_reviews()
+    {
+        var names = typeof(StorefrontProductDetailPage).GetProperties()
+            .Select(item => item.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("ShortDescription", names);
+        Assert.Contains("FullDescription", names);
+        Assert.Contains("Specifications", names);
+        Assert.Contains("Variants", names);
+        Assert.Contains("SelectedVariantId", names);
+        Assert.Contains("PromotionalAmountExclusiveOfTax", names);
+        Assert.DoesNotContain("Rating", names);
+        Assert.DoesNotContain("RatingAggregate", names);
+        Assert.DoesNotContain("Reviews", names);
+
+        var variantNames = typeof(StorefrontProductVariant).GetProperties()
+            .Select(item => item.Name)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("Axes", variantNames);
+        Assert.Contains("Purchasable", variantNames);
+        Assert.Contains("PrimaryOffer", variantNames);
+        Assert.DoesNotContain("Price", variantNames);
+        Assert.DoesNotContain("Stock", variantNames);
+    }
+
+    [Fact]
+    public void Alternate_seller_contract_remains_offer_owned_and_has_no_product_price_or_inventory_field()
+    {
+        var names = typeof(StorefrontAlternateOffer).GetProperties()
+            .Select(item => item.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains("OfferId", names);
+        Assert.Contains("AmountExclusiveOfTax", names);
+        Assert.Contains("AvailableUnits", names);
+        Assert.DoesNotContain("ProductPrice", names);
+        Assert.DoesNotContain("ProductStock", names);
+        Assert.DoesNotContain("InventoryId", names);
+    }
+
+    [Fact]
     public void Listing_contract_exposes_only_backend_owned_discovery_state()
     {
         var names = typeof(StorefrontListingPage).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.Ordinal);

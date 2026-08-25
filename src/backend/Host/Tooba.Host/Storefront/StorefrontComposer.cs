@@ -335,9 +335,12 @@ public sealed class StorefrontComposer
     }
 
     /// <summary>
-    /// PDP را از slug درز SEO می‌خواند. چند فروشنده به‌صورت Offer جدا نمایش داده می‌شوند.
+    /// PDP را از slug می‌خواند و گونهٔ درخواستی را فقط پس از عضویت در همان محصول در backend انتخاب می‌کند.
     /// </summary>
-    public async Task<StorefrontProductDetailPage?> GetDetailAsync(string slug, CancellationToken cancellationToken)
+    public async Task<StorefrontProductDetailPage?> GetDetailAsync(
+        string slug,
+        Guid? variantId,
+        CancellationToken cancellationToken)
     {
         var normalized = slug.Trim().ToLowerInvariant();
         var products = await _catalog.Products.AsNoTracking()
@@ -350,31 +353,37 @@ public sealed class StorefrontComposer
             return null;
         }
 
-        var bundle = await ComposeProductAsync(product, cancellationToken);
+        var bundle = await ComposeProductAsync(product, cancellationToken, selectedVariantId: variantId);
         if (bundle is null)
         {
             return null;
         }
 
-        var (card, primary, others, description, brand, media, variantId) = bundle.Value;
+        var (card, primary, others, shortDescription, fullDescription, brand, media, selectedVariantId, specifications, variants) = bundle.Value;
         var relatedProducts = SelectRelatedProducts(
             await BuildProductCardsAsync(cancellationToken),
             product.ProductId,
             card.CategoryId);
         var seoTitle = string.IsNullOrWhiteSpace(product.SeoTitleSeam) ? card.Title : product.SeoTitleSeam;
-        var seoDescription = string.IsNullOrWhiteSpace(description)
+        var seoDescription = string.IsNullOrWhiteSpace(shortDescription)
             ? $"{card.Title} از {card.SellerDisplayName}"
-            : description;
+            : shortDescription;
         return new StorefrontProductDetailPage(
             product.ProductId,
             card.Slug,
             card.Title,
-            description,
+            shortDescription,
+            shortDescription,
+            fullDescription,
             card.CategoryName,
             brand,
             media,
-            variantId,
+            specifications,
+            variants,
+            selectedVariantId,
             primary,
+            card.PromotionalAmountExclusiveOfTax,
+            card.PromotionLabel,
             others,
             relatedProducts,
             seoTitle!,
@@ -418,17 +427,20 @@ public sealed class StorefrontComposer
         return cards;
     }
 
-    private async Task<(StorefrontProductCard Card, StorefrontOfferCandidate Primary, IReadOnlyList<StorefrontAlternateOffer> Others, string? Description, string? Brand, IReadOnlyList<Guid> Media, Guid VariantId)?> ComposeProductAsync(
+    private async Task<(StorefrontProductCard Card, StorefrontOfferCandidate Primary, IReadOnlyList<StorefrontAlternateOffer> Others, string? ShortDescription, string? FullDescription, string? Brand, IReadOnlyList<Guid> Media, Guid VariantId, IReadOnlyList<StorefrontProductSpecification> Specifications, IReadOnlyList<StorefrontProductVariant> Variants)?> ComposeProductAsync(
         CatalogProduct product,
         CancellationToken cancellationToken,
-        Guid? preferredSellerPartyId = null)
+        Guid? preferredSellerPartyId = null,
+        Guid? selectedVariantId = null)
     {
         var now = DateTimeOffset.UtcNow;
         var title = (await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], cancellationToken))
             .GetValueOrDefault(product.ProductId)
             ?? product.SlugSeam
             ?? "کالا";
-        var descriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "description", cancellationToken);
+        var shortDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "short_description", cancellationToken);
+        var fullDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "full_description", cancellationToken);
+        var legacyDescriptions = await LoadFieldAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], "description", cancellationToken);
         var categoryLinks = await _catalog.ProductCategories.AsNoTracking()
             .Where(x => x.ProductId == product.ProductId)
             .ToListAsync(cancellationToken);
@@ -452,6 +464,11 @@ public sealed class StorefrontComposer
             .ToListAsync(cancellationToken);
         var variantIds = variants.Select(x => x.VariantId).ToList();
         if (variantIds.Count == 0)
+        {
+            return null;
+        }
+
+        if (selectedVariantId is Guid requestedVariant && !variantIds.Contains(requestedVariant))
         {
             return null;
         }
@@ -513,16 +530,24 @@ public sealed class StorefrontComposer
                 taxLabel));
         }
 
+        var chosenVariantId = selectedVariantId
+            ?? StorefrontPrimaryOfferResolver.Resolve(candidates)?.CatalogVariantId;
+        if (chosenVariantId is null)
+        {
+            return null;
+        }
+
+        var selectedCandidates = candidates.Where(candidate => candidate.CatalogVariantId == chosenVariantId.Value).ToList();
         var resolvableCandidates = preferredSellerPartyId is Guid sellerPartyId
-            ? candidates.Where(candidate => candidate.SellerPartyId == sellerPartyId).ToList()
-            : candidates;
+            ? selectedCandidates.Where(candidate => candidate.SellerPartyId == sellerPartyId).ToList()
+            : selectedCandidates;
         var primary = StorefrontPrimaryOfferResolver.Resolve(resolvableCandidates);
         if (primary is null)
         {
             return null;
         }
 
-        var others = candidates
+        var others = selectedCandidates
             .Where(item => item.OfferId != primary.OfferId)
             .Select(item => new StorefrontAlternateOffer(
                 item.OfferId,
@@ -570,7 +595,117 @@ public sealed class StorefrontComposer
             primary.AvailableUnits,
             primary.AvailableUnits > 0,
             promotionLabel);
-        return (card, primary, others, descriptions.GetValueOrDefault(product.ProductId), brandName, media, primary.CatalogVariantId);
+        var specifications = await BuildSpecificationsAsync(product.ProductId, chosenVariantId.Value, cancellationToken);
+        var variantViews = await BuildVariantsAsync(variants, candidates, cancellationToken);
+        var shortDescription = shortDescriptions.GetValueOrDefault(product.ProductId)
+            ?? legacyDescriptions.GetValueOrDefault(product.ProductId);
+        var fullDescription = fullDescriptions.GetValueOrDefault(product.ProductId)
+            ?? legacyDescriptions.GetValueOrDefault(product.ProductId);
+        return (card, primary, others, shortDescription, fullDescription, brandName, media, chosenVariantId.Value, specifications, variantViews);
+    }
+
+    /// <summary>
+    /// مشخصات محصول و محورهای گونهٔ انتخاب‌شده را فقط از جداول Catalog می‌خواند و
+    /// شناسه‌های شمارشی را به برچسب فارسی تبدیل می‌کند. محور انتخاب‌شده یک ویژگی
+    /// واقعی Catalog است و برای دانه‌های قدیمی که مشخصهٔ غیرمحور ندارند نیز PDP را
+    /// بدون جعل داده قابل ارزیابی نگه می‌دارد.
+    /// </summary>
+    private async Task<IReadOnlyList<StorefrontProductSpecification>> BuildSpecificationsAsync(
+        Guid productId,
+        Guid selectedVariantId,
+        CancellationToken cancellationToken)
+    {
+        var productValues = await _catalog.ProductAttributeValues.AsNoTracking()
+            .Where(value => value.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var variantValues = await _catalog.VariantAttributeValues.AsNoTracking()
+            .Where(value => value.VariantId == selectedVariantId)
+            .ToListAsync(cancellationToken);
+        return await ProjectAttributesAsync(
+            productValues.Select(value => (value.DefinitionId, value.CanonicalValue))
+                .Concat(variantValues.Select(value => (value.DefinitionId, value.CanonicalValue)))
+                .Distinct()
+                .ToList(),
+            cancellationToken,
+            static (label, value) => new StorefrontProductSpecification(label, value));
+    }
+
+    /// <summary>
+    /// همهٔ گونه‌ها را با محور خوانا و Offer اصلی همان گونه نمایش می‌دهد؛ انتخاب کلاینت در این مرحله معتبر فرض نمی‌شود.
+    /// </summary>
+    private async Task<IReadOnlyList<StorefrontProductVariant>> BuildVariantsAsync(
+        IReadOnlyList<CatalogVariant> variants,
+        IReadOnlyList<StorefrontOfferCandidate> candidates,
+        CancellationToken cancellationToken)
+    {
+        var variantIds = variants.Select(variant => variant.VariantId).ToList();
+        var axisRows = await _catalog.VariantAttributeValues.AsNoTracking()
+            .Where(value => variantIds.Contains(value.VariantId))
+            .ToListAsync(cancellationToken);
+        var result = new List<StorefrontProductVariant>();
+        foreach (var variant in variants.OrderBy(item => item.CreatedAt))
+        {
+            var axes = await ProjectAttributesAsync(
+                axisRows.Where(value => value.VariantId == variant.VariantId)
+                    .Select(value => (value.DefinitionId, value.CanonicalValue))
+                    .ToList(),
+                cancellationToken,
+                static (label, value) => new StorefrontVariantAxis(label, value));
+            var primary = StorefrontPrimaryOfferResolver.Resolve(
+                candidates.Where(candidate => candidate.CatalogVariantId == variant.VariantId).ToList());
+            result.Add(new StorefrontProductVariant(
+                variant.VariantId,
+                axes,
+                primary is not null && primary.AvailableUnits > 0,
+                primary,
+                PromotionalAmountExclusiveOfTax: null,
+                PromotionLabel: null));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// مقادیر تایپ‌شدهٔ Catalog را در حافظه به جفت برچسب/مقدار فارسی تبدیل می‌کند.
+    /// </summary>
+    private async Task<IReadOnlyList<T>> ProjectAttributesAsync<T>(
+        IReadOnlyList<(Guid DefinitionId, string CanonicalValue)> values,
+        CancellationToken cancellationToken,
+        Func<string, string, T> projector)
+    {
+        if (values.Count == 0)
+        {
+            return [];
+        }
+
+        var definitionIds = values.Select(value => value.DefinitionId).Distinct().ToList();
+        var definitions = await _catalog.AttributeDefinitions.AsNoTracking()
+            .Where(definition => definitionIds.Contains(definition.DefinitionId))
+            .ToDictionaryAsync(definition => definition.DefinitionId, cancellationToken);
+        var labels = await LoadNamesAsync(CatalogLocalizedOwnerKind.AttributeDefinition, definitionIds, cancellationToken);
+        var optionIds = values
+            .Where(value => definitions.GetValueOrDefault(value.DefinitionId)?.ValueKind == CatalogAttributeValueKind.Enumeration)
+            .Select(value => Guid.TryParseExact(value.CanonicalValue, "N", out var optionId) ? optionId : Guid.Empty)
+            .Where(optionId => optionId != Guid.Empty)
+            .Distinct()
+            .ToList();
+        var optionLabels = await LoadNamesAsync(CatalogLocalizedOwnerKind.AttributeOption, optionIds, cancellationToken);
+
+        return values
+            .Where(value => definitions.ContainsKey(value.DefinitionId))
+            .Select(value =>
+            {
+                var definition = definitions[value.DefinitionId];
+                var displayValue = definition.ValueKind switch
+                {
+                    CatalogAttributeValueKind.Enumeration when Guid.TryParseExact(value.CanonicalValue, "N", out var optionId)
+                        => optionLabels.GetValueOrDefault(optionId) ?? "گزینهٔ تعریف‌شده",
+                    CatalogAttributeValueKind.Boolean => bool.TryParse(value.CanonicalValue, out var flag) && flag ? "بله" : "خیر",
+                    _ => value.CanonicalValue,
+                };
+                return projector(labels.GetValueOrDefault(value.DefinitionId) ?? definition.Code, displayValue);
+            })
+            .ToList();
     }
 
     private async Task<Dictionary<Guid, string>> LoadNamesAsync(

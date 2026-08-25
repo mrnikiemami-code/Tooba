@@ -134,6 +134,8 @@ export interface StorefrontOfferCandidate {
   market: string;
   availableUnits: number;
   taxCategoryLabel: string;
+  promotionalAmountExclusiveOfTax?: number | null;
+  promotionLabel?: string | null;
 }
 
 /**
@@ -148,6 +150,26 @@ export interface StorefrontAlternateOffer {
   inStock: boolean;
 }
 
+/** یک گزینهٔ قابل فهم برای مشتری؛ برچسب و مقدار هر دو از Catalog می‌آیند. */
+export interface StorefrontVariantOption {
+  label: string;
+  value: string;
+}
+
+/** ترکیب قابل انتخاب و Offerهای مقتدر همان ترکیب که Host برگردانده است. */
+export interface StorefrontProductVariant {
+  variantId: string;
+  options: StorefrontVariantOption[];
+  primaryOffer: StorefrontOfferCandidate | null;
+  otherSellers: StorefrontAlternateOffer[];
+}
+
+/** مشخصهٔ عمومی محصول با برچسب و مقدار قابل نمایش، بدون شناسهٔ داخلی. */
+export interface StorefrontProductSpecification {
+  label: string;
+  value: string;
+}
+
 /**
  * جزئیات محصول زنده. موجودی از Inventory روی Offer است.
  */
@@ -156,6 +178,10 @@ export interface StorefrontProductDetailPage {
   slug: string;
   title: string;
   description: string | null;
+  shortDescription: string | null;
+  fullDescription: string | null;
+  specifications: StorefrontProductSpecification[];
+  variants: StorefrontProductVariant[];
   categoryName: string;
   brandName: string | null;
   mediaAssetIds: string[];
@@ -166,4 +192,6 @@ export interface StorefrontProductDetailPage {
   seoTitle: string;
   seoDescription: string;
   cartMutationEnabled: boolean;
+  promotionalAmountExclusiveOfTax?: number | null;
+  promotionLabel?: string | null;
 }

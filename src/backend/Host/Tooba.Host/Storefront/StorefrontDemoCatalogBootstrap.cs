@@ -132,6 +132,7 @@ internal static class StorefrontDemoCatalogBootstrap
         if (await catalogRead.Products.AsNoTracking()
                 .AnyAsync(product => product.SlugSeam == SentinelProductSlug, cancellationToken))
         {
+            await EnrichLocalizedDescriptionsAsync(catalogRead, catalog, cancellationToken);
             return await SummarizeAsync(catalogRead, alreadySeeded: true, cancellationToken);
         }
 
@@ -156,6 +157,17 @@ internal static class StorefrontDemoCatalogBootstrap
             packDefinitionId,
             "standard",
             new Dictionary<string, string> { ["fa-IR"] = "استاندارد", ["en-US"] = "Standard" },
+            cancellationToken);
+        var specialPackOptionId = await catalog.AddAttributeOptionAsync(
+            packDefinitionId,
+            "special",
+            new Dictionary<string, string> { ["fa-IR"] = "بستهٔ ویژه", ["en-US"] = "Special pack" },
+            cancellationToken);
+        var originDefinitionId = await catalog.CreateAttributeDefinitionAsync(
+            "demo_origin",
+            CatalogAttributeValueKind.Text,
+            isVariantAxis: false,
+            new Dictionary<string, string> { ["fa-IR"] = "مناسب برای", ["en-US"] = "Recommended use" },
             cancellationToken);
 
         var sellerPartyIds = new List<Guid>();
@@ -200,6 +212,25 @@ internal static class StorefrontDemoCatalogBootstrap
                         new Dictionary<string, string> { ["fa-IR"] = spec.Name },
                         cancellationToken);
                     await catalog.AssignCategoryAsync(product.ProductId, childCategory.CategoryId, cancellationToken);
+                    await catalog.UpsertProductLocalizedFieldAsync(
+                        product.ProductId,
+                        "short_description",
+                        new Dictionary<string, string> { ["fa-IR"] = $"{spec.Name} با عرضهٔ معتبر فروشندگان توبا" },
+                        cancellationToken);
+                    await catalog.UpsertProductLocalizedFieldAsync(
+                        product.ProductId,
+                        "full_description",
+                        new Dictionary<string, string>
+                        {
+                            ["fa-IR"] = $"{spec.Name} برای استفادهٔ روزمره انتخاب شده است. قیمت هر فروشنده و موجودی قابل فروش به‌صورت زنده از ماژول‌های مالک خوانده می‌شود."
+                        },
+                        cancellationToken);
+                    await catalog.SetProductAttributeAsync(
+                        product.ProductId,
+                        originDefinitionId,
+                        child.Name,
+                        enumOptionId: null,
+                        cancellationToken);
                     await catalog.AttachMediaReferenceAsync(
                         product.ProductId,
                         PlaceholderMedia[productOrdinal % PlaceholderMedia.Length],
@@ -224,6 +255,27 @@ internal static class StorefrontDemoCatalogBootstrap
                         6 + (productOrdinal % 5),
                         cancellationToken);
                     offerCount++;
+
+                    if (productOrdinal < 3)
+                    {
+                        var specialVariant = await catalog.CreateVariantAsync(
+                            product.ProductId,
+                            $"DEMO-{child.Token.ToUpperInvariant()}-{index + 1}-SPECIAL",
+                            [(packDefinitionId, "ignored", specialPackOptionId)],
+                            cancellationToken);
+                        await PublishOfferAsync(
+                            offers,
+                            prices,
+                            inventory,
+                            specialVariant.VariantId,
+                            sellerPartyIds[productOrdinal % sellerPartyIds.Count],
+                            $"{child.Token.ToUpperInvariant()}-{index + 1}-SPECIAL",
+                            amount + (child.BasePrice / 25m),
+                            locationIds[productOrdinal % locationIds.Count],
+                            3 + productOrdinal,
+                            cancellationToken);
+                        offerCount++;
+                    }
 
                     // نخستین محصول هر ردهٔ فرزند عرضهٔ فروشندهٔ دوم می‌گیرد تا رفتار Marketplace
                     // با فروشندگان متفاوت روی همان گونه قابل مشاهده باشد؛ Offer دوم هویت مستقل است.
@@ -250,6 +302,41 @@ internal static class StorefrontDemoCatalogBootstrap
 
         var summary = await SummarizeAsync(catalogRead, alreadySeeded: false, cancellationToken);
         return summary with { Offers = offerCount };
+    }
+
+    /// <summary>
+    /// شرح‌های نسخهٔ جدید دانه را روی پایگاه Development قدیمی نیز به‌صورت upsert و بدون تکرار غنی می‌کند.
+    /// </summary>
+    private static async Task EnrichLocalizedDescriptionsAsync(
+        CatalogDbContext catalogRead,
+        ICatalogDirectory catalog,
+        CancellationToken cancellationToken)
+    {
+        var products = await catalogRead.Products.AsNoTracking()
+            .Where(product => product.SlugSeam != null && product.SlugSeam.StartsWith("demo-"))
+            .ToListAsync(cancellationToken);
+        var names = await catalogRead.LocalizedTexts.AsNoTracking()
+            .Where(text => text.OwnerKind == CatalogLocalizedOwnerKind.Product && text.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        foreach (var product in products)
+        {
+            var name = names.FirstOrDefault(text => text.OwnerId == product.ProductId && text.Locale.StartsWith("fa"))?.Value
+                ?? product.SlugSeam
+                ?? "کالای نمایشی";
+            await catalog.UpsertProductLocalizedFieldAsync(
+                product.ProductId,
+                "short_description",
+                new Dictionary<string, string> { ["fa-IR"] = $"{name} با عرضهٔ معتبر فروشندگان توبا" },
+                cancellationToken);
+            await catalog.UpsertProductLocalizedFieldAsync(
+                product.ProductId,
+                "full_description",
+                new Dictionary<string, string>
+                {
+                    ["fa-IR"] = $"{name} برای استفادهٔ روزمره انتخاب شده است. قیمت هر فروشنده و موجودی قابل فروش به‌صورت زنده از ماژول‌های مالک خوانده می‌شود."
+                },
+                cancellationToken);
+        }
     }
 
     /// <summary>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 
@@ -42,11 +42,6 @@ export function StorefrontProductCardView({ card }: { card: StorefrontProductCar
               {formatOfferAmount(card.offerAmountExclusiveOfTax, card.currency)}
             </span>
           ) : null}
-        </div>
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((index) => (
-            <Star key={index} className={`w-2.5 h-2.5 ${index <= 4 ? "fill-amber-400 text-amber-400" : "text-gray-300"}`} />
-          ))}
         </div>
         <p className="text-[10px] text-gray-500">{card.sellerDisplayName}</p>
         <span

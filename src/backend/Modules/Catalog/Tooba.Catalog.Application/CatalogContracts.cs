@@ -80,6 +80,19 @@ public interface ICatalogDirectory
     Task<ProductReference> CreateProductAsync(CatalogProductKind kind, string? slugSeam, Guid? brandId, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
 
     /// <summary>
+    /// متن محلی یک فیلد مجاز محصول را درج یا به‌روزرسانی می‌کند؛ این درز فقط محتوای Catalog را می‌نویسد و قیمت یا موجودی نمی‌پذیرد.
+    /// </summary>
+    /// <param name="productId">شناسهٔ محصول در Catalog جاری.</param>
+    /// <param name="fieldKey">کلید محتوایی مجاز؛ در حال حاضر short_description و full_description.</param>
+    /// <param name="localizedValues">مقادیر غیرخالی بر اساس locale استاندارد.</param>
+    /// <param name="cancellationToken">توکن لغو عملیات.</param>
+    Task UpsertProductLocalizedFieldAsync(
+        Guid productId,
+        string fieldKey,
+        IReadOnlyDictionary<string, string> localizedValues,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// محصول را به رده وصل می‌کند.
     /// </summary>
     Task AssignCategoryAsync(Guid productId, Guid categoryId, CancellationToken cancellationToken);

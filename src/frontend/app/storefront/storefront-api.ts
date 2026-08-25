@@ -11,6 +11,8 @@ import type {
   StorefrontMerchandisingPage,
   StorefrontProductCard,
   StorefrontProductDetailPage,
+  StorefrontProductSpecification,
+  StorefrontProductVariant,
   StorefrontPublicSellerItem,
   StorefrontPublicSellerPage,
 } from "./storefront-model.ts";
@@ -134,6 +136,8 @@ function mapOffer(value: unknown): StorefrontOfferCandidate | null {
     return null;
   }
   const skuRaw = readProp(offer, "sellerSku", "SellerSku");
+  const promotionalAmountRaw = readProp(offer, "promotionalAmountExclusiveOfTax", "PromotionalAmountExclusiveOfTax");
+  const promotionLabelRaw = readProp(offer, "promotionLabel", "PromotionLabel");
   return {
     offerId,
     catalogVariantId: asString(readProp(offer, "catalogVariantId", "CatalogVariantId")),
@@ -145,7 +149,25 @@ function mapOffer(value: unknown): StorefrontOfferCandidate | null {
     market: asString(readProp(offer, "market", "Market"), "IR"),
     availableUnits: asNumber(readProp(offer, "availableUnits", "AvailableUnits")),
     taxCategoryLabel: asString(readProp(offer, "taxCategoryLabel", "TaxCategoryLabel"), "مالیات"),
+    promotionalAmountExclusiveOfTax: promotionalAmountRaw == null ? null : asNumber(promotionalAmountRaw),
+    promotionLabel: promotionLabelRaw == null ? null : asString(promotionLabelRaw),
   };
+}
+
+function mapAlternateOffers(value: unknown): StorefrontAlternateOffer[] {
+  return Array.isArray(value)
+    ? value.map((row) => {
+        const other = asRecord(row) ?? {};
+        return {
+          offerId: asString(readProp(other, "offerId", "OfferId")),
+          sellerDisplayName: asString(readProp(other, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
+          amountExclusiveOfTax: asNumber(readProp(other, "amountExclusiveOfTax", "AmountExclusiveOfTax")),
+          currency: asString(readProp(other, "currency", "Currency"), "IRR"),
+          availableUnits: asNumber(readProp(other, "availableUnits", "AvailableUnits")),
+          inStock: asBoolean(readProp(other, "inStock", "InStock")),
+        };
+      })
+    : [];
 }
 
 function mapBrand(value: unknown): StorefrontBrandItem | null {
@@ -297,35 +319,62 @@ export function mapStorefrontDetail(payload: unknown): StorefrontProductDetailPa
   const mediaRaw = readProp(item, "mediaAssetIds", "MediaAssetIds");
   const brandRaw = readProp(item, "brandName", "BrandName");
   const descriptionRaw = readProp(item, "description", "Description");
+  const shortDescriptionRaw = readProp(item, "shortDescription", "ShortDescription");
+  const fullDescriptionRaw = readProp(item, "fullDescription", "FullDescription");
+  const specificationsRaw = readProp(item, "specifications", "Specifications");
+  const variantsRaw = readProp(item, "variants", "Variants");
+  const promotionalAmountRaw = readProp(item, "promotionalAmountExclusiveOfTax", "PromotionalAmountExclusiveOfTax");
+  const promotionLabelRaw = readProp(item, "promotionLabel", "PromotionLabel");
   return {
     productId,
     slug: asString(readProp(item, "slug", "Slug"), productId),
     title: asString(readProp(item, "title", "Title"), "کالا"),
     description: descriptionRaw == null ? null : asString(descriptionRaw),
+    shortDescription: shortDescriptionRaw == null ? null : asString(shortDescriptionRaw),
+    fullDescription: fullDescriptionRaw == null ? null : asString(fullDescriptionRaw),
+    specifications: Array.isArray(specificationsRaw)
+      ? specificationsRaw.flatMap((value) => {
+          const specification = asRecord(value);
+          const label = specification ? asString(readProp(specification, "label", "Label")).trim() : "";
+          const specificationValue = specification ? asString(readProp(specification, "value", "Value")).trim() : "";
+          return label && specificationValue ? [{ label, value: specificationValue } satisfies StorefrontProductSpecification] : [];
+        })
+      : [],
+    variants: Array.isArray(variantsRaw)
+      ? variantsRaw.flatMap((value) => {
+          const variant = asRecord(value);
+          const variantId = variant ? asString(readProp(variant, "variantId", "VariantId")) : "";
+          const optionsRaw = variant
+            ? readProp(variant, "options", "Options") ?? readProp(variant, "axes", "Axes")
+            : null;
+          if (!variantId) return [];
+          return [{
+            variantId,
+            options: Array.isArray(optionsRaw) ? optionsRaw.flatMap((optionValue) => {
+              const option = asRecord(optionValue);
+              const label = option ? asString(readProp(option, "label", "Label")).trim() : "";
+              const value = option ? asString(readProp(option, "value", "Value")).trim() : "";
+              return label && value ? [{ label, value }] : [];
+            }) : [],
+            primaryOffer: mapOffer(readProp(variant!, "primaryOffer", "PrimaryOffer")),
+            otherSellers: mapAlternateOffers(readProp(variant!, "otherSellers", "OtherSellers")),
+          } satisfies StorefrontProductVariant];
+        })
+      : [],
     categoryName: asString(readProp(item, "categoryName", "CategoryName"), "رده"),
     brandName: brandRaw == null ? null : asString(brandRaw),
     mediaAssetIds: Array.isArray(mediaRaw) ? mediaRaw.map((id) => asString(id)) : [],
     selectedVariantId: asString(readProp(item, "selectedVariantId", "SelectedVariantId")),
     primaryOffer,
-    otherSellers: Array.isArray(othersRaw)
-      ? othersRaw.map((row) => {
-          const other = asRecord(row) ?? {};
-          return {
-            offerId: asString(readProp(other, "offerId", "OfferId")),
-            sellerDisplayName: asString(readProp(other, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
-            amountExclusiveOfTax: asNumber(readProp(other, "amountExclusiveOfTax", "AmountExclusiveOfTax")),
-            currency: asString(readProp(other, "currency", "Currency"), "IRR"),
-            availableUnits: asNumber(readProp(other, "availableUnits", "AvailableUnits")),
-            inStock: asBoolean(readProp(other, "inStock", "InStock")),
-          } satisfies StorefrontAlternateOffer;
-        })
-      : [],
+    otherSellers: mapAlternateOffers(othersRaw),
     relatedProducts: Array.isArray(relatedRaw)
       ? relatedRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
       : [],
     seoTitle: asString(readProp(item, "seoTitle", "SeoTitle")),
     seoDescription: asString(readProp(item, "seoDescription", "SeoDescription")),
     cartMutationEnabled: asBoolean(readProp(item, "cartMutationEnabled", "CartMutationEnabled")),
+    promotionalAmountExclusiveOfTax: promotionalAmountRaw == null ? null : asNumber(promotionalAmountRaw),
+    promotionLabel: promotionLabelRaw == null ? null : asString(promotionLabelRaw),
   };
 }
 
@@ -376,10 +425,12 @@ export async function loadStorefrontListing(request: StorefrontListingRequest = 
 }
 
 /**
- * PDP را از Host می‌خواند.
+ * PDP را از Host می‌خواند و در صورت انتخاب ترکیب، VariantId را فقط به درخواست
+ * مقتدر Host می‌افزاید؛ انتخاب Offer در مرورگر انجام نمی‌شود.
  */
-export async function loadStorefrontDetail(slug: string): Promise<StorefrontProductDetailPage | null> {
-  return mapStorefrontDetail(await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}`));
+export async function loadStorefrontDetail(slug: string, variantId?: string): Promise<StorefrontProductDetailPage | null> {
+  const suffix = variantId ? `?variantId=${encodeURIComponent(variantId)}` : "";
+  return mapStorefrontDetail(await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}${suffix}`));
 }
 
 /** صفحهٔ merchandising را با وضعیت پشتیبانی صریح از Host می‌خواند. */

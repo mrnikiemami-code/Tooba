@@ -5,14 +5,13 @@ PIPELINE-PROTOCOL: BRIDGE-V2
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
 Last Architect Accepted Product Task: TB-P05-T009 + TB-P05-T009-REPAIR-01
-Current Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-V2 = AWAITING_ARCHITECT_ACCEPT
-Legacy TB-P05-T010: HELD / NOT EXECUTED
-Next product action after governance migration ACCEPT:
-reissue TB-P05-T010 through Bridge-V2 with unchanged product scope and acceptance intent
+Governance: TB-P05-GOV-MIGRATION-BRIDGE-V2 = ACCEPTED
+Current Product Task: TB-P05-T010 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT
+Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
-Do not mark TB-P05-T010 issued before Architect ACCEPT of the governance
-migration. Do not execute roadmap prose or historical task archives.
+Worker PASS is not Architect ACCEPT. Do not execute roadmap prose or historical
+task archives.
 
 ## Recovery procedure
 

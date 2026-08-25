@@ -142,6 +142,55 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task UpsertProductLocalizedFieldAsync(
+        Guid productId,
+        string fieldKey,
+        IReadOnlyDictionary<string, string> localizedValues,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var normalizedKey = fieldKey.Trim().ToLowerInvariant();
+        if (normalizedKey is not ("short_description" or "full_description"))
+        {
+            throw new InvalidOperationException("فقط فیلدهای شرح کوتاه و شرح کامل محصول از این درز پذیرفته می‌شوند.");
+        }
+
+        if (localizedValues.Count == 0
+            || !await _db.Products.AnyAsync(product => product.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول موجود و حداقل یک متن محلی غیرخالی لازم است.");
+        }
+
+        foreach (var pair in localizedValues)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(pair.Key);
+            ArgumentException.ThrowIfNullOrWhiteSpace(pair.Value);
+            var locale = pair.Key.Trim();
+            var row = await _db.LocalizedTexts.SingleOrDefaultAsync(
+                text => text.OwnerKind == CatalogLocalizedOwnerKind.Product
+                    && text.OwnerId == productId
+                    && text.FieldKey == normalizedKey
+                    && text.Locale == locale,
+                cancellationToken);
+            if (row is null)
+            {
+                _db.LocalizedTexts.Add(CatalogLocalizedText.Create(
+                    CatalogLocalizedOwnerKind.Product,
+                    productId,
+                    normalizedKey,
+                    locale,
+                    pair.Value));
+            }
+            else
+            {
+                row.Value = pair.Value.Trim();
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task AssignCategoryAsync(Guid productId, Guid categoryId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
