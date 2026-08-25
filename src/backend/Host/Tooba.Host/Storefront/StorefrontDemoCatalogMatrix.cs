@@ -277,6 +277,12 @@ internal static class StorefrontDemoCatalogMatrix
     internal static int ChildCategoryCount => Families.Sum(family => family.Children.Count);
 
     /// <summary>
+    /// تعداد ردهٔ سطح سوم ماتریس (برگ‌های ناوبری Mega Menu).
+    /// </summary>
+    internal static int ThirdLevelCategoryCount =>
+        Families.Sum(family => family.Children.Sum(child => child.Products.Count));
+
+    /// <summary>
     /// تعداد محصول نمایشی ماتریس.
     /// </summary>
     internal static int ProductCount => Families.Sum(family => family.Children.Sum(child => child.Products.Count));

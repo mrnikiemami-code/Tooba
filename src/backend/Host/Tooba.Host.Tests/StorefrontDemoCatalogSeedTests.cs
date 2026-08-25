@@ -68,6 +68,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
     {
         Assert.True(StorefrontDemoCatalogMatrix.TopLevelCategoryCount >= 8);
         Assert.True(StorefrontDemoCatalogMatrix.ChildCategoryCount >= 24);
+        Assert.True(StorefrontDemoCatalogMatrix.ThirdLevelCategoryCount >= 48);
         Assert.True(StorefrontDemoCatalogMatrix.ProductCount >= 72);
         Assert.True(StorefrontDemoCatalogMatrix.Brands.Count >= 8);
         Assert.All(StorefrontDemoCatalogMatrix.Families, family => Assert.True(family.Children.Count >= 3));
@@ -151,7 +152,8 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
 
         Assert.False(first.AlreadySeeded);
         Assert.True(first.TopLevelCategories >= 8, $"top-level categories = {first.TopLevelCategories}");
-        Assert.True(first.ChildCategories >= 24, $"child categories = {first.ChildCategories}");
+        Assert.True(first.ChildCategories >= 24, $"second-level categories = {first.ChildCategories}");
+        Assert.True(first.ThirdLevelCategories >= 48, $"third-level categories = {first.ThirdLevelCategories}");
         Assert.True(first.PublishedProducts >= 72, $"published products = {first.PublishedProducts}");
         Assert.True(first.PublishedBrands >= 8, $"published brands = {first.PublishedBrands}");
         Assert.Equal(StorefrontDemoCatalogMatrix.ExpectedOfferCount, first.Offers);
@@ -185,11 +187,23 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
 
         var categoryItems = await LoadCategoryItemsAsync(catalogDb);
         Assert.True(categoryItems.Count(item => item.ParentCategoryId is null) >= 8);
-        Assert.True(categoryItems.Count(item => item.ParentCategoryId is not null) >= 24);
+        var rootIds = categoryItems.Where(item => item.ParentCategoryId is null).Select(item => item.CategoryId).ToHashSet();
+        var secondLevel = categoryItems.Where(item => item.ParentCategoryId is Guid parentId && rootIds.Contains(parentId)).ToList();
+        Assert.True(secondLevel.Count >= 24);
+        var secondLevelIds = secondLevel.Select(item => item.CategoryId).ToHashSet();
+        Assert.True(categoryItems.Count(item => item.ParentCategoryId is Guid parentId && secondLevelIds.Contains(parentId)) >= 48);
         foreach (var family in StorefrontDemoCatalogMatrix.Families)
         {
             var root = categoryItems.Single(item => item.ParentCategoryId is null && item.Name == family.Name);
-            Assert.True(categoryItems.Count(item => item.ParentCategoryId == root.CategoryId) >= 3, family.Name);
+            var familySecondLevel = categoryItems.Where(item => item.ParentCategoryId == root.CategoryId).ToList();
+            Assert.True(familySecondLevel.Count >= 3, family.Name);
+            foreach (var child in family.Children)
+            {
+                var secondLevelCategory = familySecondLevel.Single(item => item.Name == child.Name);
+                Assert.True(
+                    categoryItems.Count(item => item.ParentCategoryId == secondLevelCategory.CategoryId) >= 2,
+                    $"{family.Name}/{child.Name} third-level count");
+            }
 
             var descendants = StorefrontComposer.DescendantCategoryIds(categoryItems, root.CategoryId);
             var reachableProducts = await catalogDb.ProductCategories.AsNoTracking()
@@ -214,6 +228,7 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         Assert.True(second.AlreadySeeded);
         Assert.Equal(first.TopLevelCategories, second.TopLevelCategories);
         Assert.Equal(first.ChildCategories, second.ChildCategories);
+        Assert.Equal(first.ThirdLevelCategories, second.ThirdLevelCategories);
         Assert.Equal(first.PublishedProducts, second.PublishedProducts);
         Assert.Equal(first.PublishedBrands, second.PublishedBrands);
         Assert.Equal(StorefrontDemoCatalogMatrix.ExpectedOfferCount, await offerDb.Offers.AsNoTracking().CountAsync());

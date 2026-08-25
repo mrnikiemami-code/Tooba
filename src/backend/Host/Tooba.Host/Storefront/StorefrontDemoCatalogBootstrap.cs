@@ -17,7 +17,8 @@ namespace Tooba.Host.Storefront;
 /// این جمع‌بندی گزارش وضعیت است و منبع حقیقت تجاری نیست؛ قیمت و موجودی در آن نگه‌داری نمی‌شود.
 /// </summary>
 /// <param name="TopLevelCategories">تعداد ردهٔ ریشهٔ منتشرشده که در Mega Menu قابل انتخاب است.</param>
-/// <param name="ChildCategories">تعداد ردهٔ فرزند منتشرشده که عمق ناوبری را می‌سازد.</param>
+/// <param name="ChildCategories">تعداد ردهٔ سطح دوم منتشرشده.</param>
+/// <param name="ThirdLevelCategories">تعداد ردهٔ سطح سوم منتشرشده.</param>
 /// <param name="PublishedProducts">تعداد محصول منتشرشدهٔ Catalog؛ نه تعداد Offer.</param>
 /// <param name="PublishedBrands">تعداد برند منتشرشدهٔ تحریری.</param>
 /// <param name="Offers">تعداد Offer قطعی که دانه برای این ماتریس ایجاد می‌کند.</param>
@@ -25,6 +26,7 @@ namespace Tooba.Host.Storefront;
 internal sealed record StorefrontDemoSeedSummary(
     int TopLevelCategories,
     int ChildCategories,
+    int ThirdLevelCategories,
     int PublishedProducts,
     int PublishedBrands,
     int Offers,
@@ -133,6 +135,7 @@ internal static class StorefrontDemoCatalogBootstrap
                 .AnyAsync(product => product.SlugSeam == SentinelProductSlug, cancellationToken))
         {
             await EnrichLocalizedDescriptionsAsync(catalogRead, catalog, cancellationToken);
+            await EnsureThirdLevelCategoriesAsync(catalogRead, catalog, cancellationToken);
             return await SummarizeAsync(catalogRead, alreadySeeded: true, cancellationToken);
         }
 
@@ -201,17 +204,30 @@ internal static class StorefrontDemoCatalogBootstrap
                     cancellationToken);
                 await catalog.PublishCategoryAsync(childCategory.CategoryId, cancellationToken);
 
+                var leafCategories = new List<(Guid CategoryId, string Slug)>();
+                for (var leafIndex = 0; leafIndex < child.Products.Count; leafIndex++)
+                {
+                    var spec = child.Products[leafIndex];
+                    var leafCategory = await catalog.CreateCategoryAsync(
+                        childCategory.CategoryId,
+                        new Dictionary<string, string> { ["fa-IR"] = spec.Name },
+                        cancellationToken);
+                    await catalog.PublishCategoryAsync(leafCategory.CategoryId, cancellationToken);
+                    leafCategories.Add((leafCategory.CategoryId, $"demo-{child.Token}-{leafIndex + 1}"));
+                }
+
                 for (var index = 0; index < child.Products.Count; index++)
                 {
                     var spec = child.Products[index];
-                    var slug = $"demo-{child.Token}-{index + 1}";
+                    var slug = leafCategories[index].Slug;
+                    var leafCategoryId = leafCategories[index].CategoryId;
                     var product = await catalog.CreateProductAsync(
                         CatalogProductKind.PhysicalGood,
                         slug,
                         spec.BrandKey is null ? null : brandIds[spec.BrandKey],
                         new Dictionary<string, string> { ["fa-IR"] = spec.Name },
                         cancellationToken);
-                    await catalog.AssignCategoryAsync(product.ProductId, childCategory.CategoryId, cancellationToken);
+                    await catalog.AssignCategoryAsync(product.ProductId, leafCategoryId, cancellationToken);
                     await catalog.UpsertProductLocalizedFieldAsync(
                         product.ProductId,
                         "short_description",
@@ -392,20 +408,120 @@ internal static class StorefrontDemoCatalogBootstrap
         bool alreadySeeded,
         CancellationToken cancellationToken)
     {
-        var published = await catalogRead.Categories.AsNoTracking()
+        var publishedCategories = await catalogRead.Categories.AsNoTracking()
             .Where(category => category.Status == CatalogPublicationStatus.Published)
-            .Select(category => category.ParentCategoryId)
+            .Select(category => new { category.CategoryId, category.ParentCategoryId })
             .ToListAsync(cancellationToken);
+        var rootIds = publishedCategories
+            .Where(category => category.ParentCategoryId is null)
+            .Select(category => category.CategoryId)
+            .ToHashSet();
+        var secondLevelIds = publishedCategories
+            .Where(category => category.ParentCategoryId is Guid parentId && rootIds.Contains(parentId))
+            .Select(category => category.CategoryId)
+            .ToHashSet();
+        var thirdLevelCount = publishedCategories.Count(category =>
+            category.ParentCategoryId is Guid parentId && secondLevelIds.Contains(parentId));
         var products = await catalogRead.Products.AsNoTracking()
             .CountAsync(product => product.Status == CatalogPublicationStatus.Published, cancellationToken);
         var brands = await catalogRead.Brands.AsNoTracking()
             .CountAsync(brand => brand.Status == CatalogPublicationStatus.Published, cancellationToken);
         return new StorefrontDemoSeedSummary(
-            published.Count(parentId => parentId is null),
-            published.Count(parentId => parentId is not null),
+            rootIds.Count,
+            secondLevelIds.Count,
+            thirdLevelCount,
             products,
             brands,
             StorefrontDemoCatalogMatrix.ExpectedOfferCount,
             alreadySeeded);
+    }
+
+    /// <summary>
+    /// برای پایگاه‌های Development قبلی که فقط دو سطح داشتند، برگ‌های سطح سوم را idempotent اضافه می‌کند
+    /// و محصولات demo- را به برگ‌های متناظر منتقل می‌کند.
+    /// </summary>
+    private static async Task EnsureThirdLevelCategoriesAsync(
+        CatalogDbContext catalogRead,
+        ICatalogDirectory catalog,
+        CancellationToken cancellationToken)
+    {
+        var categories = await catalogRead.Categories.AsNoTracking()
+            .Where(category => category.Status == CatalogPublicationStatus.Published)
+            .ToListAsync(cancellationToken);
+        var names = await catalogRead.LocalizedTexts.AsNoTracking()
+            .Where(text => text.OwnerKind == CatalogLocalizedOwnerKind.Category && text.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        string Name(Guid categoryId) =>
+            names.FirstOrDefault(text => text.OwnerId == categoryId && text.Locale.StartsWith("fa"))?.Value ?? string.Empty;
+
+        foreach (var family in StorefrontDemoCatalogMatrix.Families)
+        {
+            var root = categories.SingleOrDefault(category =>
+                category.ParentCategoryId is null && Name(category.CategoryId) == family.Name);
+            if (root is null)
+            {
+                continue;
+            }
+
+            foreach (var child in family.Children)
+            {
+                var secondLevel = categories.SingleOrDefault(category =>
+                    category.ParentCategoryId == root.CategoryId && Name(category.CategoryId) == child.Name);
+                if (secondLevel is null)
+                {
+                    continue;
+                }
+
+                var existingLeaves = categories
+                    .Where(category => category.ParentCategoryId == secondLevel.CategoryId)
+                    .ToList();
+                if (existingLeaves.Count >= child.Products.Count)
+                {
+                    continue;
+                }
+
+                var leafCategories = new List<(Guid CategoryId, string Slug)>();
+                for (var leafIndex = 0; leafIndex < child.Products.Count; leafIndex++)
+                {
+                    var spec = child.Products[leafIndex];
+                    var existing = existingLeaves.FirstOrDefault(category => Name(category.CategoryId) == spec.Name);
+                    if (existing is not null)
+                    {
+                        leafCategories.Add((existing.CategoryId, $"demo-{child.Token}-{leafIndex + 1}"));
+                        continue;
+                    }
+
+                    var leafCategory = await catalog.CreateCategoryAsync(
+                        secondLevel.CategoryId,
+                        new Dictionary<string, string> { ["fa-IR"] = spec.Name },
+                        cancellationToken);
+                    await catalog.PublishCategoryAsync(leafCategory.CategoryId, cancellationToken);
+                    leafCategories.Add((leafCategory.CategoryId, $"demo-{child.Token}-{leafIndex + 1}"));
+                }
+
+                var demoProducts = await catalogRead.Products.AsNoTracking()
+                    .Where(product => product.SlugSeam != null && product.SlugSeam.StartsWith($"demo-{child.Token}-"))
+                    .Select(product => new { product.ProductId, product.SlugSeam })
+                    .ToListAsync(cancellationToken);
+                foreach (var demoProduct in demoProducts)
+                {
+                    var leafIndex = int.Parse(demoProduct.SlugSeam!.Split('-')[^1], System.Globalization.CultureInfo.InvariantCulture) - 1;
+                    if (leafIndex < 0 || leafIndex >= leafCategories.Count)
+                    {
+                        continue;
+                    }
+
+                    var currentLinks = await catalogRead.ProductCategories.AsNoTracking()
+                        .Where(link => link.ProductId == demoProduct.ProductId)
+                        .Select(link => link.CategoryId)
+                        .ToListAsync(cancellationToken);
+                    var targetLeafId = leafCategories[leafIndex].CategoryId;
+                    if (!currentLinks.Contains(targetLeafId))
+                    {
+                        await catalog.AssignCategoryAsync(demoProduct.ProductId, targetLeafId, cancellationToken);
+                    }
+                }
+            }
+        }
     }
 }

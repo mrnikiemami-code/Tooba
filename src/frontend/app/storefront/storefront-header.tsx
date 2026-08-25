@@ -424,12 +424,48 @@ export function StorefrontShopeivaHeader({
                           <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${mobileOpenCategories[category.categoryId] ? "rotate-180" : ""}`} />
                         </button>
                         {mobileOpenCategories[category.categoryId] ? (
-                          <div className="grid grid-cols-2 gap-1 pr-3 mt-1">
-                            {children.slice(0, 10).map((child) => (
-                              <Link key={child.categoryId} href={`/products?categoryId=${child.categoryId}`} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 p-2 text-xs text-gray-500 hover:text-[#2563EB] rounded-xl hover:bg-gray-100 transition">
-                                <Icon className="w-3.5 h-3.5" /> {child.name}
-                              </Link>
-                            ))}
+                          <div className="pr-3 mt-1 space-y-2">
+                            {children.slice(0, 10).map((child) => {
+                              const grandchildren = categories.filter((leaf) => leaf.parentCategoryId === child.categoryId);
+                              const childKey = `${category.categoryId}:${child.categoryId}`;
+                              return (
+                                <div key={child.categoryId} className="border-b border-gray-50 pb-1 last:border-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleMobileCategory(childKey)}
+                                    className="flex justify-between items-center w-full p-2 rounded-xl hover:bg-gray-100 text-right"
+                                  >
+                                    <Link
+                                      href={`/products?categoryId=${child.categoryId}`}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        setMobileOpen(false);
+                                      }}
+                                      className="text-xs font-semibold text-gray-700 hover:text-[#2563EB]"
+                                    >
+                                      {child.name}
+                                    </Link>
+                                    {grandchildren.length > 0 ? (
+                                      <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${mobileOpenCategories[childKey] ? "rotate-180" : ""}`} />
+                                    ) : null}
+                                  </button>
+                                  {mobileOpenCategories[childKey] && grandchildren.length > 0 ? (
+                                    <div className="grid grid-cols-1 gap-1 pr-4 mt-1">
+                                      {grandchildren.slice(0, 6).map((leaf) => (
+                                        <Link
+                                          key={leaf.categoryId}
+                                          href={`/products?categoryId=${leaf.categoryId}`}
+                                          onClick={() => setMobileOpen(false)}
+                                          className="block p-2 text-[11px] text-gray-500 hover:text-[#2563EB] rounded-lg hover:bg-gray-100 transition truncate"
+                                        >
+                                          {leaf.name}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : null}
                       </div>
