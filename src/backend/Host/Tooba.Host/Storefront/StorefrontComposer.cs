@@ -7,6 +7,7 @@ using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Promotion.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Storefront;
@@ -23,6 +24,7 @@ public sealed class StorefrontComposer
     private readonly InventoryDbContext _inventory;
     private readonly TaxDbContext _tax;
     private readonly IPartyLookupGateway _parties;
+    private readonly IPromotionEvaluator _promotions;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -33,7 +35,8 @@ public sealed class StorefrontComposer
         PricingDbContext prices,
         InventoryDbContext inventory,
         TaxDbContext tax,
-        IPartyLookupGateway parties)
+        IPartyLookupGateway parties,
+        IPromotionEvaluator promotions)
     {
         _catalog = catalog;
         _offers = offers;
@@ -41,6 +44,7 @@ public sealed class StorefrontComposer
         _inventory = inventory;
         _tax = tax;
         _parties = parties;
+        _promotions = promotions;
     }
 
     /// <summary>
@@ -51,9 +55,14 @@ public sealed class StorefrontComposer
         var categories = await ListCategoriesAsync(cancellationToken);
         var listing = await GetListingAsync(null, null, cancellationToken);
         var brands = await ListBrandsAsync(cancellationToken);
+        var promotedProducts = listing.Products.Where(card => card.PromotionLabel is not null).Take(10).ToList();
         return new StorefrontHomePage(
             categories,
             listing.Products,
+            promotedProducts.Take(5).ToList(),
+            promotedProducts.Skip(5).Take(5).ToList(),
+            listing.Products.Take(10).ToList(),
+            listing.Products.Take(10).ToList(),
             brands,
             "فروشگاه توبا",
             "کالای واقعی از Catalog با قیمت Offer و موجودی انبار");
@@ -80,11 +89,14 @@ public sealed class StorefrontComposer
     /// </summary>
     public async Task<IReadOnlyList<StorefrontCategoryItem>> ListCategoriesAsync(CancellationToken cancellationToken)
     {
-        var categories = await _catalog.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var categories = await _catalog.Categories.AsNoTracking()
+            .Where(category => category.Status == CatalogPublicationStatus.Published)
+            .ToListAsync(cancellationToken);
         var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, categories.Select(x => x.CategoryId).ToList(), cancellationToken);
         return categories
             .Select(category => new StorefrontCategoryItem(
                 category.CategoryId,
+                category.ParentCategoryId,
                 names.GetValueOrDefault(category.CategoryId) ?? "رده"))
             .OrderBy(item => item.Name, StringComparer.Ordinal)
             .ToList();
@@ -100,7 +112,8 @@ public sealed class StorefrontComposer
         var filtered = cards.AsEnumerable();
         if (categoryId is Guid selected)
         {
-            filtered = filtered.Where(card => card.CategoryId == selected);
+            var includedCategoryIds = DescendantCategoryIds(categories, selected);
+            filtered = filtered.Where(card => card.CategoryId is Guid cardCategoryId && includedCategoryIds.Contains(cardCategoryId));
         }
 
         if (!string.IsNullOrWhiteSpace(query))
@@ -112,6 +125,30 @@ public sealed class StorefrontComposer
         }
 
         return new StorefrontListingPage(categories, filtered.ToList(), query, categoryId);
+    }
+
+    /// <summary>
+    /// شناسهٔ ردهٔ انتخابی و همهٔ فرزندان آن را برای landing رده برمی‌گرداند؛ محاسبه در حافظه و فقط روی دادهٔ Catalog است.
+    /// </summary>
+    internal static IReadOnlySet<Guid> DescendantCategoryIds(
+        IReadOnlyList<StorefrontCategoryItem> categories,
+        Guid selectedCategoryId)
+    {
+        var result = new HashSet<Guid> { selectedCategoryId };
+        var pending = new Queue<Guid>();
+        pending.Enqueue(selectedCategoryId);
+        while (pending.TryDequeue(out var parentId))
+        {
+            foreach (var child in categories.Where(category => category.ParentCategoryId == parentId))
+            {
+                if (result.Add(child.CategoryId))
+                {
+                    pending.Enqueue(child.CategoryId);
+                }
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -291,6 +328,25 @@ public sealed class StorefrontComposer
         var slug = string.IsNullOrWhiteSpace(product.SlugSeam)
             ? product.ProductId.ToString("N")
             : product.SlugSeam;
+        var promotion = await _promotions.EvaluateAsync(
+            new PromotionEvaluationRequest(
+                primary.OfferId,
+                primary.CatalogVariantId,
+                categoryId,
+                primary.SellerPartyId,
+                primary.Market,
+                "storefront",
+                primary.Currency,
+                1,
+                primary.AmountExclusiveOfTax,
+                CustomerPartyId: null,
+                OrganizationPartyId: null,
+                CouponCode: null,
+                At: now),
+            cancellationToken);
+        var promotionLabel = promotion.Applied.Count == 0
+            ? null
+            : string.Join("، ", promotion.Applied.Select(applied => applied.Name));
         var card = new StorefrontProductCard(
             product.ProductId,
             slug,
@@ -301,10 +357,11 @@ public sealed class StorefrontComposer
             primary.OfferId,
             primary.SellerDisplayName,
             primary.AmountExclusiveOfTax,
+            promotion.DiscountAmount > 0 ? promotion.PostDiscountTaxExclusiveAmount : null,
             primary.Currency,
             primary.AvailableUnits,
             primary.AvailableUnits > 0,
-            PromotionLabel: null);
+            promotionLabel);
         return (card, primary, others, descriptions.GetValueOrDefault(product.ProductId), brandName, media, primary.CatalogVariantId);
     }
 

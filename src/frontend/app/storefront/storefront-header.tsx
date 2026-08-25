@@ -29,10 +29,12 @@ export function StorefrontShopeivaHeader({
   categories: StorefrontCategoryItem[];
   searchCatalog: StorefrontProductCard[];
 }) {
+  const rootCategories = categories.filter((category) => category.parentCategoryId === null);
+  const navigationRoots = rootCategories.length > 0 ? rootCategories : categories;
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(categories[0]?.categoryId ?? null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(navigationRoots[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
@@ -51,13 +53,13 @@ export function StorefrontShopeivaHeader({
       setSelectedCategoryId(null);
       return;
     }
-    if (!selectedCategoryId || !categories.some((item) => item.categoryId === selectedCategoryId)) {
-      setSelectedCategoryId(categories[0]!.categoryId);
+    if (!selectedCategoryId || !navigationRoots.some((item) => item.categoryId === selectedCategoryId)) {
+      setSelectedCategoryId(navigationRoots[0]!.categoryId);
     }
-  }, [categories, selectedCategoryId]);
+  }, [categories, navigationRoots, selectedCategoryId]);
 
-  const selectedCategory = categories.find((item) => item.categoryId === selectedCategoryId) ?? categories[0] ?? null;
-  const siblingCategories = categories.filter((item) => item.categoryId !== selectedCategory?.categoryId);
+  const selectedCategory = navigationRoots.find((item) => item.categoryId === selectedCategoryId) ?? navigationRoots[0] ?? null;
+  const childCategories = categories.filter((item) => item.parentCategoryId === selectedCategory?.categoryId);
 
   const matches = query.trim()
     ? searchCatalog.filter((item) => item.title.includes(query.trim())).slice(0, 6)
@@ -173,7 +175,7 @@ export function StorefrontShopeivaHeader({
                     {categories.length === 0 ? (
                       <p className="text-xs text-gray-400 px-3 py-2">رده‌ای از Catalog نیست.</p>
                     ) : (
-                      categories.map((cat) => (
+                      navigationRoots.map((cat) => (
                         <button
                           key={cat.categoryId}
                           type="button"
@@ -200,7 +202,7 @@ export function StorefrontShopeivaHeader({
                       </Link>
                     ) : null}
                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                      {(siblingCategories.length > 0 ? siblingCategories : categories).slice(0, 8).map((sub) => (
+                      {childCategories.map((sub) => (
                         <div key={sub.categoryId}>
                           <Link
                             href={`/products?categoryId=${sub.categoryId}`}
@@ -209,21 +211,23 @@ export function StorefrontShopeivaHeader({
                             {sub.name}
                           </Link>
                           <div className="mt-1 space-y-1">
-                            <Link
-                              href={`/products?categoryId=${sub.categoryId}`}
-                              className="block text-[11px] text-gray-400 hover:text-[#2563EB]"
-                            >
-                              همه کالاهای این رده
-                            </Link>
-                            <Link href="/products" className="block text-[11px] text-gray-400 hover:text-[#2563EB]">
-                              همه کالاهای فروشگاه
-                            </Link>
+                            {categories
+                              .filter((category) => category.parentCategoryId === sub.categoryId)
+                              .map((child) => (
+                                <Link
+                                  key={child.categoryId}
+                                  href={`/products?categoryId=${child.categoryId}`}
+                                  className="block text-[11px] text-gray-400 hover:text-[#2563EB]"
+                                >
+                                  {child.name}
+                                </Link>
+                              ))}
                           </div>
                         </div>
                       ))}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {categories.map((category) => (
+                      {childCategories.map((category) => (
                         <Link
                           key={category.categoryId}
                           href={`/products?categoryId=${category.categoryId}`}
@@ -248,7 +252,7 @@ export function StorefrontShopeivaHeader({
               </div>
             ) : null}
           </div>
-          {categories.map((category) => (
+          {navigationRoots.map((category) => (
             <Link
               key={category.categoryId}
               href={`/products?categoryId=${category.categoryId}`}
@@ -272,15 +276,28 @@ export function StorefrontShopeivaHeader({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            {categories.map((category) => (
-              <Link
-                key={category.categoryId}
-                href={`/products?categoryId=${category.categoryId}`}
-                className="block py-2 text-sm border-b"
-                onClick={() => setMobileOpen(false)}
-              >
-                {category.name}
-              </Link>
+            {navigationRoots.map((category) => (
+              <div key={category.categoryId} className="border-b py-2">
+                <Link
+                  href={`/products?categoryId=${category.categoryId}`}
+                  className="block text-sm font-bold"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {category.name}
+                </Link>
+                {categories
+                  .filter((child) => child.parentCategoryId === category.categoryId)
+                  .map((child) => (
+                    <Link
+                      key={child.categoryId}
+                      href={`/products?categoryId=${child.categoryId}`}
+                      className="block py-1 pe-3 text-xs text-gray-500"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+              </div>
             ))}
           </div>
         </div>

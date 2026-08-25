@@ -21,44 +21,27 @@ const STORY_IMAGES = [
 const CATEGORY_IMAGE_INDEXES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
 
 /**
- * برش امن از ردیف کارت‌های زنده بدون تکرار هویت جعلی.
- */
-function takeSlice(products: StorefrontProductCard[], offset: number, count: number): StorefrontProductCard[] {
-  if (products.length === 0 || count <= 0) {
-    return [];
-  }
-  const start = ((offset % products.length) + products.length) % products.length;
-  const result: StorefrontProductCard[] = [];
-  for (let index = 0; index < Math.min(count, products.length); index += 1) {
-    result.push(products[(start + index) % products.length]!);
-  }
-  return result;
-}
-
-/**
  * خانهٔ Shopeiva با اسلایدر/بنر قالب و ردیف‌های کالای زنده Catalog/Offer.
  */
 export function StorefrontShopeivaHome({
   heroTitle,
   heroSubtitle,
   categories,
-  products,
+  specialOffers,
+  campaignProducts,
+  newArrivals,
+  productRail,
   brands,
 }: {
   heroTitle: string;
   heroSubtitle: string;
   categories: StorefrontCategoryItem[];
-  products: StorefrontProductCard[];
+  specialOffers: StorefrontProductCard[];
+  campaignProducts: StorefrontProductCard[];
+  newArrivals: StorefrontProductCard[];
+  productRail: StorefrontProductCard[];
   brands: StorefrontBrandItem[];
 }) {
-  const inStock = products.filter((item) => item.inStock);
-  const specialOffers = takeSlice(inStock.length > 0 ? inStock : products, 0, 5);
-  const saleRail = takeSlice(inStock.length > 0 ? inStock : products, 2, 5);
-  const newArrivals = takeSlice([...products].reverse(), 0, 5);
-  const bestSellers = [...(inStock.length > 0 ? inStock : products)]
-    .sort((left, right) => right.availableUnits - left.availableUnits)
-    .slice(0, 5);
-  const productRail = takeSlice(products, 1, 5);
   const storyItems =
     categories.length > 0
       ? categories.slice(0, 8).map((category, index) => ({
@@ -138,26 +121,29 @@ export function StorefrontShopeivaHome({
         </div>
       </section>
 
-      <ProductSection
-        id="home-special-offers"
-        title="پیشنهادهای ویژه"
-        href="/products"
-        linkLabel="همه کالاها"
-        tone="accent"
-        products={specialOffers}
-        empty="کالای قابل‌فروش منتشرشده‌ای برای نمایش نیست."
-      />
+      {specialOffers.length > 0 ? (
+        <ProductSection
+          id="home-special-offers"
+          title="پیشنهادهای ویژه"
+          href="/products"
+          linkLabel="همه کالاها"
+          tone="accent"
+          products={specialOffers}
+          empty=""
+        />
+      ) : null}
 
-      <ProductSection
-        id="home-sale"
-        title="فروش ویژه"
-        href="/products"
-        linkLabel="مشاهده"
-        tone="plain"
-        products={saleRail}
-        empty="کالای موجودی برای بخش فروش ویژه نیست."
-        note="بدون تخفیف جعلی؛ فقط کالاهای موجود با قیمت Offer."
-      />
+      {campaignProducts.length > 0 ? (
+        <ProductSection
+          id="home-sale"
+          title="فروش ویژه"
+          href="/products"
+          linkLabel="مشاهده"
+          tone="plain"
+          products={campaignProducts}
+          empty=""
+        />
+      ) : null}
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="بنرهای میانی">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -174,17 +160,6 @@ export function StorefrontShopeivaHome({
         tone="plain"
         products={newArrivals}
         empty="تازه‌ای برای نمایش نیست."
-      />
-
-      <ProductSection
-        id="home-best-sellers"
-        title="پرفروش‌ها"
-        href="/products"
-        linkLabel="همه"
-        tone="plain"
-        products={bestSellers}
-        empty="پرفروشی برای نمایش نیست."
-        note="تا قبل از گزارش فروش؛ مرتب‌سازی موقت بر اساس موجودی انبار."
       />
 
       <ProductSection

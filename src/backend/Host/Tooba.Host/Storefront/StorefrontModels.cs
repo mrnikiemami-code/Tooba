@@ -28,15 +28,16 @@ public sealed record StorefrontProductCard(
     Guid PrimaryOfferId,
     string SellerDisplayName,
     decimal OfferAmountExclusiveOfTax,
+    decimal? PromotionalAmountExclusiveOfTax,
     string Currency,
     int AvailableUnits,
     bool InStock,
     string? PromotionLabel);
 
 /// <summary>
-/// ردهٔ منتشرشده برای ناوبری فروشگاه. درخت CMS نیست.
+/// ردهٔ منتشرشده برای ناوبری فروشگاه. رابطهٔ والد از Catalog می‌آید و مسیر landing همان فیلتر پایدار رده است.
 /// </summary>
-public sealed record StorefrontCategoryItem(Guid CategoryId, string Name);
+public sealed record StorefrontCategoryItem(Guid CategoryId, Guid? ParentCategoryId, string Name);
 
 /// <summary>
 /// برند Catalog برای نوار برند خانه؛ رسانهٔ CMS نیست.
@@ -49,6 +50,10 @@ public sealed record StorefrontBrandItem(Guid BrandId, string Name);
 public sealed record StorefrontHomePage(
     IReadOnlyList<StorefrontCategoryItem> Categories,
     IReadOnlyList<StorefrontProductCard> FeaturedProducts,
+    IReadOnlyList<StorefrontProductCard> SpecialOffers,
+    IReadOnlyList<StorefrontProductCard> CampaignProducts,
+    IReadOnlyList<StorefrontProductCard> NewArrivals,
+    IReadOnlyList<StorefrontProductCard> ProductRail,
     IReadOnlyList<StorefrontBrandItem> Brands,
     string HeroTitle,
     string HeroSubtitle);

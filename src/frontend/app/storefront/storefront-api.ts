@@ -72,6 +72,7 @@ function mapCard(value: unknown): StorefrontProductCard | null {
   const categoryIdRaw = readProp(item, "categoryId", "CategoryId");
   const mediaRaw = readProp(item, "mediaAssetId", "MediaAssetId");
   const promoRaw = readProp(item, "promotionLabel", "PromotionLabel");
+  const promotionalAmountRaw = readProp(item, "promotionalAmountExclusiveOfTax", "PromotionalAmountExclusiveOfTax");
   return {
     productId,
     slug: asString(readProp(item, "slug", "Slug"), productId),
@@ -85,6 +86,8 @@ function mapCard(value: unknown): StorefrontProductCard | null {
       readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax") ??
         readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax"),
     ),
+    promotionalAmountExclusiveOfTax:
+      promotionalAmountRaw == null ? null : asNumber(promotionalAmountRaw),
     currency: asString(readProp(item, "currency", "Currency"), "IRR"),
     availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
     inStock: asBoolean(readProp(item, "inStock", "InStock") ?? readProp(item, "inStock", "InStock")),
@@ -104,7 +107,14 @@ function mapCategory(value: unknown): StorefrontCategoryItem | null {
     return null;
   }
   const categoryId = asString(readProp(item, "categoryId", "CategoryId"));
-  return categoryId ? { categoryId, name: asString(readProp(item, "name", "Name"), "رده") } : null;
+  const parentRaw = readProp(item, "parentCategoryId", "ParentCategoryId");
+  return categoryId
+    ? {
+        categoryId,
+        parentCategoryId: parentRaw == null ? null : asString(parentRaw),
+        name: asString(readProp(item, "name", "Name"), "رده"),
+      }
+    : null;
 }
 
 function mapOffer(value: unknown): StorefrontOfferCandidate | null {
@@ -149,6 +159,10 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
     return null;
   }
   const productsRaw = readProp(item, "featuredProducts", "FeaturedProducts");
+  const specialOffersRaw = readProp(item, "specialOffers", "SpecialOffers");
+  const campaignProductsRaw = readProp(item, "campaignProducts", "CampaignProducts");
+  const newArrivalsRaw = readProp(item, "newArrivals", "NewArrivals");
+  const productRailRaw = readProp(item, "productRail", "ProductRail");
   const categoriesRaw = readProp(item, "categories", "Categories");
   const brandsRaw = readProp(item, "brands", "Brands");
   return {
@@ -157,6 +171,18 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
       : [],
     featuredProducts: Array.isArray(productsRaw)
       ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    specialOffers: Array.isArray(specialOffersRaw)
+      ? specialOffersRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    campaignProducts: Array.isArray(campaignProductsRaw)
+      ? campaignProductsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    newArrivals: Array.isArray(newArrivalsRaw)
+      ? newArrivalsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    productRail: Array.isArray(productRailRaw)
+      ? productRailRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
       : [],
     brands: Array.isArray(brandsRaw)
       ? brandsRaw.map(mapBrand).filter((row): row is StorefrontBrandItem => row !== null)

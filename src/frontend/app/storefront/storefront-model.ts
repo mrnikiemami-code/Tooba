@@ -11,6 +11,7 @@ export interface StorefrontProductCard {
   primaryOfferId: string;
   sellerDisplayName: string;
   offerAmountExclusiveOfTax: number;
+  promotionalAmountExclusiveOfTax: number | null;
   currency: string;
   availableUnits: number;
   inStock: boolean;
@@ -22,6 +23,7 @@ export interface StorefrontProductCard {
  */
 export interface StorefrontCategoryItem {
   categoryId: string;
+  parentCategoryId: string | null;
   name: string;
 }
 
@@ -39,6 +41,10 @@ export interface StorefrontBrandItem {
 export interface StorefrontHomePage {
   categories: StorefrontCategoryItem[];
   featuredProducts: StorefrontProductCard[];
+  specialOffers: StorefrontProductCard[];
+  campaignProducts: StorefrontProductCard[];
+  newArrivals: StorefrontProductCard[];
+  productRail: StorefrontProductCard[];
   brands: StorefrontBrandItem[];
   heroTitle: string;
   heroSubtitle: string;

@@ -22,6 +22,7 @@ public sealed class StorefrontCompositionTests
             Guid.Parse("33333333-3333-7333-8333-333333333333"),
             "فروشگاه آرمان",
             1850000m,
+            1650000m,
             "IRR",
             16,
             true,
@@ -30,7 +31,31 @@ public sealed class StorefrontCompositionTests
         Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("\"stock\":", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"offerAmountExclusiveOfTax\":1850000", json, StringComparison.Ordinal);
+        Assert.Contains("\"promotionalAmountExclusiveOfTax\":1650000", json, StringComparison.Ordinal);
         Assert.Contains("\"primaryOfferId\"", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Category_landing_includes_all_published_descendants()
+    {
+        var root = Guid.Parse("11111111-1111-7111-8111-111111111111");
+        var child = Guid.Parse("22222222-2222-7222-8222-222222222222");
+        var grandchild = Guid.Parse("33333333-3333-7333-8333-333333333333");
+        var unrelated = Guid.Parse("44444444-4444-7444-8444-444444444444");
+        var categories = new[]
+        {
+            new StorefrontCategoryItem(root, null, "پوشاک"),
+            new StorefrontCategoryItem(child, root, "مردانه"),
+            new StorefrontCategoryItem(grandchild, child, "پیراهن"),
+            new StorefrontCategoryItem(unrelated, null, "خانه"),
+        };
+
+        var included = StorefrontComposer.DescendantCategoryIds(categories, root);
+
+        Assert.Contains(root, included);
+        Assert.Contains(child, included);
+        Assert.Contains(grandchild, included);
+        Assert.DoesNotContain(unrelated, included);
     }
 
     [Fact]

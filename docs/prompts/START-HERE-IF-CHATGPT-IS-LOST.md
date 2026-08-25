@@ -14,7 +14,7 @@ P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
 P04 = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 = IN_PROGRESS; TB-P05-T001/T002/T003 ACCEPTED; TB-P05-T004 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; live Admin dashboard/products/orders/sellers/customers; server-side tenant Admin authorization; Persian RTL; Data Grid; do not invent TB-P05-T005
+P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004 ACCEPTED; TB-P05-T005 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; live published category hierarchy and backend-defined commercial rails; only real automatic Promotion claims; Persian RTL; do not invent TB-P05-T006
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

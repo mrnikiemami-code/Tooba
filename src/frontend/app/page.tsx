@@ -35,7 +35,10 @@ export default async function HomePage() {
         heroTitle={home.heroTitle}
         heroSubtitle={home.heroSubtitle}
         categories={home.categories}
-        products={home.featuredProducts}
+        specialOffers={home.specialOffers}
+        campaignProducts={home.campaignProducts}
+        newArrivals={home.newArrivals}
+        productRail={home.productRail}
         brands={home.brands}
       />
     </StorefrontShell>

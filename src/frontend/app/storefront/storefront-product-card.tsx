@@ -35,8 +35,13 @@ export function StorefrontProductCardView({ card }: { card: StorefrontProductCar
         </h3>
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm sm:text-base font-black text-[#2563EB] whitespace-nowrap">
-            {formatOfferAmount(card.offerAmountExclusiveOfTax, card.currency)}
+            {formatOfferAmount(card.promotionalAmountExclusiveOfTax ?? card.offerAmountExclusiveOfTax, card.currency)}
           </span>
+          {card.promotionalAmountExclusiveOfTax !== null ? (
+            <span className="text-[10px] text-gray-400 line-through whitespace-nowrap">
+              {formatOfferAmount(card.offerAmountExclusiveOfTax, card.currency)}
+            </span>
+          ) : null}
         </div>
         <div className="flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((index) => (
