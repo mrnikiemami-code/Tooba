@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   Grid3X3,
@@ -19,7 +19,8 @@ import { formatOfferAmount } from "./storefront-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 
 /**
- * هدر Shopeiva با نوار پرومو، جستجو، مگامنوی زنده Catalog و سبد.
+ * هدر Shopeiva با نوار پرومو، جستجو، مگامنوی رده‌ای زنده Catalog و سبد.
+ * مگامنو hierarchy رده است؛ کارت محصول و قیمت داخل مگامنو نمی‌آید.
  */
 export function StorefrontShopeivaHeader({
   categories,
@@ -56,13 +57,7 @@ export function StorefrontShopeivaHeader({
   }, [categories, selectedCategoryId]);
 
   const selectedCategory = categories.find((item) => item.categoryId === selectedCategoryId) ?? categories[0] ?? null;
-  const megaProducts = useMemo(() => {
-    if (!selectedCategory) {
-      return searchCatalog.slice(0, 8);
-    }
-    const filtered = searchCatalog.filter((item) => item.categoryId === selectedCategory.categoryId);
-    return (filtered.length > 0 ? filtered : searchCatalog).slice(0, 8);
-  }, [searchCatalog, selectedCategory]);
+  const siblingCategories = categories.filter((item) => item.categoryId !== selectedCategory?.categoryId);
 
   const matches = query.trim()
     ? searchCatalog.filter((item) => item.title.includes(query.trim())).slice(0, 6)
@@ -199,23 +194,32 @@ export function StorefrontShopeivaHeader({
                     {selectedCategory ? (
                       <Link
                         href={`/products?categoryId=${selectedCategory.categoryId}`}
-                        className="inline-flex mb-3 text-[11px] font-bold text-[#2563EB]"
+                        className="inline-flex mb-4 text-[11px] font-bold text-[#2563EB]"
                       >
                         مشاهده همهٔ این رده
                       </Link>
                     ) : null}
-                    <div className="grid grid-cols-2 gap-2">
-                      {megaProducts.map((item) => (
-                        <Link
-                          key={item.productId}
-                          href={`/products/${item.slug}`}
-                          className="rounded-xl border border-gray-100 px-3 py-2 hover:border-[#2563EB]/40"
-                        >
-                          <p className="text-xs font-bold text-gray-800 line-clamp-2">{item.title}</p>
-                          <p className="text-[11px] text-[#2563EB] font-bold mt-1">
-                            {formatOfferAmount(item.offerAmountExclusiveOfTax, item.currency)}
-                          </p>
-                        </Link>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                      {(siblingCategories.length > 0 ? siblingCategories : categories).slice(0, 8).map((sub) => (
+                        <div key={sub.categoryId}>
+                          <Link
+                            href={`/products?categoryId=${sub.categoryId}`}
+                            className="text-xs font-bold text-gray-800 hover:text-[#2563EB]"
+                          >
+                            {sub.name}
+                          </Link>
+                          <div className="mt-1 space-y-1">
+                            <Link
+                              href={`/products?categoryId=${sub.categoryId}`}
+                              className="block text-[11px] text-gray-400 hover:text-[#2563EB]"
+                            >
+                              همه کالاهای این رده
+                            </Link>
+                            <Link href="/products" className="block text-[11px] text-gray-400 hover:text-[#2563EB]">
+                              همه کالاهای فروشگاه
+                            </Link>
+                          </div>
+                        </div>
                       ))}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -234,7 +238,7 @@ export function StorefrontShopeivaHeader({
                     <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#2563EB] to-[#1e40af] text-white p-4 text-center">
                       <Tag className="w-5 h-5 mx-auto mb-2" />
                       <p className="font-bold text-sm">پیشنهادهای فروشگاه</p>
-                      <p className="text-[11px] opacity-80 mt-1">کالاهای زنده Tooba در ویترین Shopeiva</p>
+                      <p className="text-[11px] opacity-80 mt-1">رده‌های زنده Catalog در پوستهٔ Shopeiva</p>
                       <Link href="/products" className="mt-3 inline-block px-4 py-1.5 bg-white text-[#2563EB] rounded-xl text-[11px] font-bold">
                         مشاهده کالاها
                       </Link>

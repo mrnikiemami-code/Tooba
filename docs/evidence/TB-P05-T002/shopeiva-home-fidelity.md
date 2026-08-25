@@ -11,7 +11,7 @@ Fast-connect of purchased Shopeiva Home chrome to live Tooba storefront data. No
 | Promo bar | Static Shopeiva chrome | Accent blue `#2563EB`; copy kept as storefront support strip |
 | Header / logo / actions | Live cart badge via `loadStorefrontCart`; search suggestions from `/v1/storefront/home` featured products | Logo asset remains Shopeiva; brand text is Tooba |
 | Search | `GET /products?q=` + live Offer amounts in suggest | No Product.Price |
-| Mega Menu | Live Catalog categories + live product cards filtered by category | Fake `/jsons/menuCategories.json` tree removed as authority; click/hover open |
+| Mega Menu | Live Catalog categories (flat) | Fake `/jsons/menuCategories.json` removed; **no product cards/prices inside mega**; middle columns are category hierarchy chrome filled with live category links; nested Catalog tree still missing |
 | Hero / Slider | Static Shopeiva slider assets + live `heroTitle` / `heroSubtitle` overlay | CMS/slider content not owned by Catalog |
 | Stories | Live category names + Shopeiva story images | Images are chrome, labels are Catalog |
 | Category tiles | `StorefrontHomePage.Categories` | Tile images rotate Shopeiva category assets |
