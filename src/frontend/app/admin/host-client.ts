@@ -1,4 +1,5 @@
 import type { ProductWorkspaceView } from "./workspace-model.ts";
+import { adminHeaders } from "./admin-api.ts";
 
 /**
  * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
@@ -182,9 +183,12 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
 /**
  * فهرست Host را می‌خواند. قطع ارتباط یا فهرست خالی با بنر fixture اعلام می‌شود.
  */
-export async function loadAdminProductList(): Promise<{ source: HostReadSource; rows: AdminProductListRow[]; message?: string }> {
+export async function loadAdminProductList(): Promise<{ source: HostReadSource; rows: AdminProductListRow[]; message?: string; denied?: boolean }> {
   try {
-    const response = await fetch("/v1/admin/products", { headers: { Accept: "application/json" } });
+    const response = await fetch("/v1/admin/products", { headers: adminHeaders() });
+    if (response.status === 401 || response.status === 403) {
+      return { source: "error", rows: [], message: "admin.authorization.denied", denied: true };
+    }
     if (!response.ok) {
       return { source: "error", rows: [], message: "host-list-http-" + String(response.status) };
     }
@@ -201,13 +205,16 @@ export async function loadAdminProductList(): Promise<{ source: HostReadSource; 
 export async function loadProductWorkspace(
   productId: string,
   viewScope: boolean,
-): Promise<{ source: HostReadSource; view: ProductWorkspaceView | null; message?: string }> {
+): Promise<{ source: HostReadSource; view: ProductWorkspaceView | null; message?: string; denied?: boolean }> {
   try {
-    const headers: Record<string, string> = { Accept: "application/json" };
+    const headers = adminHeaders();
     if (viewScope) {
       headers["X-Tooba-Workspace-Scope"] = "view";
     }
     const response = await fetch(`/v1/admin/products/${productId}`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { source: "error", view: null, message: "admin.authorization.denied", denied: true };
+    }
     if (response.ok) {
       const view = mapProductWorkspaceView(await response.json());
       if (view) {
@@ -232,7 +239,7 @@ export async function patchCatalogTitle(
   viewScope: boolean,
 ): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
   try {
-    const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "application/json" };
+    const headers = adminHeaders({ "Content-Type": "application/json" });
     if (viewScope) {
       headers["X-Tooba-Workspace-Scope"] = "view";
     }

@@ -14,7 +14,7 @@ P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
 P04 = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 = IN_PROGRESS; do not invent TB-P05-T002; preserve Shopeiva; connect live Tooba; Persian RTL; Data Grid on seller products/orders; core APIs by end of P06
+P05 = IN_PROGRESS; TB-P05-T001/T002/T003 ACCEPTED; TB-P05-T004 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; live Admin dashboard/products/orders/sellers/customers; server-side tenant Admin authorization; Persian RTL; Data Grid; do not invent TB-P05-T005
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

@@ -17,9 +17,7 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
         <span className="flex size-10 shrink-0 items-center justify-center rounded-ds bg-secondary text-xs text-muted">تصویر</span>
         <span className="min-w-0">
           <span className="block truncate font-semibold">{row.title}</span>
-          <span className="block truncate text-sm text-muted" dir="ltr">
-            {row.id.slice(0, 8)}
-          </span>
+          <span className="block truncate text-sm text-muted">{row.categorySummary}</span>
         </span>
       </Link>
     ),
@@ -140,12 +138,14 @@ export function ProductListScreen() {
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [rows, setRows] = useState<AdminProductListRow[]>([]);
   const [message, setMessage] = useState<string | undefined>(undefined);
+  const [denied, setDenied] = useState(false);
 
   function refresh() {
     void loadAdminProductList().then((result) => {
       setSource(result.source);
       setRows(result.rows);
       setMessage(result.message);
+      setDenied(Boolean(result.denied));
     });
   }
 
@@ -158,8 +158,16 @@ export function ProductListScreen() {
     [rows],
   );
 
+  if (denied) {
+    return (
+      <main data-testid="admin-auth-denied">
+        <ErrorState title="دسترسی مجاز نیست" detail="Host هویت فعلی را مدیر تشخیص نداد." onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+      </main>
+    );
+  }
+
   return (
-    <main className="w-full p-6 md:p-8">
+    <main className="w-full">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محصولات</h1>
@@ -169,14 +177,21 @@ export function ProductListScreen() {
           محصول جدید
         </button>
       </div>
-      <p className="mb-4 text-base text-muted" data-testid="list-source">
-        {source === "host" ? "فهرست عملیاتی فروشگاه" : source === "loading" ? "در حال بارگذاری فهرست" : "اتصال فروشگاه برقرار نیست"}
-      </p>
-      {source === "error" ? (
-        <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-      ) : (
-        <DataGrid columns={columns} queryAdapter={queryAdapter} />
-      )}
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
+          <p className="text-sm text-muted" data-testid="list-source">
+            {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری فهرست" : "اتصال فروشگاه برقرار نیست"}
+          </p>
+          <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} محصول</span>
+        </div>
+        <div className="p-2 md:p-4">
+          {source === "error" ? (
+            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : (
+            <DataGrid columns={columns} queryAdapter={queryAdapter} />
+          )}
+        </div>
+      </section>
     </main>
   );
 }

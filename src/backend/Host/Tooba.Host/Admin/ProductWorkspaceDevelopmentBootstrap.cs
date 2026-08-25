@@ -81,6 +81,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         {
             await RefreshOperatorFacingCopyAsync(catalogDb, partyDb);
             await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+            await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             return;
         }
 
@@ -172,6 +173,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await inventory.ReserveAsync(stockA1, 3, "workspace-live-hold", "workspace-live-hold", null, cancellation);
 
         await Seller.SellerDevActorBootstrap.EnsureAsync(provider, cancellation);
+        await AdminDevActorBootstrap.EnsureAsync(provider, cancellation);
     }
 
     /// <summary>

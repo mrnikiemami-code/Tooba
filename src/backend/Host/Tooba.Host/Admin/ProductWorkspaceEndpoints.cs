@@ -29,18 +29,50 @@ public static class ProductWorkspaceEndpoints
         return new ProductWorkspacePermissions(true, true, true, true, true);
     }
 
-    private static async Task<IResult> ListAsync(ProductWorkspaceComposer composer, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
     {
-        var items = await composer.ListAsync(cancellationToken);
-        return Results.Json(items);
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ListAsync(cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
     }
 
-    private static async Task<IResult> GetAsync(Guid productId, ProductWorkspaceComposer composer, HttpRequest request, CancellationToken cancellationToken)
+    private static async Task<IResult> GetAsync(
+        Guid productId,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
     {
-        var workspace = await composer.GetAsync(productId, ReadPermissions(request), cancellationToken);
-        return workspace is null
-            ? Results.Json(new { title = "Not Found", errorCode = "workspace.product.missing" }, statusCode: StatusCodes.Status404NotFound)
-            : Results.Json(workspace);
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var workspace = await composer.GetAsync(productId, ReadPermissions(request), cancellationToken);
+            return workspace is null
+                ? Results.Json(new { title = "Not Found", errorCode = "workspace.product.missing" }, statusCode: StatusCodes.Status404NotFound)
+                : Results.Json(workspace);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
     }
 
     private static async Task<IResult> PatchTitleAsync(
@@ -48,10 +80,16 @@ public static class ProductWorkspaceEndpoints
         CatalogTitlePatch body,
         ProductWorkspaceComposer composer,
         HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
             var workspace = await composer.UpdateCatalogTitleAsync(
                 productId,
                 body.Locale,
@@ -63,9 +101,12 @@ public static class ProductWorkspaceEndpoints
         }
         catch (PlatformHttpException ex)
         {
-            return Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+            return ToError(ex);
         }
     }
+
+    private static IResult ToError(PlatformHttpException ex) =>
+        Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
 }
 
 /// <summary>

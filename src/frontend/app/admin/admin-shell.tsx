@@ -2,62 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
-import {
-  BarChart3,
-  FileText,
-  LayoutDashboard,
-  Menu,
-  Package,
-  Settings,
-  ShoppingBag,
-  Store,
-  Tag,
-  Users,
-  Warehouse,
-  X,
-} from "lucide-react";
-import { useTheme } from "../../design-system";
+import { useEffect, useState, type ReactNode } from "react";
+import { Bell, LayoutDashboard, Menu, Package, Search, ShoppingBag, Store, Users, X } from "lucide-react";
+import { prepareAdminDevActor } from "./admin-api";
 
 const nav = [
-  { href: "#dashboard", label: "داشبورد", enabled: false, icon: LayoutDashboard },
-  { href: "/admin/products", label: "محصولات", enabled: true, icon: Package },
-  { href: "#orders", label: "سفارش‌ها", enabled: false, icon: ShoppingBag },
-  { href: "#customers", label: "مشتریان", enabled: false, icon: Users },
-  { href: "#sellers", label: "فروشندگان", enabled: false, icon: Store },
-  { href: "#inventory", label: "موجودی", enabled: false, icon: Warehouse },
-  { href: "#promotions", label: "پروموشن", enabled: false, icon: Tag },
-  { href: "#content", label: "محتوا", enabled: false, icon: FileText },
-  { href: "#analytics", label: "تحلیل", enabled: false, icon: BarChart3 },
-  { href: "#settings", label: "تنظیمات", enabled: false, icon: Settings },
+  { href: "/admin", label: "داشبورد", icon: LayoutDashboard, exact: true },
+  { href: "/admin/products", label: "محصولات", icon: Package, exact: false },
+  { href: "/admin/orders", label: "سفارش‌ها", icon: ShoppingBag, exact: false },
+  { href: "/admin/sellers", label: "فروشندگان", icon: Store, exact: false },
+  { href: "/admin/customers", label: "مشتریان", icon: Users, exact: false },
 ];
 
 /**
- * پوستهٔ عملیاتی Admin. ماژول‌های آینده فقط مکان‌نما هستند و route جدید نمی‌سازند.
+ * پوستهٔ Admin با ساختار مستقیم پنل Shopeiva Vendor و ناوبری باریک موبایل.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    void prepareAdminDevActor().finally(() => setReady(true));
+  }, []);
 
   function NavItems({ onNavigate }: { onNavigate?: () => void }) {
     return (
-      <nav className="flex flex-1 flex-col gap-1 p-3 text-base" aria-label="Admin">
+      <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label="Admin">
         {nav.map((item) => {
-          const active = item.enabled && path.startsWith(item.href);
+          const active = item.exact ? path === item.href : path.startsWith(item.href);
           const Icon = item.icon;
-          const body = (
-            <>
-              <Icon className="size-4 shrink-0 opacity-80" aria-hidden />
-              {item.label}
-            </>
-          );
-          if (!item.enabled) {
-            return (
-              <span key={item.label} className="flex items-center gap-3 rounded-ds px-3 py-2.5 text-sm text-muted/70">
-                {body}
-              </span>
-            );
-          }
           return (
             <Link
               key={item.href}
@@ -65,11 +39,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
               onClick={onNavigate}
               className={
                 active
-                  ? "flex items-center gap-3 rounded-ds bg-primary px-3 py-2.5 text-sm font-medium text-primary-foreground"
-                  : "flex items-center gap-3 rounded-ds px-3 py-2.5 text-sm text-foreground hover:bg-secondary"
+                  ? "inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground"
+                  : "inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-foreground hover:bg-secondary"
               }
             >
-              {body}
+              <Icon className="size-4 shrink-0" aria-hidden />
+              {item.label}
             </Link>
           );
         })}
@@ -77,16 +52,43 @@ export function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
+  const crumb = nav.find((item) => item.exact ? path === item.href : path.startsWith(item.href))?.label ?? "عملیات";
+
+  if (!ready) {
+    return <div className="flex min-h-screen items-center justify-center bg-[rgb(248_248_247)] text-muted">در حال آماده‌سازی پنل مدیریت…</div>;
+  }
+
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-e border-border bg-surface-elevated shadow-sm md:flex">
-        <div className="border-b border-border px-5 py-5">
-          <p className="text-sm font-semibold tracking-wide text-primary">TOOBA</p>
-          <p className="mt-1 text-xl font-semibold">عملیات فروش</p>
-          <p className="mt-2 text-sm text-muted">کاتالوگ چندفروشنده‌ای</p>
+    <div className="flex min-h-screen flex-col bg-[rgb(248_248_247)] text-foreground">
+      <div className="bg-gradient-to-l from-[rgb(180_140_70)] via-[rgb(198_162_92)] to-[rgb(168_128_58)] text-white shadow-sm">
+        <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-3 px-4 py-2 md:px-8">
+          <p className="text-sm font-medium tracking-wide md:text-base">توبا · حس خوب مدیریت</p>
+          <div className="hidden items-center gap-3 md:flex">
+            <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/15 px-3 text-sm">
+              <Search className="size-3.5" aria-hidden />
+              جستجو
+            </span>
+            <Bell className="size-4" aria-hidden />
+          </div>
         </div>
-        <NavItems />
-      </aside>
+      </div>
+      <div className="border-b border-border bg-surface-elevated shadow-sm">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:px-8">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <button type="button" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-ds border border-border md:hidden" aria-label="باز کردن منو" onClick={() => setMenuOpen(true)}>
+                <Menu className="size-5" />
+              </button>
+              <div>
+                <p className="text-base font-semibold">مرکز عملیات توبا</p>
+                <p className="text-sm text-muted">مدیریت / {crumb}</p>
+              </div>
+            </div>
+            <span className="rounded-full bg-[rgb(255_247_237)] px-3 py-1.5 text-xs text-[rgb(194_65_12)]">دسترسی مدیر</span>
+          </div>
+          <div className="hidden md:block"><NavItems /></div>
+        </div>
+      </div>
       {menuOpen ? (
         <div className="fixed inset-0 z-40 md:hidden">
           <button type="button" className="absolute inset-0 bg-foreground/40" aria-label="بستن منو" onClick={() => setMenuOpen(false)} />
@@ -97,58 +99,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <X className="size-5" />
               </button>
             </div>
-            <NavItems onNavigate={() => setMenuOpen(false)} />
+            <div className="p-3"><NavItems onNavigate={() => setMenuOpen(false)} /></div>
           </aside>
         </div>
       ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-surface px-4 md:px-8">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-ds border border-border md:hidden"
-              aria-label="باز کردن منو"
-              onClick={() => setMenuOpen(true)}
-            >
-              <Menu className="size-5" />
-            </button>
-            <div className="min-w-0">
-              <p className="truncate text-base font-medium">کاتالوگ محصول</p>
-              <p className="text-sm text-muted">فروشگاه آلفا</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <AppearanceControls />
-            <span className="hidden rounded-ds bg-secondary px-3 py-1.5 text-sm text-secondary-foreground sm:inline">اپراتور کاتالوگ</span>
-          </div>
-        </header>
-        <div className="min-w-0 flex-1">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * کنترل ظاهر عملیاتی Admin. جهت و طرح رنگ را بدون نوار اشکال‌زدایی روی پوسته عوض می‌کند.
- */
-function AppearanceControls() {
-  const { theme, setColorScheme, setDirection } = useTheme();
-  return (
-    <div className="flex items-center gap-1" role="group" aria-label="ظاهر">
-      <button
-        type="button"
-        className="min-h-9 rounded-ds border border-border px-2 text-xs"
-        onClick={() => setDirection(theme.direction === "rtl" ? "ltr" : "rtl")}
-      >
-        {theme.direction === "rtl" ? "LTR" : "RTL"}
-      </button>
-      <button
-        type="button"
-        className="min-h-9 rounded-ds border border-border px-2 text-xs"
-        onClick={() => setColorScheme(theme.colorScheme === "dark" ? "light" : "dark")}
-      >
-        {theme.colorScheme === "dark" ? "روشن" : "تیره"}
-      </button>
+      <div className="mx-auto w-full max-w-7xl min-w-0 flex-1 px-4 py-5 md:px-8 md:py-7">{children}</div>
     </div>
   );
 }

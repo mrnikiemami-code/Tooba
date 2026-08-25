@@ -85,6 +85,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCheckoutComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -183,6 +184,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 
 app.MapAuthenticationBoundary();
 app.MapProductWorkspaceEndpoints();
+app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();

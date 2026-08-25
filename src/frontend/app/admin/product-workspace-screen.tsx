@@ -20,7 +20,8 @@ function money(amount: number | undefined, currency: string | undefined): string
   if (amount == null) {
     return "—";
   }
-  return `${new Intl.NumberFormat("fa-IR").format(amount)} ${currency ?? ""}`.trim();
+  const digits = new Intl.NumberFormat("fa-IR").format(amount);
+  return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency ?? ""}`.trim();
 }
 
 /**
@@ -35,6 +36,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const [conflict, setConflict] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState<Set<string>>(new Set());
+  const [denied, setDenied] = useState(false);
 
   const reload = useCallback(() => {
     void loadProductWorkspace(productId, viewScope).then((result) => {
@@ -43,6 +45,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
       setTitleDraft(result.view?.title ?? "");
       setConflict(null);
       setError(result.message ?? null);
+      setDenied(Boolean(result.denied));
     });
   }, [productId, viewScope]);
 
@@ -54,6 +57,13 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const dirtySections = useMemo(() => dirty, [dirty]);
 
   if (!view) {
+    if (denied) {
+      return (
+        <div className="p-6" data-testid="admin-auth-denied">
+          <ErrorState title="دسترسی مجاز نیست" detail="Host هویت فعلی را مدیر تشخیص نداد." onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
+        </div>
+      );
+    }
     if (source === "error") {
       return (
         <div className="p-6">

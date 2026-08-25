@@ -1,0 +1,233 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Package, ShoppingBag, Store, Users } from "lucide-react";
+import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
+import { executeGridQuery } from "../../design-system/data-grid/query-engine";
+import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
+import {
+  formatAdminDate,
+  formatAdminMoney,
+  formatAdminStatus,
+  loadAdminCustomers,
+  loadAdminDashboard,
+  loadAdminOrderDetail,
+  loadAdminOrders,
+  loadAdminSellers,
+  type AdminCustomerRow,
+  type AdminDashboard,
+  type AdminLoadState,
+  type AdminOrderDetail,
+  type AdminOrderRow,
+  type AdminResult,
+  type AdminSellerRow,
+} from "./admin-api";
+
+function Denied({ retry }: { retry: () => void }) {
+  return (
+    <div data-testid="admin-auth-denied">
+      <ErrorState
+        title="دسترسی مجاز نیست"
+        detail="Host هویت فعلی را مدیر تشخیص نداد. تغییر مسیر یا هدر مرورگر مجوز ایجاد نمی‌کند."
+        onRetry={retry}
+        retryLabel={faWorkspaceMessages.retry}
+      />
+    </div>
+  );
+}
+
+function PageHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <p className="text-sm text-muted">خانه / {title}</p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
+      <p className="mt-1 text-base text-muted">{description}</p>
+    </div>
+  );
+}
+
+/** داشبورد Admin با کارت‌های واقعی Shopeiva و بدون تحلیل ساختگی. */
+export function AdminDashboardScreen() {
+  const [result, setResult] = useState<AdminResult<AdminDashboard>>({ state: "ok", data: null, status: 0 });
+  const refresh = () => void loadAdminDashboard().then(setResult);
+  useEffect(refresh, []);
+  if (result.state === "denied") return <Denied retry={refresh} />;
+  return (
+    <main data-testid="admin-dashboard">
+      <PageHeading title="داشبورد مدیریت" description="خلاصهٔ زندهٔ عملیات فروشگاه" />
+      {result.state === "error" ? (
+        <ErrorState title="Host در دسترس نیست" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Summary label="محصول فعال" value={result.data?.activeProducts} icon={<Package className="size-5" />} tone="bg-blue-50 text-primary" />
+            <Summary label="سفارش باز" value={result.data?.openOrders} icon={<ShoppingBag className="size-5" />} tone="bg-orange-50 text-orange-700" />
+            <Summary label="فروشنده" value={result.data?.sellersCount} icon={<Store className="size-5" />} tone="bg-violet-50 text-violet-700" />
+            <Summary label="مشتری سفارش‌دهنده" value={result.data?.customersCount} icon={<Users className="size-5" />} tone="bg-green-50 text-green-700" />
+          </div>
+          <section className="mt-5 rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <h2 className="text-lg font-semibold">وضعیت سفارش و عرضه</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <Metric label="پیشنهاد فعال" value={result.data?.activeOffers} />
+              <Metric label="پرداخت‌شده" value={result.data?.paidOrders} />
+              <Metric label="در انتظار پرداخت" value={result.data?.pendingOrders} />
+            </div>
+          </section>
+        </>
+      )}
+    </main>
+  );
+}
+
+function Summary({ label, value, icon, tone }: { label: string; value?: number; icon: ReactNode; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div><p className="text-sm text-muted">{label}</p><p className="mt-2 text-3xl font-semibold tabular-nums">{value?.toLocaleString("fa-IR") ?? "…"}</p></div>
+        <span className={`inline-flex size-11 items-center justify-center rounded-full ${tone}`}>{icon}</span>
+      </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value?: number }) {
+  return <div className="flex items-center justify-between rounded-ds bg-secondary/60 px-4 py-3"><span>{label}</span><strong className="tabular-nums">{value?.toLocaleString("fa-IR") ?? "…"}</strong></div>;
+}
+
+function GridPage<T extends { id: string }>({
+  title,
+  description,
+  loader,
+  columns,
+}: {
+  title: string;
+  description: string;
+  loader: () => Promise<AdminResult<T[]>>;
+  columns: GridColumnDef<T>[];
+}) {
+  const [state, setState] = useState<AdminLoadState | "loading">("loading");
+  const [rows, setRows] = useState<T[]>([]);
+  const [message, setMessage] = useState<string>();
+  const refresh = () => void loader().then((result) => {
+    setState(result.state);
+    setRows(result.data ?? []);
+    setMessage(result.message);
+  });
+  useEffect(refresh, [loader]);
+  const queryAdapter = useMemo(() => async (query: GridServerQuery) => executeGridQuery(rows, columns, query), [rows, columns]);
+  if (state === "denied") return <Denied retry={refresh} />;
+  return (
+    <main>
+      <PageHeading title={title} description={description} />
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
+          <span className="text-sm text-muted">{state === "ok" ? "دادهٔ زندهٔ Host" : state === "loading" ? "در حال بارگذاری" : "اتصال برقرار نیست"}</span>
+          <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} مورد</span>
+        </div>
+        <div className="p-2 md:p-4">
+          {state === "error" ? <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : <DataGrid columns={columns} queryAdapter={queryAdapter} />}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+const orderColumns: GridColumnDef<AdminOrderRow>[] = [
+  { id: "reference", header: "سفارش", accessor: (row) => row.reference, cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/orders/${row.checkoutId}`}>{row.reference}</Link>, width: 140, minWidth: 110, maxWidth: 190, sticky: "start", filterKind: "text", sortable: true },
+  { id: "customer", header: "مشتری / گیرنده", accessor: (row) => row.customerDisplayName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
+  { id: "sellers", header: "فروشنده", accessor: (row) => row.sellerCount, cell: (row) => row.sellerCount.toLocaleString("fa-IR"), width: 85, minWidth: 70, maxWidth: 110, sortable: true },
+  { id: "lines", header: "قلم", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 75, minWidth: 64, maxWidth: 100, sortable: true },
+  { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, maxWidth: 170, filterKind: "status" },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status" },
+  { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, maxWidth: 200, sortable: true },
+  { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, maxWidth: 150, sortable: true },
+];
+
+const sellerColumns: GridColumnDef<AdminSellerRow>[] = [
+  { id: "name", header: "فروشنده", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
+  { id: "relationship", header: "رابطه", accessor: (row) => row.relationship, width: 150, minWidth: 110, maxWidth: 210, filterKind: "text" },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status" },
+  { id: "offers", header: "پیشنهاد فعال", accessor: (row) => row.activeOfferCount, cell: (row) => row.activeOfferCount.toLocaleString("fa-IR"), width: 120, minWidth: 95, maxWidth: 150, sortable: true },
+  { id: "orders", header: "سفارش", accessor: (row) => row.orderCount, cell: (row) => row.orderCount.toLocaleString("fa-IR"), width: 100, minWidth: 80, maxWidth: 130, sortable: true },
+];
+
+const customerColumns: GridColumnDef<AdminCustomerRow>[] = [
+  { id: "name", header: "مشتری", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
+  { id: "contact", header: "راه ارتباطی", accessor: (row) => row.contact, width: 160, minWidth: 120, maxWidth: 220, filterKind: "text" },
+  { id: "orders", header: "تعداد سفارش", accessor: (row) => row.orderCount, cell: (row) => row.orderCount.toLocaleString("fa-IR"), width: 120, minWidth: 95, maxWidth: 150, sortable: true },
+  { id: "activity", header: "آخرین فعالیت", accessor: (row) => row.lastActivityAt ?? "", cell: (row) => formatAdminDate(row.lastActivityAt), width: 130, minWidth: 105, maxWidth: 170, sortable: true },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 110, minWidth: 90, maxWidth: 150, filterKind: "status" },
+];
+
+function Status({ value }: { value: string }) {
+  return <span className="inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">{formatAdminStatus(value)}</span>;
+}
+
+/** فهرست زندهٔ سفارش‌ها. */
+export function AdminOrdersScreen() {
+  return <GridPage title="سفارش‌ها" description="پیگیری checkout و سفارش‌های فروشندگان" loader={loadAdminOrders} columns={orderColumns} />;
+}
+
+/** فهرست زندهٔ فروشندگان. */
+export function AdminSellersScreen() {
+  return <GridPage title="فروشندگان" description="فروشندگان و رابطهٔ عملیاتی ثبت‌شده" loader={loadAdminSellers} columns={sellerColumns} />;
+}
+
+/** فهرست صادقانهٔ خریداران شناخته‌شده؛ نه CRM. */
+export function AdminCustomersScreen() {
+  return <GridPage title="مشتریان" description="خریداران شناخته‌شده از سفارش‌های زنده" loader={loadAdminCustomers} columns={customerColumns} />;
+}
+
+/** جزئیات checkout شامل snapshot ارسال و خطوط هر فروشنده. */
+export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
+  const [result, setResult] = useState<AdminResult<AdminOrderDetail>>({ state: "ok", data: null, status: 0 });
+  const refresh = () => void loadAdminOrderDetail(checkoutId).then(setResult);
+  useEffect(refresh, [checkoutId]);
+  if (result.state === "denied") return <Denied retry={refresh} />;
+  const detail = result.data;
+  return (
+    <main>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <PageHeading title="جزئیات سفارش" description={detail?.reference ?? "در حال بارگذاری سفارش"} />
+        <Link className="text-sm text-primary hover:underline" href="/admin/orders">بازگشت به سفارش‌ها</Link>
+      </div>
+      {result.state === "error" ? <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : detail ? (
+        <div className="grid gap-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Info label="وضعیت" value={formatAdminStatus(detail.status)} />
+              <Info label="پرداخت" value={formatAdminStatus(detail.paymentState)} />
+              <Info label="تاریخ" value={formatAdminDate(detail.createdAt)} />
+              <Info label="قابل پرداخت" value={formatAdminMoney(detail.payableAmount, detail.currency)} />
+            </dl>
+          </section>
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <h2 className="font-semibold">گیرنده و ارسال</h2>
+            <p className="mt-3">{detail.recipientName} · <span dir="ltr">{detail.contactMobile || "—"}</span></p>
+            <p className="mt-2 text-sm text-muted">{detail.provinceName}، {detail.cityName}، {detail.postalAddress} · {detail.postalCode} · {detail.shippingMethodLabel}</p>
+          </section>
+          {detail.sellerOrders.map((order) => (
+            <section key={order.id} className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+              <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{order.sellerDisplayName}</h2><p className="text-sm text-muted">{order.orderNumber}</p></div><Status value={order.status} /></div>
+              <ul className="mt-4 divide-y divide-border">
+                {order.lines.map((line) => <li key={line.id} className="flex flex-wrap justify-between gap-3 py-3"><div><p className="font-medium">{line.title}</p><p className="text-sm text-muted">{line.quantity.toLocaleString("fa-IR")} عدد × {formatAdminMoney(line.unitAmount, line.currency)}</p></div><strong>{formatAdminMoney(line.linePayable, line.currency)}</strong></li>)}
+              </ul>
+            </section>
+          ))}
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <div className="grid gap-3 sm:grid-cols-2"><MetricMoney label="جمع" value={detail.subtotal} currency={detail.currency} /><MetricMoney label="مالیات" value={detail.taxAmount} currency={detail.currency} /><MetricMoney label="تخفیف" value={detail.discountAmount} currency={detail.currency} /><MetricMoney label="قابل پرداخت" value={detail.payableAmount} currency={detail.currency} /></div>
+          </section>
+        </div>
+      ) : <p className="text-muted">در حال بارگذاری…</p>}
+    </main>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return <div><dt className="text-sm text-muted">{label}</dt><dd className="mt-1 font-semibold">{value}</dd></div>;
+}
+
+function MetricMoney({ label, value, currency }: { label: string; value: number; currency: string }) {
+  return <div className="flex justify-between rounded-ds bg-secondary/60 px-3 py-3"><span>{label}</span><strong>{formatAdminMoney(value, currency)}</strong></div>;
+}

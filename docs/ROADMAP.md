@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001/T002 ACCEPTED; TB-P05-T003 IN_PROGRESS; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001/T002/T003 ACCEPTED; TB-P05-T004 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -125,7 +125,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | --- | --- | --- |
 | P05-01 | Seller Panel Products & Orders live slice | ACCEPTED (TB-P05-T001) |
 | P05-02 | Storefront Home Fast Connect | ACCEPTED (TB-P05-T002) |
-| P05-03 | Shopeiva Customer Panel live customer data | IN_PROGRESS (TB-P05-T003) |
+| P05-03 | Shopeiva Customer Panel live customer data | ACCEPTED (TB-P05-T003) |
+| P05-04 | Shopeiva-derived Admin operational surfaces | AWAITING_ARCHITECT_ACCEPT (TB-P05-T004) |
 
 ## Mandatory UX sequence (locked)
 
@@ -146,4 +147,5 @@ Do not skip. Later steps wait for new envelopes.
 | P04 Gate | COMPLETE (Architect accepted TB-P04-GATE) |
 | P05 Seller Products/Orders | ACCEPTED (TB-P05-T001) |
 | P05 Storefront Home Fast Connect | ACCEPTED (TB-P05-T002) |
-| P05 Shopeiva Customer Panel | IN_PROGRESS (TB-P05-T003) |
+| P05 Shopeiva Customer Panel | ACCEPTED (TB-P05-T003) |
+| P05 Admin Fast Connect | AWAITING_ARCHITECT_ACCEPT (TB-P05-T004) |
