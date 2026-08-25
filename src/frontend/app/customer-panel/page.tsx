@@ -51,7 +51,7 @@ export default function CustomerDashboard() {
         <Metric icon={Package} value={page.totalOrders} label="کل سفارش‌ها" tone="blue" />
         <Metric icon={WalletCards} value={page.paidOrders} label="پرداخت‌شده" tone="green" />
         <Metric icon={Eye} value={page.pendingOrders} label="در انتظار" tone="amber" />
-        <Metric icon={Heart} value={0} label="علاقه‌مندی" tone="pink" suffix={page.wishlistAvailable ? "" : "غیرفعال"} />
+        <Metric icon={Heart} value={page.wishlistCount} label="علاقه‌مندی" tone="pink" suffix={page.wishlistAvailable ? "" : "غیرفعال"} />
       </section>
 
       <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">

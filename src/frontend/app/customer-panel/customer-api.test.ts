@@ -9,6 +9,12 @@ import {
   mapCustomerOrderDetail,
   mapCustomerProfile,
 } from "./customer-api.ts";
+import {
+  addWishlistProduct,
+  mapWishlistPage,
+  StorefrontWishlistApiError,
+  wishlistEmptyMessage,
+} from "../storefront/storefront-wishlist-api.ts";
 
 test("customer mapper keeps checkout identity and snapshot amount", () => {
   const order = mapCustomerOrder({
@@ -38,12 +44,66 @@ test("customer dashboard exposes capability availability without fake counts", (
     pendingOrders: 1,
     paidOrders: 1,
     wishlistAvailable: false,
+    wishlistCount: 3,
     addressBookAvailable: false,
     recentOrders: [],
   });
   assert.equal(page?.wishlistAvailable, false);
+  assert.equal(page?.wishlistCount, 3);
   assert.equal(page?.addressBookAvailable, false);
   assert.equal(page?.totalOrders, 2);
+});
+
+test("wishlist maps current live offer availability and real ratings only", () => {
+  const page = mapWishlistPage({
+    totalCount: 1,
+    items: [{
+      savedAt: "2026-08-25T12:00:00Z",
+      product: {
+        productId: "product-1",
+        slug: "live-product",
+        title: "کالای زنده",
+        primaryOfferId: "offer-live",
+        offerAmountExclusiveOfTax: 250_000,
+        promotionalAmountExclusiveOfTax: 220_000,
+        availableUnits: 4,
+        inStock: true,
+        reviewCount: 2,
+        averageRating: 4.5,
+      },
+    }],
+  });
+  assert.equal(page?.items[0]?.productId, "product-1");
+  assert.equal(page?.items[0]?.card.primaryOfferId, "offer-live");
+  assert.equal(page?.items[0]?.card.offerAmountExclusiveOfTax, 250_000);
+  assert.equal(page?.items[0]?.card.inStock, true);
+  assert.equal(page?.items[0]?.card.averageRating, 4.5);
+
+  const unrated = mapWishlistPage([{ productId: "p2", slug: "p2", reviewCount: 0, averageRating: 5 }]);
+  assert.equal(unrated?.items[0]?.card.averageRating, null);
+});
+
+test("wishlist empty helper only describes an actual empty collection", () => {
+  assert.match(wishlistEmptyMessage(0) ?? "", /هنوز/);
+  assert.equal(wishlistEmptyMessage(1), null);
+});
+
+test("wishlist toggle sends ProductId and surfaces 401 without optimistic success", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrl = String(input);
+    return new Response(null, { status: 401 });
+  }) as typeof fetch;
+  try {
+    await assert.rejects(
+      () => addWishlistProduct("product-intent"),
+      (error: unknown) => error instanceof StorefrontWishlistApiError && error.status === 401,
+    );
+    assert.equal(requestedUrl, "/v1/customer/wishlist/product-intent");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("customer detail maps seller and shipping snapshots", () => {

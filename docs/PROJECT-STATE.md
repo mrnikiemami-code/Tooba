@@ -34,13 +34,13 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P05-T011
+TB-P05-T012
 ```
 
 Last Implementation Task:
 
 ```text
-TB-P05-T012
+TB-P05-T013
 ```
 
 Last Architect Accepted Gate:
@@ -52,7 +52,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-T012 (Bridge-V2) = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T013 (Bridge-V2) = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -79,7 +79,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T012 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T013 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -273,7 +273,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T011 ACCEPTED; TB-P05-T012 AWAITING_ARCHITECT_ACCEPT)
+IN_PROGRESS (TB-P05-T001 through T012 ACCEPTED; TB-P05-T013 AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Design System Foundation:
@@ -542,4 +542,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001 through T011, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 are Architect-accepted. TB-P05-T012 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT: dedicated Reviews ownership, authenticated Pending submission, Published-only public aggregate/list, Order-owned purchase verification, server-authorized Admin moderation, live PDP/product-card ratings, conditional AggregateRating, and deterministic Development visual states are implemented with evidence under `docs/evidence/TB-P05-T012/`. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-V2`; channel `tooba-main`; P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001 through T012, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 are Architect-accepted. TB-P05-T013 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT: dedicated private Wishlist ownership, server-derived actor isolation, idempotent add, safe remove, batched membership, live Storefront composition, PDP/product-card toggles, customer empty/list states, and deterministic desktop/mobile evidence are implemented under `docs/evidence/TB-P05-T013/`. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

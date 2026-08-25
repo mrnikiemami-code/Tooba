@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T011, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-T012 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T012, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-T013 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -102,7 +102,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS. TB-P05-T001 through T011, TB-P05-T009-REPAIR-01, and Bridge-V2 governance migration are accepted. TB-P05-T012 is AWAITING_ARCHITECT_ACCEPT after connecting the existing Shopeiva review UI to dedicated Reviews ownership, Published-only live aggregates, Pending customer submission, Admin moderation, product-card ratings, and conditional review SEO. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS. TB-P05-T001 through T012, TB-P05-T009-REPAIR-01, and Bridge-V2 governance migration are accepted. TB-P05-T013 is AWAITING_ARCHITECT_ACCEPT after connecting Shopeiva Wishlist list/empty states and PDP/product-card hearts to dedicated private Wishlist ownership, actor isolation, idempotent add, safe remove, batched membership, and live Storefront price/availability/rating composition. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -136,7 +136,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-GOV | Bridge-V2 governance migration | ACCEPTED (TB-P05-GOV-MIGRATION-BRIDGE-V2) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |
-| P05-12 | Reviews & Ratings behind Shopeiva review UI | AWAITING_ARCHITECT_ACCEPT (TB-P05-T012) |
+| P05-12 | Reviews & Ratings behind Shopeiva review UI | ACCEPTED (TB-P05-T012) |
+| P05-13 | Wishlist behind Shopeiva customer/PDP/card UI | AWAITING_ARCHITECT_ACCEPT (TB-P05-T013) |
 
 ## Mandatory UX sequence (locked)
 
@@ -168,4 +169,5 @@ Do not skip. Later steps wait for new envelopes.
 | P05 Bridge-V2 Governance Migration | ACCEPTED |
 | P05 PDP Backend Capability Completeness | ACCEPTED (TB-P05-T010) |
 | P05 Shopeiva Mega Menu Visual Fidelity Repair | ACCEPTED (TB-P05-T011) |
-| P05 Reviews & Ratings live convergence | AWAITING_ARCHITECT_ACCEPT (TB-P05-T012) |
+| P05 Reviews & Ratings live convergence | ACCEPTED (TB-P05-T012) |
+| P05 Wishlist live convergence | AWAITING_ARCHITECT_ACCEPT (TB-P05-T013) |

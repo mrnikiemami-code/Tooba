@@ -13,6 +13,7 @@ using Tooba.Tax.Infrastructure;
 using Tooba.Promotion.Infrastructure;
 using Tooba.Payment.Infrastructure;
 using Tooba.Reviews.Infrastructure;
+using Tooba.Wishlist.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -39,6 +40,7 @@ public sealed class ArchitectureBoundaryTests
         Assert.Contains(ToobaModuleComposition.Modules, module => module is PromotionModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is PaymentModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is ReviewsModule);
+        Assert.Contains(ToobaModuleComposition.Modules, module => module is WishlistModule);
         Assert.All(ToobaModuleComposition.Modules, module => Assert.False(string.IsNullOrWhiteSpace(module.Name)));
         Assert.Contains(typeof(IToobaModule).Assembly.GetExportedTypes(), t => t == typeof(IToobaModule));
     }

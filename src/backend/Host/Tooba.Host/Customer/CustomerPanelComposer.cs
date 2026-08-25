@@ -6,6 +6,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
+using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Customer;
 
@@ -19,6 +20,7 @@ public sealed class CustomerPanelComposer
     private readonly CatalogDbContext _catalog;
     private readonly IPartyLookupGateway _parties;
     private readonly IPaymentDirectory _payments;
+    private readonly IWishlistDirectory _wishlist;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -27,12 +29,14 @@ public sealed class CustomerPanelComposer
         OrderDbContext orders,
         CatalogDbContext catalog,
         IPartyLookupGateway parties,
-        IPaymentDirectory payments)
+        IPaymentDirectory payments,
+        IWishlistDirectory wishlist)
     {
         _orders = orders;
         _catalog = catalog;
         _parties = parties;
         _payments = payments;
+        _wishlist = wishlist;
     }
 
     /// <summary>
@@ -51,13 +55,15 @@ public sealed class CustomerPanelComposer
             .Select(x => x.RecipientName)
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
             ?? "مشتری توبا";
+        var wishlistCount = await _wishlist.CountAsync(actorUserId, cancellationToken);
         return new CustomerDashboardPage(
             actorUserId,
             displayName,
             orders.Count,
             orders.Count(x => !string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
             orders.Count(x => string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
-            WishlistAvailable: false,
+            WishlistAvailable: true,
+            WishlistCount: wishlistCount,
             AddressBookAvailable: false,
             orders.Take(5).ToList());
     }

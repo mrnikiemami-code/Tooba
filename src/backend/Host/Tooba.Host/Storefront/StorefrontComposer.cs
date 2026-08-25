@@ -412,6 +412,35 @@ public sealed class StorefrontComposer
             .Take(10)
             .ToList();
 
+    /// <summary>
+    /// فقط شناسه‌های محصول درخواستی را از Catalog می‌خواند و به کارت زنده ترکیب می‌کند؛
+    /// برخلاف listing همهٔ محصولات را پیمایش نمی‌کند و خلاصهٔ Reviews را گروهی می‌گیرد.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, StorefrontProductCard>> ComposeProductCardsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0) return new Dictionary<Guid, StorefrontProductCard>();
+        var requested = productIds.Distinct().ToArray();
+        var products = await _catalog.Products.AsNoTracking()
+            .Where(x => requested.Contains(x.ProductId) && x.Status == CatalogPublicationStatus.Published)
+            .ToListAsync(cancellationToken);
+        var cards = new List<StorefrontProductCard>(products.Count);
+        foreach (var product in products)
+        {
+            var composed = await ComposeProductAsync(product, cancellationToken);
+            if (composed is not null) cards.Add(composed.Value.Card);
+        }
+        var summaries = await _reviews.GetPublishedSummariesAsync(cards.Select(x => x.ProductId).ToArray(), cancellationToken);
+        return cards.ToDictionary(
+            card => card.ProductId,
+            card =>
+            {
+                var summary = summaries.GetValueOrDefault(card.ProductId);
+                return card with { AverageRating = summary?.AverageRating, ReviewCount = summary?.ReviewCount ?? 0 };
+            });
+    }
+
     private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(
         CancellationToken cancellationToken,
         Guid? preferredSellerPartyId = null)

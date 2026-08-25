@@ -11,6 +11,7 @@ public sealed record CustomerDashboardPage(
     int PendingOrders,
     int PaidOrders,
     bool WishlistAvailable,
+    long WishlistCount,
     bool AddressBookAvailable,
     IReadOnlyList<CustomerOrderListItem> RecentOrders);
 

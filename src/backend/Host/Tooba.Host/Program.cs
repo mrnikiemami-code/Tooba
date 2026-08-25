@@ -16,6 +16,7 @@ using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
+using Tooba.Host.Wishlist;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -87,6 +88,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -193,6 +195,7 @@ app.MapStorefrontEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapReviewEndpoints();
+app.MapWishlistEndpoints();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

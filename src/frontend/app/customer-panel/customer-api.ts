@@ -26,6 +26,7 @@ export interface CustomerDashboardPage {
   pendingOrders: number;
   paidOrders: number;
   wishlistAvailable: boolean;
+  wishlistCount: number;
   addressBookAvailable: boolean;
   recentOrders: CustomerOrderListItem[];
 }
@@ -175,6 +176,7 @@ export function mapCustomerDashboard(value: unknown): CustomerDashboardPage | nu
     pendingOrders: number(prop(item, "pendingOrders", "PendingOrders")),
     paidOrders: number(prop(item, "paidOrders", "PaidOrders")),
     wishlistAvailable: prop(item, "wishlistAvailable", "WishlistAvailable") === true,
+    wishlistCount: number(prop(item, "wishlistCount", "WishlistCount")),
     addressBookAvailable: prop(item, "addressBookAvailable", "AddressBookAvailable") === true,
     recentOrders: Array.isArray(recentRaw)
       ? recentRaw.map(mapCustomerOrder).filter((row): row is CustomerOrderListItem => row !== null)

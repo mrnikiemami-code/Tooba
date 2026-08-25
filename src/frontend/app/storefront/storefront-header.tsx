@@ -187,9 +187,9 @@ export function StorefrontShopeivaHeader({
             >
               <Search className="w-5 h-5" />
             </Link>
-            <button type="button" className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600" aria-label="علاقه‌مندی">
+            <Link href="/customer-panel/wishlist" className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600" aria-label="علاقه‌مندی">
               <Heart className="w-5 h-5" />
-            </button>
+            </Link>
             <Link href="/admin/products" className="hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
               <User className="w-4 h-4" />
               میزکار

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bell,
   GitCompare,
@@ -19,6 +19,7 @@ import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts"
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import { StorefrontPdpReviews } from "./storefront-pdp-reviews.tsx";
+import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 
 /**
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
@@ -30,9 +31,15 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews">("intro");
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const wishlist = useStorefrontWishlist();
+  const registerWishlistProduct = wishlist.register;
+  const wishlistSaved = wishlist.membership.has(currentDetail.productId);
+  const wishlistBusy = wishlist.pending.has(currentDetail.productId);
   const offer = currentDetail.primaryOffer;
   const images = currentDetail.mediaAssetIds.length > 0 ? currentDetail.mediaAssetIds : [null];
   const [active, setActive] = useState(0);
+
+  useEffect(() => registerWishlistProduct(currentDetail.productId), [currentDetail.productId, registerWishlistProduct]);
 
   const tabs = [
     { id: "intro" as const, label: "معرفی اجمالی" },
@@ -166,8 +173,14 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             <p className="text-xs text-gray-600">فروشنده: {offer.sellerDisplayName}</p>
             <p className="text-[11px] text-gray-400">مالیات: {offer.taxCategoryLabel} · بازار {offer.market}</p>
             <div className="flex gap-2">
-              <button type="button" className="flex-1 py-2.5 rounded-xl text-sm border border-gray-200 flex items-center justify-center gap-2">
-                <Heart className="w-4 h-4" /> علاقه‌مندی
+              <button
+                type="button"
+                disabled={wishlistBusy}
+                aria-pressed={wishlistSaved}
+                onClick={() => void wishlist.toggle(currentDetail.productId).then(setNote)}
+                className={`flex-1 py-2.5 rounded-xl text-sm border flex items-center justify-center gap-2 disabled:opacity-60 ${wishlistSaved ? "border-rose-200 text-rose-600 bg-rose-50" : "border-gray-200"}`}
+              >
+                <Heart className={`w-4 h-4 ${wishlistSaved ? "fill-current" : ""}`} /> {wishlistSaved ? "حذف از علاقه‌مندی" : "علاقه‌مندی"}
               </button>
               <button type="button" className="px-4 py-2.5 rounded-xl border border-gray-200">
                 <LineChart className="w-4 h-4" />
