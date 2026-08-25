@@ -4,6 +4,8 @@ import type {
   StorefrontCategoryItem,
   StorefrontHomePage,
   StorefrontListingPage,
+  StorefrontListingRequest,
+  StorefrontListingSort,
   StorefrontOfferCandidate,
   StorefrontProductCard,
   StorefrontProductDetailPage,
@@ -81,6 +83,7 @@ function mapCard(value: unknown): StorefrontProductCard | null {
     categoryId: categoryIdRaw == null ? null : asString(categoryIdRaw),
     mediaAssetId: mediaRaw == null ? null : asString(mediaRaw),
     primaryOfferId,
+    sellerPartyId: asString(readProp(item, "sellerPartyId", "SellerPartyId")),
     sellerDisplayName: asString(readProp(item, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
     offerAmountExclusiveOfTax: asNumber(
       readProp(item, "offerAmountExclusiveOfTax", "OfferAmountExclusiveOfTax") ??
@@ -202,17 +205,37 @@ export function mapStorefrontListing(payload: unknown): StorefrontListingPage | 
   }
   const productsRaw = readProp(item, "products", "Products");
   const categoriesRaw = readProp(item, "categories", "Categories");
+  const sellersRaw = readProp(item, "sellers", "Sellers");
   const queryRaw = readProp(item, "query", "Query");
   const categoryRaw = readProp(item, "categoryId", "CategoryId");
+  const sellerRaw = readProp(item, "sellerPartyId", "SellerPartyId");
+  const availabilityRaw = readProp(item, "inStock", "InStock");
+  const sortRaw = asString(readProp(item, "sort", "Sort"), "default");
+  const allowedSorts: StorefrontListingSort[] = ["default", "newest", "price-asc", "price-desc"];
   return {
     categories: Array.isArray(categoriesRaw)
       ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+      : [],
+    sellers: Array.isArray(sellersRaw)
+      ? sellersRaw.flatMap((value) => {
+          const seller = asRecord(value);
+          const sellerPartyId = seller ? asString(readProp(seller, "sellerPartyId", "SellerPartyId")) : "";
+          return sellerPartyId
+            ? [{ sellerPartyId, displayName: asString(readProp(seller!, "displayName", "DisplayName"), "فروشنده") }]
+            : [];
+        })
       : [],
     products: Array.isArray(productsRaw)
       ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
       : [],
     query: queryRaw == null ? null : asString(queryRaw),
     categoryId: categoryRaw == null ? null : asString(categoryRaw),
+    sellerPartyId: sellerRaw == null ? null : asString(sellerRaw),
+    inStock: typeof availabilityRaw === "boolean" ? availabilityRaw : null,
+    sort: allowedSorts.includes(sortRaw as StorefrontListingSort) ? (sortRaw as StorefrontListingSort) : "default",
+    page: Math.max(1, asNumber(readProp(item, "page", "Page"), 1)),
+    pageSize: Math.max(1, asNumber(readProp(item, "pageSize", "PageSize"), 24)),
+    totalCount: Math.max(0, asNumber(readProp(item, "totalCount", "TotalCount"))),
   };
 }
 
@@ -284,13 +307,25 @@ export async function loadStorefrontHome(): Promise<StorefrontHomePage | null> {
 /**
  * فهرست را از Host می‌خواند.
  */
-export async function loadStorefrontListing(query?: string, categoryId?: string): Promise<StorefrontListingPage | null> {
+export async function loadStorefrontListing(request: StorefrontListingRequest = {}): Promise<StorefrontListingPage | null> {
   const params = new URLSearchParams();
-  if (query) {
-    params.set("q", query);
+  if (request.query) {
+    params.set("q", request.query);
   }
-  if (categoryId) {
-    params.set("categoryId", categoryId);
+  if (request.categoryId) {
+    params.set("categoryId", request.categoryId);
+  }
+  if (request.sellerPartyId) {
+    params.set("sellerPartyId", request.sellerPartyId);
+  }
+  if (request.inStock !== undefined) {
+    params.set("inStock", String(request.inStock));
+  }
+  if (request.sort) {
+    params.set("sort", request.sort);
+  }
+  if (request.page && request.page > 1) {
+    params.set("page", String(request.page));
   }
   const suffix = params.toString() ? `?${params.toString()}` : "";
   return mapStorefrontListing(await readJson(`/v1/storefront/products${suffix}`));

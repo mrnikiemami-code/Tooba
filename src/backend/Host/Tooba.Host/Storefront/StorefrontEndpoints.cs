@@ -41,8 +41,21 @@ public static class StorefrontEndpoints
         StorefrontComposer composer,
         string? q,
         Guid? categoryId,
-        CancellationToken cancellationToken)
-        => Results.Json(await composer.GetListingAsync(q, categoryId, cancellationToken));
+        Guid? sellerPartyId,
+        bool? inStock,
+        string? sort,
+        int page = 1,
+        int pageSize = 24,
+        CancellationToken cancellationToken = default)
+        => Results.Json(await composer.GetListingAsync(
+            q,
+            categoryId,
+            sellerPartyId,
+            inStock,
+            sort,
+            page,
+            pageSize,
+            cancellationToken));
 
     private static async Task<IResult> GetDetailAsync(string slug, StorefrontComposer composer, CancellationToken cancellationToken)
     {

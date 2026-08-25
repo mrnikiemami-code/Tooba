@@ -26,6 +26,7 @@ public sealed record StorefrontProductCard(
     Guid? CategoryId,
     Guid? MediaAssetId,
     Guid PrimaryOfferId,
+    Guid SellerPartyId,
     string SellerDisplayName,
     decimal OfferAmountExclusiveOfTax,
     decimal? PromotionalAmountExclusiveOfTax,
@@ -63,9 +64,21 @@ public sealed record StorefrontHomePage(
 /// </summary>
 public sealed record StorefrontListingPage(
     IReadOnlyList<StorefrontCategoryItem> Categories,
+    IReadOnlyList<StorefrontSellerFilterItem> Sellers,
     IReadOnlyList<StorefrontProductCard> Products,
     string? Query,
-    Guid? CategoryId);
+    Guid? CategoryId,
+    Guid? SellerPartyId,
+    bool? InStock,
+    string Sort,
+    int Page,
+    int PageSize,
+    int TotalCount);
+
+/// <summary>
+/// فروشنده‌ای که واقعاً در نتیجهٔ ترکیب‌شده Offer دارد و بنابراین می‌تواند به‌عنوان facet نمایش داده شود.
+/// </summary>
+public sealed record StorefrontSellerFilterItem(Guid SellerPartyId, string DisplayName);
 
 /// <summary>
 /// Offer غیر اصلی روی PDP برای نمایش فروشندگان دیگر.

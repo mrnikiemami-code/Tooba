@@ -20,6 +20,7 @@ public sealed class StorefrontCompositionTests
             Guid.Parse("22222222-2222-7222-8222-222222222222"),
             Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
             Guid.Parse("33333333-3333-7333-8333-333333333333"),
+            Guid.Parse("44444444-4444-7444-8444-444444444444"),
             "فروشگاه آرمان",
             1850000m,
             1650000m,
@@ -33,6 +34,7 @@ public sealed class StorefrontCompositionTests
         Assert.Contains("\"offerAmountExclusiveOfTax\":1850000", json, StringComparison.Ordinal);
         Assert.Contains("\"promotionalAmountExclusiveOfTax\":1650000", json, StringComparison.Ordinal);
         Assert.Contains("\"primaryOfferId\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"sellerPartyId\"", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -107,6 +109,19 @@ public sealed class StorefrontCompositionTests
         Assert.Contains("CartMutationEnabled", names);
         Assert.DoesNotContain("Price", names);
         Assert.DoesNotContain("Stock", names);
+    }
+
+    [Fact]
+    public void Listing_contract_exposes_only_backend_owned_discovery_state()
+    {
+        var names = typeof(StorefrontListingPage).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("Categories", names);
+        Assert.Contains("Sellers", names);
+        Assert.Contains("InStock", names);
+        Assert.Contains("Sort", names);
+        Assert.Contains("TotalCount", names);
+        Assert.DoesNotContain("PriceFacet", names);
+        Assert.DoesNotContain("BrandFacet", names);
     }
 
     [Fact]

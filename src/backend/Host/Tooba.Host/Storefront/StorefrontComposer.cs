@@ -53,7 +53,7 @@ public sealed class StorefrontComposer
     public async Task<StorefrontHomePage> GetHomeAsync(CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
-        var listing = await GetListingAsync(null, null, cancellationToken);
+        var listing = await GetListingAsync(null, null, null, null, "newest", 1, 24, cancellationToken);
         var brands = await ListBrandsAsync(cancellationToken);
         var promotedProducts = listing.Products.Where(card => card.PromotionLabel is not null).Take(10).ToList();
         return new StorefrontHomePage(
@@ -105,10 +105,23 @@ public sealed class StorefrontComposer
     /// <summary>
     /// فهرست فروشگاهی را از محصولات Published و Offer فعال می‌سازد.
     /// </summary>
-    public async Task<StorefrontListingPage> GetListingAsync(string? query, Guid? categoryId, CancellationToken cancellationToken)
+    public async Task<StorefrontListingPage> GetListingAsync(
+        string? query,
+        Guid? categoryId,
+        Guid? sellerPartyId,
+        bool? inStock,
+        string? sort,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
         var cards = await BuildProductCardsAsync(cancellationToken);
+        var sellers = cards
+            .GroupBy(card => new { card.SellerPartyId, card.SellerDisplayName })
+            .Select(group => new StorefrontSellerFilterItem(group.Key.SellerPartyId, group.Key.SellerDisplayName))
+            .OrderBy(item => item.DisplayName, StringComparer.Ordinal)
+            .ToList();
         var filtered = cards.AsEnumerable();
         if (categoryId is Guid selected)
         {
@@ -121,10 +134,49 @@ public sealed class StorefrontComposer
             var needle = query.Trim();
             filtered = filtered.Where(card =>
                 card.Title.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || card.CategoryName.Contains(needle, StringComparison.OrdinalIgnoreCase)
                 || card.SellerDisplayName.Contains(needle, StringComparison.OrdinalIgnoreCase));
         }
 
-        return new StorefrontListingPage(categories, filtered.ToList(), query, categoryId);
+        if (sellerPartyId is Guid selectedSeller)
+        {
+            filtered = filtered.Where(card => card.SellerPartyId == selectedSeller);
+        }
+
+        if (inStock is bool availability)
+        {
+            filtered = filtered.Where(card => card.InStock == availability);
+        }
+
+        var normalizedSort = sort?.Trim().ToLowerInvariant() switch
+        {
+            "price-asc" => "price-asc",
+            "price-desc" => "price-desc",
+            "newest" => "newest",
+            _ => "default",
+        };
+        filtered = normalizedSort switch
+        {
+            "price-asc" => filtered.OrderBy(card => card.PromotionalAmountExclusiveOfTax ?? card.OfferAmountExclusiveOfTax),
+            "price-desc" => filtered.OrderByDescending(card => card.PromotionalAmountExclusiveOfTax ?? card.OfferAmountExclusiveOfTax),
+            _ => filtered,
+        };
+
+        var safePageSize = Math.Clamp(pageSize, 1, 48);
+        var safePage = Math.Max(page, 1);
+        var materialized = filtered.ToList();
+        return new StorefrontListingPage(
+            categories,
+            sellers,
+            materialized.Skip((safePage - 1) * safePageSize).Take(safePageSize).ToList(),
+            string.IsNullOrWhiteSpace(query) ? null : query.Trim(),
+            categoryId,
+            sellerPartyId,
+            inStock,
+            normalizedSort,
+            safePage,
+            safePageSize,
+            materialized.Count);
     }
 
     /// <summary>
@@ -355,6 +407,7 @@ public sealed class StorefrontComposer
             categoryId,
             media.FirstOrDefault() == Guid.Empty ? null : media.FirstOrDefault(),
             primary.OfferId,
+            primary.SellerPartyId,
             primary.SellerDisplayName,
             primary.AmountExclusiveOfTax,
             promotion.DiscountAmount > 0 ? promotion.PostDiscountTaxExclusiveAmount : null,

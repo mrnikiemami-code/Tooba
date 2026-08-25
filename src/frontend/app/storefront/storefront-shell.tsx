@@ -10,7 +10,6 @@ import { StorefrontShopeivaHeader } from "./storefront-header.tsx";
 export function StorefrontShell({
   categories,
   children,
-  searchCatalog = [],
 }: {
   categories: StorefrontCategoryItem[];
   children: ReactNode;
@@ -18,7 +17,7 @@ export function StorefrontShell({
 }) {
   return (
     <div className="min-h-screen bg-[#f3f5f8] text-gray-900 flex flex-col">
-      <StorefrontShopeivaHeader categories={categories} searchCatalog={searchCatalog} />
+      <StorefrontShopeivaHeader categories={categories} />
       <main className="flex-1 w-full">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6">{children}</div>
       </main>

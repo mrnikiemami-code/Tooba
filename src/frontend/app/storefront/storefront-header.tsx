@@ -14,8 +14,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
-import { formatOfferAmount } from "./storefront-api.ts";
+import type { StorefrontCategoryItem } from "./storefront-model.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 
 /**
@@ -24,10 +23,8 @@ import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts
  */
 export function StorefrontShopeivaHeader({
   categories,
-  searchCatalog,
 }: {
   categories: StorefrontCategoryItem[];
-  searchCatalog: StorefrontProductCard[];
 }) {
   const rootCategories = categories.filter((category) => category.parentCategoryId === null);
   const navigationRoots = rootCategories.length > 0 ? rootCategories : categories;
@@ -60,10 +57,6 @@ export function StorefrontShopeivaHeader({
 
   const selectedCategory = navigationRoots.find((item) => item.categoryId === selectedCategoryId) ?? navigationRoots[0] ?? null;
   const childCategories = categories.filter((item) => item.parentCategoryId === selectedCategory?.categoryId);
-
-  const matches = query.trim()
-    ? searchCatalog.filter((item) => item.title.includes(query.trim())).slice(0, 6)
-    : [];
 
   return (
     <div className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -103,22 +96,6 @@ export function StorefrontShopeivaHeader({
                 aria-label="جستجوی کالا"
               />
               <Search className="absolute right-3.5 top-2.5 w-4 h-4 text-gray-400" />
-              {matches.length > 0 ? (
-                <div className="absolute top-full mt-2 right-0 left-0 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-                  {matches.map((item) => (
-                    <Link
-                      key={item.productId}
-                      href={`/products/${item.slug}`}
-                      className="flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-50 border-b last:border-0"
-                    >
-                      <span>{item.title}</span>
-                      <span className="text-[#2563EB] font-bold text-xs">
-                        {formatOfferAmount(item.offerAmountExclusiveOfTax, item.currency)}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </form>
 
@@ -276,6 +253,17 @@ export function StorefrontShopeivaHeader({
                 <X className="w-5 h-5" />
               </button>
             </div>
+            <form action="/products" method="get" className="mb-4">
+              <div className="relative">
+                <input
+                  name="q"
+                  placeholder="جستجو در کالاها..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-10 pl-3 text-sm"
+                  aria-label="جستجوی کالا در موبایل"
+                />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />
+              </div>
+            </form>
             {navigationRoots.map((category) => (
               <div key={category.categoryId} className="border-b py-2">
                 <Link

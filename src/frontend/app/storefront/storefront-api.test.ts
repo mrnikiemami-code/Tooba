@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatOfferAmount, mapStorefrontDetail, mapStorefrontHome } from "./storefront-api.ts";
+import { formatOfferAmount, mapStorefrontDetail, mapStorefrontHome, mapStorefrontListing } from "./storefront-api.ts";
 
 test("home mapper keeps offer amount off a product price field", () => {
   const home = mapStorefrontHome({
@@ -95,4 +95,39 @@ test("detail mapper reads amount from primary offer only", () => {
   assert.equal(detail?.otherSellers.length, 1);
   assert.equal(detail?.cartMutationEnabled, false);
   assert.equal(formatOfferAmount(1790000, "IRR").includes("ریال"), true);
+});
+
+test("listing mapper keeps backend discovery facets and pagination", () => {
+  const listing = mapStorefrontListing({
+    categories: [{ categoryId: "c1", parentCategoryId: null, name: "پوشاک" }],
+    sellers: [{ sellerPartyId: "s1", displayName: "آرمان" }],
+    products: [{
+      productId: "p1",
+      slug: "shirt",
+      title: "پیراهن",
+      categoryName: "پوشاک",
+      categoryId: "c1",
+      primaryOfferId: "o1",
+      sellerPartyId: "s1",
+      sellerDisplayName: "آرمان",
+      offerAmountExclusiveOfTax: 100,
+      currency: "IRR",
+      availableUnits: 2,
+      inStock: true,
+    }],
+    query: "پیراهن",
+    categoryId: "c1",
+    sellerPartyId: "s1",
+    inStock: true,
+    sort: "price-asc",
+    page: 2,
+    pageSize: 24,
+    totalCount: 30,
+  });
+
+  assert.equal(listing?.sellers[0]?.sellerPartyId, "s1");
+  assert.equal(listing?.products[0]?.sellerPartyId, "s1");
+  assert.equal(listing?.sort, "price-asc");
+  assert.equal(listing?.page, 2);
+  assert.equal(listing?.totalCount, 30);
 });

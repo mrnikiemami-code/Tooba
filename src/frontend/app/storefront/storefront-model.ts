@@ -9,6 +9,7 @@ export interface StorefrontProductCard {
   categoryId: string | null;
   mediaAssetId: string | null;
   primaryOfferId: string;
+  sellerPartyId: string;
   sellerDisplayName: string;
   offerAmountExclusiveOfTax: number;
   promotionalAmountExclusiveOfTax: number | null;
@@ -55,9 +56,37 @@ export interface StorefrontHomePage {
  */
 export interface StorefrontListingPage {
   categories: StorefrontCategoryItem[];
+  sellers: StorefrontSellerFilterItem[];
   products: StorefrontProductCard[];
   query: string | null;
   categoryId: string | null;
+  sellerPartyId: string | null;
+  inStock: boolean | null;
+  sort: StorefrontListingSort;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+/**
+ * facet فروشنده فقط از Offerهای واقعاً قابل نمایش ساخته می‌شود.
+ */
+export interface StorefrontSellerFilterItem {
+  sellerPartyId: string;
+  displayName: string;
+}
+
+/** ترتیب‌های واقعی که Host روی مبلغ ترکیب‌شده یا ترتیب Catalog اعمال می‌کند. */
+export type StorefrontListingSort = "default" | "newest" | "price-asc" | "price-desc";
+
+/** ورودی عمومی کشف کالا؛ UI فقط این پارامترها را به Host منتقل می‌کند. */
+export interface StorefrontListingRequest {
+  query?: string;
+  categoryId?: string;
+  sellerPartyId?: string;
+  inStock?: boolean;
+  sort?: StorefrontListingSort;
+  page?: number;
 }
 
 /**
