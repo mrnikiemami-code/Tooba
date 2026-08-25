@@ -1,0 +1,224 @@
+using Microsoft.EntityFrameworkCore;
+using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Order.Domain;
+using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Party.Application;
+
+namespace Tooba.Host.Customer;
+
+/// <summary>
+/// خواندن پنل مشتری را روی Order و lookupهای مستقل Catalog/Party ترکیب می‌کند.
+/// پرس‌وجوی بین‌schema، قیمت جاری Product و موجودی جاری در این read model وجود ندارد.
+/// </summary>
+public sealed class CustomerPanelComposer
+{
+    private readonly OrderDbContext _orders;
+    private readonly CatalogDbContext _catalog;
+    private readonly IPartyLookupGateway _parties;
+
+    /// <summary>
+    /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
+    /// </summary>
+    public CustomerPanelComposer(
+        OrderDbContext orders,
+        CatalogDbContext catalog,
+        IPartyLookupGateway parties)
+    {
+        _orders = orders;
+        _catalog = catalog;
+        _parties = parties;
+    }
+
+    /// <summary>
+    /// داشبورد واقعی مشتری را برای User نشست می‌سازد؛ نمودار و شمارندهٔ جعلی ندارد.
+    /// </summary>
+    public async Task<CustomerDashboardPage> GetDashboardAsync(Guid actorUserId, CancellationToken cancellationToken)
+    {
+        var groups = await LoadGroupsAsync(actorUserId, cancellationToken);
+        var orders = groups.Select(MapListItem).ToList();
+        var displayName = groups
+            .OrderByDescending(x => x.SubmittedAt)
+            .Select(x => x.RecipientName)
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? "مشتری توبا";
+        return new CustomerDashboardPage(
+            actorUserId,
+            displayName,
+            orders.Count,
+            orders.Count(x => !string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
+            orders.Count(x => string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
+            WishlistAvailable: false,
+            AddressBookAvailable: false,
+            orders.Take(5).ToList());
+    }
+
+    /// <summary>
+    /// پروفایل فقط‌خواندنی را از اصل نشست و آخرین snapshot ارسال برمی‌گرداند.
+    /// </summary>
+    public async Task<CustomerProfilePage> GetProfileAsync(Guid actorUserId, CancellationToken cancellationToken)
+    {
+        var latest = await _orders.Checkouts.AsNoTracking()
+            .Where(x => x.PlacedByUserId == actorUserId)
+            .OrderByDescending(x => x.SubmittedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        var address = latest is null
+            ? null
+            : string.Join("، ", new[] { latest.ProvinceName, latest.CityName, latest.PostalAddress }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+        return new CustomerProfilePage(
+            actorUserId,
+            string.IsNullOrWhiteSpace(latest?.RecipientName) ? "مشتری توبا" : latest.RecipientName,
+            string.IsNullOrWhiteSpace(latest?.ContactMobile) ? null : latest.ContactMobile,
+            string.IsNullOrWhiteSpace(address) ? null : address,
+            Editable: false);
+    }
+
+    /// <summary>
+    /// فهرست سفارش‌ها را فقط با PlacedByUserId همان نشست برمی‌گرداند.
+    /// </summary>
+    public async Task<IReadOnlyList<CustomerOrderListItem>> ListOrdersAsync(
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        (await LoadGroupsAsync(actorUserId, cancellationToken)).Select(MapListItem).ToList();
+
+    /// <summary>
+    /// جزئیات checkout را فقط در صورت مالکیت User نشست ترکیب می‌کند.
+    /// </summary>
+    public async Task<CustomerOrderDetailPage?> GetOrderAsync(
+        Guid actorUserId,
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var group = await _orders.Checkouts.AsNoTracking()
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .SingleOrDefaultAsync(
+                x => x.CheckoutId == checkoutId && x.PlacedByUserId == actorUserId,
+                cancellationToken);
+        if (group is null)
+        {
+            return null;
+        }
+
+        var variantIds = group.SellerOrders
+            .SelectMany(x => x.Lines)
+            .Select(x => x.CatalogVariantId)
+            .Distinct()
+            .ToList();
+        var variants = variantIds.Count == 0
+            ? []
+            : await _catalog.Variants.AsNoTracking()
+                .Where(x => variantIds.Contains(x.VariantId))
+                .Select(x => new { x.VariantId, x.ProductId })
+                .ToListAsync(cancellationToken);
+        var productIds = variants.Select(x => x.ProductId).Distinct().ToList();
+        var names = productIds.Count == 0
+            ? []
+            : await _catalog.LocalizedTexts.AsNoTracking()
+                .Where(x =>
+                    x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                    && productIds.Contains(x.OwnerId)
+                    && x.FieldKey == "name")
+                .ToListAsync(cancellationToken);
+        var productNameMap = names
+            .GroupBy(x => x.OwnerId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.OrderBy(row => row.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .First().Value);
+        var variantProductMap = variants.ToDictionary(x => x.VariantId, x => x.ProductId);
+
+        var sellerViews = new List<CustomerSellerOrderView>();
+        foreach (var sellerOrder in group.SellerOrders)
+        {
+            var party = await _parties.FindByIdAsync(sellerOrder.SellerPartyId, cancellationToken);
+            var sellerName = party?.DisplayName ?? "فروشنده";
+            var lineViews = sellerOrder.Lines.Select(line =>
+            {
+                variantProductMap.TryGetValue(line.CatalogVariantId, out var productId);
+                productNameMap.TryGetValue(productId, out var title);
+                return new CustomerOrderLineView(
+                    line.OfferId,
+                    string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
+                    sellerName,
+                    line.Quantity,
+                    line.UnitPriceSnapshot,
+                    line.LineTotalSnapshot + line.TaxAmountSnapshot - line.DiscountAmountSnapshot,
+                    line.Currency);
+            }).ToList();
+            sellerViews.Add(new CustomerSellerOrderView(
+                sellerOrder.SellerOrderId,
+                sellerOrder.OrderNumber,
+                sellerOrder.SellerPartyId,
+                sellerName,
+                sellerOrder.Status.ToString(),
+                PaymentState(sellerOrder.Status),
+                sellerOrder.GrandTotalSnapshot,
+                sellerOrder.Currency,
+                lineViews));
+        }
+
+        var listItem = MapListItem(group);
+        return new CustomerOrderDetailPage(
+            group.CheckoutId,
+            listItem.Reference,
+            group.SubmittedAt,
+            listItem.Status,
+            listItem.PaymentState,
+            group.SellerOrders.Sum(x => x.SubtotalSnapshot),
+            group.SellerOrders.Sum(x => x.TaxSnapshot),
+            group.SellerOrders.Sum(x => x.DiscountSnapshot),
+            group.SellerOrders.Sum(x => x.GrandTotalSnapshot),
+            group.SellerOrders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
+            group.RecipientName,
+            group.ContactMobile,
+            group.ProvinceName,
+            group.CityName,
+            group.PostalAddress,
+            group.PostalCode,
+            group.ShippingMethodLabel,
+            sellerViews);
+    }
+
+    private async Task<IReadOnlyList<CheckoutGroup>> LoadGroupsAsync(
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        await _orders.Checkouts.AsNoTracking()
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .Where(x => x.PlacedByUserId == actorUserId)
+            .OrderByDescending(x => x.SubmittedAt)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+
+    private static CustomerOrderListItem MapListItem(CheckoutGroup group)
+    {
+        var orders = group.SellerOrders;
+        var payment = orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
+            ? "Paid"
+            : orders.Any(x => x.Status == SellerOrderStatus.Cancelled)
+                ? "Cancelled"
+                : "PendingPayment";
+        var statuses = orders.Select(x => x.Status).Distinct().ToList();
+        var status = statuses.Count == 1 ? statuses[0].ToString() : "Mixed";
+        var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        return new CustomerOrderListItem(
+            group.CheckoutId,
+            references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
+            group.SubmittedAt,
+            orders.Count,
+            orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
+            orders.Sum(x => x.GrandTotalSnapshot),
+            orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
+            payment,
+            status);
+    }
+
+    private static string PaymentState(SellerOrderStatus status) =>
+        status == SellerOrderStatus.Paid
+            ? "Paid"
+            : status == SellerOrderStatus.Cancelled
+                ? "Cancelled"
+                : "PendingPayment";
+}
