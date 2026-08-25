@@ -198,6 +198,24 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task PublishCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        category.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PublishBrandAsync(Guid brandId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var brand = await _db.Brands.SingleAsync(x => x.BrandId == brandId, cancellationToken);
+        brand.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<VariantReference> CreateVariantAsync(
         Guid productId,
         string? catalogCodeSeam,

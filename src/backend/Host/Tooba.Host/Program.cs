@@ -171,6 +171,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
+    // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
+    // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
+    await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
 }
 
 app.UseExceptionHandler();

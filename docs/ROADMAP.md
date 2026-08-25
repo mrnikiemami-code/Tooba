@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; TB-P05-T009-REPAIR-01 COMPLETED_BY_CURSOR; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -132,6 +132,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-07 | Shopeiva PDP live purchase experience | ACCEPTED (TB-P05-T007) |
 | P05-08 | Customer purchase continuity and order history | ACCEPTED (TB-P05-T008) |
 | P05-09 | Public merchandising and discovery routes | AWAITING_ARCHITECT_ACCEPT (TB-P05-T009) |
+| P05-09R | Demo catalog depth, brand seed and mega menu evidence | COMPLETED_BY_CURSOR (TB-P05-T009-REPAIR-01) |
 
 ## Mandatory UX sequence (locked)
 
@@ -159,3 +160,4 @@ Do not skip. Later steps wait for new envelopes.
 | P05 Product Detail Purchase Fast Connect | ACCEPTED (TB-P05-T007) |
 | P05 Customer Purchase Continuity | ACCEPTED (TB-P05-T008) |
 | P05 Public Merchandising Fast Connect | AWAITING_ARCHITECT_ACCEPT (TB-P05-T009) |
+| P05 Demo Catalog Depth Repair | COMPLETED_BY_CURSOR (TB-P05-T009-REPAIR-01) |

@@ -164,6 +164,17 @@ public sealed class CatalogCategory
         ParentCategoryId = parentCategoryId;
         UpdatedAt = now;
     }
+
+    /// <summary>
+    /// رده را برای ناوبری منتشر می‌کند. انتشار رده فقط طبقه‌بندی را قابل‌کشف می‌کند و
+    /// هیچ قابلیت خریدی نمی‌سازد؛ قیمت و موجودی هرگز به رده تعلق ندارند.
+    /// </summary>
+    /// <param name="now">زمان UTC سرور برای مهر به‌روزرسانی؛ ساعت کلاینت مرجع نیست.</param>
+    public void Publish(DateTimeOffset now)
+    {
+        Status = CatalogPublicationStatus.Published;
+        UpdatedAt = now;
+    }
 }
 
 /// <summary>
@@ -208,6 +219,17 @@ public sealed class CatalogBrand
             CreatedAt = now,
             UpdatedAt = now,
         };
+
+    /// <summary>
+    /// برند را برای سطوح عمومی برند منتشر می‌کند. انتشار برند صرفاً تحریری است و
+    /// نه مالکیت فروشنده می‌سازد و نه ادعای بازاریابی؛ Offer و قیمت بیرون از Catalog می‌مانند.
+    /// </summary>
+    /// <param name="now">زمان UTC سرور برای مهر به‌روزرسانی؛ ساعت کلاینت مرجع نیست.</param>
+    public void Publish(DateTimeOffset now)
+    {
+        Status = CatalogPublicationStatus.Published;
+        UpdatedAt = now;
+    }
 }
 
 /// <summary>

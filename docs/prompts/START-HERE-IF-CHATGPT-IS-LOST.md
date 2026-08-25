@@ -14,7 +14,7 @@ P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
 P04 = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; preserve Shopeiva; live truthful public merchandising, brands and opaque public sellers; Persian RTL; do not invent TB-P05-T010
+P05 = IN_PROGRESS; TB-P05-T001/T002/T003/T004/T005/T006/T007/T008 ACCEPTED; TB-P05-T009 AWAITING_ARCHITECT_ACCEPT; TB-P05-T009-REPAIR-01 COMPLETED_BY_CURSOR (Development demo seed: 8 top-level categories, 24 child categories, 72 published products, 8 brands); preserve Shopeiva; live truthful public merchandising, brands and opaque public sellers; Persian RTL; locked follow-up = map backend capability onto correct Shopeiva PDP sections; do not invent TB-P05-T010
 ```
 
 Cursor must NOT continue implementation automatically from ROADMAP.

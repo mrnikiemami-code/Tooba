@@ -100,6 +100,24 @@ public interface ICatalogDirectory
     Task PublishProductAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// رده را برای ناوبری منتشر می‌کند. رده منتشرنشده در سطوح عمومی دیده نمی‌شود،
+    /// اما انتشار رده هیچ قابلیت خریدی نمی‌سازد؛ قیمت و موجودی بیرون از Catalog می‌مانند.
+    /// </summary>
+    /// <param name="categoryId">شناسهٔ ردهٔ موجود در Catalog همین Tenant.</param>
+    /// <param name="cancellationToken">توکن لغو عملیات.</param>
+    /// <exception cref="InvalidOperationException">اگر رده در Catalog این Tenant نباشد.</exception>
+    Task PublishCategoryAsync(Guid categoryId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// برند را برای سطوح عمومی برند منتشر می‌کند. انتشار برند تحریری است و
+    /// مالکیت فروشنده، کمیسیون یا ادعای بازاریابی تولید نمی‌کند.
+    /// </summary>
+    /// <param name="brandId">شناسهٔ برند موجود در Catalog همین Tenant.</param>
+    /// <param name="cancellationToken">توکن لغو عملیات.</param>
+    /// <exception cref="InvalidOperationException">اگر برند در Catalog این Tenant نباشد.</exception>
+    Task PublishBrandAsync(Guid brandId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// گونه با ترکیب یکتا می‌سازد.
     /// </summary>
     Task<VariantReference> CreateVariantAsync(
