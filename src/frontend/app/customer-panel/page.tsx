@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Eye, Heart, Package, Sparkles, Star, WalletCards } from "lucide-react";
+import { Eye, Heart, MapPin, Package, Sparkles, Star, WalletCards } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   type CustomerDashboardPage,
@@ -52,6 +52,7 @@ export default function CustomerDashboard() {
         <Metric icon={WalletCards} value={page.paidOrders} label="پرداخت‌شده" tone="green" />
         <Metric icon={Eye} value={page.pendingOrders} label="در انتظار" tone="amber" />
         <Metric icon={Heart} value={page.wishlistCount} label="علاقه‌مندی" tone="pink" suffix={page.wishlistAvailable ? "" : "غیرفعال"} />
+        <Metric icon={MapPin} value={page.addressBookCount} label="آدرس‌ها" tone="blue" suffix={page.addressBookAvailable ? "" : "غیرفعال"} />
       </section>
 
       <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">

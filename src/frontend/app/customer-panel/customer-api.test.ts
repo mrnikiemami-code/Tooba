@@ -51,7 +51,19 @@ test("customer dashboard exposes capability availability without fake counts", (
   assert.equal(page?.wishlistAvailable, false);
   assert.equal(page?.wishlistCount, 3);
   assert.equal(page?.addressBookAvailable, false);
+  assert.equal(page?.addressBookCount, 0);
   assert.equal(page?.totalOrders, 2);
+});
+
+test("customer dashboard maps live address-book availability without inventing counts", () => {
+  const page = mapCustomerDashboard({
+    actorUserId: "actor-1",
+    displayName: "مشتری",
+    addressBookAvailable: true,
+    AddressBookCount: 2,
+  });
+  assert.equal(page?.addressBookAvailable, true);
+  assert.equal(page?.addressBookCount, 2);
 });
 
 test("wishlist maps current live offer availability and real ratings only", () => {

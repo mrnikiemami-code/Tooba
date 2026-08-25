@@ -28,6 +28,7 @@ export interface CustomerDashboardPage {
   wishlistAvailable: boolean;
   wishlistCount: number;
   addressBookAvailable: boolean;
+  addressBookCount: number;
   recentOrders: CustomerOrderListItem[];
 }
 
@@ -178,6 +179,7 @@ export function mapCustomerDashboard(value: unknown): CustomerDashboardPage | nu
     wishlistAvailable: prop(item, "wishlistAvailable", "WishlistAvailable") === true,
     wishlistCount: number(prop(item, "wishlistCount", "WishlistCount")),
     addressBookAvailable: prop(item, "addressBookAvailable", "AddressBookAvailable") === true,
+    addressBookCount: number(prop(item, "addressBookCount", "AddressBookCount")),
     recentOrders: Array.isArray(recentRaw)
       ? recentRaw.map(mapCustomerOrder).filter((row): row is CustomerOrderListItem => row !== null)
       : [],
@@ -261,12 +263,26 @@ export function mapCustomerOrderDetail(value: unknown): CustomerOrderDetailPage 
   };
 }
 
-function headers(): Record<string, string> {
-  if (typeof window === "undefined") return { Accept: "application/json" };
+/**
+ * هدر هویت مشتری را برای Host می‌سازد.
+ * مالکیت از Bearer نشست یا هدر توسعهٔ Actor می‌آید؛ شناسهٔ کاربر در بدنه یا query مرجع نیست.
+ */
+export function customerAuthHeaders(json = false): Record<string, string> {
+  const result: Record<string, string> = { Accept: "application/json" };
+  if (json) result["Content-Type"] = "application/json";
+  if (typeof window === "undefined") return result;
   const session = window.localStorage.getItem(CUSTOMER_SESSION_STORAGE_KEY);
-  if (session) return { Accept: "application/json", Authorization: `Bearer ${session}` };
-  const actor = window.localStorage.getItem(CUSTOMER_DEV_ACTOR_STORAGE_KEY) ?? DEFAULT_CUSTOMER_DEV_ACTOR_ID;
-  return { Accept: "application/json", [CUSTOMER_DEV_ACTOR_HEADER]: actor };
+  if (session) {
+    result.Authorization = `Bearer ${session}`;
+    return result;
+  }
+  result[CUSTOMER_DEV_ACTOR_HEADER] =
+    window.localStorage.getItem(CUSTOMER_DEV_ACTOR_STORAGE_KEY) ?? DEFAULT_CUSTOMER_DEV_ACTOR_ID;
+  return result;
+}
+
+function headers(): Record<string, string> {
+  return customerAuthHeaders();
 }
 
 async function read(path: string): Promise<{ ok: boolean; status: number; payload: unknown }> {

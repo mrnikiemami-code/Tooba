@@ -1,4 +1,5 @@
 import { cartHeaders, readCartSession, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
+import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 
 const IDEMPOTENCY_KEY = "tooba.storefront.checkoutIdempotency";
 
@@ -9,6 +10,18 @@ export interface StorefrontCheckoutShipping {
   cityName: string;
   postalAddress: string;
   postalCode: string;
+}
+
+/**
+ * بدنهٔ ارسال تسویه را می‌سازد. شناسهٔ نشانی ذخیره‌شده فقط وقتی انتخاب شده باشد می‌آید.
+ * مسیر مهمان همان فیلدهای خطی است و savedAddressId ندارد.
+ */
+export function toCheckoutShippingBody(
+  shipping: StorefrontCheckoutShipping,
+  savedAddressId?: string | null,
+): StorefrontCheckoutShipping & { savedAddressId?: string } {
+  if (!savedAddressId) return { ...shipping };
+  return { ...shipping, savedAddressId };
 }
 
 export interface StorefrontCheckoutLine {
@@ -220,16 +233,21 @@ export async function submitStorefrontCheckout(
   cartId: string,
   expectedCartVersion: number,
   shipping: StorefrontCheckoutShipping,
+  savedAddressId?: string | null,
 ): Promise<StorefrontCheckoutPage> {
+  const headers = { ...(cartHeaders(expectedCartVersion) as Record<string, string>) };
+  if (savedAddressId) {
+    Object.assign(headers, customerAuthHeaders(true));
+  }
   const response = await fetch("/v1/storefront/checkout", {
     method: "POST",
     cache: "no-store",
-    headers: cartHeaders(expectedCartVersion),
+    headers,
     body: JSON.stringify({
       cartId,
       expectedCartVersion,
       idempotencyKey: checkoutIdempotencyKey(),
-      shipping,
+      shipping: toCheckoutShippingBody(shipping, savedAddressId),
     }),
   });
   return parseCheckout(response);

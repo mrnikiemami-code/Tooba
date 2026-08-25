@@ -6,6 +6,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
+using Tooba.AddressBook.Application;
 using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Customer;
@@ -21,6 +22,7 @@ public sealed class CustomerPanelComposer
     private readonly IPartyLookupGateway _parties;
     private readonly IPaymentDirectory _payments;
     private readonly IWishlistDirectory _wishlist;
+    private readonly IAddressBookDirectory _addresses;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -30,13 +32,15 @@ public sealed class CustomerPanelComposer
         CatalogDbContext catalog,
         IPartyLookupGateway parties,
         IPaymentDirectory payments,
-        IWishlistDirectory wishlist)
+        IWishlistDirectory wishlist,
+        IAddressBookDirectory addresses)
     {
         _orders = orders;
         _catalog = catalog;
         _parties = parties;
         _payments = payments;
         _wishlist = wishlist;
+        _addresses = addresses;
     }
 
     /// <summary>
@@ -56,6 +60,7 @@ public sealed class CustomerPanelComposer
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
             ?? "مشتری توبا";
         var wishlistCount = await _wishlist.CountAsync(actorUserId, cancellationToken);
+        var addressCount = await _addresses.CountAsync(actorUserId, cancellationToken);
         return new CustomerDashboardPage(
             actorUserId,
             displayName,
@@ -64,7 +69,8 @@ public sealed class CustomerPanelComposer
             orders.Count(x => string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
             WishlistAvailable: true,
             WishlistCount: wishlistCount,
-            AddressBookAvailable: false,
+            AddressBookAvailable: true,
+            AddressBookCount: addressCount,
             orders.Take(5).ToList());
     }
 

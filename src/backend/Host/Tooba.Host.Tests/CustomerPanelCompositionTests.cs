@@ -36,6 +36,7 @@ public sealed class CustomerPanelCompositionTests
             WishlistAvailable: false,
             WishlistCount: 0,
             AddressBookAvailable: false,
+            AddressBookCount: 0,
             RecentOrders: []);
         Assert.False(dashboard.WishlistAvailable);
         Assert.False(dashboard.AddressBookAvailable);

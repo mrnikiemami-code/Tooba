@@ -13,6 +13,7 @@ public sealed record CustomerDashboardPage(
     bool WishlistAvailable,
     long WishlistCount,
     bool AddressBookAvailable,
+    long AddressBookCount,
     IReadOnlyList<CustomerOrderListItem> RecentOrders);
 
 /// <summary>

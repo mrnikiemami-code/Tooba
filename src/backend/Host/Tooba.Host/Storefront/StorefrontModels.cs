@@ -224,7 +224,8 @@ public sealed record StorefrontAddCartLineRequest(Guid OfferId, int Quantity);
 public sealed record StorefrontChangeCartLineRequest(int Quantity);
 
 /// <summary>
-/// تصویر ارسال فروشگاهی. دفترچهٔ آدرس مشتری پایدار نیست.
+/// تصویر ارسال فروشگاهی. SavedAddressId اختیاری است و روی سفارش ذخیره نمی‌شود؛
+/// فقط برای تصویربرداری فیلدها از دفترچهٔ متعلق به Actor استفاده می‌گردد.
 /// </summary>
 public sealed record StorefrontCheckoutShippingInput(
     string RecipientName,
@@ -232,7 +233,8 @@ public sealed record StorefrontCheckoutShippingInput(
     string ProvinceName,
     string CityName,
     string PostalAddress,
-    string PostalCode);
+    string PostalCode,
+    Guid? SavedAddressId = null);
 
 /// <summary>
 /// ورودی ارسال checkout از سبد زنده.

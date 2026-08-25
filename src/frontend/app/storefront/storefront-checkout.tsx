@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, MapPin, ShieldCheck, Truck } from "lucide-react";
+import { Check, ChevronDown, CreditCard, Home, MapPin, Plus, ShieldCheck, Truck } from "lucide-react";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { readCartSession } from "./storefront-cart-api.ts";
+import {
+  listCheckoutSavedAddresses,
+  shippingFromCustomerAddress,
+  type CustomerAddress,
+} from "../customer-panel/customer-address-api.ts";
 import {
   previewStorefrontCheckout,
   submitStorefrontCheckout,
@@ -32,6 +37,10 @@ export function StorefrontShopeivaCheckout() {
   const [shipping, setShipping] = useState<StorefrontCheckoutShipping>(emptyShipping);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[] | null>(null);
+  const [useSavedAddress, setUseSavedAddress] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const [savedAddressId, setSavedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
     const session = readCartSession();
@@ -45,7 +54,30 @@ export function StorefrontShopeivaCheckout() {
         setError(null);
       })
       .catch((cause: unknown) => setError(toCustomerCheckoutMessage(cause)));
+    void listCheckoutSavedAddresses()
+      .then((result) => setSavedAddresses(result.addresses))
+      .catch(() => setSavedAddresses(null));
   }, []);
+
+  function changeShipping<K extends keyof StorefrontCheckoutShipping>(key: K, value: StorefrontCheckoutShipping[K]) {
+    setSavedAddressId(null);
+    setUseSavedAddress(false);
+    setShipping((current) => ({ ...current, [key]: value }));
+  }
+
+  function selectSaved(address: CustomerAddress) {
+    setShipping(shippingFromCustomerAddress(address));
+    setSavedAddressId(address.addressId);
+    setUseSavedAddress(true);
+    setShowSaved(false);
+  }
+
+  function startNewAddress() {
+    setUseSavedAddress(false);
+    setSavedAddressId(null);
+    setShowSaved(false);
+    setShipping(emptyShipping);
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -56,7 +88,7 @@ export function StorefrontShopeivaCheckout() {
     setBusy(true);
     setError(null);
     try {
-      const submitted = await submitStorefrontCheckout(session.cartId, page.cartVersion, shipping);
+      const submitted = await submitStorefrontCheckout(session.cartId, page.cartVersion, shipping, savedAddressId);
       if (!submitted.checkoutId) {
         throw new Error("شناسهٔ سفارش برنگشت.");
       }
@@ -88,26 +120,89 @@ export function StorefrontShopeivaCheckout() {
           <span className="px-3 py-1 rounded-full bg-gray-50 text-gray-500">۲. پرداخت بعدی</span>
         </div>
         {error ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3">{error}</p> : null}
+        {savedAddresses ? (
+          <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
+            <h2 className="text-sm md:text-base font-black flex items-center gap-2 mb-3">
+              <Home className="w-4 h-4 text-[#2563EB]" />
+              انتخاب آدرس
+            </h2>
+            <div className="flex gap-3 mb-4">
+              <button
+                type="button"
+                onClick={startNewAddress}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
+                  !useSavedAddress ? "border-[#2563EB] bg-[#2563EB]/5 text-[#2563EB]" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                <Plus className="w-4 h-4" /> آدرس جدید
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSaved((open) => !open)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs md:text-sm font-bold border-2 transition-all ${
+                  useSavedAddress ? "border-[#2563EB] bg-[#2563EB]/5 text-[#2563EB]" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                <Home className="w-4 h-4" /> آدرس‌های من
+                <ChevronDown className={`w-3 h-3 transition-transform ${showSaved ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+            {showSaved ? (
+              <div className="space-y-2">
+                {savedAddresses.length === 0 ? (
+                  <p className="text-xs text-gray-500 text-center py-3">نشانی ذخیره‌شده‌ای نیست.</p>
+                ) : (
+                  savedAddresses.map((saved) => (
+                    <button
+                      key={saved.addressId}
+                      type="button"
+                      onClick={() => selectSaved(saved)}
+                      className={`w-full text-right p-3 md:p-4 rounded-xl border-2 transition-all ${
+                        savedAddressId === saved.addressId
+                          ? "border-[#2563EB] bg-[#2563EB]/5"
+                          : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs md:text-sm font-bold">{saved.recipientName}</p>
+                          <p className="text-[10px] md:text-xs text-gray-500">
+                            {saved.provinceName}، {saved.cityName}، {saved.postalAddress}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            {saved.contactMobile} | کد پستی: {saved.postalCode}
+                            {saved.isDefault ? " · پیش‌فرض" : ""}
+                          </p>
+                        </div>
+                        {savedAddressId === saved.addressId ? <Check className="w-4 h-4 text-[#2563EB] shrink-0 mt-1" /> : null}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
         <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3">
           <h2 className="text-base font-black flex items-center gap-2">
             <MapPin className="w-4 h-4 text-[#2563EB]" />
             اطلاعات گیرنده
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="نام و نام خانوادگی" value={shipping.recipientName} onChange={(value) => setShipping({ ...shipping, recipientName: value })} />
-            <Field label="موبایل" value={shipping.contactMobile} ltr onChange={(value) => setShipping({ ...shipping, contactMobile: value })} />
-            <Field label="استان" value={shipping.provinceName} onChange={(value) => setShipping({ ...shipping, provinceName: value })} />
-            <Field label="شهر" value={shipping.cityName} onChange={(value) => setShipping({ ...shipping, cityName: value })} />
+            <Field label="نام و نام خانوادگی" value={shipping.recipientName} onChange={(value) => changeShipping("recipientName", value)} />
+            <Field label="موبایل" value={shipping.contactMobile} ltr onChange={(value) => changeShipping("contactMobile", value)} />
+            <Field label="استان" value={shipping.provinceName} onChange={(value) => changeShipping("provinceName", value)} />
+            <Field label="شهر" value={shipping.cityName} onChange={(value) => changeShipping("cityName", value)} />
             <label className="md:col-span-2 text-xs font-bold text-gray-600">
               نشانی
               <textarea
                 required
                 value={shipping.postalAddress}
-                onChange={(event) => setShipping({ ...shipping, postalAddress: event.target.value })}
+                onChange={(event) => changeShipping("postalAddress", event.target.value)}
                 className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm min-h-24"
               />
             </label>
-            <Field label="کد پستی" value={shipping.postalCode} ltr onChange={(value) => setShipping({ ...shipping, postalCode: value })} />
+            <Field label="کد پستی" value={shipping.postalCode} ltr onChange={(value) => changeShipping("postalCode", value)} />
           </div>
         </section>
         <section className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">

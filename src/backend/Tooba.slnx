@@ -46,5 +46,8 @@
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />
+    <Project Path="Modules/AddressBook/Tooba.AddressBook.Domain/Tooba.AddressBook.Domain.csproj" />
+    <Project Path="Modules/AddressBook/Tooba.AddressBook.Application/Tooba.AddressBook.Application.csproj" />
+    <Project Path="Modules/AddressBook/Tooba.AddressBook.Infrastructure/Tooba.AddressBook.Infrastructure.csproj" />
   </Folder>
 </Solution>

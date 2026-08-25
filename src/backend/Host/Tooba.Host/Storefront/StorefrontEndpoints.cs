@@ -319,6 +319,11 @@ public static class StorefrontEndpoints
     private static (int Status, string Title, string Code) MapCheckoutException(InvalidOperationException exception)
     {
         var text = exception.Message;
+        if (text.Contains("متعلق", StringComparison.Ordinal) || text.Contains("دفترچه", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "checkout.address.forbidden");
+        }
+
         if (text.Contains("پیدا نشد", StringComparison.Ordinal))
         {
             return (StatusCodes.Status404NotFound, "Not Found", "checkout.missing");
@@ -366,6 +371,7 @@ public static class StorefrontEndpoints
         "checkout.cart.empty" => "سبد خرید خالی است.",
         "checkout.version.conflict" => "سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.",
         "checkout.missing" => "سفارش پیدا نشد.",
+        "checkout.address.forbidden" => "این نشانی متعلق به مشتری جاری نیست.",
         _ => "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.",
     };
 

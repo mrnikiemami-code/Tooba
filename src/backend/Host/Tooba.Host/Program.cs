@@ -17,6 +17,7 @@ using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
 using Tooba.Host.Wishlist;
+using Tooba.Host.AddressBook;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -83,7 +84,14 @@ builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCheckoutComposer>();
+builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
+    new StorefrontCheckoutComposer(
+        sp.GetRequiredService<StorefrontCartComposer>(),
+        sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
+        sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>(),
+        sp.GetRequiredService<IHostEnvironment>(),
+        sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
@@ -196,6 +204,7 @@ app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapReviewEndpoints();
 app.MapWishlistEndpoints();
+app.MapAddressBookEndpoints();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

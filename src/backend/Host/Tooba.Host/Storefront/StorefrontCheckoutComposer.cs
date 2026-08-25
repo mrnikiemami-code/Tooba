@@ -1,3 +1,4 @@
+using Tooba.AddressBook.Application;
 using Tooba.Cart.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -6,6 +7,7 @@ namespace Tooba.Host.Storefront;
 
 /// <summary>
 /// ترکیب نمایشی Checkout روی قرارداد Order. مبلغ نهایی در React ساخته نمی‌شود و سفارش Paid نمی‌شود.
+/// دفترچهٔ آدرس فقط برای تصویربرداری فیلدهای ارسال مصرف می‌شود و شناسهٔ نشانی روی سفارش ذخیره نمی‌گردد.
 /// </summary>
 public sealed class StorefrontCheckoutComposer
 {
@@ -17,17 +19,33 @@ public sealed class StorefrontCheckoutComposer
     private const string DefaultShippingCode = "storefront-default";
     private const string DefaultShippingLabel = "ارسال پیش‌فرض فروشگاه";
     private const string TaxJurisdiction = "IR-NAT";
+    private const string DevActorHeader = "X-Tooba-Dev-Actor-User-Id";
 
     private readonly StorefrontCartComposer _carts;
     private readonly ICheckoutDirectory _checkouts;
+    private readonly IAddressBookDirectory _addresses;
+    private readonly CurrentAuthenticatedSession _session;
+    private readonly IHostEnvironment _environment;
+    private readonly IHttpContextAccessor _http;
 
     /// <summary>
-    /// سازندهٔ ترکیب checkout فروشگاه.
+    /// سازندهٔ ترکیب checkout فروشگاه با درگاه دفترچه برای تصویربرداری اختیاری.
+    /// داخلی است چون <see cref="CurrentAuthenticatedSession"/> عمومی نیست؛ ثبت DI با کارخانه در Program انجام می‌شود.
     /// </summary>
-    public StorefrontCheckoutComposer(StorefrontCartComposer carts, ICheckoutDirectory checkouts)
+    internal StorefrontCheckoutComposer(
+        StorefrontCartComposer carts,
+        ICheckoutDirectory checkouts,
+        IAddressBookDirectory addresses,
+        CurrentAuthenticatedSession session,
+        IHostEnvironment environment,
+        IHttpContextAccessor http)
     {
         _carts = carts;
         _checkouts = checkouts;
+        _addresses = addresses;
+        _session = session;
+        _environment = environment;
+        _http = http;
     }
 
     /// <summary>
@@ -36,12 +54,13 @@ public sealed class StorefrontCheckoutComposer
     public async Task<StorefrontCheckoutPage> PreviewAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
-        var quoted = await _checkouts.PreviewAsync(BuildCommand(cart, guestSecret, "preview"), cancellationToken);
+        var quoted = await _checkouts.PreviewAsync(BuildCommand(cart, guestSecret, "preview", StorefrontGuestActorId), cancellationToken);
         return MapPage(quoted, cart, persisted: false);
     }
 
     /// <summary>
     /// سبد را به CheckoutGroup و سفارش‌های PendingPayment تبدیل می‌کند.
+    /// در صورت وجود SavedAddressId، فیلدهای ارسال از دفترچهٔ متعلق به Actor تصویربرداری می‌شوند.
     /// </summary>
     public async Task<StorefrontCheckoutPage> SubmitAsync(
         Guid cartId,
@@ -51,7 +70,7 @@ public sealed class StorefrontCheckoutComposer
         StorefrontCheckoutShippingInput shipping,
         CancellationToken cancellationToken)
     {
-        ValidateShipping(shipping);
+        var prepared = await PrepareShippingAsync(shipping, cancellationToken);
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
         if (cart.Version != expectedVersion)
         {
@@ -59,13 +78,14 @@ public sealed class StorefrontCheckoutComposer
         }
 
         var submitted = await _checkouts.SubmitAsync(
-            BuildCommand(cart, guestSecret, idempotencyKey, shipping),
+            BuildCommand(cart, guestSecret, idempotencyKey, prepared.PlacedByUserId, prepared.Shipping),
             cancellationToken);
         return MapPage(submitted, cart, persisted: true);
     }
 
     /// <summary>
     /// تأیید سفارش را پس از اثبات راز مهمان روی همان CartId برمی‌گرداند.
+    /// Actor خواندن با همان قاعدهٔ Submit Resolve می‌شود تا تأیید پس از ذخیرهٔ نشانی کار کند.
     /// </summary>
     public async Task<StorefrontCheckoutPage?> GetAsync(
         Guid checkoutId,
@@ -74,9 +94,10 @@ public sealed class StorefrontCheckoutComposer
         CancellationToken cancellationToken)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
+        var actor = ResolvePlacementActor(usingSavedAddress: false);
         var snapshot = await _checkouts.GetCheckoutAsync(
             checkoutId,
-            new OrderAccess(null, StorefrontGuestActorId),
+            new OrderAccess(null, actor),
             cancellationToken);
         if (snapshot is null || snapshot.CartId != cart.CartId)
         {
@@ -84,6 +105,68 @@ public sealed class StorefrontCheckoutComposer
         }
 
         return MapPage(snapshot, cart, persisted: true);
+    }
+
+    /// <summary>
+    /// فیلدهای ارسال را از دفترچه تصویربرداری می‌کند یا اعتبارسنجی درون‌خطی مهمان را نگه می‌دارد.
+    /// شناسهٔ نشانی به سفارش منتقل نمی‌شود.
+    /// </summary>
+    internal async Task<StorefrontCheckoutPlacement> PrepareShippingAsync(
+        StorefrontCheckoutShippingInput shipping,
+        CancellationToken cancellationToken)
+    {
+        var usingSaved = shipping.SavedAddressId is Guid savedId && savedId != Guid.Empty;
+        var actor = ResolvePlacementActor(usingSaved);
+        if (!usingSaved)
+        {
+            ValidateShipping(shipping);
+            return new StorefrontCheckoutPlacement(actor, shipping);
+        }
+
+        var saved = await _addresses.GetAsync(actor, shipping.SavedAddressId!.Value, cancellationToken);
+        if (saved is null)
+        {
+            throw new InvalidOperationException("نشانی ذخیره‌شده متعلق به این مشتری نیست یا پیدا نشد.");
+        }
+
+        var snapshot = new StorefrontCheckoutShippingInput(
+            saved.RecipientName,
+            saved.ContactMobile,
+            saved.ProvinceName ?? string.Empty,
+            saved.CityName,
+            saved.PostalAddress,
+            saved.PostalCode);
+        return new StorefrontCheckoutPlacement(actor, snapshot);
+    }
+
+    /// <summary>
+    /// Actor ثبت سفارش را از نشست، سپس هدر Dev/Testing، و در غیر این صورت مهمان فروشگاه Resolve می‌کند.
+    /// استفاده از دفترچه در Production بدون نشست رد می‌شود.
+    /// </summary>
+    internal Guid ResolvePlacementActor(bool usingSavedAddress)
+    {
+        if (_session.IsAuthenticated && _session.UserId is Guid userId && userId != Guid.Empty)
+        {
+            return userId;
+        }
+
+        var request = _http.HttpContext?.Request;
+        var isDevSeam = _environment.IsDevelopment() || _environment.IsEnvironment("Testing");
+        if (isDevSeam
+            && request is not null
+            && request.Headers.TryGetValue(DevActorHeader, out var raw)
+            && Guid.TryParse(raw.ToString(), out var headerActor)
+            && headerActor != Guid.Empty)
+        {
+            return headerActor;
+        }
+
+        if (usingSavedAddress && !isDevSeam)
+        {
+            throw new InvalidOperationException("برای استفاده از دفترچه آدرس نشست مشتری لازم است.");
+        }
+
+        return StorefrontGuestActorId;
     }
 
     private async Task<StorefrontCartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
@@ -102,6 +185,7 @@ public sealed class StorefrontCheckoutComposer
         StorefrontCartPage cart,
         string? guestSecret,
         string idempotencyKey,
+        Guid placedByUserId,
         StorefrontCheckoutShippingInput? shipping = null) =>
         new(
             cart.CartId,
@@ -109,7 +193,7 @@ public sealed class StorefrontCheckoutComposer
             cart.Version,
             OrderMode.OnlinePurchase,
             null,
-            StorefrontGuestActorId,
+            placedByUserId,
             idempotencyKey,
             TaxJurisdiction,
             null,
@@ -200,3 +284,6 @@ public sealed class StorefrontCheckoutComposer
         }
     }
 }
+
+/// <summary>نتیجهٔ Resolve هویت ثبت و تصویر ارسال قبل از ماندگاری سفارش.</summary>
+internal sealed record StorefrontCheckoutPlacement(Guid PlacedByUserId, StorefrontCheckoutShippingInput Shipping);
