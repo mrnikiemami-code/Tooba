@@ -33,7 +33,7 @@ PIPELINE
 Last Architect Accepted Task:
 
 ```text
-TB-P04-T010
+TB-P05-T001
 ```
 
 Last Implementation Task:
@@ -51,7 +51,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-T001 / REPAIR / AWAITING_ARCHITECT_ACCEPT
+NONE — wait for next Architect envelope (FAST CONNECT)
 ```
 
 Current Gate:
@@ -78,7 +78,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T001 = REPAIR / AWAITING_ARCHITECT_ACCEPT
+TB-P05-T001 = ACCEPTED
 ```
 
 Accepted ledger (selected):
@@ -272,7 +272,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 REPAIR / AWAITING_ARCHITECT_ACCEPT)
+IN_PROGRESS (TB-P05-T001 ACCEPTED; waiting next Fast Connect envelope)
 ```
 
 Design System Foundation:
@@ -541,4 +541,4 @@ docs/ai/tasks/TB-P05-T001-REPAIR.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: TB-P04-GATE is Architect ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001 REPAIR (real seller authorization + Shopeiva vendor fidelity) is locally complete and AWAITING_ARCHITECT_ACCEPT — do not invent TB-P05-T002. Preserve Shopeiva with minimum change; connect Tooba live backend; sell quickly. Persian RTL first. Tooba Professional Data Grid on seller products/orders. Core API integration by end of P06. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.
+Resume: TB-P04-GATE ACCEPTED. P04 = COMPLETE. P05 = IN_PROGRESS. TB-P05-T001 ACCEPTED (seller authorization + Shopeiva fidelity). Wait for next Architect Fast Connect envelope — do not invent TB-P05-T002. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window. P00–P04 = COMPLETE.

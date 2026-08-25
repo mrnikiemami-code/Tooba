@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 REPAIR / AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 ACCEPTED; waiting Fast Connect envelope; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
