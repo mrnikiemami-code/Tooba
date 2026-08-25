@@ -472,6 +472,18 @@ public interface IMfaEnrollmentStore
     Task<IReadOnlyList<MfaFactorKind>> ListEnabledAsync(Guid userId, CancellationToken cancellationToken);
 }
 
+/// <summary>نمایهٔ فقط‌خواندنی شناسه‌های تماس Identity برای UI پروفایل.</summary>
+public sealed record IdentityContactSnapshot(string? Email, string? Mobile);
+
+/// <summary>
+/// lookup محدود برای نمایش email/mobile در پروفایل. mutation از مسیر OTP/Auth انجام می‌شود.
+/// </summary>
+public interface IIdentityContactLookup
+{
+    /// <summary>ایمیل و موبایل تأیید‌شدهٔ نمایشی User را برمی‌گرداند.</summary>
+    Task<IdentityContactSnapshot> GetContactAsync(Guid userId, CancellationToken cancellationToken);
+}
+
 /// <summary>
 /// درز Security Audit آینده. لاگ فنی جایگزین این درز نیست.
 /// </summary>

@@ -1,3 +1,4 @@
+using Tooba.CustomerProfile.Application;
 using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Customer;
@@ -19,6 +20,7 @@ public static class CustomerPanelEndpoints
         group.MapGet("/dev-context", GetDevContext);
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/profile", GetProfileAsync);
+        group.MapPut("/profile", UpdateProfileAsync);
         group.MapGet("/orders", ListOrdersAsync);
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
     }
@@ -61,6 +63,24 @@ public static class CustomerPanelEndpoints
         return actor is null
             ? Unauthorized()
             : Results.Json(await composer.GetProfileAsync(actor.Value, cancellationToken));
+    }
+
+    private static async Task<IResult> UpdateProfileAsync(
+        CustomerProfileWriteRequest body,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IHostEnvironment environment,
+        CustomerPanelComposer composer,
+        CancellationToken cancellationToken)
+    {
+        var actor = ResolveActor(request, session, environment);
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        var updated = await composer.UpdateProfileAsync(actor.Value, body.ToWrite(), cancellationToken);
+        return Results.Json(updated);
     }
 
     private static async Task<IResult> ListOrdersAsync(
@@ -127,4 +147,20 @@ public static class CustomerPanelEndpoints
         Results.Json(
             new { title = "Unauthorized", errorCode = "customer.session.required" },
             statusCode: StatusCodes.Status401Unauthorized);
+}
+
+/// <summary>بدنهٔ ویرایش پروفایل؛ شناسه‌های Identity و credential دریافت نمی‌کند.</summary>
+public sealed record CustomerProfileWriteRequest(
+    string DisplayName,
+    string? FirstName,
+    string? LastName,
+    string? BirthDate,
+    string? Bio);
+
+/// <summary>تبدیل بدنهٔ HTTP به فرمان ماژول بدون انتقال هویت مالک.</summary>
+public static class CustomerProfileWriteRequestExtensions
+{
+    /// <summary>ورودی HTTP را به فرمان دایرکتوری تبدیل می‌کند.</summary>
+    public static CustomerProfileWrite ToWrite(this CustomerProfileWriteRequest body) =>
+        new(body.DisplayName, body.FirstName, body.LastName, body.BirthDate, body.Bio);
 }

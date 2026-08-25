@@ -17,14 +17,23 @@ public sealed record CustomerDashboardPage(
     IReadOnlyList<CustomerOrderListItem> RecentOrders);
 
 /// <summary>
-/// پروفایل خواندنی مشتری بر پایهٔ اصل نشست و آخرین تصویر ارسال.
-/// این مدل جای دفترچهٔ Party یا Identity را نمی‌گیرد.
+/// پروفایل مشتری با مرز واضح بین فیلدهای توصیفی قابل‌ویرایش و شناسه‌های Identity.
 /// </summary>
 public sealed record CustomerProfilePage(
     Guid ActorUserId,
     string DisplayName,
+    string? FirstName,
+    string? LastName,
+    string? Email,
     string? ContactMobile,
+    string? BirthDate,
+    string? Bio,
     string? LastShippingAddress,
+    bool EmailEditable,
+    bool MobileEditable,
+    bool AvatarUploadAvailable,
+    bool NationalCodeEditable,
+    bool AddressEditable,
     bool Editable);
 
 /// <summary>

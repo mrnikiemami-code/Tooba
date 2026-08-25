@@ -49,5 +49,8 @@
     <Project Path="Modules/AddressBook/Tooba.AddressBook.Domain/Tooba.AddressBook.Domain.csproj" />
     <Project Path="Modules/AddressBook/Tooba.AddressBook.Application/Tooba.AddressBook.Application.csproj" />
     <Project Path="Modules/AddressBook/Tooba.AddressBook.Infrastructure/Tooba.AddressBook.Infrastructure.csproj" />
+    <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Domain/Tooba.CustomerProfile.Domain.csproj" />
+    <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Application/Tooba.CustomerProfile.Application.csproj" />
+    <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Infrastructure/Tooba.CustomerProfile.Infrastructure.csproj" />
   </Folder>
 </Solution>

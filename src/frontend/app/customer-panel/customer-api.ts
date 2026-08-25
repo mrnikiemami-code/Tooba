@@ -35,8 +35,18 @@ export interface CustomerDashboardPage {
 export interface CustomerProfilePage {
   actorUserId: string;
   displayName: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
   contactMobile: string | null;
+  birthDate: string | null;
+  bio: string | null;
   lastShippingAddress: string | null;
+  emailEditable: boolean;
+  mobileEditable: boolean;
+  avatarUploadAvailable: boolean;
+  nationalCodeEditable: boolean;
+  addressEditable: boolean;
   editable: boolean;
 }
 
@@ -186,7 +196,7 @@ export function mapCustomerDashboard(value: unknown): CustomerDashboardPage | nu
   };
 }
 
-/** پروفایل خواندنی مشتری را از Host نگاشت می‌کند. */
+/** پروفایل مشتری را از Host نگاشت می‌کند. */
 export function mapCustomerProfile(value: unknown): CustomerProfilePage | null {
   const item = recordOf(value);
   if (!item) return null;
@@ -195,8 +205,18 @@ export function mapCustomerProfile(value: unknown): CustomerProfilePage | null {
   return {
     actorUserId,
     displayName: text(prop(item, "displayName", "DisplayName"), "مشتری توبا"),
+    firstName: nullableText(prop(item, "firstName", "FirstName")),
+    lastName: nullableText(prop(item, "lastName", "LastName")),
+    email: nullableText(prop(item, "email", "Email")),
     contactMobile: nullableText(prop(item, "contactMobile", "ContactMobile")),
+    birthDate: nullableText(prop(item, "birthDate", "BirthDate")),
+    bio: nullableText(prop(item, "bio", "Bio")),
     lastShippingAddress: nullableText(prop(item, "lastShippingAddress", "LastShippingAddress")),
+    emailEditable: prop(item, "emailEditable", "EmailEditable") === true,
+    mobileEditable: prop(item, "mobileEditable", "MobileEditable") === true,
+    avatarUploadAvailable: prop(item, "avatarUploadAvailable", "AvatarUploadAvailable") === true,
+    nationalCodeEditable: prop(item, "nationalCodeEditable", "NationalCodeEditable") === true,
+    addressEditable: prop(item, "addressEditable", "AddressEditable") === true,
     editable: prop(item, "editable", "Editable") === true,
   };
 }

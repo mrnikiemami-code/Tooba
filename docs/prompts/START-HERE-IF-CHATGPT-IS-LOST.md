@@ -5,13 +5,12 @@ PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
 Last Architect Accepted Product Task: TB-P05-T014
-Governance: TB-P05-GOV-MIGRATION-BRIDGE-V2 = ACCEPTED
-Current Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 = AWAITING_ARCHITECT_ACCEPT
+Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
+Current Product Task: TB-P05-T015 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
-Worker PASS is not Architect ACCEPT. Do not execute roadmap prose or historical
-task archives.
+Worker PASS is not Architect ACCEPT. Do not execute roadmap prose or historical task archives.
 
 ## Recovery procedure
 
@@ -37,34 +36,12 @@ docs/ai/TOOBA-PIPELINE-CONTROLLER.md
 docs/ai/TOOBA-RECOVERY-CONTEXT.md
 ```
 
-Then recover:
-
-- current phase and accepted product history;
-- current Bridge channel and Worker lifecycle;
-- active or reviewed Task from Bridge;
-- blockers and locked architecture/product decisions;
-- `HEAD`, `origin/main`, and working-tree safety.
-
-The sole current operational Task source is Bridge after `BRIDGE-WAKE`. The user
-does not paste Tasks into a Worker.
+Then recover current phase, accepted history, Bridge channel, active Task, blockers, and Git safety.
 
 ```text
 ONE WORKER = ONE ACTIVE TASK
 Worker PASS != Architect ACCEPT
-SYSTEM-BRIDGE-ALERT != Result
 Worker offline between Tasks = NORMAL
-No continuous polling while idle
 ```
 
-An alert does not advance state, mark a Task PASS/FAIL, or authorize another
-Task. Do not emit or interpret an alert merely because the Worker is offline
-between Tasks. Wait for Worker/Bridge recovery on real transport failures.
-
-Historical Task and Result artifacts may contain legacy Cursor/chat pipeline
-syntax. Preserve them as prior-execution evidence; they are not current
-operational instructions.
-
-P00–P04 remain complete. P05 remains in progress. TB-P05-T010 through TB-P05-T014
-are ACCEPTED. TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 is AWAITING_ARCHITECT_ACCEPT.
-Shopeiva decisions, module boundaries, accepted architecture, and deferred
-Payment/Cart concerns remain unchanged.
+P00–P04 remain complete. P05 remains in progress. TB-P05-T015 adds live CustomerProfile editing behind the Shopeiva profile form with Identity read-only fields and actor-isolated backend writes.

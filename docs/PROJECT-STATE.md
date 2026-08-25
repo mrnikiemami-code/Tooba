@@ -34,13 +34,13 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P05-T014
+TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
 ```
 
 Last Implementation Task:
 
 ```text
-TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
+TB-P05-T015
 ```
 
 Last Architect Accepted Gate:
@@ -52,7 +52,7 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T015 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -79,7 +79,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T015 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -273,7 +273,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T014 ACCEPTED; TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 AWAITING_ARCHITECT_ACCEPT)
+IN_PROGRESS (TB-P05-T001 through T014 ACCEPTED; TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 ACCEPTED; TB-P05-T015 AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Design System Foundation:
@@ -548,4 +548,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001 through T014, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 are Architect-accepted. TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 = AWAITING_ARCHITECT_ACCEPT: operational governance migrated from BRIDGE-V2 continuous online Worker polling to BRIDGE-WAKE-V1 idle Worker + Watchdog wake semantics; evidence under `docs/evidence/TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1/`. TB-P05-T014 is ACCEPTED: dedicated private AddressBook ownership, server-derived actor isolation, CRUD + one-default invariant, checkout saved-address ownership check with immutable Order shipping snapshot, Shopeiva customer address UI and checkout «آدرس‌های من» selection, guest inline checkout retained, and deterministic desktop/mobile evidence under `docs/evidence/TB-P05-T014/`. Worker PASS is not Architect ACCEPT. Deferred: Payment missing IdempotencyKey → 500/NRE; Cart replace-hold release→reserve window; AddressBook geocoding/shipping-zone/map picker/save-from-checkout. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T001 through T014, TB-P05-T009-REPAIR-01, TB-P05-GOV-MIGRATION-BRIDGE-V2, and TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1 are Architect-accepted. TB-P05-T015 = AWAITING_ARCHITECT_ACCEPT: CustomerProfile module with actor-isolated profile read/write, Identity contact lookup for read-only email/mobile, Shopeiva profile form live bindings without redesign, dashboard displayName reflection, and evidence under `docs/evidence/TB-P05-T015/`. Worker PASS is not Architect ACCEPT. Deferred: verified email/mobile change on profile UI; avatar/media pipeline; national code/KYC; password settings route. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

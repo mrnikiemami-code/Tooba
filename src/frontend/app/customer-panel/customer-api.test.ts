@@ -137,8 +137,15 @@ test("customer detail maps seller and shipping snapshots", () => {
   assert.equal(page?.paymentState, "Failed");
 });
 
-test("customer profile remains read-only when backend has no write capability", () => {
-  const page = mapCustomerProfile({ actorUserId: "actor-1", displayName: "مشتری", editable: false });
-  assert.equal(page?.editable, false);
+test("customer profile maps editable capability from backend", () => {
+  const page = mapCustomerProfile({
+    actorUserId: "actor-1",
+    displayName: "مشتری",
+    editable: true,
+    emailEditable: false,
+    mobileEditable: false,
+  });
+  assert.equal(page?.editable, true);
+  assert.equal(page?.emailEditable, false);
   assert.equal(CUSTOMER_DEV_ACTOR_HEADER, "X-Tooba-Dev-Actor-User-Id");
 });

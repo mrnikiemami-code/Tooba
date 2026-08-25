@@ -1,18 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.AddressBook.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.CustomerProfile.Application;
+using Tooba.Identity.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
-using Tooba.AddressBook.Application;
 using Tooba.Wishlist.Application;
 
 namespace Tooba.Host.Customer;
 
 /// <summary>
-/// خواندن پنل مشتری را روی Order و lookupهای مستقل Catalog/Party ترکیب می‌کند.
+/// خواندن پنل مشتری را روی Order و lookupهای مستقل Catalog/Party/Profile ترکیب می‌کند.
 /// پرس‌وجوی بین‌schema، قیمت جاری Product و موجودی جاری در این read model وجود ندارد.
 /// </summary>
 public sealed class CustomerPanelComposer
@@ -23,6 +25,8 @@ public sealed class CustomerPanelComposer
     private readonly IPaymentDirectory _payments;
     private readonly IWishlistDirectory _wishlist;
     private readonly IAddressBookDirectory _addresses;
+    private readonly ICustomerProfileDirectory _profiles;
+    private readonly IIdentityContactLookup _identityContacts;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -33,7 +37,9 @@ public sealed class CustomerPanelComposer
         IPartyLookupGateway parties,
         IPaymentDirectory payments,
         IWishlistDirectory wishlist,
-        IAddressBookDirectory addresses)
+        IAddressBookDirectory addresses,
+        ICustomerProfileDirectory profiles,
+        IIdentityContactLookup identityContacts)
     {
         _orders = orders;
         _catalog = catalog;
@@ -41,6 +47,8 @@ public sealed class CustomerPanelComposer
         _payments = payments;
         _wishlist = wishlist;
         _addresses = addresses;
+        _profiles = profiles;
+        _identityContacts = identityContacts;
     }
 
     /// <summary>
@@ -54,11 +62,8 @@ public sealed class CustomerPanelComposer
         {
             orders.Add(await MapListItemAsync(group, actorUserId, cancellationToken));
         }
-        var displayName = groups
-            .OrderByDescending(x => x.SubmittedAt)
-            .Select(x => x.RecipientName)
-            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
-            ?? "مشتری توبا";
+
+        var displayName = await ResolveDisplayNameAsync(actorUserId, groups, cancellationToken);
         var wishlistCount = await _wishlist.CountAsync(actorUserId, cancellationToken);
         var addressCount = await _addresses.CountAsync(actorUserId, cancellationToken);
         return new CustomerDashboardPage(
@@ -75,24 +80,46 @@ public sealed class CustomerPanelComposer
     }
 
     /// <summary>
-    /// پروفایل فقط‌خواندنی را از اصل نشست و آخرین snapshot ارسال برمی‌گرداند.
+    /// پروفایل مشتری را از ماژول پروفایل و lookupهای Identity/Order ترکیب می‌کند.
     /// </summary>
     public async Task<CustomerProfilePage> GetProfileAsync(Guid actorUserId, CancellationToken cancellationToken)
     {
-        var latest = await _orders.Checkouts.AsNoTracking()
-            .Where(x => x.PlacedByUserId == actorUserId)
-            .OrderByDescending(x => x.SubmittedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        var address = latest is null
-            ? null
-            : string.Join("، ", new[] { latest.ProvinceName, latest.CityName, latest.PostalAddress }
-                .Where(x => !string.IsNullOrWhiteSpace(x)));
+        var latest = await LatestCheckoutAsync(actorUserId, cancellationToken);
+        var stored = await _profiles.GetAsync(actorUserId, cancellationToken);
+        var contact = await _identityContacts.GetContactAsync(actorUserId, cancellationToken);
+        var address = FormatShippingAddress(latest);
+        var displayName = stored?.DisplayName
+            ?? (string.IsNullOrWhiteSpace(latest?.RecipientName) ? "مشتری توبا" : latest!.RecipientName);
+        var mobile = contact.Mobile
+            ?? (string.IsNullOrWhiteSpace(latest?.ContactMobile) ? null : latest!.ContactMobile);
         return new CustomerProfilePage(
             actorUserId,
-            string.IsNullOrWhiteSpace(latest?.RecipientName) ? "مشتری توبا" : latest.RecipientName,
-            string.IsNullOrWhiteSpace(latest?.ContactMobile) ? null : latest.ContactMobile,
-            string.IsNullOrWhiteSpace(address) ? null : address,
-            Editable: false);
+            displayName,
+            stored?.FirstName,
+            stored?.LastName,
+            contact.Email,
+            mobile,
+            stored?.BirthDate,
+            stored?.Bio,
+            address,
+            EmailEditable: false,
+            MobileEditable: false,
+            AvatarUploadAvailable: false,
+            NationalCodeEditable: false,
+            AddressEditable: false,
+            Editable: true);
+    }
+
+    /// <summary>
+    /// فیلدهای توصیفی مجاز پروفایل Actor را ذخیره می‌کند.
+    /// </summary>
+    public async Task<CustomerProfilePage> UpdateProfileAsync(
+        Guid actorUserId,
+        CustomerProfileWrite input,
+        CancellationToken cancellationToken)
+    {
+        await _profiles.UpsertAsync(actorUserId, input, cancellationToken);
+        return await GetProfileAsync(actorUserId, cancellationToken);
     }
 
     /// <summary>
@@ -216,6 +243,42 @@ public sealed class CustomerPanelComposer
             group.PostalCode,
             group.ShippingMethodLabel,
             sellerViews);
+    }
+
+    private async Task<string> ResolveDisplayNameAsync(
+        Guid actorUserId,
+        IReadOnlyList<CheckoutGroup> groups,
+        CancellationToken cancellationToken)
+    {
+        var stored = await _profiles.GetAsync(actorUserId, cancellationToken);
+        if (stored is not null && !string.IsNullOrWhiteSpace(stored.DisplayName))
+        {
+            return stored.DisplayName;
+        }
+
+        return groups
+            .OrderByDescending(x => x.SubmittedAt)
+            .Select(x => x.RecipientName)
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? "مشتری توبا";
+    }
+
+    private async Task<CheckoutGroup?> LatestCheckoutAsync(Guid actorUserId, CancellationToken cancellationToken) =>
+        await _orders.Checkouts.AsNoTracking()
+            .Where(x => x.PlacedByUserId == actorUserId)
+            .OrderByDescending(x => x.SubmittedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    private static string? FormatShippingAddress(CheckoutGroup? latest)
+    {
+        if (latest is null)
+        {
+            return null;
+        }
+
+        var address = string.Join("، ", new[] { latest.ProvinceName, latest.CityName, latest.PostalAddress }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+        return string.IsNullOrWhiteSpace(address) ? null : address;
     }
 
     private async Task<IReadOnlyList<CheckoutGroup>> LoadGroupsAsync(
