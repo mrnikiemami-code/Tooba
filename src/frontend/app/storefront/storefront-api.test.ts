@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatOfferAmount, mapStorefrontDetail, mapStorefrontHome, mapStorefrontListing } from "./storefront-api.ts";
+import {
+  formatOfferAmount,
+  mapStorefrontDetail,
+  mapStorefrontHome,
+  mapStorefrontListing,
+  mapStorefrontMerchandising,
+  mapStorefrontPublicSeller,
+} from "./storefront-api.ts";
 import { buildProductStructuredData } from "./storefront-product-seo.ts";
 
 test("home mapper keeps offer amount off a product price field", () => {
@@ -153,4 +160,35 @@ test("listing mapper keeps backend discovery facets and pagination", () => {
   assert.equal(listing?.sort, "price-asc");
   assert.equal(listing?.page, 2);
   assert.equal(listing?.totalCount, 30);
+});
+
+test("unsupported merchandising remains empty and explicit", () => {
+  const page = mapStorefrontMerchandising({
+    kind: "most-viewed",
+    title: "پربازدیدترین‌ها",
+    supported: false,
+    unavailableReason: "سیگنال معتبر بازدید وجود ندارد.",
+    products: [],
+  });
+  assert.equal(page?.supported, false);
+  assert.equal(page?.products.length, 0);
+  assert.match(page?.unavailableReason ?? "", /سیگنال معتبر/);
+});
+
+test("public seller mapper ignores private and internal party fields", () => {
+  const seller = mapStorefrontPublicSeller({
+    publicId: "public-seller",
+    displayName: "فروشگاه آرمان",
+    activeOfferCount: 2,
+    productCount: 2,
+    partyId: "internal-party",
+    legalName: "private",
+    settlementAccount: "secret",
+  });
+  assert.deepEqual(seller, {
+    publicId: "public-seller",
+    displayName: "فروشگاه آرمان",
+    activeOfferCount: 2,
+    productCount: 2,
+  });
 });

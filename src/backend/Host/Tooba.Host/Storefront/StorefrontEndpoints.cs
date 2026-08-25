@@ -15,6 +15,11 @@ public static class StorefrontEndpoints
         var group = app.MapGroup("/v1/storefront");
         group.MapGet("/home", GetHomeAsync);
         group.MapGet("/categories", GetCategoriesAsync);
+        group.MapGet("/brands", GetBrandsAsync);
+        group.MapGet("/brands/{slug}", GetBrandAsync);
+        group.MapGet("/sellers", GetSellersAsync);
+        group.MapGet("/sellers/{publicId}", GetSellerAsync);
+        group.MapGet("/merchandising/{kind}", GetMerchandisingAsync);
         group.MapGet("/products", GetListingAsync);
         group.MapGet("/products/{slug}", GetDetailAsync);
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
@@ -36,6 +41,31 @@ public static class StorefrontEndpoints
 
     private static async Task<IResult> GetCategoriesAsync(StorefrontComposer composer, CancellationToken cancellationToken)
         => Results.Json(await composer.ListCategoriesAsync(cancellationToken));
+
+    private static async Task<IResult> GetBrandsAsync(StorefrontComposer composer, CancellationToken cancellationToken)
+        => Results.Json(await composer.ListBrandsAsync(cancellationToken));
+
+    private static async Task<IResult> GetBrandAsync(string slug, StorefrontComposer composer, CancellationToken cancellationToken)
+    {
+        var page = await composer.GetBrandAsync(slug, cancellationToken);
+        return page is null
+            ? Results.Json(new { title = "Not Found", errorCode = "storefront.brand.missing" }, statusCode: StatusCodes.Status404NotFound)
+            : Results.Json(page);
+    }
+
+    private static async Task<IResult> GetSellersAsync(StorefrontComposer composer, CancellationToken cancellationToken)
+        => Results.Json(await composer.ListPublicSellersAsync(cancellationToken));
+
+    private static async Task<IResult> GetSellerAsync(string publicId, StorefrontComposer composer, CancellationToken cancellationToken)
+    {
+        var page = await composer.GetPublicSellerAsync(publicId, cancellationToken);
+        return page is null
+            ? Results.Json(new { title = "Not Found", errorCode = "storefront.seller.missing" }, statusCode: StatusCodes.Status404NotFound)
+            : Results.Json(page);
+    }
+
+    private static async Task<IResult> GetMerchandisingAsync(string kind, StorefrontComposer composer, CancellationToken cancellationToken)
+        => Results.Json(await composer.GetMerchandisingAsync(kind, cancellationToken));
 
     private static async Task<IResult> GetListingAsync(
         StorefrontComposer composer,

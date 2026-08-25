@@ -126,6 +126,44 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
+    public void Unsupported_merchandising_never_contains_fabricated_products()
+    {
+        var page = StorefrontComposer.UnsupportedMerchandising(
+            "trending",
+            "محبوب‌های روز",
+            "سیگنال معتبر روند وجود ندارد.");
+
+        Assert.False(page.Supported);
+        Assert.Empty(page.Products);
+        Assert.NotNull(page.UnavailableReason);
+    }
+
+    [Fact]
+    public void Public_seller_identity_is_stable_and_does_not_expose_party_id()
+    {
+        var partyId = Guid.Parse("44444444-4444-7444-8444-444444444444");
+
+        var first = StorefrontComposer.CreatePublicSellerId(partyId);
+        var second = StorefrontComposer.CreatePublicSellerId(partyId);
+
+        Assert.Equal(first, second);
+        Assert.DoesNotContain(partyId.ToString("N"), first, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(24, first.Length);
+    }
+
+    [Fact]
+    public void Public_seller_contract_has_no_private_or_authorization_fields()
+    {
+        var names = typeof(StorefrontPublicSellerItem).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("PartyId", names);
+        Assert.DoesNotContain("LegalName", names);
+        Assert.DoesNotContain("Email", names);
+        Assert.DoesNotContain("Phone", names);
+        Assert.DoesNotContain("Settlement", names);
+        Assert.DoesNotContain("Authorization", names);
+    }
+
+    [Fact]
     public void Related_products_exclude_current_product_and_prefer_same_category()
     {
         var current = Guid.Parse("11111111-1111-7111-8111-111111111111");

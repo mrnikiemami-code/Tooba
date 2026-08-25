@@ -33,7 +33,38 @@ export interface StorefrontCategoryItem {
  */
 export interface StorefrontBrandItem {
   brandId: string;
+  slug: string;
   name: string;
+  productCount: number;
+}
+
+/** فروشندهٔ عمومی بدون PartyId، رابطهٔ مجوز، اطلاعات تماس یا دادهٔ تسویه. */
+export interface StorefrontPublicSellerItem {
+  publicId: string;
+  displayName: string;
+  activeOfferCount: number;
+  productCount: number;
+}
+
+/** landing عمومی برند با کارت‌های زندهٔ همان برند. */
+export interface StorefrontBrandPage {
+  brand: StorefrontBrandItem;
+  products: StorefrontProductCard[];
+}
+
+/** پروفایل عمومی فروشنده و کالاهای Offer فعال او. */
+export interface StorefrontPublicSellerPage {
+  seller: StorefrontPublicSellerItem;
+  products: StorefrontProductCard[];
+}
+
+/** پاسخ صریح merchandising؛ Supported مانع ادعای ساختگی برای سیگنال‌های غایب است. */
+export interface StorefrontMerchandisingPage {
+  kind: string;
+  title: string;
+  supported: boolean;
+  unavailableReason: string | null;
+  products: StorefrontProductCard[];
 }
 
 /**

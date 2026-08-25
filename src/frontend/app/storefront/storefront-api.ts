@@ -1,5 +1,6 @@
 import type {
   StorefrontAlternateOffer,
+  StorefrontBrandPage,
   StorefrontBrandItem,
   StorefrontCategoryItem,
   StorefrontHomePage,
@@ -7,8 +8,11 @@ import type {
   StorefrontListingRequest,
   StorefrontListingSort,
   StorefrontOfferCandidate,
+  StorefrontMerchandisingPage,
   StorefrontProductCard,
   StorefrontProductDetailPage,
+  StorefrontPublicSellerItem,
+  StorefrontPublicSellerPage,
 } from "./storefront-model.ts";
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -150,7 +154,43 @@ function mapBrand(value: unknown): StorefrontBrandItem | null {
     return null;
   }
   const brandId = asString(readProp(item, "brandId", "BrandId"));
-  return brandId ? { brandId, name: asString(readProp(item, "name", "Name"), "برند") } : null;
+  return brandId ? {
+    brandId,
+    slug: asString(readProp(item, "slug", "Slug"), brandId),
+    name: asString(readProp(item, "name", "Name"), "برند"),
+    productCount: asNumber(readProp(item, "productCount", "ProductCount")),
+  } : null;
+}
+
+function mapPublicSeller(value: unknown): StorefrontPublicSellerItem | null {
+  const item = asRecord(value);
+  const publicId = item ? asString(readProp(item, "publicId", "PublicId")) : "";
+  return item && publicId ? {
+    publicId,
+    displayName: asString(readProp(item, "displayName", "DisplayName"), "فروشنده"),
+    activeOfferCount: asNumber(readProp(item, "activeOfferCount", "ActiveOfferCount")),
+    productCount: asNumber(readProp(item, "productCount", "ProductCount")),
+  } : null;
+}
+
+/** پاسخ merchandising را طوری نگاشت می‌کند که Supported و فهرست خالیِ unsupported حفظ شوند. */
+export function mapStorefrontMerchandising(payload: unknown, fallbackKind = ""): StorefrontMerchandisingPage | null {
+  const item = asRecord(payload);
+  if (!item) return null;
+  const products = readProp(item, "products", "Products");
+  const reason = readProp(item, "unavailableReason", "UnavailableReason");
+  return {
+    kind: asString(readProp(item, "kind", "Kind"), fallbackKind),
+    title: asString(readProp(item, "title", "Title"), "کالاها"),
+    supported: asBoolean(readProp(item, "supported", "Supported")),
+    unavailableReason: reason == null ? null : asString(reason),
+    products: Array.isArray(products) ? products.map(mapCard).filter((row): row is StorefrontProductCard => row !== null) : [],
+  };
+}
+
+/** DTO عمومی فروشنده را بدون پذیرش PartyId نگاشت می‌کند. */
+export function mapStorefrontPublicSeller(payload: unknown): StorefrontPublicSellerItem | null {
+  return mapPublicSeller(payload);
 }
 
 /**
@@ -340,4 +380,41 @@ export async function loadStorefrontListing(request: StorefrontListingRequest = 
  */
 export async function loadStorefrontDetail(slug: string): Promise<StorefrontProductDetailPage | null> {
   return mapStorefrontDetail(await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}`));
+}
+
+/** صفحهٔ merchandising را با وضعیت پشتیبانی صریح از Host می‌خواند. */
+export async function loadStorefrontMerchandising(kind: string): Promise<StorefrontMerchandisingPage | null> {
+  return mapStorefrontMerchandising(await readJson(`/v1/storefront/merchandising/${encodeURIComponent(kind)}`), kind);
+}
+
+/** فهرست برندهای منتشرشده را از Catalog می‌خواند. */
+export async function loadStorefrontBrands(): Promise<StorefrontBrandItem[] | null> {
+  const payload = await readJson("/v1/storefront/brands");
+  return Array.isArray(payload) ? payload.map(mapBrand).filter((row): row is StorefrontBrandItem => row !== null) : null;
+}
+
+/** landing برند را بدون کپی بازاریابی ساختگی نگاشت می‌کند. */
+export async function loadStorefrontBrand(slug: string): Promise<StorefrontBrandPage | null> {
+  const item = asRecord(await readJson(`/v1/storefront/brands/${encodeURIComponent(slug)}`));
+  const brand = item ? mapBrand(readProp(item, "brand", "Brand")) : null;
+  const products = item ? readProp(item, "products", "Products") : null;
+  return brand && Array.isArray(products)
+    ? { brand, products: products.map(mapCard).filter((row): row is StorefrontProductCard => row !== null) }
+    : null;
+}
+
+/** فهرست فروشندگان عمومی را بدون پذیرش PartyId می‌خواند. */
+export async function loadStorefrontSellers(): Promise<StorefrontPublicSellerItem[] | null> {
+  const payload = await readJson("/v1/storefront/sellers");
+  return Array.isArray(payload) ? payload.map(mapPublicSeller).filter((row): row is StorefrontPublicSellerItem => row !== null) : null;
+}
+
+/** پروفایل عمومی فروشنده را با PublicId مات می‌خواند. */
+export async function loadStorefrontSeller(publicId: string): Promise<StorefrontPublicSellerPage | null> {
+  const item = asRecord(await readJson(`/v1/storefront/sellers/${encodeURIComponent(publicId)}`));
+  const seller = item ? mapPublicSeller(readProp(item, "seller", "Seller")) : null;
+  const products = item ? readProp(item, "products", "Products") : null;
+  return seller && Array.isArray(products)
+    ? { seller, products: products.map(mapCard).filter((row): row is StorefrontProductCard => row !== null) }
+    : null;
 }

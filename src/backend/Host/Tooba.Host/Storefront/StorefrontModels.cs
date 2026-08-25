@@ -43,7 +43,40 @@ public sealed record StorefrontCategoryItem(Guid CategoryId, Guid? ParentCategor
 /// <summary>
 /// برند Catalog برای نوار برند خانه؛ رسانهٔ CMS نیست.
 /// </summary>
-public sealed record StorefrontBrandItem(Guid BrandId, string Name);
+public sealed record StorefrontBrandItem(Guid BrandId, string Slug, string Name, int ProductCount);
+
+/// <summary>
+/// هویت عمومی فروشنده که از شناسهٔ داخلی Party جداست و فقط دادهٔ لازم برای ویترین را حمل می‌کند.
+/// </summary>
+public sealed record StorefrontPublicSellerItem(
+    string PublicId,
+    string DisplayName,
+    int ActiveOfferCount,
+    int ProductCount);
+
+/// <summary>
+/// صفحهٔ عمومی یک برند با کالاهای ترکیب‌شدهٔ همان برند.
+/// </summary>
+public sealed record StorefrontBrandPage(
+    StorefrontBrandItem Brand,
+    IReadOnlyList<StorefrontProductCard> Products);
+
+/// <summary>
+/// صفحهٔ عمومی فروشنده؛ هیچ شناسه، رابطهٔ مجوز، اطلاعات تماس یا دادهٔ تسویهٔ Party را افشا نمی‌کند.
+/// </summary>
+public sealed record StorefrontPublicSellerPage(
+    StorefrontPublicSellerItem Seller,
+    IReadOnlyList<StorefrontProductCard> Products);
+
+/// <summary>
+/// پاسخ مسیر merchandising که پشتیبانی یا نبود صادقانهٔ سیگنال را صریح می‌کند.
+/// </summary>
+public sealed record StorefrontMerchandisingPage(
+    string Kind,
+    string Title,
+    bool Supported,
+    string? UnavailableReason,
+    IReadOnlyList<StorefrontProductCard> Products);
 
 /// <summary>
 /// صفحهٔ خانه با بنر نمایشی ایستا و کارت‌های زندهٔ Catalog/Offer.

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -73,15 +75,144 @@ public sealed class StorefrontComposer
     /// </summary>
     public async Task<IReadOnlyList<StorefrontBrandItem>> ListBrandsAsync(CancellationToken cancellationToken)
     {
-        var brands = await _catalog.Brands.AsNoTracking().ToListAsync(cancellationToken);
+        var brands = await _catalog.Brands.AsNoTracking()
+            .Where(brand => brand.Status == CatalogPublicationStatus.Published)
+            .ToListAsync(cancellationToken);
         var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brands.Select(x => x.BrandId).ToList(), cancellationToken);
+        var productCounts = await _catalog.Products.AsNoTracking()
+            .Where(product => product.Status == CatalogPublicationStatus.Published && product.BrandId != null)
+            .GroupBy(product => product.BrandId!.Value)
+            .Select(group => new { BrandId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.BrandId, row => row.Count, cancellationToken);
         return brands
             .Select(brand => new StorefrontBrandItem(
                 brand.BrandId,
-                names.GetValueOrDefault(brand.BrandId) ?? brand.SlugSeam ?? "برند"))
+                brand.SlugSeam ?? brand.BrandId.ToString("N"),
+                names.GetValueOrDefault(brand.BrandId) ?? brand.SlugSeam ?? "برند",
+                productCounts.GetValueOrDefault(brand.BrandId)))
             .OrderBy(item => item.Name, StringComparer.Ordinal)
             .Take(24)
             .ToList();
+    }
+
+    /// <summary>
+    /// landing عمومی برند را فقط برای برند منتشرشده می‌سازد؛ متن بازاریابی ساختگی تولید نمی‌شود.
+    /// </summary>
+    public async Task<StorefrontBrandPage?> GetBrandAsync(string slug, CancellationToken cancellationToken)
+    {
+        var brands = await ListBrandsAsync(cancellationToken);
+        var brand = brands.FirstOrDefault(item => string.Equals(item.Slug, slug, StringComparison.OrdinalIgnoreCase));
+        if (brand is null)
+        {
+            return null;
+        }
+
+        var productIds = await _catalog.Products.AsNoTracking()
+            .Where(product => product.Status == CatalogPublicationStatus.Published && product.BrandId == brand.BrandId)
+            .Select(product => product.ProductId)
+            .ToListAsync(cancellationToken);
+        var cards = await BuildProductCardsAsync(cancellationToken);
+        return new StorefrontBrandPage(brand, cards.Where(card => productIds.Contains(card.ProductId)).ToList());
+    }
+
+    /// <summary>
+    /// فروشندگان عمومی را صرفاً از Offerهای فعال و قابل‌ترکیب استخراج می‌کند؛ شناسهٔ Party با کلید عمومی هش‌شده جایگزین می‌شود.
+    /// </summary>
+    public async Task<IReadOnlyList<StorefrontPublicSellerItem>> ListPublicSellersAsync(CancellationToken cancellationToken)
+    {
+        var activeOffers = await _offers.Offers.AsNoTracking()
+            .Where(offer => offer.Status == OfferStatus.Active)
+            .ToListAsync(cancellationToken);
+        var variants = await _catalog.Variants.AsNoTracking()
+            .Where(variant => activeOffers.Select(offer => offer.CatalogVariantId).Contains(variant.VariantId))
+            .ToDictionaryAsync(variant => variant.VariantId, variant => variant.ProductId, cancellationToken);
+        var sellers = new List<StorefrontPublicSellerItem>();
+        foreach (var group in activeOffers.GroupBy(offer => offer.SellerPartyId))
+        {
+            var cards = await BuildProductCardsAsync(cancellationToken, group.Key);
+            if (cards.Count == 0)
+            {
+                continue;
+            }
+
+            var party = await _parties.FindByIdAsync(group.Key, cancellationToken);
+            sellers.Add(new StorefrontPublicSellerItem(
+                CreatePublicSellerId(group.Key),
+                party?.DisplayName ?? "فروشنده",
+                group.Count(offer => variants.ContainsKey(offer.CatalogVariantId)),
+                cards.Select(card => card.ProductId).Distinct().Count()));
+        }
+
+        return sellers
+            .OrderBy(item => item.DisplayName, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>
+    /// پروفایل عمومی فروشنده را با کلید عمومی resolve می‌کند و فقط کارت‌های Offer فعال او را برمی‌گرداند.
+    /// </summary>
+    public async Task<StorefrontPublicSellerPage?> GetPublicSellerAsync(string publicId, CancellationToken cancellationToken)
+    {
+        var activeOffers = await _offers.Offers.AsNoTracking()
+            .Where(offer => offer.Status == OfferStatus.Active)
+            .ToListAsync(cancellationToken);
+        var sellerPartyId = activeOffers.Select(offer => offer.SellerPartyId).Distinct().FirstOrDefault(partyId =>
+            string.Equals(CreatePublicSellerId(partyId), publicId, StringComparison.OrdinalIgnoreCase));
+        if (sellerPartyId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var sellerCards = await BuildProductCardsAsync(cancellationToken, sellerPartyId);
+        if (sellerCards.Count == 0)
+        {
+            return null;
+        }
+
+        var seller = new StorefrontPublicSellerItem(
+            publicId,
+            sellerCards[0].SellerDisplayName,
+            activeOffers.Count(offer => offer.SellerPartyId == sellerPartyId),
+            sellerCards.Select(card => card.ProductId).Distinct().Count());
+        return new StorefrontPublicSellerPage(seller, sellerCards);
+    }
+
+    /// <summary>
+    /// مسیرهای merchandising را با سیگنال موجود می‌سازد؛ مسیرهای فاقد تحلیل فروش/بازدید صریحاً unsupported می‌مانند.
+    /// </summary>
+    public async Task<StorefrontMerchandisingPage> GetMerchandisingAsync(string kind, CancellationToken cancellationToken)
+    {
+        var normalized = kind.Trim().ToLowerInvariant();
+        var cards = await BuildProductCardsAsync(cancellationToken);
+        return normalized switch
+        {
+            "new-products" => new(normalized, "محصولات جدید", true, null, cards.Take(24).ToList()),
+            "offers" or "sale" => new(
+                normalized,
+                normalized == "sale" ? "فروش ویژه" : "پیشنهادها",
+                true,
+                null,
+                cards.Where(card => card.PromotionalAmountExclusiveOfTax is not null).Take(24).ToList()),
+            "best-seller" => UnsupportedMerchandising(normalized, "پرفروش‌ترین‌ها", "سیگنال معتبر فروش تجمیعی هنوز در دسترس نیست."),
+            "most-viewed" => UnsupportedMerchandising(normalized, "پربازدیدترین‌ها", "سیگنال معتبر بازدید هنوز در دسترس نیست."),
+            "trending" => UnsupportedMerchandising(normalized, "محبوب‌های روز", "سیگنال معتبر روند هنوز در دسترس نیست."),
+            _ => UnsupportedMerchandising(normalized, "کالاها", "این مسیر پشتیبانی نمی‌شود."),
+        };
+    }
+
+    /// <summary>
+    /// حالت unsupported را بدون محصول یا رتبه‌بندی ساختگی ایجاد می‌کند.
+    /// </summary>
+    internal static StorefrontMerchandisingPage UnsupportedMerchandising(string kind, string title, string reason)
+        => new(kind, title, false, reason, []);
+
+    /// <summary>
+    /// از PartyId یک شناسهٔ عمومی یک‌طرفه می‌سازد تا شناسهٔ داخلی در URL یا JSON افشا نشود.
+    /// </summary>
+    internal static string CreatePublicSellerId(Guid partyId)
+    {
+        var digest = SHA256.HashData(Encoding.UTF8.GetBytes($"tooba-public-seller:{partyId:N}"));
+        return Convert.ToHexString(digest[..12]).ToLowerInvariant();
     }
 
     /// <summary>
@@ -264,16 +395,18 @@ public sealed class StorefrontComposer
             .Take(10)
             .ToList();
 
-    private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<StorefrontProductCard>> BuildProductCardsAsync(
+        CancellationToken cancellationToken,
+        Guid? preferredSellerPartyId = null)
     {
         var products = await _catalog.Products.AsNoTracking()
             .Where(x => x.Status == CatalogPublicationStatus.Published)
-            .OrderByDescending(x => x.UpdatedAt)
+            .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
         var cards = new List<StorefrontProductCard>();
         foreach (var product in products)
         {
-            var composed = await ComposeProductAsync(product, cancellationToken);
+            var composed = await ComposeProductAsync(product, cancellationToken, preferredSellerPartyId);
             if (composed is null)
             {
                 continue;
@@ -287,7 +420,8 @@ public sealed class StorefrontComposer
 
     private async Task<(StorefrontProductCard Card, StorefrontOfferCandidate Primary, IReadOnlyList<StorefrontAlternateOffer> Others, string? Description, string? Brand, IReadOnlyList<Guid> Media, Guid VariantId)?> ComposeProductAsync(
         CatalogProduct product,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? preferredSellerPartyId = null)
     {
         var now = DateTimeOffset.UtcNow;
         var title = (await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, [product.ProductId], cancellationToken))
@@ -379,7 +513,10 @@ public sealed class StorefrontComposer
                 taxLabel));
         }
 
-        var primary = StorefrontPrimaryOfferResolver.Resolve(candidates);
+        var resolvableCandidates = preferredSellerPartyId is Guid sellerPartyId
+            ? candidates.Where(candidate => candidate.SellerPartyId == sellerPartyId).ToList()
+            : candidates;
+        var primary = StorefrontPrimaryOfferResolver.Resolve(resolvableCandidates);
         if (primary is null)
         {
             return null;
