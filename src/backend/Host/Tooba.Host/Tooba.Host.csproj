@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\Modules\Order\Tooba.Order.Infrastructure\Tooba.Order.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Tax\Tooba.Tax.Infrastructure\Tooba.Tax.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Promotion\Tooba.Promotion.Infrastructure\Tooba.Promotion.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Reviews\Tooba.Reviews.Infrastructure\Tooba.Reviews.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Infrastructure\Tooba.Payment.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>

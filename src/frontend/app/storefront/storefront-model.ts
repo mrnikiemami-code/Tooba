@@ -17,6 +17,10 @@ export interface StorefrontProductCard {
   availableUnits: number;
   inStock: boolean;
   promotionLabel: string | null;
+  /** میانگین مقتدر امتیازهای منتشرشده؛ در نبود امتیاز null است. */
+  averageRating: number | null;
+  /** تعداد مقتدر نظرهای منتشرشده. */
+  reviewCount: number;
 }
 
 /**
@@ -194,4 +198,44 @@ export interface StorefrontProductDetailPage {
   cartMutationEnabled: boolean;
   promotionalAmountExclusiveOfTax?: number | null;
   promotionLabel?: string | null;
+  /** میانگین مقتدر امتیازهای منتشرشده از Host. */
+  averageRating: number | null;
+  /** تعداد مقتدر نظرهای منتشرشده از Host. */
+  reviewCount: number;
+}
+
+/** یک سطر توزیع امتیاز منتشرشده که شمارش آن از Host می‌آید. */
+export interface StorefrontRatingDistribution {
+  rating: number;
+  count: number;
+}
+
+/** نظر عمومی منتشرشده؛ عمداً هیچ شناسهٔ Actor، User یا Party ندارد. */
+export interface StorefrontPublicReview {
+  publicId: string;
+  authorDisplayName: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  createdAt: string;
+  verifiedPurchase: boolean;
+}
+
+/** صفحهٔ عمومی نظرها با آمار مقتدر و صفحه‌بندی Host. */
+export interface StorefrontReviewsPage {
+  averageRating: number | null;
+  reviewCount: number;
+  ratingDistribution: StorefrontRatingDistribution[];
+  reviews: StorefrontPublicReview[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+/** فرمان ثبت نظر مشتری؛ نام نویسنده از نشست احراز‌شده می‌آید. */
+export interface StorefrontReviewSubmission {
+  productId: string;
+  rating: number;
+  title?: string;
+  body: string;
 }

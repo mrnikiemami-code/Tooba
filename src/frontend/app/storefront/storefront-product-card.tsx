@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Star } from "lucide-react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 
@@ -44,6 +44,13 @@ export function StorefrontProductCardView({ card }: { card: StorefrontProductCar
           ) : null}
         </div>
         <p className="text-[10px] text-gray-500">{card.sellerDisplayName}</p>
+        {card.reviewCount > 0 && card.averageRating !== null ? (
+          <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
+            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+            <strong className="text-gray-700">{card.averageRating.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}</strong>
+            ({card.reviewCount.toLocaleString("fa-IR")})
+          </span>
+        ) : null}
         <span
           className={`mt-auto inline-flex items-center justify-center gap-1 h-8 rounded-lg text-[11px] font-bold ${
             card.inStock ? "bg-[#2563EB] text-white" : "bg-gray-100 text-gray-400"

@@ -11,6 +11,7 @@ using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Promotion.Application;
 using Tooba.Tax.Infrastructure.Persistence;
+using Tooba.Reviews.Application;
 
 namespace Tooba.Host.Storefront;
 
@@ -27,6 +28,7 @@ public sealed class StorefrontComposer
     private readonly TaxDbContext _tax;
     private readonly IPartyLookupGateway _parties;
     private readonly IPromotionEvaluator _promotions;
+    private readonly IReviewDirectory _reviews;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -38,7 +40,8 @@ public sealed class StorefrontComposer
         InventoryDbContext inventory,
         TaxDbContext tax,
         IPartyLookupGateway parties,
-        IPromotionEvaluator promotions)
+        IPromotionEvaluator promotions,
+        IReviewDirectory reviews)
     {
         _catalog = catalog;
         _offers = offers;
@@ -47,6 +50,7 @@ public sealed class StorefrontComposer
         _tax = tax;
         _parties = parties;
         _promotions = promotions;
+        _reviews = reviews;
     }
 
     /// <summary>
@@ -364,6 +368,8 @@ public sealed class StorefrontComposer
             await BuildProductCardsAsync(cancellationToken),
             product.ProductId,
             card.CategoryId);
+        var reviewSummaries = await _reviews.GetPublishedSummariesAsync([product.ProductId], cancellationToken);
+        var reviewSummary = reviewSummaries.GetValueOrDefault(product.ProductId);
         var seoTitle = string.IsNullOrWhiteSpace(product.SeoTitleSeam) ? card.Title : product.SeoTitleSeam;
         var seoDescription = string.IsNullOrWhiteSpace(shortDescription)
             ? $"{card.Title} از {card.SellerDisplayName}"
@@ -388,7 +394,9 @@ public sealed class StorefrontComposer
             relatedProducts,
             seoTitle!,
             seoDescription,
-            CartMutationEnabled: true);
+            CartMutationEnabled: true,
+            AverageRating: reviewSummary?.AverageRating,
+            ReviewCount: reviewSummary?.ReviewCount ?? 0);
     }
 
     /// <summary>
@@ -424,7 +432,12 @@ public sealed class StorefrontComposer
             cards.Add(composed.Value.Card);
         }
 
-        return cards;
+        var summaries = await _reviews.GetPublishedSummariesAsync(cards.Select(x => x.ProductId).ToArray(), cancellationToken);
+        return cards.Select(card =>
+        {
+            var summary = summaries.GetValueOrDefault(card.ProductId);
+            return card with { AverageRating = summary?.AverageRating, ReviewCount = summary?.ReviewCount ?? 0 };
+        }).ToList();
     }
 
     private async Task<(StorefrontProductCard Card, StorefrontOfferCandidate Primary, IReadOnlyList<StorefrontAlternateOffer> Others, string? ShortDescription, string? FullDescription, string? Brand, IReadOnlyList<Guid> Media, Guid VariantId, IReadOnlyList<StorefrontProductSpecification> Specifications, IReadOnlyList<StorefrontProductVariant> Variants)?> ComposeProductAsync(

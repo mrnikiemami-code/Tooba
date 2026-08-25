@@ -11,12 +11,14 @@ import {
   Plus,
   Share2,
   ShoppingBag,
+  Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatOfferAmount, loadStorefrontDetail, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
+import { StorefrontPdpReviews } from "./storefront-pdp-reviews.tsx";
 
 /**
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
@@ -36,7 +38,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
     { id: "intro" as const, label: "معرفی اجمالی" },
     { id: "full" as const, label: "معرفی تکمیلی" },
     { id: "specs" as const, label: "مشخصات فنی" },
-    { id: "reviews" as const, label: "نظرات" },
+    { id: "reviews" as const, label: "نظرات", count: currentDetail.reviewCount },
   ];
 
   return (
@@ -85,6 +87,17 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             </div>
             <h1 className="text-xl lg:text-2xl font-extrabold text-gray-900 leading-9">{currentDetail.title}</h1>
             <p className="text-sm text-gray-500 leading-6">{currentDetail.shortDescription ?? "معرفی اجمالی برای این کالا ثبت نشده است."}</p>
+            {currentDetail.reviewCount > 0 && currentDetail.averageRating !== null ? (
+              <button type="button" onClick={() => setTab("reviews")} className="flex items-center gap-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-1.5">
+                  <Star className="size-4 fill-amber-400 text-amber-400" />
+                  <strong className="text-gray-800">{currentDetail.averageRating.toLocaleString("fa-IR", { maximumFractionDigits: 1 })}</strong>
+                  از ۵
+                </span>
+                <span>({currentDetail.reviewCount.toLocaleString("fa-IR")} دیدگاه)</span>
+                <span className="text-[#2563EB]">مشاهده نظرات</span>
+              </button>
+            ) : null}
             {currentDetail.variants.some((variant) => variant.options.length > 0) ? (
               <div className="space-y-2 min-w-0">
                 <p className="text-sm font-bold text-gray-700">انتخاب گزینه</p>
@@ -246,6 +259,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               }`}
             >
               {item.label}
+              {(item.count ?? 0) > 0 ? <span className="mr-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px]">{item.count?.toLocaleString("fa-IR")}</span> : null}
             </button>
           ))}
         </div>
@@ -262,7 +276,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               </dl>
             ) : <p>مشخصاتی برای این کالا ثبت نشده است.</p>
           ) : tab === "reviews" ? (
-            <p>امکان ثبت و نمایش نظر برای این کالا در حال حاضر در دسترس نیست.</p>
+            <StorefrontPdpReviews detail={currentDetail} />
           ) : tab === "full" ? (
             <p>{currentDetail.fullDescription ?? "معرفی تکمیلی برای این کالا ثبت نشده است."}</p>
           ) : (

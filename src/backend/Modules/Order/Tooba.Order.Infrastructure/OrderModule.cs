@@ -29,6 +29,7 @@ public sealed class OrderModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, OrderOutboxRegistration>();
         services.AddScoped<IOrderUseCaseGuard, OpenOrderUseCaseGuard>();
         services.AddScoped<ICheckoutDirectory, CheckoutDirectory>();
+        services.AddScoped<IOrderPurchaseVerificationGateway, OrderPurchaseVerificationGateway>();
         services.AddScoped<IPayableCheckoutReader, OrderPaymentBridge>();
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();

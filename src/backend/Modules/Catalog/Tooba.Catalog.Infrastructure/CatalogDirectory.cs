@@ -48,6 +48,54 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<ReviewableProductReference?> FindReviewableProductBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return null;
+        }
+
+        var normalized = slug.Trim().ToLowerInvariant();
+        var productId = await _db.Products.AsNoTracking()
+            .Where(x => x.SlugSeam == normalized)
+            .Select(x => (Guid?)x.ProductId)
+            .SingleOrDefaultAsync(cancellationToken);
+        return productId is null ? null : await FindReviewableProductByIdAsync(productId.Value, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ReviewableProductReference?> FindReviewableProductByIdAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        var product = await _db.Products.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => new { x.ProductId, x.SlugSeam, x.Status, VariantIds = x.Variants.Select(v => v.VariantId).ToArray() })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (product is null) return null;
+        var titles = await GetProductTitlesAsync([productId], cancellationToken);
+        var slug = product.SlugSeam ?? product.ProductId.ToString("N");
+        return new ReviewableProductReference(product.ProductId, slug, titles.GetValueOrDefault(productId) ?? slug, product.Status, product.VariantIds);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> GetProductTitlesAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0) return new Dictionary<Guid, string>();
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && x.FieldKey == "name" && productIds.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.First().Value);
+    }
+
+    /// <inheritdoc />
     public async Task<CategoryReference> CreateCategoryAsync(
         Guid? parentCategoryId,
         IReadOnlyDictionary<string, string> localizedNames,

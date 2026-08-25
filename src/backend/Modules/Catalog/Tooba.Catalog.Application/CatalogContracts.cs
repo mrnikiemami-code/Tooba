@@ -7,6 +7,14 @@ namespace Tooba.Catalog.Application;
 /// </summary>
 public sealed record ProductReference(Guid ProductId, CatalogProductKind Kind, CatalogPublicationStatus Status);
 
+/// <summary>مرجع محصول برای Reviews شامل گونه‌های Catalog و بدون نشت موجودیت EF.</summary>
+public sealed record ReviewableProductReference(
+    Guid ProductId,
+    string Slug,
+    string Title,
+    CatalogPublicationStatus Status,
+    IReadOnlyList<Guid> VariantIds);
+
 /// <summary>
 /// مرجع گونهٔ Catalog. هویت Offer فروشنده نیست.
 /// </summary>
@@ -36,6 +44,17 @@ public interface ICatalogLookupGateway
     /// گونه را پیدا می‌کند.
     /// </summary>
     Task<VariantReference?> FindVariantAsync(Guid variantId, CancellationToken cancellationToken);
+
+    /// <summary>محصول را با slug پایدار همراه شناسهٔ گونه‌ها برای اثبات خرید پیدا می‌کند.</summary>
+    Task<ReviewableProductReference?> FindReviewableProductBySlugAsync(string slug, CancellationToken cancellationToken);
+
+    /// <summary>محصول قابل بررسی را با شناسهٔ Catalog پیدا می‌کند.</summary>
+    Task<ReviewableProductReference?> FindReviewableProductByIdAsync(Guid productId, CancellationToken cancellationToken);
+
+    /// <summary>عنوان امن و محلی محصولات را برای ترکیب صف مدیریت به‌صورت گروهی می‌خواند.</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetProductTitlesAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -8,6 +8,9 @@ import {
   mapStorefrontListing,
   mapStorefrontMerchandising,
   mapStorefrontPublicSeller,
+  mapStorefrontReviews,
+  submitStorefrontReview,
+  StorefrontReviewApiError,
 } from "./storefront-api.ts";
 import { buildProductStructuredData } from "./storefront-product-seo.ts";
 
@@ -33,6 +36,8 @@ test("home mapper keeps offer amount off a product price field", () => {
         currency: "IRR",
         availableUnits: 4,
         inStock: true,
+        averageRating: 4.2,
+        reviewCount: 8,
       },
     ],
     specialOffers: [
@@ -57,6 +62,10 @@ test("home mapper keeps offer amount off a product price field", () => {
     productRail: [],
   });
   assert.equal(home?.featuredProducts[0]?.offerAmountExclusiveOfTax, 1850000);
+  assert.equal(home?.featuredProducts[0]?.averageRating, 4.2);
+  assert.equal(home?.featuredProducts[0]?.reviewCount, 8);
+  assert.equal(home?.specialOffers[0]?.averageRating, null);
+  assert.equal(home?.specialOffers[0]?.reviewCount, 0);
   assert.equal(home?.brands[0]?.name, "آرمان");
   assert.equal(home?.categories[1]?.parentCategoryId, "c1");
   assert.equal(home?.specialOffers[0]?.promotionLabel, "جشنواره تابستان");
@@ -122,7 +131,7 @@ test("detail mapper reads amount from primary offer only", () => {
     ],
     seoTitle: "پیراهن",
     seoDescription: "کالای زنده",
-    rating: 4.5,
+    averageRating: 4.5,
     reviewCount: 12,
     cartMutationEnabled: false,
   });
@@ -131,8 +140,8 @@ test("detail mapper reads amount from primary offer only", () => {
   assert.equal(detail?.fullDescription, "شرح کامل واقعی");
   assert.deepEqual(detail?.specifications, [{ label: "جنس", value: "لینن" }]);
   assert.equal(detail?.variants[0]?.options[0]?.value, "آبی");
-  assert.equal("rating" in (detail ?? {}), false);
-  assert.equal("reviewCount" in (detail ?? {}), false);
+  assert.equal(detail?.averageRating, 4.5);
+  assert.equal(detail?.reviewCount, 12);
   assert.equal(detail?.otherSellers.length, 1);
   assert.equal(detail?.relatedProducts[0]?.slug, "related-shirt");
   assert.equal(detail?.cartMutationEnabled, false);
@@ -142,9 +151,59 @@ test("detail mapper reads amount from primary offer only", () => {
   assert.equal(structuredData.includes("p1"), false);
   assert.equal(structuredData.includes("o-cheap"), false);
   assert.equal(structuredData.includes("s2"), false);
-  assert.equal(structuredData.includes("AggregateRating"), false);
-  assert.equal(structuredData.includes("reviewCount"), false);
+  assert.equal(structuredData.includes("AggregateRating"), true);
+  assert.equal(structuredData.includes('"reviewCount":12'), true);
   assert.match(structuredData, /"url":"\/products\/shirt"/);
+});
+
+test("maps only public review contract and backend aggregate", () => {
+  const page = mapStorefrontReviews({
+    AverageRating: 4.5,
+    ReviewCount: 2,
+    RatingDistribution: { 5: 1, 4: 1 },
+    Reviews: [{
+      ReviewId: "public-r1",
+      AuthorDisplayName: "مینا",
+      Rating: 5,
+      Title: "خوب",
+      Body: "کیفیت کالا بسیار خوب بود.",
+      CreatedAt: "2026-08-25T00:00:00Z",
+      VerifiedPurchase: true,
+      ActorUserId: "internal-user",
+      ModerationNotes: "private",
+    }],
+    Page: 1, PageSize: 10, TotalCount: 2,
+  });
+  assert.equal(page?.averageRating, 4.5);
+  assert.equal(page?.ratingDistribution[0]?.count, 1);
+  assert.equal(page?.reviews[0]?.verifiedPurchase, true);
+  assert.equal("ActorUserId" in (page?.reviews[0] ?? {}), false);
+  assert.equal("ModerationNotes" in (page?.reviews[0] ?? {}), false);
+});
+
+test("zero reviews do not emit aggregate rating", () => {
+  const detail = mapStorefrontDetail({
+    productId: "p", primaryOffer: { offerId: "o" }, reviewCount: 0, averageRating: null,
+  });
+  assert.ok(detail);
+  assert.equal("aggregateRating" in buildProductStructuredData(detail, "/products/p"), false);
+});
+
+test("review submission sends exact payload and exposes auth/conflict statuses", async () => {
+  const originalFetch = globalThis.fetch;
+  for (const status of [401, 403, 409]) {
+    let body = "";
+    globalThis.fetch = (async (_input, init) => {
+      body = String(init?.body);
+      return new Response(null, { status });
+    }) as typeof fetch;
+    await assert.rejects(
+      submitStorefrontReview({ productId: "p1", rating: 5, title: "عالی", body: "حداقل ده کاراکتر متن" }),
+      (error) => error instanceof StorefrontReviewApiError && error.status === status,
+    );
+    assert.deepEqual(JSON.parse(body), { productId: "p1", rating: 5, title: "عالی", body: "حداقل ده کاراکتر متن" });
+  }
+  globalThis.fetch = originalFetch;
 });
 
 test("detail loader sends selected variant only to the authoritative endpoint", async () => {

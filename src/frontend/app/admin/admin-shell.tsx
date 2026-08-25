@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Bell, LayoutDashboard, Menu, Package, Search, ShoppingBag, Store, Users, X } from "lucide-react";
+import { Bell, LayoutDashboard, Menu, Package, Search, ShoppingBag, Star, Store, Users, X } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
 
 const nav = [
@@ -12,6 +12,7 @@ const nav = [
   { href: "/admin/orders", label: "سفارش‌ها", icon: ShoppingBag, exact: false },
   { href: "/admin/sellers", label: "فروشندگان", icon: Store, exact: false },
   { href: "/admin/customers", label: "مشتریان", icon: Users, exact: false },
+  { href: "/admin/reviews", label: "نظرات", icon: Star, exact: false },
 ];
 
 /**

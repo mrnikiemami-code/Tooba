@@ -4,9 +4,9 @@
 PIPELINE-PROTOCOL: BRIDGE-V2
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T010
+Last Architect Accepted Product Task: TB-P05-T011
 Governance: TB-P05-GOV-MIGRATION-BRIDGE-V2 = ACCEPTED
-Current Product Task: TB-P05-T011 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT
+Current Product Task: TB-P05-T012 Bridge-V2 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -61,6 +61,9 @@ Historical Task and Result artifacts may contain legacy Cursor/chat pipeline
 syntax. Preserve them as prior-execution evidence; they are not current
 operational instructions.
 
-P00–P04 remain complete. P05 remains in progress. Shopeiva decisions, module
-boundaries, accepted architecture, deferred Payment/Cart concerns, and the
-locked PDP follow-up remain unchanged.
+P00–P04 remain complete. P05 remains in progress. TB-P05-T010 and TB-P05-T011
+are ACCEPTED. TB-P05-T012 is AWAITING_ARCHITECT_ACCEPT with live Reviews
+ownership, Published-only public ratings, Pending submission, Admin moderation,
+product-card rating, conditional AggregateRating, and evidence under
+`docs/evidence/TB-P05-T012/`. Shopeiva decisions, module boundaries, accepted
+architecture, and deferred Payment/Cart concerns remain unchanged.

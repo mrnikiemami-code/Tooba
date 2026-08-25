@@ -33,7 +33,9 @@ public sealed record StorefrontProductCard(
     string Currency,
     int AvailableUnits,
     bool InStock,
-    string? PromotionLabel);
+    string? PromotionLabel,
+    decimal? AverageRating = null,
+    long ReviewCount = 0);
 
 /// <summary>
 /// ردهٔ منتشرشده برای ناوبری فروشگاه. رابطهٔ والد از Catalog می‌آید و مسیر landing همان فیلتر پایدار رده است.
@@ -168,7 +170,9 @@ public sealed record StorefrontProductDetailPage(
     IReadOnlyList<StorefrontProductCard> RelatedProducts,
     string SeoTitle,
     string SeoDescription,
-    bool CartMutationEnabled);
+    bool CartMutationEnabled,
+    decimal? AverageRating = null,
+    long ReviewCount = 0);
 
 /// <summary>
 /// ورودی قطعی انتخاب Offer نمایشی تا UI اولین ردیف جدول را حدس نزند.

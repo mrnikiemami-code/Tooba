@@ -22,6 +22,8 @@ using Tooba.Promotion.Infrastructure.Persistence;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Persistence;
+using Tooba.Reviews.Infrastructure.Persistence;
+using Tooba.Reviews.Infrastructure;
 
 namespace Tooba.Host.Admin;
 
@@ -74,6 +76,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
         await MigrateAsync(provider.GetRequiredService<PlatformProbeDbContext>());
+        await MigrateAsync(provider.GetRequiredService<ReviewsDbContext>());
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
@@ -82,6 +85,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await RefreshOperatorFacingCopyAsync(catalogDb, partyDb);
             await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
+            await ReviewsDevelopmentSeed.ApplyAsync(provider);
             return;
         }
 
@@ -174,6 +178,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         await Seller.SellerDevActorBootstrap.EnsureAsync(provider, cancellation);
         await AdminDevActorBootstrap.EnsureAsync(provider, cancellation);
+        await ReviewsDevelopmentSeed.ApplyAsync(provider, cancellation);
     }
 
     /// <summary>

@@ -113,7 +113,7 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
-    public void Detail_contract_exposes_descriptions_specifications_and_backend_resolved_variants_without_reviews()
+    public void Detail_contract_exposes_descriptions_variants_and_truthful_review_aggregate()
     {
         var names = typeof(StorefrontProductDetailPage).GetProperties()
             .Select(item => item.Name)
@@ -125,7 +125,8 @@ public sealed class StorefrontCompositionTests
         Assert.Contains("Variants", names);
         Assert.Contains("SelectedVariantId", names);
         Assert.Contains("PromotionalAmountExclusiveOfTax", names);
-        Assert.DoesNotContain("Rating", names);
+        Assert.Contains("AverageRating", names);
+        Assert.Contains("ReviewCount", names);
         Assert.DoesNotContain("RatingAggregate", names);
         Assert.DoesNotContain("Reviews", names);
 

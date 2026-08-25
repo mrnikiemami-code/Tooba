@@ -15,6 +15,7 @@ using Tooba.Host.Admin;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
+using Tooba.Host.Reviews;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -191,6 +192,7 @@ app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();
+app.MapReviewEndpoints();
 
 app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 app.MapGet("/ready", (IServiceProvider services) =>

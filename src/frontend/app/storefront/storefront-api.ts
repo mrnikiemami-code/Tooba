@@ -15,6 +15,9 @@ import type {
   StorefrontProductVariant,
   StorefrontPublicSellerItem,
   StorefrontPublicSellerPage,
+  StorefrontPublicReview,
+  StorefrontReviewsPage,
+  StorefrontReviewSubmission,
 } from "./storefront-model.ts";
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -81,6 +84,7 @@ function mapCard(value: unknown): StorefrontProductCard | null {
   const mediaRaw = readProp(item, "mediaAssetId", "MediaAssetId");
   const promoRaw = readProp(item, "promotionLabel", "PromotionLabel");
   const promotionalAmountRaw = readProp(item, "promotionalAmountExclusiveOfTax", "PromotionalAmountExclusiveOfTax");
+  const averageRatingRaw = readProp(item, "averageRating", "AverageRating");
   return {
     productId,
     slug: asString(readProp(item, "slug", "Slug"), productId),
@@ -107,6 +111,8 @@ function mapCard(value: unknown): StorefrontProductCard | null {
             return hostPromo == null ? null : asString(hostPromo);
           })()
         : asString(promoRaw),
+    averageRating: averageRatingRaw == null ? null : asNumber(averageRatingRaw),
+    reviewCount: Math.max(0, asNumber(readProp(item, "reviewCount", "ReviewCount"))),
   };
 }
 
@@ -152,6 +158,91 @@ function mapOffer(value: unknown): StorefrontOfferCandidate | null {
     promotionalAmountExclusiveOfTax: promotionalAmountRaw == null ? null : asNumber(promotionalAmountRaw),
     promotionLabel: promotionLabelRaw == null ? null : asString(promotionLabelRaw),
   };
+}
+
+/** پاسخ عمومی نظرها را بدون پذیرش داده‌های هویتی یا یادداشت تعدیل نگاشت می‌کند. */
+export function mapStorefrontReviews(payload: unknown): StorefrontReviewsPage | null {
+  const item = asRecord(payload);
+  if (!item) return null;
+  const averageRaw = readProp(item, "averageRating", "AverageRating");
+  const reviewsRaw = readProp(item, "reviews", "Reviews");
+  const distributionRaw = readProp(item, "ratingDistribution", "RatingDistribution");
+  const reviews: StorefrontPublicReview[] = Array.isArray(reviewsRaw) ? reviewsRaw.flatMap((value) => {
+    const review = asRecord(value);
+    if (!review) return [];
+    const publicId = asString(readProp(review, "publicId", "PublicId") ?? readProp(review, "reviewId", "ReviewId"));
+    const body = asString(readProp(review, "body", "Body")).trim();
+    const rating = asNumber(readProp(review, "rating", "Rating"));
+    if (!publicId || !body || rating < 1 || rating > 5) return [];
+    const titleRaw = readProp(review, "title", "Title");
+    return [{
+      publicId,
+      authorDisplayName: asString(readProp(review, "authorDisplayName", "AuthorDisplayName"), "مشتری توبا"),
+      rating: Math.trunc(rating),
+      title: titleRaw == null || !asString(titleRaw).trim() ? null : asString(titleRaw).trim(),
+      body,
+      createdAt: asString(readProp(review, "createdAt", "CreatedAt")),
+      verifiedPurchase: asBoolean(readProp(review, "verifiedPurchase", "VerifiedPurchase")),
+    }];
+  }) : [];
+  const distribution = new Map<number, number>();
+  if (Array.isArray(distributionRaw)) {
+    distributionRaw.forEach((value) => {
+      const row = asRecord(value);
+      const rating = row ? asNumber(readProp(row, "rating", "Rating")) : 0;
+      if (rating >= 1 && rating <= 5) distribution.set(rating, Math.max(0, asNumber(readProp(row!, "count", "Count"))));
+    });
+  } else {
+    const keyed = asRecord(distributionRaw);
+    if (keyed) Object.entries(keyed).forEach(([key, value]) => {
+      const rating = Number(key);
+      if (rating >= 1 && rating <= 5) distribution.set(rating, Math.max(0, asNumber(value)));
+    });
+  }
+  return {
+    averageRating: averageRaw == null ? null : asNumber(averageRaw),
+    reviewCount: Math.max(0, asNumber(readProp(item, "reviewCount", "ReviewCount"))),
+    ratingDistribution: [5, 4, 3, 2, 1].map((rating) => ({ rating, count: distribution.get(rating) ?? 0 })),
+    reviews,
+    page: Math.max(1, asNumber(readProp(item, "page", "Page"), 1)),
+    pageSize: Math.max(1, asNumber(readProp(item, "pageSize", "PageSize"), 10)),
+    totalCount: Math.max(0, asNumber(readProp(item, "totalCount", "TotalCount"))),
+  };
+}
+
+/** خطای قابل‌تفکیک ثبت نظر، شامل وضعیت واقعی احراز هویت یا تعارض Host. */
+export class StorefrontReviewApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** نظرهای منتشرشدهٔ یک slug را فقط از endpoint عمومی می‌خواند. */
+export async function loadStorefrontReviews(slug: string, page = 1, pageSize = 10): Promise<StorefrontReviewsPage | null> {
+  const payload = await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}/reviews?page=${page}&pageSize=${pageSize}`);
+  return mapStorefrontReviews(payload);
+}
+
+/** نظر مشتری را از مرز cookie/session موجود ارسال می‌کند و انتشار فوری را فرض نمی‌کند. */
+export async function submitStorefrontReview(command: StorefrontReviewSubmission): Promise<void> {
+  const response = await fetch("/v1/customer/reviews", {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers: { "content-type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(command),
+  });
+  if (!response.ok) {
+    const messages: Record<number, string> = {
+      401: "برای ثبت نظر باید وارد حساب کاربری شوید.",
+      403: "اجازهٔ ثبت نظر برای این حساب یا خرید وجود ندارد.",
+      409: "برای این کالا قبلاً نظر ثبت کرده‌اید.",
+    };
+    throw new StorefrontReviewApiError(response.status, messages[response.status] ?? "ثبت نظر انجام نشد. لطفاً دوباره تلاش کنید.");
+  }
 }
 
 function mapAlternateOffers(value: unknown): StorefrontAlternateOffer[] {
@@ -375,12 +466,19 @@ export function mapStorefrontDetail(payload: unknown): StorefrontProductDetailPa
     cartMutationEnabled: asBoolean(readProp(item, "cartMutationEnabled", "CartMutationEnabled")),
     promotionalAmountExclusiveOfTax: promotionalAmountRaw == null ? null : asNumber(promotionalAmountRaw),
     promotionLabel: promotionLabelRaw == null ? null : asString(promotionLabelRaw),
+    averageRating: (() => {
+      const value = readProp(item, "averageRating", "AverageRating");
+      return value == null ? null : asNumber(value);
+    })(),
+    reviewCount: Math.max(0, asNumber(readProp(item, "reviewCount", "ReviewCount"))),
   };
 }
 
 async function readJson(path: string): Promise<unknown | null> {
   try {
-    const response = await fetch(`${storefrontHostOrigin()}${path}`, { cache: "no-store" });
+    // درخواست مرورگر از rewrite هم‌مبدأ Next عبور می‌کند؛ RSC مستقیماً Host را می‌خواند.
+    const url = typeof window === "undefined" ? `${storefrontHostOrigin()}${path}` : path;
+    const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) {
       return null;
     }

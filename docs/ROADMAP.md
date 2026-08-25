@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T010, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-T011 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T011, TB-P05-T009-REPAIR-01, and TB-P05-GOV-MIGRATION-BRIDGE-V2 ACCEPTED; TB-P05-T012 AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -102,7 +102,7 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 - P01 Platform Foundation is COMPLETE after Architect ACCEPT of TB-P01-GATE.
 - P02 Identity / Authorization is COMPLETE after Architect ACCEPT of TB-P02-GATE.
 - P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
-- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS. TB-P05-T001 through T010, TB-P05-T009-REPAIR-01, and Bridge-V2 governance migration are accepted. TB-P05-T011 is AWAITING_ARCHITECT_ACCEPT after restoring the actual Shopeiva Mega Menu structure with live Catalog category and brand navigation. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
+- P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE. P05 is IN_PROGRESS. TB-P05-T001 through T011, TB-P05-T009-REPAIR-01, and Bridge-V2 governance migration are accepted. TB-P05-T012 is AWAITING_ARCHITECT_ACCEPT after connecting the existing Shopeiva review UI to dedicated Reviews ownership, Published-only live aggregates, Pending customer submission, Admin moderation, product-card ratings, and conditional review SEO. Purchased Shopeiva is Next.js 16.2.6 / React 19.2.4 / Tailwind 4. Sell-first rule: preserve Shopeiva with minimum change, connect Tooba live backend. Persian RTL first. Tooba Data Grid remains. Core API integration by end of P06.
 
 ## P04 Work Packages
 
@@ -135,7 +135,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-09R | Demo catalog depth, brand seed and mega menu evidence | ACCEPTED (TB-P05-T009-REPAIR-01) |
 | P05-GOV | Bridge-V2 governance migration | ACCEPTED (TB-P05-GOV-MIGRATION-BRIDGE-V2) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
-| P05-11 | Shopeiva Mega Menu visual fidelity repair | AWAITING_ARCHITECT_ACCEPT (TB-P05-T011) |
+| P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |
+| P05-12 | Reviews & Ratings behind Shopeiva review UI | AWAITING_ARCHITECT_ACCEPT (TB-P05-T012) |
 
 ## Mandatory UX sequence (locked)
 
@@ -166,4 +167,5 @@ Do not skip. Later steps wait for new envelopes.
 | P05 Demo Catalog Depth Repair | ACCEPTED (TB-P05-T009-REPAIR-01) |
 | P05 Bridge-V2 Governance Migration | ACCEPTED |
 | P05 PDP Backend Capability Completeness | ACCEPTED (TB-P05-T010) |
-| P05 Shopeiva Mega Menu Visual Fidelity Repair | AWAITING_ARCHITECT_ACCEPT (TB-P05-T011) |
+| P05 Shopeiva Mega Menu Visual Fidelity Repair | ACCEPTED (TB-P05-T011) |
+| P05 Reviews & Ratings live convergence | AWAITING_ARCHITECT_ACCEPT (TB-P05-T012) |

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Package, ShoppingBag, Store, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { CheckCircle, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
 import { executeGridQuery } from "../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
@@ -15,6 +15,8 @@ import {
   loadAdminOrderDetail,
   loadAdminOrders,
   loadAdminSellers,
+  loadAdminReviews,
+  moderateAdminReview,
   type AdminCustomerRow,
   type AdminDashboard,
   type AdminLoadState,
@@ -22,6 +24,7 @@ import {
   type AdminOrderRow,
   type AdminResult,
   type AdminSellerRow,
+  type AdminReviewRow,
 } from "./admin-api";
 
 function Denied({ retry }: { retry: () => void }) {
@@ -160,6 +163,17 @@ const customerColumns: GridColumnDef<AdminCustomerRow>[] = [
   { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 110, minWidth: 90, maxWidth: 150, filterKind: "status" },
 ];
 
+const reviewColumns = (moderate: (id: string, action: "publish" | "reject") => void): GridColumnDef<AdminReviewRow>[] => [
+  { id: "reviewer", header: "نویسنده", accessor: (row) => row.reviewerDisplayName, cell: (row) => <strong>{row.reviewerDisplayName}</strong>, width: 150, minWidth: 110, maxWidth: 210, sticky: "start" },
+  { id: "product", header: "محصول", accessor: (row) => row.productTitle, width: 180, minWidth: 130, maxWidth: 260 },
+  { id: "rating", header: "امتیاز", accessor: (row) => row.rating, cell: (row) => <span className="inline-flex items-center gap-1"><Star className="size-4 fill-amber-400 text-amber-400" />{row.rating.toLocaleString("fa-IR")}</span>, width: 90, minWidth: 75, maxWidth: 110 },
+  { id: "excerpt", header: "نظر", accessor: (row) => row.excerpt, width: 260, minWidth: 180, maxWidth: 360 },
+  { id: "verified", header: "خرید تأییدشده", accessor: (row) => row.verifiedPurchase ? "بله" : "خیر", cell: (row) => row.verifiedPurchase ? <CheckCircle className="size-4 text-emerald-600" aria-label="بله" /> : "—", width: 120, minWidth: 100, maxWidth: 150 },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 110, minWidth: 90, maxWidth: 150 },
+  { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, maxWidth: 150 },
+  { id: "actions", header: "عملیات", accessor: () => "", cell: (row) => <span className="flex gap-2"><button onClick={() => moderate(row.id, "publish")} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white">انتشار</button><button onClick={() => moderate(row.id, "reject")} className="rounded-lg bg-red-600 px-3 py-1.5 text-xs text-white">رد</button></span>, width: 160, minWidth: 145, maxWidth: 190 },
+];
+
 function Status({ value }: { value: string }) {
   return <span className="inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">{formatAdminStatus(value)}</span>;
 }
@@ -177,6 +191,31 @@ export function AdminSellersScreen() {
 /** فهرست صادقانهٔ خریداران شناخته‌شده؛ نه CRM. */
 export function AdminCustomersScreen() {
   return <GridPage title="مشتریان" description="خریداران شناخته‌شده از سفارش‌های زنده" loader={loadAdminCustomers} columns={customerColumns} />;
+}
+
+/** حداقل سطح تعدیل نظر با DataGrid توبا و فرمان‌های مقتدر Host. */
+export function AdminReviewsScreen() {
+  const [state, setState] = useState<AdminLoadState | "loading">("loading");
+  const [rows, setRows] = useState<AdminReviewRow[]>([]);
+  const [message, setMessage] = useState<string>();
+  const refresh = useCallback(() => void loadAdminReviews().then((result) => {
+    setState(result.state); setRows(result.data?.rows ?? []); setMessage(result.message);
+  }), []);
+  useEffect(refresh, [refresh]);
+  const moderate = useCallback((id: string, action: "publish" | "reject") => void moderateAdminReview(id, action).then((result) => {
+    if (result.state === "denied") setState("denied");
+    else if (result.state === "error") { setState("error"); setMessage(result.message); }
+    else refresh();
+  }), [refresh]);
+  const columns = useMemo(() => reviewColumns(moderate), [moderate]);
+  const queryAdapter = useMemo(() => async (query: GridServerQuery) => executeGridQuery(rows, columns, query), [rows, columns]);
+  if (state === "denied") return <Denied retry={refresh} />;
+  return <main data-testid="admin-reviews"><PageHeading title="مدیریت نظرات" description="بررسی نظرهای در انتظار انتشار" />
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+      <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} نظر در انتظار</div>
+      <div className="p-2 md:p-4">{state === "error" ? <ErrorState title="نظرها خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : <DataGrid columns={columns} queryAdapter={queryAdapter} />}</div>
+    </section>
+  </main>;
 }
 
 /** جزئیات checkout شامل snapshot ارسال و خطوط هر فروشنده. */

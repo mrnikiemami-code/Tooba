@@ -12,6 +12,9 @@ export function buildProductStructuredData(detail: StorefrontProductDetailPage, 
     description: detail.seoDescription,
     url: canonicalPath,
     ...(detail.brandName ? { brand: { "@type": "Brand", name: detail.brandName } } : {}),
+    ...(detail.reviewCount > 0 && detail.averageRating !== null && detail.averageRating >= 1 && detail.averageRating <= 5
+      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: detail.averageRating, reviewCount: detail.reviewCount } }
+      : {}),
     offers: {
       "@type": "Offer",
       url: canonicalPath,

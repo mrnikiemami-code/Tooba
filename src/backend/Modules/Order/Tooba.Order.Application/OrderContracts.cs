@@ -140,3 +140,23 @@ public interface ICheckoutDirectory
     /// </summary>
     Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken);
 }
+
+/// <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
+public sealed record OrderPurchaseVerification(bool IsVerified, Guid? SellerOrderId)
+{
+    /// <summary>نتیجهٔ بسته و بدون اثبات.</summary>
+    public static OrderPurchaseVerification NotVerified { get; } = new(false, null);
+}
+
+/// <summary>درز Order-owned برای اثبات خرید محصول بدون وابستگی Order به Catalog.</summary>
+public interface IOrderPurchaseVerificationGateway
+{
+    /// <summary>
+    /// وجود سفارش Paid متعلق به Actor را برای یکی از شناسه‌های گونهٔ داده‌شده بررسی می‌کند؛
+    /// نگاشت محصول به گونه‌ها پیش از فراخوانی و توسط مصرف‌کنندهٔ Catalog انجام می‌شود.
+    /// </summary>
+    Task<OrderPurchaseVerification> VerifyPaidPurchaseAsync(
+        Guid actorUserId,
+        IReadOnlyCollection<Guid> catalogVariantIds,
+        CancellationToken cancellationToken);
+}
