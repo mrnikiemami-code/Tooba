@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { StorefrontShell } from "../storefront/storefront-shell.tsx";
 import { StorefrontShopeivaListing } from "../storefront/storefront-listing.tsx";
-import { loadStorefrontListing } from "../storefront/storefront-api.ts";
+import { loadStorefrontBrands, loadStorefrontListing } from "../storefront/storefront-api.ts";
 import type { StorefrontListingSort } from "../storefront/storefront-model.ts";
 
 type ProductsSearchParams = {
@@ -54,14 +54,17 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
-  const listing = await loadStorefrontListing({
-    query: params.q,
-    categoryId: params.categoryId,
-    sellerPartyId: params.sellerPartyId,
-    inStock: params.inStock === "true" ? true : undefined,
-    sort: readSort(params.sort),
-    page,
-  });
+  const [listing, brands] = await Promise.all([
+    loadStorefrontListing({
+      query: params.q,
+      categoryId: params.categoryId,
+      sellerPartyId: params.sellerPartyId,
+      inStock: params.inStock === "true" ? true : undefined,
+      sort: readSort(params.sort),
+      page,
+    }),
+    loadStorefrontBrands(),
+  ]);
   if (!listing) {
     return (
       <StorefrontShell categories={[]}>
@@ -70,11 +73,21 @@ export default async function ProductsPage({
     );
   }
 
+  const activeCategory = params.categoryId
+    ? listing.categories.find((category) => category.categoryId === params.categoryId)
+    : undefined;
+  const title = params.q
+    ? `نتیجه جستجو برای «${params.q}»`
+    : activeCategory
+      ? activeCategory.name
+      : "همه کالاها";
+
   return (
     <StorefrontShell categories={listing.categories} searchCatalog={listing.products}>
       <StorefrontShopeivaListing
-        title={params.q ? `نتیجه جستجو برای «${params.q}»` : "همه کالاها"}
+        title={title}
         categories={listing.categories}
+        brands={brands ?? []}
         sellers={listing.sellers}
         products={listing.products}
         activeCategoryId={params.categoryId}

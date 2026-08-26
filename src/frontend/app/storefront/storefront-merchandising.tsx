@@ -20,7 +20,7 @@ export function StorefrontMerchandisingGrid({
         <p className="text-sm opacity-90">{description}</p>
       </div>
       {products.length ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4" data-testid="brand-product-grid">
           {products.map((product) => <StorefrontProductCardView key={product.productId} card={product} />)}
         </div>
       ) : (
