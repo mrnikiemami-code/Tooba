@@ -1,0 +1,232 @@
+{
+  "productId": "01a03826-9802-7000-8c01-7c0d4f75f875",
+  "slug": "demo-mobile-1",
+  "title": "گوشی موبایل سامسونگ Galaxy A55",
+  "description": "گوشی موبایل سامسونگ Galaxy A55 با عرضهٔ معتبر فروشندگان توبا",
+  "shortDescription": "گوشی موبایل سامسونگ Galaxy A55 با عرضهٔ معتبر فروشندگان توبا",
+  "fullDescription": "گوشی موبایل سامسونگ Galaxy A55 برای استفادهٔ روزمره انتخاب شده است. قیمت هر فروشنده و موجودی قابل فروش به‌صورت زنده از ماژول‌های مالک خوانده می‌شود.",
+  "categoryName": "گوشی موبایل",
+  "brandName": "سامسونگ",
+  "mediaAssetIds": [
+    "d0d0d0d0-0001-4000-8000-000000000001"
+  ],
+  "specifications": [
+    {
+      "label": "بستهٔ عرضه",
+      "value": "استاندارد"
+    }
+  ],
+  "variants": [
+    {
+      "variantId": "01a03826-9859-7000-8c2d-cdc269a1b41d",
+      "axes": [
+        {
+          "label": "بستهٔ عرضه",
+          "value": "استاندارد"
+        }
+      ],
+      "purchasable": true,
+      "primaryOffer": {
+        "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+        "catalogVariantId": "01a03826-9859-7000-8c2d-cdc269a1b41d",
+        "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+        "sellerDisplayName": "تجارت الکترونیک پارس",
+        "sellerSku": "DEMO-MOBILE-1-B",
+        "amountExclusiveOfTax": 23655000,
+        "currency": "IRR",
+        "market": "IR",
+        "availableUnits": 4,
+        "taxCategoryLabel": "طبقه مالیات ثبت نشده"
+      }
+    }
+  ],
+  "selectedVariantId": "01a03826-9859-7000-8c2d-cdc269a1b41d",
+  "primaryOffer": {
+    "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+    "catalogVariantId": "01a03826-9859-7000-8c2d-cdc269a1b41d",
+    "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+    "sellerDisplayName": "تجارت الکترونیک پارس",
+    "sellerSku": "DEMO-MOBILE-1-B",
+    "amountExclusiveOfTax": 23655000,
+    "currency": "IRR",
+    "market": "IR",
+    "availableUnits": 4,
+    "taxCategoryLabel": "طبقه مالیات ثبت نشده"
+  },
+  "otherSellers": [
+    {
+      "offerId": "01a03826-987f-7000-a0f2-bd9d9573e1b7",
+      "sellerDisplayName": "فروشگاه توبا مارکت",
+      "amountExclusiveOfTax": 24900000,
+      "currency": "IRR",
+      "availableUnits": 6,
+      "inStock": true
+    }
+  ],
+  "relatedProducts": [
+    {
+      "productId": "01a03826-99a3-7000-8a1c-4019087bf1c3",
+      "slug": "demo-mobile-3",
+      "title": "گوشی موبایل اپل iPhone 13",
+      "categoryName": "گوشی موبایل",
+      "categoryId": "01a03826-97f6-7000-81c8-a0a6e991dc04",
+      "mediaAssetId": "d0d0d0d0-0003-4000-8000-000000000003",
+      "primaryOfferId": "01a03826-99bf-7000-8a29-e1cbd3d982d3",
+      "sellerPartyId": "01a03826-97c8-7000-8a5c-8e2b8afe2072",
+      "sellerDisplayName": "خانه و کالای مهر",
+      "offerAmountExclusiveOfTax": 29880000,
+      "currency": "IRR",
+      "availableUnits": 8,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-9962-7000-ab91-37b1111bd732",
+      "slug": "demo-mobile-2",
+      "title": "گوشی موبایل شیائومی Redmi Note 13",
+      "categoryName": "گوشی موبایل",
+      "categoryId": "01a03826-97f6-7000-81c8-a0a6e991dc04",
+      "mediaAssetId": "d0d0d0d0-0002-4000-8000-000000000002",
+      "primaryOfferId": "01a03826-997f-7000-90dc-6af3fa282490",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 27390000,
+      "currency": "IRR",
+      "availableUnits": 7,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b33f-7000-882a-e92079600e9f",
+      "slug": "demo-game-3",
+      "title": "بازی فکری رومیزی خانوادگی",
+      "categoryName": "بازی و سرگرمی",
+      "categoryId": "01a03826-b25c-7000-ab16-863e394b0e0b",
+      "mediaAssetId": "d0d0d0d0-0004-4000-8000-000000000004",
+      "primaryOfferId": "01a03826-b367-7000-9bb7-df9b314b56aa",
+      "sellerPartyId": "01a03826-97c8-7000-8a5c-8e2b8afe2072",
+      "sellerDisplayName": "خانه و کالای مهر",
+      "offerAmountExclusiveOfTax": 1920000,
+      "currency": "IRR",
+      "availableUnits": 7,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b2e8-7000-a81c-d499ff86ac91",
+      "slug": "demo-game-2",
+      "title": "پازل ۱۰۰۰ تکه",
+      "categoryName": "بازی و سرگرمی",
+      "categoryId": "01a03826-b25c-7000-ab16-863e394b0e0b",
+      "mediaAssetId": "d0d0d0d0-0003-4000-8000-000000000003",
+      "primaryOfferId": "01a03826-b318-7000-b6b6-aa85026be261",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 1760000,
+      "currency": "IRR",
+      "availableUnits": 6,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b269-7000-a4df-71d1eda37fb0",
+      "slug": "demo-game-1",
+      "title": "دسته بازی بی‌سیم",
+      "categoryName": "بازی و سرگرمی",
+      "categoryId": "01a03826-b25c-7000-ab16-863e394b0e0b",
+      "mediaAssetId": "d0d0d0d0-0002-4000-8000-000000000002",
+      "primaryOfferId": "01a03826-b2c8-7000-a417-822aa5c35e64",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 1520000,
+      "currency": "IRR",
+      "availableUnits": 4,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b20e-7000-9ee7-30fc17fbcfcc",
+      "slug": "demo-stationery-3",
+      "title": "پک ماژیک رنگی ۱۲ رنگ",
+      "categoryName": "لوازم تحریر",
+      "categoryId": "01a03826-b134-7000-af51-0e73daca7143",
+      "mediaAssetId": "d0d0d0d0-0001-4000-8000-000000000001",
+      "primaryOfferId": "01a03826-b238-7000-b7ac-e6e0f5d487e8",
+      "sellerPartyId": "01a03826-97c8-7000-8a5c-8e2b8afe2072",
+      "sellerDisplayName": "خانه و کالای مهر",
+      "offerAmountExclusiveOfTax": 420000,
+      "currency": "IRR",
+      "availableUnits": 9,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b1c3-7000-9811-a59d49d06f2e",
+      "slug": "demo-stationery-2",
+      "title": "ست خودکار و روان‌نویس",
+      "categoryName": "لوازم تحریر",
+      "categoryId": "01a03826-b134-7000-af51-0e73daca7143",
+      "mediaAssetId": "d0d0d0d0-0004-4000-8000-000000000004",
+      "primaryOfferId": "01a03826-b1eb-7000-aaa7-cab8b4c76aee",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 385000,
+      "currency": "IRR",
+      "availableUnits": 8,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b143-7000-a8b5-c6b15a84b7b6",
+      "slug": "demo-stationery-1",
+      "title": "دفتر یادداشت سیمی ۱۰۰ برگ",
+      "categoryName": "لوازم تحریر",
+      "categoryId": "01a03826-b134-7000-af51-0e73daca7143",
+      "mediaAssetId": "d0d0d0d0-0003-4000-8000-000000000003",
+      "primaryOfferId": "01a03826-b1a0-7000-9a57-05fff6358780",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 332500,
+      "currency": "IRR",
+      "availableUnits": 4,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b0e0-7000-ab52-ce5ddc5c57bf",
+      "slug": "demo-book-3",
+      "title": "کتاب مهارت‌های مدیریت زمان",
+      "categoryName": "کتاب",
+      "categoryId": "01a03826-b010-7000-99e8-e7540e21e31a",
+      "mediaAssetId": "d0d0d0d0-0002-4000-8000-000000000002",
+      "primaryOfferId": "01a03826-b109-7000-9bf7-e77a7bed4a39",
+      "sellerPartyId": "01a03826-97c8-7000-8a5c-8e2b8afe2072",
+      "sellerDisplayName": "خانه و کالای مهر",
+      "offerAmountExclusiveOfTax": 504000,
+      "currency": "IRR",
+      "availableUnits": 6,
+      "inStock": true,
+      "reviewCount": 0
+    },
+    {
+      "productId": "01a03826-b094-7000-94ad-e28bff3f32ab",
+      "slug": "demo-book-2",
+      "title": "کتاب تاریخ ایران باستان",
+      "categoryName": "کتاب",
+      "categoryId": "01a03826-b010-7000-99e8-e7540e21e31a",
+      "mediaAssetId": "d0d0d0d0-0001-4000-8000-000000000001",
+      "primaryOfferId": "01a03826-b0b9-7000-bf8e-c4bdc21eed5f",
+      "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "sellerDisplayName": "تجارت الکترونیک پارس",
+      "offerAmountExclusiveOfTax": 462000,
+      "currency": "IRR",
+      "availableUnits": 10,
+      "inStock": true,
+      "reviewCount": 0
+    }
+  ],
+  "seoTitle": "گوشی موبایل سامسونگ Galaxy A55",
+  "seoDescription": "گوشی موبایل سامسونگ Galaxy A55 با عرضهٔ معتبر فروشندگان توبا",
+  "cartMutationEnabled": true,
+  "reviewCount": 0
+}

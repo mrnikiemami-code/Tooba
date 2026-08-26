@@ -23,6 +23,8 @@ using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure.Persistence;
+using Tooba.ProductQnA.Infrastructure.Persistence;
+using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Host.Wishlist;
 using Tooba.Host.AddressBook;
 using Tooba.Host.CustomerProfile;
@@ -83,6 +85,8 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
         await MigrateAsync(provider.GetRequiredService<PlatformProbeDbContext>());
         await MigrateAsync(provider.GetRequiredService<ReviewsDbContext>());
+        await MigrateAsync(provider.GetRequiredService<ProductQnADbContext>());
+        await MigrateAsync(provider.GetRequiredService<BulkInquiryDbContext>());
         await MigrateAsync(provider.GetRequiredService<WishlistDbContext>());
         await MigrateAsync(provider.GetRequiredService<AddressBookDbContext>());
         await MigrateAsync(provider.GetRequiredService<CustomerProfileDbContext>());

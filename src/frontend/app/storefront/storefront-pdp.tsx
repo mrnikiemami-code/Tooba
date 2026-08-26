@@ -3,22 +3,30 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  Award,
   Bell,
   GitCompare,
+  Headphones,
   Heart,
   LineChart,
   Minus,
+  Package,
   Plus,
+  RotateCcw,
   Share2,
+  Shield,
   ShoppingBag,
   Star,
+  Truck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatOfferAmount, loadStorefrontDetail, storefrontMediaUrl } from "./storefront-api.ts";
+import { formatOfferAmount, loadStorefrontDetail, loadStorefrontQuestions, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import { StorefrontPdpReviews } from "./storefront-pdp-reviews.tsx";
+import { StorefrontPdpQa } from "./storefront-pdp-qa.tsx";
+import { StorefrontPdpBulk } from "./storefront-pdp-bulk.tsx";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 
 /**
@@ -28,7 +36,8 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   const router = useRouter();
   const [currentDetail, setCurrentDetail] = useState(detail);
   const [qty, setQty] = useState(1);
-  const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews">("intro");
+  const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews" | "qa" | "bulk">("intro");
+  const [qaCount, setQaCount] = useState(0);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const wishlist = useStorefrontWishlist();
@@ -40,12 +49,17 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   const [active, setActive] = useState(0);
 
   useEffect(() => registerWishlistProduct(currentDetail.productId), [currentDetail.productId, registerWishlistProduct]);
+  useEffect(() => {
+    void loadStorefrontQuestions(currentDetail.slug).then((page) => setQaCount(page?.totalCount ?? 0));
+  }, [currentDetail.slug]);
 
   const tabs = [
     { id: "intro" as const, label: "معرفی اجمالی" },
     { id: "full" as const, label: "معرفی تکمیلی" },
     { id: "specs" as const, label: "مشخصات فنی" },
     { id: "reviews" as const, label: "نظرات", count: currentDetail.reviewCount },
+    { id: "qa" as const, label: "پرسش و پاسخ", count: qaCount },
+    { id: "bulk" as const, label: "خرید عمده", count: 0 },
   ];
 
   return (
@@ -279,21 +293,64 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700">
           {tab === "specs" ? (
             currentDetail.specifications.length > 0 ? (
-              <dl className="divide-y divide-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="pdp-specs">
                 {currentDetail.specifications.map((specification) => (
-                  <div key={`${specification.label}-${specification.value}`} className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-2">
-                    <dt className="font-bold text-gray-600">{specification.label}</dt>
-                    <dd className="sm:col-span-2 break-words">{specification.value}</dd>
+                  <div key={`${specification.label}-${specification.value}`} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <Package className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500">{specification.label}</p>
+                      <p className="text-sm font-medium text-gray-900 break-words">{specification.value}</p>
+                    </div>
                   </div>
                 ))}
-              </dl>
-            ) : <p>مشخصاتی برای این کالا ثبت نشده است.</p>
+              </div>
+            ) : (
+              <p>مشخصاتی برای این کالا ثبت نشده است.</p>
+            )
           ) : tab === "reviews" ? (
             <StorefrontPdpReviews detail={currentDetail} />
+          ) : tab === "qa" ? (
+            <StorefrontPdpQa detail={currentDetail} />
+          ) : tab === "bulk" ? (
+            <StorefrontPdpBulk detail={currentDetail} />
           ) : tab === "full" ? (
-            <p>{currentDetail.fullDescription ?? "معرفی تکمیلی برای این کالا ثبت نشده است."}</p>
+            <div className="space-y-6" data-testid="pdp-full">
+              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-[#2563EB] before:rounded">
+                معرفی تکمیلی
+              </h2>
+              <p className="text-justify leading-8 text-gray-700 whitespace-pre-wrap">
+                {currentDetail.fullDescription ?? "معرفی تکمیلی برای این کالا ثبت نشده است."}
+              </p>
+            </div>
           ) : (
-            <p>{currentDetail.shortDescription ?? "معرفی اجمالی برای این کالا ثبت نشده است."}</p>
+            <div className="space-y-6" data-testid="pdp-intro">
+              <h2 className="text-2xl font-extrabold text-gray-900 relative pb-3 before:absolute before:bottom-0 before:right-0 before:h-1 before:w-24 before:bg-[#2563EB] before:rounded">
+                معرفی محصول
+              </h2>
+              <p className="text-justify leading-8 text-gray-700 whitespace-pre-wrap">
+                {currentDetail.shortDescription ?? "معرفی اجمالی برای این کالا ثبت نشده است."}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-gray-200">
+                {[
+                  { icon: Truck, title: "ارسال از فروشنده", desc: "بر اساس موجودی Offer" },
+                  { icon: Shield, title: "عرضهٔ زنده", desc: "قیمت از Pricing" },
+                  { icon: RotateCcw, title: "وضعیت موجودی", desc: "از Inventory" },
+                  { icon: Headphones, title: "پشتیبانی فروشگاه", desc: "مسیر رسمی مشتری" },
+                  { icon: Award, title: "فروشندهٔ ثبت‌شده", desc: "هویت Party" },
+                  { icon: Package, title: "کالای Catalog", desc: "بدون قیمت روی Product" },
+                ].map((item) => (
+                  <div key={item.title} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
+                      <item.icon className="w-4 h-4 text-[#2563EB]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-700">{item.title}</p>
+                      <p className="text-[9px] text-gray-500">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

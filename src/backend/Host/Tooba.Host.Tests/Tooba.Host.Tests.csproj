@@ -24,5 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Host\Tooba.Host.csproj" />
+    <ProjectReference Include="..\..\Modules\ProductQnA\Tooba.ProductQnA.Infrastructure\Tooba.ProductQnA.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\BulkInquiry\Tooba.BulkInquiry.Infrastructure\Tooba.BulkInquiry.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

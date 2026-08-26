@@ -4,9 +4,9 @@
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T015-R1
+Last Architect Accepted Product Task: TB-P05-T016-R1
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T016-R1 = AWAITING_ARCHITECT_ACCEPT (parent TB-P05-T016 = REPAIR_IN_PROGRESS)
+Current Product Task: TB-P05-T017 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -44,4 +44,4 @@ Worker PASS != Architect ACCEPT
 Worker offline between Tasks = NORMAL
 ```
 
-P00–P04 remain complete. P05 remains in progress. TB-P05-T015 / TB-P05-T015-R1 are Architect-accepted. TB-P05-T016 Mega Menu L3 remains intact (8/24/72); current repair TB-P05-T016-R1 corrects Source-of-Truth only.
+P00–P04 remain complete. P05 remains in progress. TB-P05-T016 / TB-P05-T016-R1 are Architect-accepted. TB-P05-T017 completes Shopeiva PDP tabs with live Q&A and wholesale inquiry (AWAITING_ARCHITECT_ACCEPT).

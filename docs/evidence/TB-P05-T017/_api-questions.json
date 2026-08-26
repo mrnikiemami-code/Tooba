@@ -1,0 +1,28 @@
+{
+  "status": 200,
+  "body": {
+    "questions": [
+      {
+        "questionId": "01a03b82-7dd1-7000-86de-9dccc8f7f1c5",
+        "authorDisplayName": "رضا",
+        "body": "آیا این مدل دو سیم‌کارت دارد؟",
+        "createdAt": "2026-08-26T12:00:00+00:00",
+        "answerBody": "بله، این مدل دو سیم‌کارت فعال دارد.",
+        "answerAuthorDisplayName": "پشتیبانی توبا",
+        "answerCreatedAt": "2026-08-26T12:00:00+00:00"
+      },
+      {
+        "questionId": "01a03b82-7de6-7000-aadb-314a89703049",
+        "authorDisplayName": "نیلوفر",
+        "body": "گارانتی محصول چند ماه است؟",
+        "createdAt": "2026-08-26T12:00:00+00:00",
+        "answerBody": "گارانتی ۱۸ ماهه شرکتی است.",
+        "answerAuthorDisplayName": "پشتیبانی توبا",
+        "answerCreatedAt": "2026-08-26T12:00:00+00:00"
+      }
+    ],
+    "page": 1,
+    "pageSize": 20,
+    "totalCount": 2
+  }
+}

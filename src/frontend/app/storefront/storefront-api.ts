@@ -245,6 +245,108 @@ export async function submitStorefrontReview(command: StorefrontReviewSubmission
   }
 }
 
+export interface StorefrontQaItem {
+  questionId: string;
+  authorDisplayName: string;
+  body: string;
+  createdAt: string;
+  answerBody: string | null;
+  answerAuthorDisplayName: string | null;
+  answerCreatedAt: string | null;
+}
+
+export interface StorefrontQaPage {
+  items: StorefrontQaItem[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+/** پرسش‌های منتشرشدهٔ محصول را از Host می‌خواند. */
+export async function loadStorefrontQuestions(slug: string, page = 1, pageSize = 20): Promise<StorefrontQaPage | null> {
+  const payload = await readJson(`/v1/storefront/products/${encodeURIComponent(slug)}/questions?page=${page}&pageSize=${pageSize}`);
+  const record = asRecord(payload);
+  if (!record) return null;
+  const rawItems = readProp(record, "items", "Items") ?? readProp(record, "questions", "Questions");
+  const items = Array.isArray(rawItems)
+    ? (rawItems as unknown[]).map((row) => {
+        const item = asRecord(row) ?? {};
+        return {
+          questionId: asString(readProp(item, "questionId", "QuestionId")),
+          authorDisplayName: asString(readProp(item, "authorDisplayName", "AuthorDisplayName"), "مشتری"),
+          body: asString(readProp(item, "body", "Body")),
+          createdAt: asString(readProp(item, "createdAt", "CreatedAt")),
+          answerBody: readProp(item, "answerBody", "AnswerBody") == null ? null : asString(readProp(item, "answerBody", "AnswerBody")),
+          answerAuthorDisplayName:
+            readProp(item, "answerAuthorDisplayName", "AnswerAuthorDisplayName") == null
+              ? null
+              : asString(readProp(item, "answerAuthorDisplayName", "AnswerAuthorDisplayName")),
+          answerCreatedAt:
+            readProp(item, "answerCreatedAt", "AnswerCreatedAt") == null
+              ? null
+              : asString(readProp(item, "answerCreatedAt", "AnswerCreatedAt")),
+        } satisfies StorefrontQaItem;
+      })
+    : [];
+  return {
+    items,
+    page: asNumber(readProp(record, "page", "Page"), page),
+    pageSize: asNumber(readProp(record, "pageSize", "PageSize"), pageSize),
+    totalCount: asNumber(readProp(record, "totalCount", "TotalCount"), items.length),
+  };
+}
+
+/** پرسش مشتری را ثبت می‌کند (Pending تا تعدیل). */
+export async function submitStorefrontQuestion(productId: string, body: string): Promise<void> {
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    Accept: "application/json",
+  };
+  if (typeof window !== "undefined") {
+    const actor = window.localStorage.getItem("tooba.customerActorUserId");
+    if (actor) headers["X-Tooba-Dev-Actor-User-Id"] = actor;
+  }
+  const response = await fetch("/v1/customer/product-questions", {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers,
+    body: JSON.stringify({ productId, body }),
+  });
+  if (!response.ok) {
+    const messages: Record<number, string> = {
+      401: "برای ثبت پرسش باید وارد حساب کاربری شوید.",
+      400: "متن پرسش معتبر نیست.",
+    };
+    throw new Error(messages[response.status] ?? "ثبت پرسش انجام نشد.");
+  }
+}
+
+export interface StorefrontBulkInquiryInput {
+  fullName: string;
+  phone: string;
+  email?: string;
+  companyName?: string;
+  address: string;
+  quantity: number;
+  notes?: string;
+}
+
+/** درخواست خرید عمده را بدون قیمت‌گذاری جعلی به Host می‌فرستد. */
+export async function submitStorefrontBulkInquiry(slug: string, input: StorefrontBulkInquiryInput): Promise<string> {
+  const response = await fetch(`/v1/storefront/products/${encodeURIComponent(slug)}/bulk-inquiries`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "content-type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(response.status === 400 ? "اطلاعات درخواست عمده معتبر نیست." : "ثبت درخواست عمده انجام نشد.");
+  }
+  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  return asString(payload ? readProp(payload, "inquiryId", "InquiryId") : null, "");
+}
+
 function mapAlternateOffers(value: unknown): StorefrontAlternateOffer[] {
   return Array.isArray(value)
     ? value.map((row) => {

@@ -16,6 +16,7 @@ using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
+using Tooba.Host.ProductQnA;
 using Tooba.Host.Wishlist;
 using Tooba.Host.AddressBook;
 using Tooba.Persistence;
@@ -203,6 +204,7 @@ app.MapStorefrontEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapReviewEndpoints();
+app.MapProductQnAEndpoints();
 app.MapWishlistEndpoints();
 app.MapAddressBookEndpoints();
 

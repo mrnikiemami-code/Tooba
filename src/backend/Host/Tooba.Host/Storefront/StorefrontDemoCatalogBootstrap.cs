@@ -9,6 +9,7 @@ using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
 using Tooba.Party.Application;
 using Tooba.Pricing.Application;
+using Tooba.ProductQnA.Infrastructure;
 
 namespace Tooba.Host.Storefront;
 
@@ -100,7 +101,7 @@ internal static class StorefrontDemoCatalogBootstrap
             tenant.ConnectionReference,
             "storefront-demo-seed"));
 
-        return await SeedAsync(
+        var summary = await SeedAsync(
             provider.GetRequiredService<CatalogDbContext>(),
             provider.GetRequiredService<ICatalogDirectory>(),
             provider.GetRequiredService<IPartyDirectory>(),
@@ -108,6 +109,9 @@ internal static class StorefrontDemoCatalogBootstrap
             provider.GetRequiredService<IPriceDirectory>(),
             provider.GetRequiredService<IInventoryDirectory>(),
             CancellationToken.None);
+        // پرسش‌وپاسخ نمایشی پس از وجود demo-mobile-1؛ همان CommerceContext همین scope.
+        await ProductQnADevelopmentSeed.ApplyAsync(provider);
+        return summary;
     }
 
     /// <summary>

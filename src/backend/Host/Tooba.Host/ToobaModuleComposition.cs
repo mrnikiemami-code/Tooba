@@ -12,6 +12,8 @@ using Tooba.Tax.Infrastructure;
 using Tooba.Promotion.Infrastructure;
 using Tooba.Payment.Infrastructure;
 using Tooba.Reviews.Infrastructure;
+using Tooba.ProductQnA.Infrastructure;
+using Tooba.BulkInquiry.Infrastructure;
 using Tooba.Wishlist.Infrastructure;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure;
@@ -41,6 +43,8 @@ internal static class ToobaModuleComposition
         new TaxModule(),
         new PromotionModule(),
         new ReviewsModule(),
+        new ProductQnAModule(),
+        new BulkInquiryModule(),
         new WishlistModule(),
         new AddressBookModule(),
         new CustomerProfileModule(),
