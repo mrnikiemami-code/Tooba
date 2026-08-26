@@ -62,8 +62,12 @@ public sealed class ErrorContractTests : IClassFixture<WebApplicationFactory<Pro
         var client = _factory.CreateClient();
         var health = await client.GetAsync("/health");
         var ready = await client.GetAsync("/ready");
+        var live = await client.GetAsync("/health/live");
+        var readyProbe = await client.GetAsync("/health/ready");
         Assert.Equal(HttpStatusCode.OK, health.StatusCode);
         Assert.Equal(HttpStatusCode.OK, ready.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, live.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, readyProbe.StatusCode);
     }
 }
 

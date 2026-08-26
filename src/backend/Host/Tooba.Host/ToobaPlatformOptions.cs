@@ -211,19 +211,38 @@ internal sealed class ControlPlaneRegistry
 /// </summary>
 internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformOptions>
 {
+    private readonly IHostEnvironment? _environment;
+
+    /// <summary>
+    /// اعتبارسنج بدون محیط (تست واحد) یا با محیط Host (DI).
+    /// </summary>
+    public PlatformOptionsValidator()
+    {
+    }
+
+    /// <summary>
+    /// اعتبارسنج production-aware را با محیط Host می‌سازد.
+    /// </summary>
+    public PlatformOptionsValidator(IHostEnvironment environment) => _environment = environment;
+
     /// <summary>
     /// پیکربندی را parse و registry می‌سازد؛ شکست یعنی فرآیند بالا نیاید.
     /// </summary>
     public ValidateOptionsResult Validate(string? name, ToobaPlatformOptions options)
     {
-        if (!TryParseEdition(options.Edition, out _))
+        if (!TryParseEdition(options.Edition, out var edition))
         {
             return ValidateOptionsResult.Fail($"Unsupported Tooba:Edition '{options.Edition}'.");
         }
 
         try
         {
-            _ = BuildRegistry(options);
+            var registry = BuildRegistry(options);
+            var productionFailure = ValidateProductionRequirements(options, edition, registry);
+            if (productionFailure is not null)
+            {
+                return ValidateOptionsResult.Fail(productionFailure);
+            }
         }
         catch (InvalidOperationException ex)
         {
@@ -231,6 +250,63 @@ internal sealed class PlatformOptionsValidator : IValidateOptions<ToobaPlatformO
         }
 
         return ValidateOptionsResult.Success;
+    }
+
+    /// <summary>
+    /// در Production edition و مراجع اتصال باید صریحاً پیکربندی شده باشند.
+    /// </summary>
+    private string? ValidateProductionRequirements(
+        ToobaPlatformOptions options,
+        ToobaEdition edition,
+        ControlPlaneRegistry registry)
+    {
+        if (_environment is null || !_environment.IsProduction())
+        {
+            return null;
+        }
+
+        if (edition == ToobaEdition.Unset)
+        {
+            return "Production requires Tooba:Edition to be Marketplace or SingleStore.";
+        }
+
+        if (edition == ToobaEdition.SingleStore && registry.Tenants.Count == 0)
+        {
+            return "Production Single-Store requires at least one configured tenant.";
+        }
+
+        foreach (var reference in CollectConfiguredConnectionReferences(options, registry))
+        {
+            if (!options.PostgreSQL.ConnectionReferences.TryGetValue(reference, out var connection)
+                || string.IsNullOrWhiteSpace(connection))
+            {
+                return $"Production requires PostgreSQL connection reference '{reference}' to be configured.";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// مراجع اتصال مورد انتظار edition را برای fail-fast تولید جمع می‌کند.
+    /// </summary>
+    private static IEnumerable<string> CollectConfiguredConnectionReferences(
+        ToobaPlatformOptions options,
+        ControlPlaneRegistry registry)
+    {
+        if (registry.Edition == ToobaEdition.Marketplace
+            && registry.MarketplaceConnectionReference is { } marketplaceReference)
+        {
+            yield return marketplaceReference.Value;
+        }
+
+        if (registry.Edition == ToobaEdition.SingleStore)
+        {
+            foreach (var tenant in registry.Tenants.Values)
+            {
+                yield return tenant.ConnectionReference.Value;
+            }
+        }
     }
 
     /// <summary>

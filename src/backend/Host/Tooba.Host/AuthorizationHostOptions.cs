@@ -83,6 +83,11 @@ internal sealed class AuthorizationOptionsValidator : IValidateOptions<Authoriza
                 return ValidateOptionsResult.Fail("SpiceDB endpoint is required when Mode=SpiceDb.");
             }
 
+            if (string.IsNullOrWhiteSpace(options.SpiceDb.Token))
+            {
+                return ValidateOptionsResult.Fail("SpiceDB token is required when Mode=SpiceDb.");
+            }
+
             if (options.SpiceDb.TimeoutSeconds <= 0)
             {
                 return ValidateOptionsResult.Fail("SpiceDB timeout must be positive.");

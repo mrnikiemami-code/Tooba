@@ -208,27 +208,7 @@ app.MapProductQnAEndpoints();
 app.MapWishlistEndpoints();
 app.MapAddressBookEndpoints();
 
-app.MapGet("/health", () => Results.Json(new { status = "ok" }));
-app.MapGet("/ready", (IServiceProvider services) =>
-{
-    var bus = services.GetService<MassTransit.IBusControl>();
-    if (bus is null)
-    {
-        return Results.Json(new { status = "ready" });
-    }
-
-    var health = bus.CheckHealth();
-    if (health.Status == MassTransit.BusHealthStatus.Unhealthy)
-    {
-        return Results.Json(new { status = "not-ready", messaging = "unhealthy" }, statusCode: StatusCodes.Status503ServiceUnavailable);
-    }
-
-    return Results.Json(new
-    {
-        status = "ready",
-        messaging = health.Status.ToString(),
-    });
-});
+HostHealthEndpoints.Map(app);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {

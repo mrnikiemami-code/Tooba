@@ -4,6 +4,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Tooba.BuildingBlocks;
 using Xunit;
 
@@ -75,6 +77,29 @@ public sealed class PlatformOptionsValidatorTests
         var options = new ToobaPlatformOptions { Edition = "Hybrid" };
         var result = new PlatformOptionsValidator().Validate(null, options);
         Assert.False(result.Succeeded);
+    }
+
+    [Fact]
+    public void Production_unset_edition_is_rejected()
+    {
+        var options = new ToobaPlatformOptions { Edition = "Unset" };
+        var environment = new FakeHostEnvironment("Production");
+        var result = new PlatformOptionsValidator(environment).Validate(null, options);
+        Assert.False(result.Succeeded);
+        Assert.Contains("Production requires Tooba:Edition", result.FailureMessage, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// محیط Host ساختگی برای تست fail-fast تولید.
+    /// </summary>
+    private sealed class FakeHostEnvironment : IHostEnvironment
+    {
+        public FakeHostEnvironment(string environmentName) => EnvironmentName = environmentName;
+
+        public string EnvironmentName { get; set; }
+        public string ApplicationName { get; set; } = "Tooba.Host.Tests";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = null!;
     }
 
     /// <summary>

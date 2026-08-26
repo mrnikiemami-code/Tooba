@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P05 — Operational Surface Integration
+P06 — Core API Integration / Operational Hardening
 ```
 
 Pipeline Mode:
@@ -37,34 +37,34 @@ Last Architect Accepted Task:
 TB-P05-T025
 ```
 
-Last Implementation Task:
+Last Architect Accepted Gate:
 
 ```text
 TB-P05-GATE
 ```
 
-Last Architect Accepted Gate:
+Last Implementation Task:
 
 ```text
-TB-P04-GATE
+TB-P06-T001
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker IDLE after TB-P05-GATE PASS)
+NONE (Worker completing TB-P06-T001)
 ```
 
 Current Gate:
 
 ```text
-TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P05-GATE = ACCEPTED
 ```
 
 Next Phase:
 
 ```text
-P06 (pending Architect formal definition after P05 gate ACCEPT)
+P06 continuation (Architect-issued after T001 ACCEPT)
 ```
 
 Gate State:
@@ -74,13 +74,15 @@ TB-P01-GATE = ACCEPTED
 TB-P02-GATE = ACCEPTED
 TB-P03-GATE = ACCEPTED
 TB-P04-GATE = ACCEPTED
-TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P05-GATE = ACCEPTED
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T001 = AWAITING_ARCHITECT_ACCEPT
+HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
+PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 ```
 
 Accepted ledger (selected):
@@ -274,7 +276,13 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-AWAITING_ARCHITECT_ACCEPT (TB-P05-T001 through T026-R2 ACCEPTED for gate finalization; TB-P05-GATE Worker PASS submitted; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; Worker must NOT mark P05 COMPLETE)
+COMPLETE (Architect accepted TB-P05-GATE)
+```
+
+P06 Core API Integration / Operational Hardening:
+
+```text
+IN_PROGRESS (TB-P06-T001 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK)
 ```
 
 Design System Foundation:
@@ -549,4 +557,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE. TB-P05-T026 / R1 / R2 = ACCEPTED (gate finalization). TB-P05-GATE Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT. HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK (non-blocking). P05 = AWAITING_ARCHITECT_ACCEPT (Worker must NOT mark P05 COMPLETE). Evidence under `docs/evidence/TB-P05-GATE/`. Worker PASS is not Architect ACCEPT. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE (TB-P05-GATE ACCEPTED). P06 = IN_PROGRESS. TB-P06-T001 production runtime baseline submitted AWAITING_ARCHITECT_ACCEPT. HOME/PDP visual review OPEN_FOR_USER_FEEDBACK (non-blocking). Evidence under `docs/evidence/TB-P06-T001/`. P00–P05 = COMPLETE.

@@ -15,7 +15,7 @@ main
 Current Phase:
 
 ```text
-P05 — Operational Surface Integration
+P06 — Core API Integration / Operational Hardening
 ```
 
 Pipeline Mode:
@@ -34,16 +34,16 @@ TB-P05-T021
 Last Implementation Task:
 
 ```text
-TB-P05-GATE
+TB-P06-T001
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T001 = AWAITING_ARCHITECT_ACCEPT
 HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
-TB-P02-T001 = ACCEPTED
+TB-P05-GATE = ACCEPTED
 TB-P02-T002 = ACCEPTED
 TB-P02-T003 = ACCEPTED
 TB-P02-T004 = ACCEPTED
@@ -101,14 +101,9 @@ P01 = COMPLETE
 P02 = COMPLETE
 P03 = COMPLETE
 P04 = COMPLETE
-P05 = AWAITING_ARCHITECT_ACCEPT
-TB-P05-T026 = ACCEPTED
-TB-P05-T026-R1 = ACCEPTED
-TB-P05-T026-R2 = ACCEPTED
-HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
-PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
-TB-P05-T010 legacy transport version = RETIRED / NOT EXECUTED
-Identity & Authentication Foundation = COMPLETE
+P05 = COMPLETE
+P06 = IN_PROGRESS
+TB-P06-T001 = AWAITING_ARCHITECT_ACCEPT
 SpiceDB Authorization Foundation = COMPLETE
 Party / Organization / Membership Foundation = COMPLETE
 Session / Token / Credential Lifecycle = COMPLETE
@@ -124,7 +119,10 @@ Payment Foundation = COMPLETE
 Promotion & Discount Foundation = COMPLETE
 P03 Commerce Core Gate = COMPLETE
 P04 Experience Foundation = COMPLETE (TB-P04-GATE ACCEPTED)
-P05 Operational Surface Integration = AWAITING_ARCHITECT_ACCEPT
+P05 Operational Surface Integration = COMPLETE (TB-P05-GATE ACCEPTED)
+P06 Core API Integration / Operational Hardening = IN_PROGRESS
+TB-P05-T010 legacy transport version = RETIRED / NOT EXECUTED
+Identity & Authentication Foundation = COMPLETE
 ```
 
 ## Recovered Architect procedure

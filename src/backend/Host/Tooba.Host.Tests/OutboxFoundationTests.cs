@@ -138,6 +138,12 @@ public sealed class OutboxFoundationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["Tooba:Outbox:Enabled"] = "false",
+                    ["Tooba:Messaging:Enabled"] = "false",
+                    ["Tooba:Edition"] = "SingleStore",
+                    ["Tooba:SingleStore:Tenants:0:TenantId"] = "store-alpha",
+                    ["Tooba:SingleStore:Tenants:0:ConnectionReference"] = "tenant-alpha",
+                    ["Tooba:SingleStore:Tenants:0:Hosts:0"] = "localhost",
+                    ["Tooba:PostgreSQL:ConnectionReferences:tenant-alpha"] = "Host=127.0.0.1;Database=tooba_alpha",
                 });
             });
         });

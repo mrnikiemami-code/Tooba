@@ -1,0 +1,23 @@
+# Local development runtime for Tooba Host dependencies.
+# Credentials are DEV-ONLY and must not be used in production.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tooba-postgres-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: dev-only-not-for-production
+    volumes:
+      - tooba-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tooba-postgres-data:

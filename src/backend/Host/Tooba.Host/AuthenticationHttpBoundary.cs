@@ -657,7 +657,7 @@ internal static class AuthenticationEndpointMapper
 
     private static IResult AuthProblem(HttpContext http, int status, string title, string errorCode)
     {
-        var traceId = Activity.Current?.Id ?? http.TraceIdentifier;
+        var traceId = Activity.Current?.TraceId.ToString() ?? http.TraceIdentifier;
         var problem = new ProblemDetails
         {
             Status = status,
