@@ -35,6 +35,17 @@ import {
   type FulfillmentSnapshot,
 } from "../fulfillment/fulfillment-api";
 import { FulfillmentShipmentList } from "../fulfillment/fulfillment-ui";
+import {
+  adminRetryReturnRefund,
+  formatReturnDate,
+  formatReturnStatus,
+  loadAdminReturnDetail,
+  loadAdminReturns,
+  returnStatusBadgeClass,
+  type ReturnListRow,
+  type ReturnSnapshot,
+} from "../returns/return-api";
+import { ReturnDetailCard } from "../returns/return-ui";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -281,6 +292,93 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
             <h2 className="font-semibold">محموله‌ها</h2>
             <div className="mt-4"><FulfillmentShipmentList shipments={snapshot.shipments} /></div>
           </section>
+        </div>
+      ) : <p className="text-muted">در حال بارگذاری…</p>}
+    </main>
+  );
+}
+
+const returnColumns: GridColumnDef<ReturnListRow>[] = [
+  {
+    id: "returnRequestId",
+    header: "شناسه",
+    accessor: (row) => row.returnRequestId,
+    cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/returns/${row.returnRequestId}`}>{row.returnRequestId.slice(0, 8)}</Link>,
+    width: 120,
+    minWidth: 96,
+    maxWidth: 160,
+    sticky: "start",
+    filterKind: "text",
+    sortable: true,
+  },
+  { id: "sellerOrderId", header: "سفارش", accessor: (row) => row.sellerOrderId, cell: (row) => row.sellerOrderId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
+  { id: "itemCount", header: "اقلام", accessor: (row) => row.itemCount, width: 80, minWidth: 64, maxWidth: 96, sortable: true },
+  {
+    id: "refundAmount",
+    header: "بازپرداخت",
+    accessor: (row) => row.refundAmount,
+    cell: (row) => row.refundAmount.toLocaleString("fa-IR"),
+    width: 120,
+    minWidth: 96,
+    maxWidth: 150,
+    sortable: true,
+  },
+  {
+    id: "status",
+    header: "وضعیت",
+    accessor: (row) => row.status,
+    cell: (row) => <span className={returnStatusBadgeClass(row.status)}>{formatReturnStatus(row.status)}</span>,
+    width: 140,
+    minWidth: 120,
+    maxWidth: 180,
+    filterKind: "status",
+  },
+  {
+    id: "createdAt",
+    header: "تاریخ",
+    accessor: (row) => row.createdAt,
+    cell: (row) => formatReturnDate(row.createdAt),
+    width: 140,
+    minWidth: 110,
+    maxWidth: 180,
+    sortable: true,
+  },
+];
+
+/** فهرست زندهٔ مرجوعی برای Admin. */
+export function AdminReturnsScreen() {
+  return <GridPage title="مرجوعی / بازپرداخت" description="نظارت بر درخواست‌های مرجوعی و refund" loader={loadAdminReturns} columns={returnColumns} />;
+}
+
+/** جزئیات مرجوعی Admin با retry refund. */
+export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: string }) {
+  const [result, setResult] = useState<AdminResult<ReturnSnapshot>>({ state: "ok", data: null, status: 0 });
+  const refresh = () => void loadAdminReturnDetail(returnRequestId).then(setResult);
+  useEffect(refresh, [returnRequestId]);
+  if (result.state === "denied") return <Denied retry={refresh} />;
+  const snapshot = result.data;
+  const canRetry = snapshot?.status === "RefundFailed";
+
+  return (
+    <main>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <PageHeading title="جزئیات مرجوعی" description={snapshot?.returnRequestId.slice(0, 8) ?? "در حال بارگذاری"} />
+        <Link className="text-sm text-primary hover:underline" href="/admin/returns">بازگشت به فهرست</Link>
+      </div>
+      {result.state === "error" ? (
+        <ErrorState title="مرجوعی خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+      ) : snapshot ? (
+        <div className="grid gap-5">
+          <ReturnDetailCard snapshot={snapshot} />
+          {canRetry ? (
+            <button
+              type="button"
+              className="rounded-xl px-4 py-2 text-sm font-bold bg-[#2563EB] text-white hover:bg-blue-700 transition-colors w-fit"
+              onClick={() => void adminRetryReturnRefund(returnRequestId).then(refresh)}
+            >
+              تلاش مجدد بازپرداخت
+            </button>
+          ) : null}
         </div>
       ) : <p className="text-muted">در حال بارگذاری…</p>}
     </main>

@@ -124,6 +124,27 @@ public interface IFulfillmentDirectory
 }
 
 /// <summary>
+/// snapshot eligibility مرجوعی از fulfillment.
+/// </summary>
+public sealed record FulfillmentReturnEligibilitySnapshot(
+    Guid SellerOrderId,
+    IReadOnlyDictionary<Guid, int> DeliveredQuantities,
+    DateTimeOffset? LastDeliveredAt);
+
+/// <summary>
+/// خواندن evidence تحویل برای Returns بدون cross-DbContext.
+/// </summary>
+public interface IFulfillmentReturnReader
+{
+    /// <summary>
+    /// snapshot eligibility مرجوعی را برمی‌گرداند.
+    /// </summary>
+    Task<FulfillmentReturnEligibilitySnapshot?> GetEligibilityAsync(
+        Guid sellerOrderId,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// نگهبان use-case fulfillment.
 /// </summary>
 public interface IFulfillmentUseCaseGuard

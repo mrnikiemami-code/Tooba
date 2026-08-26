@@ -157,6 +157,30 @@ public interface IPaymentGatewayRegistry
 }
 
 /// <summary>
+/// نتیجهٔ refund از درگاه.
+/// </summary>
+public sealed record GatewayRefundResult(
+    bool Succeeded,
+    string? ProviderReference,
+    string? FailureCode);
+
+/// <summary>
+/// قرارداد refund نزد درگاه. PSP واقعی اینجا نیست.
+/// </summary>
+public interface IPaymentRefundGateway
+{
+    /// <summary>
+    /// refund را با idempotency نزد درگاه اجرا می‌کند.
+    /// </summary>
+    Task<GatewayRefundResult> RefundAsync(
+        Guid paymentId,
+        decimal amount,
+        string currency,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// نگهبان موردکاربرد پرداخت.
 /// </summary>
 public interface IPaymentUseCaseGuard

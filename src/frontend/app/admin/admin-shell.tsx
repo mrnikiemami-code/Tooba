@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Star,
   Store,
+  RotateCcw,
   Truck,
   Users,
   X,
@@ -45,6 +46,7 @@ const navGroups: NavGroup[] = [
       { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true },
       { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true },
       { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true },
+      { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true },
     ],
   },
   {

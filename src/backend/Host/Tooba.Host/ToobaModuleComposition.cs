@@ -19,6 +19,7 @@ using Tooba.AddressBook.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure;
 using Tooba.Content.Infrastructure;
 using Tooba.Fulfillment.Infrastructure;
+using Tooba.Returns.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -53,6 +54,7 @@ internal static class ToobaModuleComposition
         new ContentModule(),
         new PaymentModule(),
         new FulfillmentModule(),
+        new ReturnsModule(),
     ];
 
     /// <summary>

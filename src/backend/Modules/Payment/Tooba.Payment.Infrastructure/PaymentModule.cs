@@ -51,6 +51,12 @@ public sealed class PaymentModule : IToobaModule
         {
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
             services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
+            services.AddScoped<IPaymentRefundGateway, FakePaymentRefundGateway>();
+        }
+
+        if (environment.IsProduction())
+        {
+            services.AddScoped<IPaymentRefundGateway, FailClosedPaymentRefundGateway>();
         }
 
         services.AddDbContext<PaymentDbContext>((sp, options) =>

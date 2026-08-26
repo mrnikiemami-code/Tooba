@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, MapPin, Package, Store, Truck } from "lucide-react";
+import { ChevronRight, MapPin, Package, RotateCcw, Store, Truck } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -13,6 +13,7 @@ import {
 } from "../../customer-api";
 import { loadCustomerFulfillments, type FulfillmentSnapshot } from "../../../fulfillment/fulfillment-api";
 import { FulfillmentShippingInfoBlock } from "../../../fulfillment/fulfillment-ui";
+import { ReturnFormModal } from "../../../returns/return-ui";
 
 /**
  * جزئیات سفارش مشتری با خطوط هر فروشنده و snapshot ارسال واقعی.
@@ -21,6 +22,7 @@ export default function CustomerOrderDetail() {
   const params = useParams<{ checkoutId: string }>();
   const [page, setPage] = useState<CustomerOrderDetailPage | null | undefined>(undefined);
   const [fulfillments, setFulfillments] = useState<FulfillmentSnapshot[] | null | undefined>(undefined);
+  const [returnModal, setReturnModal] = useState<{ sellerOrderId: string; items: FulfillmentSnapshot["items"] } | null>(null);
 
   useEffect(() => {
     void loadCustomerOrderDetail(params.checkoutId).then(setPage);
@@ -112,8 +114,21 @@ export default function CustomerOrderDetail() {
                 ))}
               </div>
               {fulfillmentBySeller.get(seller.sellerOrderId) ? (
-                <div className="px-4 pb-4">
+                <div className="px-4 pb-4 space-y-3">
                   <FulfillmentShippingInfoBlock snapshot={fulfillmentBySeller.get(seller.sellerOrderId)!} />
+                  {fulfillmentBySeller.get(seller.sellerOrderId)!.status === "Delivered" ? (
+                    <button
+                      type="button"
+                      onClick={() => setReturnModal({
+                        sellerOrderId: seller.sellerOrderId,
+                        items: fulfillmentBySeller.get(seller.sellerOrderId)!.items,
+                      })}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#2563EB] px-4 py-2 text-sm font-bold text-[#2563EB] hover:bg-blue-50 transition-colors"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      درخواست مرجوعی
+                    </button>
+                  ) : null}
                 </div>
               ) : fulfillments !== undefined && fulfillments !== null && fulfillments.length === 0 ? (
                 <p className="px-4 pb-4 text-xs text-gray-400">وضعیت ارسال این فروشنده هنوز ثبت نشده است.</p>
@@ -148,6 +163,14 @@ export default function CustomerOrderDetail() {
           </div>
         </div>
       </section>
+      {returnModal ? (
+        <ReturnFormModal
+          open
+          sellerOrderId={returnModal.sellerOrderId}
+          fulfillmentItems={returnModal.items}
+          onClose={() => setReturnModal(null)}
+        />
+      ) : null}
     </div>
   );
 }

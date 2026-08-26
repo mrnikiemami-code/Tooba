@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Tooba.Returns.Infrastructure</RootNamespace>
+    <AssemblyName>Tooba.Returns.Infrastructure</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Returns.Application\Tooba.Returns.Application.csproj" />
+    <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
+    <ProjectReference Include="..\..\Order\Tooba.Order.Application\Tooba.Order.Application.csproj" />
+    <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
+    <ProjectReference Include="..\..\Payment\Tooba.Payment.Application\Tooba.Payment.Application.csproj" />
+  </ItemGroup>
+</Project>

@@ -33,6 +33,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<FulfillmentDirectory>();
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();
+        services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, FulfillmentPaymentSucceededHandler>();
         services.AddDbContext<FulfillmentDbContext>((sp, options) =>
         {
