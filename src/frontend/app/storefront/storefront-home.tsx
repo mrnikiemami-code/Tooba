@@ -1,12 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ChevronLeft, Flame } from "lucide-react";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
-import type { StorefrontBrandItem, StorefrontCategoryItem, StorefrontProductCard } from "./storefront-model.ts";
+import type {
+  StorefrontBestSellerColumn,
+  StorefrontBrandItem,
+  StorefrontCategoryItem,
+  StorefrontProductCard,
+} from "./storefront-model.ts";
 
 const SLIDES = [
-  { src: "/images/sliders/slider-1.jpg", alt: "بنر فروشگاهی یک" },
-  { src: "/images/sliders/slider-2.jpg", alt: "بنر فروشگاهی دو" },
-  { src: "/images/sliders/slider-3.jpg", alt: "بنر فروشگاهی سه" },
-  { src: "/images/sliders/slider-4.jpg", alt: "بنر فروشگاهی چهار" },
+  { src: "/images/sliders/slider-1.jpg", href: "/offers", alt: "بنر فروشگاهی یک" },
+  { src: "/images/sliders/slider-2.jpg", href: "/sale", alt: "بنر فروشگاهی دو" },
+  { src: "/images/sliders/slider-3.jpg", href: "/new-products", alt: "بنر فروشگاهی سه" },
+  { src: "/images/sliders/slider-4.jpg", href: "/products", alt: "بنر فروشگاهی چهار" },
 ];
 
 const STORY_IMAGES = [
@@ -20,198 +29,276 @@ const STORY_IMAGES = [
 
 const CATEGORY_IMAGE_INDEXES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
 
+const MIDDLE_BANNERS = [
+  { src: "/images/middleBanner/1.webp", href: "/offers", title: "پیشنهادهای ویژه" },
+  { src: "/images/middleBanner/2.webp", href: "/sale", title: "حراجی" },
+  { src: "/images/middleBanner/1.webp", href: "/new-products", title: "تازه‌ها" },
+  { src: "/images/middleBanner/2.webp", href: "/brands", title: "برندها" },
+];
+
 /**
- * خانهٔ Shopeiva با اسلایدر/بنر قالب و ردیف‌های کالای زنده Catalog/Offer.
+ * خانهٔ Shopeiva با ترتیب و ریتم منبع؛ دادهٔ تجاری زنده از Host.
  */
 export function StorefrontShopeivaHome({
   heroTitle,
-  heroSubtitle,
-  categories,
+  homeCategories,
   specialOffers,
-  campaignProducts,
   newArrivals,
-  productRail,
   brands,
+  bestSellerColumns,
+  mostViewedProducts,
 }: {
   heroTitle: string;
   heroSubtitle: string;
   categories: StorefrontCategoryItem[];
+  homeCategories: StorefrontCategoryItem[];
   specialOffers: StorefrontProductCard[];
   campaignProducts: StorefrontProductCard[];
   newArrivals: StorefrontProductCard[];
   productRail: StorefrontProductCard[];
   brands: StorefrontBrandItem[];
+  bestSellerColumns: StorefrontBestSellerColumn[];
+  mostViewedProducts: StorefrontProductCard[];
 }) {
-  const storyItems =
-    categories.length > 0
-      ? categories.slice(0, 8).map((category, index) => ({
-          href: `/products?categoryId=${category.categoryId}`,
-          name: category.name,
-          src: STORY_IMAGES[index % STORY_IMAGES.length]!,
-        }))
-      : STORY_IMAGES.map((src, index) => ({
-          href: "/products",
-          name: `ویترین ${index + 1}`,
-          src,
-        }));
+  const storyItems = homeCategories.slice(0, 12).map((category, index) => ({
+    href: `/products?categoryId=${category.categoryId}`,
+    name: category.name,
+    src: STORY_IMAGES[index % STORY_IMAGES.length]!,
+  }));
 
   return (
-    <div className="py-4 md:py-6 space-y-6 md:space-y-8 overflow-x-hidden">
+    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home">
       <h1 className="sr-only">{heroTitle}</h1>
 
-      <section aria-label="اسلایدر خانه">
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={SLIDES[0]!.src} alt={SLIDES[0]!.alt} className="w-full h-[220px] sm:h-[320px] lg:h-[420px] object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-l from-black/45 to-transparent" />
-          <div className="absolute bottom-6 right-6 left-6 text-white max-w-xl">
-            <p className="text-lg md:text-3xl font-black">{heroTitle}</p>
-            <p className="text-sm md:text-base mt-2 opacity-90">{heroSubtitle}</p>
-          </div>
+      <HomeHeroSlider />
+
+      <section aria-label="استوری‌ها" className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+            استوری‌ها
+          </h3>
         </div>
-        <div className="hidden md:grid grid-cols-3 gap-3 mt-3">
-          {SLIDES.slice(1).map((slide) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={slide.src} src={slide.src} alt={slide.alt} className="h-28 w-full object-cover rounded-2xl" />
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+          {storyItems.map((story) => (
+            <Link key={`${story.href}-${story.name}`} href={story.href} className="shrink-0 w-20 md:w-[100px] text-center">
+              <div className="w-20 h-20 md:w-[100px] md:h-[100px] rounded-full p-[3px] bg-gradient-to-tr from-[#2563EB] to-amber-400">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={story.src} alt="" className="w-full h-full rounded-full object-cover bg-white p-0.5" />
+              </div>
+              <p className="text-[11px] mt-1 text-gray-700 line-clamp-2">{story.name}</p>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section aria-label="استوری رده‌ها" className="flex gap-4 overflow-x-auto pb-2">
-        {storyItems.map((story) => (
-          <Link key={`${story.href}-${story.name}`} href={story.href} className="shrink-0 w-20 text-center">
-            <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-[#2563EB] to-amber-400">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={story.src} alt="" className="w-full h-full rounded-full object-cover bg-white p-0.5" />
-            </div>
-            <p className="text-[11px] mt-1 text-gray-700 line-clamp-2">{story.name}</p>
-          </Link>
-        ))}
-      </section>
-
-      <section aria-labelledby="home-categories-heading">
+      <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-categories">
         <div className="flex items-center justify-between mb-4">
-          <h2 id="home-categories-heading" className="text-lg md:text-xl font-black">
+          <h2 id="home-categories-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
             دسته‌بندی‌ها
           </h2>
-          <Link href="/products" className="text-xs text-[#2563EB] font-bold">
+          <Link href="/products" className="text-xs text-[#2563EB] font-bold flex items-center gap-1">
             همه
+            <ChevronLeft className="w-3.5 h-3.5" />
           </Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {categories.map((category, index) => {
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 snap-x">
+          {homeCategories.map((category, index) => {
             const imageIndex = CATEGORY_IMAGE_INDEXES[index % CATEGORY_IMAGE_INDEXES.length]!;
             const extension = imageIndex === 10 ? "jpg" : "png";
             return (
               <Link
                 key={category.categoryId}
                 href={`/products?categoryId=${category.categoryId}`}
-                className="bg-white rounded-2xl border border-gray-100 p-3 text-center hover:shadow-md"
+                className="snap-start shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md"
+                data-testid="home-category-card"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/images/categories/${imageIndex}.${extension}`}
-                  alt=""
-                  className="w-14 h-14 mx-auto object-contain mb-2"
-                />
-                <span className="text-[11px] font-bold text-gray-700 line-clamp-2">{category.name}</span>
+                <div className="aspect-square bg-gray-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/categories/${imageIndex}.${extension}`}
+                    alt=""
+                    className="w-full h-full object-contain p-4"
+                  />
+                </div>
+                <p className="text-sm font-bold text-gray-800 text-center px-2 py-3 line-clamp-2">{category.name}</p>
               </Link>
             );
           })}
         </div>
+        <p className="sr-only">تعداد ردهٔ ریل خانه: {homeCategories.length}</p>
       </section>
 
       {specialOffers.length > 0 ? (
-        <ProductSection
-          id="home-special-offers"
-          title="پیشنهادهای ویژه"
-          href="/products"
-          linkLabel="همه کالاها"
+        <ProductRailSection
+          id="home-flash"
+          title="پیشنهاد شگفت‌انگیز"
+          href="/offers"
+          linkLabel="همه"
           tone="accent"
           products={specialOffers}
-          empty=""
+          slideClassName="w-[170px] md:w-[210px]"
+          testId="home-flash-sales"
         />
       ) : null}
 
-      {campaignProducts.length > 0 ? (
-        <ProductSection
-          id="home-sale"
-          title="فروش ویژه"
-          href="/products"
-          linkLabel="مشاهده"
+      {bestSellerColumns.length > 0 ? (
+        <section aria-labelledby="home-best-sellers-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-best-sellers">
+          <div className="flex items-center justify-between mb-4">
+            <h2 id="home-best-sellers-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+              پرفروش‌ترین‌ها
+            </h2>
+            <Link href="/best-seller" className="text-xs text-[#2563EB] font-bold">
+              مشاهده
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-h-[600px] overflow-y-auto">
+            {bestSellerColumns.map((column) => (
+              <div key={`${column.categoryId}-${column.categoryName}`} className="bg-white rounded-2xl border border-gray-100 p-3 space-y-3">
+                <p className="text-sm font-black text-gray-900">{column.categoryName}</p>
+                {column.products.map((card) => (
+                  <Link
+                    key={card.productId}
+                    href={`/products/${card.slug}`}
+                    className="flex gap-3 items-center hover:bg-gray-50 rounded-xl p-1"
+                  >
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#1e3a8a] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      Tooba
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-800 line-clamp-2">{card.title}</p>
+                      <p className="text-[11px] text-[#2563EB] font-bold mt-1">
+                        {(card.promotionalAmountExclusiveOfTax ?? card.offerAmountExclusiveOfTax).toLocaleString("fa-IR")} {card.currency}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {mostViewedProducts.length > 0 ? (
+        <ProductRailSection
+          id="home-most-viewed"
+          title="پربازدیدترین‌ها"
+          href="/most-viewed"
+          linkLabel="همه"
           tone="plain"
-          products={campaignProducts}
-          empty=""
+          products={mostViewedProducts}
+          slideClassName="w-[170px] md:w-[220px]"
+          testId="home-most-viewed"
         />
       ) : null}
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="بنرهای میانی">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/middleBanner/1.webp" alt="" className="w-full h-40 md:h-56 object-cover rounded-3xl" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/middleBanner/2.webp" alt="" className="w-full h-40 md:h-56 object-cover rounded-3xl" />
+      <section aria-label="بنرهای میانی" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-middle-banners">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+          {MIDDLE_BANNERS.map((banner) => (
+            <Link
+              key={`${banner.href}-${banner.title}`}
+              href={banner.href}
+              className="relative group rounded-3xl overflow-hidden aspect-[21/9] sm:aspect-[21/8] md:aspect-[21/7] bg-gray-100"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={banner.src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors" />
+              <span className="absolute bottom-4 right-4 text-white text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                {banner.title}
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
 
-      <ProductSection
-        id="home-new-arrivals"
-        title="تازه‌های ویترین"
-        href="/products"
-        linkLabel="همه"
-        tone="plain"
-        products={newArrivals}
-        empty="تازه‌ای برای نمایش نیست."
-      />
-
-      <ProductSection
-        id="home-product-rail"
-        title="پیشنهادهای بیشتر"
-        href="/products"
-        linkLabel="ویترین"
-        tone="plain"
-        products={productRail}
-        empty="ردیفی برای نمایش نیست."
-      />
-
-      <section aria-labelledby="home-brands-heading">
+      <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands">
         <div className="flex items-center justify-between mb-4">
-          <h2 id="home-brands-heading" className="text-lg md:text-xl font-black">
+          <h2 id="home-brands-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
             برندها
           </h2>
-          <Link href="/products" className="text-xs text-[#2563EB] font-bold">
-            همه کالاها
+          <Link href="/brands" className="text-xs text-[#2563EB] font-bold">
+            همه برندها
           </Link>
         </div>
         {brands.length === 0 ? (
           <p className="text-sm text-gray-500 bg-white rounded-2xl border border-gray-100 p-4">برند منتشرشده‌ای در Catalog نیست.</p>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2">
             {brands.map((brand) => (
-              <div
+              <Link
                 key={brand.brandId}
-                className="shrink-0 min-w-[120px] bg-white rounded-2xl border border-gray-100 px-4 py-5 text-center"
+                href={`/brand/${brand.slug}`}
+                className="shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 aspect-square flex flex-col items-center justify-center p-4 hover:shadow-md"
               >
-                <p className="text-sm font-bold text-gray-800 line-clamp-2">{brand.name}</p>
-              </div>
+                <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 text-[#2563EB] font-black flex items-center justify-center mb-3">
+                  {brand.name.slice(0, 1)}
+                </div>
+                <p className="text-sm font-bold text-gray-800 text-center line-clamp-2">{brand.name}</p>
+                <p className="text-[10px] text-gray-500 mt-1">{brand.productCount.toLocaleString("fa-IR")} کالا</p>
+              </Link>
             ))}
           </div>
         )}
       </section>
+
+      <ProductRailSection
+        id="home-new-arrivals"
+        title="جدیدترین‌ها"
+        href="/new-products"
+        linkLabel="همه"
+        tone="plain"
+        products={newArrivals}
+        slideClassName="w-[180px] md:w-[220px]"
+        testId="home-new-products"
+      />
     </div>
   );
 }
 
-/**
- * ردیف کارت محصول با عنوان معنایی و پوستهٔ Shopeiva.
- */
-function ProductSection({
+function HomeHeroSlider() {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setIndex((current) => (current + 1) % SLIDES.length), 4500);
+    return () => window.clearInterval(timer);
+  }, []);
+  const slide = SLIDES[index]!;
+  return (
+    <section aria-label="اسلایدر خانه" className="px-2 sm:px-4" data-testid="home-hero">
+      <Link href={slide.href} className="relative block rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={slide.src}
+          alt={slide.alt}
+          className="w-full h-[190px] sm:h-[230px] md:h-[290px] lg:h-[350px] object-cover transition-opacity"
+        />
+      </Link>
+      <div className="flex justify-center gap-2 mt-3">
+        {SLIDES.map((item, slideIndex) => (
+          <button
+            key={item.src}
+            type="button"
+            aria-label={`اسلاید ${slideIndex + 1}`}
+            className={`h-2 rounded-full transition-all ${slideIndex === index ? "w-6 bg-[#2563EB]" : "w-2 bg-gray-300"}`}
+            onClick={() => setIndex(slideIndex)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProductRailSection({
   id,
   title,
   href,
   linkLabel,
   tone,
   products,
-  empty,
-  note,
+  slideClassName,
+  testId,
 }: {
   id: string;
   title: string;
@@ -219,55 +306,56 @@ function ProductSection({
   linkLabel: string;
   tone: "accent" | "plain";
   products: StorefrontProductCard[];
-  empty: string;
-  note?: string;
+  slideClassName: string;
+  testId: string;
 }) {
   const headingId = `${id}-heading`;
+  if (products.length === 0) {
+    return null;
+  }
   if (tone === "accent") {
     return (
-      <section id={id} aria-labelledby={headingId} className="bg-gradient-to-l from-[#2563EB] to-[#1d4ed8] rounded-3xl p-4 md:p-6">
-        <div className="flex items-center justify-between mb-4 text-white">
-          <h2 id={headingId} className="text-lg md:text-xl font-black">
-            {title}
-          </h2>
-          <Link href={href} className="text-xs font-bold bg-white text-[#2563EB] px-3 py-1 rounded-lg">
-            {linkLabel}
-          </Link>
-        </div>
-        {note ? <p className="text-white/80 text-[11px] mb-3">{note}</p> : null}
-        {products.length === 0 ? (
-          <p className="text-white/90 text-sm">{empty}</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4" data-testid={testId}>
+        <div className="bg-gradient-to-l from-[#2563EB] to-[#1d4ed8] rounded-3xl p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4 text-white">
+            <h2 id={headingId} className="text-lg md:text-xl font-black flex items-center gap-2">
+              <Flame className="w-5 h-5" />
+              {title}
+            </h2>
+            <Link href={href} className="text-xs font-bold bg-white text-[#2563EB] px-3 py-1 rounded-lg">
+              {linkLabel}
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-1">
             {products.map((card) => (
-              <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} />
+              <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
+                <StorefrontProductCardView card={card} />
+              </div>
             ))}
           </div>
-        )}
+        </div>
       </section>
     );
   }
 
   return (
-    <section id={id} aria-labelledby={headingId}>
+    <section id={id} aria-labelledby={headingId} className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid={testId}>
       <div className="flex items-center justify-between mb-4">
-        <h2 id={headingId} className="text-lg md:text-xl font-black">
+        <h2 id={headingId} className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
           {title}
         </h2>
         <Link href={href} className="text-xs text-[#2563EB] font-bold">
           {linkLabel}
         </Link>
       </div>
-      {note ? <p className="text-[11px] text-gray-500 mb-3">{note}</p> : null}
-      {products.length === 0 ? (
-        <p className="text-sm text-gray-500 bg-white rounded-2xl border border-gray-100 p-4">{empty}</p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {products.map((card) => (
-            <StorefrontProductCardView key={`${id}-${card.productId}`} card={card} />
-          ))}
-        </div>
-      )}
+      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1">
+        {products.map((card) => (
+          <div key={`${id}-${card.productId}`} className={`shrink-0 ${slideClassName}`}>
+            <StorefrontProductCardView card={card} />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

@@ -84,6 +84,17 @@ export interface StorefrontHomePage {
   brands: StorefrontBrandItem[];
   heroTitle: string;
   heroSubtitle: string;
+  /** ریل خانه؛ سقف Shopeiva (~20) نه dump کامل Catalog. */
+  homeCategories: StorefrontCategoryItem[];
+  bestSellerColumns: StorefrontBestSellerColumn[];
+  mostViewedProducts: StorefrontProductCard[];
+}
+
+/** ستون پرفروش خانه مطابق Shopeiva. */
+export interface StorefrontBestSellerColumn {
+  categoryId: string;
+  categoryName: string;
+  products: StorefrontProductCard[];
 }
 
 /**

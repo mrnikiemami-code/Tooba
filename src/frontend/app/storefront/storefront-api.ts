@@ -2,6 +2,7 @@ import type {
   StorefrontAlternateOffer,
   StorefrontBrandPage,
   StorefrontBrandItem,
+  StorefrontBestSellerColumn,
   StorefrontCategoryItem,
   StorefrontHomePage,
   StorefrontListingPage,
@@ -423,10 +424,17 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
   const productRailRaw = readProp(item, "productRail", "ProductRail");
   const categoriesRaw = readProp(item, "categories", "Categories");
   const brandsRaw = readProp(item, "brands", "Brands");
+  const homeCategoriesRaw = readProp(item, "homeCategories", "HomeCategories");
+  const bestSellerColumnsRaw = readProp(item, "bestSellerColumns", "BestSellerColumns");
+  const mostViewedRaw = readProp(item, "mostViewedProducts", "MostViewedProducts");
+  const categories = Array.isArray(categoriesRaw)
+    ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+    : [];
+  const homeCategories = Array.isArray(homeCategoriesRaw)
+    ? homeCategoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
+    : categories.filter((row) => row.parentCategoryId == null).slice(0, 20);
   return {
-    categories: Array.isArray(categoriesRaw)
-      ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
-      : [],
+    categories,
     featuredProducts: Array.isArray(productsRaw)
       ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
       : [],
@@ -447,6 +455,28 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
       : [],
     heroTitle: asString(readProp(item, "heroTitle", "HeroTitle"), "فروشگاه توبا"),
     heroSubtitle: asString(readProp(item, "heroSubtitle", "HeroSubtitle")),
+    homeCategories,
+    bestSellerColumns: Array.isArray(bestSellerColumnsRaw)
+      ? bestSellerColumnsRaw.map(mapBestSellerColumn).filter((row): row is StorefrontBestSellerColumn => row !== null)
+      : [],
+    mostViewedProducts: Array.isArray(mostViewedRaw)
+      ? mostViewedRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+  };
+}
+
+function mapBestSellerColumn(payload: unknown): StorefrontBestSellerColumn | null {
+  const item = asRecord(payload);
+  if (!item) {
+    return null;
+  }
+  const productsRaw = readProp(item, "products", "Products");
+  return {
+    categoryId: asString(readProp(item, "categoryId", "CategoryId")),
+    categoryName: asString(readProp(item, "categoryName", "CategoryName"), "رده"),
+    products: Array.isArray(productsRaw)
+      ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
   };
 }
 

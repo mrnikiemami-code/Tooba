@@ -81,7 +81,15 @@ public sealed record StorefrontMerchandisingPage(
     IReadOnlyList<StorefrontProductCard> Products);
 
 /// <summary>
-/// صفحهٔ خانه با بنر نمایشی ایستا و کارت‌های زندهٔ Catalog/Offer.
+/// ستون پرفروش Shopeiva: یک رده با حداکثر سه کارت زنده.
+/// </summary>
+public sealed record StorefrontBestSellerColumn(
+    Guid CategoryId,
+    string CategoryName,
+    IReadOnlyList<StorefrontProductCard> Products);
+
+/// <summary>
+/// صفحهٔ خانه با بنر قالب و کارت‌های زندهٔ Catalog/Offer؛ ریل خانه از HomeCategories استفاده می‌کند نه dump کامل Categories.
 /// </summary>
 public sealed record StorefrontHomePage(
     IReadOnlyList<StorefrontCategoryItem> Categories,
@@ -92,7 +100,10 @@ public sealed record StorefrontHomePage(
     IReadOnlyList<StorefrontProductCard> ProductRail,
     IReadOnlyList<StorefrontBrandItem> Brands,
     string HeroTitle,
-    string HeroSubtitle);
+    string HeroSubtitle,
+    IReadOnlyList<StorefrontCategoryItem> HomeCategories,
+    IReadOnlyList<StorefrontBestSellerColumn> BestSellerColumns,
+    IReadOnlyList<StorefrontProductCard> MostViewedProducts);
 
 /// <summary>
 /// فهرست فروشگاهی فیلترپذیر. منبع حقیقت دمو JSON نیست.

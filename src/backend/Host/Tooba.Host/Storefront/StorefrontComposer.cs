@@ -59,19 +59,92 @@ public sealed class StorefrontComposer
     public async Task<StorefrontHomePage> GetHomeAsync(CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
-        var listing = await GetListingAsync(null, null, null, null, "newest", 1, 24, cancellationToken);
+        var listing = await GetListingAsync(null, null, null, null, "newest", 1, 48, cancellationToken);
         var brands = await ListBrandsAsync(cancellationToken);
         var promotedProducts = listing.Products.Where(card => card.PromotionLabel is not null).Take(10).ToList();
+        var homeCategories = SelectHomeCategories(categories, 20);
+        var bestSellerColumns = BuildBestSellerColumns(categories, listing.Products, 4, 3);
+        var mostViewed = listing.Products
+            .OrderByDescending(card => card.ReviewCount)
+            .ThenBy(card => card.Title, StringComparer.Ordinal)
+            .Take(12)
+            .ToList();
         return new StorefrontHomePage(
             categories,
-            listing.Products,
-            promotedProducts.Take(5).ToList(),
-            promotedProducts.Skip(5).Take(5).ToList(),
-            listing.Products.Take(10).ToList(),
-            listing.Products.Take(10).ToList(),
-            brands,
+            listing.Products.Take(24).ToList(),
+            promotedProducts.Take(8).ToList(),
+            promotedProducts.Skip(Math.Min(5, promotedProducts.Count)).Take(8).ToList(),
+            listing.Products.Take(8).ToList(),
+            listing.Products.Skip(8).Take(8).ToList(),
+            brands.Take(20).ToList(),
             "فروشگاه توبا",
-            "کالای واقعی از Catalog با قیمت Offer و موجودی انبار");
+            "کالای واقعی از Catalog با قیمت Offer و موجودی انبار",
+            homeCategories,
+            bestSellerColumns,
+            mostViewed);
+    }
+
+    /// <summary>
+    /// رده‌های ریل خانهٔ Shopeiva: ریشهٔ منتشرشده تا سقف مشخص؛ dump کامل Catalog نیست.
+    /// </summary>
+    internal static IReadOnlyList<StorefrontCategoryItem> SelectHomeCategories(
+        IReadOnlyList<StorefrontCategoryItem> categories,
+        int limit)
+    {
+        var roots = categories.Where(category => category.ParentCategoryId is null).ToList();
+        var source = roots.Count > 0 ? roots : categories;
+        return source.Take(Math.Clamp(limit, 1, 20)).ToList();
+    }
+
+    /// <summary>
+    /// ستون‌های پرفروش مطابق الگوی Shopeiva: تا چهار رده با سه کارت زنده در هر ستون.
+    /// </summary>
+    internal static IReadOnlyList<StorefrontBestSellerColumn> BuildBestSellerColumns(
+        IReadOnlyList<StorefrontCategoryItem> categories,
+        IReadOnlyList<StorefrontProductCard> products,
+        int columnCount,
+        int productsPerColumn)
+    {
+        var used = new HashSet<Guid>();
+        var columns = new List<StorefrontBestSellerColumn>();
+        var roots = categories.Where(category => category.ParentCategoryId is null).ToList();
+        var categoryOrder = roots.Count > 0 ? roots.Concat(categories).DistinctBy(category => category.CategoryId).ToList() : categories.ToList();
+        foreach (var category in categoryOrder)
+        {
+            if (columns.Count >= columnCount)
+            {
+                break;
+            }
+
+            var included = DescendantCategoryIds(categories, category.CategoryId);
+            var columnProducts = products
+                .Where(card => card.CategoryId is Guid categoryId && included.Contains(categoryId) && used.Add(card.ProductId))
+                .Take(productsPerColumn)
+                .ToList();
+            if (columnProducts.Count == 0)
+            {
+                continue;
+            }
+
+            columns.Add(new StorefrontBestSellerColumn(category.CategoryId, category.Name, columnProducts));
+        }
+
+        if (columns.Count < columnCount)
+        {
+            var remaining = products.Where(card => used.Add(card.ProductId)).ToList();
+            for (var index = columns.Count; index < columnCount; index++)
+            {
+                var slice = remaining.Skip((index - columns.Count) * productsPerColumn).Take(productsPerColumn).ToList();
+                if (slice.Count == 0)
+                {
+                    break;
+                }
+
+                columns.Add(new StorefrontBestSellerColumn(Guid.Empty, "پرفروش‌ها", slice));
+            }
+        }
+
+        return columns;
     }
 
     /// <summary>

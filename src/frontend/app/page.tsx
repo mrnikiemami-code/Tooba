@@ -35,11 +35,14 @@ export default async function HomePage() {
         heroTitle={home.heroTitle}
         heroSubtitle={home.heroSubtitle}
         categories={home.categories}
+        homeCategories={home.homeCategories}
         specialOffers={home.specialOffers}
         campaignProducts={home.campaignProducts}
         newArrivals={home.newArrivals}
         productRail={home.productRail}
         brands={home.brands}
+        bestSellerColumns={home.bestSellerColumns}
+        mostViewedProducts={home.mostViewedProducts}
       />
     </StorefrontShell>
   );
