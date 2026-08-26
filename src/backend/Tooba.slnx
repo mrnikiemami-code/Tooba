@@ -6,6 +6,8 @@
   <Folder Name="/Host/">
     <Project Path="Host/Tooba.Host/Tooba.Host.csproj" />
     <Project Path="Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj" />
+    <Project Path="Host/Tooba.MigrationRunner/Tooba.MigrationRunner.csproj" />
+    <Project Path="Host/Tooba.MigrationRunner.Tests/Tooba.MigrationRunner.Tests.csproj" />
   </Folder>
   <Folder Name="/Modules/">
     <Project Path="Modules/Tooba.ModuleContracts/Tooba.ModuleContracts.csproj" />

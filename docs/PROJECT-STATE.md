@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T001
+TB-P06-T002
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completing TB-P06-T001)
+NONE (Worker completing TB-P06-T002)
 ```
 
 Current Gate:
@@ -80,7 +80,8 @@ TB-P05-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P06-T001 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T001 = ACCEPTED
+TB-P06-T002 = AWAITING_ARCHITECT_ACCEPT
 HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 ```
@@ -282,7 +283,7 @@ COMPLETE (Architect accepted TB-P05-GATE)
 P06 Core API Integration / Operational Hardening:
 
 ```text
-IN_PROGRESS (TB-P06-T001 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK)
+IN_PROGRESS (TB-P06-T002 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT; TB-P06-T001 = ACCEPTED; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK)
 ```
 
 Design System Foundation:
@@ -557,4 +558,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE (TB-P05-GATE ACCEPTED). P06 = IN_PROGRESS. TB-P06-T001 production runtime baseline submitted AWAITING_ARCHITECT_ACCEPT. HOME/PDP visual review OPEN_FOR_USER_FEEDBACK (non-blocking). Evidence under `docs/evidence/TB-P06-T001/`. P00–P05 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE (TB-P05-GATE ACCEPTED). P06 = IN_PROGRESS. TB-P06-T001 = ACCEPTED. TB-P06-T002 production migration runner submitted AWAITING_ARCHITECT_ACCEPT. HOME/PDP visual review OPEN_FOR_USER_FEEDBACK (non-blocking). Evidence under `docs/evidence/TB-P06-T002/`. P00–P05 = COMPLETE.

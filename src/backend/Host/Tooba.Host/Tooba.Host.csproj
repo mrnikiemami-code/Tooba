@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Tooba.Host.Tests" />
+    <InternalsVisibleTo Include="Tooba.MigrationRunner" />
+    <InternalsVisibleTo Include="Tooba.MigrationRunner.Tests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\Tooba.BuildingBlocks\Tooba.BuildingBlocks.csproj" />
