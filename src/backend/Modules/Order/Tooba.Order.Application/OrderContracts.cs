@@ -160,3 +160,49 @@ public interface IOrderPurchaseVerificationGateway
         IReadOnlyCollection<Guid> catalogVariantIds,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// snapshot immutable سفارش برای handoff fulfillment.
+/// </summary>
+public sealed record OrderFulfillmentHandoffSnapshot(
+    Guid SellerOrderId,
+    Guid CheckoutId,
+    Guid SellerPartyId,
+    Guid PlacedByUserId,
+    bool IsPaid,
+    string RecipientName,
+    string ContactMobile,
+    string ProvinceName,
+    string CityName,
+    string PostalAddress,
+    string PostalCode,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    IReadOnlyList<OrderFulfillmentLineSnapshot> Lines);
+
+/// <summary>
+/// خط سفارش برای fulfillment.
+/// </summary>
+public sealed record OrderFulfillmentLineSnapshot(
+    Guid OrderLineId,
+    int Quantity,
+    Guid? ReservationId);
+
+/// <summary>
+/// خواندن snapshot سفارش برای Fulfillment بدون cross-DbContext.
+/// </summary>
+public interface IOrderFulfillmentReader
+{
+    /// <summary>
+    /// snapshot handoff را برای SellerOrder برمی‌گرداند.
+    /// </summary>
+    Task<OrderFulfillmentHandoffSnapshot?> GetHandoffAsync(Guid sellerOrderId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// snapshot checkout را برای مشتری برمی‌گرداند.
+    /// </summary>
+    Task<OrderFulfillmentHandoffSnapshot?> GetHandoffForCheckoutAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+}

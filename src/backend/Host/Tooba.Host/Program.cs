@@ -14,6 +14,7 @@ using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
+using Tooba.Host.Fulfillment;
 using Tooba.Host.Payments;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
@@ -104,6 +105,7 @@ builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
+builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
@@ -243,6 +245,7 @@ app.MapReviewEndpoints();
 app.MapProductQnAEndpoints();
 app.MapWishlistEndpoints();
 app.MapAddressBookEndpoints();
+app.MapFulfillmentEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);
 

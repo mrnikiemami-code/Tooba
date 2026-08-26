@@ -10,6 +10,7 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Persistence;
@@ -50,6 +51,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<CartDbContext>("Cart", CartDbContext.Schema),
         Descriptor<OrderDbContext>("Order", OrderDbContext.Schema),
         Descriptor<PaymentDbContext>("Payment", PaymentDbContext.Schema),
+        Descriptor<FulfillmentDbContext>("Fulfillment", FulfillmentDbContext.Schema),
         Descriptor<PromotionDbContext>("Promotion", PromotionDbContext.Schema),
         Descriptor<PlatformProbeDbContext>("PlatformProbe", PlatformProbeDbContext.Schema),
         Descriptor<ReviewsDbContext>("Reviews", ReviewsDbContext.Schema),

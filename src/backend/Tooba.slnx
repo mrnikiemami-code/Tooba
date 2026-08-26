@@ -45,6 +45,9 @@
     <Project Path="Modules/Payment/Tooba.Payment.Domain/Tooba.Payment.Domain.csproj" />
     <Project Path="Modules/Payment/Tooba.Payment.Application/Tooba.Payment.Application.csproj" />
     <Project Path="Modules/Payment/Tooba.Payment.Infrastructure/Tooba.Payment.Infrastructure.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Domain/Tooba.Fulfillment.Domain.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Application/Tooba.Fulfillment.Application.csproj" />
+    <Project Path="Modules/Fulfillment/Tooba.Fulfillment.Infrastructure/Tooba.Fulfillment.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />
