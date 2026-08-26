@@ -409,7 +409,11 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
     {
         public List<(Guid ReservationId, int Quantity)> Restocked { get; } = [];
 
-        public Task RestockConsumedReservationAsync(Guid reservationId, int quantity, CancellationToken cancellationToken)
+        public Task RestockConsumedReservationAsync(
+            Guid reservationId,
+            int quantity,
+            string idempotencyKey,
+            CancellationToken cancellationToken)
         {
             Restocked.Add((reservationId, quantity));
             return Task.CompletedTask;

@@ -1,27 +1,25 @@
-using Microsoft.Extensions.Logging;
+using Tooba.Inventory.Application;
 using Tooba.Returns.Application;
 
 namespace Tooba.Returns.Infrastructure;
 
 /// <summary>
-/// restock از طریق قرارداد Inventory؛ پیاده‌سازی فعلی no-op log است.
+/// restock از طریق قرارداد Inventory؛ بدون DbContext مشترک.
 /// </summary>
 public sealed class ReturnInventoryGateway : IReturnInventoryGateway
 {
-    private readonly ILogger<ReturnInventoryGateway> _logger;
+    private readonly IInventoryReturnGateway _inventory;
 
     /// <summary>
-    /// gateway را به logger وصل می‌کند.
+    /// gateway را به قرارداد Inventory وصل می‌کند.
     /// </summary>
-    public ReturnInventoryGateway(ILogger<ReturnInventoryGateway> logger) => _logger = logger;
+    public ReturnInventoryGateway(IInventoryReturnGateway inventory) => _inventory = inventory;
 
     /// <inheritdoc />
-    public Task RestockConsumedReservationAsync(Guid reservationId, int quantity, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation(
-            "Return restock no-op for reservation {ReservationId} quantity {Quantity}",
-            reservationId,
-            quantity);
-        return Task.CompletedTask;
-    }
+    public Task RestockConsumedReservationAsync(
+        Guid reservationId,
+        int quantity,
+        string idempotencyKey,
+        CancellationToken cancellationToken) =>
+        _inventory.RestockFromReturnAsync(reservationId, quantity, idempotencyKey, cancellationToken);
 }

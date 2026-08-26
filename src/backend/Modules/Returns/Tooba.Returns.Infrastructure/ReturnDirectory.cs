@@ -257,7 +257,11 @@ public sealed class ReturnDirectory : IReturnDirectory
                 _telemetry.RecordRefundSucceeded();
                 foreach (var item in request.Items.Where(x => x.ReservationId is not null))
                 {
-                    await _inventory.RestockConsumedReservationAsync(item.ReservationId!.Value, item.Quantity, cancellationToken);
+                    await _inventory.RestockConsumedReservationAsync(
+                        item.ReservationId!.Value,
+                        item.Quantity,
+                        $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
+                        cancellationToken);
                 }
             }
             else

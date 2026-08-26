@@ -37,6 +37,19 @@ export default function CustomerOrderDetail() {
     return map;
   }, [fulfillments]);
 
+  const returnLineLabels = useMemo(() => {
+    if (!page) return {} as Record<string, string>;
+    const map: Record<string, string> = {};
+    for (const seller of page.sellerOrders) {
+      const fulfillment = fulfillmentBySeller.get(seller.sellerOrderId);
+      if (!fulfillment) continue;
+      fulfillment.items.forEach((item, index) => {
+        map[item.orderLineId] = seller.lines[index]?.title ?? `خط ${item.orderLineId.slice(0, 8)}`;
+      });
+    }
+    return map;
+  }, [page, fulfillmentBySeller]);
+
   if (page === undefined) {
     return <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">در حال دریافت جزئیات سفارش...</div>;
   }
@@ -163,11 +176,13 @@ export default function CustomerOrderDetail() {
           </div>
         </div>
       </section>
-      {returnModal ? (
+      {returnModal && page ? (
         <ReturnFormModal
           open
           sellerOrderId={returnModal.sellerOrderId}
+          orderReference={page.reference}
           fulfillmentItems={returnModal.items}
+          lineLabels={returnLineLabels}
           onClose={() => setReturnModal(null)}
         />
       ) : null}

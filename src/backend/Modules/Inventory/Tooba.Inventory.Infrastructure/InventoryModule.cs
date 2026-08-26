@@ -28,6 +28,7 @@ public sealed class InventoryModule : IToobaModule
         services.AddSingleton<IOutboxModuleRegistration, InventoryOutboxRegistration>();
         services.AddScoped<IInventoryUseCaseGuard, OpenInventoryUseCaseGuard>();
         services.AddScoped<IInventoryDirectory, InventoryDirectory>();
+        services.AddScoped<IInventoryReturnGateway, InventoryReturnGateway>();
         services.AddScoped<IInventoryAvailabilityGateway>(sp => (InventoryDirectory)sp.GetRequiredService<IInventoryDirectory>());
         services.AddDbContext<InventoryDbContext>((sp, options) =>
         {

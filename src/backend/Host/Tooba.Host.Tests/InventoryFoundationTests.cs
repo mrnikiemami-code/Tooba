@@ -248,6 +248,67 @@ public sealed class InventoryFoundationTests : IAsyncLifetime
         Assert.Null(await inventoryDirA.GetAvailabilityAsync(offerBRef.OfferId, CancellationToken.None));
     }
 
+    /// <summary>
+    /// restock مرجوعی پس از Consumed: OnHand افزایش می‌یابد و idempotency dedup می‌شود.
+    /// </summary>
+    [SkippableFact]
+    public async Task Return_restock_increases_on_hand_idempotently_after_consumed_reservation()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-restock", "tenant-restock"));
+
+        await using var catalog = CreateCatalogDb(cs, commerce);
+        await using var party = CreatePartyDb(cs, commerce);
+        await using var offer = CreateOfferDb(cs, commerce);
+        await using var inventory = CreateInventoryDb(cs, commerce);
+        await catalog.Database.MigrateAsync();
+        await party.Database.MigrateAsync();
+        await offer.Database.MigrateAsync();
+        await inventory.Database.MigrateAsync();
+
+        var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
+        var partyDir = new PartyDirectory(party);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
+        var returnGateway = new InventoryReturnGateway(inventory, new OpenInventoryUseCaseGuard(), inventoryDir);
+
+        var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
+        var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "restock-item", null, names, CancellationToken.None);
+        var sizeId = await catalogDir.CreateAttributeDefinitionAsync(
+            "size-r",
+            CatalogAttributeValueKind.Enumeration,
+            isVariantAxis: true,
+            new Dictionary<string, string> { ["en-US"] = "Size" },
+            CancellationToken.None);
+        var medium = await catalogDir.AddAttributeOptionAsync(sizeId, "m", new Dictionary<string, string> { ["en-US"] = "M" }, CancellationToken.None);
+        var variant = await catalogDir.CreateVariantAsync(product.ProductId, "RESTOCK-1", [(sizeId, "ignored", medium)], CancellationToken.None);
+        var seller = await partyDir.CreateOrganizationAsync("فروشنده restock", null, CancellationToken.None);
+        var offerRef = await offerDir.CreateOfferAsync(variant.VariantId, seller.PartyId, SalesChannel.Marketplace, "RESTOCK-OFFER", CancellationToken.None);
+        var location = await inventoryDir.CreateLocationAsync("WH-R", "Restock WH", CancellationToken.None);
+        var stock = await inventoryDir.OpenPositionAsync(offerRef.OfferId, location, CancellationToken.None);
+        await inventoryDir.AdjustAsync(stock, StockAdjustmentKind.Increase, 5, "seed", null, CancellationToken.None);
+
+        var reserved = await inventoryDir.ReserveAsync(stock, 2, "cart-restock", "restock-idem", null, CancellationToken.None);
+        await inventoryDir.ConsumeAsync(reserved.ReservationId, CancellationToken.None);
+        var afterConsume = await inventoryDir.GetAvailabilityAsync(offerRef.OfferId, CancellationToken.None);
+        Assert.NotNull(afterConsume);
+        Assert.Equal(3, afterConsume!.OnHand);
+        Assert.Equal(0, afterConsume.Reserved);
+
+        await returnGateway.RestockFromReturnAsync(reserved.ReservationId, 2, "return-restock-test-001", CancellationToken.None);
+        var afterRestock = await inventoryDir.GetAvailabilityAsync(offerRef.OfferId, CancellationToken.None);
+        Assert.NotNull(afterRestock);
+        Assert.Equal(5, afterRestock!.OnHand);
+
+        await returnGateway.RestockFromReturnAsync(reserved.ReservationId, 2, "return-restock-test-001", CancellationToken.None);
+        var afterReplay = await inventoryDir.GetAvailabilityAsync(offerRef.OfferId, CancellationToken.None);
+        Assert.Equal(5, afterReplay!.OnHand);
+        Assert.Equal(1, await inventory.ReturnRestockInbox.CountAsync());
+    }
+
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
     {
         var modules = new IOutboxModuleRegistration[] { new CatalogOutboxRegistration() };

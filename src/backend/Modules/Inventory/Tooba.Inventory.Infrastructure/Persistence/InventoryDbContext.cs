@@ -39,6 +39,11 @@ public sealed class InventoryDbContext : DbContext
     public DbSet<StockReservation> Reservations => Set<StockReservation>();
 
     /// <summary>
+    /// dedup restock مرجوعی.
+    /// </summary>
+    public DbSet<ReturnRestockInboxRecord> ReturnRestockInbox => Set<ReturnRestockInboxRecord>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -76,6 +81,13 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.ExternalReference).HasMaxLength(128);
             entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique().HasFilter("idempotency_key IS NOT NULL");
+        });
+        modelBuilder.Entity<ReturnRestockInboxRecord>(entity =>
+        {
+            entity.ToTable("return_restock_inbox");
+            entity.HasKey(x => x.IdempotencyKey);
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
+            entity.HasIndex(x => x.ReservationId);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

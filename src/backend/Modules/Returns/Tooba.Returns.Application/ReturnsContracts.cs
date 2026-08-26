@@ -11,7 +11,11 @@ public interface IReturnInventoryGateway
     /// <summary>
     /// رزرو مصرف‌شده را پس از refund موفق restock می‌کند. پیاده‌سازی فعلی می‌تواند no-op log باشد.
     /// </summary>
-    Task RestockConsumedReservationAsync(Guid reservationId, int quantity, CancellationToken cancellationToken);
+    Task RestockConsumedReservationAsync(
+        Guid reservationId,
+        int quantity,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

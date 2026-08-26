@@ -47,4 +47,14 @@ Default **30 days** from last delivery timestamp (foundation constant in Returns
 
 ## Inventory restock
 
-Only via `IReturnInventoryGateway` contract after successful refund. Current implementation logs/no-op for consumed reservations (restock deferred).
+Only via `IReturnInventoryGateway` → `IInventoryReturnGateway` after **successful refund**.
+
+| Reservation status | Behavior |
+| --- | --- |
+| `Consumed` | `AdjustAsync(Increase)` restores on-hand quantity |
+| `Held` | `ReleaseAsync` (full reservation quantity only) |
+| `Released` | no-op |
+
+Idempotency: `return_restock_inbox` table in schema `inventory` deduplicates by key (`return-restock-{returnRequestId}-{returnItemId}` from Returns module).
+
+Implementation: `InventoryReturnGateway` in Inventory.Infrastructure; adapter `ReturnInventoryGateway` in Returns.Infrastructure.
