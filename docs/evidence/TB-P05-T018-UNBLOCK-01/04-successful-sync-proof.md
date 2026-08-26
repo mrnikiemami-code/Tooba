@@ -3,17 +3,18 @@
 ## Method that succeeded
 
 1. Soft-reset / rebuild from predecessor `11b7ee9` after PNG optimization (~5.8 MiB total).
-2. Split transport into three fast-forward pushes with `http.version=HTTP/1.1`:
+2. Split transport into three fast-forward pushes with `http.version=HTTP/1.1`, then a fourth SoT/evidence commit:
    - **PUSH1** `f77cc4a` — T018 code + markdown evidence (no PNGs) → `origin/main`
    - **PUSH2** `6a7dc13` — PNG batch 1 (9 files) → `origin/main`
    - **PUSH3** `8482124` — PNG batch 2 (7 files) → `origin/main`
+   - **PUSH4** `cbddb07` — UNBLOCK evidence 03–05 + SoT → `origin/main`
 
 ## Final equality
 
 | Item | Value |
 | --- | --- |
-| HEAD | `84821249a82f11a5aaf766ff94979280b2e212ef` |
-| origin/main | `84821249a82f11a5aaf766ff94979280b2e212ef` |
+| HEAD | `cbddb070e6d1518be8c46bf7875556f338c67351` |
+| origin/main | `cbddb070e6d1518be8c46bf7875556f338c67351` |
 | equal | yes |
 | force push | no |
 | TLS weakened | no |
