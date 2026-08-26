@@ -7,9 +7,13 @@ using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
 using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
+using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Pricing.Application;
 using Tooba.ProductQnA.Infrastructure;
+using Tooba.Tax.Application;
+using Tooba.Tax.Domain;
+using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Storefront;
 
@@ -108,6 +112,13 @@ internal static class StorefrontDemoCatalogBootstrap
             provider.GetRequiredService<IOfferDirectory>(),
             provider.GetRequiredService<IPriceDirectory>(),
             provider.GetRequiredService<IInventoryDirectory>(),
+            provider.GetRequiredService<ITaxDirectory>(),
+            provider.GetRequiredService<TaxDbContext>(),
+            CancellationToken.None);
+        await EnsureDemoTaxCoverageAsync(
+            provider.GetRequiredService<OfferDbContext>(),
+            provider.GetRequiredService<TaxDbContext>(),
+            provider.GetRequiredService<ITaxDirectory>(),
             CancellationToken.None);
         // پرسش‌وپاسخ نمایشی پس از وجود demo-mobile-1؛ همان CommerceContext همین scope.
         await ProductQnADevelopmentSeed.ApplyAsync(provider);
@@ -124,6 +135,8 @@ internal static class StorefrontDemoCatalogBootstrap
     /// <param name="offers">قرارداد نوشتن Offer؛ هویت فروشنده اینجاست نه در Catalog.</param>
     /// <param name="prices">قرارداد نوشتن Pricing؛ مبلغ فقط با کلید OfferId نوشته می‌شود.</param>
     /// <param name="inventory">قرارداد نوشتن Inventory؛ موجودی فقط با کلید OfferId نوشته می‌شود.</param>
+    /// <param name="tax">قرارداد Tax برای طبقه و قاعدهٔ نمایشی روی Offer.</param>
+    /// <param name="taxDb">خواندن idempotent طبقه/قاعده در schema tax.</param>
     /// <param name="cancellationToken">توکن لغو عملیات.</param>
     /// <returns>جمع‌بندی شمارشی وضعیت پس از اجرا.</returns>
     public static async Task<StorefrontDemoSeedSummary> SeedAsync(
@@ -133,6 +146,8 @@ internal static class StorefrontDemoCatalogBootstrap
         IOfferDirectory offers,
         IPriceDirectory prices,
         IInventoryDirectory inventory,
+        ITaxDirectory tax,
+        TaxDbContext taxDb,
         CancellationToken cancellationToken)
     {
         if (await catalogRead.Products.AsNoTracking()
@@ -267,6 +282,8 @@ internal static class StorefrontDemoCatalogBootstrap
                         offers,
                         prices,
                         inventory,
+                        tax,
+                        taxDb,
                         variant.VariantId,
                         sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                         $"{child.Token.ToUpperInvariant()}-{index + 1}-A",
@@ -287,6 +304,8 @@ internal static class StorefrontDemoCatalogBootstrap
                             offers,
                             prices,
                             inventory,
+                            tax,
+                            taxDb,
                             specialVariant.VariantId,
                             sellerPartyIds[productOrdinal % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-SPECIAL",
@@ -305,6 +324,8 @@ internal static class StorefrontDemoCatalogBootstrap
                             offers,
                             prices,
                             inventory,
+                            tax,
+                            taxDb,
                             variant.VariantId,
                             sellerPartyIds[(productOrdinal + 1) % sellerPartyIds.Count],
                             $"{child.Token.ToUpperInvariant()}-{index + 1}-B",
@@ -360,13 +381,15 @@ internal static class StorefrontDemoCatalogBootstrap
     }
 
     /// <summary>
-    /// یک عرضهٔ کامل و قابل نمایش می‌سازد: Offer فعال، قیمت فعال در بازهٔ اعتبار و موقعیت موجودی.
-    /// هر سه در ماژول مالک خودشان نوشته می‌شوند و کلید مشترکشان فقط OfferId است.
+    /// یک عرضهٔ کامل و قابل نمایش می‌سازد: Offer فعال، قیمت فعال در بازهٔ اعتبار، موقعیت موجودی و طبقهٔ مالیاتی.
+    /// هر بخش در ماژول مالک خودش نوشته می‌شود و کلید مشترکشان فقط OfferId است.
     /// </summary>
     private static async Task PublishOfferAsync(
         IOfferDirectory offers,
         IPriceDirectory prices,
         IInventoryDirectory inventory,
+        ITaxDirectory tax,
+        TaxDbContext taxDb,
         Guid variantId,
         Guid sellerPartyId,
         string skuSuffix,
@@ -402,6 +425,80 @@ internal static class StorefrontDemoCatalogBootstrap
             "storefront-demo-seed-receipt",
             null,
             cancellationToken);
+
+        var taxCategory = await EnsureStandardTaxCategoryAsync(tax, taxDb, cancellationToken);
+        await EnsureStandardTaxRuleAsync(tax, taxDb, taxCategory.CategoryId, cancellationToken);
+        await tax.AssignOfferCategoryAsync(offer.OfferId, taxCategory.CategoryId, cancellationToken);
+    }
+
+    /// <summary>
+    /// برای پایگاه‌های Development که قبلاً دانه شده‌اند، طبقه/قاعدهٔ مالیاتی استاندارد و
+    /// انتساب Offerهای DEMO را تضمین می‌کند تا Checkout با TAX_NO_APPLICABLE_RULE fail-closed نشود.
+    /// </summary>
+    private static async Task EnsureDemoTaxCoverageAsync(
+        OfferDbContext offers,
+        TaxDbContext taxDb,
+        ITaxDirectory tax,
+        CancellationToken cancellationToken)
+    {
+        var category = await EnsureStandardTaxCategoryAsync(tax, taxDb, cancellationToken);
+        await EnsureStandardTaxRuleAsync(tax, taxDb, category.CategoryId, cancellationToken);
+
+        var demoOfferIds = await offers.Offers.AsNoTracking()
+            .Where(offer => offer.SellerSku != null && offer.SellerSku.StartsWith("DEMO-"))
+            .Select(offer => offer.OfferId)
+            .ToListAsync(cancellationToken);
+        foreach (var offerId in demoOfferIds)
+        {
+            await tax.AssignOfferCategoryAsync(offerId, category.CategoryId, cancellationToken);
+        }
+    }
+
+    private static async Task<TaxCategoryReference> EnsureStandardTaxCategoryAsync(
+        ITaxDirectory tax,
+        TaxDbContext taxDb,
+        CancellationToken cancellationToken)
+    {
+        var existing = await taxDb.Categories.AsNoTracking()
+            .FirstOrDefaultAsync(category => category.Code == "standard" || category.Code == "standard-demo", cancellationToken);
+        if (existing is not null)
+        {
+            return new TaxCategoryReference(existing.CategoryId, existing.Code, existing.DisplayName);
+        }
+
+        return await tax.CreateCategoryAsync("standard", "استاندارد", cancellationToken);
+    }
+
+    private static async Task EnsureStandardTaxRuleAsync(
+        ITaxDirectory tax,
+        TaxDbContext taxDb,
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        var active = await taxDb.Rules.AsNoTracking()
+            .AnyAsync(
+                rule => rule.CategoryId == categoryId
+                    && rule.Jurisdiction == "IR-NAT"
+                    && rule.Market == DemoMarket
+                    && rule.Status == TaxRuleStatus.Active,
+                cancellationToken);
+        if (active)
+        {
+            return;
+        }
+
+        var rule = await tax.CreateRuleAsync(
+            "IR-NAT",
+            DemoMarket,
+            categoryId,
+            TaxRuleKind.Percentage,
+            0.09m,
+            PriceValidFrom,
+            null,
+            10,
+            TaxOverridePolicy.Disabled,
+            cancellationToken);
+        await tax.ActivateRuleAsync(rule.RuleId, cancellationToken);
     }
 
     /// <summary>

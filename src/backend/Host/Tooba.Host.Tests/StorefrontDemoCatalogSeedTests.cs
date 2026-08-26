@@ -17,6 +17,8 @@ using Tooba.Persistence;
 using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Tax.Infrastructure;
+using Tooba.Tax.Infrastructure.Persistence;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -129,17 +131,20 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         await using var offerDb = CreateOfferDb(connectionString, commerce);
         await using var pricingDb = CreatePricingDb(connectionString, commerce);
         await using var inventoryDb = CreateInventoryDb(connectionString, commerce);
+        await using var taxDb = CreateTaxDb(connectionString, commerce);
         await catalogDb.Database.MigrateAsync();
         await partyDb.Database.MigrateAsync();
         await offerDb.Database.MigrateAsync();
         await pricingDb.Database.MigrateAsync();
         await inventoryDb.Database.MigrateAsync();
+        await taxDb.Database.MigrateAsync();
 
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
         var partyDirectory = new PartyDirectory(partyDb);
         var offerDirectory = new OfferDirectory(offerDb, new OpenOfferUseCaseGuard(), catalogDirectory, partyDirectory);
         var priceDirectory = new PriceDirectory(pricingDb, new OpenPricingUseCaseGuard(), offerDirectory);
         var inventoryDirectory = new InventoryDirectory(inventoryDb, new OpenInventoryUseCaseGuard(), offerDirectory, catalogDirectory);
+        var taxDirectory = new TaxDirectory(taxDb, new OpenTaxUseCaseGuard());
 
         var first = await StorefrontDemoCatalogBootstrap.SeedAsync(
             catalogDb,
@@ -148,6 +153,8 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
             offerDirectory,
             priceDirectory,
             inventoryDirectory,
+            taxDirectory,
+            taxDb,
             CancellationToken.None);
 
         Assert.False(first.AlreadySeeded);
@@ -223,6 +230,8 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
             offerDirectory,
             priceDirectory,
             inventoryDirectory,
+            taxDirectory,
+            taxDb,
             CancellationToken.None);
 
         Assert.True(second.AlreadySeeded);
@@ -296,6 +305,14 @@ public sealed class StorefrontDemoCatalogSeedTests : IAsyncLifetime
         ToobaNpgsql.ConfigureModuleContext(options, connectionString, InventoryDbContext.Schema, typeof(InventoryDbContext));
         options.AddInterceptors(CreateOutboxInterceptor(commerce, new InventoryOutboxRegistration()));
         return new InventoryDbContext(options.Options);
+    }
+
+    private static TaxDbContext CreateTaxDb(string connectionString, ICurrentCommerceContext commerce)
+    {
+        var options = new DbContextOptionsBuilder<TaxDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(options, connectionString, TaxDbContext.Schema, typeof(TaxDbContext));
+        options.AddInterceptors(CreateOutboxInterceptor(commerce, new TaxOutboxRegistration()));
+        return new TaxDbContext(options.Options);
     }
 
     /// <summary>

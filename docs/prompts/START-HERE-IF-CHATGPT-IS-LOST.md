@@ -4,9 +4,9 @@
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T019
+Last Architect Accepted Product Task: TB-P05-T020
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T020 = AWAITING_ARCHITECT_ACCEPT
+Current Product Task: TB-P05-T021 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -38,10 +38,4 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 Then recover current phase, accepted history, Bridge channel, active Task, blockers, and Git safety.
 
-```text
-ONE WORKER = ONE ACTIVE TASK
-Worker PASS != Architect ACCEPT
-Worker offline between Tasks = NORMAL
-```
-
-P00–P04 remain complete. P05 remains in progress. Through TB-P05-T019 accepted. TB-P05-T020 restores Shopeiva Category/Search/Listing fidelity with live Tooba data.
+Evidence for the current product task lives under `docs/evidence/TB-P05-T021/`.
