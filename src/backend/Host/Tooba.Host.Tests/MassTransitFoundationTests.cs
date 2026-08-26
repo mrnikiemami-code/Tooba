@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.Host;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -57,6 +58,24 @@ public sealed class MassTransitFoundationTests
         Assert.IsType<MessagingDisabledPublisher>(publisher);
         Assert.IsNotType<InProcessIntegrationEventPublisher>(publisher);
         Assert.Null(factory.Services.GetService<MassTransit.IBusControl>());
+    }
+
+    [Fact]
+    public void Messaging_validator_rejects_forbidden_rabbitmq_transport()
+    {
+        var validator = new MessagingOptionsValidator();
+        var result = validator.Validate(
+            null,
+            new MessagingHostOptions
+            {
+                Enabled = true,
+                Transport = "RabbitMq",
+                ConnectionReference = "messaging",
+                Schema = "transport",
+            });
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("RabbitMQ", result.FailureMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -38,6 +38,15 @@ consumer tenant is not Host
 
 Architect locked **8.5.10** as the project MassTransit version. v9 APIs and packages must not be substituted. Cursor must not pick `latest`.
 
+## Canonical transport (current)
+
+```text
+MESSAGING_TRANSPORT = MASSTRANSIT_POSTGRESQL_SQL_TRANSPORT
+RabbitMQ = FORBIDDEN (supersedes any prior RabbitMQ-preferred wording)
+TB-P06-T003 = SUPERSEDED_WRONG_TRANSPORT
+TB-P06-T003-R1 = recovery + hardening authority
+```
+
 ## Why PostgreSQL SQL Transport (not RabbitMQ)
 
 Initial durable integration transport is MassTransit SQL Transport on PostgreSQL already in the platform.

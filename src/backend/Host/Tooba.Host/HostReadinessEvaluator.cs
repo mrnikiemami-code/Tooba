@@ -81,11 +81,14 @@ internal static class HostReadinessEvaluator
                 return new Evaluation(false, checks);
             }
 
+            checks["messaging-transport"] = "postgresql-sql";
+            checks["messaging-schema"] = messagingOptions.Schema;
             checks["messaging"] = health.Status.ToString();
         }
         else
         {
             checks["messaging"] = "disabled";
+            checks["messaging-transport"] = "n/a";
         }
 
         return new Evaluation(true, checks);

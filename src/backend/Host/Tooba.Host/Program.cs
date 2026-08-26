@@ -58,7 +58,8 @@ builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("
 builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
     .ValidateOnStart();
-builder.Services.AddSingleton<IValidateOptions<MessagingHostOptions>, MessagingOptionsValidator>();
+builder.Services.AddSingleton<IValidateOptions<MessagingHostOptions>>(sp =>
+    new MessagingOptionsValidator(sp.GetRequiredService<IHostEnvironment>()));
 builder.Services.AddOptions<CacheHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Cache"))
     .ValidateOnStart();

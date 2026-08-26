@@ -42,6 +42,7 @@ internal static class MessagingRegistration
         services.Configure<MassTransitHostOptions>(options =>
         {
             options.WaitUntilStarted = true;
+            options.StopTimeout = TimeSpan.FromSeconds(30);
         });
 
         services.AddSingleton(sp =>
@@ -61,7 +62,7 @@ internal static class MessagingRegistration
                 (context, cfg) =>
                 {
                     cfg.AutoStart = true;
-                    cfg.UseMessageRetry(r => r.Immediate(2));
+                    cfg.UseMessageRetry(MessagingRetryConfigurator.ApplyConsumerRetry);
                     cfg.ConfigureEndpoints(context);
                 });
         });

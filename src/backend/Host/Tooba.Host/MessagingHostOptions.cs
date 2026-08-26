@@ -1,19 +1,30 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace Tooba.Host;
 
 /// <summary>
-/// تنظیمات transport پیام از بخش <c>Tooba:Messaging</c>. یک ConnectionReference در سطح استقرار است نه per-tenant.
+/// تنظیمات PostgreSQL SQL Transport از بخش <c>Tooba:Messaging</c>.
 /// </summary>
 internal sealed class MessagingHostOptions
 {
+    /// <summary>
+    /// Canonical transport mode. Only PostgreSql is supported; RabbitMQ is forbidden.
+    /// </summary>
+    public const string CanonicalTransport = "PostgreSql";
+
     /// <summary>
     /// اگر false باشد bus ساخته نمی‌شود؛ fallback خاموش به in-process رخ نمی‌دهد.
     /// </summary>
     public bool Enabled { get; set; }
 
     /// <summary>
-    /// کلید ConnectionReference پایگاه messaging استقرار؛ از Host یا TenantId مشتق نمی‌شود.
+    /// transport ثابت: PostgreSQL SQL Transport. مقادیر دیگر رد می‌شوند.
+    /// </summary>
+    public string Transport { get; set; } = CanonicalTransport;
+
+    /// <summary>
+    /// کلید ConnectionReference پایگاه messaging استقرار.
     /// </summary>
     public string ConnectionReference { get; set; } = "";
 
@@ -23,7 +34,7 @@ internal sealed class MessagingHostOptions
     public string Schema { get; set; } = "transport";
 
     /// <summary>
-    /// فقط در محیط Testing مجاز است. دابل in-process را به‌عنوان پیش‌فرض تولید روشن نمی‌کند.
+    /// فقط در محیط Testing مجاز است.
     /// </summary>
     public bool UseInProcessTestDouble { get; set; }
 }
@@ -33,6 +44,14 @@ internal sealed class MessagingHostOptions
 /// </summary>
 internal sealed class MessagingOptionsValidator : IValidateOptions<MessagingHostOptions>
 {
+    private readonly IHostEnvironment? _environment;
+
+    public MessagingOptionsValidator()
+    {
+    }
+
+    public MessagingOptionsValidator(IHostEnvironment environment) => _environment = environment;
+
     /// <inheritdoc />
     public ValidateOptionsResult Validate(string? name, MessagingHostOptions options)
     {
@@ -45,6 +64,14 @@ internal sealed class MessagingOptionsValidator : IValidateOptions<MessagingHost
         if (!options.Enabled)
         {
             return ValidateOptionsResult.Success;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.Transport)
+            && !options.Transport.Equals(MessagingHostOptions.CanonicalTransport, StringComparison.OrdinalIgnoreCase)
+            && !options.Transport.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidateOptionsResult.Fail(
+                $"Tooba:Messaging:Transport must be {MessagingHostOptions.CanonicalTransport}. RabbitMQ/AMQP is forbidden.");
         }
 
         if (string.IsNullOrWhiteSpace(options.ConnectionReference))
@@ -61,6 +88,13 @@ internal sealed class MessagingOptionsValidator : IValidateOptions<MessagingHost
         {
             return ValidateOptionsResult.Fail(
                 "Tooba:Messaging:Schema must be a dedicated infrastructure schema such as transport.");
+        }
+
+        if (_environment?.IsProduction() == true
+            && string.IsNullOrWhiteSpace(options.ConnectionReference))
+        {
+            return ValidateOptionsResult.Fail(
+                "Production requires Tooba:Messaging:ConnectionReference when messaging is enabled.");
         }
 
         return ValidateOptionsResult.Success;
