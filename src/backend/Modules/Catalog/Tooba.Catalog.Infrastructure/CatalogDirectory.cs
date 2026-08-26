@@ -96,6 +96,38 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, ReviewableProductReference>> GetReviewableProductsByIdsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0) return new Dictionary<Guid, ReviewableProductReference>();
+        var requested = productIds.Distinct().ToArray();
+        var products = await _db.Products.AsNoTracking()
+            .Where(product => requested.Contains(product.ProductId) && product.Status == CatalogPublicationStatus.Published)
+            .ToListAsync(cancellationToken);
+        if (products.Count == 0) return new Dictionary<Guid, ReviewableProductReference>();
+        var titles = await GetProductTitlesAsync(products.Select(product => product.ProductId).ToArray(), cancellationToken);
+        var variantRows = await _db.Variants.AsNoTracking()
+            .Where(variant => products.Select(product => product.ProductId).Contains(variant.ProductId))
+            .GroupBy(variant => variant.ProductId)
+            .Select(group => new { ProductId = group.Key, VariantIds = group.Select(variant => variant.VariantId).ToList() })
+            .ToListAsync(cancellationToken);
+        var variants = variantRows.ToDictionary(row => row.ProductId, row => (IReadOnlyList<Guid>)row.VariantIds);
+        return products.ToDictionary(
+            product => product.ProductId,
+            product =>
+            {
+                var slug = string.IsNullOrWhiteSpace(product.SlugSeam) ? product.ProductId.ToString("N") : product.SlugSeam;
+                return new ReviewableProductReference(
+                    product.ProductId,
+                    slug,
+                    titles.GetValueOrDefault(product.ProductId) ?? slug,
+                    product.Status,
+                    variants.GetValueOrDefault(product.ProductId) ?? []);
+            });
+    }
+
+    /// <inheritdoc />
     public async Task<CategoryReference> CreateCategoryAsync(
         Guid? parentCategoryId,
         IReadOnlyDictionary<string, string> localizedNames,

@@ -59,6 +59,40 @@ public sealed class ReviewDirectory : IReviewDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<HomeFeaturedReview>> GetRecentPublishedForHomeAsync(int limit, CancellationToken cancellationToken)
+    {
+        limit = Math.Clamp(limit, 1, 20);
+        var reviews = await _db.Reviews.AsNoTracking()
+            .Where(x => x.Status == ReviewStatus.Published)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.ReviewId)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+        if (reviews.Count == 0) return [];
+        var products = await _catalog.GetReviewableProductsByIdsAsync(
+            reviews.Select(x => x.ProductId).Distinct().ToArray(),
+            cancellationToken);
+        return reviews
+            .Where(review => products.ContainsKey(review.ProductId))
+            .Select(review =>
+            {
+                var product = products[review.ProductId];
+                return new HomeFeaturedReview(
+                    review.ReviewId,
+                    review.AuthorDisplayName,
+                    review.Rating,
+                    review.Title,
+                    review.Body,
+                    review.IsVerifiedPurchase,
+                    review.CreatedAt,
+                    product.ProductId,
+                    product.Title,
+                    product.Slug);
+            })
+            .ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<PublishedReviewPage?> GetPublishedAsync(string productSlug, int page, int pageSize, CancellationToken cancellationToken)
     {
         var product = await _catalog.FindReviewableProductBySlugAsync(productSlug, cancellationToken);

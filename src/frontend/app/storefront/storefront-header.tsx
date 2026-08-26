@@ -73,7 +73,14 @@ export function StorefrontShopeivaHeader({
           const slug = String(row.slug ?? row.Slug ?? "");
           const name = String(row.name ?? row.Name ?? "");
           if (!brandId || !slug || !name) return [];
-          return [{ brandId, slug, name, productCount: Number(row.productCount ?? row.ProductCount ?? 0) }];
+          const logoRaw = row.logoMediaAssetId ?? row.LogoMediaAssetId;
+          return [{
+            brandId,
+            slug,
+            name,
+            productCount: Number(row.productCount ?? row.ProductCount ?? 0),
+            logoMediaAssetId: logoRaw == null ? null : String(logoRaw),
+          }];
         }));
       })
       .catch(() => setBrands([]));

@@ -27,11 +27,15 @@ public sealed class StorefrontHomeContractTests
             [
                 new StorefrontBestSellerColumn(Guid.NewGuid(), "موبایل", []),
             ],
-            MostViewedProducts: []);
+            MostViewedProducts: [],
+            FeaturedReviews: [],
+            LatestArticles: []);
 
         var json = JsonSerializer.Serialize(home);
         Assert.Contains("homeCategories", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("bestSellerColumns", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mostViewedProducts", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("featuredReviews", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("latestArticles", json, StringComparison.OrdinalIgnoreCase);
     }
 }

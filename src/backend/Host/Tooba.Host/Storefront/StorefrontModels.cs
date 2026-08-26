@@ -45,7 +45,35 @@ public sealed record StorefrontCategoryItem(Guid CategoryId, Guid? ParentCategor
 /// <summary>
 /// برند Catalog برای نوار برند خانه؛ رسانهٔ CMS نیست.
 /// </summary>
-public sealed record StorefrontBrandItem(Guid BrandId, string Slug, string Name, int ProductCount);
+public sealed record StorefrontBrandItem(Guid BrandId, string Slug, string Name, int ProductCount, Guid? LogoMediaAssetId = null);
+
+/// <summary>
+/// نظر منتشرشدهٔ اخیر برای ریل خانه همراه مرجع محصول.
+/// </summary>
+public sealed record StorefrontFeaturedReviewItem(
+    string PublicId,
+    string AuthorDisplayName,
+    int Rating,
+    string? Title,
+    string Body,
+    bool VerifiedPurchase,
+    DateTimeOffset CreatedAt,
+    string ProductTitle,
+    string ProductSlug);
+
+/// <summary>
+/// مقالهٔ منتشرشدهٔ اخیر برای ریل خانه.
+/// </summary>
+public sealed record StorefrontArticleItem(
+    string ArticleId,
+    string Slug,
+    string Title,
+    string Excerpt,
+    Guid? CoverMediaAssetId,
+    DateTimeOffset PublishDate,
+    string AuthorDisplayName,
+    IReadOnlyList<string> Tags,
+    bool IsFeatured);
 
 /// <summary>
 /// هویت عمومی فروشنده که از شناسهٔ داخلی Party جداست و فقط دادهٔ لازم برای ویترین را حمل می‌کند.
@@ -103,7 +131,9 @@ public sealed record StorefrontHomePage(
     string HeroSubtitle,
     IReadOnlyList<StorefrontCategoryItem> HomeCategories,
     IReadOnlyList<StorefrontBestSellerColumn> BestSellerColumns,
-    IReadOnlyList<StorefrontProductCard> MostViewedProducts);
+    IReadOnlyList<StorefrontProductCard> MostViewedProducts,
+    IReadOnlyList<StorefrontFeaturedReviewItem> FeaturedReviews,
+    IReadOnlyList<StorefrontArticleItem> LatestArticles);
 
 /// <summary>
 /// فهرست فروشگاهی فیلترپذیر. منبع حقیقت دمو JSON نیست.

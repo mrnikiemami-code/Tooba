@@ -107,6 +107,7 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.BrandId).ValueGeneratedNever();
             entity.Property(x => x.SlugSeam).HasMaxLength(128);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.LogoMediaAssetId);
         });
 
         modelBuilder.Entity<CatalogAttributeDefinition>(entity =>

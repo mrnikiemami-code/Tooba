@@ -4,6 +4,8 @@ import type {
   StorefrontBrandItem,
   StorefrontBestSellerColumn,
   StorefrontCategoryItem,
+  StorefrontFeaturedReviewItem,
+  StorefrontArticleItem,
   StorefrontHomePage,
   StorefrontListingPage,
   StorefrontListingRequest,
@@ -370,12 +372,57 @@ function mapBrand(value: unknown): StorefrontBrandItem | null {
     return null;
   }
   const brandId = asString(readProp(item, "brandId", "BrandId"));
+  const logoRaw = readProp(item, "logoMediaAssetId", "LogoMediaAssetId");
   return brandId ? {
     brandId,
     slug: asString(readProp(item, "slug", "Slug"), brandId),
     name: asString(readProp(item, "name", "Name"), "برند"),
     productCount: asNumber(readProp(item, "productCount", "ProductCount")),
+    logoMediaAssetId: logoRaw == null ? null : asString(logoRaw),
   } : null;
+}
+
+function mapFeaturedReview(value: unknown): StorefrontFeaturedReviewItem | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const publicId = asString(readProp(item, "publicId", "PublicId"));
+  const body = asString(readProp(item, "body", "Body")).trim();
+  const rating = asNumber(readProp(item, "rating", "Rating"));
+  if (!publicId || !body || rating < 1 || rating > 5) return null;
+  const titleRaw = readProp(item, "title", "Title");
+  return {
+    publicId,
+    authorDisplayName: asString(readProp(item, "authorDisplayName", "AuthorDisplayName"), "مشتری"),
+    rating: Math.trunc(rating),
+    title: titleRaw == null || !asString(titleRaw).trim() ? null : asString(titleRaw).trim(),
+    body,
+    verifiedPurchase: asBoolean(readProp(item, "verifiedPurchase", "VerifiedPurchase")),
+    createdAt: asString(readProp(item, "createdAt", "CreatedAt")),
+    productTitle: asString(readProp(item, "productTitle", "ProductTitle"), "کالا"),
+    productSlug: asString(readProp(item, "productSlug", "ProductSlug"), publicId),
+  };
+}
+
+function mapArticle(value: unknown): StorefrontArticleItem | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const articleId = asString(readProp(item, "articleId", "ArticleId"));
+  const slug = asString(readProp(item, "slug", "Slug"));
+  const title = asString(readProp(item, "title", "Title")).trim();
+  if (!articleId || !slug || !title) return null;
+  const coverRaw = readProp(item, "coverMediaAssetId", "CoverMediaAssetId");
+  const tagsRaw = readProp(item, "tags", "Tags");
+  return {
+    articleId,
+    slug,
+    title,
+    excerpt: asString(readProp(item, "excerpt", "Excerpt")),
+    coverMediaAssetId: coverRaw == null ? null : asString(coverRaw),
+    publishDate: asString(readProp(item, "publishDate", "PublishDate")),
+    authorDisplayName: asString(readProp(item, "authorDisplayName", "AuthorDisplayName"), "تحریریه"),
+    tags: Array.isArray(tagsRaw) ? tagsRaw.map((tag) => asString(tag)).filter(Boolean) : [],
+    isFeatured: asBoolean(readProp(item, "isFeatured", "IsFeatured")),
+  };
 }
 
 function mapPublicSeller(value: unknown): StorefrontPublicSellerItem | null {
@@ -427,6 +474,8 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
   const homeCategoriesRaw = readProp(item, "homeCategories", "HomeCategories");
   const bestSellerColumnsRaw = readProp(item, "bestSellerColumns", "BestSellerColumns");
   const mostViewedRaw = readProp(item, "mostViewedProducts", "MostViewedProducts");
+  const featuredReviewsRaw = readProp(item, "featuredReviews", "FeaturedReviews");
+  const latestArticlesRaw = readProp(item, "latestArticles", "LatestArticles");
   const categories = Array.isArray(categoriesRaw)
     ? categoriesRaw.map(mapCategory).filter((row): row is StorefrontCategoryItem => row !== null)
     : [];
@@ -461,6 +510,12 @@ export function mapStorefrontHome(payload: unknown): StorefrontHomePage | null {
       : [],
     mostViewedProducts: Array.isArray(mostViewedRaw)
       ? mostViewedRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    featuredReviews: Array.isArray(featuredReviewsRaw)
+      ? featuredReviewsRaw.map(mapFeaturedReview).filter((row): row is StorefrontFeaturedReviewItem => row !== null)
+      : [],
+    latestArticles: Array.isArray(latestArticlesRaw)
+      ? latestArticlesRaw.map(mapArticle).filter((row): row is StorefrontArticleItem => row !== null)
       : [],
   };
 }

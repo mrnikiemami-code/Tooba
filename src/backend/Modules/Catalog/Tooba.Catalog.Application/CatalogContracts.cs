@@ -55,6 +55,11 @@ public interface ICatalogLookupGateway
     Task<IReadOnlyDictionary<Guid, string>> GetProductTitlesAsync(
         IReadOnlyCollection<Guid> productIds,
         CancellationToken cancellationToken);
+
+    /// <summary>مرجع قابل‌نمایش محصولات منتشرشده را برای ترکیب نظرات خانه به‌صورت گروهی می‌خواند.</summary>
+    Task<IReadOnlyDictionary<Guid, ReviewableProductReference>> GetReviewableProductsByIdsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

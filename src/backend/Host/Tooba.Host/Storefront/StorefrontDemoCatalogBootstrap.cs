@@ -11,6 +11,7 @@ using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Pricing.Application;
 using Tooba.ProductQnA.Infrastructure;
+using Tooba.Content.Infrastructure;
 using Tooba.Tax.Application;
 using Tooba.Tax.Domain;
 using Tooba.Tax.Infrastructure.Persistence;
@@ -122,6 +123,7 @@ internal static class StorefrontDemoCatalogBootstrap
             CancellationToken.None);
         // پرسش‌وپاسخ نمایشی پس از وجود demo-mobile-1؛ همان CommerceContext همین scope.
         await ProductQnADevelopmentSeed.ApplyAsync(provider);
+        await ContentDevelopmentSeed.ApplyAsync(provider);
         return summary;
     }
 
@@ -155,10 +157,12 @@ internal static class StorefrontDemoCatalogBootstrap
         {
             await EnrichLocalizedDescriptionsAsync(catalogRead, catalog, cancellationToken);
             await EnsureThirdLevelCategoriesAsync(catalogRead, catalog, cancellationToken);
+            await EnrichBrandLogosAsync(catalogRead, cancellationToken);
             return await SummarizeAsync(catalogRead, alreadySeeded: true, cancellationToken);
         }
 
         var brandIds = new Dictionary<string, Guid>(StringComparer.Ordinal);
+        var brandIndex = 0;
         foreach (var brand in StorefrontDemoCatalogMatrix.Brands)
         {
             var reference = await catalog.CreateBrandAsync(
@@ -166,8 +170,12 @@ internal static class StorefrontDemoCatalogBootstrap
                 new Dictionary<string, string> { ["fa-IR"] = brand.PersianName, ["en-US"] = brand.LatinName },
                 cancellationToken);
             await catalog.PublishBrandAsync(reference.BrandId, cancellationToken);
+            var brandEntity = await catalogRead.Brands.SingleAsync(item => item.BrandId == reference.BrandId, cancellationToken);
+            brandEntity.LogoMediaAssetId = PlaceholderMedia[brandIndex % PlaceholderMedia.Length];
+            brandIndex++;
             brandIds.Add(brand.Key, reference.BrandId);
         }
+        await catalogRead.SaveChangesAsync(cancellationToken);
 
         var packDefinitionId = await catalog.CreateAttributeDefinitionAsync(
             "demo_pack",
@@ -343,6 +351,32 @@ internal static class StorefrontDemoCatalogBootstrap
 
         var summary = await SummarizeAsync(catalogRead, alreadySeeded: false, cancellationToken);
         return summary with { Offers = offerCount };
+    }
+
+    /// <summary>
+    /// لوگوی برندهای نمایشی را روی پایگاه Development قدیمی نیز idempotent تنظیم می‌کند.
+    /// </summary>
+    private static async Task EnrichBrandLogosAsync(CatalogDbContext catalogRead, CancellationToken cancellationToken)
+    {
+        var brands = await catalogRead.Brands.AsNoTracking()
+            .Where(brand => brand.Status == CatalogPublicationStatus.Published)
+            .OrderBy(brand => brand.SlugSeam)
+            .ToListAsync(cancellationToken);
+        var index = 0;
+        foreach (var brand in brands)
+        {
+            if (brand.LogoMediaAssetId is not null)
+            {
+                index++;
+                continue;
+            }
+
+            var tracked = await catalogRead.Brands.SingleAsync(item => item.BrandId == brand.BrandId, cancellationToken);
+            tracked.LogoMediaAssetId = PlaceholderMedia[index % PlaceholderMedia.Length];
+            index++;
+        }
+
+        await catalogRead.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>

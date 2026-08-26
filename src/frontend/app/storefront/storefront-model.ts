@@ -40,6 +40,7 @@ export interface StorefrontBrandItem {
   slug: string;
   name: string;
   productCount: number;
+  logoMediaAssetId: string | null;
 }
 
 /** فروشندهٔ عمومی بدون PartyId، رابطهٔ مجوز، اطلاعات تماس یا دادهٔ تسویه. */
@@ -88,6 +89,8 @@ export interface StorefrontHomePage {
   homeCategories: StorefrontCategoryItem[];
   bestSellerColumns: StorefrontBestSellerColumn[];
   mostViewedProducts: StorefrontProductCard[];
+  featuredReviews: StorefrontFeaturedReviewItem[];
+  latestArticles: StorefrontArticleItem[];
 }
 
 /** ستون پرفروش خانه مطابق Shopeiva. */
@@ -95,6 +98,32 @@ export interface StorefrontBestSellerColumn {
   categoryId: string;
   categoryName: string;
   products: StorefrontProductCard[];
+}
+
+/** نظر منتشرشدهٔ اخیر برای ریل خانه. */
+export interface StorefrontFeaturedReviewItem {
+  publicId: string;
+  authorDisplayName: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  verifiedPurchase: boolean;
+  createdAt: string;
+  productTitle: string;
+  productSlug: string;
+}
+
+/** مقالهٔ منتشرشدهٔ اخیر برای ریل خانه. */
+export interface StorefrontArticleItem {
+  articleId: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  coverMediaAssetId: string | null;
+  publishDate: string;
+  authorDisplayName: string;
+  tags: string[];
+  isFeatured: boolean;
 }
 
 /**

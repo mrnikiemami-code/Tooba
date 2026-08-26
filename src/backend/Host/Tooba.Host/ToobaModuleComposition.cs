@@ -17,6 +17,7 @@ using Tooba.BulkInquiry.Infrastructure;
 using Tooba.Wishlist.Infrastructure;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure;
+using Tooba.Content.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -48,6 +49,7 @@ internal static class ToobaModuleComposition
         new WishlistModule(),
         new AddressBookModule(),
         new CustomerProfileModule(),
+        new ContentModule(),
         new PaymentModule(),
     ];
 

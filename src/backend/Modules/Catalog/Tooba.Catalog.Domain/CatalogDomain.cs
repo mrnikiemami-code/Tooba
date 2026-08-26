@@ -198,6 +198,11 @@ public sealed class CatalogBrand
     public CatalogPublicationStatus Status { get; set; }
 
     /// <summary>
+    /// شناسهٔ مرجع مات لوگوی برند در Media؛ اختیاری و فقط برای نمایش ویترین.
+    /// </summary>
+    public Guid? LogoMediaAssetId { get; set; }
+
+    /// <summary>
     /// زمان ایجاد.
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }

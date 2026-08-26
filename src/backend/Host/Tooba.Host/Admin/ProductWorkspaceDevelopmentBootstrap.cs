@@ -31,6 +31,8 @@ using Tooba.Host.CustomerProfile;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
+using Tooba.Content.Infrastructure;
+using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure;
 
 namespace Tooba.Host.Admin;
@@ -90,6 +92,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<WishlistDbContext>());
         await MigrateAsync(provider.GetRequiredService<AddressBookDbContext>());
         await MigrateAsync(provider.GetRequiredService<CustomerProfileDbContext>());
+        await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
@@ -102,6 +105,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await WishlistDevelopmentSeed.ApplyAsync(provider);
             await AddressBookDevelopmentSeed.ApplyAsync(provider);
             await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
+            await ContentDevelopmentSeed.ApplyAsync(provider);
             return;
         }
 
@@ -198,6 +202,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await WishlistDevelopmentSeed.ApplyAsync(provider, cancellation);
         await AddressBookDevelopmentSeed.ApplyAsync(provider, cancellation);
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await ContentDevelopmentSeed.ApplyAsync(provider, cancellation);
     }
 
     /// <summary>

@@ -58,5 +58,8 @@
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Domain/Tooba.BulkInquiry.Domain.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Application/Tooba.BulkInquiry.Application.csproj" />
     <Project Path="Modules/BulkInquiry/Tooba.BulkInquiry.Infrastructure/Tooba.BulkInquiry.Infrastructure.csproj" />
+    <Project Path="Modules/Content/Tooba.Content.Domain/Tooba.Content.Domain.csproj" />
+    <Project Path="Modules/Content/Tooba.Content.Application/Tooba.Content.Application.csproj" />
+    <Project Path="Modules/Content/Tooba.Content.Infrastructure/Tooba.Content.Infrastructure.csproj" />
   </Folder>
 </Solution>

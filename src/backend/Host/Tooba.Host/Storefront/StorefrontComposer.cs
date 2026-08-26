@@ -12,6 +12,7 @@ using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Promotion.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Reviews.Application;
+using Tooba.Content.Application;
 
 namespace Tooba.Host.Storefront;
 
@@ -29,6 +30,7 @@ public sealed class StorefrontComposer
     private readonly IPartyLookupGateway _parties;
     private readonly IPromotionEvaluator _promotions;
     private readonly IReviewDirectory _reviews;
+    private readonly IContentDirectory _content;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -41,7 +43,8 @@ public sealed class StorefrontComposer
         TaxDbContext tax,
         IPartyLookupGateway parties,
         IPromotionEvaluator promotions,
-        IReviewDirectory reviews)
+        IReviewDirectory reviews,
+        IContentDirectory content)
     {
         _catalog = catalog;
         _offers = offers;
@@ -51,6 +54,7 @@ public sealed class StorefrontComposer
         _parties = parties;
         _promotions = promotions;
         _reviews = reviews;
+        _content = content;
     }
 
     /// <summary>
@@ -69,6 +73,8 @@ public sealed class StorefrontComposer
             .ThenBy(card => card.Title, StringComparer.Ordinal)
             .Take(12)
             .ToList();
+        var featuredReviews = await BuildFeaturedReviewsAsync(cancellationToken);
+        var latestArticles = await BuildLatestArticlesAsync(cancellationToken);
         return new StorefrontHomePage(
             categories,
             listing.Products.Take(24).ToList(),
@@ -81,7 +87,45 @@ public sealed class StorefrontComposer
             "کالای واقعی از Catalog با قیمت Offer و موجودی انبار",
             homeCategories,
             bestSellerColumns,
-            mostViewed);
+            mostViewed,
+            featuredReviews,
+            latestArticles);
+    }
+
+    /// <summary>
+    /// نظرهای Published اخیر را برای ریل خانه به DTO عمومی نگاشت می‌کند.
+    /// </summary>
+    private async Task<IReadOnlyList<StorefrontFeaturedReviewItem>> BuildFeaturedReviewsAsync(CancellationToken cancellationToken)
+    {
+        var reviews = await _reviews.GetRecentPublishedForHomeAsync(8, cancellationToken);
+        return reviews.Select(review => new StorefrontFeaturedReviewItem(
+            review.ReviewId.ToString("N"),
+            review.AuthorDisplayName,
+            review.Rating,
+            review.Title,
+            review.Body,
+            review.IsVerifiedPurchase,
+            review.CreatedAt,
+            review.ProductTitle,
+            review.ProductSlug)).ToList();
+    }
+
+    /// <summary>
+    /// مقالات Published اخیر را برای ریل خانه می‌خواند.
+    /// </summary>
+    private async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(CancellationToken cancellationToken)
+    {
+        var articles = await _content.ListPublishedForHomeAsync(6, cancellationToken);
+        return articles.Select(article => new StorefrontArticleItem(
+            article.ArticleId.ToString("N"),
+            article.Slug,
+            article.Title,
+            article.Excerpt,
+            article.CoverMediaAssetId,
+            article.PublishDate,
+            article.AuthorDisplayName,
+            article.Tags,
+            article.IsFeatured)).ToList();
     }
 
     /// <summary>
@@ -166,7 +210,8 @@ public sealed class StorefrontComposer
                 brand.BrandId,
                 brand.SlugSeam ?? brand.BrandId.ToString("N"),
                 names.GetValueOrDefault(brand.BrandId) ?? brand.SlugSeam ?? "برند",
-                productCounts.GetValueOrDefault(brand.BrandId)))
+                productCounts.GetValueOrDefault(brand.BrandId),
+                brand.LogoMediaAssetId))
             .OrderBy(item => item.Name, StringComparer.Ordinal)
             .Take(24)
             .ToList();

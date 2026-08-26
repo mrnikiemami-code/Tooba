@@ -4,10 +4,19 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Flame } from "lucide-react";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
+import {
+  HomeArticlesSection,
+  HomeBestSellersSection,
+  HomeBrandsSection,
+  HomeNewProductsSection,
+  HomeTestimonialsSection,
+} from "./storefront-home-repair-sections.tsx";
 import type {
+  StorefrontArticleItem,
   StorefrontBestSellerColumn,
   StorefrontBrandItem,
   StorefrontCategoryItem,
+  StorefrontFeaturedReviewItem,
   StorefrontProductCard,
 } from "./storefront-model.ts";
 
@@ -47,6 +56,8 @@ export function StorefrontShopeivaHome({
   brands,
   bestSellerColumns,
   mostViewedProducts,
+  featuredReviews,
+  latestArticles,
 }: {
   heroTitle: string;
   heroSubtitle: string;
@@ -59,6 +70,8 @@ export function StorefrontShopeivaHome({
   brands: StorefrontBrandItem[];
   bestSellerColumns: StorefrontBestSellerColumn[];
   mostViewedProducts: StorefrontProductCard[];
+  featuredReviews: StorefrontFeaturedReviewItem[];
+  latestArticles: StorefrontArticleItem[];
 }) {
   const storyItems = homeCategories.slice(0, 12).map((category, index) => ({
     href: `/products?categoryId=${category.categoryId}`,
@@ -145,43 +158,7 @@ export function StorefrontShopeivaHome({
         />
       ) : null}
 
-      {bestSellerColumns.length > 0 ? (
-        <section aria-labelledby="home-best-sellers-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-best-sellers">
-          <div className="flex items-center justify-between mb-4">
-            <h2 id="home-best-sellers-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
-              پرفروش‌ترین‌ها
-            </h2>
-            <Link href="/best-seller" className="text-xs text-[#2563EB] font-bold">
-              مشاهده
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 max-h-[600px] overflow-y-auto">
-            {bestSellerColumns.map((column) => (
-              <div key={`${column.categoryId}-${column.categoryName}`} className="bg-white rounded-2xl border border-gray-100 p-3 space-y-3">
-                <p className="text-sm font-black text-gray-900">{column.categoryName}</p>
-                {column.products.map((card) => (
-                  <Link
-                    key={card.productId}
-                    href={`/products/${card.slug}`}
-                    className="flex gap-3 items-center hover:bg-gray-50 rounded-xl p-1"
-                  >
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#1e3a8a] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                      Tooba
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-gray-800 line-clamp-2">{card.title}</p>
-                      <p className="text-[11px] text-[#2563EB] font-bold mt-1">
-                        {(card.promotionalAmountExclusiveOfTax ?? card.offerAmountExclusiveOfTax).toLocaleString("fa-IR")} {card.currency}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <HomeBestSellersSection columns={bestSellerColumns} />
 
       {mostViewedProducts.length > 0 ? (
         <ProductRailSection
@@ -215,47 +192,13 @@ export function StorefrontShopeivaHome({
         </div>
       </section>
 
-      <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands">
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="home-brands-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
-            برندها
-          </h2>
-          <Link href="/brands" className="text-xs text-[#2563EB] font-bold">
-            همه برندها
-          </Link>
-        </div>
-        {brands.length === 0 ? (
-          <p className="text-sm text-gray-500 bg-white rounded-2xl border border-gray-100 p-4">برند منتشرشده‌ای در Catalog نیست.</p>
-        ) : (
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2">
-            {brands.map((brand) => (
-              <Link
-                key={brand.brandId}
-                href={`/brand/${brand.slug}`}
-                className="shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 aspect-square flex flex-col items-center justify-center p-4 hover:shadow-md"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 text-[#2563EB] font-black flex items-center justify-center mb-3">
-                  {brand.name.slice(0, 1)}
-                </div>
-                <p className="text-sm font-bold text-gray-800 text-center line-clamp-2">{brand.name}</p>
-                <p className="text-[10px] text-gray-500 mt-1">{brand.productCount.toLocaleString("fa-IR")} کالا</p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+      <HomeBrandsSection brands={brands} />
 
-      <ProductRailSection
-        id="home-new-arrivals"
-        title="جدیدترین‌ها"
-        href="/new-products"
-        linkLabel="همه"
-        tone="plain"
-        products={newArrivals}
-        slideClassName="w-[180px] md:w-[220px]"
-        testId="home-new-products"
-      />
+      <HomeNewProductsSection products={newArrivals} />
+
+      <HomeTestimonialsSection reviews={featuredReviews} />
+
+      <HomeArticlesSection articles={latestArticles} />
     </div>
   );
 }

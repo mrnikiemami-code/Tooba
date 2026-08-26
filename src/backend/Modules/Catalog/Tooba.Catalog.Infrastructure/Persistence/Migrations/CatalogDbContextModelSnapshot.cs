@@ -95,6 +95,10 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("LogoMediaAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("logo_media_asset_id");
+
                     b.Property<string>("SlugSeam")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")

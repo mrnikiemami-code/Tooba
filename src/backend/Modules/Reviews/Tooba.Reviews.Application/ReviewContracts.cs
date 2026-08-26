@@ -13,6 +13,19 @@ public sealed record ReviewSummary(long Count, decimal Average, IReadOnlyDiction
 public sealed record ProductReviewSummary(Guid ProductId, long ReviewCount, decimal? AverageRating);
 /// <summary>صفحهٔ عمومی بررسی‌های Published.</summary>
 public sealed record PublishedReviewPage(ReviewSummary Summary, IReadOnlyList<PublishedReview> Items, int Page, int PageSize);
+
+/// <summary>نظر منتشرشدهٔ اخیر برای ریل خانه همراه مرجع محصول خریداری‌شده.</summary>
+public sealed record HomeFeaturedReview(
+    Guid ReviewId,
+    string AuthorDisplayName,
+    int Rating,
+    string? Title,
+    string Body,
+    bool IsVerifiedPurchase,
+    DateTimeOffset CreatedAt,
+    Guid ProductId,
+    string ProductTitle,
+    string ProductSlug);
 /// <summary>ردیف صف مدیریت که دادهٔ ممیزی را فقط در مرز مدیر ارائه می‌کند.</summary>
 public sealed record ModerationReview(Guid ReviewId, Guid ProductId, string AuthorDisplayName, int Rating, string? Title,
     string Body, bool IsVerifiedPurchase, DateTimeOffset CreatedAt, ReviewStatus Status);
@@ -42,6 +55,9 @@ public interface IReviewDirectory
     Task<IReadOnlyDictionary<Guid, ProductReviewSummary>> GetPublishedSummariesAsync(
         IReadOnlyCollection<Guid> productIds,
         CancellationToken cancellationToken);
+
+    /// <summary>جدیدترین نظرهای Published را برای ریل خانه برمی‌گرداند.</summary>
+    Task<IReadOnlyList<HomeFeaturedReview>> GetRecentPublishedForHomeAsync(int limit, CancellationToken cancellationToken);
     /// <summary>خلاصه و صفحهٔ Published محصول را با slug برمی‌گرداند.</summary>
     Task<PublishedReviewPage?> GetPublishedAsync(string productSlug, int page, int pageSize, CancellationToken cancellationToken);
     /// <summary>صف Pending را برای مرز مدیر برمی‌گرداند.</summary>

@@ -43,6 +43,8 @@ export default async function HomePage() {
         brands={home.brands}
         bestSellerColumns={home.bestSellerColumns}
         mostViewedProducts={home.mostViewedProducts}
+        featuredReviews={home.featuredReviews}
+        latestArticles={home.latestArticles}
       />
     </StorefrontShell>
   );
