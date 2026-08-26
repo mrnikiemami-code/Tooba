@@ -26,6 +26,10 @@
     storefront components must run `npm run test:critical-storefront` and follow
     `docs/visual-baselines/CRITICAL-STOREFRONT-VISUAL-REVIEW.md`. Functional PASS
     does not imply Visual ACCEPT.
+18. **Never POST test, probe, or placeholder payloads to Bridge `/api/results`.**
+    Only the complete Task Result contract (`BEGIN_TOOBA_WORKER_RESULT` …
+    `END_TOOBA_WORKER_RESULT`) after validation, commit, and push. Do not probe
+    the Results API with dummy `content`.
 
 ## Current pipeline
 

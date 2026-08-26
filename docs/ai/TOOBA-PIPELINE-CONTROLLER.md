@@ -92,6 +92,10 @@ instruction.
 Worker PASS != Architect ACCEPT
 ```
 
+**Never send test/probe Results.** `POST /api/results` accepts only the final
+complete Result contract for the active Task. No placeholder `content`, no schema
+probes, no dry-run posts. One real Result per Task lifecycle.
+
 After a real Result, control returns through Bridge to the Architect:
 
 - `ACCEPT` → Architect issues the next safe downloadable Task;
