@@ -1,0 +1,23 @@
+{
+  "offerId": "01a03826-b318-7000-b6b6-aa85026be261",
+  "cartId": "01a03ef2-4d30-7000-bb7e-bfc91ba645be",
+  "checkoutId": "01a03ef2-4d7c-7000-a47a-deee181523cd",
+  "paymentId": "576cd36d-2258-461b-b154-9fccc36f109c",
+  "attemptId": "f3a10a5a-c899-4741-824e-da64edb20ea0",
+  "payable": 1918400,
+  "tax": 158400,
+  "checkoutStatusBeforePay": null,
+  "paymentStateBeforePay": "PendingPayment",
+  "paymentAfter": {
+    "status": "Succeeded",
+    "paymentState": null
+  },
+  "confirmation": {
+    "status": null,
+    "paymentState": "Paid",
+    "recipientName": "خریدار آزمایشی گیت",
+    "payableAmount": 1918400,
+    "taxAmount": 158400
+  },
+  "redirectUrl": "/payment/sandbox?paymentId=576cd36d-2258-461b-b154-9fccc36f109c&attemptId=f3a10a5a-c899-4741-824e-da64edb20ea0&ref=fake-576cd36d2258461bb1549fccc36f109c&checkoutId=01a03ef2-4d7c-7000-a47a-deee181523cd"
+}
