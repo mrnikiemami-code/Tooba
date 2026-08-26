@@ -10,10 +10,15 @@ internal static class HostHealthEndpoints
     /// <summary>
     /// مسیرهای health را روی Host ثبت می‌کند.
     /// </summary>
-    internal static void Map(WebApplication app)
+    internal static void Map(WebApplication app, bool enableCors = false)
     {
-        app.MapGet("/health/live", () => Results.Json(new { status = "ok" }));
-        app.MapGet("/health", () => Results.Json(new { status = "ok" }));
+        var live = app.MapGet("/health/live", () => Results.Json(new { status = "ok" }));
+        var health = app.MapGet("/health", () => Results.Json(new { status = "ok" }));
+        if (enableCors)
+        {
+            live.RequireCors("ToobaCors");
+            health.RequireCors("ToobaCors");
+        }
 
         app.MapGet("/health/ready", EvaluateReadinessAsync);
         app.MapGet("/ready", EvaluateReadinessAsync);

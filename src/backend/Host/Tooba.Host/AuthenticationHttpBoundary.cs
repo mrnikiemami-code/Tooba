@@ -51,25 +51,14 @@ internal sealed class CurrentAuthenticatedSession
 }
 
 /// <summary>
-/// درز محدودسازی نرخ آینده. هویت را فقط به IP گره نمی‌زند و در این تسک antifraud اجرا نمی‌شود.
+/// درز محدودسازی نرخ auth-sensitive. هویت را فقط به IP گره نمی‌زند.
 /// </summary>
 internal interface IAuthenticationThrottleSeam
 {
     /// <summary>
-    /// رخداد ورود/Refresh/بازنشانی/تأیید را برای محدودساز بعدی علامت می‌زند. راز را نمی‌پذیرد.
+    /// تلاش برای مصرف یک permit در پنجرهٔ IP+operation. false یعنی 429 enumeration-safe.
     /// </summary>
-    void Observe(string operation);
-}
-
-/// <summary>
-/// پیاده‌سازی خنثی درز نرخ؛ محصول ضد سوءاستفاده نیست.
-/// </summary>
-internal sealed class NoOpAuthenticationThrottleSeam : IAuthenticationThrottleSeam
-{
-    /// <inheritdoc />
-    public void Observe(string operation)
-    {
-    }
+    bool TryAcquire(HttpContext context, string operation);
 }
 
 /// <summary>
@@ -294,9 +283,13 @@ internal static class AuthenticationEndpointMapper
     /// <summary>
     /// مسیرهای احراز نسخهٔ ۱ را ثبت می‌کند. کوکی امن پیش‌فرض ساخته نمی‌شود.
     /// </summary>
-    public static void MapAuthenticationBoundary(this WebApplication app)
+    public static void MapAuthenticationBoundary(this WebApplication app, bool enableCors = false)
     {
         var group = app.MapGroup("/v1/auth");
+        if (enableCors)
+        {
+            group.RequireCors("ToobaCors");
+        }
         group.MapPost("/register", RegisterAsync);
         group.MapPost("/login", LoginAsync);
         group.MapPost("/refresh", RefreshAsync);
@@ -358,7 +351,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("login");
+        if (RejectIfThrottled(http, throttle, "login") is { } throttled)
+        {
+            return throttled;
+        }
+
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
             return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.authentication.failed");
@@ -387,7 +384,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("refresh");
+        if (RejectIfThrottled(http, throttle, "refresh") is { } throttled)
+        {
+            return throttled;
+        }
+
         var result = await auth.RefreshSessionAsync(body.SessionId, body.RefreshToken ?? "", http.RequestAborted);
         if (!result.Succeeded || result.Ticket?.RefreshToken is null)
         {
@@ -443,7 +444,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("password_reset_request");
+        if (RejectIfThrottled(http, throttle, "password_reset_request") is { } throttled)
+        {
+            return throttled;
+        }
+
         if (TryParseKind(body.IdentifierKind, out var kind))
         {
             await lifecycle.RequestPasswordResetAsync(kind, body.Identifier ?? "", http.RequestAborted);
@@ -463,7 +468,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("password_reset_complete");
+        if (RejectIfThrottled(http, throttle, "password_reset_complete") is { } throttled)
+        {
+            return throttled;
+        }
+
         var outcome = await lifecycle.CompletePasswordResetAsync(
             body.ChallengeId,
             body.Secret ?? "",
@@ -494,7 +503,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("identifier_verification_request");
+        if (RejectIfThrottled(http, throttle, "identifier_verification_request") is { } throttled)
+        {
+            return throttled;
+        }
+
         if (!TryParseKind(body.IdentifierKind, out var kind))
         {
             return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
@@ -526,7 +539,11 @@ internal static class AuthenticationEndpointMapper
             return spoof;
         }
 
-        throttle.Observe("identifier_verification_complete");
+        if (RejectIfThrottled(http, throttle, "identifier_verification_complete") is { } throttled)
+        {
+            return throttled;
+        }
+
         var outcome = await lifecycle.CompleteIdentifierVerificationAsync(
             body.ChallengeId,
             body.Secret ?? "",
@@ -653,6 +670,16 @@ internal static class AuthenticationEndpointMapper
         }
 
         return null;
+    }
+
+    private static IResult? RejectIfThrottled(HttpContext http, IAuthenticationThrottleSeam throttle, string operation)
+    {
+        if (throttle.TryAcquire(http, operation))
+        {
+            return null;
+        }
+
+        return AuthProblem(http, StatusCodes.Status429TooManyRequests, "Too Many Requests", "identity.rate_limited");
     }
 
     private static IResult AuthProblem(HttpContext http, int status, string title, string errorCode)

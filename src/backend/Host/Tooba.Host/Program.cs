@@ -71,8 +71,13 @@ builder.Services.AddOptions<AuthorizationHostOptions>()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<AuthorizationHostOptions>, AuthorizationOptionsValidator>();
 builder.Services.AddToobaAuthorization();
+builder.Services.AddOptions<AuthSecurityHostOptions>()
+    .Bind(builder.Configuration.GetSection(AuthSecurityHostOptions.SectionName))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<AuthSecurityHostOptions>, AuthSecurityOptionsValidator>();
+builder.Services.AddSingleton<AuthenticationInstrumentation>();
 builder.Services.AddScoped<CurrentAuthenticatedSession>();
-builder.Services.AddSingleton<IAuthenticationThrottleSeam, NoOpAuthenticationThrottleSeam>();
+builder.Services.AddSingleton<IAuthenticationThrottleSeam, AuthenticationRateLimitThrottleSeam>();
 builder.Services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
 builder.Services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
 builder.Services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
@@ -105,6 +110,28 @@ builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+
+var authSecurityOptions = new AuthSecurityHostOptions();
+builder.Configuration.GetSection(AuthSecurityHostOptions.SectionName).Bind(authSecurityOptions);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = authSecurityOptions.MaxRequestBodyBytes;
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ToobaCors", policy =>
+    {
+        var origins = builder.Configuration.GetSection("Tooba:AuthSecurity:CorsAllowedOrigins").Get<string[]>() ?? [];
+        if (origins.Length == 0)
+        {
+            policy.SetIsOriginAllowed(_ => false);
+            return;
+        }
+
+        policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+    });
 });
 
 var trustedProxies = builder.Configuration.GetSection("Tooba:TrustedProxies").Get<string[]>() ?? [];
@@ -197,10 +224,12 @@ if (trustedProxies.Length > 0)
     app.UseForwardedHeaders();
 }
 
+app.UseCors("ToobaCors");
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseMiddleware<SessionAuthenticationMiddleware>();
 
-app.MapAuthenticationBoundary();
+app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
@@ -211,7 +240,7 @@ app.MapProductQnAEndpoints();
 app.MapWishlistEndpoints();
 app.MapAddressBookEndpoints();
 
-HostHealthEndpoints.Map(app);
+HostHealthEndpoints.Map(app, enableCors: true);
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {

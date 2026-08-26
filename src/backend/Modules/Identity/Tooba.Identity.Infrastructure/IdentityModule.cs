@@ -29,8 +29,15 @@ public sealed class IdentityModule : IToobaModule
         services.Configure<IdentityLifecycleOptions>(configuration.GetSection("Identity:Lifecycle"));
         services.AddSingleton<IOutboxModuleRegistration, IdentityOutboxRegistration>();
         services.AddSingleton<IPasswordHashingService, AspNetPasswordHashingService>();
-        services.AddSingleton<CapturingOtpSender>();
-        services.AddSingleton<IOtpSender>(sp => sp.GetRequiredService<CapturingOtpSender>());
+        if (environment.IsProduction())
+        {
+            services.AddSingleton<IOtpSender, ProductionOtpSender>();
+        }
+        else
+        {
+            services.AddSingleton<CapturingOtpSender>();
+            services.AddSingleton<IOtpSender>(sp => sp.GetRequiredService<CapturingOtpSender>());
+        }
         services.AddSingleton<IIdentitySecurityEventSink, InMemoryIdentitySecurityEventSink>();
         services.AddSingleton<IAccessCredentialBoundary, SessionAccessCredentialBoundary>();
         services.AddScoped<IdentityLifecycleService>();
