@@ -4,9 +4,9 @@
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T020
+Last Architect Accepted Product Task: TB-P05-T021
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T021 = AWAITING_ARCHITECT_ACCEPT
+Current Product Task: TB-P05-T022 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -38,4 +38,4 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 Then recover current phase, accepted history, Bridge channel, active Task, blockers, and Git safety.
 
-Evidence for the current product task lives under `docs/evidence/TB-P05-T021/`.
+Evidence for the current product task lives under `docs/evidence/TB-P05-T022/`.

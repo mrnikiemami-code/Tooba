@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T020 ACCEPTED; TB-P05-T021 = AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T021 ACCEPTED; TB-P05-T022 = AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -140,7 +140,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-18 | Home page Shopeiva fidelity + live data | ACCEPTED (TB-P05-T018 / UNBLOCK-01) |
 | P05-19 | Critical Home/PDP visual regression guards | ACCEPTED (TB-P05-T019) |
 | P05-20 | Category/Search/Listing Shopeiva fidelity | ACCEPTED (TB-P05-T020) |
-| P05-21 | Cart + Checkout Shopeiva fidelity + live commerce | AWAITING_ARCHITECT_ACCEPT (TB-P05-T021) |
+| P05-21 | Cart + Checkout Shopeiva fidelity + live commerce | ACCEPTED (TB-P05-T021) |
+| P05-22 | Customer Panel Shopeiva fidelity + live data | AWAITING_ARCHITECT_ACCEPT (TB-P05-T022) |
 | P05-15 | Customer Profile editing behind Shopeiva UI | ACCEPTED (TB-P05-T015 / TB-P05-T015-R1) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |

@@ -1,132 +1,208 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
-  ChevronDown,
-  CircleUserRound,
-  CreditCard,
+  ChevronLeft,
+  Gift,
   Heart,
-  Home,
+  LayoutDashboard,
   LogOut,
   MapPin,
   Menu,
-  Moon,
   Package,
-  Search,
   Settings,
   Ticket,
-  UserRound,
-  WalletCards,
+  User,
+  Wallet,
+  X,
 } from "lucide-react";
 
-const links = [
-  { href: "/customer-panel", label: "پیشخوان", icon: Home },
-  { href: "/customer-panel/orders", label: "سفارش‌ها", icon: Package },
-  { href: "/customer-panel/wishlist", label: "علاقه‌مندی‌ها", icon: Heart },
-  { href: "/customer-panel/wallet", label: "کیف پول", icon: WalletCards },
-  { href: "/customer-panel/gift-cards", label: "کارت هدیه", icon: CreditCard },
-  { href: "/customer-panel/addresses", label: "آدرس‌ها", icon: MapPin },
-  { href: "/customer-panel/notifications", label: "اعلان‌ها", icon: Bell },
-  { href: "/customer-panel/profile", label: "پروفایل", icon: UserRound },
-] as const;
+type NavItem = {
+  id: string;
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  live: boolean;
+};
+
+/** ترتیب قفل‌شدهٔ ناوبری Shopeiva؛ مسیرهای بدون backend به‌صورت صادقانه غیرفعال می‌مانند. */
+const menuItems: NavItem[] = [
+  { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/customer-panel", live: true },
+  { id: "orders", label: "سفارشات", icon: Package, href: "/customer-panel/orders", live: true },
+  { id: "wishlist", label: "علاقه‌مندی‌ها", icon: Heart, href: "/customer-panel/wishlist", live: true },
+  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/customer-panel/wallet", live: false },
+  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/customer-panel/tickets", live: false },
+  { id: "gift-cards", label: "کارت‌های هدیه", icon: Gift, href: "/customer-panel/gift-cards", live: false },
+  { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
+  { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: false },
+  { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
+  { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: false },
+];
+
+function isActivePath(pathname: string, href: string): boolean {
+  if (href === "/customer-panel") {
+    return pathname === href;
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 /**
- * ساختار قفل‌شدهٔ پنل مشتری Shopeiva: نوار تبلیغ، هدر، نوار حساب، سایدبار و محتوای کارت‌محور.
+ * پوستهٔ پنل مشتری مطابق layout واقعی Shopeiva:
+ * هدر چسبان، سایدبار تمام‌ارتفاع، drawer موبایل، وضعیت انتخاب با ChevronLeft.
+ * رنگ برند Tooba آبی است (MINOR TECHNICAL DEVIATION نسبت به #E53935).
  */
 export function CustomerPanelShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  function leavePanel() {
+    router.push("/");
+  }
+
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-gray-900" dir="rtl">
-      <div className="h-11 bg-[#d6aa72] text-white flex items-center justify-center px-4 text-sm font-bold">
-        محصولات گرم و محبوب در جشنوارهٔ حس خوب خرید
-      </div>
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-[1440px] mx-auto h-20 px-4 sm:px-8 flex items-center gap-4">
-          <Link href="/" className="shrink-0" aria-label="فروشگاه توبا">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/logos/logo.svg" alt="توبا" className="h-10 w-auto" />
-          </Link>
-          <div className="hidden md:flex flex-1 max-w-md relative me-8">
-            <Search className="absolute right-4 top-3 w-4 h-4 text-gray-400" />
-            <input
-              readOnly
-              aria-label="جستجو در پنل"
-              placeholder="جستجو..."
-              className="w-full h-10 rounded-xl bg-gray-50 border border-gray-100 pr-11 pl-4 text-sm"
-            />
-          </div>
-          <div className="me-auto flex items-center gap-1.5">
-            <Link href="/customer-panel/notifications" className="p-2.5 rounded-xl hover:bg-gray-50" aria-label="اعلان‌ها">
-              <Bell className="w-5 h-5" />
-            </Link>
-            <button type="button" className="p-2.5 rounded-xl hover:bg-gray-50" aria-label="حالت نمایش">
-              <Moon className="w-5 h-5" />
-            </button>
-            <Link href="/customer-panel/orders" className="p-2.5 rounded-xl hover:bg-gray-50 relative" aria-label="سفارش‌ها">
-              <Package className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/customer-panel/profile"
-              className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="customer-panel-shell">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center" data-testid="customer-panel-header">
+        <div className="flex items-center justify-between w-full px-4 lg:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((open) => !open)}
+              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="جمع‌کردن منو"
             >
-              <CircleUserRound className="w-5 h-5 text-[#2563EB]" />
-              <span className="hidden sm:inline">حساب مشتری</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <Menu className="w-5 h-5 text-gray-700" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="منوی موبایل"
+              data-testid="customer-panel-mobile-menu"
+            >
+              <Menu className="w-5 h-5 text-gray-700" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-sm">
+                <span className="text-white font-bold text-sm">ت</span>
+              </div>
+              <span className="font-bold text-gray-900 hidden sm:block">پنل کاربری</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-sm text-gray-600 hover:text-[#2563EB] truncate max-w-[120px] sm:max-w-none">
+              بازگشت به فروشگاه
             </Link>
+            <button
+              type="button"
+              onClick={leavePanel}
+              className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+              title="خروج از پنل"
+              aria-label="خروج از پنل"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-[1440px] mx-auto h-16 px-4 sm:px-8 flex items-center gap-3">
-          <button type="button" className="lg:hidden p-2 rounded-lg" aria-label="منوی پنل">
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="w-9 h-9 rounded-xl bg-[#2563EB] text-white flex items-center justify-center font-black">م</div>
-          <span className="font-bold text-sm">مشتری توبا</span>
-          <Link href="/" className="me-auto flex items-center gap-2 text-sm text-gray-600">
-            <LogOut className="w-4 h-4 text-[#2563EB]" />
-            بازگشت به فروشگاه
-          </Link>
-        </div>
-      </div>
-
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-5 lg:py-7 flex gap-6">
-        <aside className="hidden lg:block w-60 shrink-0">
-          <nav className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm sticky top-5" aria-label="منوی مشتری">
-            {links.map((item) => {
-              const Icon = item.icon;
-              const active = item.href === "/customer-panel" ? pathname === item.href : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-1 ${
-                    active ? "bg-blue-50 text-[#2563EB] font-bold" : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Icon className="w-4.5 h-4.5" />
-                  {item.label}
-                </Link>
-              );
-            })}
-            <div className="border-t border-gray-100 mt-2 pt-2">
-              <span className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400">
-                <Ticket className="w-4 h-4" />
-                تیکت‌ها
-              </span>
-              <span className="flex items-center gap-3 px-3 py-2 text-sm text-gray-400">
-                <Settings className="w-4 h-4" />
-                تنظیمات
-              </span>
-            </div>
+      <div className="flex flex-1 relative">
+        <aside
+          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 ease-in-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto ${
+            sidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0"
+          }`}
+          data-testid="customer-panel-sidebar"
+        >
+          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی مشتری">
+            {menuItems.map((item) => (
+              <NavLink key={item.id} item={item} pathname={pathname} />
+            ))}
           </nav>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+
+        <main className="flex-1 min-w-0 w-full p-4 md:p-6 lg:p-8" data-testid="customer-panel-main">
+          {children}
+        </main>
       </div>
+
+      {mobileOpen ? (
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" data-testid="customer-panel-drawer">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">ت</span>
+                </div>
+                <span className="text-lg font-bold text-gray-900">پنل کاربری</span>
+              </div>
+              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="بستن">
+                <X className="w-5 h-5 text-gray-700" />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+              {menuItems.map((item) => (
+                <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
+              ))}
+            </nav>
+            <div className="p-4 border-t border-gray-200 shrink-0 bg-gray-50">
+              <button
+                type="button"
+                onClick={leavePanel}
+                className="flex items-center justify-center gap-2 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100"
+              >
+                <LogOut className="w-5 h-5" />
+                خروج از پنل
+              </button>
+            </div>
+          </aside>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function NavLink({
+  item,
+  pathname,
+  onNavigate,
+  dense,
+}: {
+  item: NavItem;
+  pathname: string;
+  onNavigate?: () => void;
+  dense?: boolean;
+}) {
+  const active = isActivePath(pathname, item.href);
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${
+        dense ? "px-4 py-3" : "px-3 py-2.5"
+      } ${
+        active
+          ? "bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/20"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+      data-testid={`customer-nav-${item.id}`}
+      data-live={item.live ? "true" : "false"}
+    >
+      <item.icon className="w-5 h-5 shrink-0" />
+      <span className="flex-1 truncate">{item.label}</span>
+      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>به‌زودی</span> : null}
+      {active ? <ChevronLeft className="w-4 h-4 shrink-0" /> : null}
+    </Link>
   );
 }
