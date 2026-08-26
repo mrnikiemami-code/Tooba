@@ -4,9 +4,9 @@
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
-Last Architect Accepted Product Task: TB-P05-T017-UNBLOCK-01
+Last Architect Accepted Product Task: TB-P05-T018-UNBLOCK-01
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T018 = BLOCKED_REMOTE_SYNC; TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT
+Current Product Task: TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -44,4 +44,4 @@ Worker PASS != Architect ACCEPT
 Worker offline between Tasks = NORMAL
 ```
 
-P00–P04 remain complete. P05 remains in progress. TB-P05-T017 series accepted. TB-P05-T018 Home fidelity is on origin; UNBLOCK-01 awaits Architect ACCEPT for sync recovery.
+P00–P04 remain complete. P05 remains in progress. TB-P05-T018 series accepted. TB-P05-T019 locks Home/PDP Shopeiva visual regression guards.

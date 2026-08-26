@@ -15,7 +15,11 @@
     "test:seller": "node --experimental-strip-types --test app/vendor-panel/seller-api.test.ts",
     "test:customer": "node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts",
     "test:profile": "node --experimental-strip-types --test app/customer-panel/customer-profile-api.test.ts",
-    "test:storefront": "node --experimental-strip-types --test app/storefront/storefront-api.test.ts app/storefront/storefront-cart-api.test.ts app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts"
+    "test:storefront": "node --experimental-strip-types --test app/storefront/storefront-api.test.ts app/storefront/storefront-cart-api.test.ts app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts",
+    "test:home": "node --experimental-strip-types --test app/storefront/storefront-home.test.ts app/storefront/home-structure.guard.test.ts",
+    "test:pdp-guard": "node --experimental-strip-types --test app/storefront/pdp-structure.guard.test.ts",
+    "test:critical-storefront": "npm run test:home && npm run test:pdp-guard",
+    "test": "npm run test:grid && npm run test:workspace && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:customer && npm run test:storefront && npm run test:critical-storefront"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

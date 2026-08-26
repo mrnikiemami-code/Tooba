@@ -87,6 +87,17 @@ It never invents requirements, broadens scope, redesigns locked architecture,
 or self-authorizes the next Task. Architectural concerns are reported, not
 silently implemented.
 
+## Critical storefront visual lock
+
+Home and PDP are critical Shopeiva-locked surfaces.
+
+- Contracts: `docs/visual-baselines/HOME-FIDELITY-CONTRACT.md`,
+  `docs/visual-baselines/PDP-FIDELITY-CONTRACT.md`
+- Review checklist: `docs/visual-baselines/CRITICAL-STOREFRONT-VISUAL-REVIEW.md`
+- Any Task touching shared storefront components must run
+  `npm run test:critical-storefront` in `src/frontend`.
+- Functional PASS does not imply Visual ACCEPT.
+
 **Retired BRIDGE-V2 behavior:** resume `Waiting` heartbeats and continuous
 polling after every Result. Under BRIDGE-WAKE-V1 the Worker waits for the next
 `BRIDGE-WAKE`.

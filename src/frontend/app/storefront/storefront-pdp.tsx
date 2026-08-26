@@ -63,7 +63,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   ];
 
   return (
-    <div className="py-4 space-y-6">
+    <div className="py-4 space-y-6" data-testid="storefront-pdp">
       <nav className="text-xs text-gray-500 flex gap-2">
         <Link href="/" className="hover:text-[#2563EB]">
           خانه
@@ -260,7 +260,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             )}
             {note ? <p className="text-xs text-gray-500" role="status" aria-live="polite">{note}</p> : null}
             {currentDetail.otherSellers.length > 0 ? (
-              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
+              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2" data-testid="pdp-other-sellers">
                 <strong className="text-xs">فروشندگان دیگر همین کالا</strong>
                 {currentDetail.otherSellers.map((seller) => (
                   <p key={seller.offerId} className="text-xs text-gray-600">
@@ -275,11 +275,15 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200" data-testid="pdp-tabs-card">
-        <div className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-white rounded-t-2xl">
+        <div
+          className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-white rounded-t-2xl"
+          data-testid="pdp-sticky-tabs"
+        >
           {tabs.map((item) => (
             <button
               key={item.id}
               type="button"
+              data-testid={`pdp-tab-${item.id}`}
               onClick={() => setTab(item.id)}
               className={`px-4 lg:px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 tab === item.id ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-gray-500 hover:text-gray-700"
@@ -363,7 +367,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
       </div>
       {currentDetail.relatedProducts.length > 0 ? (
-        <section className="space-y-3" aria-labelledby="related-products-title">
+        <section className="space-y-3" aria-labelledby="related-products-title" data-testid="pdp-related">
           <div className="flex items-center justify-between">
             <h2 id="related-products-title" className="text-lg font-extrabold text-gray-900">محصولات مرتبط</h2>
             <Link href="/products" className="text-xs font-bold text-[#2563EB]">مشاهده همه</Link>

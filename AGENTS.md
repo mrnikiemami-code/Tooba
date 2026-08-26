@@ -22,6 +22,10 @@
 14. Do not modify unrelated files.
 15. Do not mark Architect ACCEPT unless the Task explicitly authorizes it.
 16. Do not replay historical task files from `docs/ai/tasks/` as current work.
+17. Home and PDP are critical Shopeiva-locked surfaces. Any Task touching shared
+    storefront components must run `npm run test:critical-storefront` and follow
+    `docs/visual-baselines/CRITICAL-STOREFRONT-VISUAL-REVIEW.md`. Functional PASS
+    does not imply Visual ACCEPT.
 
 ## Current pipeline
 

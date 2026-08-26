@@ -34,13 +34,13 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P05-T017-UNBLOCK-01
+TB-P05-T018-UNBLOCK-01
 ```
 
 Last Implementation Task:
 
 ```text
-TB-P05-T018-UNBLOCK-01
+TB-P05-T019
 ```
 
 Last Architect Accepted Gate:
@@ -55,8 +55,9 @@ Current Issued Task:
 TB-P05-T017 = ACCEPTED
 TB-P05-T017-R1 = ACCEPTED
 TB-P05-T017-UNBLOCK-01 = ACCEPTED
-TB-P05-T018 = BLOCKED_REMOTE_SYNC
-TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T018 = ACCEPTED
+TB-P05-T018-UNBLOCK-01 = ACCEPTED
+TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Current Gate:
@@ -83,8 +84,7 @@ TB-P04-GATE = ACCEPTED
 Issued but not accepted:
 
 ```text
-TB-P05-T018 = BLOCKED_REMOTE_SYNC
-TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -278,7 +278,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T017, T017-R1, T017-UNBLOCK-01 ACCEPTED; TB-P05-T018 = BLOCKED_REMOTE_SYNC; TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT)
+IN_PROGRESS (TB-P05-T001 through T018 / T018-UNBLOCK-01 ACCEPTED; TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Design System Foundation:
@@ -553,4 +553,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T017 / T017-R1 / T017-UNBLOCK-01 are Architect-accepted. TB-P05-T018 = BLOCKED_REMOTE_SYNC (implementation on origin; awaiting Architect path after UNBLOCK). TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT (remote sync recovery). Evidence under `docs/evidence/TB-P05-T018/` and `docs/evidence/TB-P05-T018-UNBLOCK-01/`. Worker PASS is not Architect ACCEPT. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE and P05 = IN_PROGRESS. TB-P05-T017 / T017-R1 / T017-UNBLOCK-01 / T018 / T018-UNBLOCK-01 are Architect-accepted. TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT (Home/PDP visual regression guards). Evidence under `docs/evidence/TB-P05-T019/` and contracts under `docs/visual-baselines/`. Worker PASS is not Architect ACCEPT. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

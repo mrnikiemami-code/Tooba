@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T017, T017-R1, T017-UNBLOCK-01 ACCEPTED; TB-P05-T018 = BLOCKED_REMOTE_SYNC; TB-P05-T018-UNBLOCK-01 = AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+IN_PROGRESS (TB-P05-T001 through T018 / T018-UNBLOCK-01 ACCEPTED; TB-P05-T019 = AWAITING_ARCHITECT_ACCEPT; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -137,7 +137,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-GOV-WAKE | Bridge-Wake-V1 governance migration | ACCEPTED (TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1) |
 | P05-16 | Mega Menu level-3 hierarchy | ACCEPTED (TB-P05-T016 / TB-P05-T016-R1) |
 | P05-17 | Complete Shopeiva PDP tabs + live Q&A/wholesale | ACCEPTED (TB-P05-T017 / R1 / UNBLOCK-01) |
-| P05-18 | Home page Shopeiva fidelity + live data | BLOCKED_REMOTE_SYNC (TB-P05-T018); UNBLOCK AWAITING_ARCHITECT_ACCEPT (TB-P05-T018-UNBLOCK-01) |
+| P05-18 | Home page Shopeiva fidelity + live data | ACCEPTED (TB-P05-T018 / UNBLOCK-01) |
+| P05-19 | Critical Home/PDP visual regression guards | AWAITING_ARCHITECT_ACCEPT (TB-P05-T019) |
 | P05-15 | Customer Profile editing behind Shopeiva UI | ACCEPTED (TB-P05-T015 / TB-P05-T015-R1) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |

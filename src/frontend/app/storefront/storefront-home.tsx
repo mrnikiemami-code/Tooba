@@ -70,7 +70,9 @@ export function StorefrontShopeivaHome({
     <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home">
       <h1 className="sr-only">{heroTitle}</h1>
 
-      <HomeHeroSlider />
+      <div data-testid="home-hero">
+        <HomeHeroSlider />
+      </div>
 
       <section aria-label="استوری‌ها" className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
         <div className="flex items-center justify-between mb-4">
@@ -266,7 +268,7 @@ function HomeHeroSlider() {
   }, []);
   const slide = SLIDES[index]!;
   return (
-    <section aria-label="اسلایدر خانه" className="px-2 sm:px-4" data-testid="home-hero">
+    <section aria-label="اسلایدر خانه" className="px-2 sm:px-4">
       <Link href={slide.href} className="relative block rounded-3xl overflow-hidden shadow-2xl bg-gray-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
