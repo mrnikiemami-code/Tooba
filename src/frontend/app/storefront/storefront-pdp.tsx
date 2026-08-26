@@ -274,23 +274,31 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="flex border-b border-gray-200 overflow-x-auto">
+      <div className="bg-white rounded-2xl border border-gray-200" data-testid="pdp-tabs-card">
+        <div className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-white rounded-t-2xl">
           {tabs.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`px-4 lg:px-6 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${
-                tab === item.id ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-gray-500"
+              className={`px-4 lg:px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                tab === item.id ? "border-[#2563EB] text-[#2563EB]" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
               {item.label}
-              {(item.count ?? 0) > 0 ? <span className="mr-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px]">{item.count?.toLocaleString("fa-IR")}</span> : null}
+              {(item.count ?? 0) > 0 ? (
+                <span
+                  className={`mr-1 rounded-full px-2 py-0.5 text-[10px] ${
+                    tab === item.id ? "bg-[#2563EB] text-white" : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {item.count?.toLocaleString("fa-IR")}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
-        <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700">
+        <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700 overflow-hidden rounded-b-2xl">
           {tab === "specs" ? (
             currentDetail.specifications.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="pdp-specs">
