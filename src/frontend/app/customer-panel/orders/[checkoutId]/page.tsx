@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, MapPin, Package, Store, Truck } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type CustomerOrderDetailPage,
   customerStatusClasses,
@@ -12,7 +12,7 @@ import {
   loadCustomerOrderDetail,
 } from "../../customer-api";
 import { loadCustomerFulfillments, type FulfillmentSnapshot } from "../../../fulfillment/fulfillment-api";
-import { FulfillmentSummaryCard } from "../../../fulfillment/fulfillment-ui";
+import { FulfillmentShippingInfoBlock } from "../../../fulfillment/fulfillment-ui";
 
 /**
  * جزئیات سفارش مشتری با خطوط هر فروشنده و snapshot ارسال واقعی.
@@ -26,6 +26,14 @@ export default function CustomerOrderDetail() {
     void loadCustomerOrderDetail(params.checkoutId).then(setPage);
     void loadCustomerFulfillments(params.checkoutId).then(setFulfillments);
   }, [params.checkoutId]);
+
+  const fulfillmentBySeller = useMemo(() => {
+    const map = new Map<string, FulfillmentSnapshot>();
+    for (const snapshot of fulfillments ?? []) {
+      map.set(snapshot.sellerOrderId, snapshot);
+    }
+    return map;
+  }, [fulfillments]);
 
   if (page === undefined) {
     return <div className="bg-white rounded-2xl border p-8 text-center text-gray-500">در حال دریافت جزئیات سفارش...</div>;
@@ -103,6 +111,13 @@ export default function CustomerOrderDetail() {
                   </div>
                 ))}
               </div>
+              {fulfillmentBySeller.get(seller.sellerOrderId) ? (
+                <div className="px-4 pb-4">
+                  <FulfillmentShippingInfoBlock snapshot={fulfillmentBySeller.get(seller.sellerOrderId)!} />
+                </div>
+              ) : fulfillments !== undefined && fulfillments !== null && fulfillments.length === 0 ? (
+                <p className="px-4 pb-4 text-xs text-gray-400">وضعیت ارسال این فروشنده هنوز ثبت نشده است.</p>
+              ) : null}
             </article>
           ))}
         </div>
@@ -121,32 +136,17 @@ export default function CustomerOrderDetail() {
         </div>
         <div className="flex gap-3">
           <Truck className="w-5 h-5 text-[#2563EB] shrink-0" />
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="font-black text-sm">روش ارسال</h2>
             <p className="text-sm text-gray-600 mt-2">{page.shippingMethodLabel || "ثبت نشده"}</p>
             <p className="text-xs text-gray-400 mt-2">اطلاعات فوق snapshot زمان ثبت سفارش است.</p>
+            {fulfillments === undefined ? (
+              <p className="text-xs text-gray-500 mt-3">در حال دریافت وضعیت محموله‌ها...</p>
+            ) : fulfillments === null ? (
+              <p className="text-xs text-red-600 mt-3">وضعیت محموله در دسترس نیست.</p>
+            ) : null}
           </div>
         </div>
-      </section>
-
-      <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Truck className="w-5 h-5 text-[#2563EB]" />
-          <h2 className="font-black text-sm">وضعیت ارسال و محموله‌ها</h2>
-        </div>
-        {fulfillments === undefined ? (
-          <p className="text-sm text-gray-500 text-center py-6">در حال دریافت وضعیت ارسال...</p>
-        ) : fulfillments === null ? (
-          <p className="text-sm text-red-600 text-center py-6">وضعیت ارسال در دسترس نیست. بعداً دوباره تلاش کنید.</p>
-        ) : fulfillments.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-6">هنوز fulfillment برای این سفارش ثبت نشده است.</p>
-        ) : (
-          <div className="space-y-4">
-            {fulfillments.map((snapshot) => (
-              <FulfillmentSummaryCard key={snapshot.fulfillmentId} snapshot={snapshot} />
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );
