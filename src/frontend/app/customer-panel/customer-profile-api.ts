@@ -1,4 +1,5 @@
 import { customerAuthHeaders, mapCustomerProfile, type CustomerProfilePage } from "./customer-api.ts";
+import { ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 
 /** ورودی ویرایش پروفایل؛ email/mobile/password/nationalCode ندارد. */
 export interface CustomerProfileWriteInput {
@@ -40,8 +41,10 @@ export function customerProfileErrorMessage(error: unknown): string {
 
 /** پروفایل Actor جاری را به‌روز می‌کند. */
 export async function saveCustomerProfile(input: CustomerProfileWriteInput): Promise<CustomerProfilePage> {
-  const response = await fetch("/v1/customer/profile", {
+  await ensureCsrfCookie();
+  const response = await fetch("/api/customer/profile", {
     method: "PUT",
+    credentials: "include",
     headers: customerAuthHeaders(true),
     body: JSON.stringify(sanitizeWrite(input)),
   });

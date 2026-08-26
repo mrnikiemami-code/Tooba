@@ -3,11 +3,13 @@
 ## Canonical decision
 
 ```text
-Authentication = Bearer opaque SessionId (Guid), server-side session store
-Refresh token = opaque secret in JSON body (not a cookie)
-Authorization header = Bearer {SessionId} — NOT JWT
-CSRF = N/A (Bearer-only API; no auth cookies)
-Production OTP = fail-closed until external provider wired
+Host API = Bearer opaque SessionId (Guid), server-side session store
+Browser clients = Next.js BFF with HttpOnly cookies (tooba_session, tooba_refresh)
+BFF injects Authorization: Bearer {SessionId} server-side to Host
+CSRF = double-submit (tooba_csrf cookie + X-Tooba-Csrf header) on mutating BFF routes
+AUTH_SESSION_STORAGE = HTTPONLY_COOKIE_SERVER_SIDE_PROPAGATION
+PRODUCTION_OTP = PROVIDER_BACKED_FAIL_CLOSED
+Authorization header on Host = Bearer {SessionId} — NOT JWT
 ```
 
 ## Configuration (`Tooba:AuthSecurity`)
@@ -22,73 +24,91 @@ Production OTP = fail-closed until external provider wired
 | `AuthRateLimitWindowSeconds` | Rate-limit window length | `60` |
 | `MaxRequestBodyBytes` | Kestrel max request body | `10485760` (10 MiB) |
 
-Related: `Tooba:TrustedProxies` — list of reverse-proxy IP addresses for forwarded headers (rate-limit client IP accuracy).
+Related: `Tooba:TrustedProxies` — reverse-proxy IPs for forwarded headers (rate-limit client IP accuracy).
 
-## Session model
+## OTP delivery (`Identity:OtpDelivery`)
+
+| Key | Purpose | Default (dev) | Production |
+|---|---|---|---|
+| `Mode` | `Capturing`, `Disabled`, `Webhook` | `Capturing` | `Disabled` |
+| `WebhookUrl` | Provider webhook endpoint | `""` | env-injected when Mode=Webhook |
+| `WebhookApiKey` | Bearer token for webhook | `""` | env-injected |
+| `TimeoutSeconds` | HTTP timeout for webhook | `10` | `10` |
+
+| Mode | Provider | Behavior |
+|---|---|---|
+| `Capturing` | `CapturingOtpDeliveryProvider` | Dev/test in-memory capture |
+| `Disabled` | `FailClosedOtpDeliveryProvider` | `identity.otp.delivery.unconfigured` |
+| `Webhook` | `WebhookOtpDeliveryProvider` | POST `{ purpose, destination, code }` to webhook |
+
+Implementation: `IOtpDeliveryProvider` → `OtpDeliveryProviderSender` (`IOtpSender`). Metric: `tooba.identity.otp.delivery` (outcome tag only).
+
+## Host session model
 
 - **Access**: `Authorization: Bearer {SessionId}` where SessionId is the persisted session Guid string.
-- **Refresh**: `POST /v1/auth/refresh` with `{ sessionId, refreshToken }` JSON body.
-- **No auth cookies** are set by Host; do not enable cookie-based sessions without Architect envelope.
-- **Tenant/Edition** come from resolved session; client `TenantId` headers/body/query/cookies are rejected (`identity.tenant.untrusted`).
+- **Refresh**: `POST /v1/auth/refresh` with `{ sessionId, refreshToken }` JSON body (called by BFF, not browser directly).
+- **Host does not set auth cookies** — cookie issuance is BFF responsibility.
+- **Tenant/Edition** from resolved session; client tenant spoof rejected (`identity.tenant.untrusted`).
 
 Implementation: `SessionAuthenticationMiddleware`, `AuthenticationHttpBoundary` (`src/backend/Host/Tooba.Host/AuthenticationHttpBoundary.cs`).
 
+## BFF cookie model (browser clients)
+
+| Cookie | HttpOnly | Path | Purpose |
+|---|---|---|---|
+| `tooba_session` | yes | `/` | SessionId for server-side Bearer injection |
+| `tooba_refresh` | yes | `/api/auth` | Refresh secret for BFF refresh route |
+| `tooba_csrf` | no | `/` | CSRF double-submit token |
+
+Libraries: `src/frontend/lib/server/session-cookies.ts`, `src/frontend/lib/server/host-client.ts`, `src/frontend/lib/auth/browser-session.ts`.
+
+Host origin env: `TOOBA_HOST_ORIGIN` (default `http://127.0.0.1:5088`).
+
+## BFF auth routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/auth/csrf` | GET | Issue CSRF cookie |
+| `/api/auth/login` | POST | Login; set HttpOnly cookies |
+| `/api/auth/logout` | POST | Logout Host + clear cookies |
+| `/api/auth/refresh` | POST | Rotate session from cookies |
+| `/api/auth/me` | GET | Current user via Bearer injection |
+
+## Customer API proxy
+
+`/api/customer/[...path]` → Host `/v1/customer/{path}` with server-side Bearer injection.
+
+- GET: no CSRF required.
+- POST/PUT/PATCH/DELETE: CSRF + same-origin check.
+- Browser clients use `credentials: "include"`; no localStorage session tokens.
+
+## CSRF (BFF mutating routes)
+
+1. `GET /api/auth/csrf` sets `tooba_csrf`.
+2. Mutating requests send `X-Tooba-Csrf` header matching cookie.
+3. Failure: HTTP 403 + `auth.csrf.invalid`.
+
+Protected: `/api/auth/login|logout|refresh`, mutating `/api/customer/*`.
+
 ## CORS
 
-- Policy name: `ToobaCors`.
-- Registered in `Program.cs`; applied to `/v1/auth/*` and `/health/live`, `/health` when enabled.
-- **Production**: set explicit frontend origins in `CorsAllowedOrigins`. Wildcard `*` is forbidden at startup validation.
-- **Empty array**: cross-origin denied (same-origin or reverse-proxy path only).
+- Policy name: `ToobaCors` on Host `/v1/auth/*` and health endpoints.
+- BFF routes are same-origin to the Next.js app — browser calls BFF, BFF calls Host server-side.
 
-Development example (`appsettings.Development.json`): `http://localhost:3001`, `http://127.0.0.1:3001`.
+## Rate limits (Host)
 
-## Rate limits
+Sliding window per client IP + operation. Exceeded: HTTP 429 + `identity.rate_limited`.
 
-Sliding window per **client IP + operation** via `AuthenticationRateLimitThrottleSeam`.
-
-| Operation | Endpoint |
-|---|---|
-| `login` | `POST /v1/auth/login` |
-| `refresh` | `POST /v1/auth/refresh` |
-| `password_reset_request` | `POST /v1/auth/password-reset/request` |
-| `password_reset_complete` | `POST /v1/auth/password-reset/complete` |
-| `identifier_verification_request` | `POST /v1/auth/identifier-verification/request` |
-| `identifier_verification_complete` | `POST /v1/auth/identifier-verification/complete` |
-
-Exceeded limit: HTTP **429** with `errorCode: identity.rate_limited` (enumeration-safe).
-
-Behind a reverse proxy: configure `Tooba:TrustedProxies` so `X-Forwarded-For` resolves to the real client IP.
+Configure `Tooba:TrustedProxies` behind reverse proxy for accurate IP keys.
 
 ## Security headers
 
-Applied by `SecurityHeadersMiddleware` on all responses when enabled:
-
-| Header | Value |
-|---|---|
-| `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `X-Frame-Options` | `SAMEORIGIN` |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
-| `Content-Security-Policy-Report-Only` | Shopeiva-tolerant report-only policy |
-| `Strict-Transport-Security` | Production only when HSTS enabled |
-
-CSP is **report-only** to avoid breaking Shopeiva inline scripts; enforce only after visual review.
-
-## Request body limits
-
-Kestrel `MaxRequestBodySize` bound from `MaxRequestBodyBytes`. Oversized bodies rejected at server level before handler execution.
-
-## Production OTP
-
-- **Production**: `ProductionOtpSender` — throws `identity.otp.delivery.unconfigured`. Password-reset and verification challenges cannot deliver OTP until an external SMS/email provider is registered.
-- **Non-Production**: `CapturingOtpSender` captures codes in memory for dev/test.
-
-Wire a real `IOtpSender` implementation before enabling password-reset or identifier-verification flows in Production.
+Applied by `SecurityHeadersMiddleware` when enabled (see TB-P06-T006 evidence).
 
 ## Observability
 
-- Metric: `tooba.authentication.event` — tags `outcome`, `operation`.
-- Throttled requests recorded as `outcome=throttled`.
+- Auth metric: `tooba.authentication.event` — tags `outcome`, `operation`.
+- OTP metric: `tooba.identity.otp.delivery` — tag `outcome` only.
 - **Never log** passwords, refresh tokens, OTP codes, or raw `Authorization` headers.
 
 ## Error secrecy
@@ -98,35 +118,29 @@ Wire a real `IOtpSender` implementation before enabling password-reset or identi
 | Bad login credentials | 401 | `identity.authentication.failed` |
 | Rate limited | 429 | `identity.rate_limited` |
 | Invalid session | 401 | `identity.session.invalid` |
+| CSRF failure (BFF) | 403 | `auth.csrf.invalid` |
+| OTP unconfigured (Production) | — | `identity.otp.delivery.unconfigured` |
 | Password reset request (any identifier) | 200 | `{ accepted: true }` |
-| Tenant spoof attempt | 400 | `identity.tenant.untrusted` |
-
-## Trusted proxies
-
-When `Tooba:TrustedProxies` is non-empty:
-
-1. `UseForwardedHeaders` enabled for X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host.
-2. Only listed IP addresses accepted as known proxies.
-3. Required for correct rate limiting and HSTS behind TLS-terminating load balancers.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
-| 429 on login | Rate limit; shared NAT IP; lower `AuthRateLimitPermitLimit` or widen window |
-| CORS blocked in browser | Origin in `CorsAllowedOrigins`; preflight from allowed origin |
-| OTP flows fail in Production | Expected until provider wired; check `identity.otp.delivery.unconfigured` |
-| Wrong client IP in rate limit | `TrustedProxies` not configured behind reverse proxy |
-| Missing security headers | `EnableSecurityHeaders=false` in config |
+| 403 on customer mutating calls | CSRF cookie/header; call `ensureCsrfCookie()` first |
+| 401 on `/api/customer/*` | Session cookie expired; login via `/api/auth/login` |
+| OTP flows fail in Production | Expected until `Mode=Webhook` configured |
+| BFF cannot reach Host | `TOOBA_HOST_ORIGIN` env |
+| Cookies not set in Production | HTTPS required (`secure: true`) |
 
 ## Integration tests
 
 ```powershell
-dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter AuthSecurityHttpTests
+dotnet test src/backend/Host/Tooba.Host.Tests/Tooba.Host.Tests.csproj --filter "FullyQualifiedName~OtpDeliveryProviderTests|FullyQualifiedName~AuthSecurityHttpTests"
+cd src/frontend
+npm run test -- lib/auth/csrf.test.ts
 ```
-
-Requires Docker for Testcontainers PostgreSQL.
 
 ## Evidence
 
-Task evidence: `docs/evidence/TB-P06-T006/`
+- TB-P06-T006 (Host auth hardening): `docs/evidence/TB-P06-T006/`
+- TB-P06-T007 (OTP + BFF cookies): `docs/evidence/TB-P06-T007/`

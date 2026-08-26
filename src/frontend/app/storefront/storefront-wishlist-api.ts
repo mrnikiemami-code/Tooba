@@ -1,4 +1,5 @@
 import type { StorefrontProductCard } from "./storefront-model.ts";
+import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 
 export const WISHLIST_CHANGED_EVENT = "tooba-wishlist-changed";
 
@@ -51,14 +52,7 @@ function nullableText(value: unknown): string | null {
 }
 
 function authHeaders(json = false): Record<string, string> {
-  const result: Record<string, string> = { Accept: "application/json" };
-  if (json) result["Content-Type"] = "application/json";
-  if (typeof window === "undefined") return result;
-  const session = window.localStorage.getItem("tooba.customerSessionId");
-  if (session) result.Authorization = `Bearer ${session}`;
-  else result["X-Tooba-Dev-Actor-User-Id"] =
-    window.localStorage.getItem("tooba.customerActorUserId") ?? "aaaaaaaa-aaaa-4aaa-8aaa-000000000009";
-  return result;
+  return bffFetchHeaders(json);
 }
 
 /** کارت ترکیب‌شدهٔ Wishlist را بدون ساخت قیمت، موجودی یا امتیاز نگاشت می‌کند. */
@@ -112,7 +106,15 @@ export function mapWishlistPage(value: unknown): StorefrontWishlistPage | null {
 }
 
 async function request(path: string, init?: RequestInit): Promise<unknown> {
-  const response = await fetch(path, { cache: "no-store", ...init, headers: authHeaders(Boolean(init?.body)) });
+  if (init?.method && init.method !== "GET") {
+    await ensureCsrfCookie();
+  }
+  const response = await fetch(path, {
+    cache: "no-store",
+    credentials: "include",
+    ...init,
+    headers: authHeaders(Boolean(init?.body)),
+  });
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     throw new StorefrontWishlistApiError(response.status, response.status === 401
@@ -124,7 +126,7 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
 
 /** صفحهٔ علاقه‌مندی را با دادهٔ جاری قیمت و موجودی می‌خواند. */
 export async function loadWishlist(): Promise<StorefrontWishlistPage> {
-  const mapped = mapWishlistPage(await request("/v1/customer/wishlist"));
+  const mapped = mapWishlistPage(await request("/api/customer/wishlist"));
   if (!mapped) throw new StorefrontWishlistApiError(200, "پاسخ علاقه‌مندی نامعتبر است.");
   return mapped;
 }
@@ -132,7 +134,7 @@ export async function loadWishlist(): Promise<StorefrontWishlistPage> {
 /** عضویت چند ProductId را با یک درخواست batch می‌خواند. */
 export async function loadWishlistMembership(productIds: string[]): Promise<Set<string>> {
   if (productIds.length === 0) return new Set();
-  const payload = await request("/v1/customer/wishlist/membership", {
+  const payload = await request("/api/customer/wishlist/membership", {
     method: "POST",
     body: JSON.stringify({ productIds }),
   });
@@ -152,13 +154,13 @@ export async function loadWishlistMembership(productIds: string[]): Promise<Set<
 
 /** Product را پس از موفقیت Host به علاقه‌مندی اضافه می‌کند. */
 export async function addWishlistProduct(productId: string): Promise<void> {
-  await request(`/v1/customer/wishlist/${encodeURIComponent(productId)}`, { method: "POST" });
+  await request(`/api/customer/wishlist/${encodeURIComponent(productId)}`, { method: "POST" });
   window.dispatchEvent(new Event(WISHLIST_CHANGED_EVENT));
 }
 
 /** Product را پس از موفقیت Host از علاقه‌مندی حذف می‌کند. */
 export async function removeWishlistProduct(productId: string): Promise<void> {
-  await request(`/v1/customer/wishlist/${encodeURIComponent(productId)}`, { method: "DELETE" });
+  await request(`/api/customer/wishlist/${encodeURIComponent(productId)}`, { method: "DELETE" });
   window.dispatchEvent(new Event(WISHLIST_CHANGED_EVENT));
 }
 

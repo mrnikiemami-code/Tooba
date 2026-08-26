@@ -229,13 +229,15 @@ export async function loadStorefrontReviews(slug: string, page = 1, pageSize = 1
   return mapStorefrontReviews(payload);
 }
 
-/** نظر مشتری را از مرز cookie/session موجود ارسال می‌کند و انتشار فوری را فرض نمی‌کند. */
+/** نظر مشتری را از مرز BFF/cookie موجود ارسال می‌کند و انتشار فوری را فرض نمی‌کند. */
 export async function submitStorefrontReview(command: StorefrontReviewSubmission): Promise<void> {
-  const response = await fetch("/v1/customer/reviews", {
+  const { ensureCsrfCookie, bffFetchHeaders } = await import("../../lib/auth/browser-session.ts");
+  await ensureCsrfCookie();
+  const response = await fetch("/api/customer/reviews", {
     method: "POST",
     cache: "no-store",
     credentials: "include",
-    headers: { "content-type": "application/json", Accept: "application/json" },
+    headers: bffFetchHeaders(true),
     body: JSON.stringify(command),
   });
   if (!response.ok) {
@@ -301,19 +303,13 @@ export async function loadStorefrontQuestions(slug: string, page = 1, pageSize =
 
 /** پرسش مشتری را ثبت می‌کند (Pending تا تعدیل). */
 export async function submitStorefrontQuestion(productId: string, body: string): Promise<void> {
-  const headers: Record<string, string> = {
-    "content-type": "application/json",
-    Accept: "application/json",
-  };
-  if (typeof window !== "undefined") {
-    const actor = window.localStorage.getItem("tooba.customerActorUserId");
-    if (actor) headers["X-Tooba-Dev-Actor-User-Id"] = actor;
-  }
-  const response = await fetch("/v1/customer/product-questions", {
+  const { ensureCsrfCookie, bffFetchHeaders } = await import("../../lib/auth/browser-session.ts");
+  await ensureCsrfCookie();
+  const response = await fetch("/api/customer/product-questions", {
     method: "POST",
     cache: "no-store",
     credentials: "include",
-    headers,
+    headers: bffFetchHeaders(true),
     body: JSON.stringify({ productId, body }),
   });
   if (!response.ok) {

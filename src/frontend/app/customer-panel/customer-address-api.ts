@@ -1,4 +1,5 @@
 import { customerAuthHeaders } from "./customer-api.ts";
+import { ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 
 /**
  * نشانی خصوصی مشتری. مالکیت فقط با هویت نشست/Actor سمت Host تعیین می‌شود.
@@ -156,10 +157,14 @@ async function parse(response: Response): Promise<unknown> {
 
 async function request(path: string, init?: RequestInit): Promise<{ status: number; ok: boolean; payload: unknown }> {
   const json = init?.body != null;
+  if (init?.method && init.method !== "GET") {
+    await ensureCsrfCookie();
+  }
   try {
     const response = await fetch(path, {
       ...init,
       cache: "no-store",
+      credentials: "include",
       headers: { ...customerAuthHeaders(json), ...(init?.headers ?? {}) },
     });
     return { status: response.status, ok: response.ok, payload: await parse(response) };
@@ -182,7 +187,7 @@ function ensureOk(response: { status: number; ok: boolean; payload: unknown }, f
 
 /** فهرست نشانی‌های متعلق به هویت جاری را از Host می‌خواند. */
 export async function listCustomerAddresses(): Promise<CustomerAddress[]> {
-  const response = await request("/v1/customer/addresses");
+  const response = await request("/api/customer/addresses");
   const payload = ensureOk(response, "دریافت آدرس‌ها ممکن نشد.");
   return mapCustomerAddressList(payload);
 }
@@ -191,7 +196,7 @@ export async function listCustomerAddresses(): Promise<CustomerAddress[]> {
  * فهرست را برای تسویه می‌خواند. وضعیت بدون هویت معتبر null است تا مسیر مهمان حفظ شود.
  */
 export async function listCheckoutSavedAddresses(): Promise<{ status: number; addresses: CustomerAddress[] | null }> {
-  const response = await request("/v1/customer/addresses");
+  const response = await request("/api/customer/addresses");
   if (!canShowCheckoutSavedAddresses(response.status) || !response.ok) {
     return { status: response.status, addresses: null };
   }
@@ -200,7 +205,7 @@ export async function listCheckoutSavedAddresses(): Promise<{ status: number; ad
 
 /** نشانی متعلق به هویت جاری را ایجاد می‌کند. */
 export async function createCustomerAddress(input: CustomerAddressWriteInput): Promise<CustomerAddress> {
-  const response = await request("/v1/customer/addresses", {
+  const response = await request("/api/customer/addresses", {
     method: "POST",
     body: JSON.stringify(toCustomerAddressWritePayload(input)),
   });
@@ -211,7 +216,7 @@ export async function createCustomerAddress(input: CustomerAddressWriteInput): P
 
 /** نشانی متعلق به هویت جاری را به‌روز می‌کند. */
 export async function updateCustomerAddress(addressId: string, input: CustomerAddressWriteInput): Promise<CustomerAddress> {
-  const response = await request(`/v1/customer/addresses/${encodeURIComponent(addressId)}`, {
+  const response = await request(`/api/customer/addresses/${encodeURIComponent(addressId)}`, {
     method: "PUT",
     body: JSON.stringify(toCustomerAddressWritePayload(input)),
   });
@@ -222,13 +227,13 @@ export async function updateCustomerAddress(addressId: string, input: CustomerAd
 
 /** نشانی متعلق به هویت جاری را حذف می‌کند. جایگزینی پیش‌فرض در UI ساخته نمی‌شود. */
 export async function deleteCustomerAddress(addressId: string): Promise<void> {
-  const response = await request(`/v1/customer/addresses/${encodeURIComponent(addressId)}`, { method: "DELETE" });
+  const response = await request(`/api/customer/addresses/${encodeURIComponent(addressId)}`, { method: "DELETE" });
   ensureOk(response, "حذف آدرس انجام نشد.");
 }
 
 /** نشانی را به‌عنوان پیش‌فرض اتمیک روی Host علامت می‌زند. */
 export async function setDefaultCustomerAddress(addressId: string): Promise<void> {
-  const response = await request(`/v1/customer/addresses/${encodeURIComponent(addressId)}/default`, { method: "POST" });
+  const response = await request(`/api/customer/addresses/${encodeURIComponent(addressId)}/default`, { method: "POST" });
   ensureOk(response, "تنظیم آدرس پیش‌فرض انجام نشد.");
 }
 

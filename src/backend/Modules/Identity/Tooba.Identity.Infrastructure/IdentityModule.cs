@@ -27,17 +27,32 @@ public sealed class IdentityModule : IToobaModule
 
         services.Configure<IdentityPasswordPolicyOptions>(configuration.GetSection("Identity:PasswordPolicy"));
         services.Configure<IdentityLifecycleOptions>(configuration.GetSection("Identity:Lifecycle"));
+        services.Configure<OtpDeliveryOptions>(configuration.GetSection("Identity:OtpDelivery"));
+        services.AddSingleton<OtpDeliveryInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, IdentityOutboxRegistration>();
         services.AddSingleton<IPasswordHashingService, AspNetPasswordHashingService>();
+
         if (environment.IsProduction())
         {
-            services.AddSingleton<IOtpSender, ProductionOtpSender>();
+            var otpMode = configuration.GetSection("Identity:OtpDelivery").GetValue<string>("Mode") ?? "Disabled";
+            if (string.Equals(otpMode, "Webhook", StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddHttpClient<WebhookOtpDeliveryProvider>();
+                services.AddSingleton<IOtpDeliveryProvider>(sp => sp.GetRequiredService<WebhookOtpDeliveryProvider>());
+            }
+            else
+            {
+                services.AddSingleton<IOtpDeliveryProvider, FailClosedOtpDeliveryProvider>();
+            }
         }
         else
         {
+            services.AddSingleton<CapturingOtpDeliveryProvider>();
+            services.AddSingleton<IOtpDeliveryProvider>(sp => sp.GetRequiredService<CapturingOtpDeliveryProvider>());
             services.AddSingleton<CapturingOtpSender>();
-            services.AddSingleton<IOtpSender>(sp => sp.GetRequiredService<CapturingOtpSender>());
         }
+
+        services.AddSingleton<IOtpSender, OtpDeliveryProviderSender>();
         services.AddSingleton<IIdentitySecurityEventSink, InMemoryIdentitySecurityEventSink>();
         services.AddSingleton<IAccessCredentialBoundary, SessionAccessCredentialBoundary>();
         services.AddScoped<IdentityLifecycleService>();

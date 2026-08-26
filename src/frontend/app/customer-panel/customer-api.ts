@@ -1,9 +1,9 @@
 /**
- * کلاینت پنل مشتری. هویت تولید از Bearer نشست موجود می‌آید و هدر Actor فقط seam توسعه است.
+ * کلاینت پنل مشتری. نشست از کوکی HttpOnly از طریق BFF same-origin منتقل می‌شود.
  */
 
-export const CUSTOMER_SESSION_STORAGE_KEY = "tooba.customerSessionId";
-export const CUSTOMER_DEV_ACTOR_STORAGE_KEY = "tooba.customerActorUserId";
+import { bffFetchHeaders } from "../../lib/auth/browser-session.ts";
+
 export const CUSTOMER_DEV_ACTOR_HEADER = "X-Tooba-Dev-Actor-User-Id";
 export const DEFAULT_CUSTOMER_DEV_ACTOR_ID = "aaaaaaaa-aaaa-4aaa-8aaa-000000000009";
 
@@ -284,57 +284,47 @@ export function mapCustomerOrderDetail(value: unknown): CustomerOrderDetailPage 
 }
 
 /**
- * هدر هویت مشتری را برای Host می‌سازد.
- * مالکیت از Bearer نشست یا هدر توسعهٔ Actor می‌آید؛ شناسهٔ کاربر در بدنه یا query مرجع نیست.
+ * هدر BFF مشتری؛ SessionId در JavaScript قابل خواندن نیست.
  */
 export function customerAuthHeaders(json = false): Record<string, string> {
-  const result: Record<string, string> = { Accept: "application/json" };
-  if (json) result["Content-Type"] = "application/json";
-  if (typeof window === "undefined") return result;
-  const session = window.localStorage.getItem(CUSTOMER_SESSION_STORAGE_KEY);
-  if (session) {
-    result.Authorization = `Bearer ${session}`;
-    return result;
-  }
-  result[CUSTOMER_DEV_ACTOR_HEADER] =
-    window.localStorage.getItem(CUSTOMER_DEV_ACTOR_STORAGE_KEY) ?? DEFAULT_CUSTOMER_DEV_ACTOR_ID;
-  return result;
+  return bffFetchHeaders(json);
 }
 
-function headers(): Record<string, string> {
-  return customerAuthHeaders();
+function headers(json = false): Record<string, string> {
+  return customerAuthHeaders(json);
 }
 
 async function read(path: string): Promise<{ ok: boolean; status: number; payload: unknown }> {
   try {
-    const response = await fetch(path, { headers: headers() });
+    const response = await fetch(path, { credentials: "include", headers: headers() });
     return { ok: response.ok, status: response.status, payload: await response.json().catch(() => null) };
   } catch {
     return { ok: false, status: 0, payload: null };
   }
 }
 
-/** داشبورد مشتری را از Host می‌خواند. */
+
+/** داشبورد مشتری را از BFF می‌خواند. */
 export async function loadCustomerDashboard(): Promise<CustomerDashboardPage | null> {
-  const response = await read("/v1/customer/dashboard");
+  const response = await read("/api/customer/dashboard");
   return response.ok ? mapCustomerDashboard(response.payload) : null;
 }
 
 /** پروفایل مشتری را از Host می‌خواند. */
 export async function loadCustomerProfile(): Promise<CustomerProfilePage | null> {
-  const response = await read("/v1/customer/profile");
+  const response = await read("/api/customer/profile");
   return response.ok ? mapCustomerProfile(response.payload) : null;
 }
 
 /** سفارش‌های مشتری را از Host می‌خواند. */
 export async function loadCustomerOrders(): Promise<CustomerOrderListItem[] | null> {
-  const response = await read("/v1/customer/orders");
+  const response = await read("/api/customer/orders");
   if (!response.ok || !Array.isArray(response.payload)) return null;
   return response.payload.map(mapCustomerOrder).filter((row): row is CustomerOrderListItem => row !== null);
 }
 
 /** جزئیات سفارش متعلق به مشتری نشست را می‌خواند. */
 export async function loadCustomerOrderDetail(checkoutId: string): Promise<CustomerOrderDetailPage | null> {
-  const response = await read(`/v1/customer/orders/${encodeURIComponent(checkoutId)}`);
+  const response = await read(`/api/customer/orders/${encodeURIComponent(checkoutId)}`);
   return response.ok ? mapCustomerOrderDetail(response.payload) : null;
 }

@@ -217,7 +217,7 @@ public sealed class AuthenticationHttpTests : IAsyncLifetime
         Assert.False(unknownResetJson.TryGetProperty("challengeId", out _));
         Assert.False(knownResetJson.TryGetProperty("challengeId", out _));
 
-        var sender = factory.Services.GetRequiredService<CapturingOtpSender>();
+        var sender = factory.Services.GetRequiredService<CapturingOtpDeliveryProvider>();
         var resetSecret = sender.LastCode!;
         Guid resetChallengeId;
         await using (var scope = factory.Services.CreateAsyncScope())

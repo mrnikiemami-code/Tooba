@@ -112,7 +112,7 @@ test("wishlist toggle sends ProductId and surfaces 401 without optimistic succes
       () => addWishlistProduct("product-intent"),
       (error: unknown) => error instanceof StorefrontWishlistApiError && error.status === 401,
     );
-    assert.equal(requestedUrl, "/v1/customer/wishlist/product-intent");
+    assert.equal(requestedUrl, "/api/customer/wishlist/product-intent");
   } finally {
     globalThis.fetch = originalFetch;
   }

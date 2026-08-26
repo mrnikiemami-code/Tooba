@@ -135,7 +135,7 @@ test("address mutations call Host paths and surface 401", async () => {
     });
     assert.equal(created.addressId, "addr-new");
     assert.match(calls[1]?.body ?? "", /recipientName/);
-    assert.equal(calls[1]?.url, "/v1/customer/addresses");
+    assert.equal(calls[1]?.url, "/api/customer/addresses");
 
     const updated = await updateCustomerAddress("addr-1", {
       recipientName: "علی",
@@ -148,18 +148,18 @@ test("address mutations call Host paths and surface 401", async () => {
       isDefault: false,
     });
     assert.equal(updated.addressId, "addr-1");
-    assert.equal(calls[2]?.url, "/v1/customer/addresses/addr-1");
+    assert.equal(calls[2]?.url, "/api/customer/addresses/addr-1");
     assert.match(calls[2]?.body ?? "", /"isDefault":false/);
 
     await setDefaultCustomerAddress("addr-1");
-    assert.equal(calls[3]?.url, "/v1/customer/addresses/addr-1/default");
+    assert.equal(calls[3]?.url, "/api/customer/addresses/addr-1/default");
     assert.equal(calls[3]?.method, "POST");
 
     await assert.rejects(
       () => deleteCustomerAddress("addr-1"),
       (error: unknown) => error instanceof CustomerAddressApiError && error.status === 401,
     );
-    assert.equal(calls[4]?.url, "/v1/customer/addresses/addr-1");
+    assert.equal(calls[4]?.url, "/api/customer/addresses/addr-1");
     assert.equal(calls[4]?.method, "DELETE");
   } finally {
     globalThis.fetch = originalFetch;
