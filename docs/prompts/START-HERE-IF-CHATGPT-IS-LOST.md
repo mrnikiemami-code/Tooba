@@ -6,11 +6,14 @@ CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
 Last Architect Accepted Product Task: TB-P05-T025
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT
-TB-P05-T026 = REPAIR_REQUIRED
+Last Implementation Task: TB-P05-GATE (Worker PASS submitted)
+Current Gate: TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T026 = ACCEPTED
 TB-P05-T026-R1 = ACCEPTED
-HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW
-P05: AWAITING_ARCHITECT_GATE
+TB-P05-T026-R2 = ACCEPTED
+HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
+PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
+P05: AWAITING_ARCHITECT_ACCEPT
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```
 
@@ -42,4 +45,4 @@ docs/ai/TOOBA-RECOVERY-CONTEXT.md
 
 Then recover current phase, accepted history, Bridge channel, active Task, blockers, and Git safety.
 
-Evidence for the current product task lives under `docs/evidence/TB-P05-T022/`.
+Evidence for the current gate lives under `docs/evidence/TB-P05-GATE/`.

@@ -40,7 +40,7 @@ TB-P05-T025
 Last Implementation Task:
 
 ```text
-TB-P05-T026-R2
+TB-P05-GATE
 ```
 
 Last Architect Accepted Gate:
@@ -52,34 +52,19 @@ TB-P04-GATE
 Current Issued Task:
 
 ```text
-TB-P05-T017 = ACCEPTED
-TB-P05-T017-R1 = ACCEPTED
-TB-P05-T017-UNBLOCK-01 = ACCEPTED
-TB-P05-T018 = ACCEPTED
-TB-P05-T018-UNBLOCK-01 = ACCEPTED
-TB-P05-T019 = ACCEPTED
-TB-P05-T020 = ACCEPTED
-TB-P05-T021 = ACCEPTED
-TB-P05-T022 = ACCEPTED
-TB-P05-T023 = ACCEPTED
-TB-P05-T024 = ACCEPTED
-TB-P05-T025 = ACCEPTED
-TB-P05-T026 = REPAIR_REQUIRED
-TB-P05-T026-R1 = ACCEPTED
-TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT
-HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW
+NONE (Worker IDLE after TB-P05-GATE PASS)
 ```
 
 Current Gate:
 
 ```text
-NONE
+TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Next Phase:
 
 ```text
-P05 = AWAITING_ARCHITECT_GATE
+P06 (pending Architect formal definition after P05 gate ACCEPT)
 ```
 
 Gate State:
@@ -89,15 +74,13 @@ TB-P01-GATE = ACCEPTED
 TB-P02-GATE = ACCEPTED
 TB-P03-GATE = ACCEPTED
 TB-P04-GATE = ACCEPTED
-P05 = AWAITING_ARCHITECT_GATE
+TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Issued but not accepted:
 
 ```text
-TB-P05-T026 = REPAIR_REQUIRED
-TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT
-HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW
+TB-P05-GATE = AWAITING_ARCHITECT_ACCEPT
 ```
 
 Accepted ledger (selected):
@@ -291,7 +274,7 @@ COMPLETE (Architect accepted TB-P04-GATE)
 P05 Operational Surface Integration:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T025 ACCEPTED; TB-P05-T026 = REPAIR_REQUIRED; TB-P05-T026-R1 = ACCEPTED; TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT; HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW; P05 = AWAITING_ARCHITECT_GATE)
+AWAITING_ARCHITECT_ACCEPT (TB-P05-T001 through T026-R2 ACCEPTED for gate finalization; TB-P05-GATE Worker PASS submitted; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; Worker must NOT mark P05 COMPLETE)
 ```
 
 Design System Foundation:
@@ -566,4 +549,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE. Through TB-P05-T025 are Architect-accepted. TB-P05-T026 = REPAIR_REQUIRED. TB-P05-T026-R1 = ACCEPTED (side-by-side + NU1900). TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT (Home CSS/motion/carousel/reviews/articles fidelity). HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW (`HOME_REPAIR_IMPLEMENTED_AWAITING_USER_REVIEW`). P05 = AWAITING_ARCHITECT_GATE (Worker must NOT mark P05 COMPLETE). Evidence under `docs/evidence/TB-P05-T026-R2/`. Worker PASS is not Architect ACCEPT. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle. P04 = COMPLETE. TB-P05-T026 / R1 / R2 = ACCEPTED (gate finalization). TB-P05-GATE Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT. HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK (non-blocking). P05 = AWAITING_ARCHITECT_ACCEPT (Worker must NOT mark P05 COMPLETE). Evidence under `docs/evidence/TB-P05-GATE/`. Worker PASS is not Architect ACCEPT. Historical task/result artifacts may contain retired pipeline syntax and remain evidence only. P00–P04 = COMPLETE.

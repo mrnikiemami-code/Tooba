@@ -9,7 +9,7 @@ P05 — Operational Surface Integration
 Status:
 
 ```text
-IN_PROGRESS (TB-P05-T001 through T025 ACCEPTED; TB-P05-T026 = REPAIR_REQUIRED; TB-P05-T026-R1 = ACCEPTED; TB-P05-T026-R2 = AWAITING_ARCHITECT_ACCEPT; HOME_VISUAL_ACCEPTANCE = AWAITING_USER_REVIEW; P05 = AWAITING_ARCHITECT_GATE; TB-P04-GATE ACCEPTED; P04 COMPLETE)
+AWAITING_ARCHITECT_ACCEPT (TB-P05-T001 through T026-R2 ACCEPTED for gate finalization; TB-P05-GATE Worker PASS submitted; HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK; TB-P04-GATE ACCEPTED; P04 COMPLETE)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -17,7 +17,7 @@ P01 Platform Foundation is COMPLETE (Architect accepted TB-P01-GATE).
 P02 Identity / Authorization is COMPLETE (Architect accepted TB-P02-GATE).
 P03 Commerce Core is COMPLETE after Architect ACCEPT of TB-P03-GATE.
 P04 Experience Foundation is COMPLETE after Architect ACCEPT of TB-P04-GATE.
-P05 Operational Surface Integration is IN_PROGRESS.
+P05 Operational Surface Integration is AWAITING_ARCHITECT_ACCEPT (Worker must NOT mark P05 COMPLETE).
 
 ## P01 Work Packages
 
@@ -145,9 +145,10 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P05-23 | Seller Panel Shopeiva fidelity + live data | ACCEPTED (TB-P05-T023) |
 | P05-24 | Admin Panel Shopeiva-compatible ops UX + live data | ACCEPTED (TB-P05-T024) |
 | P05-25 | Live runtime visual acceptance + user preview | ACCEPTED (TB-P05-T025) |
-| P05-26 | P05 live sellability completion gate | REPAIR_REQUIRED (TB-P05-T026) |
+| P05-26 | P05 live sellability completion gate | ACCEPTED (TB-P05-T026) |
 | P05-26-R1 | Side-by-side Shopeiva review + NU1900 gate repair | ACCEPTED (TB-P05-T026-R1) |
-| P05-26-R2 | Home visual fidelity (CSS/motion/carousel/reviews/articles) | AWAITING_ARCHITECT_ACCEPT (TB-P05-T026-R2) |
+| P05-26-R2 | Home visual fidelity (CSS/motion/carousel/reviews/articles) | ACCEPTED (TB-P05-T026-R2) |
+| P05-GATE | P05 architect gate finalization | AWAITING_ARCHITECT_ACCEPT (TB-P05-GATE) |
 | P05-15 | Customer Profile editing behind Shopeiva UI | ACCEPTED (TB-P05-T015 / TB-P05-T015-R1) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |
