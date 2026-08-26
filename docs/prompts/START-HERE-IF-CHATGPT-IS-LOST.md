@@ -6,7 +6,9 @@ CHANNEL: tooba-main
 Current Phase: P05 — Operational Surface Integration
 Last Architect Accepted Product Task: TB-P05-T025
 Last Architect Accepted Governance Task: TB-P05-GOV-MIGRATION-BRIDGE-WAKE-V1
-Current Product Task: TB-P05-T026 = AWAITING_ARCHITECT_ACCEPT
+Current Product Task: TB-P05-T026-R1 = AWAITING_ARCHITECT_ACCEPT
+TB-P05-T026 = REPAIR_REQUIRED
+HOME_VISUAL_ACCEPTANCE = AWAITING_USER_FEEDBACK
 P05: AWAITING_ARCHITECT_GATE
 Legacy TB-P05-T010 transport artifact: RETIRED / NOT EXECUTED
 ```

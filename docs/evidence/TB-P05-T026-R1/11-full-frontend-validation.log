@@ -1,0 +1,409 @@
+﻿
+> tooba-web@0.0.1 typecheck
+> tsc --noEmit
+
+
+> tooba-web@0.0.1 lint
+> next lint
+
+node.exe : `next lint` is deprecated and will be removed in Next.js 16.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (`next lint` is ... in Next.js 16.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+✔ No ESLint warnings or errors
+
+> tooba-web@0.0.1 test:critical-storefront
+> npm run test:home && npm run test:pdp-guard && npm run test:listing-guard
+
+
+> tooba-web@0.0.1 test:home
+> node --experimental-strip-types --test app/storefront/storefront-home.test.ts app/storefront/home-structure.guard.test.ts
+
+(node:27068) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/home-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home guard keeps Shopeiva section markers (0.437ms)
+✔ home guard preserves section order in main composition (0.0934ms)
+✔ home guard rejects giant catalog dump on Home rail (0.1504ms)
+(node:16592) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-home.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper prefers homeCategories rail and does not require dumping all categories (0.6909ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.9271
+
+> tooba-web@0.0.1 test:pdp-guard
+> node --experimental-strip-types --test app/storefront/pdp-structure.guard.test.ts
+
+(node:13224) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/pdp-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pdp guard keeps sticky structurally distinct tabs (0.5082ms)
+✔ pdp guard keeps distinct tab bodies (no generic flatten) (0.114ms)
+✔ pdp guard keeps other sellers and related product seams (0.0735ms)
+✔ pdp guard forbids Product.Price / Product.Stock authority markers (0.0729ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.5042
+
+> tooba-web@0.0.1 test:listing-guard
+> node --experimental-strip-types --test app/storefront/listing-structure.guard.test.ts
+
+(node:27816) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/listing-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ listing guard keeps Shopeiva PLP structure markers (0.7304ms)
+✔ listing guard keeps truthful sort options only (0.4008ms)
+✔ listing product grid keeps Shopeiva density classes (0.1162ms)
+✔ product card keeps offer-based pricing and real rating gate (0.1692ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.9987
+
+> tooba-web@0.0.1 test:storefront
+> node --experimental-strip-types --test app/storefront/storefront-api.test.ts app/storefront/storefront-cart-api.test.ts app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts
+
+(node:18364) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper keeps offer amount off a product price field (0.8076ms)
+✔ detail mapper reads amount from primary offer only (9.7792ms)
+✔ maps only public review contract and backend aggregate (0.2562ms)
+✔ zero reviews do not emit aggregate rating (0.1102ms)
+✔ review submission sends exact payload and exposes auth/conflict statuses (11.7628ms)
+✔ detail loader sends selected variant only to the authoritative endpoint (0.2066ms)
+✔ listing mapper keeps backend discovery facets and pagination (0.1823ms)
+✔ unsupported merchandising remains empty and explicit (0.1254ms)
+✔ public seller mapper ignores private and internal party fields (0.1095ms)
+(node:29816) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cart mapper keeps offer identity and ignores product price fields (0.5651ms)
+✔ customer cart message hides Held reservation wording (0.2ms)
+(node:29204) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-checkout-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checkout mapper keeps backend totals and pending payment (0.6906ms)
+✔ customer checkout message hides technical tax codes (0.2234ms)
+✔ checkout shipping body includes savedAddressId only when selected (0.0815ms)
+✔ checkout submit sends savedAddressId for actor and omits it on guest inline path (14.2959ms)
+(node:28952) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payment initiation mapper keeps host redirect and amount (1.1107ms)
+✔ payment mapper does not invent succeeded (0.1369ms)
+✔ customer payment message hides gateway codes (0.1656ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.7823
+
+> tooba-web@0.0.1 test:customer
+> node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts
+
+(node:24988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-address-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ address list mapping accepts camel and PascalCase envelopes (0.8333ms)
+✔ address mapper ignores rows without AddressId (0.3726ms)
+✔ address empty helper only describes an actual empty collection (0.0615ms)
+✔ create and edit payloads omit empty optional fields and keep isDefault (0.1005ms)
+✔ saved address fills checkout shipping snapshot fields (0.0931ms)
+✔ address mutations call Host paths and surface 401 (12.8956ms)
+✔ checkout saved-address visibility hides 401 guest path (0.0836ms)
+✔ checkout saved list returns null on 401 and mapped rows on 200 (0.3095ms)
+(node:24800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ customer mapper keeps checkout identity and snapshot amount (0.6569ms)
+✔ customer payment presentation preserves backend pending paid and failed states (0.1436ms)
+✔ customer dashboard exposes capability availability without fake counts (0.1153ms)
+✔ customer dashboard maps live address-book availability without inventing counts (0.0697ms)
+✔ wishlist maps current live offer availability and real ratings only (0.2529ms)
+✔ wishlist empty helper only describes an actual empty collection (0.062ms)
+✔ wishlist toggle sends ProductId and surfaces 401 without optimistic success (11.6906ms)
+✔ customer detail maps seller and shipping snapshots (0.21ms)
+✔ customer profile maps editable capability from backend (0.1421ms)
+(node:20320) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-profile-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profile mapper exposes editable profile fields and identity read-only flags (0.4879ms)
+✔ profile write payload excludes identity fields (0.1526ms)
+✔ profile name splitter handles single token (0.0708ms)
+✔ profile error mapping covers unauthorized (0.1257ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 103.5361
+
+> tooba-web@0.0.1 test:seller
+> node --experimental-strip-types --test app/vendor-panel/seller-api.test.ts
+
+(node:30272) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/vendor-panel/seller-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ seller offer list mapper keeps amount off Product price field (0.5445ms)
+✔ seller offer detail preserves catalog read-only seam (0.1581ms)
+✔ seller order list and detail keep seller slice only (0.2126ms)
+✔ dashboard mapper and seller header constant (0.0758ms)
+✔ persian operator formatting for status and money (9.251ms)
+✔ authorized route context keeps actor distinct from seller party (0.1096ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.1873
+
+> tooba-web@0.0.1 test:admin
+> node --experimental-strip-types --test app/admin/admin-api.test.ts app/admin/host-client.test.ts
+
+(node:29604) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps live dashboard, order, seller and customer DTOs (0.6384ms)
+✔ maps review moderation rows without internal actor data (0.1643ms)
+✔ review list and moderation expose server denied (11.5411ms)
+✔ maps admin order detail seller snapshots (0.2823ms)
+✔ uses Persian money and status labels (9.1067ms)
+✔ sends development actor header and exposes denied state (0.2561ms)
+(node:23492) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.5075ms)
+✔ workspace mapper keeps prices on offers not product (0.3417ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.6068
+node.exe : npm error Missing script: "test:listing"
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error Missing script: "test:listing":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: 
+C:\Users\User\AppData\Local\npm-cache\_logs\2026-08-26T17_00_56_180Z-debug-0.log
+node.exe : npm error Missing script: "test:cart"
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error Missing script: "test:cart":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm error
+npm error Did you mean this?
+npm error   npm restart # Restart a package
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: 
+C:\Users\User\AppData\Local\npm-cache\_logs\2026-08-26T17_01_00_141Z-debug-0.log
+
+> tooba-web@0.0.1 test:grid
+> node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts
+
+(node:25948) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/data-grid/grid-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter and sort serialization round-trips (0.9665ms)
+✔ saved view round-trips (0.1161ms)
+✔ column order and visibility persist (0.401ms)
+✔ page state and money/date normalization (0.1252ms)
+✔ rtl sticky uses logical inline start (0.0638ms)
+✔ selection and export columns (0.1018ms)
+✔ server query adapter pages and filters (6.2966ms)
+✔ sort cycle and filter activity (0.106ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 95.1974
+
+> tooba-web@0.0.1 test:workspace
+> node --experimental-strip-types --test design-system/workspace/state.test.ts
+
+(node:27336) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/workspace/state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirty section tracking (0.5248ms)
+✔ unsaved changes block other sections (0.0859ms)
+✔ permission action resolution (0.0687ms)
+✔ conflict and command transitions (0.0831ms)
+✔ section navigation serialization (0.0936ms)
+✔ master-detail return state (0.0726ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.1824
+
+> tooba-web@0.0.1 test:product-workspace
+> node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts
+
+(node:19876) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.5784ms)
+✔ workspace mapper keeps prices on offers not product (0.36ms)
+(node:20280) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/workspace-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commercial grouping keeps multiple sellers (0.501ms)
+✔ inventory stays offer-scoped (0.09ms)
+✔ publication checks are UI readiness (0.3745ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.0028
+
+> tooba-web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/48) ...
+   Generating static pages (12/48) 
+   Generating static pages (24/48) 
+   Generating static pages (36/48) 
+ ✓ Generating static pages (48/48)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                  Size  First Load JS
+┌ ƒ /                                     5.94 kB         126 kB
+├ ○ /_not-found                             131 B         103 kB
+├ ○ /admin                                  174 B         139 kB
+├ ○ /admin/customers                        173 B         139 kB
+├ ○ /admin/orders                           173 B         139 kB
+├ ƒ /admin/orders/[checkoutId]              174 B         139 kB
+├ ○ /admin/products                       1.93 kB         137 kB
+├ ƒ /admin/products/[productId]           4.38 kB         136 kB
+├ ○ /admin/reviews                          173 B         139 kB
+├ ○ /admin/sellers                          173 B         139 kB
+├ ○ /admin/settings                         850 B         103 kB
+├ ƒ /best-seller                          3.55 kB         124 kB
+├ ƒ /brand/[slug]                         3.55 kB         124 kB
+├ ƒ /brands                               3.55 kB         124 kB
+├ ƒ /cart                                 4.66 kB         125 kB
+├ ƒ /checkout                              6.1 kB         130 kB
+├ ○ /customer-panel                       6.04 kB         112 kB
+├ ○ /customer-panel/addresses             4.98 kB         111 kB
+├ ○ /customer-panel/gift-cards              850 B         103 kB
+├ ○ /customer-panel/notifications           850 B         103 kB
+├ ○ /customer-panel/orders                4.36 kB         110 kB
+├ ƒ /customer-panel/orders/[checkoutId]   5.07 kB         111 kB
+├ ○ /customer-panel/profile               3.37 kB         137 kB
+├ ○ /customer-panel/settings                850 B         103 kB
+├ ○ /customer-panel/tickets                 850 B         103 kB
+├ ○ /customer-panel/wallet                  850 B         103 kB
+├ ○ /customer-panel/wishlist              5.18 kB         114 kB
+├ ○ /design-system                        4.53 kB         143 kB
+├ ○ /icon.svg                                 0 B            0 B
+├ ƒ /most-viewed                          3.55 kB         124 kB
+├ ƒ /new-products                         3.55 kB         124 kB
+├ ƒ /offers                               3.55 kB         124 kB
+├ ƒ /order/confirmation                   3.88 kB         128 kB
+├ ƒ /payment/result                       2.63 kB         126 kB
+├ ƒ /payment/sandbox                      2.54 kB         120 kB
+├ ƒ /products                             6.36 kB         127 kB
+├ ƒ /products/[slug]                      11.3 kB         156 kB
+├ ƒ /sale                                 3.55 kB         124 kB
+├ ƒ /seller-profile/[publicId]            3.55 kB         124 kB
+├ ƒ /sellers                              3.55 kB         124 kB
+├ ƒ /trending                             3.55 kB         124 kB
+├ ○ /vendor-panel                         3.81 kB         137 kB
+├ ○ /vendor-panel/analytics                 850 B         103 kB
+├ ○ /vendor-panel/coupons                   850 B         103 kB
+├ ○ /vendor-panel/customers                 850 B         103 kB
+├ ○ /vendor-panel/gift-cards                850 B         103 kB
+├ ○ /vendor-panel/orders                  1.72 kB         134 kB
+├ ƒ /vendor-panel/orders/[sellerOrderId]  1.79 kB         135 kB
+├ ○ /vendor-panel/products                1.96 kB         135 kB
+├ ƒ /vendor-panel/products/[offerId]      2.05 kB         135 kB
+├ ○ /vendor-panel/reviews                   850 B         103 kB
+├ ○ /vendor-panel/settings                  850 B         103 kB
+├ ○ /vendor-panel/tickets                   850 B         103 kB
+└ ○ /vendor-panel/wallet                    850 B         103 kB
++ First Load JS shared by all              103 kB
+  ├ chunks/1255-a20f6c5e797a687b.js       46.4 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js   54.2 kB
+  └ other shared chunks (total)              2 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
