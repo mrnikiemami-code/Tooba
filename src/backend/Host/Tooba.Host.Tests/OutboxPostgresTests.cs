@@ -220,42 +220,18 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         commerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
         await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
         {
-            foreach (var existing in context.OutboxMessages)
-            {
-                existing.ProcessedAt = NodaTime.SystemClock.Instance.GetCurrentInstant();
-            }
-
+            context.OutboxMessages.RemoveRange(await context.OutboxMessages.ToListAsync());
             context.Records.Add(PlatformProbePersistence.NewRecord());
             await context.SaveChangesAsync();
         }
 
-        var seen = new List<string?>();
+        var recording = new RecordingProbeHandler(new FixedTenant(null));
         var options = OutboxTestPlatform.TwoTenants(_alpha, _bravo);
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton<IOptions<ToobaPlatformOptions>>(Microsoft.Extensions.Options.Options.Create(options));
-        services.AddSingleton(PlatformOptionsValidator.BuildRegistry(options));
-        services.AddSingleton<IDatabaseConnectionResolver, DatabaseConnectionResolver>();
-        services.AddSingleton<IOutboxModuleRegistration, Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration>();
-        services.AddSingleton<IIntegrationEventSerializer, JsonIntegrationEventSerializer>();
-        services.AddSingleton<IOutboxDispatcherStore, NpgsqlOutboxDispatcherStore>();
-        services.AddSingleton<IOutboxPollTargetSource, ConfiguredOutboxPollTargetSource>();
-        services.AddSingleton<WorkerCommerceContextFactory>();
-        services.AddSingleton<IOptions<OutboxHostOptions>>(Microsoft.Extensions.Options.Options.Create(new OutboxHostOptions { MaxAttempts = 5, BatchSize = 20, LockSeconds = 30 }));
-        services.AddSingleton<OutboxDispatcher>();
-        services.AddHttpContextAccessor();
-        services.AddScoped<HttpCommerceContextAccessor>();
-        services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
-        services.AddScoped<ICurrentEdition>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
-        services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
-        services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
-        services.AddScoped<IIntegrationEventPublisher, InProcessIntegrationEventPublisher>();
-        services.AddScoped<IIntegrationEventHandler<ProbeRecordCreatedIntegrationEvent>>(sp =>
-            new CaptureTenantHandler(sp.GetRequiredService<ICurrentTenant>(), seen));
-        await using var provider = services.BuildServiceProvider();
+        await using var provider = OutboxTestPlatform.BuildDispatcherServices(options, failHandlers: false, recording);
         await provider.GetRequiredService<OutboxDispatcher>().DispatchOnceAsync(CancellationToken.None);
-        Assert.Contains("store-alpha", seen);
-        Assert.DoesNotContain("store-bravo", seen);
+        Assert.NotEmpty(recording.Received);
+        Assert.All(recording.Received, e => Assert.Equal("store-alpha", e.Metadata.TenantId));
+        Assert.DoesNotContain(recording.Received, e => e.Metadata.TenantId == "store-bravo");
     }
 
     [SkippableFact]
@@ -296,6 +272,46 @@ public sealed class OutboxPostgresTests : IAsyncLifetime
         {
             Assert.Contains(await store.OutboxMessages.ToListAsync(), row => row.ProcessedAt is null);
         }
+    }
+
+    [SkippableFact]
+    public async Task Expired_lock_is_reclaimed_after_lease_elapses()
+    {
+        Skip.If(!_dockerAvailable, "Docker/Testcontainers PostgreSQL is not available.");
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("store-alpha", "tenant-alpha"));
+        await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
+        {
+            context.Records.Add(PlatformProbePersistence.NewRecord());
+            await context.SaveChangesAsync();
+        }
+
+        var store = new NpgsqlOutboxDispatcherStore();
+        var claimed = await store.ClaimAsync(
+            _alpha,
+            PlatformProbeDbContext.Schema,
+            OutboxMessageMapping.TableName,
+            1,
+            1,
+            CancellationToken.None);
+        var message = Assert.Single(claimed);
+        Assert.NotNull(message.LockedUntil);
+
+        await using (var context = OutboxTestContextFactory.Create(_alpha, commerce))
+        {
+            var row = await context.OutboxMessages.SingleAsync(x => x.Id == message.Id);
+            row.LockedUntil = NodaTime.SystemClock.Instance.GetCurrentInstant().Minus(NodaTime.Duration.FromMinutes(1));
+            await context.SaveChangesAsync();
+        }
+
+        var reclaimed = await store.ClaimAsync(
+            _alpha,
+            PlatformProbeDbContext.Schema,
+            OutboxMessageMapping.TableName,
+            1,
+            30,
+            CancellationToken.None);
+        Assert.Equal(message.Id, Assert.Single(reclaimed).Id);
     }
 
     private async Task EnsureAsync(string connectionString)

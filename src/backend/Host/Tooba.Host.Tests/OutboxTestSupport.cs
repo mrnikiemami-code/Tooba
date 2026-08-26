@@ -208,6 +208,7 @@ internal static class OutboxTestPlatform
             LockSeconds = 30,
             PollIntervalSeconds = 60,
         }));
+        services.AddSingleton<BackgroundWorkerRegistry>();
         services.AddSingleton<OutboxDispatcher>();
         services.AddScoped<HttpCommerceContextAccessor>();
         services.AddScoped<ICurrentCommerceContext>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());

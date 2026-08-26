@@ -129,9 +129,10 @@ public interface ICartDirectory
     Task AbandonAsync(Guid cartId, CartAccess access, int expectedVersion, CancellationToken cancellationToken);
 
     /// <summary>
-    /// سبدهای سررسیدشده را منقضی و رزرو منقضی Inventory را آزاد می‌کند.
+    /// سبدهای سررسیدشده را به‌صورت batch با SKIP LOCKED منقضی و رزرو منقضی Inventory را آزاد می‌کند.
     /// </summary>
-    Task ExpireDueCartsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken);
+    /// <returns>تعداد سبدهای منقضی‌شده.</returns>
+    Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// درز تبدیل را بدون ساختن Order ثبت می‌کند.

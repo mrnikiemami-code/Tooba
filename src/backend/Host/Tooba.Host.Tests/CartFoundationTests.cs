@@ -262,7 +262,7 @@ public sealed class CartFoundationTests : IAsyncLifetime
         var persisted = await cartA.Carts.SingleAsync(x => x.CartId == withLine.CartId);
         persisted.GetType().GetProperty("ExpiresAt")!.SetValue(persisted, DateTimeOffset.UtcNow.AddMinutes(-1));
         await cartA.SaveChangesAsync();
-        await cartDirA.ExpireDueCartsAsync(DateTimeOffset.UtcNow, CancellationToken.None);
+        await cartDirA.ExpireDueCartsAsync(DateTimeOffset.UtcNow, 20, CancellationToken.None);
         Assert.Equal(CartStatus.Expired, (await cartDirA.GetCartAsync(withLine.CartId, shortAccess, CancellationToken.None))!.Status);
         Assert.Equal(4, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
         var expiredHoldId = withLine.Lines.Single().ReservationId!.Value;

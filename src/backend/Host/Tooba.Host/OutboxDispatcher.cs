@@ -15,6 +15,9 @@ internal sealed class OutboxDispatcher
     private static readonly Counter<long> TenantFailures = ToobaTelemetry.Meter.CreateCounter<long>("tooba.outbox.tenant_failures");
     private static readonly Counter<long> Retries = ToobaTelemetry.Meter.CreateCounter<long>("tooba.outbox.retries");
     private static readonly Counter<long> DeadLetters = ToobaTelemetry.Meter.CreateCounter<long>("tooba.outbox.dead_letters");
+    private static readonly Counter<long> Processed = ToobaTelemetry.Meter.CreateCounter<long>("tooba.outbox.processed");
+
+    private readonly BackgroundWorkerRegistry _registry;
 
     private readonly IOutboxPollTargetSource _targets;
     private readonly IEnumerable<IOutboxModuleRegistration> _modules;
@@ -38,6 +41,7 @@ internal sealed class OutboxDispatcher
         WorkerCommerceContextFactory workerContext,
         IServiceScopeFactory scopes,
         IOptions<OutboxHostOptions> options,
+        BackgroundWorkerRegistry registry,
         ILogger<OutboxDispatcher> logger)
     {
         _targets = targets;
@@ -48,6 +52,7 @@ internal sealed class OutboxDispatcher
         _workerContext = workerContext;
         _scopes = scopes;
         _options = options.Value;
+        _registry = registry;
         _logger = logger;
     }
 
@@ -56,25 +61,30 @@ internal sealed class OutboxDispatcher
     /// </summary>
     public async Task DispatchOnceAsync(CancellationToken cancellationToken)
     {
+        var processed = 0;
         foreach (var target in _targets.GetTargets())
         {
             try
             {
-                await DispatchTargetAsync(target, cancellationToken).ConfigureAwait(false);
+                processed += await DispatchTargetAsync(target, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 TenantFailures.Add(1);
+                _registry.RecordFailure(OutboxDispatcherHostedService.WorkerName, ex.GetType().Name);
                 _logger.LogWarning(
                     "Outbox poll failed for one tenant/target. TenantId={TenantId} ErrorType={ErrorType}",
                     target.TenantId ?? string.Empty,
                     ex.GetType().Name);
             }
         }
+
+        _registry.RecordSuccess(OutboxDispatcherHostedService.WorkerName, processed);
     }
 
-    private async Task DispatchTargetAsync(OutboxPollTarget target, CancellationToken cancellationToken)
+    private async Task<int> DispatchTargetAsync(OutboxPollTarget target, CancellationToken cancellationToken)
     {
+        var processed = 0;
         var connectionString = _connections.Resolve(target.ConnectionReference);
         foreach (var module in _modules)
         {
@@ -122,6 +132,8 @@ internal sealed class OutboxDispatcher
                         module.TableName,
                         message.Id,
                         cancellationToken).ConfigureAwait(false);
+                    Processed.Add(1);
+                    processed++;
                 }
                 catch (Exception ex)
                 {
@@ -160,6 +172,8 @@ internal sealed class OutboxDispatcher
                 }
             }
         }
+
+        return processed;
     }
 }
 
@@ -168,6 +182,8 @@ internal sealed class OutboxDispatcher
 /// </summary>
 internal sealed class OutboxDispatcherHostedService : BackgroundService
 {
+    public const string WorkerName = "outbox-dispatcher";
+
     private readonly OutboxDispatcher _dispatcher;
     private readonly OutboxHostOptions _options;
     private readonly ILogger<OutboxDispatcherHostedService> _logger;

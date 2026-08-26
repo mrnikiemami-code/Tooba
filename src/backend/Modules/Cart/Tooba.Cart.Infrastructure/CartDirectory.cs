@@ -192,21 +192,62 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
-    public async Task ExpireDueCartsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken)
+    public async Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        var limit = Math.Max(1, batchSize);
+        var total = 0;
+        while (true)
+        {
+            var expired = await ExpireDueBatchAsync(utcNow, limit, cancellationToken).ConfigureAwait(false);
+            total += expired;
+            if (expired < limit)
+            {
+                break;
+            }
+        }
+
+        await _inventory.ReleaseExpiredHoldsAsync(utcNow, limit, cancellationToken).ConfigureAwait(false);
+        return total;
+    }
+
+    private async Task<int> ExpireDueBatchAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken)
+    {
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var ids = await _db.Database
+            .SqlQuery<Guid>(
+                $"""
+                 SELECT c.cart_id AS "Value"
+                 FROM cart.carts AS c
+                 WHERE c.status = 'Active'
+                   AND c.expires_at IS NOT NULL
+                   AND c.expires_at <= {utcNow}
+                 ORDER BY c.expires_at
+                 LIMIT {batchSize}
+                 FOR UPDATE SKIP LOCKED
+                 """)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (ids.Count == 0)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return 0;
+        }
+
         var due = await _db.Carts
             .Include(x => x.Lines)
-            .Where(x => x.Status == CartStatus.Active && x.ExpiresAt != null && x.ExpiresAt <= utcNow)
-            .ToListAsync(cancellationToken);
+            .Where(x => ids.Contains(x.CartId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         foreach (var cart in due)
         {
-            await ReleaseAllAsync(cart, cancellationToken);
+            await ReleaseAllAsync(cart, cancellationToken).ConfigureAwait(false);
             cart.Expire(utcNow);
         }
 
-        await SaveCartAsync(cancellationToken);
-        await _inventory.ReleaseExpiredHoldsAsync(utcNow, cancellationToken);
+        await SaveCartAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return due.Count;
     }
 
     /// <inheritdoc />

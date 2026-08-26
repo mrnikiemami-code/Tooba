@@ -606,8 +606,8 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         public Task AbandonAsync(Guid cartId, CartAccess access, int expectedVersion, CancellationToken cancellationToken) =>
             _inner.AbandonAsync(cartId, access, expectedVersion, cancellationToken);
 
-        public Task ExpireDueCartsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken) =>
-            _inner.ExpireDueCartsAsync(utcNow, cancellationToken);
+        public Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken) =>
+            _inner.ExpireDueCartsAsync(utcNow, batchSize, cancellationToken);
 
         public Task<CartSnapshot> ConvertAsync(Guid cartId, CartAccess access, int expectedVersion, CartConversionIntent intent, CancellationToken cancellationToken)
         {

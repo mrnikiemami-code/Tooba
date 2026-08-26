@@ -102,7 +102,11 @@ public interface IInventoryDirectory
     /// <summary>
     /// رزروهای Held منقضی‌شده را با زمان UTC سرور آزاد می‌کند؛ تایمر کلاینت نیست.
     /// </summary>
-    Task ReleaseExpiredHoldsAsync(DateTimeOffset utcNow, CancellationToken cancellationToken);
+    /// <summary>
+    /// رزروهای Held منقضی را batch-wise با SKIP LOCKED آزاد می‌کند.
+    /// </summary>
+    /// <returns>تعداد رزروهای آزادشده.</returns>
+    Task<int> ReleaseExpiredHoldsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken);
 
     /// <summary>
     /// رزرو Held را از OnHand کم می‌کند.
