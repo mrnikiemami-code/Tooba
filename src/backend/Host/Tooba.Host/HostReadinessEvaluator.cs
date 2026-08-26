@@ -16,14 +16,15 @@ internal static class HostReadinessEvaluator
     internal sealed record Evaluation(bool Ready, IReadOnlyDictionary<string, string> Checks);
 
     /// <summary>
-    /// readiness را از registry و options می‌سازد؛ DB TCP probe عمداً انجام نمی‌شود.
+    /// readiness را از registry و options می‌سازد؛ SpiceDB probe فقط وقتی Mode=SpiceDb فعال است.
     /// </summary>
-    internal static Evaluation Evaluate(
+    internal static async Task<Evaluation> EvaluateAsync(
         ControlPlaneRegistry registry,
         ToobaPlatformOptions platformOptions,
         MessagingHostOptions messagingOptions,
         AuthorizationHostOptions authorizationOptions,
-        IServiceProvider services)
+        IServiceProvider services,
+        CancellationToken cancellationToken = default)
     {
         var checks = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -60,6 +61,17 @@ internal static class HostReadinessEvaluator
             {
                 checks["authorization"] = "spicedb-token-missing";
                 return new Evaluation(false, checks);
+            }
+
+            var probe = services.GetService<SpiceDbHealthProbe>();
+            if (probe is not null && authorizationOptions.SpiceDb.ReadinessProbeEnabled)
+            {
+                var reachable = await probe.CheckAsync(cancellationToken);
+                if (!reachable)
+                {
+                    checks["authorization"] = "spicedb-unreachable";
+                    return new Evaluation(false, checks);
+                }
             }
         }
 

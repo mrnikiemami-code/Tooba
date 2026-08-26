@@ -183,6 +183,34 @@ public sealed class AuthorizationFoundationTests
         Assert.True(result.Failed);
     }
 
+    [Fact]
+    public async Task InMemory_revoke_removes_membership()
+    {
+        var auth = CreateInMemory();
+        var user = AuthorizationSubject.ForUser(Guid.Parse("55555555-5555-5555-5555-555555555555"));
+        var tenant = new AuthorizationResource { Type = AuthorizationObjectTypes.Tenant, Id = "tenant-r" };
+        var ctx = new AuthorizationCallContext { TenantId = "tenant-r", Edition = ToobaEdition.SingleStore };
+        var write = new AuthorizationRelationshipWrite { Subject = user, Resource = tenant, Relation = AuthorizationRelations.Member };
+        await auth.Writer.WriteAsync(write, CancellationToken.None);
+        var allow = await auth.Service.CanAsync(
+            new AuthorizationCheck { Subject = user, Resource = tenant, Permission = AuthorizationRelations.View, CallContext = ctx },
+            CancellationToken.None);
+        await auth.Writer.WriteAsync(
+            new AuthorizationRelationshipWrite
+            {
+                Subject = write.Subject,
+                Resource = write.Resource,
+                Relation = write.Relation,
+                Operation = AuthorizationRelationshipOperation.Delete,
+            },
+            CancellationToken.None);
+        var deny = await auth.Service.CanAsync(
+            new AuthorizationCheck { Subject = user, Resource = tenant, Permission = AuthorizationRelations.View, CallContext = ctx },
+            CancellationToken.None);
+        Assert.Equal(AuthorizationDecisionKind.Allow, allow.Kind);
+        Assert.Equal(AuthorizationDecisionKind.Deny, deny.Kind);
+    }
+
     private static (IAuthorizationService Service, IAuthorizationTupleWriter Writer, IAuthorizationGuard Guard) CreateInMemory()
     {
         var telemetry = new AuthorizationInstrumentation();

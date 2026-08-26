@@ -166,6 +166,22 @@ public sealed class AuthorizationCheck
 }
 
 /// <summary>
+/// عملیات نوشتن/حذف رابطه در SpiceDB.
+/// </summary>
+public enum AuthorizationRelationshipOperation
+{
+    /// <summary>
+    /// ایجاد یا به‌روزرسانی idempotent (TOUCH).
+    /// </summary>
+    Touch = 1,
+
+    /// <summary>
+    /// حذف رابطه (DELETE).
+    /// </summary>
+    Delete = 2,
+}
+
+/// <summary>
 /// درخواست typed نوشتن رابطه؛ رشتهٔ خام SpiceDB از ماژول‌ها پذیرفته نمی‌شود.
 /// </summary>
 public sealed class AuthorizationRelationshipWrite
@@ -184,6 +200,11 @@ public sealed class AuthorizationRelationshipWrite
     /// رابطهٔ snake_case.
     /// </summary>
     public required string Relation { get; init; }
+
+    /// <summary>
+    /// Touch (پیش‌فرض) یا Delete برای revoke.
+    /// </summary>
+    public AuthorizationRelationshipOperation Operation { get; init; } = AuthorizationRelationshipOperation.Touch;
 }
 
 /// <summary>

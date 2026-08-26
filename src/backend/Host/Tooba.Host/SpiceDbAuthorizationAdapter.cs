@@ -46,62 +46,68 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
     public async Task WriteSchemaAsync(string schemaText, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(schemaText);
-        try
-        {
-            await _schema.WriteSchemaAsync(new WriteSchemaRequest { Schema = schemaText }, deadline: Deadline(), cancellationToken: cancellationToken);
-        }
-        catch (Exception ex) when (IsTransportFailure(ex, cancellationToken))
-        {
-            throw new InvalidOperationException("authorization.unavailable", ex);
-        }
+        await ExecuteWithRetryAsync(
+            async ct => await _schema.WriteSchemaAsync(new WriteSchemaRequest { Schema = schemaText }, deadline: Deadline(), cancellationToken: ct),
+            "schema",
+            cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task WriteAsync(AuthorizationRelationshipWrite write, CancellationToken cancellationToken)
     {
         AuthorizationContractValidator.Validate(write);
-        try
+        var operation = write.Operation switch
         {
-            await _permissions.WriteRelationshipsAsync(
-                new WriteRelationshipsRequest
-                {
-                    Updates =
+            AuthorizationRelationshipOperation.Delete => RelationshipUpdate.Types.Operation.Delete,
+            _ => RelationshipUpdate.Types.Operation.Touch,
+        };
+
+        await ExecuteWithRetryAsync(
+            async ct =>
+            {
+                await _permissions.WriteRelationshipsAsync(
+                    new WriteRelationshipsRequest
                     {
-                        new RelationshipUpdate
+                        Updates =
                         {
-                            Operation = RelationshipUpdate.Types.Operation.Touch,
-                            Relationship = new Relationship
+                            new RelationshipUpdate
                             {
-                                Resource = new ObjectReference
+                                Operation = operation,
+                                Relationship = new Relationship
                                 {
-                                    ObjectType = write.Resource.Type,
-                                    ObjectId = write.Resource.Id,
-                                },
-                                Relation = write.Relation,
-                                Subject = new SubjectReference
-                                {
-                                    Object = new ObjectReference
+                                    Resource = new ObjectReference
                                     {
-                                        ObjectType = write.Subject.Type,
-                                        ObjectId = write.Subject.Id,
+                                        ObjectType = write.Resource.Type,
+                                        ObjectId = write.Resource.Id,
+                                    },
+                                    Relation = write.Relation,
+                                    Subject = new SubjectReference
+                                    {
+                                        Object = new ObjectReference
+                                        {
+                                            ObjectType = write.Subject.Type,
+                                            ObjectId = write.Subject.Id,
+                                        },
                                     },
                                 },
                             },
                         },
                     },
-                },
-                deadline: Deadline(),
-                cancellationToken: cancellationToken);
-            await _audit.RecordAsync("relationship_changed", write.Resource.Type, write.Relation, cancellationToken);
-            _logger.LogInformation(
-                "SpiceDB relationship write finished. ResourceType {ResourceType} Relation {Relation}",
-                write.Resource.Type,
-                write.Relation);
-        }
-        catch (Exception ex) when (IsTransportFailure(ex, cancellationToken))
-        {
-            throw new InvalidOperationException("authorization.unavailable", ex);
-        }
+                    deadline: Deadline(),
+                    cancellationToken: ct);
+            },
+            write.Resource.Type,
+            cancellationToken);
+
+        var auditEvent = write.Operation == AuthorizationRelationshipOperation.Delete
+            ? "relationship_revoked"
+            : "relationship_changed";
+        await _audit.RecordAsync(auditEvent, write.Resource.Type, write.Relation, cancellationToken);
+        _logger.LogInformation(
+            "SpiceDB relationship write finished. Operation {Operation} ResourceType {ResourceType} Relation {Relation}",
+            write.Operation,
+            write.Resource.Type,
+            write.Relation);
     }
 
     /// <inheritdoc />
@@ -111,27 +117,30 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
         AuthorizationContractValidator.Validate(check);
         try
         {
-            var response = await _permissions.CheckPermissionAsync(
-                new CheckPermissionRequest
-                {
-                    Resource = new ObjectReference
+            var response = await ExecuteWithRetryAsync(
+                async ct => await _permissions.CheckPermissionAsync(
+                    new CheckPermissionRequest
                     {
-                        ObjectType = check.Resource.Type,
-                        ObjectId = check.Resource.Id,
-                    },
-                    Permission = check.Permission,
-                    Subject = new SubjectReference
-                    {
-                        Object = new ObjectReference
+                        Resource = new ObjectReference
                         {
-                            ObjectType = check.Subject.Type,
-                            ObjectId = check.Subject.Id,
+                            ObjectType = check.Resource.Type,
+                            ObjectId = check.Resource.Id,
                         },
+                        Permission = check.Permission,
+                        Subject = new SubjectReference
+                        {
+                            Object = new ObjectReference
+                            {
+                                ObjectType = check.Subject.Type,
+                                ObjectId = check.Subject.Id,
+                            },
+                        },
+                        Consistency = BuildConsistency(check.CallContext),
                     },
-                    Consistency = new Consistency { FullyConsistent = true },
-                },
-                deadline: Deadline(),
-                cancellationToken: cancellationToken);
+                    deadline: Deadline(),
+                    cancellationToken: ct),
+                check.Resource.Type,
+                cancellationToken);
 
             var decision = response.Permissionship switch
             {
@@ -158,9 +167,10 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
                 Stopwatch.GetElapsedTime(started).Milliseconds);
             return decision;
         }
-        catch (Exception ex) when (IsTransportFailure(ex, cancellationToken))
+        catch (InvalidOperationException ex) when (ex.Message == "authorization.unavailable")
         {
-            _logger.LogWarning(ex, "SpiceDB permission check unavailable. ResourceType {ResourceType} Permission {Permission}", check.Resource.Type, check.Permission);
+            _telemetry.RecordInfrastructure("unavailable", check.Resource.Type);
+            _logger.LogWarning(ex, "SpiceDB permission check unavailable after retries. ResourceType {ResourceType} Permission {Permission}", check.Resource.Type, check.Permission);
             _telemetry.Record(
                 AuthorizationDecisionKind.Unavailable,
                 check.Resource.Type,
@@ -169,6 +179,21 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
                 Stopwatch.GetElapsedTime(started).Milliseconds);
             return AuthorizationDecision.Unavailable("spicedb.unavailable");
         }
+        catch (Exception ex) when (IsTransportFailure(ex, cancellationToken))
+        {
+            var kind = ex is RpcException { StatusCode: StatusCode.DeadlineExceeded } or TaskCanceledException
+                ? "timeout"
+                : "unavailable";
+            _telemetry.RecordInfrastructure(kind, check.Resource.Type);
+            _logger.LogWarning(ex, "SpiceDB permission check unavailable. ResourceType {ResourceType} Permission {Permission}", check.Resource.Type, check.Permission);
+            _telemetry.Record(
+                AuthorizationDecisionKind.Unavailable,
+                check.Resource.Type,
+                check.Permission,
+                check.CallContext.Edition,
+                Stopwatch.GetElapsedTime(started).Milliseconds);
+            return AuthorizationDecision.Unavailable($"spicedb.{kind}");
+        }
     }
 
     /// <summary>
@@ -176,13 +201,92 @@ internal sealed class SpiceDbAuthorizationAdapter : IAuthorizationService, IAuth
     /// </summary>
     public void Dispose() => _channel.Dispose();
 
+    private Consistency BuildConsistency(AuthorizationCallContext callContext)
+    {
+        if (!string.IsNullOrWhiteSpace(callContext.ConsistencyToken))
+        {
+            return new Consistency
+            {
+                AtLeastAsFresh = new ZedToken { Token = callContext.ConsistencyToken },
+            };
+        }
+
+        if (string.Equals(_options.SpiceDb.ConsistencyMode, "MinimizeLatency", StringComparison.Ordinal))
+        {
+            return new Consistency { MinimizeLatency = true };
+        }
+
+        return new Consistency { FullyConsistent = true };
+    }
+
+    private async Task<T> ExecuteWithRetryAsync<T>(
+        Func<CancellationToken, Task<T>> action,
+        string resourceType,
+        CancellationToken cancellationToken)
+    {
+        var maxAttempts = Math.Max(1, _options.SpiceDb.RetryMaxAttempts);
+        var delayMs = Math.Max(0, _options.SpiceDb.RetryBaseDelayMilliseconds);
+        Exception? last = null;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                return await action(cancellationToken);
+            }
+            catch (Exception ex) when (IsRetryable(ex, cancellationToken))
+            {
+                last = ex;
+                _telemetry.RecordInfrastructure("retry", resourceType);
+                if (attempt >= maxAttempts)
+                {
+                    break;
+                }
+
+                await Task.Delay(delayMs * attempt, cancellationToken);
+            }
+            catch (Exception ex) when (IsTransportFailure(ex, cancellationToken))
+            {
+                throw;
+            }
+        }
+
+        throw new InvalidOperationException("authorization.unavailable", last);
+    }
+
+    private async Task ExecuteWithRetryAsync(
+        Func<CancellationToken, Task> action,
+        string resourceType,
+        CancellationToken cancellationToken)
+    {
+        _ = await ExecuteWithRetryAsync<object?>(
+            async ct =>
+            {
+                await action(ct);
+                return null;
+            },
+            resourceType,
+            cancellationToken);
+    }
+
+    private static bool IsRetryable(Exception ex, CancellationToken cancellationToken)
+    {
+        if (!IsTransportFailure(ex, cancellationToken))
+        {
+            return false;
+        }
+
+        return ex is RpcException rpc
+            && rpc.StatusCode is StatusCode.Unavailable or StatusCode.DeadlineExceeded or StatusCode.ResourceExhausted;
+    }
+
     /// <summary>
     /// مهلت gRPC را از TimeoutSeconds می‌سازد تا تماس بی‌پایان Host را باز نگذارد.
     /// </summary>
     private DateTime Deadline() => DateTime.UtcNow.AddSeconds(Math.Max(1, _options.SpiceDb.TimeoutSeconds));
 
     /// <summary>
-    /// کانال را با TLS یا HTTP/2 بدون رمز می‌سازد. توکن فقط در metadata Bearer است نه در لاگ.
+    /// کانال را با TLS یا HTTP/2 بدون رمز می‌سازد. توکن فقط در metadata Bearer است نه در لاog.
     /// </summary>
     private static GrpcChannel CreateChannel(AuthorizationHostOptions options)
     {

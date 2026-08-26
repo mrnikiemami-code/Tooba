@@ -118,7 +118,15 @@ internal sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAut
     public async Task WriteAsync(AuthorizationRelationshipWrite write, CancellationToken cancellationToken)
     {
         AuthorizationContractValidator.Validate(write);
-        _tuples[Key(write.Subject, write.Relation, write.Resource)] = 1;
+        var key = Key(write.Subject, write.Relation, write.Resource);
+        if (write.Operation == AuthorizationRelationshipOperation.Delete)
+        {
+            _tuples.TryRemove(key, out _);
+            await _audit.RecordAsync("relationship_revoked", write.Resource.Type, write.Relation, cancellationToken);
+            return;
+        }
+
+        _tuples[key] = 1;
         await _audit.RecordAsync("relationship_changed", write.Resource.Type, write.Relation, cancellationToken);
     }
 

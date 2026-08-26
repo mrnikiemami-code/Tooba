@@ -48,6 +48,26 @@ public sealed class SpiceDbHostOptions
     /// مهلت درخواست به ثانیه.
     /// </summary>
     public int TimeoutSeconds { get; set; } = 5;
+
+    /// <summary>
+    /// حداکثر تلاش برای خطای گذرای زیرساخت (بدون retry روی DENY).
+    /// </summary>
+    public int RetryMaxAttempts { get; set; } = 3;
+
+    /// <summary>
+    /// تاخیر پایه backoff میلی‌ثانیه بین retry.
+    /// </summary>
+    public int RetryBaseDelayMilliseconds { get; set; } = 100;
+
+    /// <summary>
+    /// FullyConsistent یا MinimizeLatency برای checkهای بدون ZedToken.
+    /// </summary>
+    public string ConsistencyMode { get; set; } = "FullyConsistent";
+
+    /// <summary>
+    /// probe سبک gRPC در readiness وقتی Mode=SpiceDb.
+    /// </summary>
+    public bool ReadinessProbeEnabled { get; set; } = true;
 }
 
 /// <summary>
@@ -91,6 +111,27 @@ internal sealed class AuthorizationOptionsValidator : IValidateOptions<Authoriza
             if (options.SpiceDb.TimeoutSeconds <= 0)
             {
                 return ValidateOptionsResult.Fail("SpiceDB timeout must be positive.");
+            }
+
+            if (options.SpiceDb.RetryMaxAttempts <= 0)
+            {
+                return ValidateOptionsResult.Fail("SpiceDB retry max attempts must be positive.");
+            }
+
+            if (options.SpiceDb.RetryBaseDelayMilliseconds < 0)
+            {
+                return ValidateOptionsResult.Fail("SpiceDB retry base delay cannot be negative.");
+            }
+
+            var consistency = options.SpiceDb.ConsistencyMode.Trim();
+            if (consistency is not ("FullyConsistent" or "MinimizeLatency"))
+            {
+                return ValidateOptionsResult.Fail("SpiceDB consistency mode must be FullyConsistent or MinimizeLatency.");
+            }
+
+            if (_environment.IsProduction() && !options.SpiceDb.UseTls)
+            {
+                return ValidateOptionsResult.Fail("SpiceDB TLS must be enabled in Production.");
             }
         }
 

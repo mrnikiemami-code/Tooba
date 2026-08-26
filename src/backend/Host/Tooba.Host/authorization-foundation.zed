@@ -1,0 +1,14 @@
+// Versioned SpiceDB foundation schema (v2). Source of truth mirrors FoundationAuthorizationSchemaProvider.
+// Apply via ops process or ApplySchemaOnStartup in controlled environments only.
+
+definition user {}
+
+definition tenant {
+  relation member: user
+  permission view = member
+}
+
+definition party {
+  relation member: user
+  permission view = member
+}

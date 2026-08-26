@@ -10,6 +10,7 @@ namespace Tooba.Host;
 internal sealed class AuthorizationInstrumentation
 {
     private readonly Counter<long> _checks;
+    private readonly Counter<long> _infrastructure;
     private readonly Histogram<double> _latencyMs;
 
     /// <summary>
@@ -19,6 +20,7 @@ internal sealed class AuthorizationInstrumentation
     {
         var meter = ToobaTelemetry.Meter;
         _checks = meter.CreateCounter<long>("tooba.authorization.check");
+        _infrastructure = meter.CreateCounter<long>("tooba.authorization.infrastructure");
         _latencyMs = meter.CreateHistogram<double>("tooba.authorization.check.duration", "ms");
     }
 
@@ -31,6 +33,7 @@ internal sealed class AuthorizationInstrumentation
         {
             AuthorizationDecisionKind.Allow => "allow",
             AuthorizationDecisionKind.Deny => "deny",
+            AuthorizationDecisionKind.Unavailable => "unavailable",
             _ => "error",
         };
         var tags = new TagList
@@ -42,5 +45,21 @@ internal sealed class AuthorizationInstrumentation
         };
         _checks.Add(1, tags);
         _latencyMs.Record(elapsedMs, tags);
+        if (kind == AuthorizationDecisionKind.Unavailable)
+        {
+            _infrastructure.Add(1, new TagList { { "kind", "unavailable" }, { "resource_type", resourceType } });
+        }
+    }
+
+    /// <summary>
+    /// retry/timeout زیرساخت را جدا از DENY ثبت می‌کند.
+    /// </summary>
+    public void RecordInfrastructure(string kind, string resourceType)
+    {
+        _infrastructure.Add(1, new TagList
+        {
+            { "kind", kind },
+            { "resource_type", resourceType },
+        });
     }
 }

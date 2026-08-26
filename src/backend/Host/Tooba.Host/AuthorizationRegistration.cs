@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 
@@ -15,8 +16,14 @@ internal static class AuthorizationRegistration
     {
         services.AddSingleton<AuthorizationInstrumentation>();
         services.AddSingleton<IAuthorizationSchemaProvider, FoundationAuthorizationSchemaProvider>();
-        services.AddSingleton<IAuthorizationSchemaBootstrapper, ConfiguredAuthorizationSchemaBootstrapper>();
+        services.AddSingleton<IAuthorizationSchemaBootstrapper>(sp =>
+            new ConfiguredAuthorizationSchemaBootstrapper(
+                sp.GetRequiredService<IOptions<AuthorizationHostOptions>>(),
+                sp.GetRequiredService<IAuthorizationSchemaProvider>(),
+                sp.GetRequiredService<ILogger<ConfiguredAuthorizationSchemaBootstrapper>>(),
+                sp));
         services.AddSingleton<IAuthorizationSecurityEventSink, InMemoryAuthorizationSecurityEventSink>();
+        services.AddSingleton<SpiceDbHealthProbe>();
         services.AddSingleton<InMemoryAuthorizationAdapter>();
         services.AddSingleton(sp =>
             new FailClosedAuthorizationAdapter("authorization.disabled", sp.GetRequiredService<AuthorizationInstrumentation>()));

@@ -15,26 +15,28 @@ internal static class HostHealthEndpoints
         app.MapGet("/health/live", () => Results.Json(new { status = "ok" }));
         app.MapGet("/health", () => Results.Json(new { status = "ok" }));
 
-        app.MapGet("/health/ready", EvaluateReadiness);
-        app.MapGet("/ready", EvaluateReadiness);
+        app.MapGet("/health/ready", EvaluateReadinessAsync);
+        app.MapGet("/ready", EvaluateReadinessAsync);
     }
 
     /// <summary>
     /// readiness را بدون باز کردن DB یا افشای credential برمی‌گرداند.
     /// </summary>
-    private static IResult EvaluateReadiness(
+    private static async Task<IResult> EvaluateReadinessAsync(
         ControlPlaneRegistry registry,
         IOptions<ToobaPlatformOptions> platformOptions,
         IOptions<MessagingHostOptions> messagingOptions,
         IOptions<AuthorizationHostOptions> authorizationOptions,
-        IServiceProvider services)
+        IServiceProvider services,
+        CancellationToken cancellationToken)
     {
-        var evaluation = HostReadinessEvaluator.Evaluate(
+        var evaluation = await HostReadinessEvaluator.EvaluateAsync(
             registry,
             platformOptions.Value,
             messagingOptions.Value,
             authorizationOptions.Value,
-            services);
+            services,
+            cancellationToken);
 
         if (!evaluation.Ready)
         {

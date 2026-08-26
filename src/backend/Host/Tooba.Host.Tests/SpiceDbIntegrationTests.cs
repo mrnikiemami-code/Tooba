@@ -1,5 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
@@ -9,7 +10,7 @@ using Xunit;
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// یکپارچگی واقعی SpiceDB با تصویر قفل‌شده. PASS از InMemory به‌عنوان یکپارچگی گزارش نمی‌شود.
+/// یکپارچگی واقعی SpiceDB با تصویر قفل‌شده. PASS از InMemory به‌عنوان یکپarچگی گزارش نمی‌شود.
 /// </summary>
 [Collection("PostgresSerial")]
 public sealed class SpiceDbIntegrationTests : IAsyncLifetime
@@ -99,12 +100,115 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
         Assert.Equal(AuthorizationDecisionKind.Allow, partyAllow.Kind);
         Assert.Equal(AuthorizationDecisionKind.Deny, partyDeny.Kind);
 
-        await _container.StopAsync();
-        var unavailable = await adapter.CanAsync(
+        using var deadAdapter = CreateAdapter("127.0.0.1:1");
+        var unavailable = await deadAdapter.CanAsync(
             new AuthorizationCheck { Subject = user, Resource = tenantA, Permission = AuthorizationRelations.View, CallContext = ctxA },
             CancellationToken.None);
         Assert.Equal(AuthorizationDecisionKind.Unavailable, unavailable.Kind);
         Assert.False(unavailable.IsAllow);
+    }
+
+    [SkippableFact]
+    public async Task Revoke_removes_access_and_duplicate_touch_is_idempotent()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers SpiceDB is not available.");
+
+        var endpoint = $"127.0.0.1:{_container.GetMappedPublicPort(50051)}";
+        using var adapter = CreateAdapter(endpoint);
+        await WaitForSchemaAsync(adapter, new FoundationAuthorizationSchemaProvider().SchemaText);
+
+        var user = AuthorizationSubject.ForUser(Guid.Parse("44444444-4444-4444-4444-444444444444"));
+        var tenant = new AuthorizationResource { Type = AuthorizationObjectTypes.Tenant, Id = "tenant-revoke" };
+        var ctx = new AuthorizationCallContext { TenantId = "tenant-revoke", Edition = ToobaEdition.SingleStore };
+        var write = new AuthorizationRelationshipWrite { Subject = user, Resource = tenant, Relation = AuthorizationRelations.Member };
+
+        await adapter.WriteAsync(write, CancellationToken.None);
+        await adapter.WriteAsync(write, CancellationToken.None);
+        var allowed = await adapter.CanAsync(
+            new AuthorizationCheck { Subject = user, Resource = tenant, Permission = AuthorizationRelations.View, CallContext = ctx },
+            CancellationToken.None);
+        Assert.Equal(AuthorizationDecisionKind.Allow, allowed.Kind);
+
+        await adapter.WriteAsync(
+            new AuthorizationRelationshipWrite
+            {
+                Subject = write.Subject,
+                Resource = write.Resource,
+                Relation = write.Relation,
+                Operation = AuthorizationRelationshipOperation.Delete,
+            },
+            CancellationToken.None);
+        var denied = await adapter.CanAsync(
+            new AuthorizationCheck { Subject = user, Resource = tenant, Permission = AuthorizationRelations.View, CallContext = ctx },
+            CancellationToken.None);
+        Assert.Equal(AuthorizationDecisionKind.Deny, denied.Kind);
+    }
+
+    [SkippableFact]
+    public async Task Readiness_probe_succeeds_when_spicedb_is_up()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers SpiceDB is not available.");
+
+        var endpoint = $"127.0.0.1:{_container.GetMappedPublicPort(50051)}";
+        using var adapter = CreateAdapter(endpoint);
+        await WaitForSchemaAsync(adapter, new FoundationAuthorizationSchemaProvider().SchemaText);
+        using var probe = new SpiceDbHealthProbe(Options.Create(new AuthorizationHostOptions
+        {
+            Mode = "SpiceDb",
+            SpiceDb = new SpiceDbHostOptions
+            {
+                Endpoint = endpoint,
+                Token = TestPresharedKey,
+                UseTls = false,
+                TimeoutSeconds = 5,
+                ReadinessProbeEnabled = true,
+            },
+        }));
+
+        var ok = await probe.CheckAsync(CancellationToken.None);
+        Assert.True(ok);
+    }
+
+    [SkippableFact]
+    public async Task Readiness_probe_fails_when_spicedb_endpoint_is_unreachable()
+    {
+        Skip.If(!_dockerAvailable, "Docker/Testcontainers SpiceDB is not available.");
+
+        using var probe = new SpiceDbHealthProbe(Options.Create(new AuthorizationHostOptions
+        {
+            Mode = "SpiceDb",
+            SpiceDb = new SpiceDbHostOptions
+            {
+                Endpoint = "127.0.0.1:59999",
+                Token = TestPresharedKey,
+                UseTls = false,
+                TimeoutSeconds = 2,
+                ReadinessProbeEnabled = true,
+            },
+        }));
+
+        var ok = await probe.CheckAsync(CancellationToken.None);
+        Assert.False(ok);
+    }
+
+    [Fact]
+    public void Production_rejects_insecure_tls_and_inmemory_mode()
+    {
+        var validator = new AuthorizationOptionsValidator(new FakeHostEnvironment { EnvironmentName = Environments.Production });
+        var inMemory = validator.Validate(null, new AuthorizationHostOptions { Mode = "InMemory" });
+        var noTls = validator.Validate(null, new AuthorizationHostOptions
+        {
+            Mode = "SpiceDb",
+            SpiceDb = new SpiceDbHostOptions
+            {
+                Endpoint = "spicedb.prod.example:443",
+                Token = "secret",
+                UseTls = false,
+            },
+        });
+
+        Assert.True(inMemory.Failed);
+        Assert.True(noTls.Failed);
     }
 
     private static SpiceDbAuthorizationAdapter CreateAdapter(string endpoint) =>
@@ -119,6 +223,8 @@ public sealed class SpiceDbIntegrationTests : IAsyncLifetime
                     Token = TestPresharedKey,
                     UseTls = false,
                     TimeoutSeconds = 8,
+                    RetryMaxAttempts = 3,
+                    RetryBaseDelayMilliseconds = 50,
                 },
             }),
             new AuthorizationInstrumentation(),
