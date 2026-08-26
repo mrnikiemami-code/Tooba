@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { Package, ShoppingBag, Wallet } from "lucide-react";
+import {
+  Package,
+  Settings,
+  ShoppingBag,
+  Tag,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../design-system";
 import {
   loadSellerDashboard,
@@ -12,7 +19,8 @@ import {
 } from "./seller-api";
 
 /**
- * داشبورد فروشنده با کارت‌های واقعی و تراکم پنل Shopeiva؛ بدون نمودار جعلی.
+ * داشبورد فروشنده با تراکم Shopeiva؛ فقط کارت‌های زنده Host.
+ * بدون نمودار فروش، هدف ماهانه، یا درآمد جعلی.
  */
 export default function VendorDashboardPage() {
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
@@ -52,89 +60,97 @@ export default function VendorDashboardPage() {
     );
   }
 
+  const name = summary?.sellerDisplayName ?? "فروشنده";
+
   return (
-    <main data-testid="seller-auth-allowed">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted">خانه / داشبورد</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">داشبورد فروشنده</h1>
-          <p className="mt-1 text-base text-muted">{summary?.sellerDisplayName ?? "خلاصهٔ عملیاتی زنده"}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            className="inline-flex min-h-11 items-center rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm"
-            href="/vendor-panel/products"
-          >
-            محصولات
-          </Link>
-          <Link
-            className="inline-flex min-h-11 items-center rounded-ds border border-border bg-surface px-4 text-sm font-medium"
-            href="/vendor-panel/orders"
-          >
-            سفارش‌ها
-          </Link>
-        </div>
+    <main className="space-y-6" data-testid="seller-auth-allowed">
+      <div className="bg-gradient-to-l from-[#2563EB] to-[#3B82F6] rounded-2xl p-5 md:p-6 text-white shadow-lg shadow-[#2563EB]/20">
+        <p className="text-white/80 text-sm">خانه / داشبورد</p>
+        <h1 className="mt-1 text-2xl md:text-3xl font-black">سلام، {name}</h1>
+        <p className="mt-2 text-sm text-white/90 max-w-2xl leading-7">
+          خلاصهٔ عملیاتی از Host زنده است. درآمد، هدف ماهانه و نمودار ساختگی نمایش داده نمی‌شود.
+        </p>
       </div>
 
       {source === "error" ? (
         <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <SummaryCard
             label="پیشنهاد فعال"
             value={summary?.activeOffers}
             loading={source === "loading"}
-            icon={<Package className="size-5" />}
-            tone="bg-[rgb(239_246_255)] text-primary"
+            icon={<Package className="w-5 h-5" />}
+            tone="from-blue-500 to-blue-600"
           />
           <SummaryCard
             label="سفارش باز"
             value={summary?.openOrders}
             loading={source === "loading"}
-            icon={<ShoppingBag className="size-5" />}
-            tone="bg-[rgb(255_247_237)] text-[rgb(194_65_12)]"
+            icon={<ShoppingBag className="w-5 h-5" />}
+            tone="from-amber-500 to-amber-600"
           />
           <SummaryCard
             label="سفارش پرداخت‌شده"
             value={summary?.paidOrders}
             loading={source === "loading"}
-            icon={<Wallet className="size-5" />}
-            tone="bg-[rgb(240_253_244)] text-[rgb(22_163_74)]"
+            icon={<Wallet className="w-5 h-5" />}
+            tone="from-emerald-500 to-emerald-600"
           />
         </div>
       )}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">وضعیت عملیاتی</h2>
-          <p className="mt-2 text-sm text-muted">
-            خلاصه از دادهٔ زندهٔ Host است. نمودار فروش یا هدف ماهانهٔ ساختگی نمایش داده نمی‌شود.
-          </p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: "محصولات", href: "/vendor-panel/products", icon: Package, color: "bg-[#2563EB]" },
+          { label: "سفارشات", href: "/vendor-panel/orders", icon: ShoppingBag, color: "bg-blue-500" },
+          { label: "مشتریان", href: "/vendor-panel/customers", icon: Users, color: "bg-emerald-500" },
+          { label: "کیف پول", href: "/vendor-panel/wallet", icon: Wallet, color: "bg-amber-500" },
+          { label: "تخفیف‌ها", href: "/vendor-panel/coupons", icon: Tag, color: "bg-rose-500" },
+          { label: "تنظیمات", href: "/vendor-panel/settings", icon: Settings, color: "bg-purple-500" },
+        ].map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col items-center gap-2 hover:shadow-md transition-shadow text-center"
+          >
+            <span className={`w-10 h-10 ${action.color} text-white rounded-xl flex items-center justify-center`}>
+              <action.icon className="w-5 h-5" />
+            </span>
+            <span className="text-xs font-bold text-gray-800">{action.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+          <h2 className="font-black text-lg">وضعیت عملیاتی زنده</h2>
+          <p className="mt-1 text-sm text-gray-500">اعداد فقط از Seller Dashboard API.</p>
           <ul className="mt-4 space-y-3 text-sm">
-            <li className="flex items-center justify-between rounded-ds bg-secondary/60 px-3 py-3">
+            <li className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-3">
               <span>پیشنهادهای فعال</span>
-              <span className="font-semibold tabular-nums">{summary?.activeOffers?.toLocaleString("fa-IR") ?? "…"}</span>
+              <span className="font-bold tabular-nums">{summary?.activeOffers?.toLocaleString("fa-IR") ?? "…"}</span>
             </li>
-            <li className="flex items-center justify-between rounded-ds bg-secondary/60 px-3 py-3">
+            <li className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-3">
               <span>سفارش‌های در انتظار پرداخت</span>
-              <span className="font-semibold tabular-nums">{summary?.openOrders?.toLocaleString("fa-IR") ?? "…"}</span>
+              <span className="font-bold tabular-nums">{summary?.openOrders?.toLocaleString("fa-IR") ?? "…"}</span>
             </li>
-            <li className="flex items-center justify-between rounded-ds bg-secondary/60 px-3 py-3">
+            <li className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-3">
               <span>سفارش‌های پرداخت‌شده</span>
-              <span className="font-semibold tabular-nums">{summary?.paidOrders?.toLocaleString("fa-IR") ?? "…"}</span>
+              <span className="font-bold tabular-nums">{summary?.paidOrders?.toLocaleString("fa-IR") ?? "…"}</span>
             </li>
           </ul>
         </section>
-        <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-          <h2 className="text-lg font-semibold">میان‌برهای پنل</h2>
-          <div className="mt-4 grid gap-3">
-            <Link className="rounded-ds border border-border px-4 py-3 text-sm hover:bg-secondary" href="/vendor-panel/products">
-              مدیریت محصولات و Offer
-            </Link>
-            <Link className="rounded-ds border border-border px-4 py-3 text-sm hover:bg-secondary" href="/vendor-panel/orders">
-              پیگیری سفارش‌های فروشنده
-            </Link>
-          </div>
+        <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+          <h2 className="font-black text-lg">قابلیت‌های هنوز متصل‌نشده</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            ساختار ناوبری Shopeiva حفظ شده؛ تا capability معتبر Host، پوستهٔ صادقانه بدون دادهٔ جعلی است.
+          </p>
+          <ul className="mt-4 grid gap-2 text-sm text-gray-700">
+            <li className="rounded-xl bg-gray-50 px-3 py-2">آمار و نمودار · مشتریان · نظرات</li>
+            <li className="rounded-xl bg-gray-50 px-3 py-2">کیف پول / تسویه · تیکت · کارت هدیه</li>
+            <li className="rounded-xl bg-gray-50 px-3 py-2">تخفیف فروشنده · تنظیمات فروشگاه</li>
+          </ul>
         </section>
       </div>
     </main>
@@ -155,15 +171,17 @@ function SummaryCard({
   tone: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">
+          <p className="text-sm text-gray-500">{label}</p>
+          <p className="mt-2 text-3xl font-black tabular-nums">
             {loading ? "…" : (value ?? 0).toLocaleString("fa-IR")}
           </p>
         </div>
-        <span className={`inline-flex size-11 items-center justify-center rounded-full ${tone}`}>{icon}</span>
+        <span className={`inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ${tone} text-white`}>
+          {icon}
+        </span>
       </div>
     </div>
   );

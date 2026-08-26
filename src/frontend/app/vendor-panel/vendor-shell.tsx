@@ -3,7 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { Bell, LayoutDashboard, Menu, Package, Search, ShoppingBag, Star, X } from "lucide-react";
+import {
+  BarChart3,
+  ChevronLeft,
+  Gift,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  Settings,
+  ShoppingBag,
+  Star,
+  Store,
+  Tag,
+  Ticket,
+  Users,
+  Wallet,
+  X,
+} from "lucide-react";
 import {
   DEFAULT_SELLER_PARTY_ID,
   loadSellerDevContexts,
@@ -14,18 +31,44 @@ import {
   type SellerDevContext,
 } from "./seller-api";
 
-const nav = [
-  { href: "/vendor-panel", label: "داشبورد", icon: LayoutDashboard, exact: true },
-  { href: "/vendor-panel/products", label: "محصولات", icon: Package, exact: false },
-  { href: "/vendor-panel/orders", label: "سفارش‌ها", icon: ShoppingBag, exact: false },
+type NavItem = {
+  id: string;
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  live: boolean;
+};
+
+/** ترتیب قفل‌شدهٔ ناوبری Shopeiva vendor-panel. */
+const menuItems: NavItem[] = [
+  { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/vendor-panel", live: true },
+  { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true },
+  { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true },
+  { id: "customers", label: "مشتریان", icon: Users, href: "/vendor-panel/customers", live: false },
+  { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: false },
+  { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: false },
+  { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: false },
+  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: false },
+  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/vendor-panel/tickets", live: false },
+  { id: "gift-cards", label: "کارت‌های هدیه", icon: Gift, href: "/vendor-panel/gift-cards", live: false },
+  { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: false },
 ];
 
+function isActivePath(pathname: string, href: string): boolean {
+  if (href === "/vendor-panel") {
+    return pathname === href;
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 /**
- * پوستهٔ Vendor به زبان Shopeiva: نوار طلایی بالا، ناوبری افقی، کارت‌ها؛ accent اصلی Tooba آبی است.
+ * پوستهٔ پنل فروشنده مطابق layout واقعی Shopeiva vendor-panel.
+ * زمینهٔ Actor+Seller برای مرز SpiceDB حفظ می‌شود. accent Tooba آبی است.
  */
 export function VendorShell({ children }: { children: ReactNode }) {
-  const path = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [contexts, setContexts] = useState<SellerDevContext[]>([]);
   const [sellerPartyId, setSellerPartyId] = useState<string>(() =>
     typeof window !== "undefined" ? (readSellerPartyId(window.location.search) ?? DEFAULT_SELLER_PARTY_ID) : DEFAULT_SELLER_PARTY_ID,
@@ -50,7 +93,6 @@ export function VendorShell({ children }: { children: ReactNode }) {
         setActorUserId(exact.actorUserId);
         setSellerLabel(exact.sellerLabel);
       } else if (existingActor && existingSeller) {
-        // Actor و Seller جدا نگه داشته می‌شوند تا deny سمت Host قابل اثبات باشد.
         writeActorUserId(existingActor);
         writeSellerPartyId(existingSeller);
         setActorUserId(existingActor);
@@ -68,13 +110,12 @@ export function VendorShell({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  if (!ready) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[rgb(248_248_247)] text-muted">
-        در حال آماده‌سازی پنل فروشنده…
-      </div>
-    );
-  }
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   function onContextChange(nextKey: string) {
     const [nextActor, nextSeller] = nextKey.split("|");
@@ -93,90 +134,59 @@ export function VendorShell({ children }: { children: ReactNode }) {
     window.location.assign(window.location.pathname + window.location.search);
   }
 
-  const contextKey = actorUserId && sellerPartyId ? `${actorUserId}|${sellerPartyId}` : "";
-  const crumb =
-    path.startsWith("/vendor-panel/products")
-      ? "محصولات"
-      : path.startsWith("/vendor-panel/orders")
-        ? "سفارش‌ها"
-        : "داشبورد";
-
-  function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  if (!ready) {
     return (
-      <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label="Seller">
-        {nav.map((item) => {
-          const active = item.exact ? path === item.href : path.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={
-                active
-                  ? "inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground"
-                  : "inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-foreground hover:bg-secondary"
-              }
-            >
-              <Icon className="size-4 shrink-0" aria-hidden />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500" data-testid="vendor-shell-loading">
+        در حال آماده‌سازی پنل فروشنده…
+      </div>
     );
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-[rgb(248_248_247)] text-foreground">
-      <div className="bg-gradient-to-l from-[rgb(180_140_70)] via-[rgb(198_162_92)] to-[rgb(168_128_58)] text-white shadow-sm">
-        <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-3 px-4 py-2 md:px-8">
-          <p className="text-sm font-medium tracking-wide md:text-base">توبا · حس خوب فروش</p>
-          <div className="hidden items-center gap-3 md:flex">
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/15 px-3 text-sm">
-              <Search className="size-3.5 opacity-90" aria-hidden />
-              جستجو
-            </span>
-            <Bell className="size-4 opacity-90" aria-hidden />
-          </div>
-        </div>
-      </div>
+  const contextKey = actorUserId && sellerPartyId ? `${actorUserId}|${sellerPartyId}` : "";
 
-      <div className="border-b border-border bg-surface-elevated shadow-sm">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:px-8">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-ds border border-border md:hidden"
-                aria-label="باز کردن منو"
-                onClick={() => setMenuOpen(true)}
-              >
-                <Menu className="size-5" />
-              </button>
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="vendor-panel-shell">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center" data-testid="vendor-panel-header">
+        <div className="flex items-center justify-between w-full px-4 lg:px-6 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((open) => !open)}
+              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100"
+              aria-label="جمع‌کردن منو"
+            >
+              <Menu className="w-5 h-5 text-gray-700" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              aria-label="منوی موبایل"
+              data-testid="vendor-panel-mobile-menu"
+            >
+              <Menu className="w-5 h-5 text-gray-700" />
+            </button>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center shadow-sm shrink-0">
+                <Store className="w-4 h-4 text-white" />
+              </div>
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate text-base font-semibold">{sellerLabel}</p>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[rgb(255_247_237)] px-2 py-0.5 text-xs text-[rgb(194_65_12)]">
-                    <Star className="size-3 fill-current" aria-hidden />
-                    فروشنده ویژه
-                  </span>
-                </div>
-                <p className="text-sm text-muted">
-                  پنل فروشنده · {crumb}
-                </p>
+                <p className="font-bold text-gray-900 text-sm truncate">{sellerLabel}</p>
+                <p className="text-[10px] text-gray-500 hidden sm:block">پنل فروشنده</p>
               </div>
             </div>
-            <label className="flex min-w-0 flex-col text-xs text-muted">
-              زمینهٔ مجاز (Actor + فروشنده)
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <label className="hidden md:flex flex-col text-[10px] text-gray-500">
+              زمینهٔ مجاز
               <select
-                className="mt-1 min-h-11 max-w-[18rem] rounded-ds border border-border bg-surface px-3 text-sm text-foreground"
+                className="mt-0.5 min-h-9 max-w-[14rem] rounded-xl border border-gray-200 bg-white px-2 text-xs text-gray-800"
                 value={contextKey}
                 onChange={(event) => onContextChange(event.target.value)}
                 data-testid="seller-context-select"
               >
                 {contexts.length === 0 ? (
-                  <option value="">در حال آماده‌سازی…</option>
+                  <option value="">…</option>
                 ) : (
                   contexts.map((row) => (
                     <option key={`${row.actorUserId}|${row.sellerPartyId}`} value={`${row.actorUserId}|${row.sellerPartyId}`}>
@@ -186,36 +196,110 @@ export function VendorShell({ children }: { children: ReactNode }) {
                 )}
               </select>
             </label>
-          </div>
-          <div className="hidden md:block">
-            <NavItems />
+            <Link href="/" className="p-2 rounded-lg hover:bg-red-50 text-red-500" aria-label="خروج به فروشگاه" title="خروج">
+              <LogOut className="w-5 h-5" />
+            </Link>
           </div>
         </div>
+      </header>
+
+      <div className="flex flex-1 relative">
+        <aside
+          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto ${
+            sidebarOpen ? "w-64" : "w-0 opacity-0"
+          }`}
+          data-testid="vendor-panel-sidebar"
+        >
+          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی فروشنده">
+            {menuItems.map((item) => (
+              <NavLink key={item.id} item={item} pathname={pathname} />
+            ))}
+          </nav>
+        </aside>
+
+        <main className="flex-1 min-w-0 w-full p-4 md:p-6 lg:p-8" data-testid="vendor-panel-main">
+          <div className="md:hidden mb-4">
+            <label className="flex flex-col text-[10px] text-gray-500">
+              زمینهٔ مجاز (Actor + فروشنده)
+              <select
+                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
+                value={contextKey}
+                onChange={(event) => onContextChange(event.target.value)}
+              >
+                {contexts.map((row) => (
+                  <option key={`${row.actorUserId}|${row.sellerPartyId}`} value={`${row.actorUserId}|${row.sellerPartyId}`}>
+                    {row.actorLabel} → {row.sellerLabel}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {children}
+        </main>
       </div>
 
-      {menuOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <button type="button" className="absolute inset-0 bg-foreground/40" aria-label="بستن منو" onClick={() => setMenuOpen(false)} />
-          <aside className="relative z-50 flex h-full w-72 flex-col bg-surface-elevated shadow-lg">
-            <div className="flex items-center justify-between border-b border-border px-4 py-4">
-              <p className="text-lg font-semibold">منو</p>
-              <button
-                type="button"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-ds bg-secondary"
-                aria-label="بستن"
-                onClick={() => setMenuOpen(false)}
-              >
-                <X className="size-5" />
+      {mobileOpen ? (
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" data-testid="vendor-panel-drawer">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center">
+                  <Store className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">پنل فروشنده</span>
+              </div>
+              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="بستن">
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-3">
-              <NavItems onNavigate={() => setMenuOpen(false)} />
+            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+              {menuItems.map((item) => (
+                <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
+              ))}
+            </nav>
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <Link
+                href="/"
+                className="flex items-center justify-center gap-2 px-4 py-3 w-full rounded-xl text-sm font-medium text-red-500 bg-red-50"
+              >
+                <LogOut className="w-5 h-5" />
+                بازگشت به فروشگاه
+              </Link>
             </div>
           </aside>
         </div>
       ) : null}
-
-      <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 md:px-8 md:py-7">{children}</div>
     </div>
+  );
+}
+
+function NavLink({
+  item,
+  pathname,
+  onNavigate,
+  dense,
+}: {
+  item: NavItem;
+  pathname: string;
+  onNavigate?: () => void;
+  dense?: boolean;
+}) {
+  const active = isActivePath(pathname, item.href);
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${
+        dense ? "px-4 py-3" : "px-3 py-2.5"
+      } ${active ? "bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/20" : "text-gray-700 hover:bg-gray-100"}`}
+      data-testid={`vendor-nav-${item.id}`}
+      data-live={item.live ? "true" : "false"}
+    >
+      <item.icon className="w-5 h-5 shrink-0" />
+      <span className="flex-1 truncate">{item.label}</span>
+      {!item.live ? <span className={`text-[10px] ${active ? "text-white/80" : "text-gray-400"}`}>به‌زودی</span> : null}
+      {active ? <ChevronLeft className="w-4 h-4 shrink-0" /> : null}
+    </Link>
   );
 }
