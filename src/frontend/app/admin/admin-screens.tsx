@@ -26,6 +26,15 @@ import {
   type AdminSellerRow,
   type AdminReviewRow,
 } from "./admin-api";
+import {
+  formatFulfillmentStatus,
+  fulfillmentStatusBadgeClass,
+  loadAdminFulfillmentDetail,
+  loadAdminFulfillments,
+  type FulfillmentListRow,
+  type FulfillmentSnapshot,
+} from "../fulfillment/fulfillment-api";
+import { FulfillmentShipmentList } from "../fulfillment/fulfillment-ui";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -216,6 +225,66 @@ function Status({ value }: { value: string }) {
 /** فهرست زندهٔ سفارش‌ها. */
 export function AdminOrdersScreen() {
   return <GridPage title="سفارش‌ها" description="پیگیری checkout و سفارش‌های فروشندگان" loader={loadAdminOrders} columns={orderColumns} />;
+}
+
+const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
+  {
+    id: "fulfillmentId",
+    header: "شناسه",
+    accessor: (row) => row.fulfillmentId,
+    cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/fulfillments/${row.fulfillmentId}`}>{row.fulfillmentId.slice(0, 8)}</Link>,
+    width: 120,
+    minWidth: 96,
+    maxWidth: 160,
+    sticky: "start",
+    filterKind: "text",
+    sortable: true,
+  },
+  { id: "checkoutId", header: "Checkout", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
+  { id: "recipientName", header: "گیرنده", accessor: (row) => row.recipientName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
+  { id: "cityName", header: "شهر", accessor: (row) => row.cityName, width: 110, minWidth: 90, maxWidth: 150, filterKind: "text", sortable: true },
+  { id: "shipmentCount", header: "محموله", accessor: (row) => row.shipmentCount, cell: (row) => row.shipmentCount.toLocaleString("fa-IR"), width: 90, minWidth: 72, maxWidth: 110, sortable: true },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <span className={fulfillmentStatusBadgeClass(row.status)}>{formatFulfillmentStatus(row.status)}</span>, width: 140, minWidth: 120, maxWidth: 180, filterKind: "status" },
+];
+
+/** فهرست زندهٔ fulfillment برای Admin. */
+export function AdminFulfillmentsScreen() {
+  return <GridPage title="ارسال / fulfillment" description="نظارت عملیاتی بر fulfillment و محموله‌ها" loader={loadAdminFulfillments} columns={fulfillmentColumns} />;
+}
+
+/** جزئیات fulfillment برای Admin (read-only). */
+export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId: string }) {
+  const [result, setResult] = useState<AdminResult<FulfillmentSnapshot>>({ state: "ok", data: null, status: 0 });
+  const refresh = () => void loadAdminFulfillmentDetail(fulfillmentId).then(setResult);
+  useEffect(refresh, [fulfillmentId]);
+  if (result.state === "denied") return <Denied retry={refresh} />;
+  const snapshot = result.data;
+  return (
+    <main>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <PageHeading title="جزئیات fulfillment" description={snapshot?.fulfillmentId.slice(0, 8) ?? "در حال بارگذاری"} />
+        <Link className="text-sm text-primary hover:underline" href="/admin/fulfillments">بازگشت به فهرست</Link>
+      </div>
+      {result.state === "error" ? (
+        <ErrorState title="fulfillment خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+      ) : snapshot ? (
+        <div className="grid gap-5">
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <div className="flex flex-wrap gap-3 items-center">
+              <span className={fulfillmentStatusBadgeClass(snapshot.status)}>{formatFulfillmentStatus(snapshot.status)}</span>
+              <span className="text-sm text-muted">Checkout: {snapshot.checkoutId.slice(0, 8)}</span>
+              <span className="text-sm text-muted">Seller order: {snapshot.sellerOrderId.slice(0, 8)}</span>
+            </div>
+            <p className="mt-4 text-sm">{snapshot.recipientName} · {snapshot.provinceName}، {snapshot.cityName} · {snapshot.postalAddress}</p>
+          </section>
+          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+            <h2 className="font-semibold">محموله‌ها</h2>
+            <div className="mt-4"><FulfillmentShipmentList shipments={snapshot.shipments} /></div>
+          </section>
+        </div>
+      ) : <p className="text-muted">در حال بارگذاری…</p>}
+    </main>
+  );
 }
 
 /** فهرست زندهٔ فروشندگان. */

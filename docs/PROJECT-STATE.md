@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T009-R1
+TB-P06-T010
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completing TB-P06-T009-R1 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completing TB-P06-T010 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -569,4 +569,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T008 = ACCEPTED. TB-P06-T009 = REPAIR_REQUIRED. TB-P06-T009-R1 submitted AWAITING_ARCHITECT_ACCEPT. FULFILLMENT = FOUNDATION_IMPLEMENTED. RETURNS_REFUNDS = DEFERRED. SETTLEMENT = DEFERRED. Evidence under `docs/evidence/TB-P06-T009-R1/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T008 = ACCEPTED. TB-P06-T009 = REPAIR_REQUIRED. TB-P06-T009-R1 = AWAITING_ARCHITECT_ACCEPT. TB-P06-T010 submitted AWAITING_ARCHITECT_ACCEPT: Customer/Seller/Admin fulfillment UI wired to live Host APIs with zero storefront visual change. FULFILLMENT = UI_CONNECTED. RETURNS_REFUNDS = DEFERRED. SETTLEMENT = DEFERRED. Evidence under `docs/evidence/TB-P06-T010/`.

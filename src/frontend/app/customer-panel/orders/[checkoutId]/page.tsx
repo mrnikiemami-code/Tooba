@@ -11,6 +11,8 @@ import {
   formatCustomerOrderStatus,
   loadCustomerOrderDetail,
 } from "../../customer-api";
+import { loadCustomerFulfillments, type FulfillmentSnapshot } from "../../../fulfillment/fulfillment-api";
+import { FulfillmentSummaryCard } from "../../../fulfillment/fulfillment-ui";
 
 /**
  * جزئیات سفارش مشتری با خطوط هر فروشنده و snapshot ارسال واقعی.
@@ -18,9 +20,11 @@ import {
 export default function CustomerOrderDetail() {
   const params = useParams<{ checkoutId: string }>();
   const [page, setPage] = useState<CustomerOrderDetailPage | null | undefined>(undefined);
+  const [fulfillments, setFulfillments] = useState<FulfillmentSnapshot[] | null | undefined>(undefined);
 
   useEffect(() => {
     void loadCustomerOrderDetail(params.checkoutId).then(setPage);
+    void loadCustomerFulfillments(params.checkoutId).then(setFulfillments);
   }, [params.checkoutId]);
 
   if (page === undefined) {
@@ -123,6 +127,26 @@ export default function CustomerOrderDetail() {
             <p className="text-xs text-gray-400 mt-2">اطلاعات فوق snapshot زمان ثبت سفارش است.</p>
           </div>
         </div>
+      </section>
+
+      <section className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Truck className="w-5 h-5 text-[#2563EB]" />
+          <h2 className="font-black text-sm">وضعیت ارسال و محموله‌ها</h2>
+        </div>
+        {fulfillments === undefined ? (
+          <p className="text-sm text-gray-500 text-center py-6">در حال دریافت وضعیت ارسال...</p>
+        ) : fulfillments === null ? (
+          <p className="text-sm text-red-600 text-center py-6">وضعیت ارسال در دسترس نیست. بعداً دوباره تلاش کنید.</p>
+        ) : fulfillments.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">هنوز fulfillment برای این سفارش ثبت نشده است.</p>
+        ) : (
+          <div className="space-y-4">
+            {fulfillments.map((snapshot) => (
+              <FulfillmentSummaryCard key={snapshot.fulfillmentId} snapshot={snapshot} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

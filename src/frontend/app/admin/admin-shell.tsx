@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Star,
   Store,
+  Truck,
   Users,
   X,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const navGroups: NavGroup[] = [
       { id: "dashboard", label: "داشبورد", href: "/admin", icon: LayoutDashboard, live: true, exact: true },
       { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true },
       { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true },
+      { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true },
     ],
   },
   {
