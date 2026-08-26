@@ -14,6 +14,7 @@ using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
+using Tooba.Host.Payments;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
 using Tooba.Host.ProductQnA;
@@ -56,6 +57,7 @@ builder.Services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<HttpComme
 builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService<HttpCommerceContextAccessor>());
 builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
 builder.Services.Configure<CartExpiryHostOptions>(builder.Configuration.GetSection("Tooba:CartExpiry"));
+builder.Services.Configure<PaymentReconciliationHostOptions>(builder.Configuration.GetSection("Tooba:PaymentReconciliation"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
 builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
@@ -89,6 +91,7 @@ builder.Services.AddToobaIntegrationPublisher(builder.Environment, messagingOpti
 builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddHostedService<CartExpiryHostedService>();
+builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
@@ -233,6 +236,7 @@ app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
+app.MapPaymentWebhookEndpoints();
 app.MapSellerPanelEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapReviewEndpoints();

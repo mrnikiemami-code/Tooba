@@ -33,7 +33,10 @@ public static class StorefrontEndpoints
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
         group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
-        group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
+        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+        {
+            group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
+        }
     }
 
     private static async Task<IResult> GetHomeAsync(StorefrontComposer composer, CancellationToken cancellationToken)

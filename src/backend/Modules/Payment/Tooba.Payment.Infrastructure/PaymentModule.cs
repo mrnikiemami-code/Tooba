@@ -25,12 +25,34 @@ public sealed class PaymentModule : IToobaModule
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(environment);
 
+        services.Configure<PaymentGatewayOptions>(configuration.GetSection(PaymentGatewayOptions.SectionName));
+        services.AddSingleton<PaymentGatewayInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
         services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
-        services.AddScoped<IPaymentGateway, FakePaymentGateway>();
-        services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
         services.AddScoped<IPaymentDirectory, PaymentDirectory>();
+        services.AddScoped<IPaymentReconciliationDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
+        services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
+
+        if (environment.IsProduction())
+        {
+            var mode = configuration.GetSection(PaymentGatewayOptions.SectionName).GetValue<string>("Mode") ?? "Disabled";
+            if (string.Equals(mode, "Webhook", StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddHttpClient<WebhookPaymentGateway>();
+                services.AddScoped<IPaymentGateway, WebhookPaymentGateway>();
+            }
+            else
+            {
+                services.AddScoped<IPaymentGateway, FailClosedPaymentGateway>();
+            }
+        }
+        else
+        {
+            services.AddScoped<IPaymentGateway, FakePaymentGateway>();
+            services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
+        }
+
         services.AddDbContext<PaymentDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

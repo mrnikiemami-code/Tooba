@@ -216,6 +216,21 @@ public interface IPaymentDirectory
 }
 
 /// <summary>
+/// reconciliation پرداخت‌های Pending برای callbackهای گم‌شده/دیررسیده.
+/// </summary>
+public interface IPaymentReconciliationDirectory
+{
+    /// <summary>
+    /// پرداخت‌های Pending قدیمی‌تر از minAge را Verify می‌کند.
+    /// </summary>
+    Task<int> ReconcileStalePendingAsync(
+        DateTimeOffset asOf,
+        TimeSpan minAge,
+        int batchSize,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// رویداد پایدار موفقیت Verify. تصویر Paid سفارش فقط از مصرف این قرارداد ساخته می‌شود نه از تراکنش همزمان Payment.
 /// </summary>
 public sealed class PaymentSucceededIntegrationEvent : IIntegrationEvent

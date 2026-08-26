@@ -43,6 +43,11 @@ public sealed class PaymentDbContext : DbContext
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>
+    /// dedup webhook/callback ارائه‌دهنده.
+    /// </summary>
+    public DbSet<PaymentWebhookInboxRecord> WebhookInbox => Set<PaymentWebhookInboxRecord>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,6 +89,15 @@ public sealed class PaymentDbContext : DbContext
             entity.Property(x => x.AllocatedAmount).HasPrecision(19, 4);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
+        modelBuilder.Entity<PaymentWebhookInboxRecord>(entity =>
+        {
+            entity.ToTable("webhook_inbox");
+            entity.HasKey(x => x.InboxId);
+            entity.Property(x => x.InboxId).ValueGeneratedNever();
+            entity.Property(x => x.ProviderCode).HasMaxLength(64);
+            entity.Property(x => x.ProviderEventId).HasMaxLength(128);
+            entity.HasIndex(x => new { x.ProviderCode, x.ProviderEventId }).IsUnique();
+        });
     }
 }
 

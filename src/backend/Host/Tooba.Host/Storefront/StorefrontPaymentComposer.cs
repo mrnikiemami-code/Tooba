@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Tooba.Payment.Application;
 using Tooba.Payment.Infrastructure;
 
@@ -11,6 +12,7 @@ public sealed class StorefrontPaymentComposer
 {
     private readonly StorefrontCheckoutComposer _checkouts;
     private readonly IPaymentDirectory _payments;
+    private readonly PaymentGatewayOptions _gatewayOptions;
     private readonly ILogger<StorefrontPaymentComposer> _logger;
 
     /// <summary>
@@ -19,10 +21,12 @@ public sealed class StorefrontPaymentComposer
     public StorefrontPaymentComposer(
         StorefrontCheckoutComposer checkouts,
         IPaymentDirectory payments,
+        IOptions<PaymentGatewayOptions> gatewayOptions,
         ILogger<StorefrontPaymentComposer> logger)
     {
         _checkouts = checkouts;
         _payments = payments;
+        _gatewayOptions = gatewayOptions.Value;
         _logger = logger;
     }
 
@@ -54,7 +58,7 @@ public sealed class StorefrontPaymentComposer
                 StorefrontCheckoutComposer.StorefrontGuestActorId,
                 null,
                 idempotencyKey,
-                "fake"),
+                _gatewayOptions.DefaultProvider),
             cancellationToken);
 
         var redirect = string.IsNullOrWhiteSpace(initiated.RedirectUrl)

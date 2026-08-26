@@ -17,7 +17,7 @@ public sealed class OpenPaymentUseCaseGuard : IPaymentUseCaseGuard
 /// <summary>
 /// ارکستراسیون پرداخت در schema payment. مبلغ از تصویر سفارش است نه از کلاینت؛ OrderDbContext اینجا باز نمی‌شود.
 /// </summary>
-public sealed class PaymentDirectory : IPaymentDirectory
+public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory
 {
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
@@ -52,13 +52,19 @@ public sealed class PaymentDirectory : IPaymentDirectory
                 .AsNoTracking()
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstAsync(x => x.PaymentId == existing.PaymentId, cancellationToken);
+            var replayGateway = _gateways.Resolve(existing.ProviderCode);
+            var replayInitiation = await replayGateway.InitiateAsync(
+                existing.PaymentId,
+                existing.Amount,
+                existing.Currency,
+                cancellationToken);
             return new PaymentInitiationResult(
                 existing.PaymentId,
                 prior.AttemptId,
                 existing.Status,
                 existing.ProviderCode,
                 prior.ProviderRequestReference,
-                ComposeSandboxRedirect(existing.PaymentId, prior.AttemptId, prior.ProviderRequestReference),
+                ResolveRedirectUrl(replayGateway, existing.PaymentId, prior.AttemptId, prior.ProviderRequestReference, replayInitiation.RedirectUrl),
                 existing.Amount,
                 existing.Currency);
         }
@@ -104,9 +110,50 @@ public sealed class PaymentDirectory : IPaymentDirectory
             payment.Status,
             payment.ProviderCode,
             attempt.ProviderRequestReference,
-            ComposeSandboxRedirect(payment.PaymentId, attempt.AttemptId, attempt.ProviderRequestReference),
+            ResolveRedirectUrl(gateway, payment.PaymentId, attempt.AttemptId, attempt.ProviderRequestReference, initiation.RedirectUrl),
             payment.Amount,
             payment.Currency);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> ReconcileStalePendingAsync(
+        DateTimeOffset asOf,
+        TimeSpan minAge,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var cutoff = asOf - minAge;
+        var pending = await _db.Payments.AsNoTracking()
+            .Where(x => x.Status == PaymentStatus.Pending && x.UpdatedAt <= cutoff)
+            .OrderBy(x => x.UpdatedAt)
+            .Take(Math.Max(1, batchSize))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var processed = 0;
+        foreach (var payment in pending)
+        {
+            var attempt = await _db.Attempts.AsNoTracking()
+                .Where(x => x.PaymentId == payment.PaymentId)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (attempt is null)
+            {
+                continue;
+            }
+
+            await VerifyAsync(
+                new VerifyPaymentCommand(
+                    payment.PaymentId,
+                    attempt.AttemptId,
+                    attempt.ProviderRequestReference,
+                    false),
+                cancellationToken).ConfigureAwait(false);
+            processed++;
+        }
+
+        return processed;
     }
 
     /// <inheritdoc />
@@ -221,6 +268,28 @@ public sealed class PaymentDirectory : IPaymentDirectory
         {
             throw new InvalidOperationException("دسترسی به پرداخت بدون هویت سفارش رد شد.");
         }
+    }
+
+    private static string ResolveRedirectUrl(
+        IPaymentGateway gateway,
+        Guid paymentId,
+        Guid attemptId,
+        string providerRequestReference,
+        string? gatewayRedirect)
+    {
+        if (!string.IsNullOrWhiteSpace(gatewayRedirect))
+        {
+            return gatewayRedirect;
+        }
+
+        if (gateway is FakePaymentGateway or FakeFailingPaymentGateway)
+        {
+            return ComposeSandboxRedirect(paymentId, attemptId, providerRequestReference);
+        }
+
+        return "/payment/result?paymentId=" + paymentId.ToString("D")
+            + "&attemptId=" + attemptId.ToString("D")
+            + "&ref=" + Uri.EscapeDataString(providerRequestReference);
     }
 
     private static string ComposeSandboxRedirect(Guid paymentId, Guid attemptId, string providerRequestReference) =>
