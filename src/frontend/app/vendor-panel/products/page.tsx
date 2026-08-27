@@ -183,6 +183,13 @@ export default function VendorProductsPage() {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">محصولات فروشنده</h1>
           <p className="mt-1 text-base text-muted">فهرست Offer؛ قیمت روی Product نیست</p>
         </div>
+        <Link
+          href="/vendor-panel/products/new"
+          className="inline-flex min-h-11 items-center rounded-xl bg-[#E53935] px-4 text-sm font-bold text-white shadow-lg shadow-[#E53935]/30 hover:bg-[#c62828]"
+          data-testid="seller-create-offer"
+        >
+          پیشنهاد جدید
+        </Link>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">

@@ -23,3 +23,8 @@ Thumbs.db
 # External references — not product source
 shopeiva/
 help.pdf
+
+# Host/runtime logs
+src/backend/Host/Tooba.Host/*.log
+src/frontend/next-dev*.log
+src/frontend/next-dev*.err.log

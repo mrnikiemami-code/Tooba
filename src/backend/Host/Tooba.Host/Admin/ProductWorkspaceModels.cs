@@ -11,6 +11,15 @@ public sealed record ProductWorkspacePermissions(
     bool CanPublish);
 
 /// <summary>
+/// فرمان ایجاد سادهٔ محصول Catalog با گونهٔ پیش‌فرض برای دمو؛ قیمت و موجودی اینجا نیست.
+/// </summary>
+public sealed record AdminProductCreateRequest(
+    string Title,
+    string? Slug,
+    Guid? CategoryId,
+    string? Locale);
+
+/// <summary>
 /// ردیف فهرست Admin. مبلغ و واحد قابل‌فروش از Offer/Price/Inventory ترکیب می‌شوند؛ روی هویت Product نیستند.
 /// </summary>
 public sealed record AdminProductListItem(

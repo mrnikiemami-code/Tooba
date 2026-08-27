@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P06-T019-R1
+TB-P06-T020
 ```
 
 Last Architect Accepted Gate:
@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T020
+TB-P06-T021
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P06-T020 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completed TB-P06-T021 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -103,7 +103,20 @@ TB-P06-T017 = ACCEPTED
 TB-P06-T018 = ACCEPTED
 TB-P06-T019 = SUPERSEDED_BY_ARCHITECT_RESCOPE
 TB-P06-T019-R1 = ACCEPTED
-TB-P06-T020 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T020 = ACCEPTED
+TB-P06-T021 = AWAITING_ARCHITECT_ACCEPT
+PRODUCT_SALE_FLOW = LIVE
+SELLER_PRODUCT_MANAGEMENT = LIVE
+SELLER_OFFER_MANAGEMENT = LIVE
+PRICING_PATH = LIVE
+INVENTORY_PATH = LIVE
+CART_CHECKOUT_PAYMENT = LIVE
+SELLER_ORDER_FULFILLMENT = LIVE
+CUSTOMER_ORDER_TRACKING = LIVE
+ADVANCED_VARIANT_ARCHITECTURE = DEFERRED
+SELLABLE_PRODUCT_FLOW_LIVE = YES
+SELLABLE_DEMO = YES
+PRODUCTION_GO_LIVE_READY = NO
 PUBLIC_LOCALE_ROUTING = PREFIXED
 SUPPORTED_LOCALES = fa,en
 MULTILINGUAL_SEO = LIVE
@@ -629,4 +642,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 = ACCEPTED (`COMMERCIAL_PANEL_WAVE1_LIVE`). TB-P06-T019 = SUPERSEDED_BY_ARCHITECT_RESCOPE. TB-P06-T019-R1 = ACCEPTED (`SHARED_STORY_MANAGEMENT_LIVE`). TB-P06-T020 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Commercial Panel Wave 2 — seller coupons/promotions LIVE (`/vendor-panel/coupons` + Host `/v1/seller/promotions*` + checkout coupon apply), seller reviews LIVE (read-only list; reply deferred), admin promotions + reviews LIVE, notifications DEFERRED_WITH_REASON (nav hidden), tickets still deferred, readiness `COMMERCIAL_PANEL_WAVE2_LIVE` (not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T020/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 = ACCEPTED (`COMMERCIAL_PANEL_WAVE1_LIVE`). TB-P06-T019 = SUPERSEDED_BY_ARCHITECT_RESCOPE. TB-P06-T019-R1 = ACCEPTED (`SHARED_STORY_MANAGEMENT_LIVE`). TB-P06-T020 = ACCEPTED (`COMMERCIAL_PANEL_WAVE2_LIVE`). TB-P06-T021 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Sellable product flow LIVE (demo) — Admin Catalog Product + Seller Offer create + Pricing/Inventory writes; storefront discovery/PDP/cart/checkout/sandbox payment; seller fulfillment + customer tracking + admin inspect; `ADVANCED_VARIANT_ARCHITECTURE = DEFERRED`; readiness `SELLABLE_PRODUCT_FLOW_LIVE` / `SELLABLE_DEMO` (NOT `PRODUCTION_GO_LIVE_READY`, not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T021/`.

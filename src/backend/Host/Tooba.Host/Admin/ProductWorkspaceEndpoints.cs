@@ -14,6 +14,7 @@ public static class ProductWorkspaceEndpoints
     {
         var group = app.MapGroup("/v1/admin/products");
         group.MapGet("/", ListAsync);
+        group.MapPost("/", CreateAsync);
         group.MapGet("/{productId:guid}", GetAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
     }
@@ -43,6 +44,29 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.ListAsync(cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> CreateAsync(
+        AdminProductCreateRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var workspace = await composer.CreateSimpleProductAsync(body, ReadPermissions(request), cancellationToken);
+            return Results.Json(workspace, statusCode: StatusCodes.Status201Created);
         }
         catch (PlatformHttpException ex)
         {

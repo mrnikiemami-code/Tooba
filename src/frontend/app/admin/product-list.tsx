@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
 import { executeGridQuery } from "../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
-import { loadAdminProductList, type AdminProductListRow, type HostReadSource } from "./host-client";
+import {
+  createAdminProduct,
+  loadAdminProductList,
+  type AdminProductListRow,
+  type HostReadSource,
+} from "./host-client";
 
 const columns: GridColumnDef<AdminProductListRow>[] = [
   {
@@ -135,10 +141,16 @@ const columns: GridColumnDef<AdminProductListRow>[] = [
  * فهرست Admin با DataGrid پذیرفته‌شده. داده از Host خوانده می‌شود؛ در قطع ارتباط fixture با بنر صریح است.
  */
 export function ProductListScreen() {
+  const router = useRouter();
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [rows, setRows] = useState<AdminProductListRow[]>([]);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [denied, setDenied] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createSlug, setCreateSlug] = useState("");
+  const [createError, setCreateError] = useState<string | undefined>(undefined);
 
   function refresh() {
     void loadAdminProductList().then((result) => {
@@ -158,6 +170,29 @@ export function ProductListScreen() {
     [rows],
   );
 
+  async function onCreate() {
+    if (!createTitle.trim()) {
+      setCreateError("عنوان لازم است");
+      return;
+    }
+    setCreating(true);
+    setCreateError(undefined);
+    const result = await createAdminProduct({
+      title: createTitle.trim(),
+      slug: createSlug.trim() || null,
+      locale: "fa-IR",
+    });
+    setCreating(false);
+    if (!result.ok) {
+      setCreateError(result.denied ? "دسترسی مجاز نیست" : result.errorCode);
+      return;
+    }
+    setCreateOpen(false);
+    setCreateTitle("");
+    setCreateSlug("");
+    router.push(`/admin/products/${result.productId}`);
+  }
+
   if (denied) {
     return (
       <main data-testid="admin-auth-denied">
@@ -173,10 +208,49 @@ export function ProductListScreen() {
           <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محصولات</h1>
           <p className="mt-1 text-[length:var(--type-body)] text-muted">فهرست عملیاتی کاتالوگ فروشگاه</p>
         </div>
-        <button type="button" disabled className="min-h-11 rounded-ds bg-primary px-4 text-base font-medium text-primary-foreground opacity-50">
+        <button
+          type="button"
+          onClick={() => setCreateOpen((open) => !open)}
+          className="min-h-11 rounded-ds bg-primary px-4 text-base font-medium text-primary-foreground"
+          data-testid="admin-create-product"
+        >
           محصول جدید
         </button>
       </div>
+      {createOpen ? (
+        <section className="mb-5 max-w-xl rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+          <h2 className="text-base font-semibold">ایجاد محصول Catalog</h2>
+          <p className="mt-1 text-sm text-muted">عنوان + slug + گونهٔ پیش‌فرض؛ قیمت و موجودی روی Product نیست</p>
+          <div className="mt-4 grid gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              عنوان
+              <input
+                className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                value={createTitle}
+                onChange={(event) => setCreateTitle(event.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              slug (اختیاری)
+              <input
+                className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                value={createSlug}
+                onChange={(event) => setCreateSlug(event.target.value)}
+                dir="ltr"
+              />
+            </label>
+          </div>
+          {createError ? <p className="mt-3 text-sm text-danger">{createError}</p> : null}
+          <button
+            type="button"
+            disabled={creating}
+            onClick={() => void onCreate()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {creating ? "در حال ایجاد…" : "ایجاد و انتشار"}
+          </button>
+        </section>
+      ) : null}
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
           <p className="text-sm text-muted" data-testid="list-source">

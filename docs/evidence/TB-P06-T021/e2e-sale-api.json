@@ -1,0 +1,80 @@
+{
+  "taskId": "TB-P06-T021",
+  "steps": {
+    "adminProduct": {
+      "productId": "01a0429e-e65c-7000-9dbc-b3242782750f",
+      "slug": "t021-sale-mtbcb87t"
+    },
+    "variant": {
+      "catalogVariantId": "01a0429e-e670-7000-90f9-5b7f915e258e",
+      "productTitle": "محصول فروش T021"
+    },
+    "offer": {
+      "offerId": "01a0429e-e68d-7000-9139-65f062c1c15d",
+      "status": "Active"
+    },
+    "price": {
+      "amount": 250000,
+      "currency": "IRR"
+    },
+    "inventory": {
+      "onHand": 12
+    },
+    "discovery": {
+      "found": true,
+      "slug": "t021-sale-mtbcb87t",
+      "offerId": null
+    },
+    "pdp": {
+      "slug": "t021-sale-mtbcb87t",
+      "offerId": "01a0429e-e68d-7000-9139-65f062c1c15d",
+      "ok": true
+    },
+    "cart": {
+      "cartId": "01a0429e-f116-7000-ae3a-7496f49f48ed",
+      "offerId": "01a0429e-e68d-7000-9139-65f062c1c15d",
+      "version": 3
+    },
+    "checkout": {
+      "checkoutId": "01a0429e-f137-7000-885a-d50dd2bc876d",
+      "paymentState": "PendingPayment"
+    },
+    "paymentInit": {
+      "paymentId": "cfb05b13-9a82-4cd3-a8ef-a91f972f3d03",
+      "attemptId": "d9e7dc0f-8d53-43e7-bc05-68c58379c3d9",
+      "status": "Pending",
+      "keys": [
+        "paymentId",
+        "attemptId",
+        "checkoutId",
+        "status",
+        "providerCode",
+        "providerRequestReference",
+        "redirectUrl",
+        "amount",
+        "currency"
+      ]
+    },
+    "paymentComplete": {
+      "status": "Succeeded"
+    },
+    "sellerOrders": {
+      "count": 6,
+      "latest": {
+        "sellerOrderId": "01a0429e-f137-7000-b9e7-c16872fc825e",
+        "orderNumber": "TB-20260827094827-01-8fb91c",
+        "status": "PendingPayment"
+      }
+    }
+  },
+  "at": "2026-08-27T09:48:25.018Z",
+  "actors": {
+    "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "seller": {
+      "actorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+      "actorLabel": "اپراتور آرمان",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "sellerLabel": "فروشگاه آرمان"
+    }
+  }
+}

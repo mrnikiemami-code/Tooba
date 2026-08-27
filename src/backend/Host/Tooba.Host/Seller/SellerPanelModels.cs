@@ -54,6 +54,39 @@ public sealed record SellerOfferPatchRequest(
     string? Status);
 
 /// <summary>
+/// فرمان ایجاد Offer روی گونهٔ Catalog؛ Party فروشنده فقط از زمینهٔ احراز می‌آید نه از بدنه.
+/// </summary>
+public sealed record SellerOfferCreateRequest(
+    Guid CatalogVariantId,
+    string? SellerSku,
+    string? Status);
+
+/// <summary>
+/// فرمان نوشتن مبلغ بدون مالیات روی Offer متعلق به همان فروشنده از طریق Pricing.
+/// </summary>
+public sealed record SellerOfferPriceWriteRequest(
+    decimal Amount,
+    string? Currency,
+    string? Market);
+
+/// <summary>
+/// فرمان تنظیم موجودی روی‌دست Offer از طریق Inventory؛ Product.Stock نیست.
+/// </summary>
+public sealed record SellerOfferInventoryWriteRequest(
+    int OnHand,
+    string? Reason);
+
+/// <summary>
+/// گزینهٔ انتخاب گونهٔ Catalog منتشرشده برای ایجاد Offer؛ فقط‌خواندنی است.
+/// </summary>
+public sealed record SellerCatalogVariantOption(
+    Guid CatalogVariantId,
+    Guid ProductId,
+    string ProductTitle,
+    string? CatalogCode,
+    string ProductStatus);
+
+/// <summary>
 /// ردیف فهرست سفارش فروشنده. خطوط فروشندهٔ دیگر دیده نمی‌شود.
 /// </summary>
 public sealed record SellerOrderListItem(

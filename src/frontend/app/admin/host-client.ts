@@ -266,3 +266,38 @@ export async function patchCatalogTitle(
     return { ok: false, errorCode: "workspace.host.unreachable" };
   }
 }
+
+/** ایجاد سادهٔ محصول Catalog + گونهٔ پیش‌فرض؛ قیمت/موجودی اینجا نیست. */
+export async function createAdminProduct(input: {
+  title: string;
+  slug?: string | null;
+  categoryId?: string | null;
+  locale?: string | null;
+}): Promise<{ ok: true; productId: string } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/admin/products", {
+      method: "POST",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        title: input.title,
+        slug: input.slug ?? undefined,
+        categoryId: input.categoryId ?? undefined,
+        locale: input.locale ?? "fa-IR",
+      }),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, errorCode: "admin.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "workspace.product.create-failed" };
+    }
+    const payload = (await response.json()) as Record<string, unknown>;
+    const productId = asString(readProp(payload, "productId", "ProductId"));
+    return productId
+      ? { ok: true, productId }
+      : { ok: false, errorCode: "workspace.product.create-failed" };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}

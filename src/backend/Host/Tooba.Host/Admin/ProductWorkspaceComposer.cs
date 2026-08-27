@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -22,6 +23,7 @@ public sealed class ProductWorkspaceComposer
     private readonly InventoryDbContext _inventory;
     private readonly TaxDbContext _tax;
     private readonly IPartyLookupGateway _parties;
+    private readonly ICatalogDirectory _catalogDirectory;
 
     /// <summary>
     /// سازندهٔ ترکیب Host. جستجوی نام فروشنده جدا از Offer است و JOIN بین‌schema نیست.
@@ -32,7 +34,8 @@ public sealed class ProductWorkspaceComposer
         PricingDbContext prices,
         InventoryDbContext inventory,
         TaxDbContext tax,
-        IPartyLookupGateway parties)
+        IPartyLookupGateway parties,
+        ICatalogDirectory catalogDirectory)
     {
         _catalog = catalog;
         _offers = offers;
@@ -40,6 +43,7 @@ public sealed class ProductWorkspaceComposer
         _inventory = inventory;
         _tax = tax;
         _parties = parties;
+        _catalogDirectory = catalogDirectory;
     }
 
     /// <summary>
@@ -263,6 +267,131 @@ public sealed class ProductWorkspaceComposer
 
     /// <summary>
     /// عنوان محلی محصول را با قفل خوش‌بینانه به‌روز می‌کند.
+    /// </summary>
+    /// <summary>
+    /// محصول Catalog ساده با گونهٔ پیش‌فرض می‌سازد و منتشر می‌کند؛ قیمت/موجودی/Offer اینجا نیست.
+    /// </summary>
+    public async Task<ProductWorkspaceView> CreateSimpleProductAsync(
+        AdminProductCreateRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog || !permissions.CanPublish)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var title = request.Title?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new PlatformHttpException(400, "عنوان محصول لازم است.", "workspace.product.title.missing");
+        }
+
+        var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
+        var slugSeed = string.IsNullOrWhiteSpace(request.Slug)
+            ? $"demo-{Guid.NewGuid():N}"[..18]
+            : request.Slug.Trim();
+        var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [locale] = title };
+
+        try
+        {
+            var product = await _catalogDirectory.CreateProductAsync(
+                CatalogProductKind.PhysicalGood,
+                slugSeed,
+                null,
+                names,
+                cancellationToken);
+
+            Guid categoryId;
+            if (request.CategoryId is Guid requested && requested != Guid.Empty)
+            {
+                categoryId = requested;
+            }
+            else
+            {
+                categoryId = await _catalog.Categories.AsNoTracking()
+                    .OrderBy(x => x.CategoryId)
+                    .Select(x => x.CategoryId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (categoryId == Guid.Empty)
+                {
+                    var createdCategory = await _catalogDirectory.CreateCategoryAsync(
+                        null,
+                        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [locale] = "عمومی" },
+                        cancellationToken);
+                    categoryId = createdCategory.CategoryId;
+                }
+            }
+
+            await _catalogDirectory.AssignCategoryAsync(product.ProductId, categoryId, cancellationToken);
+            await _catalogDirectory.PublishProductAsync(product.ProductId, cancellationToken);
+
+            var axis = await _catalog.AttributeDefinitions.AsNoTracking()
+                .Where(x => x.IsVariantAxis)
+                .OrderBy(x => x.Code)
+                .FirstOrDefaultAsync(cancellationToken);
+            Guid definitionId;
+            Guid optionId;
+            if (axis is null)
+            {
+                definitionId = await _catalogDirectory.CreateAttributeDefinitionAsync(
+                    "default_option",
+                    CatalogAttributeValueKind.Enumeration,
+                    isVariantAxis: true,
+                    new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        [locale] = "گزینه",
+                        ["en-US"] = "Option",
+                    },
+                    cancellationToken);
+                optionId = await _catalogDirectory.AddAttributeOptionAsync(
+                    definitionId,
+                    "standard",
+                    new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        [locale] = "استاندارد",
+                        ["en-US"] = "Standard",
+                    },
+                    cancellationToken);
+            }
+            else
+            {
+                definitionId = axis.DefinitionId;
+                optionId = await _catalog.AttributeOptions.AsNoTracking()
+                    .Where(x => x.DefinitionId == definitionId)
+                    .OrderBy(x => x.Code)
+                    .Select(x => x.OptionId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (optionId == Guid.Empty)
+                {
+                    optionId = await _catalogDirectory.AddAttributeOptionAsync(
+                        definitionId,
+                        $"opt-{Guid.NewGuid():N}"[..12],
+                        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            [locale] = "استاندارد",
+                            ["en-US"] = "Standard",
+                        },
+                        cancellationToken);
+                }
+            }
+
+            await _catalogDirectory.CreateVariantAsync(
+                product.ProductId,
+                $"{slugSeed}-DEFAULT",
+                [(definitionId, "ignored", optionId)],
+                cancellationToken);
+
+            return (await GetAsync(product.ProductId, permissions, cancellationToken))!;
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.create.rejected");
+        }
+    }
+
+    /// <summary>
+    /// عنوان محلی Catalog را با قفل خوش‌بینانه به‌روز می‌کند.
     /// </summary>
     public async Task<ProductWorkspaceView> UpdateCatalogTitleAsync(
         Guid productId,

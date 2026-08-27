@@ -5,6 +5,7 @@ import {
   formatMoney,
   formatOfferStatus,
   formatPaymentState,
+  mapSellerCatalogVariants,
   mapSellerDashboard,
   mapSellerOfferDetail,
   mapSellerOfferList,
@@ -57,6 +58,20 @@ test("seller offer detail preserves catalog read-only seam", () => {
   assert.ok(detail);
   assert.equal(detail?.catalogReadOnly, true);
   assert.equal(detail?.availableUnits, 4);
+});
+
+test("seller catalog variant mapper keeps catalog pick identity", () => {
+  const rows = mapSellerCatalogVariants([
+    {
+      catalogVariantId: "v1",
+      productId: "p1",
+      productTitle: "پیراهن",
+      catalogCode: "LIVE-SHIRT",
+      productStatus: "Published",
+    },
+  ]);
+  assert.equal(rows[0]?.catalogVariantId, "v1");
+  assert.equal(rows[0]?.productTitle, "پیراهن");
 });
 
 test("seller order list and detail keep seller slice only", () => {

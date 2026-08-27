@@ -24,9 +24,15 @@ public static class SellerPanelEndpoints
     {
         var group = app.MapGroup("/v1/seller");
         group.MapGet("/dashboard", GetDashboardAsync);
+        group.MapGet("/catalog-variants", ListCatalogVariantsAsync);
         group.MapGet("/offers", ListOffersAsync);
+        group.MapPost("/offers", CreateOfferAsync);
         group.MapGet("/offers/{offerId:guid}", GetOfferAsync);
         group.MapPatch("/offers/{offerId:guid}", PatchOfferAsync);
+        group.MapPost("/offers/{offerId:guid}/price", WriteOfferPriceAsync);
+        group.MapPut("/offers/{offerId:guid}/price", WriteOfferPriceAsync);
+        group.MapPost("/offers/{offerId:guid}/inventory", WriteOfferInventoryAsync);
+        group.MapPut("/offers/{offerId:guid}/inventory", WriteOfferInventoryAsync);
         group.MapGet("/orders", ListOrdersAsync);
         group.MapGet("/orders/{sellerOrderId:guid}", GetOrderAsync);
         group.MapGet("/dev-contexts", GetDevContexts);
@@ -56,6 +62,27 @@ public static class SellerPanelEndpoints
         }
     }
 
+    private static async Task<IResult> ListCatalogVariantsAsync(
+        SellerPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var items = await composer.ListCatalogVariantsAsync(sellerPartyId, cancellationToken);
+            return Results.Json(items);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
     private static async Task<IResult> ListOffersAsync(
         SellerPanelComposer composer,
         HttpRequest request,
@@ -70,6 +97,28 @@ public static class SellerPanelEndpoints
                 request, session, guard, environment, cancellationToken);
             var items = await composer.ListOffersAsync(sellerPartyId, cancellationToken);
             return Results.Json(items);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> CreateOfferAsync(
+        SellerOfferCreateRequest body,
+        SellerPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var page = await composer.CreateOfferAsync(sellerPartyId, body, cancellationToken);
+            return Results.Json(page, statusCode: StatusCodes.Status201Created);
         }
         catch (PlatformHttpException ex)
         {
@@ -116,6 +165,52 @@ public static class SellerPanelEndpoints
             var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
             var page = await composer.PatchOfferAsync(sellerPartyId, offerId, body, cancellationToken);
+            return Results.Json(page);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> WriteOfferPriceAsync(
+        Guid offerId,
+        SellerOfferPriceWriteRequest body,
+        SellerPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var page = await composer.SetOfferPriceAsync(sellerPartyId, offerId, body, cancellationToken);
+            return Results.Json(page);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> WriteOfferInventoryAsync(
+        Guid offerId,
+        SellerOfferInventoryWriteRequest body,
+        SellerPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var page = await composer.SetOfferInventoryAsync(sellerPartyId, offerId, body, cancellationToken);
             return Results.Json(page);
         }
         catch (PlatformHttpException ex)

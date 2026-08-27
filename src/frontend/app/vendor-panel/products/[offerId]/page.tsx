@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ErrorState, faWorkspaceMessages } from "../../../../design-system";
 import {
@@ -11,15 +11,18 @@ import {
   loadSellerOfferDetail,
   patchSellerOffer,
   readSellerPartyId,
+  writeSellerOfferInventory,
+  writeSellerOfferPrice,
   type HostReadSource,
   type SellerOfferDetail,
 } from "../../seller-api";
 
 /**
- * seam ویرایش Offer فروشنده؛ زمینهٔ Catalog فقط‌خواندنی است.
+ * seam ویرایش Offer فروشنده؛ زمینهٔ Catalog فقط‌خواندنی است؛ قیمت و موجودی از Pricing/Inventory.
  */
 export default function VendorProductDetailPage() {
   const params = useParams<{ offerId: string }>();
+  const router = useRouter();
   const offerId = params.offerId;
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
   const [detail, setDetail] = useState<SellerOfferDetail | null>(null);
@@ -27,8 +30,18 @@ export default function VendorProductDetailPage() {
   const [denied, setDenied] = useState(false);
   const [sellerSku, setSellerSku] = useState("");
   const [status, setStatus] = useState("Active");
+  const [amount, setAmount] = useState("");
+  const [onHand, setOnHand] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
+
+  function applyDetail(next: SellerOfferDetail) {
+    setDetail(next);
+    setSellerSku(next.sellerSku ?? "");
+    setStatus(next.status);
+    setAmount(next.amount != null ? String(next.amount) : "");
+    setOnHand(String(next.onHand));
+  }
 
   function refresh() {
     const sellerPartyId = readSellerPartyId(window.location.search);
@@ -43,29 +56,14 @@ export default function VendorProductDetailPage() {
       setMessage(result.message);
       setDenied(Boolean(result.denied));
       if (result.detail) {
-        setSellerSku(result.detail.sellerSku ?? "");
-        setStatus(result.detail.status);
+        applyDetail(result.detail);
       }
     });
   }
 
   useEffect(() => {
-    const sellerPartyId = readSellerPartyId(window.location.search);
-    if (!sellerPartyId) {
-      setSource("error");
-      setMessage("seller.identity.missing");
-      return;
-    }
-    void loadSellerOfferDetail(sellerPartyId, offerId).then((result) => {
-      setSource(result.source);
-      setDetail(result.detail);
-      setMessage(result.message);
-      setDenied(Boolean(result.denied));
-      if (result.detail) {
-        setSellerSku(result.detail.sellerSku ?? "");
-        setStatus(result.detail.status);
-      }
-    });
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per offerId
   }, [offerId]);
 
   async function onSave() {
@@ -74,15 +72,41 @@ export default function VendorProductDetailPage() {
       setSaveError("seller.identity.missing");
       return;
     }
-    setSaving(true);
-    setSaveError(undefined);
-    const result = await patchSellerOffer(sellerPartyId, offerId, { sellerSku, status });
-    setSaving(false);
-    if (!result.ok) {
-      setSaveError(result.denied ? "دسترسی مجاز نیست" : result.errorCode);
+    const parsedAmount = Number(amount);
+    const parsedOnHand = Number(onHand);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      setSaveError("مبلغ نامعتبر است");
       return;
     }
-    setDetail(result.detail);
+    if (!Number.isInteger(parsedOnHand) || parsedOnHand < 0) {
+      setSaveError("موجودی نامعتبر است");
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(undefined);
+    const patchResult = await patchSellerOffer(sellerPartyId, offerId, { sellerSku, status });
+    if (!patchResult.ok) {
+      setSaving(false);
+      setSaveError(patchResult.denied ? "دسترسی مجاز نیست" : patchResult.errorCode);
+      return;
+    }
+    const priceResult = await writeSellerOfferPrice(sellerPartyId, offerId, { amount: parsedAmount });
+    if (!priceResult.ok) {
+      setSaving(false);
+      setSaveError(priceResult.denied ? "دسترسی مجاز نیست" : priceResult.errorCode);
+      return;
+    }
+    const inventoryResult = await writeSellerOfferInventory(sellerPartyId, offerId, {
+      onHand: parsedOnHand,
+      reason: "vendor-panel-edit",
+    });
+    setSaving(false);
+    if (!inventoryResult.ok) {
+      setSaveError(inventoryResult.denied ? "دسترسی مجاز نیست" : inventoryResult.errorCode);
+      return;
+    }
+    applyDetail(inventoryResult.detail);
   }
 
   if (denied) {
@@ -94,7 +118,7 @@ export default function VendorProductDetailPage() {
           onRetry={refresh}
           retryLabel={faWorkspaceMessages.retry}
         />
-        <Link className="mt-4 inline-flex text-primary underline" href="/vendor-panel/products">
+        <Link className="mt-4 inline-flex text-[#E53935] underline" href="/vendor-panel/products">
           بازگشت به فهرست
         </Link>
       </main>
@@ -109,7 +133,7 @@ export default function VendorProductDetailPage() {
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">ویرایش پیشنهاد</h1>
           <p className="mt-1 text-base text-muted">{detail?.productTitle ?? "…"}</p>
         </div>
-        <Link className="text-sm text-primary underline-offset-4 hover:underline" href="/vendor-panel/products">
+        <Link className="text-sm text-[#E53935] underline-offset-4 hover:underline" href="/vendor-panel/products">
           بازگشت
         </Link>
       </div>
@@ -139,12 +163,15 @@ export default function VendorProductDetailPage() {
             </dl>
           </section>
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="text-base font-semibold">seam تجاری فروشنده</h2>
+            <div className="border-b border-gray-100 bg-gradient-to-l from-[#E53935]/5 to-transparent pb-4">
+              <h2 className="text-base font-semibold">seam تجاری فروشنده</h2>
+              <p className="mt-1 text-sm text-muted">قیمت از Pricing و موجودی از Inventory؛ نه روی Product</p>
+            </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm">
                 SKU فروشنده
                 <input
-                  className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
                   value={sellerSku}
                   onChange={(event) => setSellerSku(event.target.value)}
                   dir="ltr"
@@ -153,7 +180,7 @@ export default function VendorProductDetailPage() {
               <label className="flex flex-col gap-1 text-sm">
                 وضعیت
                 <select
-                  className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
                 >
@@ -161,11 +188,31 @@ export default function VendorProductDetailPage() {
                   <option value="Suspended">معلق</option>
                 </select>
               </label>
+              <label className="flex flex-col gap-1 text-sm">
+                قیمت بدون مالیات (ریال)
+                <input
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  inputMode="numeric"
+                  dir="ltr"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                موجودی روی‌دست
+                <input
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                  value={onHand}
+                  onChange={(event) => setOnHand(event.target.value)}
+                  inputMode="numeric"
+                  dir="ltr"
+                />
+              </label>
             </div>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-muted">قیمت جاری Offer</dt>
-                <dd className="mt-1 tabular-nums font-medium">{formatMoney(detail.amount, detail.currency)}</dd>
+                <dd className="mt-1 tabular-nums font-medium text-[#E53935]">{formatMoney(detail.amount, detail.currency)}</dd>
               </div>
               <div>
                 <dt className="text-muted">موجودی قابل‌فروش</dt>
@@ -178,15 +225,21 @@ export default function VendorProductDetailPage() {
                 <dd className="mt-1 font-medium">{formatOfferStatus(detail.status)}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-sm text-muted">قیمت و موجودی در این slice فقط‌خواندنی نمایش داده می‌شوند.</p>
             {saveError ? <p className="mt-3 text-sm text-danger">{saveError}</p> : null}
             <button
               type="button"
               disabled={saving}
               onClick={() => void onSave()}
-              className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm disabled:opacity-50"
+              className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-[#E53935] px-5 text-sm font-bold text-white shadow-lg shadow-[#E53935]/30 hover:bg-[#c62828] disabled:opacity-50"
             >
               {saving ? "در حال ذخیره…" : "ذخیره تغییرات"}
+            </button>
+            <button
+              type="button"
+              className="mt-3 mr-3 text-sm text-muted underline-offset-4 hover:underline"
+              onClick={() => router.push("/vendor-panel/products")}
+            >
+              انصراف
             </button>
           </section>
         </div>

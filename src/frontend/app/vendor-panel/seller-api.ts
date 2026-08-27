@@ -570,6 +570,137 @@ export async function patchSellerOffer(
   }
 }
 
+/** گزینهٔ گونهٔ Catalog برای ایجاد Offer؛ Catalog فقط‌خواندنی است. */
+export interface SellerCatalogVariantOption {
+  catalogVariantId: string;
+  productId: string;
+  productTitle: string;
+  catalogCode: string | null;
+  productStatus: string;
+}
+
+export function mapSellerCatalogVariants(payload: unknown): SellerCatalogVariantOption[] {
+  const items = Array.isArray(payload) ? payload : [];
+  return items
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item) => ({
+      catalogVariantId: asString(readProp(item, "catalogVariantId", "CatalogVariantId")),
+      productId: asString(readProp(item, "productId", "ProductId")),
+      productTitle: asString(readProp(item, "productTitle", "ProductTitle"), "بدون عنوان"),
+      catalogCode: asNullableString(readProp(item, "catalogCode", "CatalogCode")),
+      productStatus: asString(readProp(item, "productStatus", "ProductStatus")),
+    }))
+    .filter((row) => row.catalogVariantId.length > 0);
+}
+
+/** فهرست گونه‌های Catalog منتشرشده برای انتخاب Offer. */
+export async function loadSellerCatalogVariants(
+  sellerPartyId: string,
+): Promise<{ source: HostReadSource; rows: SellerCatalogVariantOption[]; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/catalog-variants", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", rows: [], message: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", rows: [], message: "seller-catalog-variants-http-" + String(response.status) };
+    }
+    return { source: "host", rows: mapSellerCatalogVariants(await readJson(response)) };
+  } catch {
+    return { source: "error", rows: [], message: "host-unreachable" };
+  }
+}
+
+/** ایجاد Offer فقط برای Party فروشندهٔ احرازشده. */
+export async function createSellerOffer(
+  sellerPartyId: string,
+  input: { catalogVariantId: string; sellerSku?: string | null; status?: string | null },
+): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/offers", {
+      method: "POST",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        catalogVariantId: input.catalogVariantId,
+        sellerSku: input.sellerSku,
+        status: input.status,
+      }),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "seller.offer.create-failed" };
+    }
+    const detail = mapSellerOfferDetail(await readJson(response));
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.offer.create-failed" };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/** نوشتن مبلغ بدون مالیات روی Offer خود فروشنده از طریق Pricing. */
+export async function writeSellerOfferPrice(
+  sellerPartyId: string,
+  offerId: string,
+  input: { amount: number; currency?: string | null; market?: string | null },
+): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/offers/${offerId}/price`, {
+      method: "PUT",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        amount: input.amount,
+        currency: input.currency ?? undefined,
+        market: input.market ?? undefined,
+      }),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) {
+      return { ok: false, errorCode: "seller.offer.missing", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "seller.price.write-failed" };
+    }
+    const detail = mapSellerOfferDetail(await readJson(response));
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.price.write-failed" };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/** تنظیم موجودی روی‌دست Offer خود فروشنده از طریق Inventory. */
+export async function writeSellerOfferInventory(
+  sellerPartyId: string,
+  offerId: string,
+  input: { onHand: number; reason?: string | null },
+): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/offers/${offerId}/inventory`, {
+      method: "PUT",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        onHand: input.onHand,
+        reason: input.reason ?? undefined,
+      }),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) {
+      return { ok: false, errorCode: "seller.offer.missing", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "seller.inventory.write-failed" };
+    }
+    const detail = mapSellerOfferDetail(await readJson(response));
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.inventory.write-failed" };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
 /**
  * فهرست سفارش‌های فروشنده را می‌خواند.
  */

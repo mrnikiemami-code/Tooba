@@ -2,13 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Inventory.Application;
+using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
+using Tooba.Pricing.Application;
+using Tooba.Pricing.Domain;
 using Tooba.Pricing.Infrastructure.Persistence;
+using Tooba.Tax.Application;
+using Tooba.Tax.Domain;
+using Tooba.Tax.Infrastructure.Persistence;
 
 namespace Tooba.Host.Seller;
 
@@ -17,15 +25,26 @@ namespace Tooba.Host.Seller;
 /// </summary>
 public sealed class SellerPanelComposer
 {
+    /// <summary>بازار پیش‌فرض store-alpha / دمو ایران.</summary>
+    public const string DefaultMarket = "IR";
+
+    /// <summary>ارز نوشته‌شدهٔ پیش‌فرض؛ تومان نمایشی نیست.</summary>
+    public const string DefaultCurrency = "IRR";
+
     private readonly OfferDbContext _offers;
     private readonly CatalogDbContext _catalog;
     private readonly PricingDbContext _prices;
     private readonly InventoryDbContext _inventory;
     private readonly OrderDbContext _orders;
     private readonly IPartyLookupGateway _parties;
+    private readonly IOfferDirectory _offerDirectory;
+    private readonly IPriceDirectory _priceDirectory;
+    private readonly IInventoryDirectory _inventoryDirectory;
+    private readonly ITaxDirectory _taxDirectory;
+    private readonly TaxDbContext _tax;
 
     /// <summary>
-    /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema.
+    /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema؛ نوشتن تجاری از دایرکتوری‌های مالک.
     /// </summary>
     public SellerPanelComposer(
         OfferDbContext offers,
@@ -33,7 +52,12 @@ public sealed class SellerPanelComposer
         PricingDbContext prices,
         InventoryDbContext inventory,
         OrderDbContext orders,
-        IPartyLookupGateway parties)
+        IPartyLookupGateway parties,
+        IOfferDirectory offerDirectory,
+        IPriceDirectory priceDirectory,
+        IInventoryDirectory inventoryDirectory,
+        ITaxDirectory taxDirectory,
+        TaxDbContext tax)
     {
         _offers = offers;
         _catalog = catalog;
@@ -41,6 +65,11 @@ public sealed class SellerPanelComposer
         _inventory = inventory;
         _orders = orders;
         _parties = parties;
+        _offerDirectory = offerDirectory;
+        _priceDirectory = priceDirectory;
+        _inventoryDirectory = inventoryDirectory;
+        _taxDirectory = taxDirectory;
+        _tax = tax;
     }
 
     /// <summary>
@@ -218,6 +247,244 @@ public sealed class SellerPanelComposer
     }
 
     /// <summary>
+    /// گونه‌های Catalog منتشرشده را برای انتخاب Offer برمی‌گرداند؛ نوشتن Catalog نیست.
+    /// </summary>
+    public async Task<IReadOnlyList<SellerCatalogVariantOption>> ListCatalogVariantsAsync(
+        Guid sellerPartyId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        var products = await _catalog.Products.AsNoTracking()
+            .Where(x => x.Status == CatalogPublicationStatus.Published)
+            .OrderByDescending(x => x.UpdatedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+        if (products.Count == 0)
+        {
+            return [];
+        }
+
+        var productIds = products.Select(x => x.ProductId).ToList();
+        var names = await _catalog.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                        && productIds.Contains(x.OwnerId)
+                        && x.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        var nameMap = names
+            .GroupBy(x => x.OwnerId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+        var variants = await _catalog.Variants.AsNoTracking()
+            .Where(x => productIds.Contains(x.ProductId))
+            .OrderBy(x => x.CatalogCodeSeam)
+            .ToListAsync(cancellationToken);
+        var productStatus = products.ToDictionary(x => x.ProductId, x => x.Status.ToString());
+        return variants.Select(variant => new SellerCatalogVariantOption(
+            variant.VariantId,
+            variant.ProductId,
+            nameMap.GetValueOrDefault(variant.ProductId) ?? "بدون عنوان",
+            variant.CatalogCodeSeam,
+            productStatus.GetValueOrDefault(variant.ProductId) ?? "Published")).ToList();
+    }
+
+    /// <summary>
+    /// Offer را فقط برای Party فروشندهٔ احرازشده می‌سازد؛ بدنه شناسهٔ فروشندهٔ خارجی را نمی‌پذیرد.
+    /// </summary>
+    public async Task<SellerOfferDetailPage> CreateOfferAsync(
+        Guid sellerPartyId,
+        SellerOfferCreateRequest request,
+        CancellationToken cancellationToken)
+    {
+        await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        if (request.CatalogVariantId == Guid.Empty)
+        {
+            throw new PlatformHttpException(400, "گونهٔ Catalog لازم است.", "seller.offer.variant.missing");
+        }
+
+        OfferReference created;
+        try
+        {
+            created = await _offerDirectory.CreateOfferAsync(
+                request.CatalogVariantId,
+                sellerPartyId,
+                SalesChannel.Marketplace,
+                request.SellerSku,
+                cancellationToken);
+            if (string.Equals(request.Status, nameof(OfferStatus.Active), StringComparison.OrdinalIgnoreCase))
+            {
+                await _offerDirectory.ActivateAsync(created.OfferId, cancellationToken);
+            }
+            else if (!string.IsNullOrWhiteSpace(request.Status)
+                     && !string.Equals(request.Status, nameof(OfferStatus.Draft), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new PlatformHttpException(400, "وضعیت پشتیبانی‌شده نیست.", "seller.offer.status.unsupported");
+            }
+
+            await EnsureOfferTaxCoverageAsync(created.OfferId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "seller.offer.create.rejected");
+        }
+
+        return (await GetOfferAsync(sellerPartyId, created.OfferId, cancellationToken))!;
+    }
+
+    /// <summary>
+    /// طبقه/قاعدهٔ مالیاتی استاندارد را برای Offer تازه تضمین می‌کند تا Checkout با TAX_NO_APPLICABLE_RULE نشکند.
+    /// </summary>
+    private async Task EnsureOfferTaxCoverageAsync(Guid offerId, CancellationToken cancellationToken)
+    {
+        var category = await _tax.Categories.AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.Code == "standard" || x.Code == "standard-demo",
+                cancellationToken);
+        TaxCategoryReference categoryRef;
+        if (category is null)
+        {
+            categoryRef = await _taxDirectory.CreateCategoryAsync("standard", "استاندارد", cancellationToken);
+        }
+        else
+        {
+            categoryRef = new TaxCategoryReference(category.CategoryId, category.Code, category.DisplayName);
+        }
+
+        var hasActiveRule = await _tax.Rules.AsNoTracking()
+            .AnyAsync(
+                rule => rule.CategoryId == categoryRef.CategoryId
+                    && rule.Jurisdiction == "IR-NAT"
+                    && rule.Market == DefaultMarket
+                    && rule.Status == TaxRuleStatus.Active,
+                cancellationToken);
+        if (!hasActiveRule)
+        {
+            var rule = await _taxDirectory.CreateRuleAsync(
+                "IR-NAT",
+                DefaultMarket,
+                categoryRef.CategoryId,
+                TaxRuleKind.Percentage,
+                0.09m,
+                DateTimeOffset.UtcNow.AddYears(-1),
+                null,
+                100,
+                TaxOverridePolicy.Disabled,
+                cancellationToken);
+            await _taxDirectory.ActivateRuleAsync(rule.RuleId, cancellationToken);
+        }
+
+        await _taxDirectory.AssignOfferCategoryAsync(offerId, categoryRef.CategoryId, cancellationToken);
+    }
+
+    /// <summary>
+    /// مبلغ بدون مالیات Offer خود فروشنده را از طریق IPriceDirectory می‌نویسد؛ Offer خارجی رد می‌شود.
+    /// </summary>
+    public async Task<SellerOfferDetailPage> SetOfferPriceAsync(
+        Guid sellerPartyId,
+        Guid offerId,
+        SellerOfferPriceWriteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var offer = await RequireOwnedOfferAsync(sellerPartyId, offerId, cancellationToken);
+        if (request.Amount < 0)
+        {
+            throw new PlatformHttpException(400, "مبلغ منفی مجاز نیست.", "seller.price.amount.invalid");
+        }
+
+        var market = string.IsNullOrWhiteSpace(request.Market) ? DefaultMarket : request.Market.Trim();
+        var currency = string.IsNullOrWhiteSpace(request.Currency) ? DefaultCurrency : request.Currency.Trim();
+
+        try
+        {
+            var existing = await _prices.Prices
+                .AsNoTracking()
+                .Where(x => x.OfferId == offerId
+                            && x.Market == market
+                            && x.Channel == offer.Channel
+                            && x.Currency == currency)
+                .OrderByDescending(x => x.PriceId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (existing is null || existing.Status == PriceStatus.Retired)
+            {
+                var created = await _priceDirectory.CreatePriceAsync(
+                    offerId,
+                    market,
+                    offer.Channel,
+                    request.Amount,
+                    currency,
+                    DateTimeOffset.UtcNow.AddYears(-1),
+                    null,
+                    cancellationToken);
+                await _priceDirectory.ActivateAsync(created.PriceId, cancellationToken);
+            }
+            else
+            {
+                await _priceDirectory.ChangeAmountAsync(existing.PriceId, request.Amount, currency, cancellationToken);
+                if (existing.Status != PriceStatus.Active)
+                {
+                    await _priceDirectory.ActivateAsync(existing.PriceId, cancellationToken);
+                }
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "seller.price.write.rejected");
+        }
+
+        return (await GetOfferAsync(sellerPartyId, offerId, cancellationToken))!;
+    }
+
+    /// <summary>
+    /// موجودی روی‌دست Offer خود فروشنده را از طریق IInventoryDirectory تنظیم می‌کند؛ Offer خارجی رد می‌شود.
+    /// </summary>
+    public async Task<SellerOfferDetailPage> SetOfferInventoryAsync(
+        Guid sellerPartyId,
+        Guid offerId,
+        SellerOfferInventoryWriteRequest request,
+        CancellationToken cancellationToken)
+    {
+        await RequireOwnedOfferAsync(sellerPartyId, offerId, cancellationToken);
+        if (request.OnHand < 0)
+        {
+            throw new PlatformHttpException(400, "موجودی منفی مجاز نیست.", "seller.inventory.quantity.invalid");
+        }
+
+        var reason = string.IsNullOrWhiteSpace(request.Reason) ? "seller-panel-adjust" : request.Reason.Trim();
+        try
+        {
+            var position = await _inventory.Positions.AsNoTracking()
+                .Where(x => x.OfferId == offerId)
+                .OrderBy(x => x.StockItemId)
+                .FirstOrDefaultAsync(cancellationToken);
+            Guid stockItemId;
+            if (position is null)
+            {
+                var locationId = await ResolveDefaultLocationIdAsync(cancellationToken);
+                stockItemId = await _inventoryDirectory.OpenPositionAsync(offerId, locationId, cancellationToken);
+            }
+            else
+            {
+                stockItemId = position.StockItemId;
+            }
+
+            await _inventoryDirectory.AdjustAsync(
+                stockItemId,
+                StockAdjustmentKind.Set,
+                request.OnHand,
+                reason,
+                null,
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "seller.inventory.write.rejected");
+        }
+
+        return (await GetOfferAsync(sellerPartyId, offerId, cancellationToken))!;
+    }
+
+    /// <summary>
     /// فهرست سفارش‌های فقط همین فروشنده.
     /// </summary>
     public async Task<IReadOnlyList<SellerOrderListItem>> ListOrdersAsync(Guid sellerPartyId, CancellationToken cancellationToken)
@@ -314,6 +581,43 @@ public sealed class SellerPanelComposer
         {
             throw new PlatformHttpException(404, "فروشنده پیدا نشد.", "seller.missing");
         }
+    }
+
+    /// <summary>
+    /// Offer را فقط اگر متعلق به فروشندهٔ جاری باشد برمی‌گرداند؛ در غیر این صورت fail-closed است.
+    /// </summary>
+    private async Task<SellerOffer> RequireOwnedOfferAsync(
+        Guid sellerPartyId,
+        Guid offerId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        var offer = await _offers.Offers.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.OfferId == offerId && x.SellerPartyId == sellerPartyId, cancellationToken);
+        if (offer is null)
+        {
+            throw new PlatformHttpException(404, "پیشنهاد فروشنده پیدا نشد.", "seller.offer.missing");
+        }
+
+        return offer;
+    }
+
+    /// <summary>
+    /// محل نگهداری پیش‌فرض را پیدا یا می‌سازد تا موقعیت موجودی Offer باز شود.
+    /// </summary>
+    private async Task<Guid> ResolveDefaultLocationIdAsync(CancellationToken cancellationToken)
+    {
+        var existing = await _inventory.Locations.AsNoTracking()
+            .Where(x => x.Status == InventoryLocationStatus.Active)
+            .OrderBy(x => x.Code)
+            .Select(x => x.LocationId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (existing != Guid.Empty)
+        {
+            return existing;
+        }
+
+        return await _inventoryDirectory.CreateLocationAsync("SELLER-DEFAULT", "انبار پیش‌فرض فروشنده", cancellationToken);
     }
 
     private async Task<IReadOnlyList<SellerOfferListItem>> PresentOffersAsync(
