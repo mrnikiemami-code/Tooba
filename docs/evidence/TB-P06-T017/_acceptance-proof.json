@@ -1,0 +1,237 @@
+{
+  "taskId": "TB-P06-T017",
+  "recordedAtUtc": "2026-08-27T07:26:55.902Z",
+  "host": "http://127.0.0.1:5088",
+  "base": "http://127.0.0.1:3000",
+  "shopeiva": "http://127.0.0.1:3001",
+  "http": {
+    "hostHealth": {
+      "url": "http://127.0.0.1:5088/health",
+      "status": 200,
+      "hasHomeStoriesMarker": false,
+      "hasFakeStoryImagesConst": false,
+      "title": null
+    },
+    "storiesFa": {
+      "url": "http://127.0.0.1:5088/v1/storefront/stories?locale=fa",
+      "status": 200,
+      "json": [
+        {
+          "storyId": "01a04211-7dd7-7000-83dc-5c79db49abc4",
+          "title": "موبایل",
+          "coverMediaUrl": "/images/stories/1.jpg",
+          "isVideo": false,
+          "displayOrder": 0,
+          "ctaType": "internal",
+          "ctaTarget": "/products",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd7-7000-93af-4f85ec0726ab",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/1.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/products"
+            },
+            {
+              "storyItemId": "01a04211-7dd7-7000-a8de-c68ce093663a",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/2.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/products"
+            }
+          ]
+        },
+        {
+          "storyId": "01a04211-7dd8-7000-98cf-c57a836b43ed",
+          "title": "بازی",
+          "coverMediaUrl": "/images/stories/video/1.mp4",
+          "isVideo": true,
+          "displayOrder": 1,
+          "ctaType": "category",
+          "ctaTarget": "/offers",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd8-7000-bb04-1cfe6d91e9d5",
+              "mediaType": "video",
+              "mediaUrl": "/images/stories/video/1.mp4",
+              "durationMs": 8000,
+              "ctaType": "category",
+              "ctaTarget": "/offers"
+            },
+            {
+              "storyItemId": "01a04211-7dd8-7000-8ccc-d496b0b0530e",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/3.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/offers"
+            }
+          ]
+        }
+      ],
+      "text": "[{\"storyId\":\"01a04211-7dd7-7000-83dc-5c79db49abc4\",\"title\":\"موبایل\",\"coverMediaUrl\":\"/images/stories/1.jpg\",\"isVideo\":false,\"displayOrder\":0,\"ctaType\":\"internal\",\"ctaTarget\":\"/products\",\"items\":[{\"storyItemId\":\"01a04211-7dd7-7000-93af-4f85ec0726ab\",\"mediaType\":\"image\",\"mediaUrl\":\"/images/stories/1.jpg\",\"ctaType\":\"internal\",\"ctaTarget\":\"/products\"},{\"storyItemId\":\"01a04211-7dd7-7000-a8de-c68ce09366"
+    },
+    "storiesEn": {
+      "url": "http://127.0.0.1:5088/v1/storefront/stories?locale=en",
+      "status": 200,
+      "json": [
+        {
+          "storyId": "01a04211-7dd8-7000-98cf-c57a836b43ed",
+          "title": "بازی",
+          "coverMediaUrl": "/images/stories/video/1.mp4",
+          "isVideo": true,
+          "displayOrder": 1,
+          "ctaType": "category",
+          "ctaTarget": "/offers",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd8-7000-bb04-1cfe6d91e9d5",
+              "mediaType": "video",
+              "mediaUrl": "/images/stories/video/1.mp4",
+              "durationMs": 8000,
+              "ctaType": "category",
+              "ctaTarget": "/offers"
+            },
+            {
+              "storyItemId": "01a04211-7dd8-7000-8ccc-d496b0b0530e",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/3.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/offers"
+            }
+          ]
+        },
+        {
+          "storyId": "01a04211-7dd8-7000-aa04-55db1c387b69",
+          "title": "English rail",
+          "coverMediaUrl": "/images/stories/1.jpg",
+          "isVideo": false,
+          "displayOrder": 2,
+          "ctaType": "internal",
+          "ctaTarget": "/products",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd8-7000-947c-2ece3f38d4b4",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/1.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/products"
+            }
+          ]
+        }
+      ],
+      "text": "[{\"storyId\":\"01a04211-7dd8-7000-98cf-c57a836b43ed\",\"title\":\"بازی\",\"coverMediaUrl\":\"/images/stories/video/1.mp4\",\"isVideo\":true,\"displayOrder\":1,\"ctaType\":\"category\",\"ctaTarget\":\"/offers\",\"items\":[{\"storyItemId\":\"01a04211-7dd8-7000-bb04-1cfe6d91e9d5\",\"mediaType\":\"video\",\"mediaUrl\":\"/images/stories/video/1.mp4\",\"durationMs\":8000,\"ctaType\":\"category\",\"ctaTarget\":\"/offers\"},{\"storyItemId\":\"01a04211-7d"
+    },
+    "storiesViaFe": {
+      "url": "http://127.0.0.1:3000/v1/storefront/stories?locale=fa",
+      "status": 200,
+      "json": [
+        {
+          "storyId": "01a04211-7dd7-7000-83dc-5c79db49abc4",
+          "title": "موبایل",
+          "coverMediaUrl": "/images/stories/1.jpg",
+          "isVideo": false,
+          "displayOrder": 0,
+          "ctaType": "internal",
+          "ctaTarget": "/products",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd7-7000-93af-4f85ec0726ab",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/1.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/products"
+            },
+            {
+              "storyItemId": "01a04211-7dd7-7000-a8de-c68ce093663a",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/2.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/products"
+            }
+          ]
+        },
+        {
+          "storyId": "01a04211-7dd8-7000-98cf-c57a836b43ed",
+          "title": "بازی",
+          "coverMediaUrl": "/images/stories/video/1.mp4",
+          "isVideo": true,
+          "displayOrder": 1,
+          "ctaType": "category",
+          "ctaTarget": "/offers",
+          "items": [
+            {
+              "storyItemId": "01a04211-7dd8-7000-bb04-1cfe6d91e9d5",
+              "mediaType": "video",
+              "mediaUrl": "/images/stories/video/1.mp4",
+              "durationMs": 8000,
+              "ctaType": "category",
+              "ctaTarget": "/offers"
+            },
+            {
+              "storyItemId": "01a04211-7dd8-7000-8ccc-d496b0b0530e",
+              "mediaType": "image",
+              "mediaUrl": "/images/stories/3.jpg",
+              "ctaType": "internal",
+              "ctaTarget": "/offers"
+            }
+          ]
+        }
+      ],
+      "text": "[{\"storyId\":\"01a04211-7dd7-7000-83dc-5c79db49abc4\",\"title\":\"موبایل\",\"coverMediaUrl\":\"/images/stories/1.jpg\",\"isVideo\":false,\"displayOrder\":0,\"ctaType\":\"internal\",\"ctaTarget\":\"/products\",\"items\":[{\"storyItemId\":\"01a04211-7dd7-7000-93af-4f85ec0726ab\",\"mediaType\":\"image\",\"mediaUrl\":\"/images/stories/1.jpg\",\"ctaType\":\"internal\",\"ctaTarget\":\"/products\"},{\"storyItemId\":\"01a04211-7dd7-7000-a8de-c68ce09366"
+    },
+    "homeFa": {
+      "url": "http://127.0.0.1:3000/fa",
+      "status": 200,
+      "hasHomeStoriesMarker": false,
+      "hasFakeStoryImagesConst": false,
+      "title": "فروشگاه توبا | خانه"
+    },
+    "adminStories": {
+      "url": "http://127.0.0.1:3000/admin/stories",
+      "status": 200,
+      "hasHomeStoriesMarker": false,
+      "hasFakeStoryImagesConst": false,
+      "title": "Tooba Admin Product Workspace"
+    },
+    "shopeivaHome": {
+      "url": "http://127.0.0.1:3001/",
+      "status": 200,
+      "hasHomeStoriesMarker": false,
+      "hasFakeStoryImagesConst": false,
+      "title": "شاپیوا | فروشگاه آنلاین معتبر و مدرن"
+    }
+  },
+  "browser": {
+    "homeStoriesHydrated": true,
+    "storyCircleCount": 2,
+    "storyClickPoint": {
+      "x": 1350,
+      "y": 728
+    },
+    "storyModalVisible": true,
+    "shopeivaHasStoriesHeading": true,
+    "adminStoriesPage": true
+  },
+  "captures": [
+    "01-tooba-home-stories-rail.png",
+    "02-tooba-story-modal.png",
+    "03-shopeiva-home-stories.png",
+    "04-admin-stories.png"
+  ],
+  "checks": {
+    "publicFaHasAtLeastTwo": true,
+    "publicFaHasMobile": true,
+    "publicFaHasGames": true,
+    "publicFaExcludesEnglishRail": true,
+    "publicEnHasEnglishRail": true,
+    "publicFaHasVideo": true,
+    "publicFaHasStoryCta": true,
+    "feProxyStoriesOk": true,
+    "noFakeStoryImagesInHomeSsr": true,
+    "browserHomeStoriesVisible": true,
+    "browserStoryCirclesPresent": true,
+    "browserStoryModalVisible": true,
+    "browserAdminStories": true
+  },
+  "pass": true
+}

@@ -35,6 +35,8 @@ using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure;
 using Tooba.PageComposition.Infrastructure.Persistence;
+using global::Tooba.Story.Infrastructure;
+using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure;
 
 namespace Tooba.Host.Admin;
@@ -96,6 +98,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<CustomerProfileDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
+        await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();
@@ -110,6 +113,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
             await ContentDevelopmentSeed.ApplyAsync(provider);
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
+            await StoryDevelopmentSeed.ApplyAsync(provider);
             return;
         }
 
@@ -208,6 +212,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider, cancellation);
         await ContentDevelopmentSeed.ApplyAsync(provider, cancellation);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);
     }
 
     /// <summary>

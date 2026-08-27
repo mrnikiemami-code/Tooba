@@ -75,5 +75,8 @@
     <Project Path="Modules/PageComposition/Tooba.PageComposition.Domain/Tooba.PageComposition.Domain.csproj" />
     <Project Path="Modules/PageComposition/Tooba.PageComposition.Application/Tooba.PageComposition.Application.csproj" />
     <Project Path="Modules/PageComposition/Tooba.PageComposition.Infrastructure/Tooba.PageComposition.Infrastructure.csproj" />
+    <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
+    <Project Path="Modules/Story/Tooba.Story.Application/Tooba.Story.Application.csproj" />
+    <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
   </Folder>
 </Solution>

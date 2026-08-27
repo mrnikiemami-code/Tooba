@@ -17,6 +17,7 @@ import {
   HomeNewProductsSection,
   HomeTestimonialsSection,
 } from "./storefront-home-repair-sections.tsx";
+import { HomeStoriesSection } from "./stories/home-stories.tsx";
 import type {
   StorefrontArticleItem,
   StorefrontBestSellerColumn,
@@ -33,15 +34,6 @@ const SLIDES = [
   { src: "/images/sliders/slider-2.jpg", href: "/sale", alt: "بنر فروشگاهی دو" },
   { src: "/images/sliders/slider-3.jpg", href: "/new-products", alt: "بنر فروشگاهی سه" },
   { src: "/images/sliders/slider-4.jpg", href: "/products", alt: "بنر فروشگاهی چهار" },
-];
-
-const STORY_IMAGES = [
-  "/images/stories/1.jpg",
-  "/images/stories/2.jpg",
-  "/images/stories/3.jpg",
-  "/images/stories/5.jpg",
-  "/images/stories/6.jpg",
-  "/images/stories/7.jpg",
 ];
 
 const CATEGORY_IMAGE_INDEXES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const;
@@ -140,7 +132,7 @@ function renderHomeSection(
         </div>
       );
     case "stories":
-      return <HomeStoriesSection homeCategories={context.homeCategories} />;
+      return <HomeStoriesSection />;
     case "category_grid":
       return <HomeCategoryGridSection homeCategories={context.homeCategories} />;
     case "product_rail_flash":
@@ -184,36 +176,6 @@ function renderHomeSection(
     default:
       return null;
   }
-}
-
-function HomeStoriesSection({ homeCategories }: { homeCategories: StorefrontCategoryItem[] }) {
-  const storyItems = homeCategories.slice(0, 12).map((category, index) => ({
-    href: `/products?categoryId=${category.categoryId}`,
-    name: category.name,
-    src: STORY_IMAGES[index % STORY_IMAGES.length]!,
-  }));
-
-  return (
-    <section aria-label="استوری‌ها" className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
-          استوری‌ها
-        </h3>
-      </div>
-      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-        {storyItems.map((story) => (
-          <Link key={`${story.href}-${story.name}`} href={story.href} className="shrink-0 w-20 md:w-[100px] text-center">
-            <div className="w-20 h-20 md:w-[100px] md:h-[100px] rounded-full p-[3px] bg-gradient-to-tr from-[#2563EB] to-amber-400">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={story.src} alt="" className="w-full h-full rounded-full object-cover bg-white p-0.5" />
-            </div>
-            <p className="text-[11px] mt-1 text-gray-700 line-clamp-2">{story.name}</p>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
 }
 
 function HomeCategoryGridSection({ homeCategories }: { homeCategories: StorefrontCategoryItem[] }) {
