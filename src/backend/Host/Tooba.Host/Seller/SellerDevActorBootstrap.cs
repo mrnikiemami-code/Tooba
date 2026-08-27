@@ -101,6 +101,20 @@ internal static class SellerDevActorBootstrap
         }
     }
 
+    /// <summary>کارمند محدود ACC را به snapshot اضافه می‌کند.</summary>
+    internal static void PublishScopedEmployee(SellerDevActorPair employee)
+    {
+        lock (Gate)
+        {
+            if (_snapshot is null)
+            {
+                return;
+            }
+
+            _snapshot = new SellerDevContextSnapshot(_snapshot.ActorA, _snapshot.ActorB, employee);
+        }
+    }
+
     private static async Task<Guid> EnsureUserAsync(
         IIdentityAuthenticationService auth,
         string email,
@@ -174,6 +188,9 @@ internal static class SellerDevActorBootstrap
 internal sealed record SellerDevActorPair(Guid ActorUserId, string ActorLabel, Guid SellerPartyId, string SellerLabel);
 
 /// <summary>
-/// نگاشت دو جفت demo برای UI و شواهد.
+/// نگاشت demo برای UI و شواهد؛ Actor سوم = کارمند محدود ACC.
 /// </summary>
-internal sealed record SellerDevContextSnapshot(SellerDevActorPair ActorA, SellerDevActorPair ActorB);
+internal sealed record SellerDevContextSnapshot(
+    SellerDevActorPair ActorA,
+    SellerDevActorPair ActorB,
+    SellerDevActorPair? ScopedEmployee = null);

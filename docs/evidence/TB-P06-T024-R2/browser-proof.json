@@ -1,0 +1,97 @@
+{
+  "taskId": "TB-P06-T024-R2",
+  "host": "http://127.0.0.1:5088",
+  "tooba": "http://127.0.0.1:3000",
+  "shopeiva": "http://127.0.0.1:3001",
+  "capturedAt": "2026-08-27T16:42:02.771Z",
+  "context": {
+    "adminActorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+    "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "sellerOwnerActorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+    "employeeActorUserId": "01a04407-47ae-7000-a6b1-43f69a17cd1a",
+    "mobileSellerOrderId": "01a04409-7a06-7000-b34f-d5418b7bd2f0",
+    "sellerOwnerLabel": "اپراتور آرمان",
+    "employeeLabel": "اپراتور سفارش موبایل",
+    "sellerDisplayName": "فروشگاه آرمان",
+    "mobileOrderNumber": "TB-20260827162426-01-d8a7f2",
+    "devContextCount": 3
+  },
+  "captures": [
+    {
+      "file": "01-admin-access-control.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/admin/access-control",
+      "actor": "Platform Admin",
+      "storage": {
+        "tooba.adminActorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "file": "02-admin-seller-access-control.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/admin/sellers/01a030d1-40cb-7000-8abe-6d31739956c5/access-control",
+      "actor": "Platform Admin",
+      "storage": {
+        "tooba.adminActorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db"
+      }
+    },
+    {
+      "file": "03-seller-access-control-desktop.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/vendor-panel/access-control",
+      "actor": "اپراتور آرمان",
+      "storage": {
+        "tooba.sellerActorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "tooba.sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5"
+      }
+    },
+    {
+      "file": "05-seller-orders-owner.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/vendor-panel/orders",
+      "actor": "اپراتور آرمان",
+      "storage": {
+        "tooba.sellerActorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "tooba.sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5"
+      }
+    },
+    {
+      "file": "06-seller-orders-employee.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/vendor-panel/orders",
+      "actor": "اپراتور سفارش موبایل",
+      "storage": {
+        "tooba.sellerActorUserId": "01a04407-47ae-7000-a6b1-43f69a17cd1a",
+        "tooba.sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5"
+      },
+      "note": "Scoped employee — Mobile visible, Books absent"
+    },
+    {
+      "file": "07-seller-order-mobile-detail.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3000/vendor-panel/orders/01a04409-7a06-7000-b34f-d5418b7bd2f0",
+      "actor": "اپراتور سفارش موبایل",
+      "storage": {
+        "tooba.sellerActorUserId": "01a04407-47ae-7000-a6b1-43f69a17cd1a",
+        "tooba.sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5"
+      },
+      "orderNumber": "TB-20260827162426-01-d8a7f2"
+    },
+    {
+      "file": "04-seller-access-control-mobile.png",
+      "viewport": "390x844",
+      "url": "http://127.0.0.1:3000/vendor-panel/access-control",
+      "actor": "اپراتور آرمان",
+      "storage": {
+        "tooba.sellerActorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+        "tooba.sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5"
+      }
+    },
+    {
+      "file": "08-shopeiva-vendor-settings.png",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:3001/vendor-panel/settings",
+      "actor": "Shopeiva reference (no Tooba storage)"
+    }
+  ]
+}

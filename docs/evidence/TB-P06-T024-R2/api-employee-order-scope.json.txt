@@ -1,0 +1,3 @@
+﻿STATUS=403
+BODY={"title":"مجوز مشاهدهٔ این سفارش وجود ندارد.","errorCode":"seller.order.view.denied"}
+LIST=[{"sellerOrderId":"01a0440a-5e2f-7000-9d29-cd869acbdce7","orderNumber":"TB-20260827162525-01-1bb893","submittedAt":"2026-08-27T16:25:25.2936+00:00","recipientName":"گیرنده دمو ترکیبی","lineCount":1,"payableAmount":3106500.0000,"currency":"IRR","paymentState":"PendingPayment","status":"PendingPayment"},{"sellerOrderId":"01a04409-7a06-7000-b34f-d5418b7bd2f0","orderNumber":"TB-20260827162426-01-d8a7f2","submittedAt":"2026-08-27T16:24:26.875436+00:00","recipientName":"گیرنده دمو ACC","lineCount":1,"payableAmount":2725000.0000,"currency":"IRR","paymentState":"PendingPayment","status":"PendingPayment"}]

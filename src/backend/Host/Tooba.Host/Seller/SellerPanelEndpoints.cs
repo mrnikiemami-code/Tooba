@@ -277,25 +277,42 @@ public static class SellerPanelEndpoints
             return Results.Json(new { title = "در دسترس نیست", errorCode = "seller.dev.not-ready" }, statusCode: StatusCodes.Status503ServiceUnavailable);
         }
 
-        return Results.Json(new
+        return Results.Json(BuildDevContexts(snapshot));
+    }
+
+    private static object BuildDevContexts(SellerDevContextSnapshot snapshot)
+    {
+        var rows = new List<object>
         {
-            actors = new[]
+            new
             {
-                new
-                {
-                    actorUserId = snapshot.ActorA.ActorUserId,
-                    actorLabel = snapshot.ActorA.ActorLabel,
-                    sellerPartyId = snapshot.ActorA.SellerPartyId,
-                    sellerLabel = snapshot.ActorA.SellerLabel,
-                },
-                new
-                {
-                    actorUserId = snapshot.ActorB.ActorUserId,
-                    actorLabel = snapshot.ActorB.ActorLabel,
-                    sellerPartyId = snapshot.ActorB.SellerPartyId,
-                    sellerLabel = snapshot.ActorB.SellerLabel,
-                },
+                actorUserId = snapshot.ActorA.ActorUserId,
+                actorLabel = snapshot.ActorA.ActorLabel,
+                sellerPartyId = snapshot.ActorA.SellerPartyId,
+                sellerLabel = snapshot.ActorA.SellerLabel,
+                contextKind = "seller-owner",
             },
-        });
+            new
+            {
+                actorUserId = snapshot.ActorB.ActorUserId,
+                actorLabel = snapshot.ActorB.ActorLabel,
+                sellerPartyId = snapshot.ActorB.SellerPartyId,
+                sellerLabel = snapshot.ActorB.SellerLabel,
+                contextKind = "seller-owner-alt",
+            },
+        };
+        if (snapshot.ScopedEmployee is { } employee)
+        {
+            rows.Add(new
+            {
+                actorUserId = employee.ActorUserId,
+                actorLabel = employee.ActorLabel,
+                sellerPartyId = employee.SellerPartyId,
+                sellerLabel = employee.SellerLabel,
+                contextKind = "scoped-employee",
+            });
+        }
+
+        return new { actors = rows };
     }
 }

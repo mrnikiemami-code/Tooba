@@ -241,6 +241,14 @@ if (app.Environment.IsDevelopment())
         // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
         // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
         await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
+        try
+        {
+            await AccessControlDevelopmentSeed.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "AccessControlDevelopmentSeed failed; Host continues without ACC demo snapshot.");
+        }
     }
 }
 
