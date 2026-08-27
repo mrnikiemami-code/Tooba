@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T011-R1
+TB-P06-T011-R2
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P06-T011-R1 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completed TB-P06-T011-R2 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -90,7 +90,14 @@ TB-P06-T006 = AWAITING_ARCHITECT_ACCEPT
 TB-P06-T007 = AWAITING_ARCHITECT_ACCEPT
 TB-P06-T010-R1 = AWAITING_ARCHITECT_ACCEPT
 TB-P06-T011 = REPAIR_REQUIRED
-TB-P06-T011-R1 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T011-R1 = REPAIR_REQUIRED
+TB-P06-T011-R2 = AWAITING_ARCHITECT_ACCEPT
+RETURNS_BACKEND = LIVE
+REFUNDS_BACKEND = LIVE_FOUNDATION
+INVENTORY_RESTOCK = LIVE
+RETURNS_CUSTOMER_UI = LIVE
+RETURNS_SELLER_UI = LIVE
+RETURNS_ADMIN_UI = LIVE
 AUTH_SESSION_STORAGE = HTTPONLY_COOKIE_SERVER_SIDE_PROPAGATION
 PRODUCTION_OTP = PROVIDER_BACKED_FAIL_CLOSED
 AUTHENTICATION = BEARER_SESSION_ID
@@ -572,4 +579,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T011 = REPAIR_REQUIRED. TB-P06-T011-R1 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT: Shopeiva return UI verified against source tree + real inventory restock via IInventoryReturnGateway. RETURNS_* = LIVE. INVENTORY_RESTOCK = LIVE. Evidence under `docs/evidence/TB-P06-T011-R1/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T011 = REPAIR_REQUIRED. TB-P06-T011-R1 = REPAIR_REQUIRED. TB-P06-T011-R2 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT: mandatory Shopeiva vs Tooba browser side-by-side PNG evidence (15 captures), motion/CDP proof, CSS/JS/responsive parity matrix, live-data honesty, restock regression re-verified. RETURNS_* = LIVE. INVENTORY_RESTOCK = LIVE. Evidence under `docs/evidence/TB-P06-T011-R2/`.

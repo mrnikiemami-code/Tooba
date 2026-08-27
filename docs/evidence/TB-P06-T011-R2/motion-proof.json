@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-08-26T23:48:31.537Z",
+  "interactions": [
+    {
+      "surface": "shopeiva-customer-modal",
+      "before": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "color": "lab(35.6337 -1.58697 -10.8425)",
+        "borderRadius": "12px",
+        "boxShadow": "none",
+        "transitionProperty": "all",
+        "transitionDuration": "0s",
+        "opacity": "1",
+        "transform": "none"
+      },
+      "after": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "color": "lab(35.6337 -1.58697 -10.8425)",
+        "borderRadius": "12px",
+        "boxShadow": "none",
+        "transitionProperty": "all",
+        "transitionDuration": "0s",
+        "opacity": "1",
+        "transform": "none"
+      }
+    },
+    {
+      "surface": "tooba-seller-grid",
+      "before": null,
+      "after": null
+    }
+  ]
+}
