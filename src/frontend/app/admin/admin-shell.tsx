@@ -78,6 +78,9 @@ const navGroups: NavGroup[] = [
   },
 ];
 
+/** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
+export const ADMIN_DEFERRED_NAV_HREFS = ["/admin/settings"] as const;
+
 function isActivePath(pathname: string, item: NavItem): boolean {
   if (item.exact || item.href === "/admin") {
     return pathname === item.href;
@@ -179,16 +182,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
           data-testid="admin-panel-sidebar"
         >
           <div className="p-4 space-y-5 min-w-[250px]">
-            {navGroups.map((group) => (
-              <div key={group.id}>
-                <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{group.label}</p>
-                <nav className="space-y-1" aria-label={group.label}>
-                  {group.items.map((item) => (
-                    <NavLink key={item.id} item={item} pathname={pathname} />
-                  ))}
-                </nav>
-              </div>
-            ))}
+            {navGroups.map((group) => {
+              const liveItems = group.items.filter((item) => item.live);
+              if (liveItems.length === 0) {
+                return null;
+              }
+              return (
+                <div key={group.id}>
+                  <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{group.label}</p>
+                  <nav className="space-y-1" aria-label={group.label} data-testid={group.id === "ops" ? "admin-panel-nav-live-only" : undefined}>
+                    {liveItems.map((item) => (
+                      <NavLink key={item.id} item={item} pathname={pathname} />
+                    ))}
+                  </nav>
+                </div>
+              );
+            })}
           </div>
         </aside>
 
@@ -213,16 +222,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
-              {navGroups.map((group) => (
-                <div key={group.id}>
-                  <p className="px-3 mb-1 text-[10px] font-bold text-gray-400">{group.label}</p>
-                  <nav className="space-y-1">
-                    {group.items.map((item) => (
-                      <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
-                    ))}
-                  </nav>
-                </div>
-              ))}
+              {navGroups.map((group) => {
+                const liveItems = group.items.filter((item) => item.live);
+                if (liveItems.length === 0) {
+                  return null;
+                }
+                return (
+                  <div key={group.id}>
+                    <p className="px-3 mb-1 text-[10px] font-bold text-gray-400">{group.label}</p>
+                    <nav className="space-y-1">
+                      {liveItems.map((item) => (
+                        <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
+                      ))}
+                    </nav>
+                  </div>
+                );
+              })}
             </div>
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <Link

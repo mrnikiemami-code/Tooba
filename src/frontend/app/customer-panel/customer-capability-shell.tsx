@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 /**
@@ -32,6 +33,12 @@ export function CustomerCapabilityShell({
           ساختار پنل Shopeiva حفظ شده است، اما تا اتصال capability معتبر Host هیچ موجودی، تیکت، کارت هدیه یا اعلان جعلی
           نمایش داده نمی‌شود.
         </p>
+        <Link
+          href="/customer-panel"
+          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#2563EB] text-white text-sm font-bold px-4 py-2.5 hover:bg-[#1D4ED8] transition-colors"
+        >
+          بازگشت به داشبورد
+        </Link>
       </div>
     </section>
   );

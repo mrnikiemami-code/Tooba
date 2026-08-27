@@ -42,9 +42,8 @@ export default function CustomerDashboard() {
     { href: "/customer-panel/wishlist", label: "علاقه‌مندی", icon: Heart, live: page.wishlistAvailable },
     { href: "/customer-panel/addresses", label: "آدرس‌ها", icon: MapPin, live: page.addressBookAvailable },
     { href: "/customer-panel/profile", label: "پروفایل", icon: UserRound, live: true },
-    { href: "/customer-panel/wallet", label: "کیف پول", icon: WalletCards, live: false },
-    { href: "/customer-panel/settings", label: "تنظیمات", icon: Settings, live: false },
-  ];
+    { href: "/customer-panel/settings", label: "تنظیمات", icon: Settings, live: true },
+  ].filter((action) => action.live);
 
   return (
     <div className="space-y-6" data-testid="customer-dashboard">
@@ -79,7 +78,7 @@ export default function CustomerDashboard() {
         />
       </section>
 
-      <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3" data-testid="customer-dashboard-actions">
+      <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" data-testid="customer-dashboard-actions">
         {quickActions.map((action) => (
           <Link
             key={action.href}
@@ -90,7 +89,6 @@ export default function CustomerDashboard() {
               <action.icon className="w-5 h-5" />
             </span>
             <p className="text-xs font-bold text-gray-800">{action.label}</p>
-            {!action.live ? <p className="text-[10px] text-gray-400 mt-1">به‌زودی</p> : null}
           </Link>
         ))}
       </section>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 /** پوستهٔ صادقانه برای قابلیت فروشنده بدون backend معتبر. */
@@ -27,6 +28,12 @@ export function VendorCapabilityShell({
           ساختار پنل Shopeiva حفظ شده است، اما تا اتصال capability معتبر Host هیچ درآمد، تسویه، آمار یا دادهٔ جعلی نمایش
           داده نمی‌شود.
         </p>
+        <Link
+          href="/vendor-panel"
+          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#2563EB] text-white text-sm font-bold px-4 py-2.5 hover:bg-[#1D4ED8] transition-colors"
+        >
+          بازگشت به داشبورد
+        </Link>
       </div>
     </section>
   );

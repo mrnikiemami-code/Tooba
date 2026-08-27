@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3,
   Package,
+  Settings,
   ShoppingBag,
   Wallet,
 } from "lucide-react";
@@ -98,13 +99,14 @@ export default function VendorDashboardPage() {
         </div>
       )}
 
-      {/* فقط مسیرهای زنده؛ مشتریان/تخفیف/تنظیمات بدون backend در quick actions نیستند. */}
+      {/* فقط مسیرهای زنده؛ مشتریان/تخفیف از ناوبری حذف شده‌اند. */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
           { label: "محصولات", href: "/vendor-panel/products", icon: Package, color: "bg-[#2563EB]" },
           { label: "سفارشات", href: "/vendor-panel/orders", icon: ShoppingBag, color: "bg-blue-500" },
           { label: "آمار", href: "/vendor-panel/analytics", icon: BarChart3, color: "bg-indigo-500" },
           { label: "کیف پول", href: "/vendor-panel/wallet", icon: Wallet, color: "bg-amber-500" },
+          { label: "تنظیمات", href: "/vendor-panel/settings", icon: Settings, color: "bg-slate-600" },
         ].map((action) => (
           <Link
             key={action.href}
@@ -117,17 +119,6 @@ export default function VendorDashboardPage() {
             <span className="text-xs font-bold text-gray-800">{action.label}</span>
           </Link>
         ))}
-        <div
-          className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4 flex flex-col items-center gap-2 text-center opacity-70"
-          aria-disabled="true"
-          data-testid="vendor-quick-action-unavailable"
-        >
-          <span className="w-10 h-10 bg-gray-200 text-gray-500 rounded-xl flex items-center justify-center text-[10px] font-bold">
-            N/A
-          </span>
-          <span className="text-xs font-bold text-gray-500">مشتریان · تخفیف · تنظیمات</span>
-          <span className="text-[10px] text-gray-400">فعلاً در دسترس نیست</span>
-        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -152,12 +143,11 @@ export default function VendorDashboardPage() {
         <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
           <h2 className="font-black text-lg">قابلیت‌های هنوز متصل‌نشده</h2>
           <p className="mt-1 text-sm text-gray-500">
-            ساختار ناوبری Shopeiva حفظ شده؛ تا capability معتبر Host، پوستهٔ صادقانه بدون دادهٔ جعلی است.
+            از ناوبری حذف شده‌اند؛ deep-link صفحهٔ صادقانه نشان می‌دهد.
           </p>
           <ul className="mt-4 grid gap-2 text-sm text-gray-700">
-            <li className="rounded-xl bg-gray-50 px-3 py-2">نمودار درآمد · مشتریان · نظرات</li>
-            <li className="rounded-xl bg-gray-50 px-3 py-2">تیکت · کارت هدیه · تخفیف فروشنده</li>
-            <li className="rounded-xl bg-gray-50 px-3 py-2">تنظیمات فروشگاه</li>
+            <li className="rounded-xl bg-gray-50 px-3 py-2">مشتریان · نظرات · تخفیف فروشنده</li>
+            <li className="rounded-xl bg-gray-50 px-3 py-2">تیکت · کارت هدیه</li>
           </ul>
         </section>
       </div>

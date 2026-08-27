@@ -1,0 +1,38 @@
+{
+  "taskId": "TB-P06-T018",
+  "recordedAtUtc": "2026-08-27T07:45:11.762Z",
+  "checks": {
+    "customerNoWalletNav": true,
+    "customerSettingsNav": true,
+    "customerLocaleSection": true,
+    "vendorNoCustomersNav": true,
+    "vendorSettingsNav": true,
+    "vendorSettingsLive": true,
+    "adminNoSettingsNav": true
+  },
+  "browser": {
+    "customerNavLabels": [
+      "customer-nav-dashboard:true",
+      "customer-nav-orders:true",
+      "customer-nav-wishlist:true",
+      "customer-nav-addresses:true",
+      "customer-nav-profile:true",
+      "customer-nav-settings:true"
+    ],
+    "customerHasWalletNav": false,
+    "customerHasSettingsNav": true,
+    "customerSettingsLocale": true,
+    "vendorHasCustomersNav": false,
+    "vendorHasSettingsNav": true,
+    "vendorSettingsPage": true,
+    "adminHasSettingsNav": false
+  },
+  "captures": [
+    "01-customer-dashboard-live-nav.png",
+    "02-customer-settings-locale.png",
+    "03-vendor-dashboard-live-nav.png",
+    "04-vendor-settings-live.png",
+    "05-admin-dashboard-no-settings-nav.png"
+  ],
+  "pass": true
+}

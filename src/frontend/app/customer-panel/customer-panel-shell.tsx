@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Bell,
   ChevronLeft,
-  Gift,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -14,9 +12,7 @@ import {
   Menu,
   Package,
   Settings,
-  Ticket,
   User,
-  Wallet,
   X,
 } from "lucide-react";
 
@@ -28,19 +24,28 @@ type NavItem = {
   live: boolean;
 };
 
-/** ترتیب قفل‌شدهٔ ناوبری Shopeiva؛ مسیرهای بدون backend به‌صورت صادقانه غیرفعال می‌مانند. */
+/**
+ * ناوبری فقط برای مسیرهای زندهٔ Host.
+ * مسیرهای بدون capability از منو حذف می‌شوند؛ deep-link صفحهٔ صادقانه نشان می‌دهد.
+ */
 const menuItems: NavItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/customer-panel", live: true },
   { id: "orders", label: "سفارشات", icon: Package, href: "/customer-panel/orders", live: true },
   { id: "wishlist", label: "علاقه‌مندی‌ها", icon: Heart, href: "/customer-panel/wishlist", live: true },
-  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/customer-panel/wallet", live: false },
-  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/customer-panel/tickets", live: false },
-  { id: "gift-cards", label: "کارت‌های هدیه", icon: Gift, href: "/customer-panel/gift-cards", live: false },
   { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
-  { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: false },
   { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: true },
 ];
+
+/** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
+export const CUSTOMER_DEFERRED_NAV_HREFS = [
+  "/customer-panel/wallet",
+  "/customer-panel/tickets",
+  "/customer-panel/gift-cards",
+  "/customer-panel/notifications",
+] as const;
+
+const visibleMenuItems = menuItems.filter((item) => item.live);
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/customer-panel") {
@@ -124,8 +129,8 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
           }`}
           data-testid="customer-panel-sidebar"
         >
-          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی مشتری">
-            {menuItems.map((item) => (
+          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی مشتری" data-testid="customer-panel-nav-live-only">
+            {visibleMenuItems.map((item) => (
               <NavLink key={item.id} item={item} pathname={pathname} />
             ))}
           </nav>
@@ -152,7 +157,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              {menuItems.map((item) => (
+              {visibleMenuItems.map((item) => (
                 <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
               ))}
             </nav>

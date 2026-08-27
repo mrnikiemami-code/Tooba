@@ -6,20 +6,15 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3,
   ChevronLeft,
-  Gift,
   LayoutDashboard,
   LogOut,
   Menu,
   Package,
   Settings,
   ShoppingBag,
-  Star,
   Store,
-  Tag,
-  Ticket,
   RotateCcw,
   Truck,
-  Users,
   Wallet,
   X,
 } from "lucide-react";
@@ -41,22 +36,28 @@ type NavItem = {
   live: boolean;
 };
 
-/** ترتیب قفل‌شدهٔ ناوبری Shopeiva vendor-panel. */
+/** فقط مسیرهای زندهٔ Host در ناوبری. */
 const menuItems: NavItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/vendor-panel", live: true },
   { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true },
   { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true },
   { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true },
   { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true },
-  { id: "customers", label: "مشتریان", icon: Users, href: "/vendor-panel/customers", live: false },
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },
-  { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: false },
-  { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: false },
   { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true },
-  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/vendor-panel/tickets", live: false },
-  { id: "gift-cards", label: "کارت‌های هدیه", icon: Gift, href: "/vendor-panel/gift-cards", live: false },
-  { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: false },
+  { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: true },
 ];
+
+/** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
+export const VENDOR_DEFERRED_NAV_HREFS = [
+  "/vendor-panel/customers",
+  "/vendor-panel/coupons",
+  "/vendor-panel/reviews",
+  "/vendor-panel/tickets",
+  "/vendor-panel/gift-cards",
+] as const;
+
+const visibleMenuItems = menuItems.filter((item) => item.live);
 
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/vendor-panel") {
@@ -214,8 +215,8 @@ export function VendorShell({ children }: { children: ReactNode }) {
           }`}
           data-testid="vendor-panel-sidebar"
         >
-          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی فروشنده">
-            {menuItems.map((item) => (
+          <nav className="p-4 space-y-1 min-w-[250px]" aria-label="منوی فروشنده" data-testid="vendor-panel-nav-live-only">
+            {visibleMenuItems.map((item) => (
               <NavLink key={item.id} item={item} pathname={pathname} />
             ))}
           </nav>
@@ -258,7 +259,7 @@ export function VendorShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              {menuItems.map((item) => (
+              {visibleMenuItems.map((item) => (
                 <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
               ))}
             </nav>
