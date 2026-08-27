@@ -5,10 +5,10 @@ using Tooba.Content.Infrastructure.Persistence;
 
 namespace Tooba.Content.Infrastructure;
 
-/// <summary>دانهٔ توسعهٔ قطعی و idempotent برای مقالات Published خانه.</summary>
+/// <summary>دانهٔ توسعهٔ قطعی و idempotent برای مقالات Published خانه و بلاگ.</summary>
 public static class ContentDevelopmentSeed
 {
-    /// <summary>چند مقالهٔ Published فارسی برای ریل خانه درج می‌کند.</summary>
+    /// <summary>چند مقالهٔ Published فارسی برای ریل خانه و بلاگ درج/تکمیل می‌کند.</summary>
     public static async Task ApplyAsync(IServiceProvider services, CancellationToken cancellationToken = default)
     {
         var db = services.GetRequiredService<ContentDbContext>();
@@ -19,6 +19,7 @@ public static class ContentDevelopmentSeed
                 "guide-online-shopping",
                 "راهنمای خرید آنلاین هوشمند",
                 "نکات عملی برای انتخاب کالا، مقایسهٔ قیمت و خرید امن در فروشگاه‌های آنلاین.",
+                "راهنما",
                 Guid.Parse("d0d0d0d0-0001-4000-8000-000000000001"),
                 "تحریریه توبا",
                 new[] { "راهنما", "خرید" },
@@ -28,6 +29,7 @@ public static class ContentDevelopmentSeed
                 "mobile-buying-tips",
                 "چطور گوشی مناسب انتخاب کنیم؟",
                 "معیارهای مهم انتخاب گوشی هوشمند از بودجه تا پشتیبانی و گارانتی.",
+                "موبایل",
                 Guid.Parse("d0d0d0d0-0002-4000-8000-000000000002"),
                 "مریم احمدی",
                 new[] { "موبایل", "راهنما" },
@@ -37,6 +39,7 @@ public static class ContentDevelopmentSeed
                 "home-appliance-care",
                 "نگهداری لوازم خانگی",
                 "راهکارهای ساده برای افزایش عمر مفید لوازم خانگی پرکاربرد.",
+                "لوازم خانگی",
                 Guid.Parse("d0d0d0d0-0003-4000-8000-000000000003"),
                 "علی رضایی",
                 new[] { "لوازم خانگی" },
@@ -46,6 +49,7 @@ public static class ContentDevelopmentSeed
                 "seasonal-offers",
                 "پیشنهادهای فصلی را از دست ندهید",
                 "چگونه پیشنهادهای واقعی را از تخفیف‌های نمایشی تشخیص دهیم.",
+                "پیشنهاد",
                 Guid.Parse("d0d0d0d0-0004-4000-8000-000000000004"),
                 "تحریریه توبا",
                 new[] { "پیشنهاد", "خرید" },
@@ -55,19 +59,50 @@ public static class ContentDevelopmentSeed
 
         foreach (var row in rows)
         {
-            if (await db.Articles.AnyAsync(article => article.Slug == row.Item1, cancellationToken)) continue;
-            var article = ContentArticle.Create(
-                row.Item1,
-                row.Item2,
-                row.Item3,
-                row.Item4,
-                row.Item5,
-                row.Item6,
-                row.Item7,
-                row.Item8,
-                now);
-            article.Publish(now);
-            db.Articles.Add(article);
+            var excerpt = row.Item3;
+            var body = $"{excerpt}\n\n{excerpt}\n\nبرای مطالعهٔ بیشتر، این راهنما را تا انتها دنبال کنید.";
+            var existing = await db.Articles.SingleOrDefaultAsync(article => article.Slug == row.Item1, cancellationToken);
+            if (existing is null)
+            {
+                var article = ContentArticle.Create(
+                    row.Item1,
+                    row.Item2,
+                    excerpt,
+                    body,
+                    row.Item5,
+                    row.Item6,
+                    row.Item7,
+                    row.Item8,
+                    row.Item9,
+                    now,
+                    ContentArticle.DefaultLocale,
+                    row.Item2,
+                    excerpt,
+                    row.Item4);
+                article.Publish(now);
+                db.Articles.Add(article);
+                continue;
+            }
+
+            // مقالات قبل از گسترش Body/SEO/Category با default خالی مانده‌اند؛ تکمیل idempotent.
+            if (string.IsNullOrWhiteSpace(existing.Body)
+                || string.IsNullOrWhiteSpace(existing.Category)
+                || string.IsNullOrWhiteSpace(existing.SeoTitle))
+            {
+                existing.Update(
+                    row.Item2,
+                    excerpt,
+                    body,
+                    row.Item2,
+                    excerpt,
+                    row.Item4,
+                    row.Item5,
+                    row.Item6,
+                    row.Item7,
+                    row.Item8,
+                    now,
+                    ContentArticle.DefaultLocale);
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);

@@ -14,9 +14,7 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5088",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Tooba__Edition": "Marketplace",
-        "Tooba__DeploymentId": "dev-marketplace"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
   }

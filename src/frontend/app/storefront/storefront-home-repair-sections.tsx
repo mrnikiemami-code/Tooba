@@ -433,7 +433,6 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
 }
 
 export function HomeArticlesSection({ articles }: { articles: StorefrontArticleItem[] }) {
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
   if (articles.length === 0) return null;
 
   return (
@@ -528,17 +527,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
                         <Clock className="w-2.5 h-2.5" />
                         <span>{Math.max(1, Math.ceil(post.excerpt.length / 120)).toLocaleString("fa-IR")} دقیقه</span>
                       </div>
-                      <button
-                        type="button"
-                        className="flex items-center gap-0.5 text-[9px] text-gray-500 hover:text-red-500 transition-colors duration-200"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setLiked((current) => ({ ...current, [post.articleId]: !current[post.articleId] }));
-                        }}
-                      >
-                        <Heart className={`w-2.5 h-2.5 ${liked[post.articleId] ? "fill-[#2563EB] text-[#2563EB]" : ""}`} />
-                      </button>
+                      <span className="text-[9px] font-bold" style={{ color: STOREFRONT_ACCENT }}>مطالعه</span>
                     </div>
                   </div>
                 </article>

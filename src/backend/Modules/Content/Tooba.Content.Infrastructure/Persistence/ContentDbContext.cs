@@ -32,11 +32,17 @@ public sealed class ContentDbContext : DbContext
             entity.Property(x => x.Slug).HasMaxLength(ContentArticle.SlugMaxLength).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(ContentArticle.TitleMaxLength).IsRequired();
             entity.Property(x => x.Excerpt).HasMaxLength(ContentArticle.ExcerptMaxLength).IsRequired();
+            entity.Property(x => x.Body).HasMaxLength(ContentArticle.BodyMaxLength).IsRequired();
+            entity.Property(x => x.Locale).HasMaxLength(ContentArticle.LocaleMaxLength).IsRequired();
+            entity.Property(x => x.SeoTitle).HasMaxLength(ContentArticle.SeoTitleMaxLength);
+            entity.Property(x => x.SeoDescription).HasMaxLength(ContentArticle.SeoDescriptionMaxLength);
+            entity.Property(x => x.Category).HasMaxLength(ContentArticle.CategoryMaxLength);
             entity.Property(x => x.AuthorDisplayName).HasMaxLength(ContentArticle.AuthorDisplayNameMaxLength).IsRequired();
             entity.Property(x => x.TagsCsv).HasMaxLength(256);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             entity.HasIndex(x => x.Slug).IsUnique();
             entity.HasIndex(x => new { x.Status, x.PublishDate });
+            entity.HasIndex(x => new { x.Status, x.Category, x.PublishDate });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

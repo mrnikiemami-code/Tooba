@@ -5,4 +5,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Tooba.Content.Application</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tooba.Content.Domain\Tooba.Content.Domain.csproj" />
+  </ItemGroup>
 </Project>
