@@ -4,5 +4,6 @@
     "channelId":  "tooba-main",
     "claimedAtUtc":  "2026-08-27T21:43:24.4917724",
     "actualHeadAtClaim":  "1c38ddb3d7d4f7490aa568a5274d4b95ad0dfdfc",
-    "status":  "Claimed"
+    "status":  "Completed",
+    "completedAtUtc":  "2026-08-27T22:15:20.7431571Z"
 }
