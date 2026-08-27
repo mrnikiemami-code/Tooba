@@ -1,0 +1,143 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P06-T028
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Integrated full-wallet checkout spend (atomic debit at Paid via WalletPaymentGateway) and refund-to-wallet (Returns destination Wallet with exactly-once ledger credit). Mixed tender remains DEFERRED. FE/Host contracts aligned (providerCode/useWallet; destination/refundDestination). Live E2E + browser proof captured; SoT updated; HEAD 62cf149 on origin/main.
+
+Audit:
+Wallet/Checkout/Payment/Returns owners audited; immutable ledger reused; Order Paid only via payment.succeeded; Returns remains refund authority.
+
+Checkout:
+GET wallet-quote + POST payments with useWallet/providerCode=wallet; full cover only.
+
+Payment:
+WalletPaymentGateway ProviderCode=wallet; Initiate+Verify; requiresPspRedirect=false; Succeeded → Paid.
+
+Refund:
+RefundDestination OriginalPayment|Wallet on create/approve; Wallet path credits CreditRefundAsync and skips PSP refund gateway.
+
+Wallet:
+Existing ledger Account/Entry types; OrderPaymentDebit + RefundCredit.
+
+Wallet-Spend:
+model: ATOMIC_DEBIT_AT_PAID
+idempotency: wallet-order-debit:{paymentId}
+concurrency: one winner under parallel spend
+overdraw: fail-closed
+currency: IRR only for wallet path
+
+Full-Wallet-Payment:
+checkout: live E2E checkoutId 01a044fb-5698-7000-9f9d-8b7256eb7f17
+PSP redirect: false
+order state: Paid
+payment state: Succeeded
+ledger: OrderPaymentDebit for paymentId 46a17af2-176c-4a14-8a35-e36bd3db40c5
+retry: verify/replay safe
+
+Mixed-Tender:
+status: DEFERRED
+rollback: N/A
+deferred: remainder>0 rejected as payment.wallet.mixed_deferred
+
+Refund-To-Wallet:
+destination: Wallet
+approved source: seller approve
+amount: exact RefundAmount (live credit 350000 IRR exclusive line / seeded 25000)
+partial: supported by Returns qty caps
+exactly once: wallet-refund-credit:{returnRequestId}
+duplicate retry: approve replay keeps one RefundCredit
+ledger: RefundCredit
+notification: WalletRefundCredited / WalletPaymentSucceeded wired
+
+Authorization:
+Customer own: wallet + returns own actor
+foreign order/refund: fail-closed
+Admin: wallet demo-preview
+Seller: approve with party#view
+tenant: store-alpha
+
+Seed:
+Development only: yes (WalletDevelopmentSeed + demo-preview)
+idempotent: yes
+full-wallet order / refund order: demo IDs …000043/…000041/…000042
+mixed: deferred note only
+ledger: seeded debit+credit present
+
+E2E:
+full wallet purchase: PASS (15-wallet-checkout-e2e.json ALL_OK)
+duplicate checkout/payment: covered by payment idempotency + tests
+insufficient: QuoteForPayable CanPayFully=false path
+refund: PASS create+approve Wallet
+duplicate refund: PASS credits==1 after retry
+mixed: deferred by design
+direct DB mutation: none for commerce proof (encoding fix on party display_name was operational auth recovery only)
+
+Visual-Fidelity:
+Shopeiva source: checkout/payment methods + returns destination selector
+checkout/wallet/refund UI: Shopeiva-locked
+CSS/JS: existing shells
+responsive: panel layouts retained
+unauthorized deviation: none claimed as USER_VISUAL_ACCEPTED
+
+Validation:
+backend restore: migrations applied (returns.refund_destination, settlement)
+backend build: 0 warnings / 0 errors
+backend tests: Passed 302 (Host 298 + MigrationRunner 4) / Failed 0 / Skipped 0
+warnings: 0
+errors: 0
+failed: 0
+skipped: 0
+typecheck: PASS
+lint: PASS
+frontend tests: PASS
+frontend build: PASS
+git diff --check: clean on committed tree
+
+Runtime:
+Backend: http://127.0.0.1:5088 UP
+Frontend: http://127.0.0.1:3000 UP
+Shopeiva: http://127.0.0.1:3001 UP (kept)
+health/live: 200
+health/ready: 200
+kept alive: YES (not stopped after Result)
+
+USER-PREVIEW:
+Checkout: storefront confirmation wallet method when canPayFullyWithWallet
+Customer Wallet: http://127.0.0.1:3000/customer-panel/wallet
+Wallet-paid Order: http://127.0.0.1:3000/customer-panel/orders/01a044fb-5698-7000-9f9d-8b7256eb7f17
+Refund: vendor returns + customer return CTA on Delivered
+Wallet after Refund: ledger shows اعتبار مرجوعی
+Notification: inbox types wired
+Original Shopeiva: http://127.0.0.1:3001
+dev preview identity/context: customer aaaaaaaa-aaaa-4aaa-8aaa-000000000009; seller 01a03628-3f68-7000-844d-99f1cadb54b0 / party 01a030d1-40cb-7000-8abe-6d31739956c5
+
+Claims:
+WALLET_CHECKOUT_FULL_PAYMENT_LIVE
+REFUND_TO_WALLET_LIVE
+WALLET_CHECKOUT_USER_PREVIEW_READY
+WALLET_MIXED_TENDER=DEFERRED
+
+Not-Claims:
+WALLET_MIXED_TENDER_LIVE
+USER_VISUAL_ACCEPTED
+PRODUCT_FULLY_READY
+PRODUCTION_GO_LIVE_READY
+
+Git:
+commit: 62cf149f4c8cadff67c6e77351ff37df68169401
+branch: main
+HEAD == origin/main: YES
+message: feat integrate wallet checkout and refunds [TB-P06-T028]
+
+Evidence:
+docs/evidence/TB-P06-T028/
+
+END_TOOBA_WORKER_RESULT
