@@ -37,10 +37,18 @@ public sealed record AdminStoryItemSnapshot(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
-/// <summary>نمای مدیریتی کامل استوری.</summary>
+/// <summary>نمای مدیریتی/فروشنده کامل استوری.</summary>
 public sealed record AdminStorySnapshot(
     Guid StoryId,
     Guid TenantId,
+    StoryOrigin Origin,
+    Guid? SellerPartyId,
+    StoryReviewStatus ReviewStatus,
+    Guid? SubmittedByActorUserId,
+    Guid? ReviewedByActorUserId,
+    DateTimeOffset? SubmittedAt,
+    DateTimeOffset? ReviewedAt,
+    string? RejectionReason,
     string? Locale,
     string? Market,
     string Title,
@@ -115,13 +123,21 @@ public interface IStoryDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken);
 
-    /// <summary>فهرست مدیریتی استوری‌های Tenant.</summary>
-    Task<IReadOnlyList<AdminStorySnapshot>> AdminListAsync(Guid tenantId, CancellationToken cancellationToken);
+    /// <summary>فهرست مدیریتی استوری‌های Tenant با فیلتر اختیاری بازبینی.</summary>
+    Task<IReadOnlyList<AdminStorySnapshot>> AdminListAsync(
+        Guid tenantId,
+        StoryReviewStatus? reviewStatus,
+        CancellationToken cancellationToken);
+
+    /// <summary>فهرست استوری‌های در انتظار بازبینی.</summary>
+    Task<IReadOnlyList<AdminStorySnapshot>> AdminListPendingReviewAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken);
 
     /// <summary>جزئیات مدیریتی یک استوری.</summary>
     Task<AdminStorySnapshot?> AdminGetAsync(Guid tenantId, Guid storyId, CancellationToken cancellationToken);
 
-    /// <summary>استوری Draft جدید می‌سازد.</summary>
+    /// <summary>استوری Draft ادمین می‌سازد.</summary>
     Task<AdminStorySnapshot> AdminCreateAsync(
         Guid tenantId,
         CreateStoryCommand command,
@@ -187,5 +203,90 @@ public interface IStoryDirectory
     Task<AdminStorySnapshot> AdminSoftDisableAsync(
         Guid tenantId,
         Guid storyId,
+        CancellationToken cancellationToken);
+
+    /// <summary>استوری فروشنده را تأیید می‌کند.</summary>
+    Task<AdminStorySnapshot> AdminApproveAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>استوری فروشنده را با دلیل رد می‌کند.</summary>
+    Task<AdminStorySnapshot> AdminRejectAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        string reason,
+        CancellationToken cancellationToken);
+
+    /// <summary>فهرست استوری‌های یک فروشنده.</summary>
+    Task<IReadOnlyList<AdminStorySnapshot>> SellerListAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken);
+
+    /// <summary>جزئیات استوری متعلق به فروشنده.</summary>
+    Task<AdminStorySnapshot?> SellerGetAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نویس فروشنده می‌سازد.</summary>
+    Task<AdminStorySnapshot> SellerCreateDraftAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CreateStoryCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نویس/ردشدهٔ فروشنده را به‌روزرسانی می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerUpdateAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        UpdateStoryCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>استوری فروشنده را برای بازبینی ارسال می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerSubmitAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>آیتم به استوری قابل‌ویرایش فروشنده اضافه می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerAddItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        AddStoryItemCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>آیتم استوری قابل‌ویرایش فروشنده را به‌روزرسانی می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerUpdateItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        UpdateStoryItemCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>آیتم استوری قابل‌ویرایش فروشنده را حذف می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerRemoveItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        CancellationToken cancellationToken);
+
+    /// <summary>آیتم‌های استوری قابل‌ویرایش فروشنده را مرتب می‌کند.</summary>
+    Task<AdminStorySnapshot> SellerReorderItemsAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        IReadOnlyList<Guid> itemIdsInOrder,
         CancellationToken cancellationToken);
 }

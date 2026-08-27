@@ -5,7 +5,7 @@ using global::Tooba.Story.Domain;
 
 namespace Tooba.Host.Story;
 
-/// <summary>ترکیب HTTP برای مسیرهای عمومی و مدیریتی Story.</summary>
+/// <summary>ترکیب HTTP برای مسیرهای عمومی، فروشنده و مدیریتی Story.</summary>
 public sealed class StoryPanelComposer
 {
     private readonly IStoryDirectory _stories;
@@ -21,30 +21,31 @@ public sealed class StoryPanelComposer
         CancellationToken cancellationToken) =>
         _stories.GetPublicStoriesAsync(tenantId, locale, market, DateTimeOffset.UtcNow, cancellationToken);
 
-    /// <summary>فهرست مدیریتی.</summary>
-    public Task<IReadOnlyList<AdminStorySnapshot>> AdminListAsync(Guid tenantId, CancellationToken cancellationToken) =>
-        _stories.AdminListAsync(tenantId, cancellationToken);
+    /// <summary>فهرست مدیریتی با فیلتر اختیاری بازبینی.</summary>
+    public Task<IReadOnlyList<AdminStorySnapshot>> AdminListAsync(
+        Guid tenantId,
+        StoryReviewStatus? reviewStatus,
+        CancellationToken cancellationToken) =>
+        _stories.AdminListAsync(tenantId, reviewStatus, cancellationToken);
+
+    /// <summary>فهرست در انتظار بازبینی.</summary>
+    public Task<IReadOnlyList<AdminStorySnapshot>> AdminListPendingReviewAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken) =>
+        _stories.AdminListPendingReviewAsync(tenantId, cancellationToken);
 
     /// <summary>جزئیات مدیریتی.</summary>
     public Task<AdminStorySnapshot?> AdminGetAsync(Guid tenantId, Guid storyId, CancellationToken cancellationToken) =>
         _stories.AdminGetAsync(tenantId, storyId, cancellationToken);
 
-    /// <summary>ایجاد استوری.</summary>
+    /// <summary>ایجاد استوری ادمین.</summary>
     public Task<AdminStorySnapshot> AdminCreateAsync(
         Guid tenantId,
         CreateStoryBody body,
         CancellationToken cancellationToken) =>
         _stories.AdminCreateAsync(
             tenantId,
-            new CreateStoryCommand(
-                body.Title,
-                body.Locale,
-                body.Market,
-                body.CoverMediaAssetId,
-                body.CoverMediaUrl,
-                body.DisplayOrder,
-                body.CtaType,
-                body.CtaTarget),
+            ToCreateCommand(body),
             cancellationToken);
 
     /// <summary>به‌روزرسانی استوری.</summary>
@@ -56,14 +57,7 @@ public sealed class StoryPanelComposer
         _stories.AdminUpdateAsync(
             tenantId,
             storyId,
-            new UpdateStoryCommand(
-                body.Title,
-                body.Locale,
-                body.Market,
-                body.CoverMediaAssetId,
-                body.CoverMediaUrl,
-                body.CtaType,
-                body.CtaTarget),
+            ToUpdateCommand(body),
             cancellationToken);
 
     /// <summary>فعال‌سازی.</summary>
@@ -86,6 +80,23 @@ public sealed class StoryPanelComposer
             new SetStoryScheduleCommand(body.StartAt, body.EndAt),
             cancellationToken);
 
+    /// <summary>تأیید استوری فروشنده.</summary>
+    public Task<AdminStorySnapshot> AdminApproveAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        CancellationToken cancellationToken) =>
+        _stories.AdminApproveAsync(tenantId, storyId, adminActorUserId, cancellationToken);
+
+    /// <summary>رد استوری فروشنده.</summary>
+    public Task<AdminStorySnapshot> AdminRejectAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        string reason,
+        CancellationToken cancellationToken) =>
+        _stories.AdminRejectAsync(tenantId, storyId, adminActorUserId, reason, cancellationToken);
+
     /// <summary>مرتب‌سازی استوری‌ها.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> AdminReorderStoriesAsync(
         Guid tenantId,
@@ -99,19 +110,7 @@ public sealed class StoryPanelComposer
         Guid storyId,
         AddStoryItemBody body,
         CancellationToken cancellationToken) =>
-        _stories.AdminAddItemAsync(
-            tenantId,
-            storyId,
-            new AddStoryItemCommand(
-                body.MediaType,
-                body.MediaAssetId,
-                body.MediaUrl,
-                body.Caption,
-                body.DurationMs,
-                body.CtaType,
-                body.CtaTarget,
-                body.DisplayOrder),
-            cancellationToken);
+        _stories.AdminAddItemAsync(tenantId, storyId, ToAddItemCommand(body), cancellationToken);
 
     /// <summary>به‌روزرسانی آیتم.</summary>
     public Task<AdminStorySnapshot> AdminUpdateItemAsync(
@@ -120,19 +119,7 @@ public sealed class StoryPanelComposer
         Guid itemId,
         UpdateStoryItemBody body,
         CancellationToken cancellationToken) =>
-        _stories.AdminUpdateItemAsync(
-            tenantId,
-            storyId,
-            itemId,
-            new UpdateStoryItemCommand(
-                body.MediaType,
-                body.MediaAssetId,
-                body.MediaUrl,
-                body.Caption,
-                body.DurationMs,
-                body.CtaType,
-                body.CtaTarget),
-            cancellationToken);
+        _stories.AdminUpdateItemAsync(tenantId, storyId, itemId, ToUpdateItemCommand(body), cancellationToken);
 
     /// <summary>حذف آیتم.</summary>
     public Task<AdminStorySnapshot> AdminRemoveItemAsync(
@@ -150,9 +137,132 @@ public sealed class StoryPanelComposer
         CancellationToken cancellationToken) =>
         _stories.AdminReorderItemsAsync(tenantId, storyId, itemIds, cancellationToken);
 
+    /// <summary>فهرست استوری‌های فروشنده.</summary>
+    public Task<IReadOnlyList<AdminStorySnapshot>> SellerListAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken) =>
+        _stories.SellerListAsync(tenantId, sellerPartyId, cancellationToken);
+
+    /// <summary>جزئیات استوری فروشنده.</summary>
+    public Task<AdminStorySnapshot?> SellerGetAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        CancellationToken cancellationToken) =>
+        _stories.SellerGetAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+
+    /// <summary>ایجاد پیش‌نویس فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerCreateDraftAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CreateStoryBody body,
+        CancellationToken cancellationToken) =>
+        _stories.SellerCreateDraftAsync(tenantId, sellerPartyId, actorUserId, ToCreateCommand(body), cancellationToken);
+
+    /// <summary>به‌روزرسانی پیش‌نویس/ردشده فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerUpdateAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        UpdateStoryBody body,
+        CancellationToken cancellationToken) =>
+        _stories.SellerUpdateAsync(tenantId, sellerPartyId, storyId, ToUpdateCommand(body), cancellationToken);
+
+    /// <summary>ارسال برای بازبینی.</summary>
+    public Task<AdminStorySnapshot> SellerSubmitAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken) =>
+        _stories.SellerSubmitAsync(tenantId, sellerPartyId, storyId, actorUserId, cancellationToken);
+
+    /// <summary>افزودن آیتم فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerAddItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        AddStoryItemBody body,
+        CancellationToken cancellationToken) =>
+        _stories.SellerAddItemAsync(tenantId, sellerPartyId, storyId, ToAddItemCommand(body), cancellationToken);
+
+    /// <summary>به‌روزرسانی آیتم فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerUpdateItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        UpdateStoryItemBody body,
+        CancellationToken cancellationToken) =>
+        _stories.SellerUpdateItemAsync(
+            tenantId,
+            sellerPartyId,
+            storyId,
+            itemId,
+            ToUpdateItemCommand(body),
+            cancellationToken);
+
+    /// <summary>حذف آیتم فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerRemoveItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        CancellationToken cancellationToken) =>
+        _stories.SellerRemoveItemAsync(tenantId, sellerPartyId, storyId, itemId, cancellationToken);
+
+    /// <summary>مرتب‌سازی آیتم‌های فروشنده.</summary>
+    public Task<AdminStorySnapshot> SellerReorderItemsAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        IReadOnlyList<Guid> itemIds,
+        CancellationToken cancellationToken) =>
+        _stories.SellerReorderItemsAsync(tenantId, sellerPartyId, storyId, itemIds, cancellationToken);
+
     /// <summary>Tenant جاری را به Guid پایدار نگاشت می‌کند.</summary>
     public static Guid RequireTenantId(ICurrentTenant tenant) =>
         StoryTenantIds.FromTenantKey(
             tenant.Current?.TenantId.Value
             ?? throw new InvalidOperationException("Tenant resolve نشده است."));
+
+    private static CreateStoryCommand ToCreateCommand(CreateStoryBody body) => new(
+        body.Title,
+        body.Locale,
+        body.Market,
+        body.CoverMediaAssetId,
+        body.CoverMediaUrl,
+        body.DisplayOrder,
+        body.CtaType,
+        body.CtaTarget);
+
+    private static UpdateStoryCommand ToUpdateCommand(UpdateStoryBody body) => new(
+        body.Title,
+        body.Locale,
+        body.Market,
+        body.CoverMediaAssetId,
+        body.CoverMediaUrl,
+        body.CtaType,
+        body.CtaTarget);
+
+    private static AddStoryItemCommand ToAddItemCommand(AddStoryItemBody body) => new(
+        body.MediaType,
+        body.MediaAssetId,
+        body.MediaUrl,
+        body.Caption,
+        body.DurationMs,
+        body.CtaType,
+        body.CtaTarget,
+        body.DisplayOrder);
+
+    private static UpdateStoryItemCommand ToUpdateItemCommand(UpdateStoryItemBody body) => new(
+        body.MediaType,
+        body.MediaAssetId,
+        body.MediaUrl,
+        body.Caption,
+        body.DurationMs,
+        body.CtaType,
+        body.CtaTarget);
 }

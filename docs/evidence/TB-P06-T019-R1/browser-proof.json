@@ -1,0 +1,41 @@
+{
+  "taskId": "TB-P06-T019-R1",
+  "recordedAtUtc": "2026-08-27T08:28:59.375Z",
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "sellerActor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+  "sellerParty": "01a030d1-40cb-7000-8abe-6d31739956c5",
+  "probes": {
+    "admin": {
+      "testId": true,
+      "reviewFilter": true,
+      "approveVisible": true,
+      "submitVisible": false
+    },
+    "seller": {
+      "testId": true,
+      "reviewFilter": false,
+      "approveVisible": false,
+      "createVisible": true
+    },
+    "homeFa": {
+      "homeStories": true,
+      "fakeConst": false
+    },
+    "shopeivaOk": true
+  },
+  "captures": [
+    "01-admin-stories-shared.png",
+    "02-seller-stories-shared.png",
+    "03-home-fa-stories.png",
+    "04-shopeiva-home.png"
+  ],
+  "checks": {
+    "adminSharedSurface": true,
+    "adminHasReviewActions": true,
+    "sellerSharedSurface": true,
+    "sellerNoReviewFilter": true,
+    "sellerNoApprove": true,
+    "storefrontRailPresent": true,
+    "storefrontNoFakeConst": true
+  }
+}

@@ -4,7 +4,7 @@ using Tooba.BuildingBlocks;
 
 namespace Tooba.Story.Domain;
 
-/// <summary>وضعیت چرخهٔ عمر استوری.</summary>
+/// <summary>وضعیت انتشار استوری (چرخهٔ عمر عمومی).</summary>
 public enum StoryStatus
 {
     /// <summary>پیش‌نویس و غیرقابل نمایش عمومی.</summary>
@@ -17,6 +17,28 @@ public enum StoryStatus
     Expired = 3,
     /// <summary>غیرفعال دستی.</summary>
     Disabled = 4,
+}
+
+/// <summary>منبع ایجاد استوری.</summary>
+public enum StoryOrigin
+{
+    /// <summary>ایجادشده توسط ادمین.</summary>
+    Admin = 0,
+    /// <summary>ایجادشده توسط فروشنده.</summary>
+    Seller = 1,
+}
+
+/// <summary>وضعیت بازبینی استوری‌های فروشنده.</summary>
+public enum StoryReviewStatus
+{
+    /// <summary>بدون بازبینی فعال (ادمین یا پیش‌نویس فروشنده).</summary>
+    None = 0,
+    /// <summary>ارسال‌شده برای بازبینی ادمین.</summary>
+    Submitted = 1,
+    /// <summary>تأییدشده؛ آمادهٔ زمان‌بندی/فعال‌سازی.</summary>
+    Approved = 2,
+    /// <summary>ردشده با دلیل.</summary>
+    Rejected = 3,
 }
 
 /// <summary>شناسهٔ پایدار Tenant برای ماژول Story.</summary>
@@ -66,6 +88,8 @@ public static class StoryRules
     public const int CaptionMaxLength = 200;
     /// <summary>حداکثر طول نوع رسانه.</summary>
     public const int MediaTypeMaxLength = 16;
+    /// <summary>حداکثر طول دلیل رد بازبینی.</summary>
+    public const int RejectionReasonMaxLength = 500;
 
     /// <summary>نوع CTA بدون لینک.</summary>
     public const string CtaNone = "none";
@@ -175,6 +199,22 @@ public sealed class Story
     public Guid StoryId { get; init; }
     /// <summary>Tenant مالک.</summary>
     public Guid TenantId { get; init; }
+    /// <summary>منبع ایجاد استوری.</summary>
+    public StoryOrigin Origin { get; private set; }
+    /// <summary>Party فروشندهٔ مالک برای استوری‌های Seller.</summary>
+    public Guid? SellerPartyId { get; private set; }
+    /// <summary>وضعیت بازبینی.</summary>
+    public StoryReviewStatus ReviewStatus { get; private set; }
+    /// <summary>Actor ارسال‌کننده برای بازبینی.</summary>
+    public Guid? SubmittedByActorUserId { get; private set; }
+    /// <summary>Actor ادمین بازبین.</summary>
+    public Guid? ReviewedByActorUserId { get; private set; }
+    /// <summary>زمان ارسال برای بازبینی.</summary>
+    public DateTimeOffset? SubmittedAt { get; private set; }
+    /// <summary>زمان آخرین بازبینی.</summary>
+    public DateTimeOffset? ReviewedAt { get; private set; }
+    /// <summary>دلیل رد بازبینی.</summary>
+    public string? RejectionReason { get; private set; }
     /// <summary>locale اختیاری؛ null یعنی همهٔ localeها.</summary>
     public string? Locale { get; private set; }
     /// <summary>بازار اختیاری؛ از locale استنباط نمی‌شود.</summary>
@@ -191,7 +231,7 @@ public sealed class Story
     public DateTimeOffset? StartAt { get; private set; }
     /// <summary>پایان نمایش اختیاری.</summary>
     public DateTimeOffset? EndAt { get; private set; }
-    /// <summary>وضعیت چرخهٔ عمر.</summary>
+    /// <summary>وضعیت انتشار.</summary>
     public StoryStatus Status { get; private set; }
     /// <summary>نوع CTA سطح استوری.</summary>
     public string CtaType { get; private set; } = StoryRules.CtaNone;
@@ -206,7 +246,7 @@ public sealed class Story
     /// <summary>آیتم‌های استوری.</summary>
     public IReadOnlyCollection<StoryItem> Items => _items;
 
-    /// <summary>استوری Draft جدید می‌سازد.</summary>
+    /// <summary>استوری Draft ادمین می‌سازد.</summary>
     public static Story CreateDraft(
         Guid tenantId,
         string title,
@@ -228,6 +268,9 @@ public sealed class Story
         {
             StoryId = UuidV7.New(),
             TenantId = tenantId,
+            Origin = StoryOrigin.Admin,
+            SellerPartyId = null,
+            ReviewStatus = StoryReviewStatus.None,
             Locale = NormalizeOptional(locale, StoryRules.LocaleMaxLength),
             Market = NormalizeOptional(market, StoryRules.MarketMaxLength),
             Title = title.Trim(),
@@ -242,6 +285,64 @@ public sealed class Story
             UpdatedAt = now,
         };
     }
+
+    /// <summary>پیش‌نویس فروشنده می‌سازد.</summary>
+    public static Story CreateSellerDraft(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid actorUserId,
+        string title,
+        int displayOrder,
+        DateTimeOffset now,
+        string? locale = null,
+        string? market = null,
+        Guid? coverMediaAssetId = null,
+        string? coverMediaUrl = null,
+        string? ctaType = null,
+        string? ctaTarget = null)
+    {
+        if (sellerPartyId == Guid.Empty)
+            throw new InvalidOperationException("شناسهٔ فروشنده معتبر نیست.");
+        if (actorUserId == Guid.Empty)
+            throw new InvalidOperationException("شناسهٔ بازیگر معتبر نیست.");
+
+        ValidateTitle(title);
+        ValidateLocale(locale);
+        ValidateMarket(market);
+        ValidateMediaUrl(coverMediaUrl);
+        var (normalizedCtaType, normalizedCtaTarget) = StoryRules.ValidateCta(ctaType, ctaTarget);
+        return new Story
+        {
+            StoryId = UuidV7.New(),
+            TenantId = tenantId,
+            Origin = StoryOrigin.Seller,
+            SellerPartyId = sellerPartyId,
+            ReviewStatus = StoryReviewStatus.None,
+            SubmittedByActorUserId = actorUserId,
+            Locale = NormalizeOptional(locale, StoryRules.LocaleMaxLength),
+            Market = NormalizeOptional(market, StoryRules.MarketMaxLength),
+            Title = title.Trim(),
+            CoverMediaAssetId = coverMediaAssetId,
+            CoverMediaUrl = NormalizeOptional(coverMediaUrl, StoryRules.MediaUrlMaxLength),
+            DisplayOrder = displayOrder,
+            Status = StoryStatus.Draft,
+            CtaType = normalizedCtaType,
+            CtaTarget = normalizedCtaTarget,
+            VersionToken = 1,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+    }
+
+    /// <summary>آیا فروشنده مجاز به ویرایش محتوا است.</summary>
+    public bool IsSellerContentEditable() =>
+        Origin == StoryOrigin.Seller
+        && Status == StoryStatus.Draft
+        && (ReviewStatus is StoryReviewStatus.None or StoryReviewStatus.Rejected);
+
+    /// <summary>آیا مسیر انتشار (زمان‌بندی/فعال) باز است.</summary>
+    public bool IsPublicationEligible() =>
+        Origin == StoryOrigin.Admin || ReviewStatus == StoryReviewStatus.Approved;
 
     /// <summary>فیلدهای سطح استوری را به‌روزرسانی می‌کند.</summary>
     public void Update(
@@ -272,6 +373,7 @@ public sealed class Story
     /// <summary>زمان‌بندی را تنظیم و وضعیت Scheduled یا Active را بر اساس now تعیین می‌کند.</summary>
     public void SetSchedule(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset now)
     {
+        EnsurePublicationEligible();
         if (startAt.HasValue && endAt.HasValue && endAt.Value <= startAt.Value)
             throw new InvalidOperationException("بازهٔ زمانی استوری معتبر نیست.");
 
@@ -286,10 +388,77 @@ public sealed class Story
         Touch(now);
     }
 
-    /// <summary>استوری را فعال می‌کند.</summary>
+    /// <summary>استوری را فعال می‌کند؛ فقط پس از واجد شرایط بودن انتشار.</summary>
     public void Activate(DateTimeOffset now)
     {
+        EnsurePublicationEligible();
         Status = StoryStatus.Active;
+        Touch(now);
+    }
+
+    /// <summary>استوری را برای بازبینی ارسال می‌کند.</summary>
+    public void SubmitForReview(Guid actorUserId, DateTimeOffset now)
+    {
+        if (Origin != StoryOrigin.Seller)
+            throw new InvalidOperationException("فقط استوری فروشنده قابل ارسال برای بازبینی است.");
+        if (actorUserId == Guid.Empty)
+            throw new InvalidOperationException("شناسهٔ بازیگر معتبر نیست.");
+        if (Status != StoryStatus.Draft)
+            throw new InvalidOperationException("فقط پیش‌نویس قابل ارسال برای بازبینی است.");
+        if (ReviewStatus is not (StoryReviewStatus.None or StoryReviewStatus.Rejected))
+            throw new InvalidOperationException("وضعیت بازبینی برای ارسال مجاز نیست.");
+
+        ReviewStatus = StoryReviewStatus.Submitted;
+        SubmittedByActorUserId = actorUserId;
+        SubmittedAt = now;
+        RejectionReason = null;
+        ReviewedByActorUserId = null;
+        ReviewedAt = null;
+        Touch(now);
+    }
+
+    /// <summary>استوری را تأیید می‌کند؛ فراخوانی تکراری امن است.</summary>
+    public void Approve(Guid adminActorUserId, DateTimeOffset now)
+    {
+        if (adminActorUserId == Guid.Empty)
+            throw new InvalidOperationException("شناسهٔ بازیگر ادمین معتبر نیست.");
+        if (Origin != StoryOrigin.Seller)
+            throw new InvalidOperationException("فقط استوری فروشنده نیاز به تأیید دارد.");
+
+        if (ReviewStatus == StoryReviewStatus.Approved)
+        {
+            ReviewedByActorUserId ??= adminActorUserId;
+            ReviewedAt ??= now;
+            Touch(now);
+            return;
+        }
+
+        if (ReviewStatus != StoryReviewStatus.Submitted)
+            throw new InvalidOperationException("فقط استوری ارسال‌شده قابل تأیید است.");
+
+        ReviewStatus = StoryReviewStatus.Approved;
+        ReviewedByActorUserId = adminActorUserId;
+        ReviewedAt = now;
+        RejectionReason = null;
+        Touch(now);
+    }
+
+    /// <summary>استوری را با دلیل رد می‌کند.</summary>
+    public void Reject(Guid adminActorUserId, string reason, DateTimeOffset now)
+    {
+        if (adminActorUserId == Guid.Empty)
+            throw new InvalidOperationException("شناسهٔ بازیگر ادمین معتبر نیست.");
+        if (Origin != StoryOrigin.Seller)
+            throw new InvalidOperationException("فقط استوری فروشنده قابل رد است.");
+        if (ReviewStatus != StoryReviewStatus.Submitted)
+            throw new InvalidOperationException("فقط استوری ارسال‌شده قابل رد است.");
+
+        var normalized = ValidateRejectionReason(reason);
+        ReviewStatus = StoryReviewStatus.Rejected;
+        ReviewedByActorUserId = adminActorUserId;
+        ReviewedAt = now;
+        RejectionReason = normalized;
+        Status = StoryStatus.Draft;
         Touch(now);
     }
 
@@ -316,7 +485,8 @@ public sealed class Story
 
     /// <summary>آیا استوری در زمان داده‌شده برای عموم قابل نمایش است.</summary>
     public bool IsPubliclyVisible(DateTimeOffset now) =>
-        Status == StoryStatus.Active
+        IsPublicationEligible()
+        && Status == StoryStatus.Active
         && (StartAt is null || StartAt <= now)
         && (EndAt is null || EndAt > now);
 
@@ -401,6 +571,22 @@ public sealed class Story
     {
         _items.Clear();
         _items.AddRange(items.OrderBy(item => item.DisplayOrder));
+    }
+
+    private void EnsurePublicationEligible()
+    {
+        if (!IsPublicationEligible())
+            throw new InvalidOperationException("استوری فروشنده قبل از تأیید قابل فعال‌سازی یا زمان‌بندی نیست.");
+    }
+
+    private static string ValidateRejectionReason(string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException("دلیل رد الزامی است.");
+        var trimmed = reason.Trim();
+        if (trimmed.Length > StoryRules.RejectionReasonMaxLength)
+            throw new InvalidOperationException("دلیل رد از سقف مجاز بلندتر است.");
+        return trimmed;
     }
 
     private StoryItem RequireItem(Guid storyItemId) =>

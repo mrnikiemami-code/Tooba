@@ -3,6 +3,13 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import {
+  DEV_ACTOR_HEADER,
+  readActorUserId,
+  readSellerPartyId,
+  SELLER_PARTY_HEADER,
+  SELLER_PARTY_STORAGE_KEY,
+} from "../vendor-panel/seller-api.ts";
 
 export interface PublicStoryItem {
   storyItemId: string;
@@ -42,6 +49,14 @@ export interface AdminStoryItem {
 export interface AdminStorySnapshot {
   storyId: string;
   tenantId: string;
+  origin: string;
+  reviewStatus: string;
+  sellerPartyId: string | null;
+  rejectionReason: string | null;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  submittedByActorUserId: string | null;
+  reviewedByActorUserId: string | null;
   locale: string | null;
   market: string | null;
   title: string;
@@ -68,6 +83,18 @@ const STORY_STATUS_NAMES: Record<number, string> = {
   4: "Disabled",
 };
 
+const STORY_ORIGIN_NAMES: Record<number, string> = {
+  0: "Admin",
+  1: "Seller",
+};
+
+const STORY_REVIEW_STATUS_NAMES: Record<number, string> = {
+  0: "None",
+  1: "Submitted",
+  2: "Approved",
+  3: "Rejected",
+};
+
 function recordOf(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
@@ -91,14 +118,26 @@ function numberOrNull(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function statusOf(value: unknown): string {
-  if (typeof value === "number" && STORY_STATUS_NAMES[value]) return STORY_STATUS_NAMES[value]!;
+function enumNameOf(value: unknown, names: Record<number, string>, fallback: string): string {
+  if (typeof value === "number" && names[value]) return names[value]!;
   if (typeof value === "string" && value.trim()) {
     const asNum = Number(value);
-    if (Number.isInteger(asNum) && STORY_STATUS_NAMES[asNum]) return STORY_STATUS_NAMES[asNum]!;
+    if (Number.isInteger(asNum) && names[asNum]) return names[asNum]!;
     return value;
   }
-  return "Draft";
+  return fallback;
+}
+
+function statusOf(value: unknown): string {
+  return enumNameOf(value, STORY_STATUS_NAMES, "Draft");
+}
+
+function originOf(value: unknown): string {
+  return enumNameOf(value, STORY_ORIGIN_NAMES, "Admin");
+}
+
+function reviewStatusOf(value: unknown): string {
+  return enumNameOf(value, STORY_REVIEW_STATUS_NAMES, "None");
 }
 
 export function mapPublicStoryItem(value: unknown): PublicStoryItem | null {
@@ -170,6 +209,14 @@ export function mapAdminStory(value: unknown): AdminStorySnapshot | null {
   return {
     storyId,
     tenantId: text(prop(item, "tenantId", "TenantId")),
+    origin: originOf(prop(item, "origin", "Origin")),
+    reviewStatus: reviewStatusOf(prop(item, "reviewStatus", "ReviewStatus")),
+    sellerPartyId: nullableText(prop(item, "sellerPartyId", "SellerPartyId")),
+    rejectionReason: nullableText(prop(item, "rejectionReason", "RejectionReason")),
+    submittedAt: nullableText(prop(item, "submittedAt", "SubmittedAt")),
+    reviewedAt: nullableText(prop(item, "reviewedAt", "ReviewedAt")),
+    submittedByActorUserId: nullableText(prop(item, "submittedByActorUserId", "SubmittedByActorUserId")),
+    reviewedByActorUserId: nullableText(prop(item, "reviewedByActorUserId", "ReviewedByActorUserId")),
     locale: nullableText(prop(item, "locale", "Locale")),
     market: nullableText(prop(item, "market", "Market")),
     title: text(prop(item, "title", "Title")),
@@ -201,6 +248,27 @@ function adminHeaders(json = false): Record<string, string> {
   if (json) headers["Content-Type"] = "application/json";
   const actor = typeof window !== "undefined" ? localStorage.getItem("tooba.adminActorUserId") : null;
   if (actor) headers[ADMIN_DEV_ACTOR_HEADER] = actor;
+  return headers;
+}
+
+function resolveSellerPartyId(explicit?: string | null): string | null {
+  if (explicit) return explicit;
+  if (typeof window === "undefined") return null;
+  return readSellerPartyId(window.location.search) ?? localStorage.getItem(SELLER_PARTY_STORAGE_KEY);
+}
+
+function resolveSellerActorId(): string | null {
+  return readActorUserId();
+}
+
+function sellerStoryHeaders(sellerPartyId: string, json = false): Record<string, string> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    [SELLER_PARTY_HEADER]: sellerPartyId,
+  };
+  if (json) headers["Content-Type"] = "application/json";
+  const actor = resolveSellerActorId();
+  if (actor) headers[DEV_ACTOR_HEADER] = actor;
   return headers;
 }
 
@@ -241,9 +309,14 @@ export async function fetchPublicStories(locale?: string): Promise<PublicStoryCa
   }
 }
 
-export async function listAdminStories(): Promise<AdminResult<AdminStorySnapshot[]>> {
+export async function listAdminStories(options?: {
+  reviewStatus?: string | null;
+}): Promise<AdminResult<AdminStorySnapshot[]>> {
   try {
-    const response = await fetch("/v1/admin/stories", { headers: adminHeaders() });
+    const params = new URLSearchParams();
+    if (options?.reviewStatus) params.set("reviewStatus", options.reviewStatus);
+    const query = params.toString();
+    const response = await fetch(`/v1/admin/stories${query ? `?${query}` : ""}`, { headers: adminHeaders() });
     if (response.status === 401 || response.status === 403) {
       return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
     }
@@ -427,6 +500,222 @@ export async function reorderAdminStories(storyIds: string[]): Promise<AdminResu
       ? payload.map(mapAdminStory).filter((row): row is AdminStorySnapshot => row !== null)
       : [];
     return { state: "ok", data: rows, status: response.status };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function approveAdminStory(storyId: string): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/approve`, {
+      method: "POST",
+      headers: adminHeaders(true),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function rejectAdminStory(
+  storyId: string,
+  reason: string,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  try {
+    const response = await fetch(`/v1/admin/stories/${encodeURIComponent(storyId)}/reject`, {
+      method: "POST",
+      headers: adminHeaders(true),
+      body: JSON.stringify({ reason }),
+    });
+    return adminJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+type StoryMutationInput = {
+  title: string;
+  locale?: string | null;
+  market?: string | null;
+  coverMediaUrl?: string | null;
+  displayOrder?: number | null;
+  ctaType?: string | null;
+  ctaTarget?: string | null;
+};
+
+type StoryItemMutationInput = {
+  mediaType: string;
+  mediaUrl?: string | null;
+  caption?: string | null;
+  durationMs?: number | null;
+  ctaType?: string | null;
+  ctaTarget?: string | null;
+};
+
+async function sellerJsonResult(
+  response: Response,
+  map: (value: unknown) => AdminStorySnapshot | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  if (response.status === 401 || response.status === 403) {
+    return { state: "denied", data: null, status: response.status, message: "seller.authorization.denied" };
+  }
+  if (!response.ok) {
+    return { state: "error", data: null, status: response.status, message: `seller.http.${response.status}` };
+  }
+  const payload = await response.json();
+  const mapped = map(payload);
+  if (!mapped) return { state: "error", data: null, status: response.status, message: "invalid-response" };
+  return { state: "ok", data: mapped, status: response.status };
+}
+
+export async function listSellerStories(
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot[]>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch("/v1/seller/stories", { headers: sellerStoryHeaders(partyId) });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "seller.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: `seller.http.${response.status}` };
+    }
+    const payload = await response.json();
+    const rows = Array.isArray(payload)
+      ? payload.map(mapAdminStory).filter((row): row is AdminStorySnapshot => row !== null)
+      : [];
+    return { state: "ok", data: rows, status: response.status };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function getSellerStory(
+  storyId: string,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}`, {
+      headers: sellerStoryHeaders(partyId),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function createSellerStory(
+  input: StoryMutationInput,
+  sellerPartyId?: string | null,
+): Promise<{ ok: boolean; story?: AdminStorySnapshot; message?: string }> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) return { ok: false, message: "seller.identity.missing" };
+  try {
+    const response = await fetch("/v1/seller/stories", {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({
+        title: input.title,
+        locale: input.locale ?? null,
+        market: input.market ?? null,
+        coverMediaAssetId: null,
+        coverMediaUrl: input.coverMediaUrl ?? null,
+        displayOrder: input.displayOrder ?? null,
+        ctaType: input.ctaType ?? "none",
+        ctaTarget: input.ctaTarget ?? null,
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      return { ok: false, message: (recordOf(payload)?.title as string) ?? `create-http-${response.status}` };
+    }
+    const story = mapAdminStory(payload);
+    return story ? { ok: true, story } : { ok: false, message: "invalid-response" };
+  } catch {
+    return { ok: false, message: "host-unreachable" };
+  }
+}
+
+export async function updateSellerStory(
+  storyId: string,
+  input: StoryMutationInput,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}`, {
+      method: "PUT",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({
+        title: input.title,
+        locale: input.locale ?? null,
+        market: input.market ?? null,
+        coverMediaAssetId: null,
+        coverMediaUrl: input.coverMediaUrl ?? null,
+        ctaType: input.ctaType ?? "none",
+        ctaTarget: input.ctaTarget ?? null,
+      }),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function submitSellerStory(
+  storyId: string,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/submit`, {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+    });
+    return sellerJsonResult(response, mapAdminStory);
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function addSellerStoryItem(
+  storyId: string,
+  input: StoryItemMutationInput,
+  sellerPartyId?: string | null,
+): Promise<AdminResult<AdminStorySnapshot>> {
+  const partyId = resolveSellerPartyId(sellerPartyId);
+  if (!partyId) {
+    return { state: "error", data: null, status: 0, message: "seller.identity.missing" };
+  }
+  try {
+    const response = await fetch(`/v1/seller/stories/${encodeURIComponent(storyId)}/items`, {
+      method: "POST",
+      headers: sellerStoryHeaders(partyId, true),
+      body: JSON.stringify({
+        mediaType: input.mediaType,
+        mediaAssetId: null,
+        mediaUrl: input.mediaUrl ?? null,
+        caption: input.caption ?? null,
+        durationMs: input.durationMs ?? null,
+        ctaType: input.ctaType ?? "none",
+        ctaTarget: input.ctaTarget ?? null,
+        displayOrder: null,
+      }),
+    });
+    return sellerJsonResult(response, mapAdminStory);
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
+using Tooba.Host.Seller;
 using Tooba.Persistence;
 using global::Tooba.Story.Application;
 using global::Tooba.Story.Domain;
@@ -14,7 +15,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>پوشش foundation Story: seed عمومی، وضعیت‌ها، CTA ناامن، auth admin، reorder و locale.</summary>
+/// <summary>پوشش foundation و چرخهٔ بازبینی Story: seed عمومی، وضعیت‌ها، CTA ناامن، auth، seller review.</summary>
 [Collection("PostgresSerial")]
 public sealed class StoryFoundationTests : IAsyncLifetime
 {
@@ -81,6 +82,8 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         Assert.Contains(publicSeeded, story => story.Title == "بازی");
         Assert.DoesNotContain(publicSeeded, story => story.Title == "English rail");
         Assert.Contains(publicSeeded, story => story.IsVideo);
+        Assert.DoesNotContain(publicSeeded, story => story.Title == "پیش‌نویس فروشنده");
+        Assert.DoesNotContain(publicSeeded, story => story.Title == "در انتظار بازبینی");
 
         var draft = await directory.AdminCreateAsync(
             tenantId,
@@ -144,7 +147,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                     "javascript:alert(1)"),
                 CancellationToken.None));
 
-        var listed = await directory.AdminListAsync(tenantId, CancellationToken.None);
+        var listed = await directory.AdminListAsync(tenantId, reviewStatus: null, CancellationToken.None);
         var reorderedIds = listed
             .OrderByDescending(story => story.DisplayOrder)
             .Select(story => story.StoryId)
@@ -171,6 +174,143 @@ public sealed class StoryFoundationTests : IAsyncLifetime
                 new StubEnvironment(),
                 CancellationToken.None));
         Assert.Equal(403, sellerDenied.StatusCode);
+    }
+
+    /// <summary>
+    /// چرخهٔ بازبینی فروشنده: پیش‌نویس/ارسال/رد عمومی نیست؛ تأیید+فعال عمومی است؛
+    /// فروشنده فعال‌سازی نمی‌کند؛ رد بدون دلیل؛ تأیید idempotent؛ ایزولهٔ فروشندهٔ خارجی.
+    /// </summary>
+    [SkippableFact]
+    public async Task Seller_review_workflow_public_eligibility_and_authorization()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        await using var db = CreateDb(_container.GetConnectionString());
+        await db.Database.MigrateAsync();
+        var directory = new StoryDirectory(db);
+        var tenantId = StoryTenantIds.StoreAlpha;
+        var now = new DateTimeOffset(2026, 8, 27, 14, 0, 0, TimeSpan.Zero);
+        var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
+        var sellerB = Guid.Parse("01a030d1-40db-7000-b90c-a0705133f0eb");
+        var actorA = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001");
+        var actorB = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0002");
+        var adminActor = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccc0003");
+
+        var endpoints = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Story", "StoryEndpoints.cs"));
+        Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/enable\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/approve\"", endpoints, StringComparison.Ordinal);
+        Assert.DoesNotContain("seller.MapPost(\"/{id:guid}/activate\"", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/v1/seller/stories", endpoints, StringComparison.Ordinal);
+        Assert.Contains("AdminApproveAsync", endpoints, StringComparison.Ordinal);
+
+        var draft = await directory.SellerCreateDraftAsync(
+            tenantId,
+            sellerA,
+            actorA,
+            new CreateStoryCommand("فروشنده پیش‌نویس", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
+            CancellationToken.None);
+        Assert.Equal(StoryOrigin.Seller, draft.Origin);
+        Assert.Equal(StoryReviewStatus.None, draft.ReviewStatus);
+        Assert.DoesNotContain(
+            await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
+            story => story.StoryId == draft.StoryId);
+
+        var submitted = await directory.SellerSubmitAsync(
+            tenantId, sellerA, draft.StoryId, actorA, CancellationToken.None);
+        Assert.Equal(StoryReviewStatus.Submitted, submitted.ReviewStatus);
+        Assert.DoesNotContain(
+            await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
+            story => story.StoryId == submitted.StoryId);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.AdminSetStatusAsync(tenantId, submitted.StoryId, StoryStatus.Active, CancellationToken.None));
+
+        var domainStory = await db.Stories.AsNoTracking()
+            .FirstAsync(story => story.StoryId == submitted.StoryId, CancellationToken.None);
+        Assert.Throws<InvalidOperationException>(() => domainStory.Activate(now));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, "   ", CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.AdminRejectAsync(tenantId, submitted.StoryId, adminActor, string.Empty, CancellationToken.None));
+
+        var rejected = await directory.AdminRejectAsync(
+            tenantId, submitted.StoryId, adminActor, "نیاز به پوشش بهتر", CancellationToken.None);
+        Assert.Equal(StoryReviewStatus.Rejected, rejected.ReviewStatus);
+        Assert.Equal("نیاز به پوشش بهتر", rejected.RejectionReason);
+        Assert.Equal(StoryStatus.Draft, rejected.Status);
+        Assert.DoesNotContain(
+            await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
+            story => story.StoryId == rejected.StoryId);
+
+        var resubmitted = await directory.SellerSubmitAsync(
+            tenantId, sellerA, rejected.StoryId, actorA, CancellationToken.None);
+        Assert.Equal(StoryReviewStatus.Submitted, resubmitted.ReviewStatus);
+        Assert.Null(resubmitted.RejectionReason);
+
+        var approved = await directory.AdminApproveAsync(
+            tenantId, resubmitted.StoryId, adminActor, CancellationToken.None);
+        Assert.Equal(StoryReviewStatus.Approved, approved.ReviewStatus);
+        Assert.DoesNotContain(
+            await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
+            story => story.StoryId == approved.StoryId);
+
+        var approvedAgain = await directory.AdminApproveAsync(
+            tenantId, approved.StoryId, adminActor, CancellationToken.None);
+        Assert.Equal(StoryReviewStatus.Approved, approvedAgain.ReviewStatus);
+        Assert.Equal(adminActor, approvedAgain.ReviewedByActorUserId);
+
+        var activated = await directory.AdminSetStatusAsync(
+            tenantId, approved.StoryId, StoryStatus.Active, CancellationToken.None);
+        Assert.Equal(StoryStatus.Active, activated.Status);
+        Assert.Contains(
+            await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
+            story => story.StoryId == activated.StoryId && story.Title == "فروشنده پیش‌نویس");
+
+        var foreign = await directory.SellerCreateDraftAsync(
+            tenantId,
+            sellerB,
+            actorB,
+            new CreateStoryCommand("استوری فروشنده B", "fa", null, null, "/images/stories/2.jpg", null, "none", null),
+            CancellationToken.None);
+        var listA = await directory.SellerListAsync(tenantId, sellerA, CancellationToken.None);
+        Assert.DoesNotContain(listA, story => story.StoryId == foreign.StoryId);
+        Assert.Contains(listA, story => story.StoryId == activated.StoryId);
+        Assert.Null(await directory.SellerGetAsync(tenantId, sellerA, foreign.StoryId, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.SellerSubmitAsync(tenantId, sellerA, foreign.StoryId, actorA, CancellationToken.None));
+
+        var auth = CreateAdapter();
+        await auth.Writer.WriteAsync(
+            new AuthorizationRelationshipWrite
+            {
+                Subject = AuthorizationSubject.ForUser(actorA),
+                Resource = new AuthorizationResource
+                {
+                    Type = AuthorizationObjectTypes.Party,
+                    Id = sellerA.ToString("D"),
+                },
+                Relation = AuthorizationRelations.Member,
+            },
+            CancellationToken.None);
+
+        var missingSellerActor = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+            SellerPanelAccess.RequireAuthorizedAsync(
+                SellerRequest(sellerPartyId: sellerA, actorUserId: null),
+                new CurrentAuthenticatedSession(),
+                auth.Guard,
+                new StubEnvironment(),
+                CancellationToken.None));
+        Assert.Equal(401, missingSellerActor.StatusCode);
+
+        var crossSellerDenied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+            SellerPanelAccess.RequireAuthorizedAsync(
+                SellerRequest(sellerPartyId: sellerB, actorUserId: actorA),
+                new CurrentAuthenticatedSession(),
+                auth.Guard,
+                new StubEnvironment(),
+                CancellationToken.None));
+        Assert.Equal(403, crossSellerDenied.StatusCode);
     }
 
     private static StoryDbContext CreateDb(string connectionString)
@@ -201,6 +341,15 @@ public sealed class StoryFoundationTests : IAsyncLifetime
     {
         var request = new DefaultHttpContext().Request;
         request.Headers[AdminPanelAccess.DevActorHeader] = actor.ToString("D");
+        return request;
+    }
+
+    private static HttpRequest SellerRequest(Guid sellerPartyId, Guid? actorUserId)
+    {
+        var request = new DefaultHttpContext().Request;
+        request.Headers[SellerPanelAccess.SellerPartyHeader] = sellerPartyId.ToString("D");
+        if (actorUserId is { } actor)
+            request.Headers[SellerPanelAccess.DevActorHeader] = actor.ToString("D");
         return request;
     }
 

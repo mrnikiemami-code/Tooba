@@ -22,8 +22,12 @@ public sealed class StoryDirectory : IStoryDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        // Public eligibility: Admin-origin OR Approved review, then Active/window via IsPubliclyVisible.
         var rows = await _db.Stories.AsNoTracking()
-            .Where(story => story.TenantId == tenantId && story.Status == StoryStatus.Active)
+            .Where(story => story.TenantId == tenantId
+                && story.Status == StoryStatus.Active
+                && (story.Origin == StoryOrigin.Admin
+                    || story.ReviewStatus == StoryReviewStatus.Approved))
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
             .ToListAsync(cancellationToken);
@@ -55,15 +59,26 @@ public sealed class StoryDirectory : IStoryDirectory
     /// <inheritdoc />
     public async Task<IReadOnlyList<AdminStorySnapshot>> AdminListAsync(
         Guid tenantId,
+        StoryReviewStatus? reviewStatus,
         CancellationToken cancellationToken)
     {
         var stories = await LoadStoriesAsync(tenantId, track: false, cancellationToken);
-        return stories
+        IEnumerable<StoryEntity> query = stories;
+        if (reviewStatus.HasValue)
+            query = query.Where(story => story.ReviewStatus == reviewStatus.Value);
+
+        return query
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
             .Select(MapAdmin)
             .ToList();
     }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AdminStorySnapshot>> AdminListPendingReviewAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken) =>
+        AdminListAsync(tenantId, StoryReviewStatus.Submitted, cancellationToken);
 
     /// <inheritdoc />
     public async Task<AdminStorySnapshot?> AdminGetAsync(
@@ -280,9 +295,212 @@ public sealed class StoryDirectory : IStoryDirectory
         return MapAdmin(story);
     }
 
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> AdminApproveAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.Approve(adminActorUserId, DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> AdminRejectAsync(
+        Guid tenantId,
+        Guid storyId,
+        Guid adminActorUserId,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireStoryAsync(tenantId, storyId, cancellationToken);
+        story.Reject(adminActorUserId, reason, DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AdminStorySnapshot>> SellerListAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken)
+    {
+        var stories = await LoadStoriesForSellerAsync(tenantId, sellerPartyId, track: false, cancellationToken);
+        return stories
+            .OrderBy(story => story.DisplayOrder)
+            .ThenBy(story => story.StoryId)
+            .Select(MapAdmin)
+            .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot?> SellerGetAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        CancellationToken cancellationToken)
+    {
+        var story = await LoadSellerStoryAsync(tenantId, sellerPartyId, storyId, track: false, cancellationToken);
+        return story is null ? null : MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerCreateDraftAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CreateStoryCommand command,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var order = command.DisplayOrder
+            ?? await NextDisplayOrderAsync(tenantId, cancellationToken);
+        var story = StoryEntity.CreateSellerDraft(
+            tenantId,
+            sellerPartyId,
+            actorUserId,
+            command.Title,
+            order,
+            now,
+            command.Locale,
+            command.Market,
+            command.CoverMediaAssetId,
+            command.CoverMediaUrl,
+            command.CtaType,
+            command.CtaTarget);
+        _db.Stories.Add(story);
+        await _db.SaveChangesAsync(cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerUpdateAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        UpdateStoryCommand command,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.Update(
+            command.Title,
+            command.Locale,
+            command.Market,
+            command.CoverMediaAssetId,
+            command.CoverMediaUrl,
+            command.CtaType,
+            command.CtaTarget,
+            DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerSubmitAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.SubmitForReview(actorUserId, DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerAddItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        AddStoryItemCommand command,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var order = command.DisplayOrder
+            ?? (story.Items.Count == 0 ? 0 : story.Items.Max(item => item.DisplayOrder) + 1);
+        story.AddItem(
+            command.MediaType,
+            order,
+            now,
+            command.MediaAssetId,
+            command.MediaUrl,
+            command.Caption,
+            command.DurationMs,
+            command.CtaType,
+            command.CtaTarget);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerUpdateItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        UpdateStoryItemCommand command,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.UpdateItem(
+            itemId,
+            command.MediaType,
+            command.MediaAssetId,
+            command.MediaUrl,
+            command.Caption,
+            command.DurationMs,
+            command.CtaType,
+            command.CtaTarget,
+            DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerRemoveItemAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.RemoveItem(itemId, DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
+    /// <inheritdoc />
+    public async Task<AdminStorySnapshot> SellerReorderItemsAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        IReadOnlyList<Guid> itemIdsInOrder,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerEditableAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        story.ReorderItems(itemIdsInOrder, DateTimeOffset.UtcNow);
+        await SaveStoryAsync(story, cancellationToken);
+        return MapAdmin(story);
+    }
+
     internal static AdminStorySnapshot MapAdmin(StoryEntity story) => new(
         story.StoryId,
         story.TenantId,
+        story.Origin,
+        story.SellerPartyId,
+        story.ReviewStatus,
+        story.SubmittedByActorUserId,
+        story.ReviewedByActorUserId,
+        story.SubmittedAt,
+        story.ReviewedAt,
+        story.RejectionReason,
         story.Locale,
         story.Market,
         story.Title,
@@ -359,6 +577,28 @@ public sealed class StoryDirectory : IStoryDirectory
         return story ?? throw new InvalidOperationException("استوری یافت نشد.");
     }
 
+    private async Task<StoryEntity> RequireSellerStoryAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        CancellationToken cancellationToken)
+    {
+        var story = await LoadSellerStoryAsync(tenantId, sellerPartyId, storyId, track: true, cancellationToken);
+        return story ?? throw new InvalidOperationException("استوری یافت نشد.");
+    }
+
+    private async Task<StoryEntity> RequireSellerEditableAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        CancellationToken cancellationToken)
+    {
+        var story = await RequireSellerStoryAsync(tenantId, sellerPartyId, storyId, cancellationToken);
+        if (!story.IsSellerContentEditable())
+            throw new InvalidOperationException("استوری در این وضعیت قابل ویرایش توسط فروشنده نیست.");
+        return story;
+    }
+
     private async Task<StoryEntity?> LoadStoryAsync(
         Guid tenantId,
         Guid storyId,
@@ -372,13 +612,39 @@ public sealed class StoryDirectory : IStoryDirectory
         if (story is null)
             return null;
 
+        await AttachItemsAsync(story, track, cancellationToken);
+        return story;
+    }
+
+    private async Task<StoryEntity?> LoadSellerStoryAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        Guid storyId,
+        bool track,
+        CancellationToken cancellationToken)
+    {
+        var query = track ? _db.Stories : _db.Stories.AsNoTracking();
+        var story = await query.FirstOrDefaultAsync(
+            row => row.TenantId == tenantId
+                && row.StoryId == storyId
+                && row.Origin == StoryOrigin.Seller
+                && row.SellerPartyId == sellerPartyId,
+            cancellationToken);
+        if (story is null)
+            return null;
+
+        await AttachItemsAsync(story, track, cancellationToken);
+        return story;
+    }
+
+    private async Task AttachItemsAsync(StoryEntity story, bool track, CancellationToken cancellationToken)
+    {
         var itemQuery = track ? _db.StoryItems : _db.StoryItems.AsNoTracking();
         var items = await itemQuery
             .Where(item => item.StoryId == story.StoryId)
             .OrderBy(item => item.DisplayOrder)
             .ToListAsync(cancellationToken);
         story.AttachItems(items);
-        return story;
     }
 
     private async Task<List<StoryEntity>> LoadStoriesAsync(
@@ -392,8 +658,35 @@ public sealed class StoryDirectory : IStoryDirectory
             .OrderBy(story => story.DisplayOrder)
             .ThenBy(story => story.StoryId)
             .ToListAsync(cancellationToken);
+        await AttachItemsForStoriesAsync(stories, track, cancellationToken);
+        return stories;
+    }
+
+    private async Task<List<StoryEntity>> LoadStoriesForSellerAsync(
+        Guid tenantId,
+        Guid sellerPartyId,
+        bool track,
+        CancellationToken cancellationToken)
+    {
+        var query = track ? _db.Stories : _db.Stories.AsNoTracking();
+        var stories = await query
+            .Where(story => story.TenantId == tenantId
+                && story.Origin == StoryOrigin.Seller
+                && story.SellerPartyId == sellerPartyId)
+            .OrderBy(story => story.DisplayOrder)
+            .ThenBy(story => story.StoryId)
+            .ToListAsync(cancellationToken);
+        await AttachItemsForStoriesAsync(stories, track, cancellationToken);
+        return stories;
+    }
+
+    private async Task AttachItemsForStoriesAsync(
+        List<StoryEntity> stories,
+        bool track,
+        CancellationToken cancellationToken)
+    {
         if (stories.Count == 0)
-            return stories;
+            return;
 
         var ids = stories.Select(story => story.StoryId).ToList();
         var itemQuery = track ? _db.StoryItems : _db.StoryItems.AsNoTracking();
@@ -405,7 +698,6 @@ public sealed class StoryDirectory : IStoryDirectory
             .ToDictionary(group => group.Key, group => group.ToList());
         foreach (var story in stories)
             story.AttachItems(grouped.GetValueOrDefault(story.StoryId, []));
-        return stories;
     }
 
     private async Task SaveStoryAsync(StoryEntity story, CancellationToken cancellationToken)

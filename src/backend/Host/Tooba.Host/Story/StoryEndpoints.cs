@@ -1,16 +1,29 @@
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
+using Tooba.Host.Seller;
 using global::Tooba.Story.Application;
+using global::Tooba.Story.Domain;
 
 namespace Tooba.Host.Story;
 
-/// <summary>مرزهای HTTP عمومی و مدیریتی Story.</summary>
+/// <summary>مرزهای HTTP عمومی، فروشنده و مدیریتی Story.</summary>
 public static class StoryEndpoints
 {
     /// <summary>مسیرهای Story را ثبت می‌کند.</summary>
     public static void MapStoryEndpoints(this WebApplication app)
     {
         app.MapGet("/v1/storefront/stories", GetPublicStoriesAsync);
+
+        var seller = app.MapGroup("/v1/seller/stories");
+        seller.MapGet("", SellerListAsync);
+        seller.MapGet("/{id:guid}", SellerGetAsync);
+        seller.MapPost("", SellerCreateAsync);
+        seller.MapPut("/{id:guid}", SellerUpdateAsync);
+        seller.MapPost("/{id:guid}/submit", SellerSubmitAsync);
+        seller.MapPost("/{id:guid}/items", SellerAddItemAsync);
+        seller.MapPut("/{id:guid}/items/{itemId:guid}", SellerUpdateItemAsync);
+        seller.MapDelete("/{id:guid}/items/{itemId:guid}", SellerRemoveItemAsync);
+        seller.MapPut("/{id:guid}/items/reorder", SellerReorderItemsAsync);
 
         var admin = app.MapGroup("/v1/admin/stories");
         admin.MapGet("", AdminListAsync);
@@ -21,6 +34,8 @@ public static class StoryEndpoints
         admin.MapPost("/{id:guid}/enable", AdminEnableAsync);
         admin.MapPost("/{id:guid}/disable", AdminDisableAsync);
         admin.MapPost("/{id:guid}/schedule", AdminScheduleAsync);
+        admin.MapPost("/{id:guid}/approve", AdminApproveAsync);
+        admin.MapPost("/{id:guid}/reject", AdminRejectAsync);
         admin.MapPost("/{id:guid}/items", AdminAddItemAsync);
         admin.MapPut("/{id:guid}/items/{itemId:guid}", AdminUpdateItemAsync);
         admin.MapDelete("/{id:guid}/items/{itemId:guid}", AdminRemoveItemAsync);
@@ -29,6 +44,21 @@ public static class StoryEndpoints
 
     private static IResult ToError(PlatformHttpException ex) =>
         Results.Json(new { title = ex.Title, errorCode = ex.ErrorCode }, statusCode: ex.StatusCode);
+
+    private static IResult ToMutationError(InvalidOperationException ex)
+    {
+        var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+        var unsafeCta = ex.Message.Contains("ناامن", StringComparison.Ordinal);
+        var errorCode = missing
+            ? "story.missing"
+            : unsafeCta
+                ? "story.cta.rejected"
+                : "story.mutation.rejected";
+        var statusCode = missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest;
+        return Results.Json(
+            new { title = missing ? "Not Found" : "Bad Request", errorCode, detail = ex.Message },
+            statusCode: statusCode);
+    }
 
     private static async Task<IResult> GetPublicStoriesAsync(
         StoryPanelComposer composer,
@@ -50,7 +80,7 @@ public static class StoryEndpoints
         }
     }
 
-    private static async Task<IResult> AdminListAsync(
+    private static async Task<IResult> SellerListAsync(
         StoryPanelComposer composer,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -61,9 +91,215 @@ public static class StoryEndpoints
     {
         try
         {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var tenantId = StoryPanelComposer.RequireTenantId(tenant);
+            return Results.Json(await composer.SellerListAsync(tenantId, sellerPartyId, cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(
+                new { title = "Bad Request", errorCode = "story.tenant.missing", detail = ex.Message },
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    private static async Task<IResult> SellerGetAsync(
+        Guid id,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var tenantId = StoryPanelComposer.RequireTenantId(tenant);
+            var story = await composer.SellerGetAsync(tenantId, sellerPartyId, id, cancellationToken);
+            return story is null ? Results.NotFound() : Results.Json(story);
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+    }
+
+    private static async Task<IResult> SellerCreateAsync(
+        CreateStoryBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, actorUserId, sellerPartyId) =>
+                composer.SellerCreateDraftAsync(tenantId, sellerPartyId, actorUserId, body, cancellationToken),
+            successStatusCode: StatusCodes.Status201Created);
+
+    private static async Task<IResult> SellerUpdateAsync(
+        Guid id,
+        UpdateStoryBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, _, sellerPartyId) =>
+                composer.SellerUpdateAsync(tenantId, sellerPartyId, id, body, cancellationToken));
+
+    private static async Task<IResult> SellerSubmitAsync(
+        Guid id,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, actorUserId, sellerPartyId) =>
+                composer.SellerSubmitAsync(tenantId, sellerPartyId, id, actorUserId, cancellationToken));
+
+    private static async Task<IResult> SellerAddItemAsync(
+        Guid id,
+        AddStoryItemBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, _, sellerPartyId) =>
+                composer.SellerAddItemAsync(tenantId, sellerPartyId, id, body, cancellationToken),
+            successStatusCode: StatusCodes.Status201Created);
+
+    private static async Task<IResult> SellerUpdateItemAsync(
+        Guid id,
+        Guid itemId,
+        UpdateStoryItemBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, _, sellerPartyId) =>
+                composer.SellerUpdateItemAsync(tenantId, sellerPartyId, id, itemId, body, cancellationToken));
+
+    private static async Task<IResult> SellerRemoveItemAsync(
+        Guid id,
+        Guid itemId,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, _, sellerPartyId) =>
+                composer.SellerRemoveItemAsync(tenantId, sellerPartyId, id, itemId, cancellationToken));
+
+    private static async Task<IResult> SellerReorderItemsAsync(
+        Guid id,
+        ReorderStoryItemsBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await SellerMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, _, sellerPartyId) =>
+                composer.SellerReorderItemsAsync(tenantId, sellerPartyId, id, body.ItemIds, cancellationToken));
+
+    private static async Task<IResult> AdminListAsync(
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        string? reviewStatus = null,
+        bool pendingReview = false,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
             await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
             var tenantId = StoryPanelComposer.RequireTenantId(tenant);
-            return Results.Json(await composer.AdminListAsync(tenantId, cancellationToken));
+            if (pendingReview)
+                return Results.Json(await composer.AdminListPendingReviewAsync(tenantId, cancellationToken));
+
+            StoryReviewStatus? parsed = null;
+            if (!string.IsNullOrWhiteSpace(reviewStatus))
+            {
+                if (!Enum.TryParse<StoryReviewStatus>(reviewStatus, ignoreCase: true, out var value)
+                    || !Enum.IsDefined(value))
+                {
+                    return Results.Json(
+                        new { title = "Bad Request", errorCode = "story.reviewStatus.invalid" },
+                        statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                parsed = value;
+            }
+
+            return Results.Json(await composer.AdminListAsync(tenantId, parsed, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
         catch (InvalidOperationException ex)
@@ -110,7 +346,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminCreateAsync(tenantId, body, cancellationToken),
+            (tenantId, _) => composer.AdminCreateAsync(tenantId, body, cancellationToken),
             successStatusCode: StatusCodes.Status201Created);
 
     private static async Task<IResult> AdminUpdateAsync(
@@ -130,7 +366,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminUpdateAsync(tenantId, id, body, cancellationToken));
+            (tenantId, _) => composer.AdminUpdateAsync(tenantId, id, body, cancellationToken));
 
     private static async Task<IResult> AdminReorderAsync(
         ReorderStoriesBody body,
@@ -148,7 +384,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminReorderStoriesAsync(tenantId, body.StoryIds, cancellationToken));
+            (tenantId, _) => composer.AdminReorderStoriesAsync(tenantId, body.StoryIds, cancellationToken));
 
     private static async Task<IResult> AdminEnableAsync(
         Guid id,
@@ -166,7 +402,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminEnableAsync(tenantId, id, cancellationToken));
+            (tenantId, _) => composer.AdminEnableAsync(tenantId, id, cancellationToken));
 
     private static async Task<IResult> AdminDisableAsync(
         Guid id,
@@ -184,7 +420,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminDisableAsync(tenantId, id, cancellationToken));
+            (tenantId, _) => composer.AdminDisableAsync(tenantId, id, cancellationToken));
 
     private static async Task<IResult> AdminScheduleAsync(
         Guid id,
@@ -203,7 +439,45 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminSetScheduleAsync(tenantId, id, body, cancellationToken));
+            (tenantId, _) => composer.AdminSetScheduleAsync(tenantId, id, body, cancellationToken));
+
+    private static async Task<IResult> AdminApproveAsync(
+        Guid id,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await AdminMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, actorUserId) => composer.AdminApproveAsync(tenantId, id, actorUserId, cancellationToken));
+
+    private static async Task<IResult> AdminRejectAsync(
+        Guid id,
+        RejectStoryBody body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await AdminMutationAsync(
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            cancellationToken,
+            (tenantId, actorUserId) =>
+                composer.AdminRejectAsync(tenantId, id, actorUserId, body.Reason ?? string.Empty, cancellationToken));
 
     private static async Task<IResult> AdminAddItemAsync(
         Guid id,
@@ -222,7 +496,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminAddItemAsync(tenantId, id, body, cancellationToken),
+            (tenantId, _) => composer.AdminAddItemAsync(tenantId, id, body, cancellationToken),
             successStatusCode: StatusCodes.Status201Created);
 
     private static async Task<IResult> AdminUpdateItemAsync(
@@ -243,7 +517,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminUpdateItemAsync(tenantId, id, itemId, body, cancellationToken));
+            (tenantId, _) => composer.AdminUpdateItemAsync(tenantId, id, itemId, body, cancellationToken));
 
     private static async Task<IResult> AdminRemoveItemAsync(
         Guid id,
@@ -262,7 +536,7 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminRemoveItemAsync(tenantId, id, itemId, cancellationToken));
+            (tenantId, _) => composer.AdminRemoveItemAsync(tenantId, id, itemId, cancellationToken));
 
     private static async Task<IResult> AdminReorderItemsAsync(
         Guid id,
@@ -281,7 +555,29 @@ public static class StoryEndpoints
             guard,
             environment,
             cancellationToken,
-            tenantId => composer.AdminReorderItemsAsync(tenantId, id, body.ItemIds, cancellationToken));
+            (tenantId, _) => composer.AdminReorderItemsAsync(tenantId, id, body.ItemIds, cancellationToken));
+
+    private static async Task<IResult> SellerMutationAsync<T>(
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken,
+        Func<Guid, Guid, Guid, Task<T>> action,
+        int successStatusCode = StatusCodes.Status200OK)
+    {
+        try
+        {
+            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            var tenantId = StoryPanelComposer.RequireTenantId(tenant);
+            var result = await action(tenantId, actorUserId, sellerPartyId);
+            return Results.Json(result, statusCode: successStatusCode);
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex) { return ToMutationError(ex); }
+    }
 
     private static async Task<IResult> AdminMutationAsync<T>(
         HttpRequest request,
@@ -290,31 +586,19 @@ public static class StoryEndpoints
         IAuthorizationGuard guard,
         IHostEnvironment environment,
         CancellationToken cancellationToken,
-        Func<Guid, Task<T>> action,
+        Func<Guid, Guid, Task<T>> action,
         int successStatusCode = StatusCodes.Status200OK)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            var actorUserId = await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
             var tenantId = StoryPanelComposer.RequireTenantId(tenant);
-            var result = await action(tenantId);
+            var result = await action(tenantId, actorUserId);
             return Results.Json(result, statusCode: successStatusCode);
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex)
-        {
-            var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
-            var unsafeCta = ex.Message.Contains("ناامن", StringComparison.Ordinal);
-            var errorCode = missing
-                ? "story.missing"
-                : unsafeCta
-                    ? "story.cta.rejected"
-                    : "story.mutation.rejected";
-            var statusCode = missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest;
-            return Results.Json(
-                new { title = missing ? "Not Found" : "Bad Request", errorCode, detail = ex.Message },
-                statusCode: statusCode);
-        }
+        catch (InvalidOperationException ex) { return ToMutationError(ex); }
     }
 }
 
@@ -341,6 +625,9 @@ public sealed record UpdateStoryBody(
 
 /// <summary>بدنهٔ زمان‌بندی استوری.</summary>
 public sealed record SetStoryScheduleBody(DateTimeOffset? StartAt, DateTimeOffset? EndAt);
+
+/// <summary>بدنهٔ رد استوری.</summary>
+public sealed record RejectStoryBody(string? Reason);
 
 /// <summary>بدنهٔ مرتب‌سازی استوری‌ها.</summary>
 public sealed record ReorderStoriesBody(IReadOnlyList<Guid> StoryIds);

@@ -38,12 +38,17 @@ public sealed class StoryDbContext : DbContext
             entity.Property(x => x.Market).HasMaxLength(StoryRules.MarketMaxLength);
             entity.Property(x => x.Title).HasMaxLength(StoryRules.TitleMaxLength).IsRequired();
             entity.Property(x => x.CoverMediaUrl).HasMaxLength(StoryRules.MediaUrlMaxLength);
+            entity.Property(x => x.Origin).HasConversion<int>().IsRequired();
+            entity.Property(x => x.ReviewStatus).HasConversion<int>().IsRequired();
+            entity.Property(x => x.RejectionReason).HasMaxLength(StoryRules.RejectionReasonMaxLength);
             entity.Property(x => x.Status).HasConversion<int>().IsRequired();
             entity.Property(x => x.CtaType).HasMaxLength(StoryRules.CtaTypeMaxLength).IsRequired();
             entity.Property(x => x.CtaTarget).HasMaxLength(StoryRules.CtaTargetMaxLength);
             entity.Property(x => x.VersionToken).IsConcurrencyToken();
             entity.HasIndex(x => new { x.TenantId, x.DisplayOrder });
             entity.HasIndex(x => new { x.TenantId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.ReviewStatus });
+            entity.HasIndex(x => new { x.TenantId, x.SellerPartyId });
             entity.Ignore(x => x.Items);
         });
         modelBuilder.Entity<StoryItem>(entity =>

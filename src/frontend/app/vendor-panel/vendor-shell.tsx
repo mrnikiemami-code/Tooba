@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3,
   ChevronLeft,
+  Images,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -41,6 +42,7 @@ const menuItems: NavItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/vendor-panel", live: true },
   { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true },
   { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true },
+  { id: "stories", label: "استوری‌ها", icon: Images, href: "/vendor-panel/stories", live: true },
   { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true },
   { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true },
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },

@@ -67,4 +67,79 @@ test("mapAdminStory normalizes numeric status and items", () => {
   assert.equal(story?.status, "Active");
   assert.equal(story?.id, story?.storyId);
   assert.equal(story?.items[0]?.mediaType, "video");
+  assert.equal(story?.origin, "Admin");
+  assert.equal(story?.reviewStatus, "None");
+  assert.equal(story?.sellerPartyId, null);
+  assert.equal(story?.rejectionReason, null);
+});
+
+test("mapAdminStory maps origin/review/seller ownership fields (camel + Pascal)", () => {
+  const camel = mapAdminStory({
+    storyId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+    tenantId: "a0000000-0001-4000-8000-000000000001",
+    origin: 1,
+    reviewStatus: 3,
+    sellerPartyId: "01a030d1-40cb-7000-8abe-6d31739956c5",
+    rejectionReason: "محتوای نامناسب",
+    submittedAt: "2026-08-27T10:00:00Z",
+    reviewedAt: "2026-08-27T11:00:00Z",
+    submittedByActorUserId: "actor-submit",
+    reviewedByActorUserId: "actor-review",
+    locale: "fa",
+    market: null,
+    title: "فروشنده",
+    coverMediaAssetId: null,
+    coverMediaUrl: null,
+    displayOrder: 0,
+    startAt: null,
+    endAt: null,
+    status: "Draft",
+    ctaType: "none",
+    ctaTarget: null,
+    versionToken: 2,
+    createdAt: "2026-08-27T00:00:00Z",
+    updatedAt: "2026-08-27T00:00:00Z",
+    items: [],
+  });
+  assert.equal(camel?.origin, "Seller");
+  assert.equal(camel?.reviewStatus, "Rejected");
+  assert.equal(camel?.sellerPartyId, "01a030d1-40cb-7000-8abe-6d31739956c5");
+  assert.equal(camel?.rejectionReason, "محتوای نامناسب");
+  assert.equal(camel?.submittedAt, "2026-08-27T10:00:00Z");
+  assert.equal(camel?.reviewedAt, "2026-08-27T11:00:00Z");
+  assert.equal(camel?.submittedByActorUserId, "actor-submit");
+  assert.equal(camel?.reviewedByActorUserId, "actor-review");
+
+  const pascal = mapAdminStory({
+    StoryId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    TenantId: "a0000000-0001-4000-8000-000000000001",
+    Origin: "Seller",
+    ReviewStatus: "Submitted",
+    SellerPartyId: "01a030d1-40cb-7000-8abe-6d31739956c5",
+    RejectionReason: null,
+    SubmittedAt: "2026-08-27T12:00:00Z",
+    ReviewedAt: null,
+    SubmittedByActorUserId: "actor-2",
+    ReviewedByActorUserId: null,
+    Locale: "en",
+    Market: null,
+    Title: "Pending",
+    CoverMediaAssetId: null,
+    CoverMediaUrl: null,
+    DisplayOrder: 3,
+    StartAt: null,
+    EndAt: null,
+    Status: 0,
+    CtaType: "none",
+    CtaTarget: null,
+    VersionToken: 1,
+    CreatedAt: "2026-08-27T00:00:00Z",
+    UpdatedAt: "2026-08-27T00:00:00Z",
+    Items: [],
+  });
+  assert.equal(pascal?.origin, "Seller");
+  assert.equal(pascal?.reviewStatus, "Submitted");
+  assert.equal(pascal?.status, "Draft");
+  assert.equal(pascal?.submittedByActorUserId, "actor-2");
+  assert.equal(pascal?.reviewedByActorUserId, null);
 });

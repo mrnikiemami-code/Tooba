@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T016-R1
+TB-P06-T019-R1
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P06-T016-R1 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completed TB-P06-T019-R1 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -614,4 +614,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Commercial Panel Completion Wave 1 — nav honesty (hide deferred Customer/Seller/Admin items), customer settings locale preference + profile bridge, live seller settings from dashboard API, PANEL_NAVIGATION = HONEST_LIVE_ONLY, PRESENTATION_CRITICAL_FAKE_ACTIONS = FORBIDDEN, readiness `COMMERCIAL_PANEL_WAVE1_LIVE` (not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T018/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 Worker PASS = AWAITING_ARCHITECT_ACCEPT (`COMMERCIAL_PANEL_WAVE1_LIVE`). TB-P06-T019 interrupted by Architect; replacement TB-P06-T019-R1 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Shared Story Management — recovered backend review/ownership WIP (`AddStoryReviewOwnership`), one `StoryManagementScreen` for Admin+Seller (capability-scoped actions), seller `/vendor-panel/stories` submit/resubmit own-only, admin approve/reject/schedule/activate in existing `/admin/stories`, storefront Shopeiva Story rail untouched, readiness `SHARED_STORY_MANAGEMENT_LIVE` (not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T019-R1/`.
