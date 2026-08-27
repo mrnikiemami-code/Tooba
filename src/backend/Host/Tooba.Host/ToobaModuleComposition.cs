@@ -18,6 +18,7 @@ using Tooba.Wishlist.Infrastructure;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure;
 using Tooba.Content.Infrastructure;
+using Tooba.PageComposition.Infrastructure;
 using Tooba.Fulfillment.Infrastructure;
 using Tooba.Returns.Infrastructure;
 using Tooba.Settlement.Infrastructure;
@@ -53,6 +54,7 @@ internal static class ToobaModuleComposition
         new AddressBookModule(),
         new CustomerProfileModule(),
         new ContentModule(),
+        new PageCompositionModule(),
         new PaymentModule(),
         new FulfillmentModule(),
         new ReturnsModule(),

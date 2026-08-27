@@ -1,0 +1,61 @@
+{
+  "recordedAtUtc": "2026-08-27T02:29:35.436Z",
+  "runtime": {
+    "hostLive": 200,
+    "hostReady": 200,
+    "home": 200,
+    "adminComposition": 200,
+    "blog": 200,
+    "customerDashboard": 200,
+    "sellerDashboard": 200,
+    "adminDashboard": 200,
+    "shopeivaHome": 200
+  },
+  "baselineSectionTypes": [
+    "hero",
+    "stories",
+    "category_grid",
+    "product_rail_flash",
+    "best_sellers",
+    "product_rail_most_viewed",
+    "middle_banners",
+    "brands",
+    "newest_products",
+    "customer_reviews",
+    "latest_articles"
+  ],
+  "reorderStatus": 200,
+  "afterReorderFirstTwo": [
+    "stories",
+    "hero"
+  ],
+  "hideBrandsStatus": 200,
+  "publicSectionTypesAfterHide": [
+    "stories",
+    "hero",
+    "category_grid",
+    "product_rail_flash",
+    "best_sellers",
+    "product_rail_most_viewed",
+    "middle_banners",
+    "newest_products",
+    "customer_reviews",
+    "latest_articles"
+  ],
+  "brandsVisibleAfterHide": false,
+  "restoreStatus": 200,
+  "afterRestoreSectionTypes": [
+    "hero",
+    "stories",
+    "category_grid",
+    "product_rail_flash",
+    "best_sellers",
+    "product_rail_most_viewed",
+    "middle_banners",
+    "brands",
+    "newest_products",
+    "customer_reviews",
+    "latest_articles"
+  ],
+  "rejectedForbiddenConfigStatus": 404
+}

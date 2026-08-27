@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   LayoutDashboard,
+  LayoutTemplate,
   LogOut,
   Menu,
   Package,
@@ -52,6 +53,7 @@ const navGroups: NavGroup[] = [
       { id: "settlement", label: "تسویه فروشندگان", href: "/admin/settlement", icon: Wallet, live: true },
       { id: "payouts", label: "صف payout", href: "/admin/payouts", icon: Wallet, live: true },
       { id: "content", label: "محتوا / بلاگ", href: "/admin/content", icon: FileText, live: true },
+      { id: "page-composition", label: "ترکیب صفحهٔ خانه", href: "/admin/page-composition", icon: LayoutTemplate, live: true },
     ],
   },
   {

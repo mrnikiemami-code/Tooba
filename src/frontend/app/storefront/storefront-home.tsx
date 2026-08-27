@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, Flame } from "lucide-react";
+import {
+  defaultHomeCompositionSections,
+  parseSectionDisplayConfig,
+  type HomeCompositionSectionItem,
+  type SectionDisplayConfig,
+} from "../composition/composition-api.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import {
   HomeArticlesSection,
@@ -19,6 +25,8 @@ import type {
   StorefrontFeaturedReviewItem,
   StorefrontProductCard,
 } from "./storefront-model.ts";
+
+export { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";
 
 const SLIDES = [
   { src: "/images/sliders/slider-1.jpg", href: "/offers", alt: "بنر فروشگاهی یک" },
@@ -45,8 +53,20 @@ const MIDDLE_BANNERS = [
   { src: "/images/middleBanner/2.webp", href: "/brands", title: "برندها" },
 ];
 
+type HomeRenderContext = {
+  heroTitle: string;
+  homeCategories: StorefrontCategoryItem[];
+  specialOffers: StorefrontProductCard[];
+  bestSellerColumns: StorefrontBestSellerColumn[];
+  mostViewedProducts: StorefrontProductCard[];
+  brands: StorefrontBrandItem[];
+  newArrivals: StorefrontProductCard[];
+  featuredReviews: StorefrontFeaturedReviewItem[];
+  latestArticles: StorefrontArticleItem[];
+};
+
 /**
- * خانهٔ Shopeiva با ترتیب و ریتم منبع؛ دادهٔ تجاری زنده از Host.
+ * خانهٔ Shopeiva با ترتیب Page Composition؛ دادهٔ تجاری زنده از Host.
  */
 export function StorefrontShopeivaHome({
   heroTitle,
@@ -58,6 +78,7 @@ export function StorefrontShopeivaHome({
   mostViewedProducts,
   featuredReviews,
   latestArticles,
+  compositionSections,
 }: {
   heroTitle: string;
   heroSubtitle: string;
@@ -72,7 +93,100 @@ export function StorefrontShopeivaHome({
   mostViewedProducts: StorefrontProductCard[];
   featuredReviews: StorefrontFeaturedReviewItem[];
   latestArticles: StorefrontArticleItem[];
+  compositionSections?: HomeCompositionSectionItem[];
 }) {
+  const renderContext: HomeRenderContext = {
+    heroTitle,
+    homeCategories,
+    specialOffers,
+    bestSellerColumns,
+    mostViewedProducts,
+    brands,
+    newArrivals,
+    featuredReviews,
+    latestArticles,
+  };
+
+  const sections = (compositionSections?.length ? compositionSections : defaultHomeCompositionSections())
+    .slice()
+    .sort((left, right) => left.displayOrder - right.displayOrder);
+
+  return (
+    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home">
+      <h1 className="sr-only">{heroTitle}</h1>
+      {sections.map((section) => {
+        const rendered = renderHomeSection(
+          section.sectionType,
+          renderContext,
+          parseSectionDisplayConfig(section.configurationJson),
+        );
+        if (!rendered) return null;
+        return <Fragment key={section.pageSectionId}>{rendered}</Fragment>;
+      })}
+    </div>
+  );
+}
+
+function renderHomeSection(
+  sectionType: string,
+  context: HomeRenderContext,
+  config: SectionDisplayConfig,
+): ReactNode | null {
+  switch (sectionType) {
+    case "hero":
+      return (
+        <div data-testid="home-hero">
+          <HomeHeroSlider />
+        </div>
+      );
+    case "stories":
+      return <HomeStoriesSection homeCategories={context.homeCategories} />;
+    case "category_grid":
+      return <HomeCategoryGridSection homeCategories={context.homeCategories} />;
+    case "product_rail_flash":
+      return context.specialOffers.length > 0 ? (
+        <ProductRailSection
+          id="home-flash"
+          title={config.title ?? "پیشنهاد شگفت‌انگیز"}
+          href={config.href ?? "/offers"}
+          linkLabel="همه"
+          tone="accent"
+          products={context.specialOffers}
+          slideClassName="w-[170px] md:w-[210px]"
+          testId="home-flash-sales"
+        />
+      ) : null;
+    case "best_sellers":
+      return <HomeBestSellersSection columns={context.bestSellerColumns} />;
+    case "product_rail_most_viewed":
+      return context.mostViewedProducts.length > 0 ? (
+        <ProductRailSection
+          id="home-most-viewed"
+          title={config.title ?? "پربازدیدترین‌ها"}
+          href={config.href ?? "/most-viewed"}
+          linkLabel="همه"
+          tone="plain"
+          products={context.mostViewedProducts}
+          slideClassName="w-[170px] md:w-[220px]"
+          testId="home-most-viewed"
+        />
+      ) : null;
+    case "middle_banners":
+      return <HomeMiddleBannersSection />;
+    case "brands":
+      return <HomeBrandsSection brands={context.brands} />;
+    case "newest_products":
+      return <HomeNewProductsSection products={context.newArrivals} />;
+    case "customer_reviews":
+      return <HomeTestimonialsSection reviews={context.featuredReviews} />;
+    case "latest_articles":
+      return <HomeArticlesSection articles={context.latestArticles} />;
+    default:
+      return null;
+  }
+}
+
+function HomeStoriesSection({ homeCategories }: { homeCategories: StorefrontCategoryItem[] }) {
   const storyItems = homeCategories.slice(0, 12).map((category, index) => ({
     href: `/products?categoryId=${category.categoryId}`,
     name: category.name,
@@ -80,126 +194,90 @@ export function StorefrontShopeivaHome({
   }));
 
   return (
-    <div className="py-6 space-y-6 overflow-x-hidden" data-testid="storefront-home">
-      <h1 className="sr-only">{heroTitle}</h1>
-
-      <div data-testid="home-hero">
-        <HomeHeroSlider />
+    <section aria-label="استوری‌ها" className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+          استوری‌ها
+        </h3>
       </div>
-
-      <section aria-label="استوری‌ها" className="w-full px-2 sm:px-4 py-2" data-testid="home-stories">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
-            استوری‌ها
-          </h3>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-          {storyItems.map((story) => (
-            <Link key={`${story.href}-${story.name}`} href={story.href} className="shrink-0 w-20 md:w-[100px] text-center">
-              <div className="w-20 h-20 md:w-[100px] md:h-[100px] rounded-full p-[3px] bg-gradient-to-tr from-[#2563EB] to-amber-400">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={story.src} alt="" className="w-full h-full rounded-full object-cover bg-white p-0.5" />
-              </div>
-              <p className="text-[11px] mt-1 text-gray-700 line-clamp-2">{story.name}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-categories">
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="home-categories-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
-            دسته‌بندی‌ها
-          </h2>
-          <Link href="/products" className="text-xs text-[#2563EB] font-bold flex items-center gap-1">
-            همه
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 snap-x">
-          {homeCategories.map((category, index) => {
-            const imageIndex = CATEGORY_IMAGE_INDEXES[index % CATEGORY_IMAGE_INDEXES.length]!;
-            const extension = imageIndex === 10 ? "jpg" : "png";
-            return (
-              <Link
-                key={category.categoryId}
-                href={`/products?categoryId=${category.categoryId}`}
-                className="snap-start shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md"
-                data-testid="home-category-card"
-              >
-                <div className="aspect-square bg-gray-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/images/categories/${imageIndex}.${extension}`}
-                    alt=""
-                    className="w-full h-full object-contain p-4"
-                  />
-                </div>
-                <p className="text-sm font-bold text-gray-800 text-center px-2 py-3 line-clamp-2">{category.name}</p>
-              </Link>
-            );
-          })}
-        </div>
-        <p className="sr-only">تعداد ردهٔ ریل خانه: {homeCategories.length}</p>
-      </section>
-
-      {specialOffers.length > 0 ? (
-        <ProductRailSection
-          id="home-flash"
-          title="پیشنهاد شگفت‌انگیز"
-          href="/offers"
-          linkLabel="همه"
-          tone="accent"
-          products={specialOffers}
-          slideClassName="w-[170px] md:w-[210px]"
-          testId="home-flash-sales"
-        />
-      ) : null}
-
-      <HomeBestSellersSection columns={bestSellerColumns} />
-
-      {mostViewedProducts.length > 0 ? (
-        <ProductRailSection
-          id="home-most-viewed"
-          title="پربازدیدترین‌ها"
-          href="/most-viewed"
-          linkLabel="همه"
-          tone="plain"
-          products={mostViewedProducts}
-          slideClassName="w-[170px] md:w-[220px]"
-          testId="home-most-viewed"
-        />
-      ) : null}
-
-      <section aria-label="بنرهای میانی" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-middle-banners">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
-          {MIDDLE_BANNERS.map((banner) => (
-            <Link
-              key={`${banner.href}-${banner.title}`}
-              href={banner.href}
-              className="relative group rounded-3xl overflow-hidden aspect-[21/9] sm:aspect-[21/8] md:aspect-[21/7] bg-gray-100"
-            >
+      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+        {storyItems.map((story) => (
+          <Link key={`${story.href}-${story.name}`} href={story.href} className="shrink-0 w-20 md:w-[100px] text-center">
+            <div className="w-20 h-20 md:w-[100px] md:h-[100px] rounded-full p-[3px] bg-gradient-to-tr from-[#2563EB] to-amber-400">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={banner.src} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors" />
-              <span className="absolute bottom-4 right-4 text-white text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                {banner.title}
-              </span>
+              <img src={story.src} alt="" className="w-full h-full rounded-full object-cover bg-white p-0.5" />
+            </div>
+            <p className="text-[11px] mt-1 text-gray-700 line-clamp-2">{story.name}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function HomeCategoryGridSection({ homeCategories }: { homeCategories: StorefrontCategoryItem[] }) {
+  return (
+    <section aria-labelledby="home-categories-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-categories">
+      <div className="flex items-center justify-between mb-4">
+        <h2 id="home-categories-heading" className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span className="w-1 h-5 bg-[#2563EB] rounded-full" />
+          دسته‌بندی‌ها
+        </h2>
+        <Link href="/products" className="text-xs text-[#2563EB] font-bold flex items-center gap-1">
+          همه
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 snap-x">
+        {homeCategories.map((category, index) => {
+          const imageIndex = CATEGORY_IMAGE_INDEXES[index % CATEGORY_IMAGE_INDEXES.length]!;
+          const extension = imageIndex === 10 ? "jpg" : "png";
+          return (
+            <Link
+              key={category.categoryId}
+              href={`/products?categoryId=${category.categoryId}`}
+              className="snap-start shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md"
+              data-testid="home-category-card"
+            >
+              <div className="aspect-square bg-gray-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/images/categories/${imageIndex}.${extension}`}
+                  alt=""
+                  className="w-full h-full object-contain p-4"
+                />
+              </div>
+              <p className="text-sm font-bold text-gray-800 text-center px-2 py-3 line-clamp-2">{category.name}</p>
             </Link>
-          ))}
-        </div>
-      </section>
+          );
+        })}
+      </div>
+      <p className="sr-only">تعداد ردهٔ ریل خانه: {homeCategories.length}</p>
+    </section>
+  );
+}
 
-      <HomeBrandsSection brands={brands} />
-
-      <HomeNewProductsSection products={newArrivals} />
-
-      <HomeTestimonialsSection reviews={featuredReviews} />
-
-      <HomeArticlesSection articles={latestArticles} />
-    </div>
+function HomeMiddleBannersSection() {
+  return (
+    <section aria-label="بنرهای میانی" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-middle-banners">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+        {MIDDLE_BANNERS.map((banner) => (
+          <Link
+            key={`${banner.href}-${banner.title}`}
+            href={banner.href}
+            className="relative group rounded-3xl overflow-hidden aspect-[21/9] sm:aspect-[21/8] md:aspect-[21/7] bg-gray-100"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={banner.src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-colors" />
+            <span className="absolute bottom-4 right-4 text-white text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+              {banner.title}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

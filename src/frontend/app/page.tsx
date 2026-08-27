@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadHomeComposition } from "./composition/composition-api.ts";
 import { StorefrontShell } from "./storefront/storefront-shell.tsx";
 import { StorefrontShopeivaHome } from "./storefront/storefront-home.tsx";
 import { loadStorefrontHome, storefrontHostOrigin } from "./storefront/storefront-api.ts";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
  * خانهٔ فروشگاه زنده با پوستهٔ Shopeiva. داده از Host می‌آید نه از JSON دمو.
  */
 export default async function HomePage() {
-  const home = await loadStorefrontHome();
+  const [home, composition] = await Promise.all([loadStorefrontHome(), loadHomeComposition()]);
   if (!home) {
     return (
       <StorefrontShell categories={[]}>
@@ -45,6 +46,7 @@ export default async function HomePage() {
         mostViewedProducts={home.mostViewedProducts}
         featuredReviews={home.featuredReviews}
         latestArticles={home.latestArticles}
+        compositionSections={composition?.sections}
       />
     </StorefrontShell>
   );

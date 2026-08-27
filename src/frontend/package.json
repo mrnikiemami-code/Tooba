@@ -17,6 +17,7 @@
     "test:returns": "node --experimental-strip-types --test app/returns/return-api.test.ts",
     "test:settlement": "node --experimental-strip-types --test app/settlement/settlement-api.test.ts",
     "test:content": "node --experimental-strip-types --test app/content/content-api.test.ts",
+    "test:composition": "node --experimental-strip-types --test app/composition/composition-api.test.ts",
     "test:i18n": "node --experimental-strip-types --test lib/i18n/locale.test.ts",
     "test:customer": "node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts lib/auth/csrf.test.ts",
     "test:profile": "node --experimental-strip-types --test app/customer-panel/customer-profile-api.test.ts",
@@ -25,7 +26,7 @@
     "test:pdp-guard": "node --experimental-strip-types --test app/storefront/pdp-structure.guard.test.ts",
     "test:listing-guard": "node --experimental-strip-types --test app/storefront/listing-structure.guard.test.ts",
     "test:critical-storefront": "npm run test:home && npm run test:pdp-guard && npm run test:listing-guard",
-    "test": "npm run test:grid && npm run test:workspace && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront"
+    "test": "npm run test:grid && npm run test:workspace && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:composition && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

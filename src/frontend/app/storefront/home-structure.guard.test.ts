@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { DEFAULT_HOME_SECTION_ORDER } from "../composition/composition-api.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const homeSource = fs.readFileSync(path.join(root, "app/storefront/storefront-home.tsx"), "utf8");
@@ -26,19 +27,19 @@ const REQUIRED_MARKERS = [
   'modules={[FreeMode, Autoplay]}',
 ] as const;
 
-const ORDER_MARKERS = [
-  'data-testid="home-hero"',
-  'data-testid="home-stories"',
-  'data-testid="home-categories"',
-  'testId="home-flash-sales"',
-  '<HomeBestSellersSection',
-  'testId="home-most-viewed"',
-  'data-testid="home-middle-banners"',
-  '<HomeBrandsSection',
-  '<HomeNewProductsSection',
-  '<HomeTestimonialsSection',
-  '<HomeArticlesSection',
-] as const;
+const SECTION_TYPE_MARKERS: Record<string, string> = {
+  hero: 'data-testid="home-hero"',
+  stories: 'data-testid="home-stories"',
+  category_grid: 'data-testid="home-categories"',
+  product_rail_flash: 'testId="home-flash-sales"',
+  best_sellers: '<HomeBestSellersSection',
+  product_rail_most_viewed: 'testId="home-most-viewed"',
+  middle_banners: 'data-testid="home-middle-banners"',
+  brands: '<HomeBrandsSection',
+  newest_products: '<HomeNewProductsSection',
+  customer_reviews: '<HomeTestimonialsSection',
+  latest_articles: '<HomeArticlesSection',
+};
 
 test("home guard keeps Shopeiva section markers", () => {
   for (const marker of REQUIRED_MARKERS) {
@@ -46,14 +47,24 @@ test("home guard keeps Shopeiva section markers", () => {
   }
 });
 
-test("home guard preserves section order in main composition", () => {
-  const start = homeSource.indexOf("return (");
-  const composition = homeSource.slice(start, homeSource.indexOf("function HomeHeroSlider"));
-  let cursor = -1;
-  for (const marker of ORDER_MARKERS) {
-    const next = composition.indexOf(marker, cursor + 1);
-    assert.ok(next > cursor, `Home order broken around ${marker}`);
-    cursor = next;
+test("home guard preserves canonical default section order", () => {
+  assert.deepEqual([...DEFAULT_HOME_SECTION_ORDER], [
+    "hero",
+    "stories",
+    "category_grid",
+    "product_rail_flash",
+    "best_sellers",
+    "product_rail_most_viewed",
+    "middle_banners",
+    "brands",
+    "newest_products",
+    "customer_reviews",
+    "latest_articles",
+  ]);
+  for (const sectionType of DEFAULT_HOME_SECTION_ORDER) {
+    const marker = SECTION_TYPE_MARKERS[sectionType];
+    assert.ok(marker, `missing marker mapping for ${sectionType}`);
+    assert.ok(homeSource.includes(marker), `missing renderer marker for ${sectionType}`);
   }
 });
 
@@ -61,4 +72,11 @@ test("home guard rejects giant catalog dump on Home rail", () => {
   assert.equal(homeSource.includes('data-testid="home-all-categories"'), false);
   assert.match(homeSource, /homeCategories\.map/);
   assert.doesNotMatch(homeSource, /\{categories\.map\(/);
+});
+
+test("home guard keeps composition renderer switch cases", () => {
+  assert.match(homeSource, /function renderHomeSection/);
+  for (const sectionType of DEFAULT_HOME_SECTION_ORDER) {
+    assert.match(homeSource, new RegExp(`case "${sectionType}":`));
+  }
 });

@@ -1,5 +1,7 @@
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure;
+using Tooba.PageComposition.Infrastructure.Persistence;
+using Tooba.PageComposition.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Identity.Infrastructure.Persistence;
@@ -42,7 +44,9 @@ internal static class MarketplaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
         await MigrateAsync(provider.GetRequiredService<SettlementDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
+        await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
+        await PageCompositionDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);
         await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
         await MarketplaceSellerDevBootstrap.EnsureAsync(provider, CancellationToken.None);
         await MarketplaceAdminDevBootstrap.EnsureAsync(provider, CancellationToken.None);

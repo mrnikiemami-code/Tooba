@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CheckCircle, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
+import { CheckCircle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
 import { executeGridQuery } from "../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
@@ -64,6 +64,14 @@ import {
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
+import {
+  loadAdminHomeComposition,
+  reorderAdminHomeSections,
+  restoreDefaultAdminHomeComposition,
+  SECTION_TYPE_LABELS,
+  updateAdminHomeSection,
+  type AdminHomeCompositionSectionItem,
+} from "../composition/composition-api";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -832,6 +840,157 @@ export function AdminContentScreen() {
           </div>
         </div>
       ) : null}
+    </main>
+  );
+}
+
+/** مدیریت ترکیب صفحهٔ خانه — section catalog تأییدشده. */
+export function AdminPageCompositionScreen() {
+  const [state, setState] = useState<AdminLoadState | "loading">("loading");
+  const [rows, setRows] = useState<AdminHomeCompositionSectionItem[]>([]);
+  const [message, setMessage] = useState<string>();
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(() => {
+    void loadAdminHomeComposition().then((result) => {
+      setState(result.state);
+      setRows(result.data?.sections ?? []);
+      setMessage(result.message);
+    });
+  }, []);
+
+  useEffect(refresh, [refresh]);
+
+  const move = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= rows.length) return;
+    const next = rows.slice();
+    const current = next[index]!;
+    next[index] = next[target]!;
+    next[target] = current;
+    setBusy(true);
+    const result = await reorderAdminHomeSections(next.map((row) => row.pageSectionId));
+    setBusy(false);
+    if (result.state === "ok" && result.data) {
+      setRows(result.data.sections);
+      setMessage(undefined);
+    } else {
+      setMessage(result.message ?? "مرتب‌سازی ذخیره نشد");
+      refresh();
+    }
+  };
+
+  const toggleVisibility = async (row: AdminHomeCompositionSectionItem) => {
+    setBusy(true);
+    const result = await updateAdminHomeSection(row.pageSectionId, { isVisible: !row.isVisible });
+    setBusy(false);
+    if (result.state === "ok" && result.data) {
+      setRows(result.data.sections);
+    } else {
+      setMessage(result.message ?? "به‌روزرسانی visibility انجام نشد");
+    }
+  };
+
+  const restoreDefault = async () => {
+    setBusy(true);
+    const result = await restoreDefaultAdminHomeComposition();
+    setBusy(false);
+    if (result.state === "ok" && result.data) {
+      setRows(result.data.sections);
+      setMessage(undefined);
+    } else {
+      setMessage(result.message ?? "بازگردانی پیش‌فرض انجام نشد");
+    }
+  };
+
+  if (state === "denied") return <Denied retry={refresh} />;
+
+  return (
+    <main data-testid="admin-page-composition">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <PageHeading
+          title="ترکیب صفحهٔ خانه"
+          description="ترتیب، نمایش/پنهان و variant sectionهای تأییدشدهٔ Shopeiva"
+        />
+        <button
+          type="button"
+          className="rounded-xl border border-border bg-surface-elevated px-4 py-2 text-sm font-bold"
+          disabled={busy}
+          onClick={() => void restoreDefault()}
+        >
+          بازگردانی پیش‌فرض
+        </button>
+      </div>
+
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="border-b border-border px-5 py-3 text-sm text-muted">
+          {rows.length.toLocaleString("fa-IR")} section — فقط کاتالوگ تأییدشده
+        </div>
+        <div className="p-4 md:p-5">
+          {state === "error" ? (
+            <ErrorState title="ترکیب خانه خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : state === "loading" ? (
+            <p className="text-sm text-muted">در حال بارگذاری…</p>
+          ) : (
+            <ol className="space-y-3">
+              {rows.map((row, index) => (
+                <li
+                  key={row.pageSectionId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white px-4 py-3"
+                  data-testid={`admin-composition-row-${row.sectionType}`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <LayoutTemplate className="h-4 w-4 text-[#2563EB]" />
+                      <strong>{SECTION_TYPE_LABELS[row.sectionType] ?? row.sectionType}</strong>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-mono" dir="ltr">
+                        {row.sectionType}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted">
+                      ترتیب {index + 1} · variant {row.variant}
+                      {!row.isVisible ? " · پنهان" : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="بالا"
+                      className="rounded-lg border border-border p-2 hover:bg-slate-50 disabled:opacity-40"
+                      disabled={busy || index === 0}
+                      onClick={() => void move(index, -1)}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="پایین"
+                      className="rounded-lg border border-border p-2 hover:bg-slate-50 disabled:opacity-40"
+                      disabled={busy || index === rows.length - 1}
+                      onClick={() => void move(index, 1)}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className={`rounded-lg px-3 py-2 text-xs font-bold ${row.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                      disabled={busy}
+                      onClick={() => void toggleVisibility(row)}
+                    >
+                      {row.isVisible ? (
+                        <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> نمایان</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1"><EyeOff className="h-3.5 w-3.5" /> پنهان</span>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+          {message ? <p className="mt-4 text-sm text-red-600">{message}</p> : null}
+        </div>
+      </section>
     </main>
   );
 }

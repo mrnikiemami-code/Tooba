@@ -4,6 +4,7 @@ using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.PageComposition.Infrastructure.Persistence;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -65,6 +66,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<AddressBookDbContext>("AddressBook", AddressBookDbContext.Schema),
         Descriptor<CustomerProfileDbContext>("CustomerProfile", CustomerProfileDbContext.Schema),
         Descriptor<ContentDbContext>("Content", ContentDbContext.Schema),
+        Descriptor<PageCompositionDbContext>("PageComposition", PageCompositionDbContext.Schema),
     ];
 
     private static ModuleMigrationDescriptor Descriptor<TContext>(string module, string schema)
