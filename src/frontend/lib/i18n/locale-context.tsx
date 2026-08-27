@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
-import { DEFAULT_LOCALE, type Locale } from "./locale.ts";
-import { localePath, stripLocalePrefix } from "./routing.ts";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DEFAULT_LOCALE, dirForLocale, langForLocale, type Locale } from "./locale.ts";
+import { localePath, parseLocalePrefix, stripLocalePrefix } from "./routing.ts";
 
 const LocaleContext = createContext<{
   locale: Locale;
@@ -14,8 +14,30 @@ const LocaleContext = createContext<{
   switchLocalePath: (target) => localePath(target, "/"),
 });
 
-/** locale فعال از URL (توسط layout/parent تزریق می‌شود). */
-export function LocaleProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
+function readPublicLocale(fallback: Locale): Locale {
+  if (typeof window === "undefined") return fallback;
+  return parseLocalePrefix(window.location.pathname)?.locale ?? fallback;
+}
+
+/** locale فعال از URL عمومی (prefix) — canonical برای لینک و dir/lang. */
+export function LocaleProvider({ locale: serverLocale, children }: { locale: Locale; children: ReactNode }) {
+  const [locale, setLocale] = useState<Locale>(serverLocale);
+
+  useEffect(() => {
+    setLocale(readPublicLocale(serverLocale));
+  }, [serverLocale]);
+
+  useEffect(() => {
+    const syncFromUrl = () => setLocale(readPublicLocale(serverLocale));
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, [serverLocale]);
+
+  useEffect(() => {
+    document.documentElement.lang = langForLocale(locale);
+    document.documentElement.dir = dirForLocale(locale);
+  }, [locale]);
+
   const localizePath = useCallback((internalPath: string) => localePath(locale, internalPath), [locale]);
   const switchLocalePath = useCallback(
     (target: Locale) => {
@@ -29,6 +51,7 @@ export function LocaleProvider({ locale, children }: { locale: Locale; children:
     () => ({ locale, localizePath, switchLocalePath }),
     [locale, localizePath, switchLocalePath],
   );
+
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 

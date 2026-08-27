@@ -1,0 +1,668 @@
+{
+  "recordedAtUtc": "2026-08-27T03:23:26.456Z",
+  "productSlug": "demo-game-3",
+  "articleSlug": "guide-online-shopping",
+  "runtime": {
+    "hostLive": 200,
+    "hostReady": 200,
+    "fa": {
+      "url": "http://127.0.0.1:3000/fa",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/fa",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa"
+        }
+      ],
+      "ogLocale": "fa_IR",
+      "title": "فروشگاه توبا | خانه",
+      "htmlLang": "fa",
+      "htmlDir": "rtl",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"image\" href=\"/ima"
+    },
+    "en": {
+      "url": "http://127.0.0.1:3000/en",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/en",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa"
+        }
+      ],
+      "ogLocale": "en_US",
+      "title": "Tooba Store | Home",
+      "htmlLang": "en",
+      "htmlDir": "ltr",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"image\" href=\"/ima"
+    },
+    "faBlogs": {
+      "url": "http://127.0.0.1:3000/fa/blogs",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/fa/blogs",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa/blogs"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en/blogs"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa/blogs"
+        }
+      ],
+      "ogLocale": "fa_IR",
+      "title": "مجله توبا | مقالات و راهنماها",
+      "htmlLang": "fa",
+      "htmlDir": "rtl",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/stati"
+    },
+    "enBlogs": {
+      "url": "http://127.0.0.1:3000/en/blogs",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/en/blogs",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa/blogs"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en/blogs"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa/blogs"
+        }
+      ],
+      "ogLocale": "en_US",
+      "title": "Tooba Magazine | Articles",
+      "htmlLang": "en",
+      "htmlDir": "ltr",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/stati"
+    },
+    "faPdp": {
+      "url": "http://127.0.0.1:3000/fa/products/demo-game-3",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/fa/products/demo-game-3",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa/products/demo-game-3"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en/products/demo-game-3"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa/products/demo-game-3"
+        }
+      ],
+      "ogLocale": "fa_IR",
+      "title": "بازی فکری رومیزی خانوادگی",
+      "htmlLang": "fa",
+      "htmlDir": "rtl",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"image\" href=\"/ima"
+    },
+    "enPdp": {
+      "url": "http://127.0.0.1:3000/en/products/demo-game-3",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/en/products/demo-game-3",
+      "hreflang": [
+        {
+          "hreflang": "fa-IR",
+          "href": "/fa/products/demo-game-3"
+        },
+        {
+          "hreflang": "en",
+          "href": "/en/products/demo-game-3"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "/fa/products/demo-game-3"
+        }
+      ],
+      "ogLocale": "en_US",
+      "title": "بازی فکری رومیزی خانوادگی",
+      "htmlLang": "en",
+      "htmlDir": "ltr",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"preload\" as=\"image\" href=\"/ima"
+    },
+    "faArticle": {
+      "url": "http://127.0.0.1:3000/fa/blogs/guide-online-shopping",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/fa/blogs/guide-online-shopping",
+      "hreflang": [],
+      "ogLocale": "fa_IR",
+      "title": "راهنمای خرید آنلاین هوشمند",
+      "htmlLang": "fa",
+      "htmlDir": "rtl",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/stati"
+    },
+    "enArticle": {
+      "url": "http://127.0.0.1:3000/en/blogs/guide-online-shopping",
+      "status": 200,
+      "location": null,
+      "hasCanonical": true,
+      "canonicalHref": "/en/blogs/guide-online-shopping",
+      "hreflang": [],
+      "ogLocale": "en_US",
+      "title": "راهنمای خرید آنلاین هوشمند",
+      "htmlLang": "en",
+      "htmlDir": "ltr",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/stati"
+    },
+    "shopeiva": 200
+  },
+  "redirects": {
+    "root": {
+      "url": "http://127.0.0.1:3000/",
+      "status": 308,
+      "location": "/fa",
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": null,
+      "htmlLang": null,
+      "htmlDir": null,
+      "bodySnippet": "/fa"
+    },
+    "blogs": {
+      "url": "http://127.0.0.1:3000/blogs",
+      "status": 308,
+      "location": "/fa/blogs",
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": null,
+      "htmlLang": null,
+      "htmlDir": null,
+      "bodySnippet": "/fa/blogs"
+    },
+    "products": {
+      "url": "http://127.0.0.1:3000/products",
+      "status": 308,
+      "location": "/fa/products",
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": null,
+      "htmlLang": null,
+      "htmlDir": null,
+      "bodySnippet": "/fa/products"
+    },
+    "productSlug": {
+      "url": "http://127.0.0.1:3000/products/demo-game-3",
+      "status": 308,
+      "location": "/fa/products/demo-game-3",
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": null,
+      "htmlLang": null,
+      "htmlDir": null,
+      "bodySnippet": "/fa/products/demo-game-3"
+    },
+    "withQuery": {
+      "url": "http://127.0.0.1:3000/products?q=demo&page=1",
+      "status": 308,
+      "location": "/fa/products?q=demo&page=1",
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": null,
+      "htmlLang": null,
+      "htmlDir": null,
+      "bodySnippet": "/fa/products?q=demo&page=1"
+    },
+    "invalidLocale": {
+      "url": "http://127.0.0.1:3000/fr/products",
+      "status": 404,
+      "location": null,
+      "hasCanonical": false,
+      "canonicalHref": null,
+      "hreflang": [],
+      "ogLocale": null,
+      "title": "Tooba",
+      "htmlLang": "fa",
+      "htmlDir": "rtl",
+      "bodySnippet": "<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/stati"
+    }
+  },
+  "sitemap": {
+    "status": 200,
+    "hasFa": true,
+    "hasEn": true,
+    "hasUnprefixedProducts": false,
+    "sample": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\">\n<url>\n<loc>http://127.0.0.1:3000/fa</loc>\n<xhtml:link rel=\"alternate\" hreflang=\"fa-IR\" href=\"http://127.0.0.1:3000/fa\" />\n<xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"http://127.0.0.1:3000/en\" />\n</url>\n<url>\n<loc>http://127.0.0.1:3000/en</loc>\n<xhtml:link rel=\"alternate\" hreflang=\"fa-IR\" href=\"http://127.0.0.1:3000/fa\" />\n<xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"http://127.0.0.1:3000/en\" />\n</url>\n<url>\n<loc>http://127.0.0.1:3000/fa/products</loc>\n<xhtml:link rel=\"alternate\" hreflang=\"fa-IR\" href=\"http://127.0.0.1:3000/fa/products\" />\n<xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"http://127.0.0.1:3000/en/products\" />\n</url>\n<url>\n<loc>h",
+    "entryCount": 30
+  },
+  "composition": {
+    "faSectionCount": 11,
+    "enSectionCount": 11,
+    "faTypes": [
+      "hero",
+      "stories",
+      "category_grid",
+      "product_rail_flash",
+      "best_sellers",
+      "product_rail_most_viewed",
+      "middle_banners",
+      "brands",
+      "newest_products",
+      "customer_reviews",
+      "latest_articles"
+    ],
+    "enTypes": [
+      "hero",
+      "stories",
+      "category_grid",
+      "product_rail_flash",
+      "best_sellers",
+      "product_rail_most_viewed",
+      "middle_banners",
+      "brands",
+      "newest_products",
+      "customer_reviews",
+      "latest_articles"
+    ]
+  },
+  "browser": {
+    "desktop": [
+      {
+        "file": "01-fa-home-desktop.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3000/fa",
+          "title": "فروشگاه توبا | خانه"
+        },
+        "links": {
+          "sample": [
+            "/fa",
+            "/fa/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/fa/cart",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa/sale",
+            "/fa/products?categoryId=01a03826-a835-7000-95a0-1a4d9cec9cb7",
+            "/fa/products?categoryId=01a03826-aad6-7000-8769-fb7d738a0cff",
+            "/fa/products?categoryId=01a03826-a4f5-7000-95a8-4ba233163d9c",
+            "/fa/products?categoryId=01a03826-9c28-7000-8adf-df93502c4140"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "02-en-home-desktop.png",
+        "attrs": {
+          "lang": "en",
+          "dir": "ltr",
+          "href": "http://127.0.0.1:3000/en",
+          "title": "Tooba Store | Home"
+        },
+        "links": {
+          "sample": [
+            "/en",
+            "/en/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/en/cart",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en/sale",
+            "/en/products?categoryId=01a03826-a835-7000-95a0-1a4d9cec9cb7",
+            "/en/products?categoryId=01a03826-aad6-7000-8769-fb7d738a0cff",
+            "/en/products?categoryId=01a03826-a4f5-7000-95a8-4ba233163d9c",
+            "/en/products?categoryId=01a03826-9c28-7000-8adf-df93502c4140"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "03-fa-pdp-desktop.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3000/fa/products/demo-game-3",
+          "title": "بازی فکری رومیزی خانوادگی"
+        },
+        "links": {
+          "sample": [
+            "/fa",
+            "/fa/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/fa/cart",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa",
+            "/fa/products",
+            "/fa/products",
+            "/fa/products",
+            "/fa/products/demo-game-2"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "04-en-pdp-desktop.png",
+        "attrs": {
+          "lang": "en",
+          "dir": "ltr",
+          "href": "http://127.0.0.1:3000/en/products/demo-game-3",
+          "title": "بازی فکری رومیزی خانوادگی"
+        },
+        "links": {
+          "sample": [
+            "/en",
+            "/en/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/en/cart",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en",
+            "/en/products",
+            "/en/products",
+            "/en/products",
+            "/en/products/demo-game-2"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "05-fa-blogs-desktop.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3000/fa/blogs",
+          "title": "مجله توبا | مقالات و راهنماها"
+        },
+        "links": {
+          "sample": [
+            "/fa/blogs/guide-online-shopping",
+            "/fa/blogs/mobile-buying-tips",
+            "/fa/blogs/home-appliance-care",
+            "/fa/blogs/seasonal-offers",
+            "/fa/blogs/guide-online-shopping",
+            "/fa/blogs/mobile-buying-tips",
+            "/fa/blogs/home-appliance-care",
+            "/fa/blogs/seasonal-offers"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "06-en-blogs-desktop.png",
+        "attrs": {
+          "lang": "en",
+          "dir": "ltr",
+          "href": "http://127.0.0.1:3000/en/blogs",
+          "title": "Tooba Magazine | Articles"
+        },
+        "links": {
+          "sample": [
+            "/en/blogs/guide-online-shopping",
+            "/en/blogs/mobile-buying-tips",
+            "/en/blogs/home-appliance-care",
+            "/en/blogs/seasonal-offers",
+            "/en/blogs/guide-online-shopping",
+            "/en/blogs/mobile-buying-tips",
+            "/en/blogs/home-appliance-care",
+            "/en/blogs/seasonal-offers"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "07-fa-article-desktop.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3000/fa/blogs/guide-online-shopping",
+          "title": "راهنمای خرید آنلاین هوشمند"
+        },
+        "links": {
+          "sample": [
+            "/fa/blogs"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "08-shopeiva-home-desktop.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3001/",
+          "title": "شاپیوا | فروشگاه آنلاین معتبر و مدرن"
+        },
+        "links": {
+          "sample": [
+            "/",
+            "/login",
+            "/club",
+            "/offers",
+            "/trending",
+            "/new-products",
+            "/brands",
+            "/vendor-register",
+            "/about",
+            "/contact",
+            "/club",
+            "/offers",
+            "/trending",
+            "/new-products",
+            "/brands",
+            "/vendor-register",
+            "/about",
+            "/contact",
+            "/login",
+            "/sale"
+          ],
+          "unprefixedPublic": [
+            "/",
+            "/login",
+            "/club",
+            "/offers",
+            "/trending",
+            "/new-products",
+            "/brands",
+            "/vendor-register",
+            "/about",
+            "/contact",
+            "/club",
+            "/offers",
+            "/trending",
+            "/new-products",
+            "/brands",
+            "/vendor-register",
+            "/about",
+            "/contact",
+            "/login",
+            "/sale",
+            "/new-products",
+            "/brands",
+            "/sale",
+            "/categories",
+            "/offers",
+            "/product/1/گوشی-موبایل-اپل-آیفون-۱۵-پرو-مکس",
+            "/product/2/لپ-تاپ-دل-XPS-15",
+            "/product/3/هدفون-سونی-WH-1000XM5",
+            "/product/4/ساعت-هوشمند-اپل-واچ-سری-۹",
+            "/product/5/کیف-چرمی-مردانه",
+            "/product/6/مایکروویو-ال-جی",
+            "/product/7/تبلت-سامسونگ-Galaxy-Tab-S9",
+            "/product/8/کنسول-بازی-PS5",
+            "/sale",
+            "/new-products",
+            "/brands",
+            "/shipping",
+            "/brands",
+            "/new-products",
+            "/product/2/لپ-تاپ-دل-XPS-15",
+            "/product/4/ساعت-هوشمند-اپل-واچ-سری-۹",
+            "/product/7/تبلت-سامسونگ-Galaxy-Tab-S9",
+            "/product/9/گوشی-سامسونگ-Galaxy-S24-Ultra",
+            "/product/12/کیبورد-مکانیکال-لاجیتک-G-Pro",
+            "/product/17/ساعت-هوشمند-سامسونگ-Watch-6",
+            "/product/19/تبلت-آیپد-پرو-۱۲.۹-اینچ",
+            "/product/23/عینک-واقعیت-مجازی-Meta-Quest-3",
+            "/blogs",
+            "/blogs/1/complete-guide-buying-game-console-2024",
+            "/blogs/2/10-useful-windows-11-tips",
+            "/blogs/3/iphone-15-pro-max-vs-samsung-s24-ultra",
+            "/blogs/4/build-gaming-pc-medium-budget",
+            "/blogs/5/ai-in-photography-revolution-or-threat",
+            "/blogs/6/best-wireless-headphones-under-3-million"
+          ]
+        }
+      }
+    ],
+    "mobile": [
+      {
+        "file": "09-fa-home-mobile.png",
+        "attrs": {
+          "lang": "fa",
+          "dir": "rtl",
+          "href": "http://127.0.0.1:3000/fa",
+          "title": "فروشگاه توبا | خانه"
+        },
+        "links": {
+          "sample": [
+            "/fa",
+            "/fa/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/fa/cart",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa/offers",
+            "/fa/trending",
+            "/fa/new-products",
+            "/fa/brands",
+            "/fa/sellers",
+            "/fa/sale",
+            "/fa/products?categoryId=01a03826-a835-7000-95a0-1a4d9cec9cb7",
+            "/fa/products?categoryId=01a03826-aad6-7000-8769-fb7d738a0cff",
+            "/fa/products?categoryId=01a03826-a4f5-7000-95a8-4ba233163d9c",
+            "/fa/products?categoryId=01a03826-9c28-7000-8adf-df93502c4140"
+          ],
+          "unprefixedPublic": []
+        }
+      },
+      {
+        "file": "10-en-home-mobile.png",
+        "attrs": {
+          "lang": "en",
+          "dir": "ltr",
+          "href": "http://127.0.0.1:3000/en",
+          "title": "Tooba Store | Home"
+        },
+        "links": {
+          "sample": [
+            "/en",
+            "/en/products",
+            "/customer-panel/wishlist",
+            "/admin/products",
+            "/en/cart",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en/offers",
+            "/en/trending",
+            "/en/new-products",
+            "/en/brands",
+            "/en/sellers",
+            "/en/sale",
+            "/en/products?categoryId=01a03826-a835-7000-95a0-1a4d9cec9cb7",
+            "/en/products?categoryId=01a03826-aad6-7000-8769-fb7d738a0cff",
+            "/en/products?categoryId=01a03826-a4f5-7000-95a8-4ba233163d9c",
+            "/en/products?categoryId=01a03826-9c28-7000-8adf-df93502c4140"
+          ],
+          "unprefixedPublic": []
+        }
+      }
+    ]
+  }
+}
