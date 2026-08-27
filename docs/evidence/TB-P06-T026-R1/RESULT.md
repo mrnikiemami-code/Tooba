@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_WORKER_RESULT
 
@@ -16,8 +16,8 @@ Final proof Repair for Wallet/Gift Card: full backend/FE validation (0 warnings/
 
 Recovery:
 predecessor: 9ec56d15069cf080940829d93cbf01beef7d8091
-HEAD: 4bb15c20165d7a94e3674d9c32e6acbfc34bf475
-origin/main: 4bb15c20165d7a94e3674d9c32e6acbfc34bf475
+HEAD: b2d033a9d5f1174faa200283dac512ec2955221f
+origin/main: b2d033a9d5f1174faa200283dac512ec2955221f
 tree: clean tracked after commit
 
 Backend-Validation:
@@ -108,7 +108,7 @@ visual contract: SHOPEIVA_LOCKED
 Git:
 commit: test prove wallet and gift card preview [TB-P06-T026-R1]
 push: origin main
-final HEAD: 4bb15c20165d7a94e3674d9c32e6acbfc34bf475
+final HEAD: b2d033a9d5f1174faa200283dac512ec2955221f
 origin/main: synchronized
 tracked tree: clean
 
