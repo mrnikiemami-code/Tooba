@@ -148,7 +148,7 @@ visual contract: SHOPEIVA_LOCKED
 Git:
 commit: feat complete commercial settings profiles [TB-P06-T027]
 push: origin main
-final HEAD: 52a51b77826ef716b1d43f468d41a35da854a000
+final HEAD: a44de0d3361bdf8b1710949123a81113a075bbe4
 origin/main: synchronized
 tracked tree: clean
 
