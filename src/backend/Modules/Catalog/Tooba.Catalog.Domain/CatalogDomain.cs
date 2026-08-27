@@ -258,9 +258,65 @@ public sealed class CatalogAttributeDefinition
     public CatalogAttributeValueKind ValueKind { get; init; }
 
     /// <summary>
-    /// اگر true باشد محور ترکیب Variant است نه مشخصات سادهٔ محصول.
+    /// اگر true باشد تعریف مجاز است به‌عنوان محور ترکیب Variant انتخاب شود (نه مشخصات سادهٔ محصول).
+    /// ستون DB همان <c>IsVariantAxis</c> است؛ معنای معنایی IsVariantAxisAllowed.
     /// </summary>
     public bool IsVariantAxis { get; init; }
+
+    /// <summary>
+    /// نام مستعار معنایی برای <see cref="IsVariantAxis"/>؛ در EF نادیده گرفته می‌شود.
+    /// </summary>
+    public bool IsVariantAxisAllowed => IsVariantAxis;
+
+    /// <summary>
+    /// واحد نمایشی اختیاری (مثلاً GB، inch)؛ قیمت نیست.
+    /// </summary>
+    public string? Unit { get; set; }
+
+    /// <summary>
+    /// پیش‌فرض الزام در سطح تعریف؛ override رده می‌تواند سخت‌تر کند.
+    /// </summary>
+    public bool IsRequired { get; set; }
+
+    /// <summary>
+    /// قابل استفاده در فیلتر ویترین آینده.
+    /// </summary>
+    public bool IsFilterable { get; set; }
+
+    /// <summary>
+    /// قابل مقایسه در جدول مقایسهٔ آینده.
+    /// </summary>
+    public bool IsComparable { get; set; }
+
+    /// <summary>
+    /// چندمقداری بودن؛ در foundation فعلی مقدار تکی ذخیره می‌شود.
+    /// </summary>
+    public bool IsMultivalue { get; set; }
+
+    /// <summary>
+    /// ترتیب نمایش پیش‌فرض تعریف.
+    /// </summary>
+    public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// حداقل عددی اختیاری برای Number.
+    /// </summary>
+    public decimal? ValidationMin { get; set; }
+
+    /// <summary>
+    /// حداکثر عددی اختیاری برای Number.
+    /// </summary>
+    public decimal? ValidationMax { get; set; }
+
+    /// <summary>
+    /// حداکثر طول متن اختیاری برای Text.
+    /// </summary>
+    public int? ValidationMaxLength { get; set; }
+
+    /// <summary>
+    /// فعال بودن تعریف برای schema authoring؛ پیش‌فرض true برای BC.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// زمان ایجاد.
@@ -279,8 +335,52 @@ public sealed class CatalogAttributeDefinition
             Code = code.Trim().ToLowerInvariant(),
             ValueKind = valueKind,
             IsVariantAxis = isVariantAxis,
+            Unit = null,
+            IsRequired = false,
+            IsFilterable = false,
+            IsComparable = false,
+            IsMultivalue = false,
+            DisplayOrder = 0,
+            ValidationMin = null,
+            ValidationMax = null,
+            ValidationMaxLength = null,
+            IsActive = true,
             CreatedAt = now,
         };
+    }
+
+    /// <summary>
+    /// فرادادهٔ schema را بدون تغییر Code/ValueKind/IsVariantAxis به‌روز می‌کند.
+    /// </summary>
+    public void UpdateMetadata(
+        string? unit,
+        bool isRequired,
+        bool isFilterable,
+        bool isComparable,
+        bool isMultivalue,
+        int displayOrder,
+        decimal? validationMin,
+        decimal? validationMax,
+        int? validationMaxLength,
+        bool isActive)
+    {
+        if (validationMin is not null && validationMax is not null && validationMin > validationMax)
+        {
+            throw new InvalidOperationException("حداقل اعتبارسنجی نمی‌تواند از حداکثر بزرگ‌تر باشد.");
+        }
+
+        Unit = string.IsNullOrWhiteSpace(unit) ? null : unit.Trim();
+        IsRequired = isRequired;
+        IsFilterable = isFilterable;
+        IsComparable = isComparable;
+        IsMultivalue = isMultivalue;
+        DisplayOrder = displayOrder;
+        ValidationMin = validationMin;
+        ValidationMax = validationMax;
+        ValidationMaxLength = validationMaxLength is < 0
+            ? throw new InvalidOperationException("حداکثر طول نمی‌تواند منفی باشد.")
+            : validationMaxLength;
+        IsActive = isActive;
     }
 }
 
@@ -305,9 +405,19 @@ public sealed class CatalogAttributeOption
     public string Code { get; init; } = "";
 
     /// <summary>
+    /// ترتیب نمایش گزینه.
+    /// </summary>
+    public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// فعال بودن گزینه برای انتخاب؛ پیش‌فرض true برای BC.
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
     /// گزینه می‌سازد.
     /// </summary>
-    public static CatalogAttributeOption Create(Guid definitionId, string code)
+    public static CatalogAttributeOption Create(Guid definitionId, string code, int displayOrder = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
         return new CatalogAttributeOption
@@ -315,8 +425,103 @@ public sealed class CatalogAttributeOption
             OptionId = UuidV7.New(),
             DefinitionId = definitionId,
             Code = code.Trim().ToLowerInvariant(),
+            DisplayOrder = displayOrder,
+            IsActive = true,
         };
     }
+}
+
+/// <summary>
+/// پیوند تعریف ویژگی به رده برای schema مؤثر. SQL بیرون از Catalog نیست.
+/// </summary>
+public sealed class CatalogCategoryAttributeBinding
+{
+    /// <summary>
+    /// شناسهٔ پیوند.
+    /// </summary>
+    public Guid BindingId { get; init; }
+
+    /// <summary>
+    /// ردهٔ مالک schema.
+    /// </summary>
+    public Guid CategoryId { get; init; }
+
+    /// <summary>
+    /// تعریف ویژگی.
+    /// </summary>
+    public Guid DefinitionId { get; init; }
+
+    /// <summary>
+    /// ترتیب نمایش در schema همین رده.
+    /// </summary>
+    public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// override الزام؛ null یعنی از تعریف ارث ببرد.
+    /// </summary>
+    public bool? IsRequiredOverride { get; set; }
+
+    /// <summary>
+    /// زمان ایجاد.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// پیوند رده-تعریف می‌سازد.
+    /// </summary>
+    public static CatalogCategoryAttributeBinding Bind(
+        Guid categoryId,
+        Guid definitionId,
+        int displayOrder,
+        bool? isRequiredOverride,
+        DateTimeOffset now) =>
+        new()
+        {
+            BindingId = UuidV7.New(),
+            CategoryId = categoryId,
+            DefinitionId = definitionId,
+            DisplayOrder = displayOrder,
+            IsRequiredOverride = isRequiredOverride,
+            CreatedAt = now,
+        };
+}
+
+/// <summary>
+/// محورهای Variant انتخاب‌شده برای یک محصول. ماتریس کامل ترکیبی اینجا تولید نمی‌شود.
+/// </summary>
+public sealed class CatalogProductVariantAxis
+{
+    /// <summary>
+    /// شناسهٔ ردیف.
+    /// </summary>
+    public Guid AxisId { get; init; }
+
+    /// <summary>
+    /// محصول مالک محورهای انتخاب‌شده.
+    /// </summary>
+    public Guid ProductId { get; init; }
+
+    /// <summary>
+    /// تعریف مجاز محور (باید IsVariantAxis=true باشد).
+    /// </summary>
+    public Guid DefinitionId { get; init; }
+
+    /// <summary>
+    /// ترتیب محور در هویت ترکیب.
+    /// </summary>
+    public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// ردیف محور محصول می‌سازد.
+    /// </summary>
+    public static CatalogProductVariantAxis Create(Guid productId, Guid definitionId, int displayOrder) =>
+        new()
+        {
+            AxisId = UuidV7.New(),
+            ProductId = productId,
+            DefinitionId = definitionId,
+            DisplayOrder = displayOrder,
+        };
 }
 
 /// <summary>
@@ -850,5 +1055,162 @@ public static class CatalogAttributeCanonicalizer
                 .ToString("N"),
             _ => throw new InvalidOperationException("گونهٔ ویژگی پشتیبانی نمی‌شود."),
         };
+    }
+
+    /// <summary>
+    /// محدودیت‌های typed تعریف را پس از canonicalization اعمال می‌کند؛ JSON آزاد نیست.
+    /// </summary>
+    public static void EnforceValidationBounds(CatalogAttributeDefinition definition, string canonicalValue)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        ArgumentException.ThrowIfNullOrWhiteSpace(canonicalValue);
+        if (definition.ValueKind == CatalogAttributeValueKind.Number)
+        {
+            var number = decimal.Parse(canonicalValue, System.Globalization.CultureInfo.InvariantCulture);
+            if (definition.ValidationMin is decimal min && number < min)
+            {
+                throw new InvalidOperationException("مقدار عددی از حداقل تعریف کوچک‌تر است.");
+            }
+
+            if (definition.ValidationMax is decimal max && number > max)
+            {
+                throw new InvalidOperationException("مقدار عددی از حداکثر تعریف بزرگ‌تر است.");
+            }
+        }
+
+        if (definition.ValueKind == CatalogAttributeValueKind.Text
+            && definition.ValidationMaxLength is int maxLength
+            && canonicalValue.Length > maxLength)
+        {
+            throw new InvalidOperationException("طول متن از حداکثر تعریف بیشتر است.");
+        }
+    }
+}
+
+/// <summary>
+/// ردیف میانی حل schema مؤثر قبل از DTO لایهٔ Application.
+/// </summary>
+public sealed record CatalogEffectiveSchemaBinding(
+    Guid DefinitionId,
+    int DisplayOrder,
+    bool IsRequired,
+    Guid InheritedFromCategoryId,
+    CatalogAttributeDefinition Definition);
+
+/// <summary>
+/// گزارش تأثیر تغییر رده بدون حذف خاموش مقادیر.
+/// </summary>
+public sealed record CatalogCategoryChangeImpactReport(
+    IReadOnlyList<(Guid DefinitionId, string CanonicalValue)> OrphanAttributeValues,
+    IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds);
+
+/// <summary>
+/// حل schema مؤثر رده با ارث از والدین؛ حلقهٔ درخت تشخیص داده می‌شود.
+/// </summary>
+public static class CatalogCategorySchemaResolver
+{
+    /// <summary>
+    /// از ردهٔ هدف به ریشه راه می‌رود، پیوندها را ادغام می‌کند (فرزند روی همان DefinitionId غالب است)،
+    /// و فهرست مرتب با فرادادهٔ تعریف برمی‌گرداند.
+    /// </summary>
+    public static IReadOnlyList<CatalogEffectiveSchemaBinding> ResolveEffectiveSchema(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, CatalogCategory> categoriesById,
+        IReadOnlyList<CatalogCategoryAttributeBinding> allBindings,
+        IReadOnlyDictionary<Guid, CatalogAttributeDefinition> definitionsById)
+    {
+        ArgumentNullException.ThrowIfNull(categoriesById);
+        ArgumentNullException.ThrowIfNull(allBindings);
+        ArgumentNullException.ThrowIfNull(definitionsById);
+
+        if (!categoriesById.ContainsKey(categoryId))
+        {
+            throw new InvalidOperationException("رده برای حل schema در Catalog این Tenant نیست.");
+        }
+
+        var ancestry = WalkAncestry(categoryId, categoriesById);
+        // از ریشه به فرزند: فرزند override می‌کند.
+        var merged = new Dictionary<Guid, CatalogCategoryAttributeBinding>();
+        var inheritedFrom = new Dictionary<Guid, Guid>();
+        foreach (var ancestorId in ancestry)
+        {
+            foreach (var binding in allBindings.Where(b => b.CategoryId == ancestorId)
+                         .OrderBy(b => b.DisplayOrder)
+                         .ThenBy(b => b.BindingId))
+            {
+                merged[binding.DefinitionId] = binding;
+                inheritedFrom[binding.DefinitionId] = ancestorId;
+            }
+        }
+
+        return merged.Values
+            .Select(binding =>
+            {
+                if (!definitionsById.TryGetValue(binding.DefinitionId, out var definition))
+                {
+                    throw new InvalidOperationException("تعریف ویژگی پیوندشده در Catalog نیست.");
+                }
+
+                var required = binding.IsRequiredOverride ?? definition.IsRequired;
+                return new CatalogEffectiveSchemaBinding(
+                    binding.DefinitionId,
+                    binding.DisplayOrder,
+                    required,
+                    inheritedFrom[binding.DefinitionId],
+                    definition);
+            })
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Definition.Code, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>
+    /// مقادیر محصول و محورهایی که در schema جدید جایی ندارند را فهرست می‌کند؛ حذف نمی‌کند.
+    /// </summary>
+    public static CatalogCategoryChangeImpactReport PreviewCategoryChange(
+        IReadOnlyList<CatalogProductAttributeValue> productValues,
+        IReadOnlyList<CatalogProductVariantAxis> productAxes,
+        IReadOnlyList<CatalogEffectiveSchemaBinding> newEffectiveSchema)
+    {
+        ArgumentNullException.ThrowIfNull(productValues);
+        ArgumentNullException.ThrowIfNull(productAxes);
+        ArgumentNullException.ThrowIfNull(newEffectiveSchema);
+
+        var allowed = newEffectiveSchema.Select(x => x.DefinitionId).ToHashSet();
+        var orphans = productValues
+            .Where(v => !allowed.Contains(v.DefinitionId))
+            .Select(v => (v.DefinitionId, v.CanonicalValue))
+            .ToList();
+        var invalidAxes = productAxes
+            .Where(a => !allowed.Contains(a.DefinitionId))
+            .Select(a => a.DefinitionId)
+            .Distinct()
+            .ToList();
+        return new CatalogCategoryChangeImpactReport(orphans, invalidAxes);
+    }
+
+    private static List<Guid> WalkAncestry(Guid categoryId, IReadOnlyDictionary<Guid, CatalogCategory> categoriesById)
+    {
+        var chain = new List<Guid>();
+        var seen = new HashSet<Guid>();
+        var current = categoryId;
+        while (true)
+        {
+            if (!seen.Add(current))
+            {
+                throw new InvalidOperationException("حلقه در درخت ردهٔ Catalog تشخیص داده شد؛ schema قابل حل نیست.");
+            }
+
+            chain.Add(current);
+            if (!categoriesById.TryGetValue(current, out var category) || category.ParentCategoryId is not Guid parent)
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        chain.Reverse();
+        return chain;
     }
 }

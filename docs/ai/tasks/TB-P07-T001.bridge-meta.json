@@ -1,0 +1,9 @@
+﻿{
+    "bridgeTaskId":  "c7edb4c0-fa1c-4a3d-82dd-9358007a0c26",
+    "channelId":  "tooba-main",
+    "expectedPredecessor":  "00e7b93c3cd70bb20daffdfa3cad1115918586d7",
+    "claimedAtUtc":  "2026-08-27T22:19:10.3792691",
+    "actualHeadAtClaim":  "9b0f61c04c880649a30333e691864b35e6f37601",
+    "taskId":  "TB-P07-T001",
+    "status":  "Claimed"
+}

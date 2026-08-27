@@ -317,6 +317,57 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task UpdateAttributeDefinitionAsync(
+        Guid definitionId,
+        string? unit,
+        bool isRequired,
+        bool isFilterable,
+        bool isComparable,
+        bool isMultivalue,
+        int displayOrder,
+        decimal? validationMin,
+        decimal? validationMax,
+        int? validationMaxLength,
+        bool isActive,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == definitionId, cancellationToken);
+        definition.UpdateMetadata(
+            unit,
+            isRequired,
+            isFilterable,
+            isComparable,
+            isMultivalue,
+            displayOrder,
+            validationMin,
+            validationMax,
+            validationMaxLength,
+            isActive);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AttributeDefinitionView>> ListAttributeDefinitionsAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _db.AttributeDefinitions.AsNoTracking()
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Code)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToDefinitionView).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<AttributeDefinitionView?> GetAttributeDefinitionAsync(
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.AttributeDefinitions.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.DefinitionId == definitionId, cancellationToken);
+        return row is null ? null : ToDefinitionView(row);
+    }
+
+    /// <inheritdoc />
     public async Task<Guid> AddAttributeOptionAsync(
         Guid definitionId,
         string code,
@@ -335,6 +386,96 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         AddLocalizedNames(CatalogLocalizedOwnerKind.AttributeOption, option.OptionId, localizedNames);
         await _db.SaveChangesAsync(cancellationToken);
         return option.OptionId;
+    }
+
+    /// <inheritdoc />
+    public async Task BindCategoryAttributeAsync(
+        Guid categoryId,
+        Guid definitionId,
+        int displayOrder,
+        bool? isRequiredOverride,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken)
+            || !await _db.AttributeDefinitions.AnyAsync(x => x.DefinitionId == definitionId, cancellationToken))
+        {
+            throw new InvalidOperationException("رده یا تعریف ویژگی در Catalog این Tenant نیست.");
+        }
+
+        if (await _db.CategoryAttributeBindings.AnyAsync(
+                x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("این تعریف از قبل به رده پیوند شده است.");
+        }
+
+        _db.CategoryAttributeBindings.Add(
+            CatalogCategoryAttributeBinding.Bind(categoryId, definitionId, displayOrder, isRequiredOverride, DateTimeOffset.UtcNow));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task UnbindCategoryAttributeAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var binding = await _db.CategoryAttributeBindings.SingleOrDefaultAsync(
+            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("پیوند schema رده پیدا نشد.");
+        _db.CategoryAttributeBindings.Remove(binding);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReorderCategoryAttributeBindingsAsync(
+        Guid categoryId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(orderedDefinitionIds);
+        var bindings = await _db.CategoryAttributeBindings
+            .Where(x => x.CategoryId == categoryId)
+            .ToListAsync(cancellationToken);
+        if (bindings.Count != orderedDefinitionIds.Count
+            || orderedDefinitionIds.Distinct().Count() != orderedDefinitionIds.Count
+            || bindings.Select(b => b.DefinitionId).ToHashSet().SetEquals(orderedDefinitionIds) is false)
+        {
+            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همان پیوندهای موجود رده باشد.");
+        }
+
+        for (var i = 0; i < orderedDefinitionIds.Count; i++)
+        {
+            var binding = bindings.Single(b => b.DefinitionId == orderedDefinitionIds[i]);
+            binding.DisplayOrder = i;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<EffectiveSchemaEntry>> GetEffectiveCategorySchemaAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
+        return resolved.Select(x => new EffectiveSchemaEntry(
+            x.DefinitionId,
+            x.Definition.Code,
+            x.Definition.ValueKind,
+            x.Definition.IsVariantAxisAllowed,
+            x.Definition.Unit,
+            x.IsRequired,
+            x.Definition.IsFilterable,
+            x.Definition.IsComparable,
+            x.Definition.IsMultivalue,
+            x.DisplayOrder,
+            x.InheritedFromCategoryId,
+            x.Definition.IsActive)).ToList();
     }
 
     /// <inheritdoc />
@@ -444,21 +585,189 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
         var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == definitionId, cancellationToken);
+        if (!definition.IsActive)
+        {
+            throw new InvalidOperationException("تعریف ویژگی غیرفعال است.");
+        }
+
         if (definition.IsVariantAxis)
         {
             throw new InvalidOperationException("محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.");
         }
 
+        await EnsureDefinitionAllowedForProductSchemaAsync(productId, definitionId, cancellationToken);
+
+        if (definition.ValueKind == CatalogAttributeValueKind.Enumeration)
+        {
+            if (enumOptionId is not Guid optionId)
+            {
+                throw new InvalidOperationException("گزینهٔ شمارشی باید شناسه داشته باشد.");
+            }
+
+            var option = await _db.AttributeOptions.SingleOrDefaultAsync(
+                x => x.OptionId == optionId && x.DefinitionId == definitionId,
+                cancellationToken)
+                ?? throw new InvalidOperationException("گزینه به این تعریف تعلق ندارد.");
+            if (!option.IsActive)
+            {
+                throw new InvalidOperationException("گزینهٔ شمارشی غیرفعال است.");
+            }
+        }
+
         var canonical = CatalogAttributeCanonicalizer.Canonicalize(definition.ValueKind, rawValue, enumOptionId);
-        _db.ProductAttributeValues.Add(CatalogProductAttributeValue.Create(productId, definitionId, canonical));
+        CatalogAttributeCanonicalizer.EnforceValidationBounds(definition, canonical);
+
+        var existing = await _db.ProductAttributeValues.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.DefinitionId == definitionId,
+            cancellationToken);
+        if (existing is null)
+        {
+            _db.ProductAttributeValues.Add(CatalogProductAttributeValue.Create(productId, definitionId, canonical));
+        }
+        else
+        {
+            // upsert: ردیف موجود را عوض می‌کنیم تا unique (ProductId, DefinitionId) بشکند.
+            _db.ProductAttributeValues.Remove(existing);
+            _db.ProductAttributeValues.Add(CatalogProductAttributeValue.Create(productId, definitionId, canonical));
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task SetProductVariantAxesAsync(
+        Guid productId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(orderedDefinitionIds);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        if (orderedDefinitionIds.Distinct().Count() != orderedDefinitionIds.Count)
+        {
+            throw new InvalidOperationException("محورهای Variant محصول نباید تکراری باشند.");
+        }
+
+        foreach (var definitionId in orderedDefinitionIds)
+        {
+            var definition = await _db.AttributeDefinitions.SingleAsync(x => x.DefinitionId == definitionId, cancellationToken);
+            if (!definition.IsVariantAxisAllowed)
+            {
+                throw new InvalidOperationException("فقط تعریف‌های مجاز محور Variant قابل انتخاب هستند.");
+            }
+
+            if (!definition.IsActive)
+            {
+                throw new InvalidOperationException("تعریف محور Variant غیرفعال است.");
+            }
+        }
+
+        var existing = await _db.ProductVariantAxes.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        _db.ProductVariantAxes.RemoveRange(existing);
+        for (var i = 0; i < orderedDefinitionIds.Count; i++)
+        {
+            _db.ProductVariantAxes.Add(CatalogProductVariantAxis.Create(productId, orderedDefinitionIds[i], i));
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryChangeImpact> PreviewCategoryChangeAsync(
+        Guid productId,
+        Guid newCategoryId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var schema = await ResolveEffectiveBindingsAsync(newCategoryId, cancellationToken);
+        var values = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var axes = await _db.ProductVariantAxes.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var report = CatalogCategorySchemaResolver.PreviewCategoryChange(values, axes, schema);
+        return new CategoryChangeImpact(
+            productId,
+            newCategoryId,
+            report.OrphanAttributeValues.Select(x => new OrphanProductAttributeValue(x.DefinitionId, x.CanonicalValue)).ToList(),
+            report.InvalidVariantAxisDefinitionIds);
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryChangeImpact> ReplaceProductPrimaryCategoryAsync(
+        Guid productId,
+        Guid newCategoryId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var impact = await PreviewCategoryChangeAsync(productId, newCategoryId, cancellationToken);
+        var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        _db.ProductCategories.RemoveRange(existing);
+        _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, newCategoryId));
+        await _db.SaveChangesAsync(cancellationToken);
+        return impact;
+    }
+
+    /// <inheritdoc />
+    public async Task ValidateProductAttributesAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        var categoryIds = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.CategoryId)
+            .ToListAsync(cancellationToken);
+        if (categoryIds.Count == 0)
+        {
+            return;
+        }
+
+        var required = new HashSet<Guid>();
+        foreach (var categoryId in categoryIds)
+        {
+            foreach (var entry in await ResolveEffectiveBindingsAsync(categoryId, cancellationToken))
+            {
+                if (entry.IsRequired && entry.Definition.IsActive && !entry.Definition.IsVariantAxis)
+                {
+                    required.Add(entry.DefinitionId);
+                }
+            }
+        }
+
+        if (required.Count == 0)
+        {
+            return;
+        }
+
+        var present = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.DefinitionId)
+            .ToListAsync(cancellationToken);
+        var missing = required.Except(present).ToList();
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException("مقادیر الزامی schema محصول کامل نیست.");
+        }
     }
 
     /// <inheritdoc />
     public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await ValidateProductAttributesAsync(productId, cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.Publish(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
@@ -495,6 +804,22 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("محصول والد گونه در Catalog این Tenant نیست.");
         }
 
+        var selectedAxes = await _db.ProductVariantAxes.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderBy(x => x.DisplayOrder)
+            .Select(x => x.DefinitionId)
+            .ToListAsync(cancellationToken);
+        if (selectedAxes.Count > 0)
+        {
+            var selectedSet = selectedAxes.ToHashSet();
+            var axisDefs = axes.Select(a => a.DefinitionId).ToHashSet();
+            if (!axisDefs.SetEquals(selectedSet))
+            {
+                throw new InvalidOperationException(
+                    "وقتی محورهای محصول انتخاب شده‌اند، ترکیب گونه باید دقیقاً همان مجموعه‌محورها باشد.");
+            }
+        }
+
         var normalized = new List<(Guid DefinitionId, string Canonical)>();
         foreach (var axis in axes)
         {
@@ -504,7 +829,20 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 throw new InvalidOperationException("فقط ویژگی محور Variant می‌تواند ترکیب گونه بسازد.");
             }
 
+            if (definition.ValueKind == CatalogAttributeValueKind.Enumeration && axis.EnumOptionId is Guid optionId)
+            {
+                var option = await _db.AttributeOptions.SingleOrDefaultAsync(
+                    x => x.OptionId == optionId && x.DefinitionId == definition.DefinitionId,
+                    cancellationToken)
+                    ?? throw new InvalidOperationException("گزینه به این تعریف تعلق ندارد.");
+                if (!option.IsActive)
+                {
+                    throw new InvalidOperationException("گزینهٔ شمارشی غیرفعال است.");
+                }
+            }
+
             var canonical = CatalogAttributeCanonicalizer.Canonicalize(definition.ValueKind, axis.RawValue, axis.EnumOptionId);
+            CatalogAttributeCanonicalizer.EnforceValidationBounds(definition, canonical);
             normalized.Add((definition.DefinitionId, canonical));
         }
 
@@ -526,6 +864,66 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await _db.SaveChangesAsync(cancellationToken);
         return new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
     }
+
+    private async Task EnsureDefinitionAllowedForProductSchemaAsync(
+        Guid productId,
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        var categoryIds = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.CategoryId)
+            .ToListAsync(cancellationToken);
+        if (categoryIds.Count == 0)
+        {
+            return;
+        }
+
+        var allowed = new HashSet<Guid>();
+        foreach (var categoryId in categoryIds)
+        {
+            foreach (var entry in await ResolveEffectiveBindingsAsync(categoryId, cancellationToken))
+            {
+                allowed.Add(entry.DefinitionId);
+            }
+        }
+
+        // schema-bound فقط وقتی حداقل یک binding در union مؤثر وجود دارد؛ در غیر این صورت BC آزاد.
+        if (allowed.Count > 0 && !allowed.Contains(definitionId))
+        {
+            throw new InvalidOperationException("ویژگی در schema مؤثر رده‌های محصول نیست.");
+        }
+    }
+
+    private async Task<IReadOnlyList<CatalogEffectiveSchemaBinding>> ResolveEffectiveBindingsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        var categories = await _db.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var categoriesById = categories.ToDictionary(x => x.CategoryId);
+        var bindings = await _db.CategoryAttributeBindings.AsNoTracking().ToListAsync(cancellationToken);
+        var definitions = await _db.AttributeDefinitions.AsNoTracking().ToListAsync(cancellationToken);
+        var definitionsById = definitions.ToDictionary(x => x.DefinitionId);
+        return CatalogCategorySchemaResolver.ResolveEffectiveSchema(categoryId, categoriesById, bindings, definitionsById);
+    }
+
+    private static AttributeDefinitionView ToDefinitionView(CatalogAttributeDefinition definition) =>
+        new(
+            definition.DefinitionId,
+            definition.Code,
+            definition.ValueKind,
+            definition.IsVariantAxisAllowed,
+            definition.Unit,
+            definition.IsRequired,
+            definition.IsFilterable,
+            definition.IsComparable,
+            definition.IsMultivalue,
+            definition.DisplayOrder,
+            definition.ValidationMin,
+            definition.ValidationMax,
+            definition.ValidationMaxLength,
+            definition.IsActive,
+            definition.CreatedAt);
 
     private void AddLocalizedNames(CatalogLocalizedOwnerKind ownerKind, Guid ownerId, IReadOnlyDictionary<string, string> localizedNames)
     {

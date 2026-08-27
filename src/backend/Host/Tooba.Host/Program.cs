@@ -247,6 +247,14 @@ if (app.Environment.IsDevelopment())
         await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
         try
         {
+            await CatalogAttributeSchemaDevelopmentBootstrap.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentBootstrap failed; Host continues without attribute schema demo.");
+        }
+        try
+        {
             await AccessControlDevelopmentSeed.ApplyAsync(app.Services);
         }
         catch (Exception ex)
@@ -287,6 +295,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
+app.MapCatalogAttributeEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
 app.MapPaymentWebhookEndpoints();

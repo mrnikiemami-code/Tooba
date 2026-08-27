@@ -25,6 +25,8 @@ import {
   WalletCards,
   FileText,
   Tag,
+  Tags,
+  ListTree,
   X,
 } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
@@ -59,6 +61,8 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "dashboard", label: "داشبورد", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
       { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
+      { id: "catalog-attributes", label: "تعاریف ویژگی", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
+      { id: "category-schema", label: "Schema رده", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
       { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
       { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },

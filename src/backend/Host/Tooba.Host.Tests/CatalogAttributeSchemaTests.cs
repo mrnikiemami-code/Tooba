@@ -1,0 +1,231 @@
+using Microsoft.EntityFrameworkCore;
+using Testcontainers.PostgreSql;
+using Tooba.AccessControl.Application;
+using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
+using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure;
+using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Persistence;
+using Xunit;
+
+namespace Tooba.Host.Tests;
+
+/// <summary>
+/// پوشش foundation اسکیما ویژگی رده و محورهای Variant بدون ماتریس کامل.
+/// </summary>
+[Collection("PostgresSerial")]
+public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
+{
+    private PostgreSqlContainer? _container;
+    private bool _dockerAvailable;
+
+    /// <inheritdoc />
+    public async Task InitializeAsync()
+    {
+        try
+        {
+            _container = new PostgreSqlBuilder()
+                .WithImage("postgres:16-alpine")
+                .WithDatabase("tooba_catalog_schema_a")
+                .WithUsername("tooba")
+                .WithPassword("dev-placeholder")
+                .Build();
+            await _container.StartAsync();
+            _dockerAvailable = true;
+        }
+        catch (Exception)
+        {
+            _dockerAvailable = false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DisposeAsync()
+    {
+        if (_container is not null)
+        {
+            await _container.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public void Permission_catalog_includes_attribute_schema_permissions()
+    {
+        Assert.Contains(PermissionCatalog.All, p => p.PermissionId == "catalog.attribute.view");
+        Assert.Contains(PermissionCatalog.All, p => p.PermissionId == "catalog.attribute.manage");
+        Assert.False(PermissionCatalog.IsDelegable("catalog.attribute.manage"));
+        Assert.False(PermissionCatalog.IsDelegable("catalog.attribute.view"));
+    }
+
+    [Fact]
+    public void IsVariantAxisAllowed_aliases_IsVariantAxis_column_semantics()
+    {
+        var def = CatalogAttributeDefinition.Create("color", CatalogAttributeValueKind.Enumeration, isVariantAxis: true, DateTimeOffset.UtcNow);
+        Assert.True(def.IsVariantAxis);
+        Assert.True(def.IsVariantAxisAllowed);
+        Assert.DoesNotContain("Price", typeof(CatalogAttributeDefinition).GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("Stock", typeof(CatalogProductVariantAxis).GetProperties().Select(p => p.Name));
+    }
+
+    [SkippableFact]
+    public async Task Attribute_schema_foundation_covers_inheritance_validation_and_axes()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var csA = _container.GetConnectionString();
+        await using (var admin = new Npgsql.NpgsqlConnection(csA))
+        {
+            await admin.OpenAsync();
+            await using var cmd = admin.CreateCommand();
+            cmd.CommandText = "SELECT 1 FROM pg_database WHERE datname = 'tooba_catalog_schema_b'";
+            if (await cmd.ExecuteScalarAsync() is null)
+            {
+                await using var create = admin.CreateCommand();
+                create.CommandText = "CREATE DATABASE tooba_catalog_schema_b";
+                await create.ExecuteNonQueryAsync();
+            }
+        }
+
+        var csB = new Npgsql.NpgsqlConnectionStringBuilder(csA) { Database = "tooba_catalog_schema_b" }.ConnectionString;
+        var commerceA = new FixedCommerceContext();
+        commerceA.Assign(OutboxTestContextFactory.SingleStore("tenant-schema-a", "tenant-schema-a"));
+        var commerceB = new FixedCommerceContext();
+        commerceB.Assign(OutboxTestContextFactory.SingleStore("tenant-schema-b", "tenant-schema-b"));
+
+        await using var dbA = CreateCatalogDb(csA, commerceA);
+        await using var dbB = CreateCatalogDb(csB, commerceB);
+        await dbA.Database.EnsureCreatedAsync();
+        await dbB.Database.EnsureCreatedAsync();
+
+        var dirA = new CatalogDirectory(dbA, new OpenCatalogUseCaseGuard());
+        var dirB = new CatalogDirectory(dbB, new OpenCatalogUseCaseGuard());
+
+        // 1+2+3: effective schema + inheritance + child override
+        var parent = await dirA.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "الکترونیک" }, CancellationToken.None);
+        var child = await dirA.CreateCategoryAsync(parent.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
+
+        var colorId = await dirA.CreateAttributeDefinitionAsync(
+            "color", CatalogAttributeValueKind.Enumeration, true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ" }, CancellationToken.None);
+        var storageId = await dirA.CreateAttributeDefinitionAsync(
+            "storage", CatalogAttributeValueKind.Enumeration, true,
+            new Dictionary<string, string> { ["fa-IR"] = "حافظه" }, CancellationToken.None);
+        var screenId = await dirA.CreateAttributeDefinitionAsync(
+            "screen_size", CatalogAttributeValueKind.Number, false,
+            new Dictionary<string, string> { ["fa-IR"] = "صفحه" }, CancellationToken.None);
+        var weightId = await dirA.CreateAttributeDefinitionAsync(
+            "weight_g", CatalogAttributeValueKind.Number, false,
+            new Dictionary<string, string> { ["fa-IR"] = "وزن" }, CancellationToken.None);
+
+        await dirA.UpdateAttributeDefinitionAsync(
+            screenId, "inch", isRequired: true, isFilterable: true, isComparable: true, isMultivalue: false,
+            displayOrder: 5, validationMin: 4m, validationMax: 10m, validationMaxLength: null, isActive: true,
+            CancellationToken.None);
+
+        await dirA.BindCategoryAttributeAsync(parent.CategoryId, colorId, 10, null, CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(parent.CategoryId, screenId, 20, false, CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(child.CategoryId, screenId, 1, true, CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(child.CategoryId, storageId, 2, null, CancellationToken.None);
+
+        var effective = await dirA.GetEffectiveCategorySchemaAsync(child.CategoryId, CancellationToken.None);
+        Assert.Equal(3, effective.Count);
+        Assert.Equal(screenId, effective[0].DefinitionId);
+        Assert.True(effective[0].IsRequired); // 3 child override required
+        Assert.Equal(child.CategoryId, effective[0].InheritedFromCategoryId);
+        Assert.Contains(effective, e => e.DefinitionId == colorId && e.InheritedFromCategoryId == parent.CategoryId);
+        Assert.Contains(effective, e => e.DefinitionId == storageId);
+
+        // 15 default variant BC: no selected axes → any IsVariantAxis definition works
+        var productBc = await dirA.CreateProductAsync(
+            CatalogProductKind.PhysicalGood, "bc-phone", null,
+            new Dictionary<string, string> { ["fa-IR"] = "BC" }, CancellationToken.None);
+        var black = await dirA.AddAttributeOptionAsync(colorId, "black", new Dictionary<string, string> { ["fa-IR"] = "مشکی" }, CancellationToken.None);
+        var white = await dirA.AddAttributeOptionAsync(colorId, "white", new Dictionary<string, string> { ["fa-IR"] = "سفید" }, CancellationToken.None);
+        var storage128 = await dirA.AddAttributeOptionAsync(storageId, "128gb", new Dictionary<string, string> { ["fa-IR"] = "۱۲۸" }, CancellationToken.None);
+        await dirA.CreateVariantAsync(productBc.ProductId, "BC-BLK", [(colorId, "ignored", black)], CancellationToken.None);
+
+        // schema-bound product
+        var product = await dirA.CreateProductAsync(
+            CatalogProductKind.PhysicalGood, "schema-phone", null,
+            new Dictionary<string, string> { ["fa-IR"] = "گوشی" }, CancellationToken.None);
+        await dirA.AssignCategoryAsync(product.ProductId, child.CategoryId, CancellationToken.None);
+
+        // 4 required validated on publish before value is set
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.PublishProductAsync(product.ProductId, CancellationToken.None));
+
+        // 7 typed numeric ok
+        await dirA.SetProductAttributeAsync(product.ProductId, screenId, "6.1", null, CancellationToken.None);
+
+        // 7 typed numeric out of range
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.SetProductAttributeAsync(product.ProductId, screenId, "12", null, CancellationToken.None));
+
+        // 6 unknown attribute rejected when schema-bound
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.SetProductAttributeAsync(product.ProductId, weightId, "100", null, CancellationToken.None));
+
+        // 5 invalid option (wrong definition / non-numeric raw for number)
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.SetProductAttributeAsync(product.ProductId, screenId, "ignored", black, CancellationToken.None));
+
+        await dirA.PublishProductAsync(product.ProductId, CancellationToken.None);
+
+        // 8 axis allowed / 9 duplicate axis
+        await dirA.SetProductVariantAxesAsync(product.ProductId, [colorId, storageId], CancellationToken.None);
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.SetProductVariantAxesAsync(product.ProductId, [colorId, colorId], CancellationToken.None));
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.SetProductVariantAxesAsync(product.ProductId, [screenId], CancellationToken.None));
+
+        // selected axes require exact set
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.CreateVariantAsync(product.ProductId, "ONLY-COLOR", [(colorId, "ignored", black)], CancellationToken.None));
+
+        var v1 = await dirA.CreateVariantAsync(
+            product.ProductId, "C-BLK-128",
+            [(colorId, "ignored", black), (storageId, "ignored", storage128)],
+            CancellationToken.None);
+
+        // 10 duplicate variant combo
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dirA.CreateVariantAsync(
+                product.ProductId, "DUP",
+                [(colorId, "ignored", black), (storageId, "ignored", storage128)],
+                CancellationToken.None));
+
+        var storage256 = await dirA.AddAttributeOptionAsync(storageId, "256gb", new Dictionary<string, string> { ["fa-IR"] = "۲۵۶" }, CancellationToken.None);
+        var v2 = await dirA.CreateVariantAsync(
+            product.ProductId, "C-WHT-256",
+            [(colorId, "ignored", white), (storageId, "ignored", storage256)],
+            CancellationToken.None);
+        Assert.NotEqual(v1.VariantId, v2.VariantId);
+
+        // 11 category change orphan report — do not silently delete
+        var other = await dirA.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var impact = await dirA.PreviewCategoryChangeAsync(product.ProductId, other.CategoryId, CancellationToken.None);
+        Assert.Contains(impact.OrphanAttributeValues, o => o.DefinitionId == screenId);
+        Assert.Contains(impact.InvalidVariantAxisDefinitionIds, id => id == colorId || id == storageId);
+        Assert.True(await dbA.ProductAttributeValues.AnyAsync(v => v.ProductId == product.ProductId && v.DefinitionId == screenId));
+
+        // 14 tenant isolation
+        var otherTenantProduct = await dirB.CreateProductAsync(
+            CatalogProductKind.PhysicalGood, "other", null,
+            new Dictionary<string, string> { ["en-US"] = "Other" }, CancellationToken.None);
+        Assert.Null(await dirB.FindProductAsync(product.ProductId, CancellationToken.None));
+        Assert.Null(await dirA.FindProductAsync(otherTenantProduct.ProductId, CancellationToken.None));
+        Assert.Empty(await dirB.ListAttributeDefinitionsAsync(CancellationToken.None));
+    }
+
+    private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
+    {
+        var modules = new IOutboxModuleRegistration[] { new CatalogOutboxRegistration() };
+        var serializer = new JsonIntegrationEventSerializer(modules);
+        var interceptor = new OutboxSaveChangesInterceptor(commerce, modules, serializer);
+        var options = new DbContextOptionsBuilder<CatalogDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(options, connectionString, CatalogDbContext.Schema, typeof(CatalogDbContext));
+        options.AddInterceptors(interceptor);
+        return new CatalogDbContext(options.Options);
+    }
+}

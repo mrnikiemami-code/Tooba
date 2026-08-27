@@ -42,6 +42,8 @@ public static class PermissionCatalog
         Def("product.create", "Product", delegable: true),
         Def("product.edit", "Product", delegable: true, GlobalProductBrand),
         Def("product.publish", "Product", delegable: true, GlobalProductBrand),
+        Def("catalog.attribute.view", "Catalog", delegable: false),
+        Def("catalog.attribute.manage", "Catalog", delegable: false),
         Def("order.view", "Order", delegable: true, GlobalAndCategory),
         Def("order.detail", "Order", delegable: true, GlobalAndCategory),
         Def("order.handle", "Order", delegable: true, GlobalAndCategory),

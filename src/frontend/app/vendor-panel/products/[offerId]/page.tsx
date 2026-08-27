@@ -16,6 +16,7 @@ import {
   type HostReadSource,
   type SellerOfferDetail,
 } from "../../seller-api";
+import { SellerProductAttributesPanel } from "../../../admin/catalog-attribute-ui";
 
 /**
  * seam ویرایش Offer فروشنده؛ زمینهٔ Catalog فقط‌خواندنی است؛ قیمت و موجودی از Pricing/Inventory.
@@ -242,6 +243,7 @@ export default function VendorProductDetailPage() {
               انصراف
             </button>
           </section>
+          <SellerProductAttributesPanel productId={detail.productId} />
         </div>
       ) : (
         <p className="text-muted">در حال بارگذاری…</p>

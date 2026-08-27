@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages } from "../../design-system";
 import { loadProductWorkspace, patchCatalogTitle, type HostReadSource } from "./host-client";
 import { type ProductWorkspaceView } from "./workspace-model";
+import { ProductAttributesPanel } from "./catalog-attribute-ui";
 
 const sections = [
   { id: "overview", label: "نمای کلی" },
+  { id: "attributes", label: "ویژگی‌ها" },
   { id: "variants", label: "گونه‌ها" },
   { id: "media", label: "رسانه" },
   { id: "commercial", label: "فروش و قیمت" },
@@ -201,6 +203,11 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
               </p>
             </Card>
           </div>
+        ) : null}
+        {sectionId === "attributes" ? (
+          <Card>
+            <ProductAttributesPanel productId={current.productId} />
+          </Card>
         ) : null}
         {sectionId === "variants" ? (
           <div className="overflow-x-auto md:overflow-visible">

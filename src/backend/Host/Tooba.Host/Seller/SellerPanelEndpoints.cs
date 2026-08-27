@@ -1,4 +1,6 @@
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
+using Tooba.Host.Admin;
 
 namespace Tooba.Host.Seller;
 
@@ -36,6 +38,8 @@ public static class SellerPanelEndpoints
         group.MapGet("/orders", ListOrdersAsync);
         group.MapGet("/orders/{sellerOrderId:guid}", GetOrderAsync);
         group.MapGet("/dev-contexts", GetDevContexts);
+        group.MapPut("/products/{productId:guid}/attributes/{definitionId:guid}", SetProductAttributeAsync);
+        group.MapPut("/products/{productId:guid}/variant-axes", SetProductVariantAxesAsync);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>
@@ -314,5 +318,69 @@ public static class SellerPanelEndpoints
         }
 
         return new { actors = rows };
+    }
+
+    private static async Task<IResult> SetProductAttributeAsync(
+        Guid productId,
+        Guid definitionId,
+        SetProductAttributeRequest body,
+        ICatalogDirectory catalog,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            // فروشنده فقط مقدار محصول را می‌نویسد؛ تعریف schema را بازتعریف نمی‌کند.
+            await catalog.SetProductAttributeAsync(
+                productId,
+                definitionId,
+                body.RawValue,
+                body.EnumOptionId,
+                cancellationToken);
+            return Results.Json(new { ok = true });
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    private static async Task<IResult> SetProductVariantAxesAsync(
+        Guid productId,
+        SetProductVariantAxesRequest body,
+        ICatalogDirectory catalog,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SellerPanelAccess.RequireAuthorizedAsync(
+                request, session, guard, environment, cancellationToken);
+            await catalog.SetProductVariantAxesAsync(
+                productId,
+                body.OrderedDefinitionIds ?? [],
+                cancellationToken);
+            return Results.Json(new { ok = true });
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(new { title = ex.Message, errorCode = "catalog.variant_axes.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+        }
     }
 }

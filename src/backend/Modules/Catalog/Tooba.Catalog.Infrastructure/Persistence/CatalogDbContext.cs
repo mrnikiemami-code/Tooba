@@ -79,6 +79,16 @@ public sealed class CatalogDbContext : DbContext
     public DbSet<CatalogVariantAttributeValue> VariantAttributeValues => Set<CatalogVariantAttributeValue>();
 
     /// <summary>
+    /// پیوند تعریف ویژگی به رده.
+    /// </summary>
+    public DbSet<CatalogCategoryAttributeBinding> CategoryAttributeBindings => Set<CatalogCategoryAttributeBinding>();
+
+    /// <summary>
+    /// محورهای Variant انتخاب‌شدهٔ محصول.
+    /// </summary>
+    public DbSet<CatalogProductVariantAxis> ProductVariantAxes => Set<CatalogProductVariantAxis>();
+
+    /// <summary>
     /// Outbox همین ماژول برای تصویر Search آینده.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -117,6 +127,10 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.DefinitionId).ValueGeneratedNever();
             entity.Property(x => x.Code).HasMaxLength(64).IsRequired();
             entity.Property(x => x.ValueKind).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Unit).HasMaxLength(32);
+            entity.Property(x => x.ValidationMin).HasPrecision(18, 4);
+            entity.Property(x => x.ValidationMax).HasPrecision(18, 4);
+            entity.Ignore(x => x.IsVariantAxisAllowed);
             entity.HasIndex(x => x.Code).IsUnique();
         });
 
@@ -131,6 +145,38 @@ public sealed class CatalogDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.DefinitionId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CatalogCategoryAttributeBinding>(entity =>
+        {
+            entity.ToTable("category_attribute_bindings");
+            entity.HasKey(x => x.BindingId);
+            entity.Property(x => x.BindingId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.CategoryId, x.DefinitionId }).IsUnique();
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogAttributeDefinition>()
+                .WithMany()
+                .HasForeignKey(x => x.DefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogProductVariantAxis>(entity =>
+        {
+            entity.ToTable("product_variant_axes");
+            entity.HasKey(x => x.AxisId);
+            entity.Property(x => x.AxisId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.ProductId, x.DefinitionId }).IsUnique();
+            entity.HasOne<CatalogProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogAttributeDefinition>()
+                .WithMany()
+                .HasForeignKey(x => x.DefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<CatalogLocalizedText>(entity =>

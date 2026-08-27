@@ -153,9 +153,66 @@ public interface ICatalogDirectory
     Task<Guid> CreateAttributeDefinitionAsync(string code, CatalogAttributeValueKind valueKind, bool isVariantAxis, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
 
     /// <summary>
+    /// فرادادهٔ تعریف ویژگی را به‌روز می‌کند (نه Code/ValueKind/IsVariantAxis).
+    /// </summary>
+    Task UpdateAttributeDefinitionAsync(
+        Guid definitionId,
+        string? unit,
+        bool isRequired,
+        bool isFilterable,
+        bool isComparable,
+        bool isMultivalue,
+        int displayOrder,
+        decimal? validationMin,
+        decimal? validationMax,
+        int? validationMaxLength,
+        bool isActive,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// فهرست تعاریف ویژگی.
+    /// </summary>
+    Task<IReadOnlyList<AttributeDefinitionView>> ListAttributeDefinitionsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یک تعریف ویژگی را برمی‌گرداند.
+    /// </summary>
+    Task<AttributeDefinitionView?> GetAttributeDefinitionAsync(Guid definitionId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// گزینهٔ شمارشی اضافه می‌کند.
     /// </summary>
     Task<Guid> AddAttributeOptionAsync(Guid definitionId, string code, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تعریف را به schema رده پیوند می‌دهد.
+    /// </summary>
+    Task BindCategoryAttributeAsync(
+        Guid categoryId,
+        Guid definitionId,
+        int displayOrder,
+        bool? isRequiredOverride,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پیوند schema رده را برمی‌دارد؛ مقادیر محصول را حذف نمی‌کند.
+    /// </summary>
+    Task UnbindCategoryAttributeAsync(Guid categoryId, Guid definitionId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ترتیب پیوندهای schema رده را بازنویسی می‌کند.
+    /// </summary>
+    Task ReorderCategoryAttributeBindingsAsync(
+        Guid categoryId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// schema مؤثر رده (با ارث والدین) را برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyList<EffectiveSchemaEntry>> GetEffectiveCategorySchemaAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// محصول توصیفی می‌سازد.
@@ -186,9 +243,38 @@ public interface ICatalogDirectory
     Task AttachMediaReferenceAsync(Guid productId, Guid mediaAssetId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// مشخصهٔ غیرمحور روی محصول می‌گذارد.
+    /// مشخصهٔ غیرمحور روی محصول می‌گذارد (upsert). JSON آزاد نیست.
     /// </summary>
     Task SetProductAttributeAsync(Guid productId, Guid definitionId, string rawValue, Guid? enumOptionId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// محورهای Variant انتخاب‌شدهٔ محصول را جایگزین می‌کند؛ ماتریس کامل تولید نمی‌شود.
+    /// </summary>
+    Task SetProductVariantAxesAsync(
+        Guid productId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تأثیر تغییر رده را بدون حذف مقادیر گزارش می‌کند.
+    /// </summary>
+    Task<CategoryChangeImpact> PreviewCategoryChangeAsync(
+        Guid productId,
+        Guid newCategoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ردهٔ اصلی محصول را عوض می‌کند پس از گزارش تأثیر؛ orphanها را حذف خاموش نمی‌کند.
+    /// </summary>
+    Task<CategoryChangeImpact> ReplaceProductPrimaryCategoryAsync(
+        Guid productId,
+        Guid newCategoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// الزام‌های schema مؤثر را برای مقادیر فعلی محصول بررسی می‌کند.
+    /// </summary>
+    Task ValidateProductAttributesAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
     /// محصول را در Catalog منتشر می‌کند نه در Offer.
@@ -222,3 +308,54 @@ public interface ICatalogDirectory
         IReadOnlyList<(Guid DefinitionId, string RawValue, Guid? EnumOptionId)> axes,
         CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// نمای تعریف ویژگی برای schema authoring بدون نشت EF.
+/// </summary>
+public sealed record AttributeDefinitionView(
+    Guid DefinitionId,
+    string Code,
+    CatalogAttributeValueKind ValueKind,
+    bool IsVariantAxisAllowed,
+    string? Unit,
+    bool IsRequired,
+    bool IsFilterable,
+    bool IsComparable,
+    bool IsMultivalue,
+    int DisplayOrder,
+    decimal? ValidationMin,
+    decimal? ValidationMax,
+    int? ValidationMaxLength,
+    bool IsActive,
+    DateTimeOffset CreatedAt);
+
+/// <summary>
+/// ردیف schema مؤثر رده پس از ارث والدین.
+/// </summary>
+public sealed record EffectiveSchemaEntry(
+    Guid DefinitionId,
+    string Code,
+    CatalogAttributeValueKind ValueKind,
+    bool IsVariantAxisAllowed,
+    string? Unit,
+    bool IsRequired,
+    bool IsFilterable,
+    bool IsComparable,
+    bool IsMultivalue,
+    int DisplayOrder,
+    Guid InheritedFromCategoryId,
+    bool DefinitionIsActive);
+
+/// <summary>
+/// گزارش تأثیر تغییر رده؛ حذف خاموش انجام نمی‌شود.
+/// </summary>
+public sealed record CategoryChangeImpact(
+    Guid ProductId,
+    Guid NewCategoryId,
+    IReadOnlyList<OrphanProductAttributeValue> OrphanAttributeValues,
+    IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds);
+
+/// <summary>
+/// مقدار ویژگی محصول که در schema جدید جایی ندارد.
+/// </summary>
+public sealed record OrphanProductAttributeValue(Guid DefinitionId, string CanonicalValue);
