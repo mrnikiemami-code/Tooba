@@ -1,0 +1,24 @@
+﻿308	http://localhost:3000/	The remote server returned an error: (308) Permanent Redirect.
+308	http://localhost:3000/products	The remote server returned an error: (308) Permanent Redirect.
+308	http://localhost:3000/cart	The remote server returned an error: (308) Permanent Redirect.
+308	http://localhost:3000/checkout	The remote server returned an error: (308) Permanent Redirect.
+404	http://localhost:3000/blog	The remote server returned an error: (404) Not Found.
+200	http://localhost:3000/customer-panel
+200	http://localhost:3000/customer-panel/orders
+200	http://localhost:3000/customer-panel/wallet
+200	http://localhost:3000/customer-panel/notifications
+200	http://localhost:3000/customer-panel/tickets
+200	http://localhost:3000/customer-panel/gift-cards
+200	http://localhost:3000/customer-panel/settings
+200	http://localhost:3000/customer-panel/profile
+200	http://localhost:3000/vendor-panel
+200	http://localhost:3000/vendor-panel/orders
+200	http://localhost:3000/vendor-panel/returns
+200	http://localhost:3000/vendor-panel/products
+200	http://localhost:3000/admin
+200	http://localhost:3000/admin/orders
+200	http://localhost:3000/admin/wallets
+200	http://127.0.0.1:3001/
+200	http://127.0.0.1:3001/payment
+200	http://127.0.0.1:5088/health/live
+200	http://127.0.0.1:5088/health/ready

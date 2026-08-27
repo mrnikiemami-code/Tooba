@@ -1,0 +1,81 @@
+{
+  "createdAt": "2026-08-27T21:58:36.065Z",
+  "directDbMutation": false,
+  "steps": [
+    {
+      "walletTopUp": 200
+    },
+    {
+      "walletRead": 200
+    },
+    {
+      "addLine": 200
+    },
+    {
+      "checkout": 200,
+      "checkoutId": "01a0453b-6829-7000-8c77-32cfb5f5d409",
+      "payable": 381500
+    },
+    {
+      "walletQuote": 200
+    },
+    {
+      "pay": 200
+    },
+    {
+      "fulfillDeliver": true,
+      "shipmentId": "b479d1d7-678f-4e07-98dd-953bf37c1f17"
+    },
+    {
+      "returnApprove": 200,
+      "retry": 400
+    }
+  ],
+  "adminActor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "walletBefore": 1316500,
+  "quote": {
+    "checkoutId": "01a0453b-6829-7000-8c77-32cfb5f5d409",
+    "walletBalance": 1316500,
+    "maxUsable": 381500,
+    "remainingPayable": 0,
+    "canPayFullyWithWallet": true,
+    "currency": "IRR",
+    "mixedTenderDeferred": true
+  },
+  "payment": {
+    "status": 200,
+    "paymentId": "aeb80a42-139f-425e-a7b5-204a9a410b80",
+    "providerCode": "wallet",
+    "requiresPspRedirect": false,
+    "paymentStatus": "Succeeded"
+  },
+  "fulfillmentId": "9fb87e6f-6d55-4ad5-8d95-dafc082b26d6",
+  "lineId": "01a0453b-6859-7000-89a8-f6194cd4e71d",
+  "return": {
+    "createStatus": 200,
+    "returnRequestId": "4497a586-db39-4134-a90e-7b10a3eedde0",
+    "approveStatus": 200,
+    "approveRetryStatus": 400
+  },
+  "ticket": {
+    "status": 201,
+    "ticketId": "01a0453b-707d-7000-b7cf-72e428758f43",
+    "adminReplyStatus": 200
+  },
+  "walletAfter": 1285000,
+  "urls": {
+    "home": "http://localhost:3000/fa",
+    "products": "http://localhost:3000/fa/products",
+    "cart": "http://localhost:3000/fa/cart",
+    "checkout": "http://localhost:3000/fa/checkout",
+    "blogs": "http://localhost:3000/fa/blogs",
+    "order": "http://localhost:3000/customer-panel/orders/01a0453b-6829-7000-8c77-32cfb5f5d409",
+    "wallet": "http://localhost:3000/customer-panel/wallet",
+    "tickets": "http://localhost:3000/customer-panel/tickets",
+    "notifications": "http://localhost:3000/customer-panel/notifications",
+    "sellerOrder": "http://localhost:3000/vendor-panel/orders?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+    "sellerReturn": "http://localhost:3000/vendor-panel/returns/4497a586-db39-4134-a90e-7b10a3eedde0?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+    "adminTickets": "http://localhost:3000/admin/tickets"
+  },
+  "ok": true
+}

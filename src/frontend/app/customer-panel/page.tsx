@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  CreditCard,
   Eye,
   Heart,
   MapPin,
@@ -9,6 +10,7 @@ import {
   Settings,
   Sparkles,
   Star,
+  Ticket,
   UserRound,
   WalletCards,
 } from "lucide-react";
@@ -39,6 +41,9 @@ export default function CustomerDashboard() {
 
   const quickActions = [
     { href: "/customer-panel/orders", label: "سفارش‌ها", icon: Package, live: true },
+    { href: "/customer-panel/wallet", label: "کیف پول", icon: WalletCards, live: true },
+    { href: "/customer-panel/tickets", label: "تیکت‌ها", icon: Ticket, live: true },
+    { href: "/customer-panel/gift-cards", label: "کارت هدیه", icon: CreditCard, live: true },
     { href: "/customer-panel/wishlist", label: "علاقه‌مندی", icon: Heart, live: page.wishlistAvailable },
     { href: "/customer-panel/addresses", label: "آدرس‌ها", icon: MapPin, live: page.addressBookAvailable },
     { href: "/customer-panel/profile", label: "پروفایل", icon: UserRound, live: true },
@@ -152,7 +157,26 @@ export default function CustomerDashboard() {
             }
             href="/customer-panel/wishlist"
           />
-          <SummaryRow label="کیف پول / تیکت / هدیه" value="فعلاً در دسترس نیست" href="/customer-panel/wallet" />
+          <SummaryRow
+            label="کیف پول"
+            value="فعال"
+            href="/customer-panel/wallet"
+          />
+          <SummaryRow
+            label="تیکت پشتیبانی"
+            value="فعال"
+            href="/customer-panel/tickets"
+          />
+          <SummaryRow
+            label="کارت هدیه"
+            value="فعال"
+            href="/customer-panel/gift-cards"
+          />
+          <SummaryRow
+            label="اطلاعیه‌ها"
+            value="فعال"
+            href="/customer-panel/notifications"
+          />
           <Link
             href="/customer-panel/settings"
             className="block text-center text-xs font-bold text-[#2563EB] pt-2 border-t border-gray-100"
