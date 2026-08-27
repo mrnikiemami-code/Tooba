@@ -77,6 +77,23 @@ test("wallet quote mapper keeps host-calculated balances and deferred mixed flag
   assert.equal(quote?.balance, 2_000_000);
 });
 
+test("wallet quote mapper accepts Host wallet-quote field names without cartId", () => {
+  const quote = mapStorefrontWalletQuote({
+    checkoutId: "chk-2",
+    walletBalance: 724000,
+    maxUsable: 381500,
+    remainingPayable: 0,
+    canPayFullyWithWallet: true,
+    currency: "IRR",
+    mixedTenderDeferred: true,
+  });
+  assert.ok(quote);
+  assert.equal(quote?.balance, 724000);
+  assert.equal(quote?.maxUsableAmount, 381500);
+  assert.equal(quote?.canPayFullyWithWallet, true);
+  assert.equal(quote?.mixedTenderAvailable, false);
+});
+
 test("payment mapper does not invent succeeded", () => {
   const page = mapStorefrontPayment({
     paymentId: "pay-1",

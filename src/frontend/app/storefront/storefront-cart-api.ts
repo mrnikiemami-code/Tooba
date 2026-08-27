@@ -31,6 +31,26 @@ export function writeCartSession(cartId: string, guestSecret: string | null | un
 }
 
 /**
+ * برای User-Preview: اگر URL شامل cartId/guestSecret باشد نشست را یک‌بار seed می‌کند.
+ * فقط Development/preview؛ حقیقت مبلغ همچنان از Host است.
+ */
+export function bootstrapCartSessionFromQuery(params: {
+  cartId?: string | null;
+  guestSecret?: string | null;
+}): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const cartId = params.cartId?.trim();
+  const guestSecret = params.guestSecret?.trim();
+  if (!cartId || !guestSecret) {
+    return false;
+  }
+  writeCartSession(cartId, guestSecret);
+  return true;
+}
+
+/**
  * نشست سبد را پاک می‌کند. برای خالی شدن پس از حذف همهٔ خطوط لازم نیست مگر سبد منقضی شود.
  */
 export function clearCartSession(): void {

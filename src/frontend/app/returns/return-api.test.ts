@@ -90,5 +90,26 @@ test("formatters localize return statuses and destinations", () => {
   assert.equal(formatRefundDestination("Wallet"), "کیف پول");
   assert.equal(formatRefundDestination("OriginalPayment"), "پرداخت اصلی");
   assert.equal(normalizeRefundDestination("wallet"), "Wallet");
+  assert.equal(normalizeRefundDestination(1), "Wallet");
+  assert.equal(normalizeRefundDestination(0), "OriginalPayment");
   assert.equal(normalizeRefundDestination("unknown"), "OriginalPayment");
+});
+
+test("mapReturnSnapshot reads Host refundDestination numeric enum", () => {
+  const snap = mapReturnSnapshot({
+    returnRequestId: "r1",
+    sellerOrderId: "s1",
+    checkoutId: "c1",
+    sellerPartyId: "p1",
+    requestedByUserId: "u1",
+    status: 4,
+    currency: "IRR",
+    refundAmount: 350000,
+    refundDestination: 1,
+    createdAt: "2026-08-27T00:00:00Z",
+    updatedAt: "2026-08-27T00:00:00Z",
+    items: [],
+    refundAttempts: [],
+  });
+  assert.equal(snap?.destination, "Wallet");
 });

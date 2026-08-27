@@ -1,0 +1,47 @@
+{
+  "createdAt": "2026-08-27T21:25:22.262Z",
+  "directDbMutation": false,
+  "note": "Canonical USER-PREVIEW set proven in browser for TB-P06-T028-R1. Regenerate with build-preview-urls.mjs when balances allow; unpaid URL below remains openable.",
+  "identity": {
+    "customerActorUserId": "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+    "sellerActorUserId": "01a03628-3f68-7000-844d-99f1cadb54b0",
+    "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "offerId": "01a04402-7a75-7000-b614-6f093cb072ac",
+    "addressId": "aaaaaaaa-aaaa-4aaa-8aaa-0000000000a1"
+  },
+  "browserPaidCheckout": {
+    "checkoutId": "01a0451c-fabf-7000-99f0-30d410a58638",
+    "paymentId": "88ddad77-9a7f-4e51-8ed9-12e45ecbf791",
+    "resultUrl": "http://localhost:3000/fa/payment/result?paymentId=88ddad77-9a7f-4e51-8ed9-12e45ecbf791&checkoutId=01a0451c-fabf-7000-99f0-30d410a58638",
+    "orderUrl": "http://localhost:3000/customer-panel/orders/01a0451c-fabf-7000-99f0-30d410a58638",
+    "pspRedirect": false,
+    "status": "Succeeded"
+  },
+  "paidCheckoutScenario": {
+    "checkoutId": "01a0451c-f1f8-7000-b291-db065075733f",
+    "paymentId": "23ff4d99-214a-46ab-84c7-03702f7e1f40",
+    "providerCode": "wallet",
+    "requiresPspRedirect": false,
+    "returnRequestId": "e848ec42-0a0f-4b99-a85e-78444033b21e",
+    "approveStatus": 200,
+    "approveRetryStatus": 400
+  },
+  "unpaidCheckoutForBrowserPay": {
+    "confirmationUrl": "http://localhost:3000/customer-panel/dev/wallet-checkout?checkoutId=01a04529-84ab-7000-a55d-3dd16c58c915&cartId=01a04529-848a-7000-b143-0646625daa8c&guestSecret=fb11d0cdcd39e05364f426f9afea1c194d22e98fb10c2c03cfad3fca2835f0a3&actor=aaaaaaaa-aaaa-4aaa-8aaa-000000000009"
+  },
+  "urls": {
+    "customerCheckoutConfirmation": "http://localhost:3000/customer-panel/dev/wallet-checkout?checkoutId=01a04529-84ab-7000-a55d-3dd16c58c915&cartId=01a04529-848a-7000-b143-0646625daa8c&guestSecret=fb11d0cdcd39e05364f426f9afea1c194d22e98fb10c2c03cfad3fca2835f0a3&actor=aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+    "customerWallet": "http://localhost:3000/customer-panel/wallet",
+    "walletPaidOrder": "http://localhost:3000/customer-panel/orders/01a0451c-fabf-7000-99f0-30d410a58638",
+    "customerRefundEntry": "http://localhost:3000/customer-panel/orders/01a0451c-f1f8-7000-b291-db065075733f",
+    "sellerRefundOperation": "http://localhost:3000/vendor-panel/returns/e848ec42-0a0f-4b99-a85e-78444033b21e?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+    "walletAfterRefund": "http://localhost:3000/customer-panel/wallet",
+    "notificationInbox": "http://localhost:3000/customer-panel/notifications",
+    "shopeivaCheckout": "http://127.0.0.1:3001/payment",
+    "shopeivaCart": "http://127.0.0.1:3001/cart",
+    "shopeivaUserPanel": "http://127.0.0.1:3001/user-panel",
+    "shopeivaGiftCards": "http://127.0.0.1:3001/user-panel/gift-cards",
+    "shopeivaWalletClosest": "http://127.0.0.1:3001/user-panel/wallet",
+    "shopeivaOrders": "http://127.0.0.1:3001/user-panel/orders"
+  }
+}

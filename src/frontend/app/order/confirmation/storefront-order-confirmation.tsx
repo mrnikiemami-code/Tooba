@@ -10,6 +10,7 @@ import {
   toCustomerCheckoutMessage,
   type StorefrontCheckoutPage,
 } from "../../storefront/storefront-checkout-api.ts";
+import { bootstrapCartSessionFromQuery } from "../../storefront/storefront-cart-api.ts";
 import { StorefrontPaymentMethodPicker } from "../../storefront/storefront-payment-methods.tsx";
 import {
   loadStorefrontWalletQuote,
@@ -45,23 +46,39 @@ function ConfirmationBody() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    bootstrapCartSessionFromQuery({
+      cartId: params.get("cartId"),
+      guestSecret: params.get("guestSecret"),
+    });
+    const actor = params.get("actor")?.trim();
+    if (actor && typeof window !== "undefined") {
+      window.localStorage.setItem("tooba.customerActorUserId", actor);
+    }
     if (!checkoutId) {
       setError("شناسهٔ سفارش نیست.");
       return;
     }
+    let cancelled = false;
     void loadStorefrontCheckout(checkoutId)
       .then(async (checkout) => {
+        if (cancelled) return;
         setPage(checkout);
         if (checkout.paymentState !== "Paid") {
           const nextQuote = await loadStorefrontWalletQuote(checkoutId);
+          if (cancelled) return;
           setQuote(nextQuote);
           if (nextQuote?.canPayFullyWithWallet) {
             setMethod("wallet");
           }
         }
       })
-      .catch((cause: unknown) => setError(toCustomerCheckoutMessage(cause)));
-  }, [checkoutId]);
+      .catch((cause: unknown) => {
+        if (!cancelled) setError(toCustomerCheckoutMessage(cause));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkoutId, params]);
 
   if (!page) {
     return (

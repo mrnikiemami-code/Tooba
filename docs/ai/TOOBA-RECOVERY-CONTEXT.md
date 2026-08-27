@@ -34,7 +34,7 @@ TB-P06-T022
 Last Implementation Task:
 
 ```text
-TB-P06-T028
+TB-P06-T028-R1
 ```
 
 Issued but not accepted:
@@ -50,8 +50,9 @@ TB-P06-T024-R2 = ACCEPTED
 TB-P06-T025 = ACCEPTED
 TB-P06-T026 = REPAIRED_BY_TB-P06-T026-R1
 TB-P06-T026-R1 = ACCEPTED
-TB-P06-T027 = AWAITING_ARCHITECT_ACCEPT
-TB-P06-T028 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T027 = ACCEPTED
+TB-P06-T028 = REPAIRED_BY_TB-P06-T028-R1
+TB-P06-T028-R1 = AWAITING_ARCHITECT_ACCEPT
 SUPPORT_BACKEND = LIVE
 CUSTOMER_TICKETS = LIVE
 SELLER_TICKETS = LIVE
@@ -68,8 +69,11 @@ WALLET_DEMO_SEED = LIVE_DEV_ONLY
 WALLET_BROWSER_PROOF = LIVE
 WALLET_USER_PREVIEW = READY
 WALLET_CHECKOUT = LIVE
+WALLET_CHECKOUT_FULL_PAYMENT = LIVE
 REFUND_TO_WALLET = LIVE
 WALLET_MIXED_TENDER = DEFERRED
+WALLET_CHECKOUT_BROWSER_PROOF = LIVE
+REFUND_TO_WALLET_BROWSER_PROOF = LIVE
 WALLET_CHECKOUT_USER_PREVIEW = READY
 CUSTOMER_SETTINGS = LIVE
 SELLER_SETTINGS = LIVE
@@ -314,5 +318,5 @@ by Bridge on channel `tooba-main`.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/active task from the repository and Bridge;
 5. follow `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle; one Worker has one active Task; Worker PASS is not Architect ACCEPT; `SYSTEM-BRIDGE-ALERT` is not a Result and must not be emitted merely because the Worker is offline between Tasks;
-6. TB-P05-GATE is Architect-accepted. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T025 = ACCEPTED; TB-P06-T026-R1 = ACCEPTED; TB-P06-T027 = AWAITING_ARCHITECT_ACCEPT. Settings/profile LIVE for Customer/Seller/Admin operator via canonical owners (CustomerProfile, Party organization profile, OperatorProfile, UserPreference locale). Notification/security preference UI deferred. Claims: `SETTINGS_COMPLETE_FOR_CURRENT_SCOPE`, `SETTINGS_USER_PREVIEW_READY` — not `USER_VISUAL_ACCEPTED` / `PRODUCT_FULLY_READY` / `PRODUCTION_GO_LIVE_READY`. Evidence under `docs/evidence/TB-P06-T027/`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. HOME/PDP visual review remains OPEN_FOR_USER_FEEDBACK.
+6. TB-P05-GATE is Architect-accepted. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T025 = ACCEPTED; TB-P06-T026-R1 = ACCEPTED; TB-P06-T027 = ACCEPTED; TB-P06-T028 = REPAIRED_BY_TB-P06-T028-R1; TB-P06-T028-R1 = AWAITING_ARCHITECT_ACCEPT. R1 completed concrete User-Preview URLs + browser proof; financial design unchanged; mixed tender still deferred. Wallet flags: `WALLET_CHECKOUT_FULL_PAYMENT` = LIVE; `REFUND_TO_WALLET` = LIVE; `WALLET_CHECKOUT_BROWSER_PROOF` = LIVE; `REFUND_TO_WALLET_BROWSER_PROOF` = LIVE; `WALLET_CHECKOUT_USER_PREVIEW` = READY; `WALLET_MIXED_TENDER` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED — not `USER_VISUAL_ACCEPTED` / `PRODUCT_FULLY_READY` / `PRODUCTION_GO_LIVE_READY`. Evidence under `docs/evidence/TB-P06-T028-R1/`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. HOME/PDP visual review remains OPEN_FOR_USER_FEEDBACK.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

@@ -138,18 +138,22 @@ export function mapStorefrontWalletQuote(payload: unknown): StorefrontWalletQuot
   if (!item) {
     return null;
   }
-  const cartId = asString(readProp(item, "cartId", "CartId"));
-  if (!cartId) {
+  const checkoutRaw = readProp(item, "checkoutId", "CheckoutId");
+  const checkoutId = checkoutRaw == null || checkoutRaw === "" ? null : asString(checkoutRaw);
+  if (!checkoutId) {
     return null;
   }
-  const checkoutRaw = readProp(item, "checkoutId", "CheckoutId");
+  const cartFromPayload = asString(readProp(item, "cartId", "CartId"));
+  const cartId = cartFromPayload || readCartSession().cartId || "";
   const mixedRaw = readProp(item, "mixedTenderAvailable", "MixedTenderAvailable");
+  const balanceRaw = readProp(item, "walletBalance", "WalletBalance");
+  const maxUsableRaw = readProp(item, "maxUsable", "MaxUsable");
   return {
-    checkoutId: checkoutRaw == null || checkoutRaw === "" ? null : asString(checkoutRaw),
+    checkoutId,
     cartId,
     currency: asString(readProp(item, "currency", "Currency"), "IRR"),
-    balance: asNumber(readProp(item, "balance", "Balance")),
-    maxUsableAmount: asNumber(readProp(item, "maxUsableAmount", "MaxUsableAmount")),
+    balance: asNumber(balanceRaw ?? readProp(item, "balance", "Balance")),
+    maxUsableAmount: asNumber(maxUsableRaw ?? readProp(item, "maxUsableAmount", "MaxUsableAmount")),
     selectedWalletAmount: asNumber(readProp(item, "selectedWalletAmount", "SelectedWalletAmount")),
     remainingPayable: asNumber(readProp(item, "remainingPayable", "RemainingPayable")),
     payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),

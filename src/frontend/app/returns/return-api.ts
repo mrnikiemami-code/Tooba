@@ -93,8 +93,12 @@ function nullableText(value: unknown): string | null {
 
 /** مقصد بازپرداخت را نرمال می‌کند؛ مقدار ناشناخته → OriginalPayment. */
 export function normalizeRefundDestination(value: unknown): RefundDestination {
+  // Host may serialize enum as number (Wallet=1) or string.
+  if (typeof value === "number") {
+    return value === 1 ? "Wallet" : "OriginalPayment";
+  }
   const raw = text(value).trim();
-  if (raw === "Wallet" || raw === "wallet") return "Wallet";
+  if (raw === "1" || raw === "Wallet" || raw === "wallet") return "Wallet";
   return "OriginalPayment";
 }
 
@@ -158,7 +162,9 @@ export function mapReturnSnapshot(value: unknown): ReturnSnapshot | null {
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     refundAmount: number(prop(item, "refundAmount", "RefundAmount")),
     paymentId: nullableText(prop(item, "paymentId", "PaymentId")),
-    destination: normalizeRefundDestination(prop(item, "destination", "Destination")),
+    destination: normalizeRefundDestination(
+      prop(item, "refundDestination", "RefundDestination") ?? prop(item, "destination", "Destination"),
+    ),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
     items: Array.isArray(itemsRaw)

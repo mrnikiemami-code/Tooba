@@ -38,6 +38,39 @@ test("cart mapper keeps offer identity and ignores product price fields", () => 
   assert.equal("price" in (cart?.lines[0] ?? {}), false);
 });
 
+test("bootstrapCartSessionFromQuery writes session when both ids present", async () => {
+  const { bootstrapCartSessionFromQuery, readCartSession, clearCartSession } = await import("./storefront-cart-api.ts");
+  const store = new Map<string, string>();
+  const sessionStorage: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    key(index) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    getItem(k) {
+      return store.has(k) ? store.get(k)! : null;
+    },
+    setItem(k, v) {
+      store.set(k, String(v));
+    },
+    removeItem(k) {
+      store.delete(k);
+    },
+  };
+  (globalThis as { window?: Window }).window = {
+    sessionStorage,
+    dispatchEvent: () => true,
+  } as unknown as Window;
+  clearCartSession();
+  assert.equal(bootstrapCartSessionFromQuery({ cartId: null, guestSecret: "x" }), false);
+  assert.equal(bootstrapCartSessionFromQuery({ cartId: "c1", guestSecret: "s1" }), true);
+  assert.deepEqual(readCartSession(), { cartId: "c1", guestSecret: "s1" });
+});
+
 test("customer cart message hides Held reservation wording", () => {
   const hidden = toCustomerCartMessage(
     new StorefrontCartApiError(409, "cart.inventory.stale", "فقط رزرو Held قابل آزادسازی یا مصرف است."),
