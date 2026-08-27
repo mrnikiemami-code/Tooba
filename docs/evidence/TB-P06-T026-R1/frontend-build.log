@@ -1,0 +1,129 @@
+﻿
+> tooba-web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/77) ...
+   Generating static pages (19/77) 
+   Generating static pages (38/77) 
+   Generating static pages (57/77) 
+ ✓ Generating static pages (77/77)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                        Size  First Load JS
+┌ ƒ /                                           13.5 kB         180 kB
+├ ƒ /_not-found                                   168 B         103 kB
+├ ƒ /admin                                        203 B         173 kB
+├ ƒ /admin/access-control                         370 B         119 kB
+├ ƒ /admin/content                                203 B         173 kB
+├ ƒ /admin/customers                              203 B         173 kB
+├ ƒ /admin/fulfillments                           203 B         173 kB
+├ ƒ /admin/fulfillments/[fulfillmentId]           204 B         173 kB
+├ ƒ /admin/gift-cards                             256 B         131 kB
+├ ƒ /admin/gift-cards/[id]                        508 B         131 kB
+├ ƒ /admin/orders                                 203 B         173 kB
+├ ƒ /admin/orders/[checkoutId]                    203 B         173 kB
+├ ƒ /admin/page-composition                       203 B         173 kB
+├ ƒ /admin/payouts                                204 B         173 kB
+├ ƒ /admin/products                             4.51 kB         138 kB
+├ ƒ /admin/products/[productId]                  6.2 kB         136 kB
+├ ƒ /admin/promotions                             203 B         173 kB
+├ ƒ /admin/returns                                203 B         173 kB
+├ ƒ /admin/returns/[returnRequestId]              204 B         173 kB
+├ ƒ /admin/reviews                                204 B         173 kB
+├ ƒ /admin/sellers                                203 B         173 kB
+├ ƒ /admin/sellers/[sellerId]/access-control      504 B         119 kB
+├ ƒ /admin/settings                               803 B         103 kB
+├ ƒ /admin/settlement                             203 B         173 kB
+├ ƒ /admin/stories                                203 B         173 kB
+├ ƒ /admin/tickets                              1.08 kB         126 kB
+├ ƒ /admin/tickets/[id]                         1.46 kB         126 kB
+├ ƒ /admin/wallets                                258 B         131 kB
+├ ƒ /api/auth/csrf                                168 B         103 kB
+├ ƒ /api/auth/login                               168 B         103 kB
+├ ƒ /api/auth/logout                              168 B         103 kB
+├ ƒ /api/auth/me                                  168 B         103 kB
+├ ƒ /api/auth/refresh                             168 B         103 kB
+├ ƒ /api/customer/[...path]                       168 B         103 kB
+├ ƒ /api/customer/support/tickets                 168 B         103 kB
+├ ƒ /api/customer/support/tickets/[id]            168 B         103 kB
+├ ƒ /api/customer/support/tickets/[id]/close      168 B         103 kB
+├ ƒ /api/customer/support/tickets/[id]/reopen     168 B         103 kB
+├ ƒ /api/customer/support/tickets/[id]/replies    168 B         103 kB
+├ ƒ /best-seller                                  240 B         126 kB
+├ ƒ /blogs                                      5.64 kB         148 kB
+├ ƒ /blogs/[slug]                               4.75 kB         117 kB
+├ ƒ /brand/[slug]                                 240 B         126 kB
+├ ƒ /brands                                       240 B         126 kB
+├ ƒ /cart                                       5.01 kB         130 kB
+├ ƒ /checkout                                   6.33 kB         132 kB
+├ ƒ /customer-panel                             6.16 kB         112 kB
+├ ƒ /customer-panel/addresses                    7.6 kB         110 kB
+├ ƒ /customer-panel/gift-cards                    258 B         131 kB
+├ ƒ /customer-panel/notifications                 400 B         124 kB
+├ ƒ /customer-panel/orders                      4.53 kB         110 kB
+├ ƒ /customer-panel/orders/[checkoutId]         4.55 kB         129 kB
+├ ƒ /customer-panel/profile                     6.14 kB         136 kB
+├ ƒ /customer-panel/settings                    3.64 kB         109 kB
+├ ƒ /customer-panel/tickets                       572 B         125 kB
+├ ƒ /customer-panel/tickets/[id]                  687 B         125 kB
+├ ƒ /customer-panel/tickets/new                   370 B         125 kB
+├ ƒ /customer-panel/wallet                        258 B         131 kB
+├ ƒ /customer-panel/wishlist                    3.15 kB         117 kB
+├ ƒ /design-system                              4.54 kB         143 kB
+├ ○ /icon.svg                                       0 B            0 B
+├ ƒ /most-viewed                                  240 B         126 kB
+├ ƒ /new-products                                 240 B         126 kB
+├ ƒ /offers                                       240 B         126 kB
+├ ƒ /order/confirmation                            4 kB         129 kB
+├ ƒ /payment/result                              2.7 kB         128 kB
+├ ƒ /payment/sandbox                            2.56 kB         121 kB
+├ ƒ /products                                   3.58 kB         130 kB
+├ ƒ /products/[slug]                             8.8 kB         159 kB
+├ ƒ /sale                                         240 B         126 kB
+├ ƒ /seller-profile/[publicId]                    240 B         126 kB
+├ ƒ /sellers                                      240 B         126 kB
+├ ƒ /sitemap.xml                                  168 B         103 kB
+├ ƒ /trending                                     240 B         126 kB
+├ ƒ /vendor-panel                               3.59 kB         137 kB
+├ ƒ /vendor-panel/access-control                  376 B         119 kB
+├ ƒ /vendor-panel/analytics                     2.95 kB         133 kB
+├ ƒ /vendor-panel/coupons                       5.07 kB         115 kB
+├ ƒ /vendor-panel/coupons/[id]/edit               290 B         111 kB
+├ ƒ /vendor-panel/coupons/new                     253 B         111 kB
+├ ƒ /vendor-panel/customers                       826 B         107 kB
+├ ƒ /vendor-panel/fulfillments                   5.4 kB         143 kB
+├ ƒ /vendor-panel/fulfillments/[fulfillmentId]  5.86 kB         147 kB
+├ ƒ /vendor-panel/gift-cards                      826 B         107 kB
+├ ƒ /vendor-panel/notifications                   417 B         124 kB
+├ ƒ /vendor-panel/orders                        1.72 kB         136 kB
+├ ƒ /vendor-panel/orders/[sellerOrderId]         1.8 kB         136 kB
+├ ƒ /vendor-panel/products                      2.06 kB         136 kB
+├ ƒ /vendor-panel/products/[offerId]            2.49 kB         136 kB
+├ ƒ /vendor-panel/products/new                   2.3 kB         136 kB
+├ ƒ /vendor-panel/returns                       1.67 kB         143 kB
+├ ƒ /vendor-panel/returns/[returnRequestId]     2.47 kB         147 kB
+├ ƒ /vendor-panel/reviews                        5.2 kB         111 kB
+├ ƒ /vendor-panel/settings                       3.7 kB         138 kB
+├ ƒ /vendor-panel/stories                         276 B         141 kB
+├ ƒ /vendor-panel/tickets                         957 B         126 kB
+├ ƒ /vendor-panel/tickets/[id]                    799 B         126 kB
+├ ƒ /vendor-panel/tickets/new                     427 B         125 kB
+└ ƒ /vendor-panel/wallet                        6.39 kB         116 kB
++ First Load JS shared by all                    102 kB
+  ├ chunks/1255-d3668eefd1b4a69b.js             46.1 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js         54.2 kB
+  └ other shared chunks (total)                 2.07 kB
+
+
+ƒ Middleware                                    34.7 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
