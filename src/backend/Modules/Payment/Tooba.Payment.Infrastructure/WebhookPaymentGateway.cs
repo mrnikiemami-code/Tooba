@@ -8,7 +8,8 @@ using Tooba.Payment.Application;
 namespace Tooba.Payment.Infrastructure;
 
 /// <summary>
-/// Production adapter: Verify از StatusQuery می‌خواند؛ متن callback حقیقت نیست.
+/// Production adapter boundary: Initiate از InitiateBaseUrl؛ Verify از StatusQuery؛ متن callback حقیقت نیست.
+/// هیچ برند تجاری PSP در کد انتخاب نمی‌شود — فقط پیکربندی امن.
 /// </summary>
 public sealed class WebhookPaymentGateway : IPaymentGateway
 {
@@ -51,20 +52,25 @@ public sealed class WebhookPaymentGateway : IPaymentGateway
         string currency,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_options.WebhookSigningSecret)
-            || string.IsNullOrWhiteSpace(_options.StatusQueryBaseUrl))
+        _ = cancellationToken;
+        if (!IsFullyConfigured())
         {
             _telemetry.RecordInitiate("misconfigured");
             throw new InvalidOperationException("payment.gateway.unconfigured");
         }
 
-        _ = amount;
-        _ = currency;
+        if (!TryValidateOutboundUrl(_options.InitiateBaseUrl, out _))
+        {
+            _telemetry.RecordInitiate("misconfigured");
+            throw new InvalidOperationException("payment.gateway.unconfigured");
+        }
+
         var reference = $"wh-{paymentId:N}";
+        var redirect = BuildInitiateRedirect(paymentId, amount, currency, reference);
         _telemetry.RecordInitiate("succeeded");
         return Task.FromResult(new GatewayInitiation(
             reference,
-            $"/payment/result?paymentId={paymentId:D}&ref={Uri.EscapeDataString(reference)}",
+            redirect,
             DateTimeOffset.UtcNow.AddMinutes(30)));
     }
 
@@ -81,13 +87,47 @@ public sealed class WebhookPaymentGateway : IPaymentGateway
             return testOverride;
         }
 
-        if (string.IsNullOrWhiteSpace(_options.StatusQueryBaseUrl))
+        if (string.IsNullOrWhiteSpace(_options.StatusQueryBaseUrl)
+            || string.IsNullOrWhiteSpace(_options.WebhookSigningSecret))
         {
             _telemetry.RecordVerify("misconfigured");
             return new GatewayVerification(false, null, "GATEWAY_MISCONFIGURED");
         }
 
-        var url = _options.StatusQueryBaseUrl.TrimEnd('/')
+        if (!TryValidateOutboundUrl(_options.StatusQueryBaseUrl, out var statusBase))
+        {
+            _telemetry.RecordVerify("ssrf_blocked");
+            return new GatewayVerification(false, null, "GATEWAY_MISCONFIGURED");
+        }
+
+        var maxAttempts = Math.Clamp(_options.VerifyMaxAttempts, 1, 5);
+        GatewayVerification last = new(false, null, "GATEWAY_UNAVAILABLE");
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            last = await QueryStatusOnceAsync(statusBase!, providerRequestReference, cancellationToken)
+                .ConfigureAwait(false);
+            if (last.VerifiedSuccess
+                || !PaymentGatewayOutcomes.IsIndeterminate(last.FailureCode))
+            {
+                return last;
+            }
+
+            if (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100 * attempt), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        return last;
+    }
+
+    private async Task<GatewayVerification> QueryStatusOnceAsync(
+        string statusBase,
+        string providerRequestReference,
+        CancellationToken cancellationToken)
+    {
+        var url = statusBase.TrimEnd('/')
             + "?reference=" + Uri.EscapeDataString(providerRequestReference);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         if (!string.IsNullOrWhiteSpace(_options.StatusQueryApiKey))
@@ -119,6 +159,13 @@ public sealed class WebhookPaymentGateway : IPaymentGateway
                 return new GatewayVerification(false, null, "GATEWAY_INVALID_RESPONSE");
             }
 
+            var status = (payload.Status ?? string.Empty).Trim().ToLowerInvariant();
+            if (status is "pending" or "unknown" or "processing")
+            {
+                _telemetry.RecordVerify("pending");
+                return new GatewayVerification(false, null, "GATEWAY_PENDING");
+            }
+
             if (payload.VerifiedSuccess
                 && !string.IsNullOrWhiteSpace(payload.ProviderTransactionReference))
             {
@@ -141,8 +188,100 @@ public sealed class WebhookPaymentGateway : IPaymentGateway
         }
     }
 
+    private bool IsFullyConfigured() =>
+        !string.IsNullOrWhiteSpace(_options.WebhookSigningSecret)
+        && !string.IsNullOrWhiteSpace(_options.StatusQueryBaseUrl)
+        && !string.IsNullOrWhiteSpace(_options.InitiateBaseUrl);
+
+    private string BuildInitiateRedirect(Guid paymentId, decimal amount, string currency, string reference)
+    {
+        var sep = _options.InitiateBaseUrl.Contains('?', StringComparison.Ordinal) ? "&" : "?";
+        return _options.InitiateBaseUrl.TrimEnd('/')
+            + sep
+            + "paymentId=" + Uri.EscapeDataString(paymentId.ToString("D"))
+            + "&amount=" + Uri.EscapeDataString(amount.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            + "&currency=" + Uri.EscapeDataString(currency)
+            + "&reference=" + Uri.EscapeDataString(reference)
+            + "&returnPath=" + Uri.EscapeDataString($"/payment/result?paymentId={paymentId:D}");
+    }
+
+    private bool TryValidateOutboundUrl(string raw, out string? normalized)
+    {
+        normalized = null;
+        if (!Uri.TryCreate(raw, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Production boundary: prefer https; allow http only for explicitly listed hosts (test harness).
+        var host = uri.Host;
+        if (_options.AllowedStatusQueryHosts is { Length: > 0 })
+        {
+            if (!_options.AllowedStatusQueryHosts.Any(h =>
+                    string.Equals(h, host, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (IsLoopbackOrPrivate(host))
+            {
+                return false;
+            }
+
+            if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        normalized = uri.GetLeftPart(UriPartial.Path).TrimEnd('/');
+        return true;
+    }
+
+    private static bool IsLoopbackOrPrivate(string host)
+    {
+        if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("127.0.0.1", StringComparison.Ordinal)
+            || host.Equals("::1", StringComparison.Ordinal)
+            || host.EndsWith(".local", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (IPAddress.TryParse(host, out var ip))
+        {
+            if (IPAddress.IsLoopback(ip))
+            {
+                return true;
+            }
+
+            var bytes = ip.GetAddressBytes();
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && bytes.Length >= 2)
+            {
+                if (bytes[0] == 10
+                    || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                    || (bytes[0] == 192 && bytes[1] == 168)
+                    || (bytes[0] == 169 && bytes[1] == 254))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private sealed record StatusQueryPayload(
         [property: JsonPropertyName("verifiedSuccess")] bool VerifiedSuccess,
         [property: JsonPropertyName("providerTransactionReference")] string? ProviderTransactionReference,
-        [property: JsonPropertyName("failureCode")] string? FailureCode);
+        [property: JsonPropertyName("failureCode")] string? FailureCode,
+        [property: JsonPropertyName("status")] string? Status);
 }

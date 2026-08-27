@@ -5,7 +5,7 @@ using Xunit;
 namespace Tooba.Host.Tests;
 
 /// <summary>
-/// سیاست Production درگاه: fail-closed، webhook misconfig، امضای callback.
+/// سیاست Production درگاه: fail-closed، webhook misconfig، امضای callback، SSRF، InitiateBaseUrl.
 /// </summary>
 public sealed class PaymentProductionPolicyTests
 {
@@ -40,6 +40,40 @@ public sealed class PaymentProductionPolicyTests
     }
 
     [Fact]
+    public async Task Webhook_gateway_requires_initiate_base_url_even_when_status_query_set()
+    {
+        var gateway = new WebhookPaymentGateway(
+            new HttpClient(),
+            Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions
+            {
+                WebhookSigningSecret = "secret",
+                StatusQueryBaseUrl = "https://payments.example/status",
+                InitiateBaseUrl = "",
+            }),
+            new PaymentGatewayInstrumentation());
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            gateway.InitiateAsync(Guid.NewGuid(), 100m, "IRR", CancellationToken.None));
+        Assert.Equal("payment.gateway.unconfigured", ex.Message);
+    }
+
+    [Fact]
+    public async Task Webhook_gateway_blocks_private_status_query_host_without_allowlist()
+    {
+        var gateway = new WebhookPaymentGateway(
+            new HttpClient(),
+            Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions
+            {
+                WebhookSigningSecret = "secret",
+                StatusQueryBaseUrl = "http://127.0.0.1:9/status",
+                InitiateBaseUrl = "https://payments.example/pay",
+            }),
+            new PaymentGatewayInstrumentation());
+        var verified = await gateway.VerifyAsync("wh-ref", false, CancellationToken.None);
+        Assert.False(verified.VerifiedSuccess);
+        Assert.Equal("GATEWAY_MISCONFIGURED", verified.FailureCode);
+    }
+
+    [Fact]
     public async Task Webhook_gateway_verify_uses_status_override_not_callback_text()
     {
         var reference = "wh-test-ref";
@@ -51,7 +85,10 @@ public sealed class PaymentProductionPolicyTests
                 new HttpClient(),
                 Microsoft.Extensions.Options.Options.Create(new PaymentGatewayOptions
                 {
+                    WebhookSigningSecret = "secret",
                     StatusQueryBaseUrl = "https://payments.test/status",
+                    InitiateBaseUrl = "https://payments.test/pay",
+                    AllowedStatusQueryHosts = ["payments.test"],
                 }),
                 new PaymentGatewayInstrumentation());
             var verified = await gateway.VerifyAsync(reference, callbackClaimsSuccess: false, CancellationToken.None);
@@ -83,4 +120,16 @@ public sealed class PaymentProductionPolicyTests
         Assert.True(PaymentWebhookSignatureValidator.TryValidate(secret, body, valid, out var error));
         Assert.Equal(string.Empty, error);
     }
+
+    [Theory]
+    [InlineData("GATEWAY_TIMEOUT")]
+    [InlineData("GATEWAY_UNAVAILABLE")]
+    [InlineData("GATEWAY_RATE_LIMITED")]
+    [InlineData("GATEWAY_PENDING")]
+    public void Indeterminate_gateway_codes_are_recognized(string code) =>
+        Assert.True(PaymentGatewayOutcomes.IsIndeterminate(code));
+
+    [Fact]
+    public void Definitive_reject_is_not_indeterminate() =>
+        Assert.False(PaymentGatewayOutcomes.IsIndeterminate("GATEWAY_REJECTED"));
 }

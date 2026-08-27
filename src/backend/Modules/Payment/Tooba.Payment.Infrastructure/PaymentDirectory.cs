@@ -17,7 +17,7 @@ public sealed class OpenPaymentUseCaseGuard : IPaymentUseCaseGuard
 /// <summary>
 /// ارکستراسیون پرداخت در schema payment. مبلغ از تصویر سفارش است نه از کلاینت؛ OrderDbContext اینجا باز نمی‌شود.
 /// </summary>
-public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory
+public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory, IPaymentAdminDirectory
 {
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
@@ -183,6 +183,12 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         payment.AttachLoadedAllocations(allocations);
         if (!verified.VerifiedSuccess || string.IsNullOrWhiteSpace(verified.ProviderTransactionReference))
         {
+            // Unknown/timeout/rate-limit: Pending می‌ماند؛ فقط شکست قطعی درگاه Failed می‌شود.
+            if (PaymentGatewayOutcomes.IsIndeterminate(verified.FailureCode))
+            {
+                return new PaymentVerificationResult(payment.PaymentId, payment.Status, false);
+            }
+
             payment.ApplyVerifiedFailure(attempt.AttemptId, verified.FailureCode, DateTimeOffset.UtcNow);
             await _db.SaveChangesAsync(cancellationToken);
             return new PaymentVerificationResult(payment.PaymentId, payment.Status, false);
@@ -255,6 +261,87 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             payment.Status,
             payment.ProviderCode,
             allocations.Select(x => new PaymentAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency)).ToArray());
+    }
+
+    /// <inheritdoc />
+    public async Task<PaymentOperationalSnapshot?> GetOperationalAsync(
+        Guid paymentId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false);
+        if (payment is null)
+        {
+            return null;
+        }
+
+        return await ToOperationalAsync(payment, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<PaymentOperationalSnapshot?> GetLatestOperationalForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (payment is null)
+        {
+            return null;
+        }
+
+        return await ToOperationalAsync(payment, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<PaymentVerificationResult> ReconcileAsync(Guid paymentId, CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.missing");
+        var attempt = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == paymentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.attempt.missing");
+        return await VerifyAsync(
+            new VerifyPaymentCommand(
+                payment.PaymentId,
+                attempt.AttemptId,
+                attempt.ProviderRequestReference,
+                false),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<PaymentOperationalSnapshot> ToOperationalAsync(
+        CustomerPayment payment,
+        CancellationToken cancellationToken)
+    {
+        var attempt = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == payment.PaymentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return new PaymentOperationalSnapshot(
+            payment.PaymentId,
+            payment.CheckoutId,
+            payment.Status,
+            payment.Amount,
+            payment.Currency,
+            payment.ProviderCode,
+            attempt?.ProviderRequestReference,
+            attempt?.ProviderTransactionReference,
+            payment.CreatedAt,
+            payment.UpdatedAt,
+            payment.CompletedAt,
+            attempt?.FailureCode,
+            payment.Status == PaymentStatus.Pending);
     }
 
     private async Task EnsureActorCanSeeAsync(

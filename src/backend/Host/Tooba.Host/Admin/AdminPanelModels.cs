@@ -73,7 +73,26 @@ public sealed record AdminOrderDetailPage(
     string PostalAddress,
     string PostalCode,
     string ShippingMethodLabel,
-    IReadOnlyList<AdminSellerOrderView> SellerOrders);
+    IReadOnlyList<AdminSellerOrderView> SellerOrders,
+    AdminPaymentOpsView? Payment = null);
+
+/// <summary>
+/// بازرسی عملیاتی پرداخت روی جزئیات سفارش مدیر؛ راز یا payload خام ندارد.
+/// </summary>
+public sealed record AdminPaymentOpsView(
+    Guid PaymentId,
+    Guid CheckoutId,
+    string Status,
+    decimal Amount,
+    string Currency,
+    string ProviderCode,
+    string? ProviderRequestReference,
+    string? ProviderTransactionReference,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? CompletedAt,
+    string? LastFailureCode,
+    bool ReconcileEligible);
 
 /// <summary>
 /// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.

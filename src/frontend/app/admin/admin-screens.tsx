@@ -617,6 +617,21 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
               <Info label="قابل پرداخت" value={formatAdminMoney(detail.payableAmount, detail.currency)} />
             </dl>
           </section>
+          {detail.payment ? (
+            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
+              <h2 className="font-semibold">پرداخت (Host)</h2>
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Info label="PaymentId" value={detail.payment.paymentId} />
+                <Info label="وضعیت درگاه" value={formatAdminStatus(detail.payment.status)} />
+                <Info label="Provider" value={detail.payment.providerCode || "—"} />
+                <Info label="مرجع درگاه" value={detail.payment.providerRequestReference || "—"} />
+                <Info label="تراکنش تأییدشده" value={detail.payment.providerTransactionReference || "—"} />
+                <Info label="ایجاد" value={formatAdminDate(detail.payment.createdAt)} />
+                <Info label="به‌روزرسانی" value={formatAdminDate(detail.payment.updatedAt)} />
+                <Info label="شکست ایمن" value={detail.payment.lastFailureCode || "—"} />
+              </dl>
+            </section>
+          ) : null}
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <h2 className="font-semibold">گیرنده و ارسال</h2>
             <p className="mt-3">{detail.recipientName} · <span dir="ltr">{detail.contactMobile || "—"}</span></p>

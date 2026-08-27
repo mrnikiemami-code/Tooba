@@ -6,6 +6,7 @@ using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Payment.Application;
 
 namespace Tooba.Host.Admin;
 
@@ -19,6 +20,7 @@ public sealed class AdminPanelComposer
     private readonly OfferDbContext _offers;
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
+    private readonly IPaymentAdminDirectory _payments;
 
     /// <summary>
     /// ترکیب‌گر Host را با contextهای مستقل ماژول‌ها می‌سازد.
@@ -27,12 +29,14 @@ public sealed class AdminPanelComposer
         CatalogDbContext catalog,
         OfferDbContext offers,
         OrderDbContext orders,
-        PartyDbContext parties)
+        PartyDbContext parties,
+        IPaymentAdminDirectory payments)
     {
         _catalog = catalog;
         _offers = offers;
         _orders = orders;
         _parties = parties;
+        _payments = payments;
     }
 
     /// <summary>
@@ -127,6 +131,23 @@ public sealed class AdminPanelComposer
                 lines);
         }).ToList();
         var listItem = MapOrderListItem(group);
+        var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
+        AdminPaymentOpsView? paymentView = paymentOps is null
+            ? null
+            : new AdminPaymentOpsView(
+                paymentOps.PaymentId,
+                paymentOps.CheckoutId,
+                paymentOps.Status.ToString(),
+                paymentOps.Amount,
+                paymentOps.Currency,
+                paymentOps.ProviderCode,
+                paymentOps.ProviderRequestReference,
+                paymentOps.ProviderTransactionReference,
+                paymentOps.CreatedAt,
+                paymentOps.UpdatedAt,
+                paymentOps.CompletedAt,
+                paymentOps.LastFailureCode,
+                paymentOps.ReconcileEligible);
         return new AdminOrderDetailPage(
             group.CheckoutId,
             listItem.Reference,
@@ -145,7 +166,8 @@ public sealed class AdminPanelComposer
             group.PostalAddress,
             group.PostalCode,
             group.ShippingMethodLabel,
-            sellerOrders);
+            sellerOrders,
+            paymentView);
     }
 
     /// <summary>

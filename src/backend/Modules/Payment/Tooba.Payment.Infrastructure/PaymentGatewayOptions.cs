@@ -26,6 +26,11 @@ public sealed class PaymentGatewayOptions
     public string WebhookSigningSecret { get; set; } = "";
 
     /// <summary>
+    /// پایهٔ URL شروع پرداخت نزد PSP (بدون انتخاب تجاری در کد).
+    /// </summary>
+    public string InitiateBaseUrl { get; set; } = "";
+
+    /// <summary>
     /// پایهٔ URL پرس‌وجوی وضعیت PSP برای Verify مستقل از متن callback.
     /// </summary>
     public string StatusQueryBaseUrl { get; set; } = "";
@@ -36,7 +41,17 @@ public sealed class PaymentGatewayOptions
     public string StatusQueryApiKey { get; set; } = "";
 
     /// <summary>
+    /// میزبان‌های مجاز برای StatusQuery (SSRF fail-closed). خالی = فقط https و رد localhost/private.
+    /// </summary>
+    public string[] AllowedStatusQueryHosts { get; set; } = [];
+
+    /// <summary>
     /// مهلت HTTP به ثانیه.
     /// </summary>
     public int TimeoutSeconds { get; set; } = 15;
+
+    /// <summary>
+    /// حداکثر تلاش Verify برای خطاهای موقت (timeout/rate-limit/unavailable).
+    /// </summary>
+    public int VerifyMaxAttempts { get; set; } = 3;
 }

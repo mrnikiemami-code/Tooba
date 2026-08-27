@@ -204,6 +204,47 @@ public sealed record PaymentSnapshot(
     IReadOnlyList<PaymentAllocationSnapshot> Allocations);
 
 /// <summary>
+/// تصویر عملیاتی مدیر برای پرداخت (بدون راز/payload خام).
+/// </summary>
+public sealed record PaymentOperationalSnapshot(
+    Guid PaymentId,
+    Guid CheckoutId,
+    PaymentStatus Status,
+    decimal Amount,
+    string Currency,
+    string ProviderCode,
+    string? ProviderRequestReference,
+    string? ProviderTransactionReference,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? CompletedAt,
+    string? LastFailureCode,
+    bool ReconcileEligible);
+
+/// <summary>
+/// بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
+/// </summary>
+public interface IPaymentAdminDirectory
+{
+    /// <summary>
+    /// تصویر عملیاتی پرداخت را بدون مالکیت خریدار برمی‌گرداند.
+    /// </summary>
+    Task<PaymentOperationalSnapshot?> GetOperationalAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آخرین پرداخت checkout را برای بازرسی مدیر برمی‌گرداند.
+    /// </summary>
+    Task<PaymentOperationalSnapshot?> GetLatestOperationalForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Verify/Reconcile یک پرداخت Pending را با idempotency اجرا می‌کند.
+    /// </summary>
+    Task<PaymentVerificationResult> ReconcileAsync(Guid paymentId, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// تخصیص خواندنی.
 /// </summary>
 public sealed record PaymentAllocationSnapshot(Guid SellerOrderId, decimal AllocatedAmount, string Currency);

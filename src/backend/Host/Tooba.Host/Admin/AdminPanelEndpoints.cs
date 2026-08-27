@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Payment.Application;
 
 namespace Tooba.Host.Admin;
 
@@ -16,6 +17,8 @@ public static class AdminPanelEndpoints
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/orders", ListOrdersAsync);
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
+        group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/reconcile", ReconcilePaymentAsync);
         group.MapGet("/sellers", ListSellersAsync);
         group.MapGet("/customers", ListCustomersAsync);
         group.MapGet("/dev-context", GetDevContext);
@@ -61,6 +64,58 @@ public static class AdminPanelEndpoints
             return page is null
                 ? Results.Json(new { title = "سفارش پیدا نشد.", errorCode = "admin.order.missing" }, statusCode: 404)
                 : Results.Json(page);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> GetPaymentAsync(
+        Guid paymentId,
+        IPaymentAdminDirectory payments,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var page = await payments.GetOperationalAsync(paymentId, cancellationToken);
+            return page is null
+                ? Results.Json(new { title = "پرداخت پیدا نشد.", errorCode = "admin.payment.missing" }, statusCode: 404)
+                : Results.Json(page);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> ReconcilePaymentAsync(
+        Guid paymentId,
+        IPaymentAdminDirectory payments,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var result = await payments.ReconcileAsync(paymentId, cancellationToken);
+            return Results.Json(result);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.missing" or "payment.attempt.missing")
+        {
+            return Results.Json(new { title = "پرداخت پیدا نشد.", errorCode = ex.Message }, statusCode: 404);
         }
         catch (PlatformHttpException ex)
         {

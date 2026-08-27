@@ -10,6 +10,7 @@ callback success text != verified payment success
 VerifyAsync is source of truth (StatusQuery or gateway evidence)
 Paid Order state = Outbox payment.succeeded.v1 consumer only
 No PAN/CVV storage
+No commercial PSP brand hardcoded in application code
 ```
 
 ## Configuration
@@ -22,9 +23,12 @@ No PAN/CVV storage
     "Mode": "Sandbox",
     "DefaultProvider": "fake",
     "WebhookSigningSecret": "",
+    "InitiateBaseUrl": "",
     "StatusQueryBaseUrl": "",
     "StatusQueryApiKey": "",
-    "TimeoutSeconds": 15
+    "AllowedStatusQueryHosts": [],
+    "TimeoutSeconds": 15,
+    "VerifyMaxAttempts": 3
   }
 }
 ```
@@ -40,9 +44,12 @@ No PAN/CVV storage
     "Mode": "Disabled",
     "DefaultProvider": "webhook",
     "WebhookSigningSecret": "",
+    "InitiateBaseUrl": "",
     "StatusQueryBaseUrl": "",
     "StatusQueryApiKey": "",
-    "TimeoutSeconds": 15
+    "AllowedStatusQueryHosts": [],
+    "TimeoutSeconds": 15,
+    "VerifyMaxAttempts": 3
   }
 }
 ```
@@ -50,9 +57,17 @@ No PAN/CVV storage
 | Mode | Provider | Behavior |
 |---|---|---|
 | `Disabled` (default) | `FailClosedPaymentGateway` | Initiate/Verify throw `payment.gateway.unconfigured` |
-| `Webhook` | `WebhookPaymentGateway` | Requires `WebhookSigningSecret` + `StatusQueryBaseUrl`; Verify queries PSP status API |
+| `Webhook` | `WebhookPaymentGateway` | Requires `WebhookSigningSecret` + `InitiateBaseUrl` + `StatusQueryBaseUrl`; Initiate redirects to configured PSP URL; Verify queries StatusQuery |
 
-Env-inject secrets before enabling Production checkout payments.
+Inject secrets/URLs via environment before enabling Production checkout payments.
+
+**REAL_PSP_PROVIDER_CONFIGURATION_REQUIRED** until a real provider target + credentials are supplied outside the repo.
+
+### SSRF / outbound safety
+
+- StatusQuery/Initiate URLs must be absolute http(s).
+- Without `AllowedStatusQueryHosts`, loopback/private hosts are rejected and https is required.
+- With allowlist, only listed hosts are accepted (test harness / approved endpoints).
 
 ### Reconciliation (`Tooba:PaymentReconciliation`)
 
@@ -65,7 +80,16 @@ Env-inject secrets before enabling Production checkout payments.
 }
 ```
 
-Background worker re-Verify stale `Pending` payments (lost/delayed callbacks).
+Background worker re-Verify stale `Pending` payments. Indeterminate gateway outcomes (`GATEWAY_TIMEOUT`, `GATEWAY_UNAVAILABLE`, `GATEWAY_RATE_LIMITED`, `GATEWAY_PENDING`) leave Payment **Pending** (do not force Failed).
+
+## Admin operator APIs
+
+```http
+GET  /v1/admin/payments/{paymentId}
+POST /v1/admin/payments/{paymentId}/reconcile
+```
+
+Also embedded on `GET /v1/admin/orders/{checkoutId}` as `payment` (no secrets).
 
 ## Webhook endpoint
 
@@ -107,6 +131,7 @@ Processing:
 | `payment.webhook.attempt_mismatch` | 409 | Wrong attempt/reference |
 | `payment.webhook.provider_mismatch` | 409 | Provider code mismatch |
 | `payment.missing` | 404 | Payment not found |
+| `admin.payment.missing` | 404 | Admin payment inspect miss |
 
 ## Observability
 
@@ -119,10 +144,4 @@ Metrics (no secrets, no card data):
 
 ## Storefront integration
 
-- Initiate: `POST /v1/storefront/checkout/{checkoutId}/payments` — provider from `Payment:Gateway:DefaultProvider`
-- Poll: `GET /v1/storefront/payments/{paymentId}` + order `paymentState === Paid` on result page
-- No checkout UI changes in this task
-
-## Migration
-
-Apply `20260827000000_PaymentWebhookInbox` — table `payment.webhook_inbox` for provider event dedup.
+Checkout and Payment Result UI remain Shopeiva-locked. Browser return URL is UX only; backend Verify is truth.

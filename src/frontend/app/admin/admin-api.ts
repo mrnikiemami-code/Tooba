@@ -78,6 +78,23 @@ export interface AdminOrderDetail {
   postalCode: string;
   shippingMethodLabel: string;
   sellerOrders: AdminSellerOrder[];
+  payment?: AdminPaymentOps | null;
+}
+
+export interface AdminPaymentOps {
+  paymentId: string;
+  checkoutId: string;
+  status: string;
+  amount: number;
+  currency: string;
+  providerCode: string;
+  providerRequestReference: string | null;
+  providerTransactionReference: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  lastFailureCode: string | null;
+  reconcileEligible: boolean;
 }
 
 export interface AdminSellerRow {
@@ -268,6 +285,29 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     postalCode: text(prop(item, "postalCode", "PostalCode")),
     shippingMethodLabel: text(prop(item, "shippingMethodLabel", "ShippingMethodLabel")),
     sellerOrders,
+    payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
+  };
+}
+
+function mapAdminPaymentOps(value: unknown): AdminPaymentOps | null {
+  const item = record(value);
+  if (!item) return null;
+  const paymentId = text(prop(item, "paymentId", "PaymentId"));
+  if (!paymentId) return null;
+  return {
+    paymentId,
+    checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
+    status: text(prop(item, "status", "Status")),
+    amount: number(prop(item, "amount", "Amount")),
+    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    providerCode: text(prop(item, "providerCode", "ProviderCode")),
+    providerRequestReference: text(prop(item, "providerRequestReference", "ProviderRequestReference")) || null,
+    providerTransactionReference: text(prop(item, "providerTransactionReference", "ProviderTransactionReference")) || null,
+    createdAt: text(prop(item, "createdAt", "CreatedAt")),
+    updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
+    completedAt: text(prop(item, "completedAt", "CompletedAt")) || null,
+    lastFailureCode: text(prop(item, "lastFailureCode", "LastFailureCode")) || null,
+    reconcileEligible: Boolean(prop(item, "reconcileEligible", "ReconcileEligible")),
   };
 }
 
