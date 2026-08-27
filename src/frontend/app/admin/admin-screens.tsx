@@ -46,6 +46,16 @@ import {
   type ReturnSnapshot,
 } from "../returns/return-api";
 import { ReturnDetailCard } from "../returns/return-ui";
+import {
+  formatPayoutStatus,
+  formatSettlementMoney,
+  loadAdminPayoutQueue,
+  loadAdminSettlementBalances,
+  payoutStatusClass,
+  processAdminPayout,
+  type PayoutRequestRow,
+  type SettlementBalance,
+} from "../settlement/settlement-api";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -471,4 +481,177 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function MetricMoney({ label, value, currency }: { label: string; value: number; currency: string }) {
   return <div className="flex justify-between rounded-ds bg-secondary/60 px-3 py-3"><span>{label}</span><strong>{formatAdminMoney(value, currency)}</strong></div>;
+}
+
+type SettlementBalanceRow = SettlementBalance & { id: string };
+type PayoutQueueRow = PayoutRequestRow & { id: string };
+
+const settlementBalanceColumns: GridColumnDef<SettlementBalanceRow>[] = [
+  {
+    id: "seller",
+    header: "فروشنده",
+    accessor: (row) => row.sellerPartyId,
+    cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}…</span>,
+    width: 140,
+    minWidth: 110,
+    maxWidth: 180,
+    sticky: "start",
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "available",
+    header: "قابل برداشت",
+    accessor: (row) => row.availableBalance,
+    cell: (row) => formatSettlementMoney(row.availableBalance, row.currency),
+    width: 150,
+    minWidth: 120,
+    maxWidth: 200,
+    sortable: true,
+  },
+  {
+    id: "credits",
+    header: "واریز",
+    accessor: (row) => row.postedCredits,
+    cell: (row) => formatSettlementMoney(row.postedCredits, row.currency),
+    width: 130,
+    minWidth: 100,
+    maxWidth: 170,
+    sortable: true,
+  },
+  {
+    id: "debits",
+    header: "برداشت/تعدیل",
+    accessor: (row) => row.postedDebits,
+    cell: (row) => formatSettlementMoney(row.postedDebits, row.currency),
+    width: 130,
+    minWidth: 100,
+    maxWidth: 170,
+    sortable: true,
+  },
+  {
+    id: "reserved",
+    header: "رزرو payout",
+    accessor: (row) => row.reservedPayouts,
+    cell: (row) => formatSettlementMoney(row.reservedPayouts, row.currency),
+    width: 130,
+    minWidth: 100,
+    maxWidth: 170,
+    sortable: true,
+  },
+];
+
+async function loadAdminSettlementBalanceRows(): Promise<AdminResult<SettlementBalanceRow[]>> {
+  const result = await loadAdminSettlementBalances();
+  if (result.state !== "ok" || !result.data) return result as AdminResult<SettlementBalanceRow[]>;
+  return {
+    ...result,
+    data: result.data.map((row) => ({ ...row, id: row.settlementAccountId })),
+  };
+}
+
+/** فهرست ماندهٔ تسویه فروشندگان. */
+export function AdminSettlementScreen() {
+  return (
+    <GridPage
+      title="تسویه فروشندگان"
+      description="ماندهٔ posted و قابل برداشت هر فروشنده marketplace"
+      loader={loadAdminSettlementBalanceRows}
+      columns={settlementBalanceColumns}
+    />
+  );
+}
+
+/** صف payout با پردازش admin. */
+export function AdminPayoutQueueScreen() {
+  const [state, setState] = useState<AdminLoadState | "loading">("loading");
+  const [rows, setRows] = useState<PayoutQueueRow[]>([]);
+  const [message, setMessage] = useState<string>();
+  const refresh = useCallback(() => void loadAdminPayoutQueue().then((result) => {
+    setState(result.state);
+    setRows((result.data ?? []).map((row) => ({ ...row, id: row.payoutRequestId })));
+    setMessage(result.message);
+  }), []);
+  useEffect(refresh, [refresh]);
+
+  const columns = useMemo((): GridColumnDef<PayoutQueueRow>[] => [
+    {
+      id: "seller",
+      header: "فروشنده",
+      accessor: (row) => row.sellerPartyId,
+      cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}…</span>,
+      width: 130,
+      minWidth: 100,
+      maxWidth: 170,
+      sticky: "start",
+    },
+    {
+      id: "amount",
+      header: "مبلغ",
+      accessor: (row) => row.amount,
+      cell: (row) => formatSettlementMoney(row.amount, row.currency),
+      width: 140,
+      minWidth: 110,
+      maxWidth: 180,
+      sortable: true,
+    },
+    {
+      id: "status",
+      header: "وضعیت",
+      accessor: (row) => row.status,
+      cell: (row) => <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${payoutStatusClass(row.status)}`}>{formatPayoutStatus(row.status)}</span>,
+      width: 120,
+      minWidth: 95,
+      maxWidth: 150,
+      filterKind: "status",
+    },
+    {
+      id: "created",
+      header: "تاریخ",
+      accessor: (row) => row.createdAt,
+      cell: (row) => formatAdminDate(row.createdAt),
+      width: 130,
+      minWidth: 105,
+      maxWidth: 170,
+      sortable: true,
+    },
+    {
+      id: "actions",
+      header: "عملیات",
+      accessor: () => "",
+      cell: (row) =>
+        row.status === "Requested" || row.status === "0" || row.status === "Failed" || row.status === "3" ? (
+          <button
+            type="button"
+            className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700"
+            onClick={() => void processAdminPayout(row.payoutRequestId).then(refresh)}
+          >
+            پردازش
+          </button>
+        ) : (
+          "—"
+        ),
+      width: 110,
+      minWidth: 95,
+      maxWidth: 130,
+    },
+  ], [refresh]);
+
+  const queryAdapter = useMemo(() => async (query: GridServerQuery) => executeGridQuery(rows, columns, query), [rows, columns]);
+  if (state === "denied") return <Denied retry={refresh} />;
+  return (
+    <main data-testid="admin-payout-queue">
+      <PageHeading title="صف payout" description="درخواست‌های برداشت فروشندگان marketplace" />
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} درخواست</div>
+        <div className="p-2 md:p-4">
+          {state === "error" ? (
+            <ErrorState title="صف payout خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : (
+            <DataGrid columns={columns} queryAdapter={queryAdapter} />
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }

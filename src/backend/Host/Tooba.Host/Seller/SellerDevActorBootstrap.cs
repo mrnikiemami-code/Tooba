@@ -90,6 +90,17 @@ internal static class SellerDevActorBootstrap
         }
     }
 
+    /// <summary>Development marketplace: snapshot را با Party واقعی DB تنظیم می‌کند.</summary>
+    internal static void PublishSnapshot(Guid actorUserId, string actorLabel, Guid sellerPartyId, string sellerLabel)
+    {
+        lock (Gate)
+        {
+            _snapshot = new SellerDevContextSnapshot(
+                new SellerDevActorPair(actorUserId, actorLabel, sellerPartyId, sellerLabel),
+                new SellerDevActorPair(actorUserId, actorLabel, sellerPartyId, sellerLabel));
+        }
+    }
+
     private static async Task<Guid> EnsureUserAsync(
         IIdentityAuthenticationService auth,
         string email,

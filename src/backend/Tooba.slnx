@@ -51,6 +51,9 @@
     <Project Path="Modules/Returns/Tooba.Returns.Domain/Tooba.Returns.Domain.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Application/Tooba.Returns.Application.csproj" />
     <Project Path="Modules/Returns/Tooba.Returns.Infrastructure/Tooba.Returns.Infrastructure.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Domain/Tooba.Settlement.Domain.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Application/Tooba.Settlement.Application.csproj" />
+    <Project Path="Modules/Settlement/Tooba.Settlement.Infrastructure/Tooba.Settlement.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />

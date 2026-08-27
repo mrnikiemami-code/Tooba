@@ -16,6 +16,7 @@ using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Fulfillment;
 using Tooba.Host.Returns;
+using Tooba.Host.Settlement;
 using Tooba.Host.Payments;
 using Tooba.Host.Storefront;
 using Tooba.Host.Reviews;
@@ -108,6 +109,7 @@ builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
         sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Settlement.SettlementPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
@@ -219,10 +221,17 @@ builder.Services.AddOpenTelemetry()
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
-    await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
-    // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
-    // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
-    await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
+    if (app.Services.GetRequiredService<ControlPlaneRegistry>().Edition == ToobaEdition.Marketplace)
+    {
+        await MarketplaceDevelopmentBootstrap.ApplyAsync(app.Services);
+    }
+    else
+    {
+        await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
+        // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
+        // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
+        await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
+    }
 }
 
 app.UseExceptionHandler();
@@ -249,6 +258,7 @@ app.MapWishlistEndpoints();
 app.MapAddressBookEndpoints();
 app.MapFulfillmentEndpoints();
 app.MapReturnEndpoints();
+app.MapSettlementEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);
 

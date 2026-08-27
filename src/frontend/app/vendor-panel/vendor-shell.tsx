@@ -52,7 +52,7 @@ const menuItems: NavItem[] = [
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: false },
   { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: false },
   { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: false },
-  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: false },
+  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true },
   { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/vendor-panel/tickets", live: false },
   { id: "gift-cards", label: "کارت‌های هدیه", icon: Gift, href: "/vendor-panel/gift-cards", live: false },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: false },

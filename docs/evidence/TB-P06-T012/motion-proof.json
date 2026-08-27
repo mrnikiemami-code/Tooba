@@ -1,0 +1,41 @@
+{
+  "capturedAt": "2026-08-27T00:57:32.967Z",
+  "interactions": [
+    {
+      "label": "shopeiva-wallet-desktop",
+      "url": "http://127.0.0.1:3001/vendor-panel/wallet",
+      "file": "01-shopeiva-vendor-wallet-desktop.png",
+      "viewport": "desktop"
+    },
+    {
+      "label": "tooba-wallet-desktop",
+      "url": "http://127.0.0.1:3000/vendor-panel/wallet?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&actorUserId=01a03628-3f68-7000-844d-99f1cadb54b0",
+      "file": "02-tooba-vendor-wallet-desktop.png",
+      "viewport": "desktop"
+    },
+    {
+      "label": "tooba-admin-settlement-desktop",
+      "url": "http://127.0.0.1:3000/admin/settlement",
+      "file": "03-tooba-admin-settlement-desktop.png",
+      "viewport": "desktop"
+    },
+    {
+      "label": "tooba-admin-payouts-desktop",
+      "url": "http://127.0.0.1:3000/admin/payouts",
+      "file": "04-tooba-admin-payouts-desktop.png",
+      "viewport": "desktop"
+    },
+    {
+      "label": "tooba-wallet-mobile",
+      "url": "http://127.0.0.1:3000/vendor-panel/wallet?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5&actorUserId=01a03628-3f68-7000-844d-99f1cadb54b0",
+      "file": "05-tooba-vendor-wallet-mobile.png",
+      "viewport": "mobile"
+    },
+    {
+      "label": "tooba-admin-settlement-mobile",
+      "url": "http://127.0.0.1:3000/admin/settlement",
+      "file": "06-tooba-admin-settlement-mobile.png",
+      "viewport": "mobile"
+    }
+  ]
+}

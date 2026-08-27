@@ -31,6 +31,7 @@ public sealed class ReturnsModule : IToobaModule
         services.AddScoped<ReturnDirectory>();
         services.AddScoped<IReturnDirectory>(sp => sp.GetRequiredService<ReturnDirectory>());
         services.AddScoped<IReturnInventoryGateway, ReturnInventoryGateway>();
+        services.AddScoped<IReturnSettlementReader, ReturnSettlementBridge>();
         services.AddDbContext<ReturnsDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

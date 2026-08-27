@@ -1,12 +1,6 @@
-﻿import { Wallet } from "lucide-react";
-import { VendorCapabilityShell } from "../vendor-capability-shell";
+﻿import { VendorWalletPageClient } from "../vendor-wallet-ui";
 
-export default function VendorwalletPage() {
-  return (
-    <VendorCapabilityShell
-      title="کیف پول"
-      description="موجودی و تسویه فروشنده"
-      icon={<Wallet className="w-5 h-5" />}
-    />
-  );
+/** کیف پول زندهٔ marketplace — ساختار Shopeiva، داده Host. */
+export default function VendorWalletPage() {
+  return <VendorWalletPageClient />;
 }

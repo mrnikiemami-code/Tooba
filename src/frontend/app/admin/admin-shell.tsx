@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Truck,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
@@ -47,6 +48,8 @@ const navGroups: NavGroup[] = [
       { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true },
       { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true },
       { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true },
+      { id: "settlement", label: "تسویه فروشندگان", href: "/admin/settlement", icon: Wallet, live: true },
+      { id: "payouts", label: "صف payout", href: "/admin/payouts", icon: Wallet, live: true },
     ],
   },
   {
