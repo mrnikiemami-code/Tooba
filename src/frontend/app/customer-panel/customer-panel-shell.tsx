@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
   ChevronLeft,
+  CreditCard,
   Heart,
   LayoutDashboard,
   LogOut,
@@ -15,6 +16,7 @@ import {
   Settings,
   Ticket,
   User,
+  Wallet,
   X,
 } from "lucide-react";
 
@@ -37,15 +39,14 @@ const menuItems: NavItem[] = [
   { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
   { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: true },
   { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/customer-panel/tickets", live: true },
+  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/customer-panel/wallet", live: true },
+  { id: "gift-cards", label: "کارت‌های هدیه", icon: CreditCard, href: "/customer-panel/gift-cards", live: true },
   { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: true },
 ];
 
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
-export const CUSTOMER_DEFERRED_NAV_HREFS = [
-  "/customer-panel/wallet",
-  "/customer-panel/gift-cards",
-] as const;
+export const CUSTOMER_DEFERRED_NAV_HREFS = [] as const;
 
 const visibleMenuItems = menuItems.filter((item) => item.live);
 

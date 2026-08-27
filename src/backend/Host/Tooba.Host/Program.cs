@@ -30,6 +30,7 @@ using Tooba.Host.PageComposition;
 using Tooba.Host.Story;
 using Tooba.Host.Promotion;
 using Tooba.Host.Support;
+using Tooba.Host.Wallet;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -259,6 +260,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "SupportDevelopmentSeed failed; Host continues without Support demo snapshot.");
         }
+
+        try
+        {
+            await WalletDevelopmentSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "WalletDevelopmentSeed failed; Host continues without Wallet demo snapshot.");
+        }
     }
 }
 
@@ -288,6 +298,7 @@ app.MapFulfillmentEndpoints();
 app.MapReturnEndpoints();
 app.MapSettlementEndpoints();
 app.MapSupportEndpoints();
+app.MapWalletEndpoints();
 app.MapNotificationEndpoints();
 app.MapAccessControlEndpoints();
 app.MapContentEndpoints();

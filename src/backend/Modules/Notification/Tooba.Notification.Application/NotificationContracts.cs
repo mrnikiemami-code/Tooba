@@ -169,6 +169,10 @@ public static class NotificationTargetRoutes
     /// <summary>مسیر تیکت پشتیبانی فروشنده.</summary>
     public static string SellerTicket(Guid ticketId) =>
         RequireAllowed($"/vendor-panel/tickets/{ticketId:D}");
+
+    /// <summary>مسیر کیف پول مشتری.</summary>
+    public static string CustomerWallet() =>
+        RequireAllowed("/customer-panel/wallet");
 }
 
 /// <summary>
@@ -203,12 +207,19 @@ public static class NotificationCopy
     /// <summary>پاسخ عمومی پشتیبانی از Admin.</summary>
     public const string SupportAdminReply = "support.admin_reply";
 
+    /// <summary>بازخرید کارت هدیه به کیف پول.</summary>
+    public const string WalletGiftCardRedeemed = "wallet.gift_card.redeemed";
+
+    /// <summary>تعدیل Admin روی کیف پول مشتری.</summary>
+    public const string WalletAdminAdjustment = "wallet.admin_adjustment";
+
     /// <summary>دستهٔ فیلتر UI (order/offer/ticket) از نوع معنایی.</summary>
     public static string CategoryOf(string type) => type switch
     {
         PaymentSucceeded or PaymentFailed or OrderPaidSeller or FulfillmentCreated or ShipmentDispatched => "order",
         ReturnRequested or ReturnApproved or RefundSucceeded => "order",
         SupportAdminReply => "ticket",
+        WalletGiftCardRedeemed or WalletAdminAdjustment => "offer",
         _ => "order",
     };
 
@@ -247,6 +258,12 @@ public static class NotificationCopy
             SupportAdminReply => fa
                 ? ("پاسخ پشتیبانی", "پاسخ جدیدی برای تیکت پشتیبانی شما ثبت شد.")
                 : ("Support reply", "There is a new reply on your support ticket."),
+            WalletGiftCardRedeemed => fa
+                ? ("کارت هدیه", "مبلغ کارت هدیه به کیف پول شما اضافه شد.")
+                : ("Gift card", "Gift card value was credited to your wallet."),
+            WalletAdminAdjustment => fa
+                ? ("تعدیل کیف پول", "موجودی کیف پول شما توسط پشتیبانی به‌روز شد.")
+                : ("Wallet adjustment", "Your wallet balance was updated by support."),
             _ => fa
                 ? ("اعلان", "رویداد تجاری جدید دارید.")
                 : ("Notification", "You have a new commerce event."),

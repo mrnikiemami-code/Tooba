@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
+  Gift,
   LayoutDashboard,
   LayoutTemplate,
   LogOut,
@@ -21,6 +22,7 @@ import {
   Truck,
   Users,
   Wallet,
+  WalletCards,
   FileText,
   Tag,
   X,
@@ -81,6 +83,8 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true, viewPermission: "review.view" },
       { id: "tickets", label: "تیکت پشتیبانی", href: "/admin/tickets", icon: Ticket, live: true, viewPermission: "support.view" },
+      { id: "gift-cards", label: "کارت هدیه", href: "/admin/gift-cards", icon: Gift, live: true, viewPermission: "giftcard.view" },
+      { id: "wallets", label: "کیف پول مشتریان", href: "/admin/wallets", icon: WalletCards, live: true, viewPermission: "wallet.view" },
       { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
     ],
   },

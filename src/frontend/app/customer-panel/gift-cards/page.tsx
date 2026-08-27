@@ -1,13 +1,8 @@
-import { CreditCard } from "lucide-react";
-import { CustomerCapabilityShell } from "../customer-capability-shell";
+"use client";
 
-/** پوستهٔ کارت هدیه تا زمان وجود ledger و redemption معتبر. */
+import { CustomerGiftCardsPanel } from "../../wallet/wallet-ui.tsx";
+
+/** کارت هدیه مشتری — موجودی کیف + بازخرید کد؛ بدون فهرست جعلی کارت مالکیت. */
 export default function CustomerGiftCardsPage() {
-  return (
-    <CustomerCapabilityShell
-      title="کارت‌های هدیه"
-      description="کارت‌های فعال و استفاده‌شده"
-      icon={<CreditCard className="w-5 h-5" />}
-    />
-  );
+  return <CustomerGiftCardsPanel />;
 }

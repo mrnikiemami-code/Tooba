@@ -1,0 +1,85 @@
+﻿
+> tooba-web@0.0.1 test:wallet
+> node --experimental-strip-types --test app/wallet/wallet-api.test.ts
+
+(node:20636) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/wallet/wallet-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapWalletSummary maps camel and Pascal ledger-derived balance (0.5029ms)
+✔ mapWalletLedgerPage accepts paged envelope and labels gift credit (0.3355ms)
+✔ mapGiftCardRedeemResult and issue/list/detail adapters (0.7012ms)
+✔ mapWalletDemoPreview and FA money helpers (11.3198ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 123.5156
+
+> tooba-web@0.0.1 test:customer
+> node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts app/customer-panel/panel-nav-integrity.test.ts app/wallet/wallet-api.test.ts lib/auth/csrf.test.ts
+
+(node:31884) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-address-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ address list mapping accepts camel and PascalCase envelopes (1.0811ms)
+✔ address mapper ignores rows without AddressId (0.6211ms)
+✔ address empty helper only describes an actual empty collection (0.1027ms)
+✔ create and edit payloads omit empty optional fields and keep isDefault (0.1719ms)
+✔ saved address fills checkout shipping snapshot fields (0.1547ms)
+✔ address mutations call Host paths and surface 401 (21.3002ms)
+✔ checkout saved-address visibility hides 401 guest path (0.1215ms)
+✔ checkout saved list returns null on 401 and mapped rows on 200 (0.4694ms)
+(node:36992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ customer mapper keeps checkout identity and snapshot amount (1.0389ms)
+✔ customer payment presentation preserves backend pending paid and failed states (0.2767ms)
+✔ customer dashboard exposes capability availability without fake counts (0.227ms)
+✔ customer dashboard maps live address-book availability without inventing counts (0.1571ms)
+✔ wishlist maps current live offer availability and real ratings only (0.4995ms)
+✔ wishlist empty helper only describes an actual empty collection (0.1473ms)
+✔ wishlist toggle sends ProductId and surfaces 401 without optimistic success (19.291ms)
+✔ customer detail maps seller and shipping snapshots (0.3291ms)
+✔ customer profile maps editable capability from backend (0.2398ms)
+(node:16616) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-profile-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profile mapper exposes editable profile fields and identity read-only flags (0.7969ms)
+✔ profile write payload excludes identity fields (0.2688ms)
+✔ profile name splitter handles single token (0.1333ms)
+✔ profile error mapping covers unauthorized (0.2232ms)
+(node:38012) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/panel-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ customer shell exports deferred hrefs and filters live-only nav (0.4938ms)
+✔ customer shell menuItems keep wallet/gift-cards live alongside settings (0.2362ms)
+(node:12056) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/wallet/wallet-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapWalletSummary maps camel and Pascal ledger-derived balance (0.9269ms)
+✔ mapWalletLedgerPage accepts paged envelope and labels gift credit (0.2461ms)
+✔ mapGiftCardRedeemResult and issue/list/detail adapters (0.3422ms)
+✔ mapWalletDemoPreview and FA money helpers (10.4049ms)
+(node:15832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/auth/csrf.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ csrf validation accepts matching header and cookie (11.8496ms)
+✔ csrf validation rejects missing header (0.2065ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 144.7267

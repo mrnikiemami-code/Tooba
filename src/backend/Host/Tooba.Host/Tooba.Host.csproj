@@ -48,6 +48,7 @@
     <ProjectReference Include="..\..\Modules\Returns\Tooba.Returns.Infrastructure\Tooba.Returns.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Settlement\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Support\Tooba.Support.Infrastructure\Tooba.Support.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Wallet\Tooba.Wallet.Infrastructure\Tooba.Wallet.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Notification\Tooba.Notification.Infrastructure\Tooba.Notification.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Tooba.AccessControl.Infrastructure.csproj" />
   </ItemGroup>

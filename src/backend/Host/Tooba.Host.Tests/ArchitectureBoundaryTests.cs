@@ -19,6 +19,8 @@ using Tooba.Wishlist.Infrastructure;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.Notification.Infrastructure;
 using Tooba.AccessControl.Infrastructure;
+using Tooba.Support.Infrastructure;
+using Tooba.Wallet.Infrastructure;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -51,6 +53,8 @@ public sealed class ArchitectureBoundaryTests
         Assert.Contains(ToobaModuleComposition.Modules, module => module is AddressBookModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is NotificationModule);
         Assert.Contains(ToobaModuleComposition.Modules, module => module is AccessControlModule);
+        Assert.Contains(ToobaModuleComposition.Modules, module => module is SupportModule);
+        Assert.Contains(ToobaModuleComposition.Modules, module => module is WalletModule);
         Assert.All(ToobaModuleComposition.Modules, module => Assert.False(string.IsNullOrWhiteSpace(module.Name)));
         Assert.Contains(typeof(IToobaModule).Assembly.GetExportedTypes(), t => t == typeof(IToobaModule));
     }

@@ -84,6 +84,10 @@ public static class PermissionCatalog
         Def("support.create", "Support", delegable: true),
         Def("support.reply", "Support", delegable: true),
         Def("support.manage", "Support", delegable: true),
+        Def("wallet.view", "Wallet", delegable: false),
+        Def("wallet.adjust", "Wallet", delegable: false),
+        Def("giftcard.view", "Wallet", delegable: false),
+        Def("giftcard.manage", "Wallet", delegable: false),
     ];
 
     private static readonly Dictionary<string, PermissionDefinition> ById =

@@ -18,6 +18,7 @@ using Tooba.Settlement.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Support.Infrastructure.Persistence;
+using Tooba.Wallet.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Persistence;
@@ -62,6 +63,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<ReturnsDbContext>("Returns", ReturnsDbContext.Schema),
         Descriptor<SettlementDbContext>("Settlement", SettlementDbContext.Schema),
         Descriptor<SupportDbContext>("Support", SupportDbContext.Schema),
+        Descriptor<WalletDbContext>("Wallet", WalletDbContext.Schema),
         Descriptor<NotificationDbContext>("Notification", NotificationDbContext.Schema),
         Descriptor<AccessControlDbContext>("AccessControl", AccessControlDbContext.Schema),
         Descriptor<PromotionDbContext>("Promotion", PromotionDbContext.Schema),
