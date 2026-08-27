@@ -49,7 +49,7 @@ const menuItems: NavItem[] = [
   { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true },
   { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true },
   { id: "customers", label: "مشتریان", icon: Users, href: "/vendor-panel/customers", live: false },
-  { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: false },
+  { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },
   { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: false },
   { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: false },
   { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true },

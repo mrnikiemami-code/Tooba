@@ -39,7 +39,7 @@ const menuItems: NavItem[] = [
   { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
   { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: false },
   { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
-  { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: false },
+  { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: true },
 ];
 
 function isActivePath(pathname: string, href: string): boolean {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Package,
   Quote,
-  Share2,
   ShoppingBag,
   Sparkles,
   Star,
@@ -304,7 +303,6 @@ export function HomeNewProductsSection({ products }: { products: StorefrontProdu
 }
 
 export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeaturedReviewItem[] }) {
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
   const summary = useMemo(() => {
     if (reviews.length === 0) return null;
     const average = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
@@ -408,18 +406,10 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
                         {item.productTitle}
                       </Link>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className="flex items-center gap-1 text-[10px] text-gray-400 px-1.5 py-0.5 rounded-full hover:bg-[#2563EB]/5"
-                        onClick={() => setLiked((current) => ({ ...current, [item.publicId]: !current[item.publicId] }))}
-                      >
-                        <Heart className={`w-3.5 h-3.5 ${liked[item.publicId] ? "fill-[#2563EB] text-[#2563EB]" : ""}`} />
-                      </button>
-                      <button type="button" aria-label="اشتراک" className="p-1 rounded-full hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100">
-                        <Share2 className="w-3 h-3 text-gray-400" />
-                      </button>
-                    </div>
+                    {/* Decorative only — no client-side fake engagement toggle. */}
+                    <span className="flex items-center gap-1 text-[10px] text-gray-300 px-1.5 py-0.5" aria-hidden="true">
+                      <Heart className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
               </article>

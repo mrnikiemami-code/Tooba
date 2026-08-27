@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
+import { LocaleSwitcher } from "../../lib/i18n/LocaleSwitcher.tsx";
 
 /**
  * هدر Shopeiva با نوار پرومو، جستجو، مگامنوی رده‌ای زنده Catalog و سبد.
@@ -187,6 +188,7 @@ export function StorefrontShopeivaHeader({
           </form>
 
           <div className="ms-auto flex items-center gap-1 sm:gap-2">
+            <LocaleSwitcher className="hidden sm:inline-flex me-1" />
             <Link
               href="/products"
               className="lg:hidden w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600"

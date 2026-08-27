@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { AppProviders } from "./providers";
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_NAME,
+  dirForLocale,
+  langForLocale,
+  parseLocale,
+} from "../lib/i18n/locale";
 import "./globals.css";
 
 /**
@@ -12,11 +20,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * لایهٔ ریشه. جهت و تم از Design System روی html اعمال می‌شود.
+ * لایهٔ ریشه. lang/dir از کوکی tooba_locale؛ فارسی پیش‌فرض و RTL.
  */
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const jar = await cookies();
+  const locale = parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
+
   return (
-    <html lang="fa" dir="rtl" suppressHydrationWarning>
+    <html lang={langForLocale(locale)} dir={dirForLocale(locale)} suppressHydrationWarning>
       <body>
         <AppProviders>{children}</AppProviders>
       </body>
