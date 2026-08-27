@@ -17,6 +17,7 @@ import {
   Star,
   Store,
   RotateCcw,
+  Ticket,
   Truck,
   Users,
   Wallet,
@@ -79,6 +80,7 @@ const navGroups: NavGroup[] = [
     label: "نظارت",
     items: [
       { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true, viewPermission: "review.view" },
+      { id: "tickets", label: "تیکت پشتیبانی", href: "/admin/tickets", icon: Ticket, live: true, viewPermission: "support.view" },
       { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
     ],
   },

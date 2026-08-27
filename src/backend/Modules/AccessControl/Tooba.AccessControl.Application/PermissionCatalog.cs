@@ -80,6 +80,10 @@ public static class PermissionCatalog
         Def("settlement.manage", "Settlement", delegable: false),
         Def("accesscontrol.view", "AccessControl", delegable: true),
         Def("accesscontrol.manage", "AccessControl", delegable: true),
+        Def("support.view", "Support", delegable: true),
+        Def("support.create", "Support", delegable: true),
+        Def("support.reply", "Support", delegable: true),
+        Def("support.manage", "Support", delegable: true),
     ];
 
     private static readonly Dictionary<string, PermissionDefinition> ById =

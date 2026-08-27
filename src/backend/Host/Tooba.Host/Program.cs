@@ -29,6 +29,7 @@ using Tooba.Host.Content;
 using Tooba.Host.PageComposition;
 using Tooba.Host.Story;
 using Tooba.Host.Promotion;
+using Tooba.Host.Support;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -249,6 +250,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogError(ex, "AccessControlDevelopmentSeed failed; Host continues without ACC demo snapshot.");
         }
+
+        try
+        {
+            await SupportDevelopmentSeedHost.ApplyAsync(app.Services);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "SupportDevelopmentSeed failed; Host continues without Support demo snapshot.");
+        }
     }
 }
 
@@ -277,6 +287,7 @@ app.MapAddressBookEndpoints();
 app.MapFulfillmentEndpoints();
 app.MapReturnEndpoints();
 app.MapSettlementEndpoints();
+app.MapSupportEndpoints();
 app.MapNotificationEndpoints();
 app.MapAccessControlEndpoints();
 app.MapContentEndpoints();

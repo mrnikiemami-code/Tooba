@@ -19,6 +19,7 @@ import {
   Store,
   RotateCcw,
   Tag,
+  Ticket,
   Truck,
   Wallet,
   X,
@@ -59,6 +60,7 @@ const menuItems: NavItem[] = [
   { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: true, viewPermission: "review.view" },
   { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true, viewPermission: "fulfillment.view" },
   { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true, viewPermission: "return.view" },
+  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/vendor-panel/tickets", live: true, viewPermission: "support.view" },
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },
   { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true, viewPermission: "settlement.view" },
   { id: "access-control", label: "کنترل دسترسی", icon: Shield, href: "/vendor-panel/access-control", live: true, viewPermission: "accesscontrol.view" },
@@ -68,7 +70,6 @@ const menuItems: NavItem[] = [
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
 export const VENDOR_DEFERRED_NAV_HREFS = [
   "/vendor-panel/customers",
-  "/vendor-panel/tickets",
   "/vendor-panel/gift-cards",
 ] as const;
 

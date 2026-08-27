@@ -103,6 +103,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
         await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());
         await MigrateAsync(provider.GetRequiredService<AccessControlDbContext>());
+        await MigrateAsync(provider.GetRequiredService<Tooba.Support.Infrastructure.Persistence.SupportDbContext>());
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();

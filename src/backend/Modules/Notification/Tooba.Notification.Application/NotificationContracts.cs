@@ -161,6 +161,14 @@ public static class NotificationTargetRoutes
     /// <summary>مسیر مرجوعی مشتری.</summary>
     public static string CustomerReturn(Guid returnRequestId) =>
         RequireAllowed($"/customer-panel/returns/{returnRequestId:D}");
+
+    /// <summary>مسیر تیکت پشتیبانی مشتری.</summary>
+    public static string CustomerTicket(Guid ticketId) =>
+        RequireAllowed($"/customer-panel/tickets/{ticketId:D}");
+
+    /// <summary>مسیر تیکت پشتیبانی فروشنده.</summary>
+    public static string SellerTicket(Guid ticketId) =>
+        RequireAllowed($"/vendor-panel/tickets/{ticketId:D}");
 }
 
 /// <summary>
@@ -192,11 +200,15 @@ public static class NotificationCopy
     /// <summary>موفقیت refund.</summary>
     public const string RefundSucceeded = "refund.succeeded";
 
+    /// <summary>پاسخ عمومی پشتیبانی از Admin.</summary>
+    public const string SupportAdminReply = "support.admin_reply";
+
     /// <summary>دستهٔ فیلتر UI (order/offer/ticket) از نوع معنایی.</summary>
     public static string CategoryOf(string type) => type switch
     {
         PaymentSucceeded or PaymentFailed or OrderPaidSeller or FulfillmentCreated or ShipmentDispatched => "order",
         ReturnRequested or ReturnApproved or RefundSucceeded => "order",
+        SupportAdminReply => "ticket",
         _ => "order",
     };
 
@@ -232,6 +244,9 @@ public static class NotificationCopy
             RefundSucceeded => fa
                 ? ("بازگشت وجه موفق", "بازگشت وجه مرجوعی با موفقیت انجام شد.")
                 : ("Refund succeeded", "The return refund succeeded."),
+            SupportAdminReply => fa
+                ? ("پاسخ پشتیبانی", "پاسخ جدیدی برای تیکت پشتیبانی شما ثبت شد.")
+                : ("Support reply", "There is a new reply on your support ticket."),
             _ => fa
                 ? ("اعلان", "رویداد تجاری جدید دارید.")
                 : ("Notification", "You have a new commerce event."),

@@ -1,0 +1,9 @@
+﻿{
+  "id": "fea41101-89a9-45ba-be0d-571093835694",
+  "channelId": "tooba-main",
+  "taskId": "TB-P06-T025",
+  "status": "Claimed",
+  "createdAtUtc": "2026-08-27T17:03:00.213843",
+  "claimedAtUtc": "2026-08-27T17:06:59.5060199",
+  "predecessor": "f5a45ca0a5c77849ab55de96d50550005678d2d4"
+}

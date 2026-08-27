@@ -13,6 +13,7 @@ import {
   Menu,
   Package,
   Settings,
+  Ticket,
   User,
   X,
 } from "lucide-react";
@@ -35,6 +36,7 @@ const menuItems: NavItem[] = [
   { id: "wishlist", label: "علاقه‌مندی‌ها", icon: Heart, href: "/customer-panel/wishlist", live: true },
   { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
   { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: true },
+  { id: "tickets", label: "تیکت‌ها", icon: Ticket, href: "/customer-panel/tickets", live: true },
   { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: true },
 ];
@@ -42,7 +44,6 @@ const menuItems: NavItem[] = [
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
 export const CUSTOMER_DEFERRED_NAV_HREFS = [
   "/customer-panel/wallet",
-  "/customer-panel/tickets",
   "/customer-panel/gift-cards",
 ] as const;
 

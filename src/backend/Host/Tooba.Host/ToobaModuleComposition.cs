@@ -25,6 +25,7 @@ using Tooba.Returns.Infrastructure;
 using Tooba.Settlement.Infrastructure;
 using Tooba.Notification.Infrastructure;
 using Tooba.AccessControl.Infrastructure;
+using Tooba.Support.Infrastructure;
 
 namespace Tooba.Host;
 
@@ -63,6 +64,7 @@ internal static class ToobaModuleComposition
         new FulfillmentModule(),
         new ReturnsModule(),
         new SettlementModule(),
+        new SupportModule(),
         new NotificationModule(),
         new AccessControlModule(),
     ];

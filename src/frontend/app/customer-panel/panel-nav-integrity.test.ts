@@ -13,13 +13,13 @@ const LIVE_HREFS = [
   "/customer-panel/wishlist",
   "/customer-panel/addresses",
   "/customer-panel/notifications",
+  "/customer-panel/tickets",
   "/customer-panel/profile",
   "/customer-panel/settings",
 ] as const;
 
 const DEFERRED_HREFS = [
   "/customer-panel/wallet",
-  "/customer-panel/tickets",
   "/customer-panel/gift-cards",
 ] as const;
 
@@ -38,15 +38,25 @@ test("customer shell exports deferred hrefs and filters live-only nav", () => {
   for (const href of DEFERRED_HREFS) {
     assert.ok(shellSource.includes(`"${href}"`), `deferred export missing ${href}`);
   }
+  assert.equal(shellSource.includes('"/customer-panel/tickets"') && shellSource.includes("CUSTOMER_DEFERRED_NAV_HREFS"), true);
+  const deferredBlock = shellSource.slice(
+    shellSource.indexOf("export const CUSTOMER_DEFERRED_NAV_HREFS"),
+    shellSource.indexOf("] as const;", shellSource.indexOf("export const CUSTOMER_DEFERRED_NAV_HREFS")) + 11,
+  );
+  assert.equal(deferredBlock.includes("/customer-panel/tickets"), false, "tickets must not remain deferred");
 });
 
-test("customer shell menuItems keep settings live and omit deferred wallet/tickets", () => {
+test("customer shell menuItems keep settings live and omit deferred wallet/gift-cards", () => {
   const menuBlock = extractMenuItemsBlock(shellSource);
 
   const settingsIdx = menuBlock.indexOf('href: "/customer-panel/settings"');
   assert.ok(settingsIdx >= 0, "settings href missing from menuItems");
   const settingsEntry = menuBlock.slice(settingsIdx, settingsIdx + 120);
   assert.ok(settingsEntry.includes("live: true"), "settings must be live: true");
+
+  const ticketsIdx = menuBlock.indexOf('href: "/customer-panel/tickets"');
+  assert.ok(ticketsIdx >= 0, "tickets href missing from live menuItems");
+  assert.ok(menuBlock.slice(ticketsIdx, ticketsIdx + 120).includes("live: true"), "tickets must be live");
 
   for (const href of DEFERRED_HREFS) {
     assert.equal(menuBlock.includes(`"${href}"`), false, `${href} must not appear in live menuItems`);

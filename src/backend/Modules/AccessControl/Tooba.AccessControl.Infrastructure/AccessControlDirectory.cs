@@ -569,6 +569,14 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
 
             await _db.SaveChangesAsync(cancellationToken);
         }
+        else
+        {
+            // رشد کاتالوگ (مثل support.*) روی نقش سیستمی موجود باید reconcile شود.
+            await EnsureRoleHasCatalogPermissionsAsync(
+                adminRole.Id,
+                PermissionCatalog.All.Select(p => p.PermissionId),
+                cancellationToken);
+        }
 
         if (platformAdminUserId is Guid adminUser)
         {
@@ -595,9 +603,10 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         foreach (var sellerId in sellerPartyIds.Distinct())
         {
             var owner = new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerId, tenantId);
-            if (!await ScopedRoles(owner).AnyAsync(r => r.Code == "seller-owner", cancellationToken))
+            var ownerRole = await ScopedRoles(owner).FirstOrDefaultAsync(r => r.Code == "seller-owner", cancellationToken);
+            if (ownerRole is null)
             {
-                var ownerRole = new AccessRole
+                ownerRole = new AccessRole
                 {
                     Id = Guid.NewGuid(),
                     TenantId = tenantId,
@@ -625,25 +634,75 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                     });
                 }
             }
-
-            if (!await _db.SellerCeilings.AnyAsync(c => c.SellerPartyId == sellerId, cancellationToken))
+            else
             {
-                var now = DateTimeOffset.UtcNow;
-                foreach (var perm in PermissionCatalog.All.Where(p => p.Delegable))
-                {
-                    _db.SellerCeilings.Add(new PlatformSellerCeiling
-                    {
-                        Id = Guid.NewGuid(),
-                        SellerPartyId = sellerId,
-                        PermissionId = perm.PermissionId,
-                        ScopeKind = AccessScopeKind.GlobalWithinOwner,
-                        ScopeResourceId = null,
-                        Enabled = true,
-                        UpdatedAt = now,
-                    });
-                }
+                await EnsureRoleHasCatalogPermissionsAsync(
+                    ownerRole.Id,
+                    PermissionCatalog.All.Where(p => p.Delegable).Select(p => p.PermissionId),
+                    cancellationToken);
             }
 
+            var now = DateTimeOffset.UtcNow;
+            var existingCeiling = await _db.SellerCeilings.AsNoTracking()
+                .Where(c => c.SellerPartyId == sellerId)
+                .Select(c => c.PermissionId)
+                .ToListAsync(cancellationToken);
+            var ceilingSet = existingCeiling.ToHashSet(StringComparer.Ordinal);
+            foreach (var perm in PermissionCatalog.All.Where(p => p.Delegable))
+            {
+                if (ceilingSet.Contains(perm.PermissionId))
+                {
+                    continue;
+                }
+
+                _db.SellerCeilings.Add(new PlatformSellerCeiling
+                {
+                    Id = Guid.NewGuid(),
+                    SellerPartyId = sellerId,
+                    PermissionId = perm.PermissionId,
+                    ScopeKind = AccessScopeKind.GlobalWithinOwner,
+                    ScopeResourceId = null,
+                    Enabled = true,
+                    UpdatedAt = now,
+                });
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>مجوزهای مفقود کاتالوگ را به نقش سیستمی اضافه می‌کند.</summary>
+    private async Task EnsureRoleHasCatalogPermissionsAsync(
+        Guid roleId,
+        IEnumerable<string> permissionIds,
+        CancellationToken cancellationToken)
+    {
+        var existing = await _db.RolePermissions.AsNoTracking()
+            .Where(p => p.RoleId == roleId)
+            .Select(p => p.PermissionId)
+            .ToListAsync(cancellationToken);
+        var have = existing.ToHashSet(StringComparer.Ordinal);
+        var added = false;
+        foreach (var permissionId in permissionIds)
+        {
+            if (have.Contains(permissionId))
+            {
+                continue;
+            }
+
+            _db.RolePermissions.Add(new RolePermission
+            {
+                Id = Guid.NewGuid(),
+                RoleId = roleId,
+                PermissionId = permissionId,
+                ScopeKind = AccessScopeKind.GlobalWithinOwner,
+                Enabled = true,
+            });
+            added = true;
+        }
+
+        if (added)
+        {
             await _db.SaveChangesAsync(cancellationToken);
         }
     }
