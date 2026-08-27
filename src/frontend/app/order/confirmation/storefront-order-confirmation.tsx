@@ -10,11 +10,21 @@ import {
   toCustomerCheckoutMessage,
   type StorefrontCheckoutPage,
 } from "../../storefront/storefront-checkout-api.ts";
-import { startStorefrontPayment, toCustomerPaymentMessage } from "../../storefront/storefront-payment-api.ts";
+import { StorefrontPaymentMethodPicker } from "../../storefront/storefront-payment-methods.tsx";
+import {
+  loadStorefrontWalletQuote,
+  requiresProviderRedirect,
+  startStorefrontPayment,
+  toCustomerPaymentMessage,
+  WALLET_PROVIDER_CODE,
+  type StorefrontPaymentMethodId,
+  type StorefrontWalletQuote,
+} from "../../storefront/storefront-payment-api.ts";
 
 /**
  * تأیید سفارش زنده با پوستهٔ کارت موفقیت Shopeiva.
  * Paid فقط از Host؛ وضعیت جعلی نمایش داده نمی‌شود.
+ * کیف پول فقط وقتی Host canPayFullyWithWallet بدهد.
  */
 export function StorefrontOrderConfirmation() {
   return (
@@ -28,6 +38,8 @@ function ConfirmationBody() {
   const params = useSearchParams();
   const checkoutId = params.get("checkoutId");
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
+  const [quote, setQuote] = useState<StorefrontWalletQuote | null>(null);
+  const [method, setMethod] = useState<StorefrontPaymentMethodId>("gateway");
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -38,7 +50,16 @@ function ConfirmationBody() {
       return;
     }
     void loadStorefrontCheckout(checkoutId)
-      .then(setPage)
+      .then(async (checkout) => {
+        setPage(checkout);
+        if (checkout.paymentState !== "Paid") {
+          const nextQuote = await loadStorefrontWalletQuote(checkoutId);
+          setQuote(nextQuote);
+          if (nextQuote?.canPayFullyWithWallet) {
+            setMethod("wallet");
+          }
+        }
+      })
       .catch((cause: unknown) => setError(toCustomerCheckoutMessage(cause)));
   }, [checkoutId]);
 
@@ -62,11 +83,23 @@ function ConfirmationBody() {
     if (!current.checkoutId) {
       return;
     }
+    if (method === "wallet" && !quote?.canPayFullyWithWallet) {
+      setError("پرداخت کامل با کیف پول برای این سفارش ممکن نیست.");
+      return;
+    }
     setPaying(true);
     setError(null);
     try {
-      const initiated = await startStorefrontPayment(current.checkoutId);
-      window.location.assign(initiated.redirectUrl);
+      const initiated = await startStorefrontPayment(current.checkoutId, {
+        providerCode: method === "wallet" ? WALLET_PROVIDER_CODE : undefined,
+      });
+      if (requiresProviderRedirect(initiated)) {
+        window.location.assign(initiated.redirectUrl);
+        return;
+      }
+      window.location.assign(
+        `/payment/result?paymentId=${encodeURIComponent(initiated.paymentId)}&checkoutId=${encodeURIComponent(initiated.checkoutId || current.checkoutId)}`,
+      );
     } catch (cause: unknown) {
       setError(toCustomerPaymentMessage(cause));
       setPaying(false);
@@ -85,7 +118,7 @@ function ConfirmationBody() {
 
   return (
     <div className="py-8 md:py-12 flex items-center justify-center" data-testid="order-confirmation">
-      <div className="max-w-md w-full mx-auto text-center space-y-4">
+      <div className="max-w-md w-full mx-auto text-center space-y-4 px-3">
         <div className="bg-white border border-gray-200 rounded-3xl p-6 md:p-10 shadow-2xl">
           <div
             className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
@@ -132,15 +165,24 @@ function ConfirmationBody() {
           </div>
 
           {!paid ? (
-            <button
-              type="button"
-              disabled={paying}
-              onClick={() => void pay()}
-              className="w-full px-6 py-3 rounded-2xl bg-[#2563EB] text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-[#2563EB]/25"
-              data-testid="confirmation-pay"
-            >
-              {paying ? "در حال انتقال…" : "پرداخت سفارش"}
-            </button>
+            <div className="space-y-4 text-right mb-4">
+              <StorefrontPaymentMethodPicker selected={method} onChange={setMethod} quote={quote} />
+              <button
+                type="button"
+                disabled={paying}
+                onClick={() => void pay()}
+                className="w-full px-6 py-3 rounded-2xl bg-[#2563EB] text-white text-sm font-bold disabled:opacity-50 shadow-lg shadow-[#2563EB]/25"
+                data-testid="confirmation-pay"
+              >
+                {paying
+                  ? method === "wallet"
+                    ? "در حال پرداخت از کیف پول…"
+                    : "در حال انتقال…"
+                  : method === "wallet"
+                    ? "پرداخت با کیف پول"
+                    : "پرداخت سفارش"}
+              </button>
+            </div>
           ) : null}
           {error ? <p className="text-sm text-red-600 mt-3">{error}</p> : null}
 

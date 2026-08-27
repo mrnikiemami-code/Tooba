@@ -12,6 +12,27 @@ public static class WalletDemoIds
     /// <summary>سطر اعتبار کارت هدیهٔ بخشی.</summary>
     public static readonly Guid GiftCreditEntryId = Guid.Parse("01900000-0000-7000-9000-000000000012");
 
+    /// <summary>سطر بدهکار سفارش demo (checkout کیف پول).</summary>
+    public static readonly Guid OrderPaymentDebitEntryId = Guid.Parse("01900000-0000-7000-9000-000000000013");
+
+    /// <summary>سطر اعتبار refund-to-wallet demo.</summary>
+    public static readonly Guid RefundCreditEntryId = Guid.Parse("01900000-0000-7000-9000-000000000014");
+
+    /// <summary>سطر top-up idempotent برای پوشش سفارش demo.</summary>
+    public static readonly Guid CheckoutTopUpEntryId = Guid.Parse("01900000-0000-7000-9000-000000000015");
+
+    /// <summary>PaymentId پایدار demo برای debit کیف پول.</summary>
+    public static readonly Guid DemoWalletPaymentId = Guid.Parse("01900000-0000-7000-9000-000000000041");
+
+    /// <summary>ReturnRequestId پایدار demo برای اعتبار کیف پول.</summary>
+    public static readonly Guid DemoWalletReturnRequestId = Guid.Parse("01900000-0000-7000-9000-000000000042");
+
+    /// <summary>CheckoutId پایدار demo سفارش پرداخت‌شده با کیف پول.</summary>
+    public static readonly Guid DemoWalletPaidCheckoutId = Guid.Parse("01900000-0000-7000-9000-000000000043");
+
+    /// <summary>SellerOrderId پایدار demo.</summary>
+    public static readonly Guid DemoWalletPaidSellerOrderId = Guid.Parse("01900000-0000-7000-9000-000000000044");
+
     /// <summary>کارت هدیهٔ استفاده‌نشده.</summary>
     public static readonly Guid UnusedGiftCardId = Guid.Parse("01900000-0000-7000-9000-000000000021");
 
@@ -50,6 +71,12 @@ public static class WalletDemoIds
 
     /// <summary>کد کارت بخشی (دیگر قابل بازخرید کامل نیست اگر مانده صفر).</summary>
     public const string PartialGiftCardDemoCode = "TOOBA-DEMO-GIFT-PARTIAL";
+
+    /// <summary>مبلغ سفارش demo کیف پول.</summary>
+    public const decimal DemoWalletOrderAmount = 75_000m;
+
+    /// <summary>مبلغ refund جزئی demo به کیف پول.</summary>
+    public const decimal DemoWalletRefundAmount = 25_000m;
 }
 
 /// <summary>snapshot پیش‌نمایش توسعه.</summary>
@@ -62,6 +89,10 @@ public sealed record WalletDemoSnapshot(
     Guid PartiallyRedeemedGiftCardId,
     Guid ExpiredGiftCardId,
     Guid RevokedGiftCardId,
+    Guid? WalletPaidCheckoutId,
+    Guid? WalletPaidPaymentId,
+    Guid? WalletPaidSellerOrderId,
+    Guid? WalletRefundReturnRequestId,
     string Note);
 
 /// <summary>نگهدارندهٔ snapshot پس از دانه.</summary>

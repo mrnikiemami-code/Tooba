@@ -346,11 +346,34 @@ public sealed record StorefrontCheckoutPage(
 
 /// <summary>
 /// ورودی شروع پرداخت فروشگاهی. مبلغ در بدنه نیست.
+/// UseWallet یا ProviderCode=wallet فقط وقتی موجودی کل مبلغ را پوشش دهد مجاز است (mixed deferred).
 /// </summary>
-public sealed record StorefrontInitiatePaymentRequest(Guid CartId, string IdempotencyKey);
+public sealed record StorefrontInitiatePaymentRequest(
+    Guid CartId,
+    string IdempotencyKey,
+    bool UseWallet = false,
+    string? ProviderCode = null)
+{
+    /// <summary>آیا درخواست صریحاً مسیر کیف پول کامل را می‌خواهد.</summary>
+    public bool WantsWallet =>
+        UseWallet
+        || string.Equals(ProviderCode, "wallet", StringComparison.OrdinalIgnoreCase);
+}
 
 /// <summary>
-/// نتیجهٔ شروع پرداخت. Redirect به صفحهٔ sandbox/dev است نه بانک واقعی.
+/// نقل قول کیف پول برای checkout.
+/// </summary>
+public sealed record StorefrontWalletQuotePage(
+    Guid CheckoutId,
+    decimal WalletBalance,
+    decimal MaxUsable,
+    decimal RemainingPayable,
+    bool CanPayFullyWithWallet,
+    string Currency,
+    bool MixedTenderDeferred);
+
+/// <summary>
+/// نتیجهٔ شروع پرداخت. Redirect به صفحهٔ sandbox/dev است نه بانک واقعی؛ full-wallet بدون PSP.
 /// </summary>
 public sealed record StorefrontPaymentInitiationPage(
     Guid PaymentId,
@@ -361,7 +384,8 @@ public sealed record StorefrontPaymentInitiationPage(
     string ProviderRequestReference,
     string RedirectUrl,
     decimal Amount,
-    string Currency);
+    string Currency,
+    bool RequiresPspRedirect = true);
 
 /// <summary>
 /// تصویر خواندنی پرداخت برای صفحهٔ نتیجه. Paid بودن سفارش از همین JSON استنتاج نمی‌شود مگر وضعیت سفارش جدا خوانده شود.

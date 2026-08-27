@@ -34,6 +34,11 @@ export interface RefundAttempt {
   completedAt: string | null;
 }
 
+/** مقصد بازپرداخت تایپ‌شده — بدون free-form. */
+export type RefundDestination = "OriginalPayment" | "Wallet";
+
+export const DEFAULT_REFUND_DESTINATION: RefundDestination = "OriginalPayment";
+
 export interface ReturnSnapshot {
   returnRequestId: string;
   sellerOrderId: string;
@@ -45,6 +50,8 @@ export interface ReturnSnapshot {
   currency: string;
   refundAmount: number;
   paymentId: string | null;
+  /** مقصد بازپرداخت؛ پیش‌فرض OriginalPayment اگر Host نفرستد. */
+  destination: RefundDestination;
   createdAt: string;
   updatedAt: string;
   items: ReturnItem[];
@@ -82,6 +89,18 @@ function number(value: unknown): number {
 
 function nullableText(value: unknown): string | null {
   return value == null || String(value).length === 0 ? null : String(value);
+}
+
+/** مقصد بازپرداخت را نرمال می‌کند؛ مقدار ناشناخته → OriginalPayment. */
+export function normalizeRefundDestination(value: unknown): RefundDestination {
+  const raw = text(value).trim();
+  if (raw === "Wallet" || raw === "wallet") return "Wallet";
+  return "OriginalPayment";
+}
+
+/** برچسب فارسی مقصد بازپرداخت. */
+export function formatRefundDestination(destination: RefundDestination | string): string {
+  return normalizeRefundDestination(destination) === "Wallet" ? "کیف پول" : "پرداخت اصلی";
 }
 
 function mapReturnItem(value: unknown): ReturnItem | null {
@@ -139,6 +158,7 @@ export function mapReturnSnapshot(value: unknown): ReturnSnapshot | null {
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     refundAmount: number(prop(item, "refundAmount", "RefundAmount")),
     paymentId: nullableText(prop(item, "paymentId", "PaymentId")),
+    destination: normalizeRefundDestination(prop(item, "destination", "Destination")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
     items: Array.isArray(itemsRaw)
@@ -266,6 +286,7 @@ export async function createCustomerReturn(input: {
   sellerOrderId: string;
   reason?: string;
   items: CreateReturnLineInput[];
+  destination?: RefundDestination;
   idempotencyKey?: string;
 }): Promise<{ ok: true; snapshot: ReturnSnapshot } | { ok: false; errorCode: string }> {
   try {
@@ -277,6 +298,8 @@ export async function createCustomerReturn(input: {
         sellerOrderId: input.sellerOrderId,
         idempotencyKey: input.idempotencyKey ?? crypto.randomUUID(),
         reason: input.reason ?? null,
+        destination: input.destination ?? DEFAULT_REFUND_DESTINATION,
+        refundDestination: input.destination ?? DEFAULT_REFUND_DESTINATION,
         items: input.items,
       }),
     });
@@ -373,8 +396,16 @@ async function sellerMutate(
   }
 }
 
-export function sellerApproveReturn(sellerPartyId: string, returnRequestId: string) {
-  return sellerMutate(sellerPartyId, `/v1/seller/returns/${returnRequestId}/approve`);
+export function sellerApproveReturn(
+  sellerPartyId: string,
+  returnRequestId: string,
+  destination?: RefundDestination,
+) {
+  const dest = destination ?? DEFAULT_REFUND_DESTINATION;
+  return sellerMutate(sellerPartyId, `/v1/seller/returns/${returnRequestId}/approve`, {
+    destination: dest,
+    refundDestination: dest,
+  });
 }
 
 export function sellerRejectReturn(sellerPartyId: string, returnRequestId: string, reason?: string) {

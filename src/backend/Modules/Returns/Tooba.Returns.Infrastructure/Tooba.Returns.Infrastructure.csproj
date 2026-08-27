@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\Order\Tooba.Order.Application\Tooba.Order.Application.csproj" />
     <ProjectReference Include="..\..\Fulfillment\Tooba.Fulfillment.Application\Tooba.Fulfillment.Application.csproj" />
     <ProjectReference Include="..\..\Payment\Tooba.Payment.Application\Tooba.Payment.Application.csproj" />
+    <ProjectReference Include="..\..\Wallet\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
     <ProjectReference Include="..\..\Inventory\Tooba.Inventory.Application\Tooba.Inventory.Application.csproj" />
   </ItemGroup>
 </Project>

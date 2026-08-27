@@ -32,6 +32,7 @@ public static class StorefrontEndpoints
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
         group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
+        group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", GetWalletQuoteAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
         if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         {
@@ -235,6 +236,19 @@ public static class StorefrontEndpoints
             body.CartId,
             ReadGuestSecret(request),
             body.IdempotencyKey,
+            body.WantsWallet,
+            cancellationToken));
+
+    private static Task<IResult> GetWalletQuoteAsync(
+        Guid checkoutId,
+        Guid cartId,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.GetWalletQuoteAsync(
+            checkoutId,
+            cartId,
+            ReadGuestSecret(request),
             cancellationToken));
 
     private static async Task<IResult> GetPaymentAsync(
@@ -299,6 +313,13 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status401Unauthorized, "Unauthorized", "payment.guest.invalid");
         }
 
+        if (text.Contains("پرداخت ترکیبی", StringComparison.Ordinal)
+            || text.Contains("موجودی کیف پول کافی نیست", StringComparison.Ordinal)
+            || text.Contains("موجودی باید کل مبلغ", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.wallet.mixed_deferred");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
@@ -307,6 +328,7 @@ public static class StorefrontEndpoints
         "payment.already-paid" => "این سفارش قبلاً پرداخت شده است.",
         "payment.missing" => "پرداخت پیدا نشد.",
         "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
+        "payment.wallet.mixed_deferred" => "پرداخت ترکیبی کیف پول هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 

@@ -31,12 +31,16 @@ public sealed record CreateReturnCommand(
     Guid ActorUserId,
     string IdempotencyKey,
     string? Reason,
-    IReadOnlyList<ReturnLineCommand> Items);
+    IReadOnlyList<ReturnLineCommand> Items,
+    RefundDestination RefundDestination = RefundDestination.OriginalPayment);
 
 /// <summary>
 /// فرمان تأیید مرجوعی.
 /// </summary>
-public sealed record ApproveReturnCommand(Guid ReturnRequestId, Guid ActorUserId);
+public sealed record ApproveReturnCommand(
+    Guid ReturnRequestId,
+    Guid ActorUserId,
+    RefundDestination? RefundDestination = null);
 
 /// <summary>
 /// فرمان رد مرجوعی.
@@ -62,6 +66,7 @@ public sealed record ReturnSnapshot(
     string Currency,
     decimal RefundAmount,
     Guid? PaymentId,
+    RefundDestination RefundDestination,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<ReturnItemSnapshot> Items,

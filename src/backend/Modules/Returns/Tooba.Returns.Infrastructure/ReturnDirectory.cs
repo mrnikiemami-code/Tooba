@@ -7,6 +7,7 @@ using Tooba.Payment.Domain;
 using Tooba.Returns.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Wallet.Application;
 
 namespace Tooba.Returns.Infrastructure;
 
@@ -21,6 +22,7 @@ public sealed class OpenReturnUseCaseGuard : IReturnUseCaseGuard
 
 /// <summary>
 /// ارکستراسیون مرجوعی در schema returns.
+/// مقصد Wallet: اعتبار ledger یک‌بار؛ PSP refund gateway صدا زده نمی‌شود (no double-credit).
 /// </summary>
 public sealed class ReturnDirectory : IReturnDirectory
 {
@@ -32,12 +34,13 @@ public sealed class ReturnDirectory : IReturnDirectory
     private readonly IFulfillmentReturnReader _fulfillment;
     private readonly IPaymentDirectory _payments;
     private readonly IPaymentRefundGateway _refundGateway;
+    private readonly IWalletDirectory _wallets;
     private readonly IReturnInventoryGateway _inventory;
     private readonly ReturnsInstrumentation _telemetry;
     private readonly ILogger<ReturnDirectory> _logger;
 
     /// <summary>
-    /// دایرکتوری را به schema returns و درز Order/Fulfillment/Payment وصل می‌کند.
+    /// دایرکتوری را به schema returns و درز Order/Fulfillment/Payment/Wallet وصل می‌کند.
     /// </summary>
     public ReturnDirectory(
         ReturnsDbContext db,
@@ -46,6 +49,7 @@ public sealed class ReturnDirectory : IReturnDirectory
         IFulfillmentReturnReader fulfillment,
         IPaymentDirectory payments,
         IPaymentRefundGateway refundGateway,
+        IWalletDirectory wallets,
         IReturnInventoryGateway inventory,
         ReturnsInstrumentation telemetry,
         ILogger<ReturnDirectory> logger)
@@ -56,6 +60,7 @@ public sealed class ReturnDirectory : IReturnDirectory
         _fulfillment = fulfillment;
         _payments = payments;
         _refundGateway = refundGateway;
+        _wallets = wallets;
         _inventory = inventory;
         _telemetry = telemetry;
         _logger = logger;
@@ -125,7 +130,8 @@ public sealed class ReturnDirectory : IReturnDirectory
             command.Reason,
             orderContext.Currency,
             lineSnapshots,
-            now);
+            now,
+            command.RefundDestination);
         _db.ReturnRequests.Add(request);
         _db.ReturnItems.AddRange(request.Items);
         await _db.SaveChangesAsync(cancellationToken);
@@ -189,7 +195,7 @@ public sealed class ReturnDirectory : IReturnDirectory
             throw new InvalidOperationException("refund فقط برای پرداخت Succeeded مجاز است.");
         }
 
-        request.Approve(payment.PaymentId, DateTimeOffset.UtcNow);
+        request.Approve(payment.PaymentId, DateTimeOffset.UtcNow, command.RefundDestination);
         request.MarkRefundProcessing(DateTimeOffset.UtcNow);
         var attempt = request.BeginRefundAttempt(payment.PaymentId, $"refund-{request.ReturnRequestId:N}", DateTimeOffset.UtcNow);
         _db.RefundAttempts.Add(attempt);
@@ -244,6 +250,31 @@ public sealed class ReturnDirectory : IReturnDirectory
         var now = DateTimeOffset.UtcNow;
         try
         {
+            if (request.RefundDestination == RefundDestination.Wallet)
+            {
+                // انتخاب معماری: اعتبار کیف پول جایگزین PSP gateway است؛ gateway صدا زده نمی‌شود تا double-credit نشود.
+                await _wallets.CreditRefundAsync(
+                    request.RequestedByUserId,
+                    attempt.Amount,
+                    attempt.Currency,
+                    request.ReturnRequestId,
+                    $"wallet-refund-credit:{request.ReturnRequestId:D}",
+                    cancellationToken);
+                attempt.MarkSucceeded($"wallet-refund:{request.ReturnRequestId:D}", now);
+                request.MarkRefundSucceeded(now);
+                _telemetry.RecordRefundSucceeded();
+                foreach (var item in request.Items.Where(x => x.ReservationId is not null))
+                {
+                    await _inventory.RestockConsumedReservationAsync(
+                        item.ReservationId!.Value,
+                        item.Quantity,
+                        $"return-restock-{request.ReturnRequestId:N}-{item.ReturnItemId:N}",
+                        cancellationToken);
+                }
+
+                return;
+            }
+
             var result = await _refundGateway.RefundAsync(
                 attempt.PaymentId,
                 attempt.Amount,
@@ -357,6 +388,7 @@ public sealed class ReturnDirectory : IReturnDirectory
             request.Currency,
             request.RefundAmount,
             request.PaymentId,
+            request.RefundDestination,
             request.CreatedAt,
             request.UpdatedAt,
             items.Select(x => new ReturnItemSnapshot(

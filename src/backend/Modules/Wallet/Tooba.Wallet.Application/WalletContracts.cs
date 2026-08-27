@@ -124,6 +124,26 @@ public sealed record AdminWalletAdjustmentResultDto(
     decimal Balance,
     bool IdempotentReplay);
 
+/// <summary>نتیجهٔ بدهکار پرداخت سفارش از کیف پول.</summary>
+public sealed record WalletSpendResultDto(
+    WalletLedgerEntryDto Entry,
+    decimal Balance,
+    bool IdempotentReplay);
+
+/// <summary>نتیجهٔ اعتبار refund به کیف پول.</summary>
+public sealed record WalletCreditResultDto(
+    WalletLedgerEntryDto Entry,
+    decimal Balance,
+    bool IdempotentReplay);
+
+/// <summary>نقل قول قابل استفاده بودن کیف پول برای مبلغ قابل پرداخت.</summary>
+public sealed record WalletCheckoutQuoteDto(
+    decimal WalletBalance,
+    decimal MaxUsable,
+    decimal RemainingPayable,
+    bool CanPayFullyWithWallet,
+    string Currency);
+
 /// <summary>snapshot پیش‌نمایش توسعه.</summary>
 public sealed record WalletDemoPreviewDto(
     Guid CustomerActorUserId,
@@ -185,6 +205,35 @@ public interface IWalletDirectory
         Guid customerActorUserId,
         Guid adminActorUserId,
         AdminWalletAdjustmentCommand command,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// بدهکار اتمی برای پرداخت سفارش؛ IdempotentReplay امن؛ بدون overdraw.
+    /// </summary>
+    Task<WalletSpendResultDto> SpendForOrderPaymentAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid paymentId,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// اعتبار refund به کیف پول؛ یک‌بار برای هر ReturnRequestId.
+    /// </summary>
+    Task<WalletCreditResultDto> CreditRefundAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid returnRequestId,
+        string idempotencyKey,
+        CancellationToken cancellationToken);
+
+    /// <summary>نقل قول موجودی در برابر مبلغ قابل پرداخت سفارش.</summary>
+    Task<WalletCheckoutQuoteDto> QuoteForPayableAsync(
+        Guid customerActorId,
+        decimal payableAmount,
+        string currency,
         CancellationToken cancellationToken);
 }
 

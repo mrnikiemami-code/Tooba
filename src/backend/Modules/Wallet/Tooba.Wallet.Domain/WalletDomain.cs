@@ -33,10 +33,10 @@ public enum LedgerEntryType
     /// <summary>تعدیل ممیزی‌شدهٔ Admin.</summary>
     AdminAdjustment = 1,
 
-    /// <summary>رزرو برای debit تسویهٔ سفارش — در این Task فعال نیست.</summary>
+    /// <summary>بدهکار پرداخت سفارش (ATOMIC_DEBIT_AT_PAID).</summary>
     OrderPaymentDebit = 2,
 
-    /// <summary>رزرو برای اعتبار refund — در این Task فعال نیست.</summary>
+    /// <summary>اعتبار بازگشت وجه به کیف پول.</summary>
     RefundCredit = 3,
 }
 
@@ -123,7 +123,8 @@ public sealed class WalletAccount
     /// <summary>آیا حساب برای اعتبار/بدهکار باز است.</summary>
     public bool CanMutateLedger => Status == WalletAccountStatus.Active;
 
-    internal static string NormalizeCurrency(string currency)
+    /// <summary>ارز را نرمال و اعتبارسنجی می‌کند.</summary>
+    public static string NormalizeCurrency(string currency)
     {
         if (string.IsNullOrWhiteSpace(currency))
             throw new InvalidOperationException("ارز الزامی است.");
@@ -222,6 +223,48 @@ public sealed class WalletLedgerEntry
             direction,
             "admin_adjustment",
             adjustmentId,
+            idempotencyKey,
+            now,
+            metadata);
+
+    /// <summary>سطر بدهکار پرداخت سفارش می‌سازد؛ SourceType=payment.</summary>
+    public static WalletLedgerEntry PostOrderPaymentDebit(
+        Guid accountId,
+        Guid paymentId,
+        decimal amount,
+        string currency,
+        string idempotencyKey,
+        DateTimeOffset now,
+        string? metadata = null) =>
+        Create(
+            accountId,
+            LedgerEntryType.OrderPaymentDebit,
+            amount,
+            currency,
+            LedgerDirection.Debit,
+            "payment",
+            paymentId,
+            idempotencyKey,
+            now,
+            metadata);
+
+    /// <summary>سطر اعتبار refund به کیف پول می‌سازد؛ SourceType=refund.</summary>
+    public static WalletLedgerEntry PostRefundCredit(
+        Guid accountId,
+        Guid returnRequestId,
+        decimal amount,
+        string currency,
+        string idempotencyKey,
+        DateTimeOffset now,
+        string? metadata = null) =>
+        Create(
+            accountId,
+            LedgerEntryType.RefundCredit,
+            amount,
+            currency,
+            LedgerDirection.Credit,
+            "refund",
+            returnRequestId,
             idempotencyKey,
             now,
             metadata);

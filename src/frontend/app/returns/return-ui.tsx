@@ -4,9 +4,11 @@ import {
   AlertTriangle,
   Calendar,
   CheckCircle,
+  CreditCard,
   MessageSquare,
   Package,
   User,
+  Wallet,
   X,
   XCircle,
 } from "lucide-react";
@@ -14,12 +16,15 @@ import { useEffect, useState } from "react";
 import type { FulfillmentItem } from "../fulfillment/fulfillment-api.ts";
 import {
   createCustomerReturn,
+  DEFAULT_REFUND_DESTINATION,
+  formatRefundDestination,
   formatReturnDate,
   formatReturnStatus,
   formatRefundAttemptStatus,
   returnStatusBadgeClass,
   sellerApproveReturn,
   sellerRejectReturn,
+  type RefundDestination,
   type ReturnSnapshot,
 } from "./return-api.ts";
 import { readSellerPartyId } from "../vendor-panel/seller-api.ts";
@@ -99,6 +104,17 @@ export function ReturnDetailCard({ snapshot }: { snapshot: ReturnSnapshot }) {
           مبلغ بازپرداخت: <strong className="text-[#2563EB]">{snapshot.refundAmount.toLocaleString("fa-IR")} {snapshot.currency}</strong>
         </p>
       ) : null}
+      <div className="bg-gray-50 rounded-xl p-3" data-testid="return-destination-display">
+        <p className="text-[10px] text-gray-500">مقصد بازپرداخت</p>
+        <p className="text-sm font-bold text-gray-900 mt-1 flex items-center gap-1.5">
+          {snapshot.destination === "Wallet" ? (
+            <Wallet className="w-3.5 h-3.5 text-violet-500" />
+          ) : (
+            <CreditCard className="w-3.5 h-3.5 text-[#2563EB]" />
+          )}
+          {formatRefundDestination(snapshot.destination)}
+        </p>
+      </div>
       {snapshot.refundAttempts.length > 0 ? (
         <div className="space-y-2">
           <h4 className="text-sm font-bold">تلاش‌های بازپرداخت</h4>
@@ -151,6 +167,7 @@ export function ReturnFormModal({
 }) {
   const [reasonId, setReasonId] = useState("");
   const [description, setDescription] = useState("");
+  const [destination, setDestination] = useState<RefundDestination>(DEFAULT_REFUND_DESTINATION);
   const [lines, setLines] = useState<ReturnFormLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,6 +187,7 @@ export function ReturnFormModal({
     );
     setReasonId("");
     setDescription("");
+    setDestination(DEFAULT_REFUND_DESTINATION);
     setError(null);
     setStep("form");
   }, [open, fulfillmentItems, lineLabels]);
@@ -197,6 +215,7 @@ export function ReturnFormModal({
     const result = await createCustomerReturn({
       sellerOrderId,
       reason: `${selectedReason}\n${description.trim()}`,
+      destination,
       items: selected.map((line) => ({ orderLineId: line.orderLineId, quantity: line.quantity })),
     });
     setSubmitting(false);
@@ -276,6 +295,8 @@ export function ReturnFormModal({
               <p className="text-xs text-gray-400 mt-1">حداقل ۱۰ کاراکتر</p>
             </div>
 
+            <RefundDestinationSelector value={destination} onChange={setDestination} />
+
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
             <div className="flex gap-3 pt-2">
@@ -326,6 +347,7 @@ export function ReturnReviewModal({
   onUpdated?: (snapshot: ReturnSnapshot) => void;
 }) {
   const [adminReason, setAdminReason] = useState("");
+  const [destination, setDestination] = useState<RefundDestination>(DEFAULT_REFUND_DESTINATION);
   const [action, setAction] = useState<"approved" | "rejected" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -333,9 +355,10 @@ export function ReturnReviewModal({
   useEffect(() => {
     if (!open) return;
     setAdminReason("");
+    setDestination(snapshot?.destination ?? DEFAULT_REFUND_DESTINATION);
     setAction(null);
     setError(null);
-  }, [open, snapshot?.returnRequestId]);
+  }, [open, snapshot?.returnRequestId, snapshot?.destination]);
 
   if (!open || !snapshot) return null;
 
@@ -357,7 +380,7 @@ export function ReturnReviewModal({
     setBusy(true);
     setError(null);
     const result = kind === "approved"
-      ? await sellerApproveReturn(sellerPartyId, current.returnRequestId)
+      ? await sellerApproveReturn(sellerPartyId, current.returnRequestId, destination)
       : await sellerRejectReturn(sellerPartyId, current.returnRequestId, adminReason.trim());
     setBusy(false);
     if (!result.ok) {
@@ -428,6 +451,7 @@ export function ReturnReviewModal({
 
           {canDecide ? (
             <>
+              <RefundDestinationSelector value={destination} onChange={setDestination} />
               {action === "rejected" ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">دلیل رد درخواست (الزامی)</label>
@@ -467,8 +491,61 @@ export function ReturnReviewModal({
                 </button>
               </div>
             </>
-          ) : null}
+          ) : (
+            <div className="bg-gray-50 rounded-xl p-3 text-sm" data-testid="return-review-destination">
+              مقصد بازپرداخت: <strong>{formatRefundDestination(snapshot.destination)}</strong>
+            </div>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** انتخابگر مقصد بازپرداخت — OriginalPayment (پیش‌فرض) یا Wallet. */
+export function RefundDestinationSelector({
+  value,
+  onChange,
+}: {
+  value: RefundDestination;
+  onChange: (next: RefundDestination) => void;
+}) {
+  return (
+    <div data-testid="refund-destination-selector">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">مقصد بازپرداخت</label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onChange("OriginalPayment")}
+          data-testid="refund-destination-original"
+          className={`flex items-center gap-2 p-3 rounded-xl border-2 text-right transition-all ${
+            value === "OriginalPayment"
+              ? "border-[#2563EB] bg-[#2563EB]/5"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <CreditCard className="w-4 h-4 text-[#2563EB] shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900">پرداخت اصلی</p>
+            <p className="text-[10px] text-gray-500">بازگشت به روش پرداخت اولیه</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("Wallet")}
+          data-testid="refund-destination-wallet"
+          className={`flex items-center gap-2 p-3 rounded-xl border-2 text-right transition-all ${
+            value === "Wallet"
+              ? "border-violet-500 bg-violet-50"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
+          <Wallet className="w-4 h-4 text-violet-500 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900">کیف پول</p>
+            <p className="text-[10px] text-gray-500">اعتبار فوری به کیف پول مشتری</p>
+          </div>
+        </button>
       </div>
     </div>
   );

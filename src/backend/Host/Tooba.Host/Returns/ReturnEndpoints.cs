@@ -143,6 +143,7 @@ public static class ReturnEndpoints
 
     private static async Task<IResult> SellerApproveAsync(
         Guid returnRequestId,
+        ApproveReturnRequest? body,
         ReturnPanelComposer composer,
         HttpRequest request,
         CurrentAuthenticatedSession session,
@@ -151,7 +152,7 @@ public static class ReturnEndpoints
         CancellationToken cancellationToken)
         => await SellerMutateAsync(
             request, session, guard, environment, returnRequestId, composer,
-            (actor, id, c) => composer.ApproveAsync(id, actor, c), cancellationToken);
+            (actor, id, c) => composer.ApproveAsync(id, actor, body?.EffectiveRefundDestination, c), cancellationToken);
 
     private static async Task<IResult> SellerRejectAsync(
         Guid returnRequestId,

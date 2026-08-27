@@ -3,6 +3,18 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Returns.Domain;
 
 /// <summary>
+/// مقصد بازگشت وجه. فقط مقادیر typed؛ free-form نیست.
+/// </summary>
+public enum RefundDestination
+{
+    /// <summary>بازگشت به روش پرداخت اصلی (PSP/gateway).</summary>
+    OriginalPayment = 0,
+
+    /// <summary>اعتبار به کیف پول مشتری.</summary>
+    Wallet = 1,
+}
+
+/// <summary>
 /// وضعیت درخواست مرجوعی. با وضعیت Order یا Payment یکی نیست.
 /// </summary>
 public enum ReturnRequestStatus
@@ -214,6 +226,9 @@ public sealed class ReturnRequest : IHasDomainEvents
     /// <summary>مبلغ refund محاسبه‌شده از snapshot خطوط.</summary>
     public decimal RefundAmount { get; private set; }
 
+    /// <summary>مقصد بازگشت وجه.</summary>
+    public RefundDestination RefundDestination { get; private set; }
+
     /// <summary>شناسه پرداخت snapshot.</summary>
     public Guid? PaymentId { get; private set; }
 
@@ -247,11 +262,17 @@ public sealed class ReturnRequest : IHasDomainEvents
         string? reason,
         string currency,
         IEnumerable<(Guid OrderLineId, int Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)> lines,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        RefundDestination refundDestination = RefundDestination.OriginalPayment)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             throw new InvalidOperationException("کلید idempotency الزامی است.");
+        }
+
+        if (!Enum.IsDefined(refundDestination))
+        {
+            throw new InvalidOperationException("مقصد بازگشت وجه نامعتبر است.");
         }
 
         var request = new ReturnRequest
@@ -265,6 +286,7 @@ public sealed class ReturnRequest : IHasDomainEvents
             Status = ReturnRequestStatus.Requested,
             Reason = reason?.Trim(),
             Currency = currency.Trim(),
+            RefundDestination = refundDestination,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -304,11 +326,18 @@ public sealed class ReturnRequest : IHasDomainEvents
     }
 
     /// <summary>درخواست را تأیید می‌کند.</summary>
-    public void Approve(Guid paymentId, DateTimeOffset now)
+    public void Approve(Guid paymentId, DateTimeOffset now, RefundDestination? destinationOverride = null)
     {
         EnsureStatus(ReturnRequestStatus.Requested);
         Status = ReturnRequestStatus.Approved;
         PaymentId = paymentId;
+        if (destinationOverride is { } dest)
+        {
+            if (!Enum.IsDefined(dest))
+                throw new InvalidOperationException("مقصد بازگشت وجه نامعتبر است.");
+            RefundDestination = dest;
+        }
+
         UpdatedAt = now;
         _domainEvents.Add(new ReturnApprovedDomainEvent(ReturnRequestId, SellerOrderId, CheckoutId, RefundAmount, Currency));
     }

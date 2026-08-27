@@ -18,6 +18,7 @@ import {
   RotateCcw,
   ShoppingBag,
   Truck,
+  Wallet,
   X,
   XCircle,
   type LucideIcon,
@@ -74,6 +75,17 @@ function visualFor(item: NotificationItem): VisualItem {
     color = "text-red-500";
     bgColor = "bg-red-50 dark:bg-red-900/20";
     borderColor = "border-red-500/30";
+  } else if (
+    type.includes("wallet") ||
+    type === "wallet.payment.succeeded" ||
+    type === "wallet.refund.credited" ||
+    type === "wallet.gift_card.redeemed" ||
+    type === "wallet.admin_adjustment"
+  ) {
+    icon = Wallet;
+    color = "text-violet-500";
+    bgColor = "bg-violet-50 dark:bg-violet-900/20";
+    borderColor = "border-violet-500/30";
   } else if (type === "shipment.dispatched" || type.includes("shipment")) {
     icon = Truck;
     color = "text-blue-500";
@@ -192,6 +204,7 @@ export function NotificationInbox({
           n.category === "order" ||
           n.type.includes("order") ||
           n.type.includes("payment") ||
+          n.type.includes("wallet") ||
           n.type.includes("shipment") ||
           n.type.includes("fulfillment") ||
           n.type.includes("return") ||

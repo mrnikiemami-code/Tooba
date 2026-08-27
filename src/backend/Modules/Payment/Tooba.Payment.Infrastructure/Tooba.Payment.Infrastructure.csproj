@@ -17,6 +17,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tooba.Payment.Application\Tooba.Payment.Application.csproj" />
+    <ProjectReference Include="..\..\Wallet\Tooba.Wallet.Application\Tooba.Wallet.Application.csproj" />
+    <ProjectReference Include="..\..\Wallet\Tooba.Wallet.Domain\Tooba.Wallet.Domain.csproj" />
     <ProjectReference Include="..\..\Tooba.ModuleContracts\Tooba.ModuleContracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Tooba.Persistence\Tooba.Persistence.csproj" />
   </ItemGroup>

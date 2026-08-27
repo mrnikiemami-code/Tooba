@@ -57,6 +57,7 @@ public sealed class ReturnsDbContext : DbContext
             entity.Property(x => x.Reason).HasMaxLength(512);
             entity.Property(x => x.Currency).HasMaxLength(8);
             entity.Property(x => x.RefundAmount).HasPrecision(18, 4);
+            entity.Property(x => x.RefundDestination).HasConversion<string>().HasMaxLength(32);
             entity.Ignore(x => x.DomainEvents);
             entity.Ignore(x => x.Items);
             entity.Ignore(x => x.RefundAttempts);

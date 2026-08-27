@@ -1,6 +1,13 @@
+import {
+  CUSTOMER_DEV_ACTOR_HEADER,
+  DEFAULT_CUSTOMER_DEV_ACTOR_ID,
+} from "../customer-panel/customer-api.ts";
 import { cartHeaders, readCartSession, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
 
 const PAYMENT_IDEMPOTENCY_KEY = "tooba.storefront.paymentIdempotency";
+
+/** کد درگاه کیف پول (پرداخت کامل؛ بدون redirect سندباکس). */
+export const WALLET_PROVIDER_CODE = "wallet";
 
 /**
  * نتیجهٔ شروع پرداخت. مبلغ از Host است.
@@ -12,6 +19,7 @@ export interface StorefrontPaymentInitiation {
   status: string;
   providerCode: string;
   providerRequestReference: string;
+  /** برای wallet کامل ممکن است خالی باشد. */
   redirectUrl: string;
   amount: number;
   currency: string;
@@ -28,6 +36,25 @@ export interface StorefrontPaymentPage {
   status: string;
   providerCode: string;
 }
+
+/**
+ * نقل‌قول کیف‌پول محاسبه‌شده در Host برای تسویه/تأیید سفارش.
+ * mixedTenderAvailable فقط وقتی LIVE است true می‌شود؛ در غیر این صورت UI نباید ادعا کند.
+ */
+export interface StorefrontWalletQuote {
+  checkoutId: string | null;
+  cartId: string;
+  currency: string;
+  balance: number;
+  maxUsableAmount: number;
+  selectedWalletAmount: number;
+  remainingPayable: number;
+  payableAmount: number;
+  canPayFullyWithWallet: boolean;
+  mixedTenderAvailable: boolean;
+}
+
+export type StorefrontPaymentMethodId = "gateway" | "wallet";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -73,6 +100,7 @@ function throwIfFailed(response: Response, payload: unknown, fallbackCode: strin
 
 /**
  * JSON شروع پرداخت Host را نگاشت می‌کند.
+ * redirectUrl برای پرداخت کامل wallet می‌تواند خالی باشد.
  */
 export function mapStorefrontPaymentInitiation(payload: unknown): StorefrontPaymentInitiation | null {
   const item = asRecord(payload);
@@ -80,8 +108,13 @@ export function mapStorefrontPaymentInitiation(payload: unknown): StorefrontPaym
     return null;
   }
   const paymentId = asString(readProp(item, "paymentId", "PaymentId"));
+  if (!paymentId) {
+    return null;
+  }
+  const providerCode = asString(readProp(item, "providerCode", "ProviderCode"));
   const redirectUrl = asString(readProp(item, "redirectUrl", "RedirectUrl"));
-  if (!paymentId || !redirectUrl) {
+  const isWallet = providerCode.toLowerCase() === WALLET_PROVIDER_CODE;
+  if (!redirectUrl && !isWallet) {
     return null;
   }
   return {
@@ -89,12 +122,64 @@ export function mapStorefrontPaymentInitiation(payload: unknown): StorefrontPaym
     attemptId: asString(readProp(item, "attemptId", "AttemptId")),
     checkoutId: asString(readProp(item, "checkoutId", "CheckoutId")),
     status: asString(readProp(item, "status", "Status")),
-    providerCode: asString(readProp(item, "providerCode", "ProviderCode")),
+    providerCode,
     providerRequestReference: asString(readProp(item, "providerRequestReference", "ProviderRequestReference")),
     redirectUrl,
     amount: asNumber(readProp(item, "amount", "Amount")),
     currency: asString(readProp(item, "currency", "Currency"), "IRR"),
   };
+}
+
+/**
+ * نقل‌قول کیف‌پول Host را نگاشت می‌کند. موجودی را UI محاسبه نمی‌کند.
+ */
+export function mapStorefrontWalletQuote(payload: unknown): StorefrontWalletQuote | null {
+  const item = asRecord(payload);
+  if (!item) {
+    return null;
+  }
+  const cartId = asString(readProp(item, "cartId", "CartId"));
+  if (!cartId) {
+    return null;
+  }
+  const checkoutRaw = readProp(item, "checkoutId", "CheckoutId");
+  const mixedRaw = readProp(item, "mixedTenderAvailable", "MixedTenderAvailable");
+  return {
+    checkoutId: checkoutRaw == null || checkoutRaw === "" ? null : asString(checkoutRaw),
+    cartId,
+    currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+    balance: asNumber(readProp(item, "balance", "Balance")),
+    maxUsableAmount: asNumber(readProp(item, "maxUsableAmount", "MaxUsableAmount")),
+    selectedWalletAmount: asNumber(readProp(item, "selectedWalletAmount", "SelectedWalletAmount")),
+    remainingPayable: asNumber(readProp(item, "remainingPayable", "RemainingPayable")),
+    payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
+    canPayFullyWithWallet: Boolean(readProp(item, "canPayFullyWithWallet", "CanPayFullyWithWallet")),
+    mixedTenderAvailable: typeof mixedRaw === "boolean" ? mixedRaw : false,
+  };
+}
+
+/**
+ * آیا شروع پرداخت نیاز به redirect درگاه/سندباکس دارد؟
+ * wallet کامل و وضعیت Succeeded → بدون redirect.
+ */
+export function requiresProviderRedirect(initiation: StorefrontPaymentInitiation): boolean {
+  const provider = initiation.providerCode.trim().toLowerCase();
+  if (provider === WALLET_PROVIDER_CODE) {
+    return false;
+  }
+  if (initiation.status === "Succeeded") {
+    return false;
+  }
+  return initiation.redirectUrl.trim().length > 0;
+}
+
+function storefrontActorHeaders(version?: number): Record<string, string> {
+  const headers: Record<string, string> = { ...(cartHeaders(version) as Record<string, string>) };
+  if (typeof window !== "undefined") {
+    const stored = window.localStorage.getItem("tooba.customerActorUserId");
+    headers[CUSTOMER_DEV_ACTOR_HEADER] = stored || DEFAULT_CUSTOMER_DEV_ACTOR_ID;
+  }
+  return headers;
 }
 
 /**
@@ -142,6 +227,12 @@ export function toCustomerPaymentMessage(error: unknown): string {
         return "پرداخت پیدا نشد.";
       case "payment.guest.invalid":
         return "دسترسی به پرداخت معتبر نیست.";
+      case "payment.wallet.insufficient":
+        return "موجودی کیف پول برای پرداخت کامل کافی نیست.";
+      case "payment.wallet.unavailable":
+        return "پرداخت با کیف پول در حال حاضر در دسترس نیست.";
+      case "wallet.quote.missing":
+        return "اطلاعات کیف پول برای این سفارش در دسترس نیست.";
       default:
         return error.detail && !/Held|GATEWAY_|Verify/i.test(error.detail)
           ? error.detail
@@ -152,21 +243,59 @@ export function toCustomerPaymentMessage(error: unknown): string {
 }
 
 /**
- * پرداخت سفارش PendingPayment را از Host شروع می‌کند. مبلغ در بدنه نیست.
+ * نقل‌قول کیف‌پول را از Host می‌خواند (endpoint بک‌اند).
  */
-export async function startStorefrontPayment(checkoutId: string): Promise<StorefrontPaymentInitiation> {
+export async function loadStorefrontWalletQuote(checkoutId: string): Promise<StorefrontWalletQuote | null> {
+  const session = readCartSession();
+  if (!session.cartId) {
+    return null;
+  }
+  try {
+    const response = await fetch(
+      `/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/wallet-quote?cartId=${encodeURIComponent(session.cartId)}`,
+      { cache: "no-store", headers: storefrontActorHeaders() },
+    );
+    if (response.status === 401 || response.status === 404) {
+      return null;
+    }
+    const payload = await parseJson(response);
+    if (!response.ok) {
+      return null;
+    }
+    return mapStorefrontWalletQuote(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * پرداخت سفارش PendingPayment را از Host شروع می‌کند. مبلغ در بدنه نیست.
+ * providerCode=wallet برای پرداخت کامل کیف‌پول؛ در غیر این صورت درگاه پیش‌فرض Host.
+ */
+export async function startStorefrontPayment(
+  checkoutId: string,
+  options?: { providerCode?: string },
+): Promise<StorefrontPaymentInitiation> {
   const session = readCartSession();
   if (!session.cartId) {
     throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای شروع پرداخت پیدا نشد.");
   }
+  const providerCode = options?.providerCode?.trim();
+  const body: Record<string, string | boolean> = {
+    cartId: session.cartId,
+    idempotencyKey: paymentIdempotencyKey(checkoutId),
+  };
+  if (providerCode) {
+    body.providerCode = providerCode;
+    if (providerCode.toLowerCase() === WALLET_PROVIDER_CODE) {
+      body.useWallet = true;
+    }
+  }
   const response = await fetch(`/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/payments`, {
     method: "POST",
     cache: "no-store",
-    headers: cartHeaders(),
-    body: JSON.stringify({
-      cartId: session.cartId,
-      idempotencyKey: paymentIdempotencyKey(checkoutId),
-    }),
+    headers: providerCode?.toLowerCase() === WALLET_PROVIDER_CODE ? storefrontActorHeaders() : cartHeaders(),
+    body: JSON.stringify(body),
   });
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.rejected");

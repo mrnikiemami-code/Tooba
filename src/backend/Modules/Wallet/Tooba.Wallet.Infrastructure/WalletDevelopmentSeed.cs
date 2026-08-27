@@ -22,6 +22,7 @@ public static class WalletDevelopmentSeed
 
         await EnsureAccountAsync(db, customerActorUserId, now, cancellationToken);
         await EnsureLedgerAsync(db, adminActorUserId, now, cancellationToken);
+        await EnsureCheckoutRefundLedgerAsync(db, now, cancellationToken);
         await EnsureGiftCardsAsync(db, customerActorUserId, adminActorUserId, now, cancellationToken);
         await EnsureSpareUnusedIfNeededAsync(db, customerActorUserId, adminActorUserId, now, cancellationToken);
 
@@ -37,7 +38,68 @@ public static class WalletDevelopmentSeed
                 WalletDemoIds.PartiallyRedeemedGiftCardId,
                 WalletDemoIds.ExpiredGiftCardId,
                 WalletDemoIds.RevokedGiftCardId,
-                "wallet-demo: unused preview code; ledger admin+gift; checkout/refund deferred"));
+                WalletDemoIds.DemoWalletPaidCheckoutId,
+                WalletDemoIds.DemoWalletPaymentId,
+                WalletDemoIds.DemoWalletPaidSellerOrderId,
+                WalletDemoIds.DemoWalletReturnRequestId,
+                "wallet-demo: full-wallet debit+refund credit seeded; mixed tender deferred"));
+    }
+
+    private static async Task EnsureCheckoutRefundLedgerAsync(
+        WalletDbContext db,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        // top-up idempotent تا موجودی برای سفارش demo کافی باشد (پس از debit+اعتبار نسبی).
+        if (!await db.LedgerEntries.AnyAsync(x => x.EntryId == WalletDemoIds.CheckoutTopUpEntryId, cancellationToken))
+        {
+            db.LedgerEntries.Add(WalletLedgerEntry.CreateSeeded(
+                WalletDemoIds.CheckoutTopUpEntryId,
+                WalletDemoIds.AccountId,
+                LedgerEntryType.AdminAdjustment,
+                500_000m,
+                WalletAccount.DefaultCurrency,
+                LedgerDirection.Credit,
+                "admin_adjustment",
+                WalletDemoIds.DemoWalletPaymentId,
+                "wallet-seed-checkout-topup-v1",
+                now.AddMinutes(10),
+                """{"reason":"seed checkout cover top-up"}"""));
+        }
+
+        if (!await db.LedgerEntries.AnyAsync(x => x.EntryId == WalletDemoIds.OrderPaymentDebitEntryId, cancellationToken))
+        {
+            db.LedgerEntries.Add(WalletLedgerEntry.CreateSeeded(
+                WalletDemoIds.OrderPaymentDebitEntryId,
+                WalletDemoIds.AccountId,
+                LedgerEntryType.OrderPaymentDebit,
+                WalletDemoIds.DemoWalletOrderAmount,
+                WalletAccount.DefaultCurrency,
+                LedgerDirection.Debit,
+                "payment",
+                WalletDemoIds.DemoWalletPaymentId,
+                $"wallet-order-debit:{WalletDemoIds.DemoWalletPaymentId:D}",
+                now.AddMinutes(15),
+                """{"reason":"seed full-wallet order debit"}"""));
+        }
+
+        if (!await db.LedgerEntries.AnyAsync(x => x.EntryId == WalletDemoIds.RefundCreditEntryId, cancellationToken))
+        {
+            db.LedgerEntries.Add(WalletLedgerEntry.CreateSeeded(
+                WalletDemoIds.RefundCreditEntryId,
+                WalletDemoIds.AccountId,
+                LedgerEntryType.RefundCredit,
+                WalletDemoIds.DemoWalletRefundAmount,
+                WalletAccount.DefaultCurrency,
+                LedgerDirection.Credit,
+                "refund",
+                WalletDemoIds.DemoWalletReturnRequestId,
+                $"wallet-refund-credit:{WalletDemoIds.DemoWalletReturnRequestId:D}",
+                now.AddMinutes(20),
+                """{"reason":"seed refund-to-wallet credit"}"""));
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task EnsureSpareUnusedIfNeededAsync(

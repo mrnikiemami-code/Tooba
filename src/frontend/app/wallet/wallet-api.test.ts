@@ -63,6 +63,39 @@ test("mapWalletLedgerPage accepts paged envelope and labels gift credit", () => 
   assert.equal(isCreditDirection(page.items[0]!.direction), true);
 });
 
+test("ledger labels localize order debit and refund credit", () => {
+  assert.equal(
+    formatLedgerEntryLabel({
+      entryId: "e1",
+      accountId: "a1",
+      type: "OrderPaymentDebit",
+      amount: 100,
+      currency: "IRR",
+      direction: "Debit",
+      sourceType: "Payment",
+      sourceId: "p1",
+      createdAt: "2026-08-27T00:00:00Z",
+      metadata: null,
+    }),
+    "پرداخت سفارش",
+  );
+  assert.equal(
+    formatLedgerEntryLabel({
+      entryId: "e2",
+      accountId: "a1",
+      type: "RefundCredit",
+      amount: 50,
+      currency: "IRR",
+      direction: "Credit",
+      sourceType: "Refund",
+      sourceId: "r1",
+      createdAt: "2026-08-27T00:00:00Z",
+      metadata: null,
+    }),
+    "اعتبار مرجوعی",
+  );
+});
+
 test("mapGiftCardRedeemResult and issue/list/detail adapters", () => {
   const redeem = mapGiftCardRedeemResult({
     redemptionId: "r1",

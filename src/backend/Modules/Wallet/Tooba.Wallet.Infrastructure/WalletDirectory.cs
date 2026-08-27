@@ -297,6 +297,230 @@ public sealed class WalletDirectory : IWalletDirectory
         return new AdminWalletAdjustmentResultDto(MapEntry(entry), newBalance, IdempotentReplay: false);
     }
 
+    /// <inheritdoc />
+    public async Task<WalletSpendResultDto> SpendForOrderPaymentAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid paymentId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        if (customerActorId == Guid.Empty || paymentId == Guid.Empty)
+            throw new InvalidOperationException("هویت مشتری و پرداخت الزامی است.");
+        if (amount <= 0)
+            throw new InvalidOperationException("مبلغ بدهکار باید مثبت باشد.");
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            throw new InvalidOperationException("IdempotencyKey الزامی است.");
+
+        var key = idempotencyKey.Trim();
+        var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
+        var existing = await _db.LedgerEntries.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+        if (existing is not null)
+        {
+            if (existing.SourceId != paymentId
+                || existing.Type != LedgerEntryType.OrderPaymentDebit
+                || existing.Amount != decimal.Round(amount, 0, MidpointRounding.AwayFromZero)
+                || !string.Equals(existing.Currency, normalizedCurrency, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("کلید idempotency با بدهکار پرداخت قبلی ناسازگار است.");
+            }
+
+            var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
+            return new WalletSpendResultDto(MapEntry(existing), balanceReplay, IdempotentReplay: true);
+        }
+
+        await using var tx = await _db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable,
+            cancellationToken);
+        try
+        {
+            existing = await _db.LedgerEntries.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+            if (existing is not null)
+            {
+                await tx.CommitAsync(cancellationToken);
+                var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
+                return new WalletSpendResultDto(MapEntry(existing), balanceReplay, IdempotentReplay: true);
+            }
+
+            var account = await EnsureAccountTrackedAsync(customerActorId, cancellationToken);
+            if (!account.CanMutateLedger)
+                throw new InvalidOperationException("حساب کیف پول مسدود است.");
+            if (!string.Equals(account.Currency, normalizedCurrency, StringComparison.Ordinal))
+                throw new InvalidOperationException("ارز پرداخت با کیف پول سازگار نیست.");
+
+            var balance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
+            var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
+            if (rounded > balance)
+                throw new InvalidOperationException("موجودی کیف پول کافی نیست.");
+
+            var now = DateTimeOffset.UtcNow;
+            var entry = WalletLedgerEntry.PostOrderPaymentDebit(
+                account.AccountId,
+                paymentId,
+                rounded,
+                normalizedCurrency,
+                key,
+                now,
+                JsonSerializer.Serialize(new { reason = "order_payment_debit", paymentId }));
+            _db.LedgerEntries.Add(entry);
+            // لمس ردیف حساب برای قفل خوش‌بینانه/سریال در Serializable.
+            _db.Entry(account).Property(x => x.Status).IsModified = true;
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            await _notifications.CreateIfAbsentAsync(
+                new CreateNotificationCommand(
+                    NotificationRecipientKind.Customer,
+                    customerActorId,
+                    customerActorId,
+                    NotificationCopy.WalletPaymentSucceeded,
+                    new { amount = entry.Amount, currency = entry.Currency, paymentId },
+                    NotificationTargetRoutes.CustomerWallet(),
+                    $"wallet.payment-succeeded:{paymentId:D}",
+                    "wallet.payment.succeeded"),
+                cancellationToken);
+
+            var newBalance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
+            return new WalletSpendResultDto(MapEntry(entry), newBalance, IdempotentReplay: false);
+        }
+        catch
+        {
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<WalletCreditResultDto> CreditRefundAsync(
+        Guid customerActorId,
+        decimal amount,
+        string currency,
+        Guid returnRequestId,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        if (customerActorId == Guid.Empty || returnRequestId == Guid.Empty)
+            throw new InvalidOperationException("هویت مشتری و مرجوعی الزامی است.");
+        if (amount <= 0)
+            throw new InvalidOperationException("مبلغ اعتبار باید مثبت باشد.");
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            throw new InvalidOperationException("IdempotencyKey الزامی است.");
+
+        var key = idempotencyKey.Trim();
+        var expectedKey = $"wallet-refund-credit:{returnRequestId:D}";
+        if (!string.Equals(key, expectedKey, StringComparison.Ordinal))
+            throw new InvalidOperationException("کلید idempotency اعتبار refund نامعتبر است.");
+
+        var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
+        var existing = await _db.LedgerEntries.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+        if (existing is not null)
+        {
+            if (existing.SourceId != returnRequestId
+                || existing.Type != LedgerEntryType.RefundCredit
+                || existing.Amount != decimal.Round(amount, 0, MidpointRounding.AwayFromZero)
+                || !string.Equals(existing.Currency, normalizedCurrency, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("کلید idempotency با اعتبار refund قبلی ناسازگار است.");
+            }
+
+            var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
+            return new WalletCreditResultDto(MapEntry(existing), balanceReplay, IdempotentReplay: true);
+        }
+
+        await using var tx = await _db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable,
+            cancellationToken);
+        try
+        {
+            existing = await _db.LedgerEntries.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+            if (existing is not null)
+            {
+                await tx.CommitAsync(cancellationToken);
+                var balanceReplay = await DeriveBalanceAsync(existing.AccountId, cancellationToken);
+                return new WalletCreditResultDto(MapEntry(existing), balanceReplay, IdempotentReplay: true);
+            }
+
+            var account = await EnsureAccountTrackedAsync(customerActorId, cancellationToken);
+            if (!account.CanMutateLedger)
+                throw new InvalidOperationException("حساب کیف پول مسدود است.");
+            if (!string.Equals(account.Currency, normalizedCurrency, StringComparison.Ordinal))
+                throw new InvalidOperationException("ارز مرجوعی با کیف پول سازگار نیست.");
+
+            var now = DateTimeOffset.UtcNow;
+            var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
+            var entry = WalletLedgerEntry.PostRefundCredit(
+                account.AccountId,
+                returnRequestId,
+                rounded,
+                normalizedCurrency,
+                key,
+                now,
+                JsonSerializer.Serialize(new { reason = "refund_credit", returnRequestId }));
+            _db.LedgerEntries.Add(entry);
+            _db.Entry(account).Property(x => x.Status).IsModified = true;
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+
+            await _notifications.CreateIfAbsentAsync(
+                new CreateNotificationCommand(
+                    NotificationRecipientKind.Customer,
+                    customerActorId,
+                    customerActorId,
+                    NotificationCopy.WalletRefundCredited,
+                    new { amount = entry.Amount, currency = entry.Currency, returnRequestId },
+                    NotificationTargetRoutes.CustomerWallet(),
+                    $"wallet.refund-credited:{returnRequestId:D}",
+                    "wallet.refund.credited"),
+                cancellationToken);
+
+            var newBalance = await DeriveBalanceAsync(account.AccountId, cancellationToken);
+            return new WalletCreditResultDto(MapEntry(entry), newBalance, IdempotentReplay: false);
+        }
+        catch
+        {
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<WalletCheckoutQuoteDto> QuoteForPayableAsync(
+        Guid customerActorId,
+        decimal payableAmount,
+        string currency,
+        CancellationToken cancellationToken)
+    {
+        if (payableAmount < 0)
+            throw new InvalidOperationException("مبلغ قابل پرداخت نامعتبر است.");
+        var normalizedCurrency = WalletAccount.NormalizeCurrency(currency);
+        var summary = await GetOrCreateSummaryForCustomerAsync(customerActorId, cancellationToken);
+        if (!string.Equals(summary.Currency, normalizedCurrency, StringComparison.Ordinal))
+        {
+            return new WalletCheckoutQuoteDto(
+                summary.Balance,
+                0m,
+                payableAmount,
+                false,
+                normalizedCurrency);
+        }
+
+        var maxUsable = Math.Min(summary.Balance, payableAmount);
+        if (summary.Status != nameof(WalletAccountStatus.Active))
+            maxUsable = 0m;
+        var remaining = payableAmount - maxUsable;
+        return new WalletCheckoutQuoteDto(
+            summary.Balance,
+            maxUsable,
+            remaining,
+            payableAmount > 0 && remaining == 0 && maxUsable == payableAmount,
+            normalizedCurrency);
+    }
+
     private async Task<WalletAccount> EnsureAccountAsync(Guid customerActorUserId, CancellationToken cancellationToken)
     {
         var existing = await _db.Accounts.AsNoTracking()

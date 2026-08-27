@@ -1,0 +1,130 @@
+{
+  "steps": [
+    {
+      "name": "wallet-balance-before",
+      "status": 200,
+      "ok": true,
+      "balance": 787000
+    },
+    {
+      "name": "create-cart",
+      "status": 200,
+      "ok": true,
+      "cartId": "01a044fb-55cc-7000-a937-7ce73fb3ac89",
+      "cartVersion0": 1,
+      "guestSecret": true
+    },
+    {
+      "name": "add-line",
+      "status": 200,
+      "ok": true,
+      "version": 3
+    },
+    {
+      "name": "submit-checkout",
+      "status": 200,
+      "ok": true,
+      "checkoutId": "01a044fb-5698-7000-9f9d-8b7256eb7f17",
+      "payable": 381500,
+      "sellerOrderId": "01a044fb-56a4-7000-a9f8-9c315c554758",
+      "orderStatus": "PendingPayment"
+    },
+    {
+      "name": "wallet-quote",
+      "status": 200,
+      "ok": true,
+      "quote": {
+        "checkoutId": "01a044fb-5698-7000-9f9d-8b7256eb7f17",
+        "walletBalance": 787000,
+        "maxUsable": 381500,
+        "remainingPayable": 0,
+        "canPayFullyWithWallet": true,
+        "currency": "IRR",
+        "mixedTenderDeferred": true
+      }
+    },
+    {
+      "name": "wallet-pay",
+      "status": 200,
+      "ok": true,
+      "paymentId": "46a17af2-176c-4a14-8a35-e36bd3db40c5",
+      "providerCode": "wallet",
+      "requiresPspRedirect": false,
+      "paymentStatus": "Succeeded"
+    },
+    {
+      "name": "checkout-after-pay",
+      "status": 200,
+      "ok": true,
+      "statuses": [
+        "Paid"
+      ]
+    },
+    {
+      "name": "ledger-debit",
+      "status": 200,
+      "ok": true,
+      "debit": {
+        "entryId": "01a044fb-579a-7000-809c-3edb723c0a2f",
+        "accountId": "01900000-0000-7000-9000-000000000001",
+        "type": "OrderPaymentDebit",
+        "amount": 381500,
+        "currency": "IRR",
+        "direction": "Debit",
+        "sourceType": "payment",
+        "sourceId": "46a17af2-176c-4a14-8a35-e36bd3db40c5",
+        "createdAt": "2026-08-27T20:48:37.785094+00:00",
+        "metadata": "{\"reason\":\"order_payment_debit\",\"paymentId\":\"46a17af2-176c-4a14-8a35-e36bd3db40c5\"}"
+      },
+      "balance": 405500
+    },
+    {
+      "name": "fulfillment-handoff",
+      "status": 200,
+      "ok": true,
+      "fulfillmentId": "5a5cf3d8-fb70-438f-8bd8-116e695418fe",
+      "lineId": "01a044fb-56b8-7000-a9a7-1829def93037",
+      "statusName": 0
+    },
+    {
+      "name": "fulfillment-deliver",
+      "status": 200,
+      "ok": true,
+      "processing": 200,
+      "packed": 200,
+      "ship": 200,
+      "tracking": 200,
+      "dispatch": 200,
+      "shipmentId": "58afe566-2227-4198-9a8f-d05048007c05"
+    },
+    {
+      "name": "create-return-wallet",
+      "status": 200,
+      "ok": true,
+      "returnRequestId": "f4d8c4bc-f7e8-4a77-aaec-b1bf4f91e40e",
+      "destination": 1
+    },
+    {
+      "name": "approve-return-wallet",
+      "status": 200,
+      "ok": true,
+      "statusName": 4,
+      "destination": 1
+    },
+    {
+      "name": "refund-credit-once",
+      "status": 200,
+      "ok": true,
+      "credits": 1,
+      "creditsAfterRetry": 1,
+      "approveRetryStatus": 400,
+      "creditAmount": 350000
+    },
+    {
+      "name": "providerCode-accepted-on-initiate",
+      "status": 200,
+      "ok": true,
+      "note": "FE providerCode=wallet mapped via Host WantsWallet"
+    }
+  ]
+}

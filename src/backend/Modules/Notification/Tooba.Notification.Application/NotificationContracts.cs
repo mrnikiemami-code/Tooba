@@ -213,13 +213,19 @@ public static class NotificationCopy
     /// <summary>تعدیل Admin روی کیف پول مشتری.</summary>
     public const string WalletAdminAdjustment = "wallet.admin_adjustment";
 
+    /// <summary>پرداخت موفق سفارش از کیف پول.</summary>
+    public const string WalletPaymentSucceeded = "wallet.payment.succeeded";
+
+    /// <summary>اعتبار refund به کیف پول.</summary>
+    public const string WalletRefundCredited = "wallet.refund.credited";
+
     /// <summary>دستهٔ فیلتر UI (order/offer/ticket) از نوع معنایی.</summary>
     public static string CategoryOf(string type) => type switch
     {
         PaymentSucceeded or PaymentFailed or OrderPaidSeller or FulfillmentCreated or ShipmentDispatched => "order",
         ReturnRequested or ReturnApproved or RefundSucceeded => "order",
         SupportAdminReply => "ticket",
-        WalletGiftCardRedeemed or WalletAdminAdjustment => "offer",
+        WalletGiftCardRedeemed or WalletAdminAdjustment or WalletPaymentSucceeded or WalletRefundCredited => "offer",
         _ => "order",
     };
 
@@ -264,6 +270,12 @@ public static class NotificationCopy
             WalletAdminAdjustment => fa
                 ? ("تعدیل کیف پول", "موجودی کیف پول شما توسط پشتیبانی به‌روز شد.")
                 : ("Wallet adjustment", "Your wallet balance was updated by support."),
+            WalletPaymentSucceeded => fa
+                ? ("پرداخت با کیف پول", FormatAmountFa(root, "سفارش شما با کیف پول پرداخت شد."))
+                : ("Wallet payment", FormatAmountEn(root, "Your order was paid with wallet.")),
+            WalletRefundCredited => fa
+                ? ("بازگشت به کیف پول", FormatAmountFa(root, "مبلغ مرجوعی به کیف پول شما واریز شد."))
+                : ("Refund to wallet", FormatAmountEn(root, "Your refund was credited to your wallet.")),
             _ => fa
                 ? ("اعلان", "رویداد تجاری جدید دارید.")
                 : ("Notification", "You have a new commerce event."),

@@ -123,7 +123,8 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
             paymentDb,
             new OpenPaymentUseCaseGuard(),
             paymentBridge,
-            new PaymentGatewayRegistry([new FakePaymentGateway()]));
+            new PaymentGatewayRegistry([new FakePaymentGateway()]),
+            new PaymentGatewayActorContext());
         var initiated = await paymentDirectory.InitiateAsync(
             new InitiatePaymentCommand(checkout.CheckoutId, actor, buyer, "idem-settlement-pay", "fake"),
             CancellationToken.None);

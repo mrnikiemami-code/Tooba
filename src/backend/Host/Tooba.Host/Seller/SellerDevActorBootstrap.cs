@@ -58,13 +58,17 @@ internal static class SellerDevActorBootstrap
             .SingleOrDefaultAsync(x => x.DisplayName == SellerADisplayName, cancellationToken);
         var sellerB = await partyDb.Parties.AsNoTracking()
             .SingleOrDefaultAsync(x => x.DisplayName == SellerBDisplayName, cancellationToken);
+
+        var actorA = await EnsureUserAsync(authUsers, ActorAEmail, cancellationToken);
+        var actorB = await EnsureUserAsync(authUsers, ActorBEmail, cancellationToken);
+
+        // اگر نام نمایشی در DB به‌خاطر encoding خراب شده باشد، از عضویت Actor بازیابی می‌کنیم.
+        sellerA ??= await ResolveSellerPartyByMembershipAsync(partyDb, actorA, cancellationToken);
+        sellerB ??= await ResolveSellerPartyByMembershipAsync(partyDb, actorB, cancellationToken);
         if (sellerA is null || sellerB is null)
         {
             return;
         }
-
-        var actorA = await EnsureUserAsync(authUsers, ActorAEmail, cancellationToken);
-        var actorB = await EnsureUserAsync(authUsers, ActorBEmail, cancellationToken);
 
         await EnsureMembershipAsync(parties, partyDb, actorA, sellerA.PartyId, cancellationToken);
         await EnsureMembershipAsync(parties, partyDb, actorB, sellerB.PartyId, cancellationToken);
@@ -113,6 +117,24 @@ internal static class SellerDevActorBootstrap
 
             _snapshot = new SellerDevContextSnapshot(_snapshot.ActorA, _snapshot.ActorB, employee);
         }
+    }
+
+    private static async Task<BusinessParty?> ResolveSellerPartyByMembershipAsync(
+        PartyDbContext partyDb,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var membership = await partyDb.Memberships.AsNoTracking()
+            .Where(x => x.UserId == userId && x.RelationCode == MembershipRelationCodes.Member)
+            .OrderBy(x => x.PartyId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (membership is null)
+        {
+            return null;
+        }
+
+        return await partyDb.Parties.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PartyId == membership.PartyId, cancellationToken);
     }
 
     private static async Task<Guid> EnsureUserAsync(

@@ -2,16 +2,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tooba.Payment.Application;
 using Tooba.Payment.Infrastructure;
+using Tooba.Wallet.Application;
 
 namespace Tooba.Host.Storefront;
 
 /// <summary>
 /// ترکیب HTTP پرداخت فروشگاه روی IPaymentDirectory موجود. مبلغ از کلاینت پذیرفته نمی‌شود.
+/// WALLET_MIXED_TENDER = DEFERRED — فقط پوشش کامل کیف پول مجاز است.
 /// </summary>
 public sealed class StorefrontPaymentComposer
 {
     private readonly StorefrontCheckoutComposer _checkouts;
     private readonly IPaymentDirectory _payments;
+    private readonly IWalletDirectory _wallets;
     private readonly PaymentGatewayOptions _gatewayOptions;
     private readonly ILogger<StorefrontPaymentComposer> _logger;
 
@@ -21,13 +24,44 @@ public sealed class StorefrontPaymentComposer
     public StorefrontPaymentComposer(
         StorefrontCheckoutComposer checkouts,
         IPaymentDirectory payments,
+        IWalletDirectory wallets,
         IOptions<PaymentGatewayOptions> gatewayOptions,
         ILogger<StorefrontPaymentComposer> logger)
     {
         _checkouts = checkouts;
         _payments = payments;
+        _wallets = wallets;
         _gatewayOptions = gatewayOptions.Value;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// نقل قول موجودی کیف پول در برابر مبلغ قابل پرداخت checkout.
+    /// </summary>
+    public async Task<StorefrontWalletQuotePage> GetWalletQuoteAsync(
+        Guid checkoutId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var checkout = await _checkouts.GetAsync(checkoutId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+        if (checkout.CheckoutId is null)
+            throw new InvalidOperationException("سفارش پیدا نشد.");
+
+        var quote = await _wallets.QuoteForPayableAsync(
+            StorefrontCheckoutComposer.StorefrontGuestActorId,
+            checkout.PayableAmount,
+            checkout.Currency,
+            cancellationToken);
+        return new StorefrontWalletQuotePage(
+            checkout.CheckoutId.Value,
+            quote.WalletBalance,
+            quote.MaxUsable,
+            quote.RemainingPayable,
+            quote.CanPayFullyWithWallet,
+            quote.Currency,
+            MixedTenderDeferred: true);
     }
 
     /// <summary>
@@ -38,6 +72,7 @@ public sealed class StorefrontPaymentComposer
         Guid cartId,
         string? guestSecret,
         string idempotencyKey,
+        bool useWallet,
         CancellationToken cancellationToken)
     {
         var checkout = await _checkouts.GetAsync(checkoutId, cartId, guestSecret, cancellationToken)
@@ -52,14 +87,68 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("این سفارش قبلاً پرداخت شده است.");
         }
 
+        var providerCode = _gatewayOptions.DefaultProvider;
+        if (useWallet)
+        {
+            var quote = await _wallets.QuoteForPayableAsync(
+                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                checkout.PayableAmount,
+                checkout.Currency,
+                cancellationToken);
+            if (!quote.CanPayFullyWithWallet || quote.RemainingPayable > 0)
+            {
+                throw new InvalidOperationException(
+                    "پرداخت ترکیبی کیف پول و درگاه هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.");
+            }
+
+            providerCode = WalletPaymentGateway.ProviderCodeValue;
+        }
+
         var initiated = await _payments.InitiateAsync(
             new InitiatePaymentCommand(
                 checkout.CheckoutId.Value,
                 StorefrontCheckoutComposer.StorefrontGuestActorId,
                 null,
                 idempotencyKey,
-                _gatewayOptions.DefaultProvider),
+                providerCode),
             cancellationToken);
+
+        // مسیر full-wallet: Verify بلافاصله؛ بدون redirect به sandbox/PSP.
+        if (string.Equals(initiated.ProviderCode, WalletPaymentGateway.ProviderCodeValue, StringComparison.OrdinalIgnoreCase)
+            && initiated.Status != Tooba.Payment.Domain.PaymentStatus.Succeeded)
+        {
+            var verified = await _payments.VerifyAsync(
+                new VerifyPaymentCommand(
+                    initiated.PaymentId,
+                    initiated.AttemptId,
+                    initiated.ProviderRequestReference,
+                    true),
+                cancellationToken);
+            _logger.LogInformation(
+                "Storefront wallet payment verified immediately. CheckoutId={CheckoutId} PaymentId={PaymentId} Status={Status} NewlySucceeded={NewlySucceeded}",
+                checkout.CheckoutId.Value,
+                verified.PaymentId,
+                verified.Status,
+                verified.NewlySucceeded);
+
+            var after = await _payments.GetAsync(
+                initiated.PaymentId,
+                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                null,
+                cancellationToken) ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+
+            return new StorefrontPaymentInitiationPage(
+                after.PaymentId,
+                initiated.AttemptId,
+                checkout.CheckoutId.Value,
+                after.Status.ToString(),
+                after.ProviderCode,
+                initiated.ProviderRequestReference,
+                RedirectUrl: $"/payment/result?checkoutId={checkout.CheckoutId.Value:D}&paymentId={after.PaymentId:D}",
+                after.Amount,
+                after.Currency,
+                RequiresPspRedirect: false);
+        }
 
         var redirect = string.IsNullOrWhiteSpace(initiated.RedirectUrl)
             ? "/payment/sandbox"
@@ -86,7 +175,8 @@ public sealed class StorefrontPaymentComposer
             initiated.ProviderRequestReference,
             redirect,
             initiated.Amount,
-            initiated.Currency);
+            initiated.Currency,
+            RequiresPspRedirect: true);
     }
 
     /// <summary>

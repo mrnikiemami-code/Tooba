@@ -143,7 +143,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
 
         var bridge = new OrderPaymentBridge(orderA);
         var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new FakeFailingPaymentGateway()]);
-        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways);
+        var directory = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext());
 
         var reserveEx = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             directory.InitiateAsync(new InitiatePaymentCommand(reserve.CheckoutId, actor, buyer, "idem-reserve", "fake"), CancellationToken.None));
@@ -218,7 +218,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
             row => row.EventType.Contains("succeeded", StringComparison.OrdinalIgnoreCase)
                 && row.Payload.Contains(failedInit.PaymentId.ToString(), StringComparison.OrdinalIgnoreCase));
 
-        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, gateways);
+        var isolated = new PaymentDirectory(paymentB, new OpenPaymentUseCaseGuard(), bridge, gateways, new PaymentGatewayActorContext());
         Assert.Null(await isolated.GetAsync(initiated.PaymentId, actor, buyer, CancellationToken.None));
 
         var mismatch = new StubPayableReader
@@ -229,7 +229,7 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
                 "IRR",
                 [new PayableSellerOrderSnapshot(Guid.NewGuid(), 10m, "USD")]),
         };
-        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, gateways);
+        var mismatchDir = new PaymentDirectory(paymentA, new OpenPaymentUseCaseGuard(), mismatch, gateways, new PaymentGatewayActorContext());
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             mismatchDir.InitiateAsync(new InitiatePaymentCommand(mismatch.Snapshot.CheckoutId, actor, buyer, "idem-fx", "fake"), CancellationToken.None));
 

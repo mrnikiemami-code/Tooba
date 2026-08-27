@@ -282,7 +282,7 @@ export function StorefrontShopeivaCheckout() {
                 <CreditCard className="w-4 h-4 text-[#2563EB]" />
                 پرداخت
               </h2>
-              <div className="rounded-xl border-2 border-[#2563EB] bg-white p-4">
+              <div className="rounded-xl border-2 border-[#2563EB] bg-white p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-5 h-5 text-[#2563EB]" />
@@ -290,10 +290,18 @@ export function StorefrontShopeivaCheckout() {
                   <div>
                     <p className="text-sm font-bold text-gray-900">پرداخت پس از ثبت سفارش</p>
                     <p className="text-xs text-gray-500 mt-1 leading-6">
-                      پس از ثبت، سفارش در وضعیت انتظار پرداخت می‌ماند. درگاه فقط از مسیر Host شروع می‌شود؛ لوگوی PSP یا
-                      روش پرداخت جعلی نمایش داده نمی‌شود.
+                      پس از ثبت، در صفحهٔ تأیید می‌توانید درگاه بانکی یا — در صورت پوشش کامل موجودی —
+                      کیف پول را انتخاب کنید. کارت بانکی جعلی یا شارژ کیف پول در این صفحه نیست.
                     </p>
                   </div>
+                </div>
+                <div
+                  className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 py-2"
+                  data-testid="checkout-payment-mixed-deferred"
+                >
+                  <p className="text-[10px] md:text-xs text-gray-500">
+                    پرداخت ترکیبی کیف پول + درگاه فعلاً DEFERRED است و اینجا ادعا نمی‌شود.
+                  </p>
                 </div>
               </div>
             </section>

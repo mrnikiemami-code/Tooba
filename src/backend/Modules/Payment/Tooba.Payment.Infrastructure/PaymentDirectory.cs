@@ -23,6 +23,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     private readonly IPaymentUseCaseGuard _guard;
     private readonly IPayableCheckoutReader _orders;
     private readonly IPaymentGatewayRegistry _gateways;
+    private readonly PaymentGatewayActorContext _actorContext;
 
     /// <summary>
     /// دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
@@ -31,12 +32,14 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         PaymentDbContext db,
         IPaymentUseCaseGuard guard,
         IPayableCheckoutReader orders,
-        IPaymentGatewayRegistry gateways)
+        IPaymentGatewayRegistry gateways,
+        PaymentGatewayActorContext actorContext)
     {
         _db = db;
         _guard = guard;
         _orders = orders;
         _gateways = gateways;
+        _actorContext = actorContext;
     }
 
     /// <inheritdoc />
@@ -53,6 +56,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                 .OrderByDescending(x => x.CreatedAt)
                 .FirstAsync(x => x.PaymentId == existing.PaymentId, cancellationToken);
             var replayGateway = _gateways.Resolve(existing.ProviderCode);
+            _actorContext.ActorUserId = command.ActorUserId;
             var replayInitiation = await replayGateway.InitiateAsync(
                 existing.PaymentId,
                 existing.Amount,
@@ -98,6 +102,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             key,
             pending.Select(x => (x.SellerOrderId, x.PayableAmount)).ToArray(),
             DateTimeOffset.UtcNow);
+        _actorContext.ActorUserId = command.ActorUserId;
         var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
         var attempt = payment.RecordInitiation(initiation.ProviderRequestReference, DateTimeOffset.UtcNow);
         _db.Payments.Add(payment);

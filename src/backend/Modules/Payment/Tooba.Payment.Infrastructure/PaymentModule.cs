@@ -29,6 +29,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddSingleton<PaymentGatewayInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, PaymentOutboxRegistration>();
         services.AddScoped<IPaymentUseCaseGuard, OpenPaymentUseCaseGuard>();
+        services.AddScoped<PaymentGatewayActorContext>();
         services.AddScoped<IPaymentGatewayRegistry, PaymentGatewayRegistry>();
         services.AddScoped<IPaymentDirectory, PaymentDirectory>();
         services.AddScoped<IPaymentReconciliationDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
@@ -48,11 +49,15 @@ public sealed class PaymentModule : IToobaModule
             {
                 services.AddScoped<IPaymentGateway, FailClosedPaymentGateway>();
             }
+
+            // کیف پول در Production هم در دسترس است (ledger محلی؛ PSP نیست).
+            services.AddScoped<IPaymentGateway, WalletPaymentGateway>();
         }
         else
         {
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
             services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
+            services.AddScoped<IPaymentGateway, WalletPaymentGateway>();
             services.AddScoped<IPaymentRefundGateway, FakePaymentRefundGateway>();
         }
 

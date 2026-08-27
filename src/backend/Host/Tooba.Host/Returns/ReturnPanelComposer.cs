@@ -14,7 +14,22 @@ public sealed record CreateReturnRequest(
     Guid SellerOrderId,
     string IdempotencyKey,
     string? Reason,
-    IReadOnlyList<ReturnLineRequest> Items);
+    IReadOnlyList<ReturnLineRequest> Items,
+    string? RefundDestination = null,
+    string? Destination = null)
+{
+    /// <summary>مقصد بازپرداخت از فیلدهای هم‌نام FE/Host.</summary>
+    public string? EffectiveRefundDestination => RefundDestination ?? Destination;
+}
+
+/// <summary>
+/// درخواست تأیید مرجوعی فروشنده (مقصد اختیاری).
+/// </summary>
+public sealed record ApproveReturnRequest(string? RefundDestination = null, string? Destination = null)
+{
+    /// <summary>مقصد بازپرداخت از فیلدهای هم‌نام FE/Host.</summary>
+    public string? EffectiveRefundDestination => RefundDestination ?? Destination;
+}
 
 /// <summary>
 /// درخواست رد مرجوعی.
@@ -76,14 +91,24 @@ public sealed class ReturnPanelComposer
                 actorUserId,
                 request.IdempotencyKey,
                 request.Reason,
-                request.Items.Select(x => new ReturnLineCommand(x.OrderLineId, x.Quantity)).ToArray()),
+                request.Items.Select(x => new ReturnLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
+                ParseDestination(request.EffectiveRefundDestination)),
             cancellationToken);
 
     /// <summary>
     /// درخواست را تأیید می‌کند.
     /// </summary>
-    public Task<ReturnSnapshot> ApproveAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
-        _returns.ApproveAsync(new ApproveReturnCommand(returnRequestId, actorUserId), cancellationToken);
+    public Task<ReturnSnapshot> ApproveAsync(
+        Guid returnRequestId,
+        Guid actorUserId,
+        string? refundDestination,
+        CancellationToken cancellationToken) =>
+        _returns.ApproveAsync(
+            new ApproveReturnCommand(
+                returnRequestId,
+                actorUserId,
+                string.IsNullOrWhiteSpace(refundDestination) ? null : ParseDestination(refundDestination)),
+            cancellationToken);
 
     /// <summary>
     /// درخواست را رد می‌کند.
@@ -100,4 +125,13 @@ public sealed class ReturnPanelComposer
     /// </summary>
     public Task<ReturnSnapshot> RetryRefundAsync(Guid returnRequestId, Guid actorUserId, CancellationToken cancellationToken) =>
         _returns.RetryRefundAsync(new RetryRefundCommand(returnRequestId, actorUserId), cancellationToken);
+
+    private static Tooba.Returns.Domain.RefundDestination ParseDestination(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Tooba.Returns.Domain.RefundDestination.OriginalPayment;
+        return Enum.TryParse<Tooba.Returns.Domain.RefundDestination>(value, ignoreCase: true, out var parsed)
+            ? parsed
+            : throw new InvalidOperationException("مقصد بازگشت وجه نامعتبر است.");
+    }
 }
