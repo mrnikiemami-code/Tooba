@@ -1,9 +1,10 @@
 ﻿{
     "bridgeTaskId":  "c7edb4c0-fa1c-4a3d-82dd-9358007a0c26",
-    "channelId":  "tooba-main",
-    "expectedPredecessor":  "00e7b93c3cd70bb20daffdfa3cad1115918586d7",
+    "finalHead":  "155a0e46af09259975e4e73f24cb910c304a0c39",
+    "resultId":  "c5874c94-9229-4dc7-9082-745a60112b6a",
     "claimedAtUtc":  "2026-08-27T22:19:10.3792691",
-    "actualHeadAtClaim":  "9b0f61c04c880649a30333e691864b35e6f37601",
+    "status":  "Completed",
     "taskId":  "TB-P07-T001",
-    "status":  "Claimed"
+    "channelId":  "tooba-main",
+    "completedAtUtc":  "2026-08-27T22:58:53.3459660Z"
 }
