@@ -12,6 +12,7 @@ import {
   mapSellerOrderDetail,
   mapSellerOrderList,
   mapSellerReviewsPage,
+  mapSellerSettings,
   SELLER_PARTY_HEADER,
 } from "./seller-api.ts";
 
@@ -172,4 +173,34 @@ test("seller reviews mapper keeps live counts and no fake reply surface", () => 
   assert.equal(page?.sellerResponseSupported, false);
   assert.equal("image" in (page?.rows[0] ?? {}), false);
   assert.equal("reply" in (page?.rows[0] ?? {}), false);
+});
+
+test("mapSellerSettings maps store fields and canManage", () => {
+  const settings = mapSellerSettings({
+    partyId: "01a030d1-40cb-7000-8abe-6d31739956c5",
+    DisplayName: "فروشگاه آرمان",
+    LegalName: "Arman Legal",
+    Description: "توضیح",
+    SupportPhone: "02112345678",
+    SupportEmail: "support@arman.test",
+    AddressLine: "تهران",
+    CanManage: true,
+    UpdatedAt: "2026-08-27T00:00:00Z",
+  });
+  assert.ok(settings);
+  assert.equal(settings!.sellerPartyId, "01a030d1-40cb-7000-8abe-6d31739956c5");
+  assert.equal(settings!.displayName, "فروشگاه آرمان");
+  assert.equal(settings!.supportPhone, "02112345678");
+  assert.equal(settings!.canManage, true);
+  assert.equal(settings!.legalName, "Arman Legal");
+});
+
+test("mapSellerSettings defaults canManage false and accepts storeName alias", () => {
+  const settings = mapSellerSettings({
+    sellerPartyId: "s1",
+    storeName: "فروشگاه من",
+  });
+  assert.ok(settings);
+  assert.equal(settings!.displayName, "فروشگاه من");
+  assert.equal(settings!.canManage, false);
 });

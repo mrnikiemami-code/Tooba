@@ -7,6 +7,8 @@ using Tooba.Content.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
+using Tooba.UserPreference.Infrastructure.Persistence;
+using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Identity.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Infrastructure.Persistence;
@@ -74,6 +76,8 @@ internal static class ModuleMigrationRegistry
         Descriptor<WishlistDbContext>("Wishlist", WishlistDbContext.Schema),
         Descriptor<AddressBookDbContext>("AddressBook", AddressBookDbContext.Schema),
         Descriptor<CustomerProfileDbContext>("CustomerProfile", CustomerProfileDbContext.Schema),
+        Descriptor<UserPreferenceDbContext>("UserPreference", UserPreferenceDbContext.Schema),
+        Descriptor<OperatorProfileDbContext>("OperatorProfile", OperatorProfileDbContext.Schema),
         Descriptor<ContentDbContext>("Content", ContentDbContext.Schema),
         Descriptor<PageCompositionDbContext>("PageComposition", PageCompositionDbContext.Schema),
         Descriptor<StoryDbContext>("Story", StoryDbContext.Schema),

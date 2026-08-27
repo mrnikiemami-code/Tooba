@@ -67,6 +67,10 @@ public sealed class PartyDbContext : DbContext
             entity.Property(x => x.Kind).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.LegalName).HasMaxLength(256);
+            entity.Property(x => x.Description).HasMaxLength(BusinessParty.DescriptionMaxLength);
+            entity.Property(x => x.SupportPhone).HasMaxLength(BusinessParty.SupportPhoneMaxLength);
+            entity.Property(x => x.SupportEmail).HasMaxLength(BusinessParty.SupportEmailMaxLength);
+            entity.Property(x => x.AddressLine).HasMaxLength(BusinessParty.AddressLineMaxLength);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Ignore(x => x.DomainEvents);
             entity.HasMany(x => x.Capabilities)

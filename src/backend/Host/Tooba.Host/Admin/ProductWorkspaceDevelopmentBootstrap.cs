@@ -28,9 +28,12 @@ using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Host.Wishlist;
 using Tooba.Host.AddressBook;
 using Tooba.Host.CustomerProfile;
+using Tooba.Host.Settings;
 using Tooba.Wishlist.Infrastructure.Persistence;
 using Tooba.AddressBook.Infrastructure.Persistence;
 using Tooba.CustomerProfile.Infrastructure.Persistence;
+using Tooba.UserPreference.Infrastructure.Persistence;
+using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure;
@@ -98,6 +101,8 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<WishlistDbContext>());
         await MigrateAsync(provider.GetRequiredService<AddressBookDbContext>());
         await MigrateAsync(provider.GetRequiredService<CustomerProfileDbContext>());
+        await MigrateAsync(provider.GetRequiredService<UserPreferenceDbContext>());
+        await MigrateAsync(provider.GetRequiredService<OperatorProfileDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
@@ -116,6 +121,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
             await WishlistDevelopmentSeed.ApplyAsync(provider);
             await AddressBookDevelopmentSeed.ApplyAsync(provider);
             await CustomerProfileDevelopmentSeed.ApplyAsync(provider);
+            await SettingsFoundationDevelopmentSeed.ApplyAsync(provider);
             await ContentDevelopmentSeed.ApplyAsync(provider);
             await PageCompositionDevelopmentSeed.ApplyAsync(provider);
             await StoryDevelopmentSeed.ApplyAsync(provider);
@@ -215,6 +221,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await WishlistDevelopmentSeed.ApplyAsync(provider, cancellation);
         await AddressBookDevelopmentSeed.ApplyAsync(provider, cancellation);
         await CustomerProfileDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await SettingsFoundationDevelopmentSeed.ApplyAsync(provider, cancellation);
         await ContentDevelopmentSeed.ApplyAsync(provider, cancellation);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
         await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);

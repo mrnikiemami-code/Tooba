@@ -40,6 +40,10 @@
     <ProjectReference Include="..\..\Modules\AddressBook\Tooba.AddressBook.Infrastructure\Tooba.AddressBook.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerProfile\Tooba.CustomerProfile.Application\Tooba.CustomerProfile.Application.csproj" />
     <ProjectReference Include="..\..\Modules\CustomerProfile\Tooba.CustomerProfile.Infrastructure\Tooba.CustomerProfile.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\UserPreference\Tooba.UserPreference.Application\Tooba.UserPreference.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\UserPreference\Tooba.UserPreference.Infrastructure\Tooba.UserPreference.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Application\Tooba.OperatorProfile.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Infrastructure\Tooba.OperatorProfile.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Content\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\PageComposition\Tooba.PageComposition.Infrastructure\Tooba.PageComposition.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Story\Tooba.Story.Infrastructure\Tooba.Story.Infrastructure.csproj" />

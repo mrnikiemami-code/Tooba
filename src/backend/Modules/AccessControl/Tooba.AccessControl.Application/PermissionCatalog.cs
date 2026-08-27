@@ -84,6 +84,8 @@ public static class PermissionCatalog
         Def("support.create", "Support", delegable: true),
         Def("support.reply", "Support", delegable: true),
         Def("support.manage", "Support", delegable: true),
+        Def("seller.settings.view", "Seller", delegable: true),
+        Def("seller.settings.manage", "Seller", delegable: true),
         Def("wallet.view", "Wallet", delegable: false),
         Def("wallet.adjust", "Wallet", delegable: false),
         Def("giftcard.view", "Wallet", delegable: false),

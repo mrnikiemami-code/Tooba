@@ -318,7 +318,10 @@ export function mapSellerDashboard(payload: unknown): SellerDashboardSummary | n
     return null;
   }
   const item = payload as Record<string, unknown>;
-  const sellerPartyId = asString(readProp(item, "sellerPartyId", "SellerPartyId"));
+  // Host returns partyId; accept sellerPartyId alias.
+  const sellerPartyId = asString(
+    readProp(item, "partyId", "PartyId") ?? readProp(item, "sellerPartyId", "SellerPartyId"),
+  );
   if (!sellerPartyId) {
     return null;
   }
@@ -1028,6 +1031,114 @@ async function mutateSellerPromotionAction(
       return { ok: false, errorCode: body?.errorCode ?? `seller.promotion.${action}-failed` };
     }
     return { ok: true, detail: mapSellerPromotion(await readJson(response)) };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/** پروفایل عملیاتی فروشگاه از Host `/v1/seller/settings`. */
+export interface SellerSettings {
+  sellerPartyId: string;
+  displayName: string;
+  legalName: string | null;
+  description: string | null;
+  supportPhone: string | null;
+  supportEmail: string | null;
+  addressLine: string | null;
+  canManage: boolean;
+  updatedAt: string | null;
+}
+
+export interface SellerSettingsWriteInput {
+  displayName: string;
+  legalName?: string | null;
+  description?: string | null;
+  supportPhone?: string | null;
+  supportEmail?: string | null;
+  addressLine?: string | null;
+}
+
+/** نگاشت پاسخ تنظیمات فروشنده از Host. */
+export function mapSellerSettings(payload: unknown): SellerSettings | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+  const item = payload as Record<string, unknown>;
+  // Host returns partyId; accept sellerPartyId alias.
+  const sellerPartyId = asString(
+    readProp(item, "partyId", "PartyId") ?? readProp(item, "sellerPartyId", "SellerPartyId"),
+  );
+  if (!sellerPartyId) {
+    return null;
+  }
+  const displayName = asString(
+    readProp(item, "displayName", "DisplayName") ?? readProp(item, "storeName", "StoreName"),
+    "فروشگاه",
+  );
+  const canManageRaw = readProp(item, "canManage", "CanManage");
+  return {
+    sellerPartyId,
+    displayName,
+    legalName: asNullableString(readProp(item, "legalName", "LegalName")),
+    description: asNullableString(readProp(item, "description", "Description")),
+    supportPhone: asNullableString(readProp(item, "supportPhone", "SupportPhone")),
+    supportEmail: asNullableString(readProp(item, "supportEmail", "SupportEmail")),
+    addressLine: asNullableString(readProp(item, "addressLine", "AddressLine")),
+    canManage: typeof canManageRaw === "boolean" ? canManageRaw : false,
+    updatedAt: asNullableString(readProp(item, "updatedAt", "UpdatedAt")),
+  };
+}
+
+/** تنظیمات فروشگاه را از Host می‌خواند. */
+export async function loadSellerSettings(
+  sellerPartyId: string,
+): Promise<{ source: HostReadSource; settings: SellerSettings | null; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/settings", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", settings: null, message: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", settings: null, message: "seller-settings-http-" + String(response.status) };
+    }
+    const settings = mapSellerSettings(await readJson(response));
+    return settings
+      ? { source: "host", settings }
+      : { source: "error", settings: null, message: "seller-settings-invalid" };
+  } catch {
+    return { source: "error", settings: null, message: "host-unreachable" };
+  }
+}
+
+/** تنظیمات فروشگاه را با مجوز manage ذخیره می‌کند. */
+export async function saveSellerSettings(
+  sellerPartyId: string,
+  input: SellerSettingsWriteInput,
+): Promise<{ ok: true; settings: SellerSettings } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/settings", {
+      method: "PUT",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        displayName: input.displayName,
+        legalName: input.legalName ?? null,
+        description: input.description ?? null,
+        supportPhone: input.supportPhone ?? null,
+        supportEmail: input.supportEmail ?? null,
+        addressLine: input.addressLine ?? null,
+      }),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? body?.title ?? "seller.settings.save-failed" };
+    }
+    const settings = mapSellerSettings(await readJson(response));
+    return settings ? { ok: true, settings } : { ok: false, errorCode: "seller.settings.save-failed" };
   } catch {
     return { ok: false, errorCode: "host-unreachable" };
   }

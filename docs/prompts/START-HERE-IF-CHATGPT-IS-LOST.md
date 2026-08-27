@@ -1,4 +1,4 @@
-﻿# Tooba — Bridge-Wake-V1 Recovery Start
+# Tooba — Bridge-Wake-V1 Recovery Start
 
 ```text
 PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
@@ -8,7 +8,7 @@ Last Architect Accepted Gate: TB-P05-GATE
 P05: COMPLETE
 P06: IN_PROGRESS
 Last Architect Accepted Task: TB-P06-T022
-Last Implementation Task: TB-P06-T026-R1
+Last Implementation Task: TB-P06-T027
 TB-P06-T011 = ACCEPTED
 TB-P06-T011-R1 = ACCEPTED
 TB-P06-T011-R2 = ACCEPTED
@@ -33,7 +33,8 @@ TB-P06-T024-R1 = FUNCTIONALLY_COMPLETE
 TB-P06-T024-R2 = ACCEPTED
 TB-P06-T025 = ACCEPTED
 TB-P06-T026 = REPAIRED_BY_TB-P06-T026-R1
-TB-P06-T026-R1 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T026-R1 = ACCEPTED
+TB-P06-T027 = AWAITING_ARCHITECT_ACCEPT
 SUPPORT_BACKEND = LIVE
 CUSTOMER_TICKETS = LIVE
 SELLER_TICKETS = LIVE
@@ -109,4 +110,4 @@ PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 PRODUCT_FULLY_READY = NO
 ```
 
-Evidence for current task: `docs/evidence/TB-P06-T026-R1/` (Wallet/Gift final proof; browser captures LIVE; demo `TOOBA-DEMO-GIFT-R1`; checkout spend + refund-to-wallet DEFERRED). Worker may report `WALLET_GIFT_CARD_FINAL_PROOF_PASS`, `WALLET_USER_PREVIEW_READY`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, or `PRODUCTION_GO_LIVE_READY`.
+Evidence for current task: `docs/evidence/TB-P06-T027/` (Customer/Seller/Admin settings + locale preference; Shopeiva-locked UI; notification/security deferred). Worker may report `SETTINGS_COMPLETE_FOR_CURRENT_SCOPE`, `SETTINGS_USER_PREVIEW_READY`. Do **not** claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, or `PRODUCTION_GO_LIVE_READY`.

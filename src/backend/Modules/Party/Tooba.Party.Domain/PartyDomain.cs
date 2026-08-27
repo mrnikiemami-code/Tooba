@@ -133,6 +133,46 @@ public sealed class BusinessParty : IHasDomainEvents
     public string? LegalName { get; set; }
 
     /// <summary>
+    /// حداکثر طول توضیح عملیاتی سازمان.
+    /// </summary>
+    public const int DescriptionMaxLength = 1000;
+
+    /// <summary>
+    /// حداکثر طول تلفن پشتیبانی سازمان.
+    /// </summary>
+    public const int SupportPhoneMaxLength = 32;
+
+    /// <summary>
+    /// حداکثر طول ایمیل پشتیبانی سازمان.
+    /// </summary>
+    public const int SupportEmailMaxLength = 256;
+
+    /// <summary>
+    /// حداکثر طول نشانی عملیاتی سازمان.
+    /// </summary>
+    public const int AddressLineMaxLength = 512;
+
+    /// <summary>
+    /// توضیح کوتاه عملیاتی سازمان؛ برای Person معنا ندارد.
+    /// </summary>
+    public string? Description { get; private set; }
+
+    /// <summary>
+    /// تلفن پشتیبانی سازمان؛ شناسهٔ ورود Identity نیست.
+    /// </summary>
+    public string? SupportPhone { get; private set; }
+
+    /// <summary>
+    /// ایمیل پشتیبانی سازمان؛ credential ورود نیست.
+    /// </summary>
+    public string? SupportEmail { get; private set; }
+
+    /// <summary>
+    /// خط نشانی عملیاتی سازمان.
+    /// </summary>
+    public string? AddressLine { get; private set; }
+
+    /// <summary>
     /// وضعیت Party در منبع حقیقت محلی.
     /// </summary>
     public PartyStatus Status { get; set; }
@@ -188,6 +228,54 @@ public sealed class BusinessParty : IHasDomainEvents
         Capabilities.Add(granted);
         UpdatedAt = now;
         return granted;
+    }
+
+    /// <summary>
+    /// پروفایل عملیاتی Organization را به‌روز می‌کند؛ برای Person رد می‌شود.
+    /// </summary>
+    public void UpdateOrganizationProfile(
+        string displayName,
+        string? legalName,
+        string? description,
+        string? supportPhone,
+        string? supportEmail,
+        string? addressLine,
+        DateTimeOffset now)
+    {
+        if (Kind != PartyKind.Organization)
+        {
+            throw new InvalidOperationException("پروفایل سازمانی فقط برای Organization معنا دارد.");
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        DisplayName = displayName.Trim();
+        if (DisplayName.Length > 256)
+        {
+            throw new InvalidOperationException("نام نمایشی سازمان بیش از حد بلند است.");
+        }
+
+        LegalName = OptionalBounded(legalName, 256, "نام حقوقی بیش از حد بلند است.");
+        Description = OptionalBounded(description, DescriptionMaxLength, "توضیح سازمان بیش از حد بلند است.");
+        SupportPhone = OptionalBounded(supportPhone, SupportPhoneMaxLength, "تلفن پشتیبانی بیش از حد بلند است.");
+        SupportEmail = OptionalBounded(supportEmail, SupportEmailMaxLength, "ایمیل پشتیبانی بیش از حد بلند است.");
+        AddressLine = OptionalBounded(addressLine, AddressLineMaxLength, "نشانی سازمان بیش از حد بلند است.");
+        UpdatedAt = now;
+    }
+
+    private static string? OptionalBounded(string? value, int max, string message)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length > max)
+        {
+            throw new InvalidOperationException(message);
+        }
+
+        return trimmed;
     }
 
     /// <summary>

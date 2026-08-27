@@ -69,6 +69,12 @@
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Domain/Tooba.CustomerProfile.Domain.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Application/Tooba.CustomerProfile.Application.csproj" />
     <Project Path="Modules/CustomerProfile/Tooba.CustomerProfile.Infrastructure/Tooba.CustomerProfile.Infrastructure.csproj" />
+    <Project Path="Modules/UserPreference/Tooba.UserPreference.Domain/Tooba.UserPreference.Domain.csproj" />
+    <Project Path="Modules/UserPreference/Tooba.UserPreference.Application/Tooba.UserPreference.Application.csproj" />
+    <Project Path="Modules/UserPreference/Tooba.UserPreference.Infrastructure/Tooba.UserPreference.Infrastructure.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Domain/Tooba.OperatorProfile.Domain.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Application/Tooba.OperatorProfile.Application.csproj" />
+    <Project Path="Modules/OperatorProfile/Tooba.OperatorProfile.Infrastructure/Tooba.OperatorProfile.Infrastructure.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Domain/Tooba.ProductQnA.Domain.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Application/Tooba.ProductQnA.Application.csproj" />
     <Project Path="Modules/ProductQnA/Tooba.ProductQnA.Infrastructure/Tooba.ProductQnA.Infrastructure.csproj" />

@@ -92,14 +92,14 @@ const navGroups: NavGroup[] = [
     id: "system",
     label: "سامانه",
     items: [
-      { id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: false },
+      { id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: true },
       { id: "access-control", label: "کنترل دسترسی", href: "/admin/access-control", icon: Shield, live: true, viewPermission: "accesscontrol.view" },
     ],
   },
 ];
 
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
-export const ADMIN_DEFERRED_NAV_HREFS = ["/admin/settings"] as const;
+export const ADMIN_DEFERRED_NAV_HREFS = [] as const;
 
 function isActivePath(pathname: string, item: NavItem): boolean {
   if (item.exact || item.href === "/admin") {

@@ -97,4 +97,47 @@ public sealed class PartyDirectory : IPartyDirectory, IPartyLookupGateway
         party.GrantCapability(capabilityCode, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<OrganizationProfileSnapshot?> GetOrganizationProfileAsync(Guid partyId, CancellationToken cancellationToken)
+    {
+        var party = await _db.Parties.AsNoTracking().SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken);
+        if (party is null || party.Kind != PartyKind.Organization)
+        {
+            return null;
+        }
+
+        return MapOrganizationProfile(party);
+    }
+
+    /// <inheritdoc />
+    public async Task<OrganizationProfileSnapshot> UpdateOrganizationProfileAsync(
+        Guid partyId,
+        OrganizationProfileWrite input,
+        CancellationToken cancellationToken)
+    {
+        var party = await _db.Parties.SingleOrDefaultAsync(x => x.PartyId == partyId, cancellationToken)
+            ?? throw new InvalidOperationException("سازمان مقصد پروفایل یافت نشد.");
+        party.UpdateOrganizationProfile(
+            input.DisplayName,
+            input.LegalName,
+            input.Description,
+            input.SupportPhone,
+            input.SupportEmail,
+            input.AddressLine,
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        return MapOrganizationProfile(party);
+    }
+
+    private static OrganizationProfileSnapshot MapOrganizationProfile(BusinessParty party) =>
+        new(
+            party.PartyId,
+            party.DisplayName,
+            party.LegalName,
+            party.Description,
+            party.SupportPhone,
+            party.SupportEmail,
+            party.AddressLine,
+            party.UpdatedAt);
 }

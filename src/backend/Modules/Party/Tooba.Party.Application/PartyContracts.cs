@@ -72,4 +72,41 @@ public interface IPartyDirectory
     /// قابلیت تجاری گسترش‌پذیر به سازمان می‌دهد.
     /// </summary>
     Task GrantOrganizationCapabilityAsync(Guid organizationPartyId, string capabilityCode, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پروفایل عملیاتی Organization را می‌خواند؛ برای Person یا نبود Party تهی است.
+    /// </summary>
+    Task<OrganizationProfileSnapshot?> GetOrganizationProfileAsync(Guid partyId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پروفایل عملیاتی Organization را به‌روز می‌کند؛ Person رد می‌شود.
+    /// </summary>
+    Task<OrganizationProfileSnapshot> UpdateOrganizationProfileAsync(
+        Guid partyId,
+        OrganizationProfileWrite input,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// نمایهٔ پروفایل عملیاتی سازمان بدون credential ورود.
+/// </summary>
+public sealed record OrganizationProfileSnapshot(
+    Guid PartyId,
+    string DisplayName,
+    string? LegalName,
+    string? Description,
+    string? SupportPhone,
+    string? SupportEmail,
+    string? AddressLine,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>
+/// ورودی نوشتن پروفایل عملیاتی سازمان.
+/// </summary>
+public sealed record OrganizationProfileWrite(
+    string DisplayName,
+    string? LegalName,
+    string? Description,
+    string? SupportPhone,
+    string? SupportEmail,
+    string? AddressLine);

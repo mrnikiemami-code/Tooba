@@ -6,7 +6,7 @@ namespace Tooba.Host.Tests;
 /// <summary>
 /// دایرکتوری Access Control ساختگی برای تست‌های غیر-ACC.
 /// </summary>
-internal sealed class FakeAccessControlDirectory : IAccessControlDirectory
+internal class FakeAccessControlDirectory : IAccessControlDirectory
 {
     /// <inheritdoc />
     public IReadOnlyList<PermissionDefinition> ListCatalog() => PermissionCatalog.All;
@@ -69,7 +69,7 @@ internal sealed class FakeAccessControlDirectory : IAccessControlDirectory
         throw new NotSupportedException();
 
     /// <inheritdoc />
-    public Task<EffectiveAccessDto> GetEffectiveAccessAsync(Guid userId, AccessOwnerScope owner, CancellationToken cancellationToken) =>
+    public virtual Task<EffectiveAccessDto> GetEffectiveAccessAsync(Guid userId, AccessOwnerScope owner, CancellationToken cancellationToken) =>
         Task.FromResult(new EffectiveAccessDto(
             userId,
             owner.Kind,
