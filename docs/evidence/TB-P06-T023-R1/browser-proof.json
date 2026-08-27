@@ -1,0 +1,15 @@
+{
+  "at": "2026-08-27T13:37:26.288Z",
+  "shopeivaUserNotifications": "http://127.0.0.1:3001/user-panel/notifications",
+  "shopeivaVendorNotifications": "ABSENT (404); vendor panel root captured",
+  "captures": [
+    "01-tooba-customer-notifications.png",
+    "01b-tooba-customer-toast.png",
+    "02-tooba-seller-notifications.png",
+    "03-shopeiva-user-notifications.png",
+    "04-tooba-customer-mobile.png",
+    "05-shopeiva-user-mobile.png",
+    "06-shopeiva-vendor-panel-root.png",
+    "debug-customer.png"
+  ]
+}

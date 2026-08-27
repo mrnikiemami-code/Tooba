@@ -2,10 +2,11 @@
 
 /**
  * اینباکس اعلان — قفل بصری Shopeiva notifications.jsx با بایندینگ Host واقعی.
- * بدون دادهٔ جعلی؛ بدون ادعا realtime/push.
+ * بازخورد پس از read/delete/mark-all: react-toastify مطابق منبع شاپیوا (نه inline flash).
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import {
   Bell,
   Calendar,
@@ -119,12 +120,6 @@ export function NotificationInbox({
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<(typeof filterOptions)[number]["value"]>("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [flash, setFlash] = useState<string | null>(null);
-
-  const showFlash = useCallback((message: string) => {
-    setFlash(message);
-    window.setTimeout(() => setFlash(null), 2400);
-  }, []);
 
   const reload = useCallback(async () => {
     try {
@@ -147,9 +142,9 @@ export function NotificationInbox({
     try {
       await markNotificationRead(kind, id);
       setItems((prev) => (prev ?? []).map((n) => (n.id === id ? { ...n, read: true, isRead: true } : n)));
-      showFlash("به عنوان خوانده شد علامت‌گذاری شد");
+      toast.success("به عنوان خوانده شد علامت‌گذاری شد");
     } catch {
-      showFlash("علامت‌گذاری خوانده‌شدن ناموفق بود");
+      toast.error("علامت‌گذاری خوانده‌شدن ناموفق بود");
     }
   };
 
@@ -157,23 +152,23 @@ export function NotificationInbox({
     try {
       await dismissNotification(kind, id);
       setItems((prev) => (prev ?? []).filter((n) => n.id !== id));
-      showFlash("اطلاعیه حذف شد");
+      toast.info("اطلاعیه حذف شد");
     } catch {
-      showFlash("حذف اطلاعیه ناموفق بود");
+      toast.error("حذف اطلاعیه ناموفق بود");
     }
   };
 
   const handleMarkAllRead = async () => {
     if (unreadCount === 0) {
-      showFlash("همه اطلاعیه‌ها قبلاً خوانده شده‌اند");
+      toast.info("همه اطلاعیه‌ها قبلاً خوانده شده‌اند");
       return;
     }
     try {
       await markAllNotificationsRead(kind);
       setItems((prev) => (prev ?? []).map((n) => ({ ...n, read: true, isRead: true })));
-      showFlash("همه اطلاعیه‌ها خوانده شدند");
+      toast.success("همه اطلاعیه‌ها خوانده شدند");
     } catch {
-      showFlash("خواندن همه ناموفق بود");
+      toast.error("خواندن همه ناموفق بود");
     }
   };
 
@@ -192,7 +187,16 @@ export function NotificationInbox({
     return {
       total: list.length,
       unread: list.filter((n) => !n.read).length,
-      orders: list.filter((n) => n.category === "order" || n.type.includes("order") || n.type.includes("payment") || n.type.includes("shipment") || n.type.includes("fulfillment") || n.type.includes("return") || n.type.includes("refund")).length,
+      orders: list.filter(
+        (n) =>
+          n.category === "order" ||
+          n.type.includes("order") ||
+          n.type.includes("payment") ||
+          n.type.includes("shipment") ||
+          n.type.includes("fulfillment") ||
+          n.type.includes("return") ||
+          n.type.includes("refund"),
+      ).length,
       offers: list.filter((n) => n.category === "offer" || n.type === "offer").length,
     };
   }, [items]);
@@ -209,17 +213,11 @@ export function NotificationInbox({
 
   return (
     <div className="space-y-4" data-testid={`notifications-inbox-${kind}`}>
-      {flash ? (
-        <div
-          className="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium px-3 py-2"
-          data-testid="notifications-flash"
-          role="status"
-        >
-          {flash}
-        </div>
-      ) : null}
       {error ? (
-        <div className="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium px-3 py-2" role="alert">
+        <div
+          className="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium px-3 py-2"
+          role="alert"
+        >
           {error}
         </div>
       ) : null}
