@@ -6,12 +6,12 @@ using Tooba.BuildingBlocks;
 namespace Tooba.Host;
 
 /// <summary>
-/// schema خنثی foundation برای اثبات user+tenant و تصویر عضویت Party. مدل Catalog/Order نیست.
+/// schema خنثی foundation برای اثبات user+tenant، عضویت Party، و قابلیت Access Control (role/permission/category).
 /// </summary>
 internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSchemaProvider
 {
     /// <inheritdoc />
-    public int SchemaVersion => 2;
+    public int SchemaVersion => 3;
 
     /// <inheritdoc />
     public string SchemaText =>
@@ -26,6 +26,20 @@ internal sealed class FoundationAuthorizationSchemaProvider : IAuthorizationSche
         definition party {
           relation member: user
           permission view = member
+        }
+
+        definition role {
+          relation member: user
+        }
+
+        definition capability {
+          relation granted: user | role#member
+          permission allow = granted
+        }
+
+        definition category {
+          relation handler: user | role#member
+          permission handle_orders = handler
         }
         """;
 }
@@ -135,8 +149,7 @@ internal sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAut
     {
         var started = Stopwatch.GetTimestamp();
         AuthorizationContractValidator.Validate(check);
-        var allowed = check.Permission == AuthorizationRelations.View
-            && _tuples.ContainsKey(Key(check.Subject, AuthorizationRelations.Member, check.Resource));
+        var allowed = IsAllowed(check);
         var decision = allowed ? AuthorizationDecision.Allow() : AuthorizationDecision.Deny();
         if (decision.Kind == AuthorizationDecisionKind.Deny)
         {
@@ -150,6 +163,38 @@ internal sealed class InMemoryAuthorizationAdapter : IAuthorizationService, IAut
             check.CallContext.Edition,
             Stopwatch.GetElapsedTime(started).Milliseconds);
         return decision;
+    }
+
+    private bool IsAllowed(AuthorizationCheck check)
+    {
+        // tenant/party: view = member (بدون تغییر قرارداد پنل).
+        if (check.Permission == AuthorizationRelations.View
+            && (check.Resource.Type == AuthorizationObjectTypes.Tenant
+                || check.Resource.Type == AuthorizationObjectTypes.Party)
+            && _tuples.ContainsKey(Key(check.Subject, AuthorizationRelations.Member, check.Resource)))
+        {
+            return true;
+        }
+
+        // capability: allow/granted وقتی user#granted@capability:id وجود دارد.
+        if (check.Resource.Type == AuthorizationObjectTypes.Permission
+            && (check.Permission == AuthorizationRelations.Check
+                || check.Permission == AuthorizationRelations.Granted
+                || check.Permission == "allow")
+            && _tuples.ContainsKey(Key(check.Subject, AuthorizationRelations.Granted, check.Resource)))
+        {
+            return true;
+        }
+
+        // category: handle_orders وقتی user#handler@category:id وجود دارد.
+        if (check.Resource.Type == AuthorizationObjectTypes.Category
+            && check.Permission == AuthorizationRelations.HandleOrders
+            && _tuples.ContainsKey(Key(check.Subject, AuthorizationRelations.Handler, check.Resource)))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static string Key(AuthorizationSubject subject, string relation, AuthorizationResource resource) =>

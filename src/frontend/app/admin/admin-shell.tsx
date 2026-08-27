@@ -78,7 +78,10 @@ const navGroups: NavGroup[] = [
   {
     id: "system",
     label: "سامانه",
-    items: [{ id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: false }],
+    items: [
+      { id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: false },
+      { id: "access-control", label: "کنترل دسترسی", href: "/admin/access-control", icon: Shield, live: true },
+    ],
   },
 ];
 

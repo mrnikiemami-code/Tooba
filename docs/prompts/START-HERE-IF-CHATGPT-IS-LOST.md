@@ -8,7 +8,7 @@ Last Architect Accepted Gate: TB-P05-GATE
 P05: COMPLETE
 P06: IN_PROGRESS
 Last Architect Accepted Task: TB-P06-T022
-Last Implementation Task: TB-P06-T023-R1
+Last Implementation Task: TB-P06-T024
 TB-P06-T011 = ACCEPTED
 TB-P06-T011-R1 = ACCEPTED
 TB-P06-T011-R2 = ACCEPTED
@@ -26,8 +26,9 @@ TB-P06-T019-R1 = ACCEPTED
 TB-P06-T020 = ACCEPTED
 TB-P06-T021 = ACCEPTED
 TB-P06-T022 = ACCEPTED
-TB-P06-T023 = REPAIRED_BY_TB-P06-T023-R1
-TB-P06-T023-R1 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T023 = CLOSED_BY_REPAIR
+TB-P06-T023-R1 = ACCEPTED
+TB-P06-T024 = AWAITING_ARCHITECT_ACCEPT
 PRODUCT_SALE_FLOW = LIVE
 SELLER_PRODUCT_MANAGEMENT = LIVE
 SELLER_OFFER_MANAGEMENT = LIVE
@@ -84,4 +85,4 @@ PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 PRODUCT_FULLY_READY = NO
 ```
 
-Evidence for current task: `docs/evidence/TB-P06-T023-R1/` (toastify parity; FE production build; Shopeiva runtime `http://127.0.0.1:3001/user-panel/notifications`; side-by-side captures). Parent T023 repaired by R1. Worker PASS ≠ Architect ACCEPT. Do not claim `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, or `PRODUCTION_GO_LIVE_READY`.
+Evidence for current task: `docs/evidence/TB-P06-T024/` (Access Control Center; SpiceDB schema v3; seller ceiling; category scope foundation; shared Admin/Seller UI). Worker PASS ≠ Architect ACCEPT. May claim `ACCESS_CONTROL_CENTER_LIVE` + `RESOURCE_SCOPED_AUTHORIZATION_FOUNDATION_LIVE`. Do not claim `ALL_RESOURCE_SCOPES_FULLY_INTEGRATED`, `USER_VISUAL_ACCEPTED`, `PRODUCT_FULLY_READY`, or `PRODUCTION_GO_LIVE_READY`.

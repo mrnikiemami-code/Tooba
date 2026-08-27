@@ -38,6 +38,7 @@ using Tooba.PageComposition.Infrastructure.Persistence;
 using global::Tooba.Story.Infrastructure;
 using global::Tooba.Story.Infrastructure.Persistence;
 using Tooba.Notification.Infrastructure.Persistence;
+using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.Reviews.Infrastructure;
 
 namespace Tooba.Host.Admin;
@@ -101,6 +102,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
         await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());
+        await MigrateAsync(provider.GetRequiredService<AccessControlDbContext>());
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();

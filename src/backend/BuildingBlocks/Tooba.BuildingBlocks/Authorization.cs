@@ -226,6 +226,21 @@ public static class AuthorizationObjectTypes
     /// منبع کسب‌وکار Party برای تصویرسازی عضویت؛ Catalog/Order نیست.
     /// </summary>
     public const string Party = "party";
+
+    /// <summary>
+    /// نقش Access Control؛ عضویت کاربر در نقش برای تصویرسازی ReBAC.
+    /// </summary>
+    public const string Role = "role";
+
+    /// <summary>
+    /// قابلیت معنایی کاتالوگ (مثلاً product.view)؛ ماتریس محصول UI نیست.
+    /// </summary>
+    public const string Permission = "capability";
+
+    /// <summary>
+    /// دستهٔ کالا برای محدودهٔ سفارش (مثلاً Mobile در برابر Books).
+    /// </summary>
+    public const string Category = "category";
 }
 
 /// <summary>
@@ -242,6 +257,26 @@ public static class AuthorizationRelations
     /// مجوز مشاهدهٔ منبع Tenant.
     /// </summary>
     public const string View = "view";
+
+    /// <summary>
+    /// اعطای مستقیم قابلیت روی منبع permission.
+    /// </summary>
+    public const string Granted = "granted";
+
+    /// <summary>
+    /// بررسی قابلیت روی منبع capability (معادل schema allow = granted).
+    /// </summary>
+    public const string Check = "allow";
+
+    /// <summary>
+    /// رابطه‌ی handler برای دستهٔ سفارش.
+    /// </summary>
+    public const string Handler = "handler";
+
+    /// <summary>
+    /// مجوز handle_orders روی category (سیاست محدوده؛ فیلتر کامل سفارش جدا است).
+    /// </summary>
+    public const string HandleOrders = "handle_orders";
 }
 
 /// <summary>

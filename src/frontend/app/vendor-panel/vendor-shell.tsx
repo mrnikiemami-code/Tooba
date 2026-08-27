@@ -14,6 +14,7 @@ import {
   Package,
   Settings,
   ShoppingBag,
+  Shield,
   Star,
   Store,
   RotateCcw,
@@ -53,6 +54,7 @@ const menuItems: NavItem[] = [
   { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true },
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },
   { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true },
+  { id: "access-control", label: "کنترل دسترسی", icon: Shield, href: "/vendor-panel/access-control", live: true },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: true },
 ];
 

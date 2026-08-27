@@ -1,5 +1,6 @@
-// Versioned SpiceDB foundation schema (v2). Source of truth mirrors FoundationAuthorizationSchemaProvider.
+// Versioned SpiceDB foundation schema (v3). Source of truth mirrors FoundationAuthorizationSchemaProvider.
 // Apply via ops process or ApplySchemaOnStartup in controlled environments only.
+// Note: object type must NOT be named `permission` (SpiceDB keyword).
 
 definition user {}
 
@@ -11,4 +12,18 @@ definition tenant {
 definition party {
   relation member: user
   permission view = member
+}
+
+definition role {
+  relation member: user
+}
+
+definition capability {
+  relation granted: user | role#member
+  permission allow = granted
+}
+
+definition category {
+  relation handler: user | role#member
+  permission handle_orders = handler
 }

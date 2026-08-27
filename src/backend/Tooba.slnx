@@ -57,6 +57,9 @@
     <Project Path="Modules/Notification/Tooba.Notification.Domain/Tooba.Notification.Domain.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Application/Tooba.Notification.Application.csproj" />
     <Project Path="Modules/Notification/Tooba.Notification.Infrastructure/Tooba.Notification.Infrastructure.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Domain/Tooba.AccessControl.Domain.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Application/Tooba.AccessControl.Application.csproj" />
+    <Project Path="Modules/AccessControl/Tooba.AccessControl.Infrastructure/Tooba.AccessControl.Infrastructure.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Domain/Tooba.Wishlist.Domain.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Application/Tooba.Wishlist.Application.csproj" />
     <Project Path="Modules/Wishlist/Tooba.Wishlist.Infrastructure/Tooba.Wishlist.Infrastructure.csproj" />

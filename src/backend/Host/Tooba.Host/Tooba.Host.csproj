@@ -48,6 +48,7 @@
     <ProjectReference Include="..\..\Modules\Returns\Tooba.Returns.Infrastructure\Tooba.Returns.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Settlement\Tooba.Settlement.Infrastructure\Tooba.Settlement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Notification\Tooba.Notification.Infrastructure\Tooba.Notification.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\AccessControl\Tooba.AccessControl.Infrastructure\Tooba.AccessControl.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Authzed.Net" Version="1.6.0" />
