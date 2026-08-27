@@ -1,0 +1,24 @@
+﻿{
+  "taskId": "TB-P06-T021",
+  "at": "2026-08-27T10:22:00.000Z",
+  "transaction": {
+    "slug": "t021-sale-mtbcb87t",
+    "offerId": "01a0429e-e68d-7000-9139-65f062c1c15d",
+    "sellerOrderId": "01a0429e-f137-7000-b9e7-c16872fc825e",
+    "orderNumber": "TB-20260827094827-01-8fb91c"
+  },
+  "captures": [
+    { "file": "01-seller-products.png", "url": "http://127.0.0.1:3000/vendor-panel/products", "ok": true },
+    { "file": "02-seller-products-new.png", "url": "http://127.0.0.1:3000/vendor-panel/products/new", "ok": true },
+    { "file": "03-seller-offer-detail.png", "url": "http://127.0.0.1:3000/vendor-panel/products/01a0429e-e68d-7000-9139-65f062c1c15d", "ok": true },
+    { "file": "04-seller-order.png", "url": "http://127.0.0.1:3000/vendor-panel/orders/01a0429e-f137-7000-b9e7-c16872fc825e", "ok": true, "notes": "Paid TB-20260827094827-01-8fb91c" },
+    { "file": "05-listing-fa.png", "url": "http://localhost:3000/fa/products?sort=newest", "ok": true },
+    { "file": "06-pdp-fa.png", "url": "http://localhost:3000/fa/products/t021-sale-mtbcb87t", "ok": true },
+    { "file": "07-cart-fa.png", "url": "http://localhost:3000/fa/cart", "ok": true },
+    { "file": "08-checkout-fa.png", "url": "http://localhost:3000/fa/checkout", "ok": true },
+    { "file": "09-customer-orders.png", "url": "http://localhost:3000/customer-panel/orders", "ok": true },
+    { "file": "10-admin-orders.png", "url": "http://localhost:3000/admin/orders", "ok": true },
+    { "file": "11-pdp-mobile.png", "url": "http://localhost:3000/fa/products/t021-sale-mtbcb87t", "ok": true, "viewport": "390x844" },
+    { "file": "12-shopeiva-home.png", "url": "http://127.0.0.1:3001/", "ok": true }
+  ]
+}
