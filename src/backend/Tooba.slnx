@@ -84,5 +84,8 @@
     <Project Path="Modules/Story/Tooba.Story.Domain/Tooba.Story.Domain.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Application/Tooba.Story.Application.csproj" />
     <Project Path="Modules/Story/Tooba.Story.Infrastructure/Tooba.Story.Infrastructure.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Domain/Tooba.Wallet.Domain.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Application/Tooba.Wallet.Application.csproj" />
+    <Project Path="Modules/Wallet/Tooba.Wallet.Infrastructure/Tooba.Wallet.Infrastructure.csproj" />
   </Folder>
 </Solution>

@@ -9,7 +9,7 @@ P06 — Core API Integration / Operational Hardening
 Status:
 
 ```text
-IN_PROGRESS (… TB-P06-T024-R2 = ACCEPTED; TB-P06-T025 = ACCEPTED; TB-P06-T026 = AWAITING_ARCHITECT_ACCEPT; WALLET_LEDGER_LIVE; GIFTCARD_LIVE; WALLET_USER_PREVIEW = READY; WALLET_CHECKOUT/REFUND_TO_WALLET = DEFERRED; SUPPORT_TICKETS_LIVE; SUPPORT_USER_PREVIEW = READY; ACCESS_CONTROL_USER_PREVIEW = READY; VISUAL_CONTRACT = SHOPEIVA_LOCKED; NOT USER_VISUAL_ACCEPTED; NOT PRODUCTION_GO_LIVE_READY)
+IN_PROGRESS (… TB-P06-T024-R2 = ACCEPTED; TB-P06-T025 = ACCEPTED; TB-P06-T026 = REPAIRED_BY_TB-P06-T026-R1; TB-P06-T026-R1 = AWAITING_ARCHITECT_ACCEPT; WALLET_LEDGER_LIVE; GIFTCARD_LIVE; WALLET_BROWSER_PROOF = LIVE; WALLET_USER_PREVIEW = READY; WALLET_CHECKOUT/REFUND_TO_WALLET = DEFERRED; SUPPORT_TICKETS_LIVE; SUPPORT_USER_PREVIEW = READY; ACCESS_CONTROL_USER_PREVIEW = READY; VISUAL_CONTRACT = SHOPEIVA_LOCKED; NOT USER_VISUAL_ACCEPTED; NOT PRODUCTION_GO_LIVE_READY)
 ```
 
 P00 Architecture / Discovery is COMPLETE (Architect accepted TB-P00-GATE).
@@ -168,7 +168,8 @@ Statuses: `PLANNED` | `IN_PROGRESS` | `BLOCKED` | `COMPLETE`
 | P06-23 | Transactional notifications (customer/seller inbox from commerce events; Shopeiva UI) | CLOSED_BY_REPAIR (TB-P06-T023-R1 ACCEPTED) |
 | P06-24 | Professional Access Control Center (Admin/Seller roles, ceiling, SpiceDB, scope + preview seed) | ACCEPTED (TB-P06-T024-R2; ACCESS_CONTROL_USER_PREVIEW = READY) |
 | P06-25 | Customer & Seller Support Tickets (threaded Support module + Admin ops + Shopeiva UI) | ACCEPTED (TB-P06-T025; SUPPORT_BACKEND = LIVE; SUPPORT_USER_PREVIEW = READY) |
-| P06-26 | Customer Wallet & Gift Card (ledger balance; gift issue/redeem/revoke; Admin inspect/adjust; checkout spend + refund-to-wallet DEFERRED) | AWAITING_ARCHITECT_ACCEPT (TB-P06-T026; WALLET_LEDGER_LIVE; GIFTCARD_LIVE; WALLET_USER_PREVIEW_READY; not USER_VISUAL_ACCEPTED) |
+| P06-26 | Customer Wallet & Gift Card (ledger balance; gift issue/redeem/revoke; Admin inspect/adjust; checkout spend + refund-to-wallet DEFERRED) | REPAIRED_BY_TB-P06-T026-R1 (TB-P06-T026) |
+| P06-26-R1 | Wallet/Gift final proof — full validation + browser evidence + concrete preview | AWAITING_ARCHITECT_ACCEPT (TB-P06-T026-R1; WALLET_GIFT_CARD_FINAL_PROOF_PASS; WALLET_BROWSER_PROOF; not USER_VISUAL_ACCEPTED) |
 | P05-15 | Customer Profile editing behind Shopeiva UI | ACCEPTED (TB-P05-T015 / TB-P05-T015-R1) |
 | P05-10 | PDP backend capability completeness | ACCEPTED (TB-P05-T010) |
 | P05-11 | Shopeiva Mega Menu visual fidelity repair | ACCEPTED (TB-P05-T011) |

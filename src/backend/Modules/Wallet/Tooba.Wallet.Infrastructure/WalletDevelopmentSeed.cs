@@ -53,7 +53,29 @@ public static class WalletDevelopmentSeed
             return;
 
         if (await db.GiftCards.AnyAsync(x => x.CardId == WalletDemoIds.SpareUnusedGiftCardId, cancellationToken))
+        {
+            // اگر یدکی هم مصرف شده، کارت Repair را یک‌بار درج کن.
+            var spare = await db.GiftCards.AsNoTracking()
+                .SingleAsync(x => x.CardId == WalletDemoIds.SpareUnusedGiftCardId, cancellationToken);
+            if (spare.Status == GiftCardStatus.Active && spare.RemainingAmount > 0)
+                return;
+            if (await db.GiftCards.AnyAsync(x => x.CardId == WalletDemoIds.RepairPreviewGiftCardId, cancellationToken))
+                return;
+            db.GiftCards.Add(GiftCard.CreateSeeded(
+                WalletDemoIds.RepairPreviewGiftCardId,
+                WalletDemoIds.RepairPreviewGiftCardDemoCode,
+                100_000m,
+                100_000m,
+                WalletAccount.DefaultCurrency,
+                GiftCardStatus.Active,
+                adminActorUserId,
+                "wallet-seed-repair-preview-gift-v1",
+                now,
+                expiresAt: now.AddYears(1),
+                recipientActorUserId: customerActorUserId));
+            await db.SaveChangesAsync(cancellationToken);
             return;
+        }
 
         db.GiftCards.Add(GiftCard.CreateSeeded(
             WalletDemoIds.SpareUnusedGiftCardId,
@@ -74,15 +96,18 @@ public static class WalletDevelopmentSeed
         WalletDbContext db,
         CancellationToken cancellationToken)
     {
-        var primary = await db.GiftCards.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.CardId == WalletDemoIds.UnusedGiftCardId, cancellationToken);
-        if (primary is not null && primary.Status == GiftCardStatus.Active && primary.RemainingAmount > 0)
-            return (WalletDemoIds.UnusedGiftCardId, WalletDemoIds.UnusedGiftCardDemoCode);
-
-        var spare = await db.GiftCards.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.CardId == WalletDemoIds.SpareUnusedGiftCardId, cancellationToken);
-        if (spare is not null && spare.Status == GiftCardStatus.Active && spare.RemainingAmount > 0)
-            return (WalletDemoIds.SpareUnusedGiftCardId, WalletDemoIds.SpareUnusedGiftCardDemoCode);
+        foreach (var (id, code) in new (Guid, string)[]
+                 {
+                     (WalletDemoIds.UnusedGiftCardId, WalletDemoIds.UnusedGiftCardDemoCode),
+                     (WalletDemoIds.SpareUnusedGiftCardId, WalletDemoIds.SpareUnusedGiftCardDemoCode),
+                     (WalletDemoIds.RepairPreviewGiftCardId, WalletDemoIds.RepairPreviewGiftCardDemoCode),
+                 })
+        {
+            var card = await db.GiftCards.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.CardId == id, cancellationToken);
+            if (card is not null && card.Status == GiftCardStatus.Active && card.RemainingAmount > 0)
+                return (id, code);
+        }
 
         return (WalletDemoIds.UnusedGiftCardId, WalletDemoIds.UnusedGiftCardDemoCode);
     }

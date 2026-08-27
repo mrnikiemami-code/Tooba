@@ -30,11 +30,17 @@ public static class WalletDemoIds
     /// <summary>کارت هدیهٔ استفاده‌نشدهٔ یدکی (اگر کارت اصلی در Dev مصرف شده باشد).</summary>
     public static readonly Guid SpareUnusedGiftCardId = Guid.Parse("01900000-0000-7000-9000-000000000025");
 
+    /// <summary>کارت پیش‌نمایش Repair وقتی یدکی هم مصرف شده.</summary>
+    public static readonly Guid RepairPreviewGiftCardId = Guid.Parse("01900000-0000-7000-9000-000000000026");
+
     /// <summary>کد نمایشی کارت استفاده‌نشده (فقط demo-preview).</summary>
     public const string UnusedGiftCardDemoCode = "TOOBA-DEMO-GIFT-500K";
 
     /// <summary>کد یدکی استفاده‌نشده برای USER-PREVIEW پس از smoke.</summary>
     public const string SpareUnusedGiftCardDemoCode = "TOOBA-DEMO-GIFT-SPARE";
+
+    /// <summary>کد پیش‌نمایش Repair.</summary>
+    public const string RepairPreviewGiftCardDemoCode = "TOOBA-DEMO-GIFT-R1";
 
     /// <summary>کد کارت منقضی (برای تست reject).</summary>
     public const string ExpiredGiftCardDemoCode = "TOOBA-DEMO-GIFT-EXPIRED";
