@@ -1,6 +1,7 @@
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 
@@ -30,6 +31,13 @@ public static class AccessControlEndpoints
         admin.MapGet("/users", AdminSearchUsersAsync);
         admin.MapGet("/users/{userId:guid}/effective", AdminEffectiveAsync);
         admin.MapPost("/bootstrap", AdminBootstrapAsync);
+        admin.MapGet("/me/capabilities", AdminMeCapabilitiesAsync);
+        admin.MapGet("/scope-resources/categories", AdminListCategoriesAsync);
+        admin.MapGet("/scope-resources/brands", AdminListBrandsAsync);
+        admin.MapGet("/scope-resources/products", AdminListProductsAsync);
+        admin.MapGet("/scope-resources/warehouses", AdminDeferredScopeAsync);
+        admin.MapGet("/scope-resources/stores", AdminDeferredScopeAsync);
+        admin.MapGet("/scope-resources/order-segments", AdminDeferredScopeAsync);
 
         var adminSeller = app.MapGroup("/v1/admin/sellers/{sellerId:guid}/access-control");
         adminSeller.MapGet("/ceiling", AdminGetCeilingAsync);
@@ -62,6 +70,13 @@ public static class AccessControlEndpoints
         seller.MapDelete("/assignments/{assignmentId:guid}", SellerRemoveAssignmentAsync);
         seller.MapGet("/users", SellerSearchUsersAsync);
         seller.MapGet("/users/{userId:guid}/effective", SellerEffectiveAsync);
+        seller.MapGet("/me/capabilities", SellerMeCapabilitiesAsync);
+        seller.MapGet("/scope-resources/categories", SellerListCategoriesAsync);
+        seller.MapGet("/scope-resources/brands", SellerListBrandsAsync);
+        seller.MapGet("/scope-resources/products", SellerListProductsAsync);
+        seller.MapGet("/scope-resources/warehouses", SellerDeferredScopeAsync);
+        seller.MapGet("/scope-resources/stores", SellerDeferredScopeAsync);
+        seller.MapGet("/scope-resources/order-segments", SellerDeferredScopeAsync);
     }
 
     private static AccessOwnerScope PlatformScope(ICurrentTenant tenant) =>
@@ -350,7 +365,11 @@ public static class AccessControlEndpoints
     }
 
     private sealed record CeilingBody(List<CeilingEntry> Entries);
-    private sealed record CeilingEntry(string PermissionId, bool Enabled);
+    private sealed record CeilingEntry(
+        string PermissionId,
+        bool Enabled,
+        AccessScopeKind ScopeKind = AccessScopeKind.GlobalWithinOwner,
+        Guid? ScopeResourceId = null);
 
     private static async Task<IResult> AdminSetCeilingAsync(
         Guid sellerId, CeilingBody body, HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant,
@@ -362,7 +381,7 @@ public static class AccessControlEndpoints
             await EnsureCapabilityAsync(actor, "accesscontrol.manage", authz, tenant, ct);
             await directory.SetSellerCeilingAsync(
                 sellerId,
-                body.Entries.Select(e => (e.PermissionId, e.Enabled)).ToList(),
+                body.Entries.Select(e => (e.PermissionId, e.Enabled, e.ScopeKind, e.ScopeResourceId)).ToList(),
                 actor,
                 Trace(request),
                 ct);
@@ -759,6 +778,100 @@ public static class AccessControlEndpoints
         var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
         await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
         return Results.Json(await directory.GetEffectiveAccessAsync(userId, SellerScope(sellerId, tenant), ct));
+    }
+
+    private static async Task<IResult> AdminMeCapabilitiesAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
+    {
+        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
+        return Results.Json(await directory.GetEffectiveAccessAsync(actor, PlatformScope(tenant), ct));
+    }
+
+    private static async Task<IResult> SellerMeCapabilitiesAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IHostEnvironment env, IAccessControlDirectory directory, CancellationToken ct)
+    {
+        var (actor, sellerId) = await RequireSellerAsync(request, session, guard, env, ct);
+        return Results.Json(await directory.GetEffectiveAccessAsync(actor, SellerScope(sellerId, tenant), ct));
+    }
+
+    private static async Task<IResult> AdminListCategoriesAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListCategoriesForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> SellerListCategoriesAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListCategoriesForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> AdminListBrandsAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListBrandsForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> SellerListBrandsAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListBrandsForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> AdminListProductsAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListProductsForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> SellerListProductsAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, ICatalogLookupGateway catalog, CancellationToken ct, string? q = null)
+    {
+        var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        var items = await catalog.ListProductsForAccessControlAsync(q, ct);
+        return Results.Json(new { deferred = false, items });
+    }
+
+    private static async Task<IResult> AdminDeferredScopeAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, CancellationToken ct)
+    {
+        var actor = await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        return Results.Json(new { deferred = true, items = Array.Empty<object>() });
+    }
+
+    private static async Task<IResult> SellerDeferredScopeAsync(
+        HttpRequest request, CurrentAuthenticatedSession session, ICurrentTenant tenant, IAuthorizationGuard guard,
+        IAuthorizationService authz, IHostEnvironment env, CancellationToken ct)
+    {
+        var (actor, _) = await RequireSellerAsync(request, session, guard, env, ct);
+        await EnsureCapabilityAsync(actor, "accesscontrol.view", authz, tenant, ct);
+        return Results.Json(new { deferred = true, items = Array.Empty<object>() });
     }
 
     #endregion

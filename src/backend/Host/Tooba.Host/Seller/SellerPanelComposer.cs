@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.AccessControl.Application;
+using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
@@ -42,6 +45,8 @@ public sealed class SellerPanelComposer
     private readonly IInventoryDirectory _inventoryDirectory;
     private readonly ITaxDirectory _taxDirectory;
     private readonly TaxDbContext _tax;
+    private readonly IAccessControlDirectory _access;
+    private readonly ICatalogLookupGateway _catalogLookup;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema؛ نوشتن تجاری از دایرکتوری‌های مالک.
@@ -57,7 +62,9 @@ public sealed class SellerPanelComposer
         IPriceDirectory priceDirectory,
         IInventoryDirectory inventoryDirectory,
         ITaxDirectory taxDirectory,
-        TaxDbContext tax)
+        TaxDbContext tax,
+        IAccessControlDirectory access,
+        ICatalogLookupGateway catalogLookup)
     {
         _offers = offers;
         _catalog = catalog;
@@ -70,27 +77,34 @@ public sealed class SellerPanelComposer
         _inventoryDirectory = inventoryDirectory;
         _taxDirectory = taxDirectory;
         _tax = tax;
+        _access = access;
+        _catalogLookup = catalogLookup;
     }
 
     /// <summary>
-    /// خلاصهٔ داشبورد واقعی برای همان SellerPartyId.
+    /// خلاصهٔ داشبورد واقعی برای همان SellerPartyId با رعایت scope سفارش.
     /// </summary>
-    public async Task<SellerDashboardSummary> GetDashboardAsync(Guid sellerPartyId, CancellationToken cancellationToken)
+    public async Task<SellerDashboardSummary> GetDashboardAsync(
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
         var seller = await _parties.FindByIdAsync(sellerPartyId, cancellationToken)
             ?? throw new PlatformHttpException(404, "فروشنده پیدا نشد.", "seller.missing");
         var activeOffers = await _offers.Offers.AsNoTracking()
             .CountAsync(x => x.SellerPartyId == sellerPartyId && x.Status == OfferStatus.Active, cancellationToken);
-        var sellerOrders = await _orders.SellerOrders.AsNoTracking()
+        var orders = await _orders.SellerOrders.AsNoTracking()
+            .Include(x => x.Lines)
             .Where(x => x.SellerPartyId == sellerPartyId)
-            .Select(x => x.Status)
             .ToListAsync(cancellationToken);
-        var open = sellerOrders.Count(x =>
-            x is SellerOrderStatus.Submitted
+        var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
+        var visible = await FilterOrdersByScopeAsync(orders, scope, cancellationToken);
+        var open = visible.Count(x =>
+            x.Status is SellerOrderStatus.Submitted
                 or SellerOrderStatus.PendingPayment
                 or SellerOrderStatus.ReservationRequested);
-        var paid = sellerOrders.Count(x => x == SellerOrderStatus.Paid);
+        var paid = visible.Count(x => x.Status == SellerOrderStatus.Paid);
         return new SellerDashboardSummary(sellerPartyId, seller.DisplayName, activeOffers, open, paid);
     }
 
@@ -485,33 +499,57 @@ public sealed class SellerPanelComposer
     }
 
     /// <summary>
-    /// فهرست سفارش‌های فقط همین فروشنده.
+    /// فهرست سفارش‌های فقط همین فروشنده با فیلتر scope سفارش بازیگر.
     /// </summary>
-    public async Task<IReadOnlyList<SellerOrderListItem>> ListOrdersAsync(Guid sellerPartyId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SellerOrderListItem>> ListOrdersAsync(
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
+        if (scope.Denied)
+        {
+            return [];
+        }
+
         var orders = await _orders.SellerOrders.AsNoTracking()
             .Include(x => x.Lines)
             .Where(x => x.SellerPartyId == sellerPartyId)
             .OrderByDescending(x => x.SellerOrderId)
             .Take(200)
             .ToListAsync(cancellationToken);
-        var checkoutIds = orders.Select(x => x.CheckoutId).Distinct().ToList();
+        var allLines = orders.SelectMany(o => o.Lines).ToList();
+        var resolved = scope.Global
+            ? (IReadOnlyDictionary<Guid, Guid?>)new Dictionary<Guid, Guid?>()
+            : await ResolveLineCategoriesAsync(allLines, cancellationToken);
+        var visible = scope.Global
+            ? orders
+            : orders.Where(order =>
+                order.Lines.Any(line =>
+                {
+                    var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+                    return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
+                })).ToList();
+        var checkoutIds = visible.Select(x => x.CheckoutId).Distinct().ToList();
         var checkouts = checkoutIds.Count == 0
             ? []
             : await _orders.Checkouts.AsNoTracking()
                 .Where(x => checkoutIds.Contains(x.CheckoutId))
                 .ToListAsync(cancellationToken);
         var checkoutMap = checkouts.ToDictionary(x => x.CheckoutId);
-        return orders.Select(order =>
+        return visible.Select(order =>
         {
             checkoutMap.TryGetValue(order.CheckoutId, out var checkout);
+            var lineCount = scope.Global
+                ? order.Lines.Count
+                : CountAuthorizedLines(order.Lines, scope.AllowedCategoryIds, resolved);
             return new SellerOrderListItem(
                 order.SellerOrderId,
                 order.OrderNumber,
                 checkout?.SubmittedAt ?? default,
                 checkout?.RecipientName ?? string.Empty,
-                order.Lines.Count,
+                lineCount,
                 order.GrandTotalSnapshot,
                 order.Currency,
                 order.Status.ToString(),
@@ -520,11 +558,21 @@ public sealed class SellerPanelComposer
     }
 
     /// <summary>
-    /// جزئیات سفارش فقط اگر SellerPartyId مطابقت کند؛ خطوط دیگران برنمی‌گردد.
+    /// جزئیات سفارش فقط اگر SellerPartyId مطابقت کند؛ خطوط خارج از scope برنمی‌گردد.
     /// </summary>
-    public async Task<SellerOrderDetailPage?> GetOrderAsync(Guid sellerPartyId, Guid sellerOrderId, CancellationToken cancellationToken)
+    public async Task<SellerOrderDetailPage?> GetOrderAsync(
+        Guid sellerPartyId,
+        Guid actorUserId,
+        Guid sellerOrderId,
+        CancellationToken cancellationToken)
     {
         await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        var scope = await ResolveOrderViewScopeAsync(sellerPartyId, actorUserId, cancellationToken);
+        if (scope.Denied)
+        {
+            throw new PlatformHttpException(403, "مجوز مشاهدهٔ سفارش وجود ندارد.", "seller.order.view.denied");
+        }
+
         var order = await _orders.SellerOrders.AsNoTracking()
             .Include(x => x.Lines)
             .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId && x.SellerPartyId == sellerPartyId, cancellationToken);
@@ -533,14 +581,28 @@ public sealed class SellerPanelComposer
             return null;
         }
 
+        var resolved = await ResolveLineCategoriesAsync(order.Lines, cancellationToken);
+        var authorizedLines = scope.Global
+            ? order.Lines.ToList()
+            : order.Lines.Where(line =>
+            {
+                var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+                return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
+            }).ToList();
+
+        if (authorizedLines.Count == 0)
+        {
+            throw new PlatformHttpException(403, "مجوز مشاهدهٔ این سفارش وجود ندارد.", "seller.order.view.denied");
+        }
+
         var checkout = await _orders.Checkouts.AsNoTracking()
             .SingleOrDefaultAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
-        var offerIds = order.Lines.Select(x => x.OfferId).Distinct().ToList();
+        var offerIds = authorizedLines.Select(x => x.OfferId).Distinct().ToList();
         var offers = offerIds.Count == 0
             ? []
             : await _offers.Offers.AsNoTracking().Where(x => offerIds.Contains(x.OfferId)).ToListAsync(cancellationToken);
         var titles = await ResolveTitlesAsync(offers, cancellationToken);
-        var lines = order.Lines.Select(line =>
+        var lines = authorizedLines.Select(line =>
         {
             titles.TryGetValue(line.OfferId, out var title);
             return new SellerOrderLineView(
@@ -552,6 +614,11 @@ public sealed class SellerPanelComposer
                 line.Currency);
         }).ToList();
 
+        var subtotal = authorizedLines.Sum(x => x.PostDiscountTaxExclusiveSnapshot);
+        var tax = authorizedLines.Sum(x => x.TaxAmountSnapshot);
+        var discount = authorizedLines.Sum(x => x.DiscountAmountSnapshot);
+        var grand = subtotal + tax;
+
         return new SellerOrderDetailPage(
             order.SellerOrderId,
             order.OrderNumber,
@@ -559,10 +626,10 @@ public sealed class SellerPanelComposer
             checkout?.SubmittedAt ?? default,
             order.Status.ToString(),
             order.Status.ToString(),
-            order.SubtotalSnapshot,
-            order.TaxSnapshot,
-            order.DiscountSnapshot,
-            order.GrandTotalSnapshot,
+            subtotal,
+            tax,
+            discount,
+            grand,
             order.Currency,
             checkout?.RecipientName ?? string.Empty,
             checkout?.ContactMobile ?? string.Empty,
@@ -573,6 +640,96 @@ public sealed class SellerPanelComposer
             checkout?.ShippingMethodLabel ?? string.Empty,
             lines);
     }
+
+    private sealed record OrderViewScope(
+        bool Denied,
+        bool Global,
+        HashSet<Guid> AllowedCategoryIds);
+
+    private async Task<OrderViewScope> ResolveOrderViewScopeAsync(
+        Guid sellerPartyId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var effective = await _access.GetEffectiveAccessAsync(
+            actorUserId,
+            new AccessOwnerScope(AccessOwnerScopeKind.Seller, sellerPartyId),
+            cancellationToken);
+        var orderViews = effective.Permissions
+            .Where(p => p.PermissionId == "order.view" && !p.DeniedByCeiling)
+            .ToList();
+        if (orderViews.Count == 0)
+        {
+            return new OrderViewScope(true, false, []);
+        }
+
+        if (orderViews.Any(p => p.ScopeKind == AccessScopeKind.GlobalWithinOwner))
+        {
+            return new OrderViewScope(false, true, []);
+        }
+
+        var allowed = orderViews
+            .Where(p => p.ScopeKind == AccessScopeKind.Category && p.ScopeResourceId is not null)
+            .Select(p => p.ScopeResourceId!.Value)
+            .ToHashSet();
+        if (allowed.Count == 0)
+        {
+            return new OrderViewScope(true, false, []);
+        }
+
+        return new OrderViewScope(false, false, allowed);
+    }
+
+    private async Task<IReadOnlyList<SellerOrder>> FilterOrdersByScopeAsync(
+        IReadOnlyList<SellerOrder> orders,
+        OrderViewScope scope,
+        CancellationToken cancellationToken)
+    {
+        if (scope.Denied)
+        {
+            return [];
+        }
+
+        if (scope.Global)
+        {
+            return orders;
+        }
+
+        var resolved = await ResolveLineCategoriesAsync(orders.SelectMany(o => o.Lines).ToList(), cancellationToken);
+        return orders.Where(order =>
+            order.Lines.Any(line =>
+            {
+                var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+                return categoryId is Guid cid && scope.AllowedCategoryIds.Contains(cid);
+            })).ToList();
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, Guid?>> ResolveLineCategoriesAsync(
+        IReadOnlyCollection<OrderLine> lines,
+        CancellationToken cancellationToken)
+    {
+        var missing = lines
+            .Where(l => l.CategoryIdSnapshot is null)
+            .Select(l => l.CatalogVariantId)
+            .Distinct()
+            .ToArray();
+        if (missing.Length == 0)
+        {
+            return new Dictionary<Guid, Guid?>();
+        }
+
+        return await _catalogLookup.GetPrimaryCategoryIdsByVariantIdsAsync(missing, cancellationToken);
+    }
+
+    private static int CountAuthorizedLines(
+        IEnumerable<OrderLine> lines,
+        HashSet<Guid> allowed,
+        IReadOnlyDictionary<Guid, Guid?> resolved) =>
+        lines.Count(line =>
+        {
+            var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+            return categoryId is Guid cid && allowed.Contains(cid);
+        });
 
     private async Task EnsureSellerAsync(Guid sellerPartyId, CancellationToken cancellationToken)
     {

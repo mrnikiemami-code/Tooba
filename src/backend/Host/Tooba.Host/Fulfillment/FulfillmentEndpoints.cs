@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
@@ -172,10 +173,78 @@ public static class FulfillmentEndpoints
                 return Results.Json(new { title = "Not Found", errorCode = "fulfillment.missing" }, statusCode: 404);
             }
 
+            var access = request.HttpContext.RequestServices.GetRequiredService<Tooba.AccessControl.Application.IAccessControlDirectory>();
+            var orders = request.HttpContext.RequestServices.GetRequiredService<Order.Infrastructure.Persistence.OrderDbContext>();
+            var catalog = request.HttpContext.RequestServices.GetRequiredService<Tooba.Catalog.Application.ICatalogLookupGateway>();
+            await EnsureSellerOrderHandleScopeAsync(
+                actorUserId, sellerPartyId, existing.SellerOrderId, access, orders, catalog, cancellationToken);
+
             return Results.Json(await action(actorUserId, fulfillmentId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
         catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "fulfillment.rejected", detail = ex.Message }, statusCode: 400); }
+    }
+
+    private static async Task EnsureSellerOrderHandleScopeAsync(
+        Guid actorUserId,
+        Guid sellerPartyId,
+        Guid sellerOrderId,
+        Tooba.AccessControl.Application.IAccessControlDirectory access,
+        Order.Infrastructure.Persistence.OrderDbContext orders,
+        Tooba.Catalog.Application.ICatalogLookupGateway catalog,
+        CancellationToken cancellationToken)
+    {
+        var effective = await access.GetEffectiveAccessAsync(
+            actorUserId,
+            new Tooba.AccessControl.Application.AccessOwnerScope(
+                Tooba.AccessControl.Domain.AccessOwnerScopeKind.Seller,
+                sellerPartyId),
+            cancellationToken);
+        var handles = effective.Permissions
+            .Where(p => p.PermissionId == "order.handle" && !p.DeniedByCeiling)
+            .ToList();
+        if (handles.Count == 0)
+        {
+            throw new PlatformHttpException(403, "مجوز انجام سفارش وجود ندارد.", "seller.order.handle.denied");
+        }
+
+        if (handles.Any(p => p.ScopeKind == Tooba.AccessControl.Domain.AccessScopeKind.GlobalWithinOwner))
+        {
+            return;
+        }
+
+        var allowed = handles
+            .Where(p => p.ScopeKind == Tooba.AccessControl.Domain.AccessScopeKind.Category && p.ScopeResourceId is not null)
+            .Select(p => p.ScopeResourceId!.Value)
+            .ToHashSet();
+        if (allowed.Count == 0)
+        {
+            throw new PlatformHttpException(403, "مجوز انجام سفارش وجود ندارد.", "seller.order.handle.denied");
+        }
+
+        var order = await orders.SellerOrders.AsNoTracking()
+            .Include(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.SellerOrderId == sellerOrderId && x.SellerPartyId == sellerPartyId, cancellationToken);
+        if (order is null)
+        {
+            throw new PlatformHttpException(404, "سفارش یافت نشد.", "seller.order.missing");
+        }
+
+        var missing = order.Lines.Where(l => l.CategoryIdSnapshot is null).Select(l => l.CatalogVariantId).Distinct().ToArray();
+        var resolved = missing.Length == 0
+            ? new Dictionary<Guid, Guid?>()
+            : await catalog.GetPrimaryCategoryIdsByVariantIdsAsync(missing, cancellationToken);
+
+        // Whole-order fulfillment is unsafe unless every line is authorized.
+        var allAuthorized = order.Lines.All(line =>
+        {
+            var categoryId = line.CategoryIdSnapshot ?? resolved.GetValueOrDefault(line.CatalogVariantId);
+            return categoryId is Guid cid && allowed.Contains(cid);
+        });
+        if (!allAuthorized)
+        {
+            throw new PlatformHttpException(403, "اقدام کل‌سفارش خارج از محدودهٔ مجاز است.", "seller.order.handle.scope_denied");
+        }
     }
 
     private static async Task<IResult> AdminListAsync(

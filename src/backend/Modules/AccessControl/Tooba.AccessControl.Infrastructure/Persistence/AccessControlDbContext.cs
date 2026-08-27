@@ -84,7 +84,8 @@ public sealed class AccessControlDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).ValueGeneratedNever();
             entity.Property(x => x.PermissionId).HasMaxLength(128).IsRequired();
-            entity.HasIndex(x => new { x.SellerPartyId, x.PermissionId }).IsUnique();
+            entity.Property(x => x.ScopeKind).HasConversion<int>();
+            entity.HasIndex(x => new { x.SellerPartyId, x.PermissionId, x.ScopeKind, x.ScopeResourceId }).IsUnique();
             entity.HasIndex(x => x.SellerPartyId);
         });
 

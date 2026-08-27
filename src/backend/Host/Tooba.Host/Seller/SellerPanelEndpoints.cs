@@ -51,9 +51,9 @@ public static class SellerPanelEndpoints
     {
         try
         {
-            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var summary = await composer.GetDashboardAsync(sellerPartyId, cancellationToken);
+            var summary = await composer.GetDashboardAsync(sellerPartyId, actorUserId, cancellationToken);
             return Results.Json(summary);
         }
         catch (PlatformHttpException ex)
@@ -229,9 +229,9 @@ public static class SellerPanelEndpoints
     {
         try
         {
-            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var items = await composer.ListOrdersAsync(sellerPartyId, cancellationToken);
+            var items = await composer.ListOrdersAsync(sellerPartyId, actorUserId, cancellationToken);
             return Results.Json(items);
         }
         catch (PlatformHttpException ex)
@@ -251,9 +251,9 @@ public static class SellerPanelEndpoints
     {
         try
         {
-            var (_, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
+            var (actorUserId, sellerPartyId) = await SellerPanelAccess.RequireAuthorizedAsync(
                 request, session, guard, environment, cancellationToken);
-            var page = await composer.GetOrderAsync(sellerPartyId, sellerOrderId, cancellationToken);
+            var page = await composer.GetOrderAsync(sellerPartyId, actorUserId, sellerOrderId, cancellationToken);
             return page is null
                 ? Results.Json(new { title = "سفارش فروشنده پیدا نشد.", errorCode = "seller.order.missing" }, statusCode: StatusCodes.Status404NotFound)
                 : Results.Json(page);

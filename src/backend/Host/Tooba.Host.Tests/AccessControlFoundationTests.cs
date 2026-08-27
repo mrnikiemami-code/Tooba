@@ -65,6 +65,8 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         Assert.Contains("/v1/admin/access-control", endpoints, StringComparison.Ordinal);
         Assert.Contains("/v1/seller/access-control", endpoints, StringComparison.Ordinal);
         Assert.Contains("/v1/admin/sellers/{sellerId:guid}/access-control", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/scope-resources/categories", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/me/capabilities", endpoints, StringComparison.Ordinal);
     }
 
     /// <summary>سقف، منع escalation و Mobile ALLOW / Books DENY در لایهٔ مجوز.</summary>
@@ -77,8 +79,6 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         await db.Database.MigrateAsync();
 
         var authz = CreateInMemoryAuthz();
-        var directory = new AccessControlDirectory(db, authz, new AccessControlInstrumentation());
-
         var sellerA = Guid.Parse("a1a1a1a1-a1a1-41a1-81a1-a1a1a1a1a1a1");
         var sellerB = Guid.Parse("b2b2b2b2-b2b2-42b2-82b2-b2b2b2b2b2b2");
         var ownerActor = Guid.Parse("c3c3c3c3-c3c3-43c3-83c3-c3c3c3c3c3c3");
@@ -86,6 +86,10 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         var mobileCategory = Guid.Parse("e5e5e5e5-e5e5-45e5-85e5-e5e5e5e5e5e5");
         var booksCategory = Guid.Parse("f6f6f6f6-f6f6-46f6-86f6-f6f6f6f6f6f6");
         var admin = Guid.Parse("17171717-1717-4171-8171-171717171717");
+        var catalog = new FakeCatalogLookupGateway();
+        catalog.AddCategory(mobileCategory, "موبایل");
+        catalog.AddCategory(booksCategory, "کتاب");
+        var directory = new AccessControlDirectory(db, authz, new AccessControlInstrumentation(), catalog);
 
         await directory.EnsureBootstrapAsync(admin, [sellerA, sellerB], "tenant-test", CancellationToken.None);
 
@@ -96,7 +100,7 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         await directory.SetSellerCeilingAsync(
             sellerA,
             PermissionCatalog.All.Where(p => p.Delegable && p.PermissionId != "order.handle")
-                .Select(p => (p.PermissionId, true)).ToList(),
+                .Select(p => (p.PermissionId, true, AccessScopeKind.GlobalWithinOwner, (Guid?)null)).ToList(),
             admin,
             "t1",
             CancellationToken.None);
@@ -132,10 +136,10 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         await directory.SetSellerCeilingAsync(
             sellerA,
             [
-                ("order.view", true),
-                ("order.handle", true),
-                ("accesscontrol.view", true),
-                ("accesscontrol.manage", true),
+                ("order.view", true, AccessScopeKind.GlobalWithinOwner, null),
+                ("order.handle", true, AccessScopeKind.GlobalWithinOwner, null),
+                ("accesscontrol.view", true, AccessScopeKind.GlobalWithinOwner, null),
+                ("accesscontrol.manage", true, AccessScopeKind.GlobalWithinOwner, null),
             ],
             admin,
             "t4",
@@ -185,7 +189,12 @@ public sealed class AccessControlFoundationTests : IAsyncLifetime
         Assert.Equal(AuthorizationDecisionKind.Deny, booksDeny.Kind);
 
         // revoke ceiling -> effective deny after sync
-        await directory.SetSellerCeilingAsync(sellerA, [("accesscontrol.view", true)], admin, "t7", CancellationToken.None);
+        await directory.SetSellerCeilingAsync(
+            sellerA,
+            [("accesscontrol.view", true, AccessScopeKind.GlobalWithinOwner, null)],
+            admin,
+            "t7",
+            CancellationToken.None);
         var afterRevoke = await directory.GetEffectiveAccessAsync(employee, sellerOwner, CancellationToken.None);
         Assert.DoesNotContain(afterRevoke.Permissions, p => p.PermissionId == "order.handle");
 

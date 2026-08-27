@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
   Bell,
@@ -32,6 +32,11 @@ import {
   writeSellerPartyId,
   type SellerDevContext,
 } from "./seller-api";
+import {
+  capabilityPermissionIds,
+  createSellerAccessApi,
+  hasViewCapability,
+} from "../access-control/access-control-api";
 
 type NavItem = {
   id: string;
@@ -39,22 +44,24 @@ type NavItem = {
   href: string;
   icon: typeof LayoutDashboard;
   live: boolean;
+  /** مجوز *.view لازم برای نمایش؛ بدون آن در صورت live همیشه دیده می‌شود. */
+  viewPermission?: string;
 };
 
 /** فقط مسیرهای زندهٔ Host در ناوبری. */
 const menuItems: NavItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/vendor-panel", live: true },
-  { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true },
-  { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true },
+  { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true, viewPermission: "product.view" },
+  { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true, viewPermission: "order.view" },
   { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/vendor-panel/notifications", live: true },
-  { id: "stories", label: "استوری‌ها", icon: Images, href: "/vendor-panel/stories", live: true },
-  { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: true },
-  { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: true },
-  { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true },
-  { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true },
+  { id: "stories", label: "استوری‌ها", icon: Images, href: "/vendor-panel/stories", live: true, viewPermission: "story.view" },
+  { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: true, viewPermission: "promotion.view" },
+  { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: true, viewPermission: "review.view" },
+  { id: "fulfillments", label: "ارسال", icon: Truck, href: "/vendor-panel/fulfillments", live: true, viewPermission: "fulfillment.view" },
+  { id: "returns", label: "مرجوعی", icon: RotateCcw, href: "/vendor-panel/returns", live: true, viewPermission: "return.view" },
   { id: "analytics", label: "آمار و نمودار", icon: BarChart3, href: "/vendor-panel/analytics", live: true },
-  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true },
-  { id: "access-control", label: "کنترل دسترسی", icon: Shield, href: "/vendor-panel/access-control", live: true },
+  { id: "wallet", label: "کیف پول", icon: Wallet, href: "/vendor-panel/wallet", live: true, viewPermission: "settlement.view" },
+  { id: "access-control", label: "کنترل دسترسی", icon: Shield, href: "/vendor-panel/access-control", live: true, viewPermission: "accesscontrol.view" },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/vendor-panel/settings", live: true },
 ];
 
@@ -65,13 +72,18 @@ export const VENDOR_DEFERRED_NAV_HREFS = [
   "/vendor-panel/gift-cards",
 ] as const;
 
-const visibleMenuItems = menuItems.filter((item) => item.live);
-
 function isActivePath(pathname: string, href: string): boolean {
   if (href === "/vendor-panel") {
     return pathname === href;
   }
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function itemAllowed(item: NavItem, caps: Set<string> | null): boolean {
+  if (!item.live) return false;
+  if (!item.viewPermission) return true;
+  if (caps === null) return true;
+  return hasViewCapability(caps, item.viewPermission);
 }
 
 /**
@@ -91,9 +103,10 @@ export function VendorShell({ children }: { children: ReactNode }) {
   );
   const [sellerLabel, setSellerLabel] = useState("فروشنده");
   const [ready, setReady] = useState(false);
+  const [caps, setCaps] = useState<Set<string> | null>(null);
 
   useEffect(() => {
-    void loadSellerDevContexts().then((rows) => {
+    void loadSellerDevContexts().then(async (rows) => {
       setContexts(rows);
       const existingSeller = readSellerPartyId(window.location.search) ?? DEFAULT_SELLER_PARTY_ID;
       const existingActor = readActorUserId();
@@ -119,6 +132,12 @@ export function VendorShell({ children }: { children: ReactNode }) {
         setActorUserId(fallback.actorUserId);
         setSellerLabel(fallback.sellerLabel);
       }
+      try {
+        const effective = await createSellerAccessApi().getMyCapabilities();
+        setCaps(capabilityPermissionIds(effective));
+      } catch {
+        setCaps(null);
+      }
       setReady(true);
     });
   }, []);
@@ -129,6 +148,8 @@ export function VendorShell({ children }: { children: ReactNode }) {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  const visibleMenuItems = useMemo(() => menuItems.filter((item) => itemAllowed(item, caps)), [caps]);
 
   function onContextChange(nextKey: string) {
     const [nextActor, nextSeller] = nextKey.split("|");

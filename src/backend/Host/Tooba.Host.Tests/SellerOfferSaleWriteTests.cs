@@ -133,7 +133,9 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
             priceDir,
             inventoryDir,
             taxDir,
-            tax);
+            tax,
+            new FakeAccessControlDirectory(),
+            catalogDir);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالای فروش", ["en-US"] = "Sale item" };
         var product = await catalogDir.CreateProductAsync(

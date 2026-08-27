@@ -131,6 +131,12 @@ public sealed class PlatformSellerCeiling
     /// <summary>مجوز.</summary>
     public string PermissionId { get; set; } = string.Empty;
 
+    /// <summary>گونهٔ scope سقف.</summary>
+    public AccessScopeKind ScopeKind { get; set; } = AccessScopeKind.GlobalWithinOwner;
+
+    /// <summary>منبع scope سقف (مثلاً CategoryId).</summary>
+    public Guid? ScopeResourceId { get; set; }
+
     /// <summary>فعال در سقف.</summary>
     public bool Enabled { get; set; } = true;
 

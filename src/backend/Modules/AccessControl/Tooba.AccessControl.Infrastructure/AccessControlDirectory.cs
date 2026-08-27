@@ -3,6 +3,7 @@ using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.AccessControl.Infrastructure.Persistence;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 
 namespace Tooba.AccessControl.Infrastructure;
 
@@ -14,16 +15,19 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
     private readonly AccessControlDbContext _db;
     private readonly IAuthorizationTupleWriter _tuples;
     private readonly AccessControlInstrumentation _telemetry;
+    private readonly ICatalogLookupGateway _catalog;
 
     /// <summary>دایرکتوری را با DbContext و writer می‌سازد.</summary>
     public AccessControlDirectory(
         AccessControlDbContext db,
         IAuthorizationTupleWriter tuples,
-        AccessControlInstrumentation telemetry)
+        AccessControlInstrumentation telemetry,
+        ICatalogLookupGateway catalog)
     {
         _db = db;
         _tuples = tuples;
         _telemetry = telemetry;
+        _catalog = catalog;
     }
 
     /// <inheritdoc />
@@ -325,51 +329,92 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         Guid sellerPartyId,
         CancellationToken cancellationToken)
     {
-        var enabled = await _db.SellerCeilings.AsNoTracking()
-            .Where(c => c.SellerPartyId == sellerPartyId && c.Enabled)
-            .Select(c => c.PermissionId)
+        var rows = await _db.SellerCeilings.AsNoTracking()
+            .Where(c => c.SellerPartyId == sellerPartyId)
             .ToListAsync(cancellationToken);
-        var set = enabled.ToHashSet(StringComparer.Ordinal);
-        return PermissionCatalog.All
-            .Where(p => p.Delegable)
-            .Select(p => new SellerCeilingEntryDto(p.PermissionId, set.Contains(p.PermissionId), p.Delegable, p.Module))
-            .ToList();
+        var enabled = rows.Where(c => c.Enabled).ToList();
+        var result = new List<SellerCeilingEntryDto>();
+        foreach (var row in enabled)
+        {
+            var def = PermissionCatalog.Find(row.PermissionId);
+            result.Add(new SellerCeilingEntryDto(
+                row.PermissionId,
+                true,
+                def?.Delegable ?? false,
+                def?.Module ?? "Unknown",
+                row.ScopeKind,
+                row.ScopeResourceId));
+        }
+
+        var covered = enabled.Select(c => c.PermissionId).ToHashSet(StringComparer.Ordinal);
+        foreach (var perm in PermissionCatalog.All.Where(p => p.Delegable && !covered.Contains(p.PermissionId)))
+        {
+            result.Add(new SellerCeilingEntryDto(
+                perm.PermissionId,
+                false,
+                perm.Delegable,
+                perm.Module,
+                AccessScopeKind.GlobalWithinOwner,
+                null));
+        }
+
+        return result.OrderBy(x => x.PermissionId).ThenBy(x => x.ScopeKind).ToList();
     }
 
     /// <inheritdoc />
     public async Task SetSellerCeilingAsync(
         Guid sellerPartyId,
-        IReadOnlyList<(string PermissionId, bool Enabled)> entries,
+        IReadOnlyList<(string PermissionId, bool Enabled, AccessScopeKind ScopeKind, Guid? ScopeResourceId)> entries,
         Guid actorUserId,
         string? traceId,
         CancellationToken cancellationToken)
     {
-        foreach (var (permissionId, _) in entries)
+        foreach (var (permissionId, _, scopeKind, scopeResourceId) in entries)
         {
             var def = PermissionCatalog.Require(permissionId);
             if (!def.Delegable)
             {
                 throw new AccessControlException("access.ceiling.not_delegable", $"مجوز پلتفرمی قابل سقف نیست: {permissionId}");
             }
+
+            if (!def.ScopeKinds.Contains(scopeKind))
+            {
+                throw new AccessControlException("access.scope.unsupported", $"Scope برای {permissionId} مجاز نیست.");
+            }
+
+            if (scopeKind == AccessScopeKind.Category && scopeResourceId is Guid categoryId)
+            {
+                var found = await _catalog.FindCategoryAsync(categoryId, cancellationToken);
+                if (found is null)
+                {
+                    throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
+                }
+            }
         }
 
         var existing = await _db.SellerCeilings.Where(c => c.SellerPartyId == sellerPartyId).ToListAsync(cancellationToken);
-        var before = string.Join(",", existing.Where(x => x.Enabled).Select(x => x.PermissionId).OrderBy(x => x));
+        var before = string.Join(",", existing.Where(x => x.Enabled)
+            .Select(x => $"{x.PermissionId}:{x.ScopeKind}:{x.ScopeResourceId}")
+            .OrderBy(x => x));
         _db.SellerCeilings.RemoveRange(existing);
         var now = DateTimeOffset.UtcNow;
-        foreach (var (permissionId, enabled) in entries.Where(e => e.Enabled))
+        foreach (var (permissionId, enabled, scopeKind, scopeResourceId) in entries.Where(e => e.Enabled))
         {
             _db.SellerCeilings.Add(new PlatformSellerCeiling
             {
                 Id = Guid.NewGuid(),
                 SellerPartyId = sellerPartyId,
                 PermissionId = permissionId,
+                ScopeKind = scopeKind,
+                ScopeResourceId = scopeKind == AccessScopeKind.GlobalWithinOwner ? null : scopeResourceId,
                 Enabled = true,
                 UpdatedAt = now,
             });
         }
 
-        var after = string.Join(",", entries.Where(e => e.Enabled).Select(e => e.PermissionId).OrderBy(x => x));
+        var after = string.Join(",", entries.Where(e => e.Enabled)
+            .Select(e => $"{e.PermissionId}:{e.ScopeKind}:{e.ScopeResourceId}")
+            .OrderBy(x => x));
         await AuditAsync(actorUserId, "ceiling.set", "seller", sellerPartyId.ToString("D"), sellerPartyId, before, after, traceId, cancellationToken);
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -405,14 +450,22 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             .Where(p => roleIds.Contains(p.RoleId) && p.Enabled)
             .ToListAsync(cancellationToken);
 
-        HashSet<string>? ceiling = null;
+        IReadOnlyList<PlatformSellerCeiling> ceilingRows = Array.Empty<PlatformSellerCeiling>();
         if (owner.Kind == AccessOwnerScopeKind.Seller && owner.OwnerScopeId is Guid sellerId)
         {
-            ceiling = (await _db.SellerCeilings.AsNoTracking()
+            ceilingRows = await _db.SellerCeilings.AsNoTracking()
                 .Where(c => c.SellerPartyId == sellerId && c.Enabled)
-                .Select(c => c.PermissionId)
-                .ToListAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal);
+                .ToListAsync(cancellationToken);
         }
+
+        var categoryIds = perms
+            .Where(p => p.ScopeKind == AccessScopeKind.Category && p.ScopeResourceId is not null)
+            .Select(p => p.ScopeResourceId!.Value)
+            .Distinct()
+            .ToArray();
+        var categoryNames = categoryIds.Length == 0
+            ? new Dictionary<Guid, string>()
+            : await _catalog.GetCategoryNamesAsync(categoryIds, cancellationToken);
 
         var grouped = perms
             .GroupBy(p => (p.PermissionId, p.ScopeKind, p.ScopeResourceId))
@@ -420,20 +473,28 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
             {
                 var def = PermissionCatalog.Find(g.Key.PermissionId);
                 var denied = owner.Kind == AccessOwnerScopeKind.Seller
-                    && (def?.Delegable != true || ceiling is null || !ceiling.Contains(g.Key.PermissionId));
+                    && (def?.Delegable != true
+                        || !CeilingAllows(ceilingRows, g.Key.PermissionId, g.Key.ScopeKind, g.Key.ScopeResourceId));
                 var via = assignments
                     .Where(a => g.Any(p => p.RoleId == a.RoleId))
                     .Select(a => a.Code)
                     .Distinct()
                     .OrderBy(x => x)
                     .ToList();
+                string? display = null;
+                if (g.Key.ScopeKind == AccessScopeKind.Category && g.Key.ScopeResourceId is Guid cid)
+                {
+                    display = categoryNames.GetValueOrDefault(cid);
+                }
+
                 return new EffectivePermissionDto(
                     g.Key.PermissionId,
                     def?.Module ?? "Unknown",
                     g.Key.ScopeKind,
                     g.Key.ScopeResourceId,
                     via,
-                    denied);
+                    denied,
+                    display);
             })
             .Where(p => !p.DeniedByCeiling)
             .OrderBy(p => p.PermissionId)
@@ -575,6 +636,8 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                         Id = Guid.NewGuid(),
                         SellerPartyId = sellerId,
                         PermissionId = perm.PermissionId,
+                        ScopeKind = AccessScopeKind.GlobalWithinOwner,
+                        ScopeResourceId = null,
                         Enabled = true,
                         UpdatedAt = now,
                     });
@@ -674,13 +737,12 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
         IReadOnlyList<RolePermissionGrant> grants,
         CancellationToken cancellationToken)
     {
-        HashSet<string>? ceiling = null;
+        IReadOnlyList<PlatformSellerCeiling> ceilingRows = Array.Empty<PlatformSellerCeiling>();
         if (owner.Kind == AccessOwnerScopeKind.Seller && owner.OwnerScopeId is Guid sellerId)
         {
-            ceiling = (await _db.SellerCeilings.AsNoTracking()
+            ceilingRows = await _db.SellerCeilings.AsNoTracking()
                 .Where(c => c.SellerPartyId == sellerId && c.Enabled)
-                .Select(c => c.PermissionId)
-                .ToListAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal);
+                .ToListAsync(cancellationToken);
         }
 
         foreach (var grant in grants.Where(g => g.Enabled))
@@ -691,6 +753,20 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                 throw new AccessControlException("access.scope.unsupported", $"Scope برای {grant.PermissionId} مجاز نیست.");
             }
 
+            if (grant.ScopeKind == AccessScopeKind.Category)
+            {
+                if (grant.ScopeResourceId is not Guid categoryId)
+                {
+                    throw new AccessControlException("access.scope.unknown_resource", "منبع scope رده الزامی است.");
+                }
+
+                var found = await _catalog.FindCategoryAsync(categoryId, cancellationToken);
+                if (found is null)
+                {
+                    throw new AccessControlException("access.scope.unknown_resource", "ردهٔ scope در Catalog یافت نشد.");
+                }
+            }
+
             if (owner.Kind == AccessOwnerScopeKind.Seller)
             {
                 if (!def.Delegable)
@@ -698,12 +774,43 @@ public sealed class AccessControlDirectory : IAccessControlDirectory
                     throw new AccessControlException("access.escalation.platform_permission", $"فروشنده نمی‌تواند مجوز پلتفرم بدهد: {grant.PermissionId}");
                 }
 
-                if (ceiling is null || !ceiling.Contains(grant.PermissionId))
+                if (!CeilingAllows(ceilingRows, grant.PermissionId, grant.ScopeKind, grant.ScopeResourceId))
                 {
                     throw new AccessControlException("access.escalation.ceiling", $"مجوز خارج از سقف پلتفرم است: {grant.PermissionId}");
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// سقف GlobalWithinOwner برای همان مجوز هر scope را پوشش می‌دهد؛ سقف Category فقط همان منبع (یا دقیق) را اجازه می‌دهد.
+    /// </summary>
+    private static bool CeilingAllows(
+        IReadOnlyList<PlatformSellerCeiling> ceilings,
+        string permissionId,
+        AccessScopeKind grantScopeKind,
+        Guid? grantScopeResourceId)
+    {
+        var relevant = ceilings
+            .Where(c => c.Enabled && string.Equals(c.PermissionId, permissionId, StringComparison.Ordinal))
+            .ToList();
+        if (relevant.Count == 0)
+        {
+            return false;
+        }
+
+        if (relevant.Any(c => c.ScopeKind == AccessScopeKind.GlobalWithinOwner))
+        {
+            return true;
+        }
+
+        if (grantScopeKind == AccessScopeKind.Category && grantScopeResourceId is Guid rid)
+        {
+            return relevant.Any(c =>
+                c.ScopeKind == AccessScopeKind.Category && c.ScopeResourceId == rid);
+        }
+
+        return false;
     }
 
     private async Task<IReadOnlyList<AccessRoleDto>> MapRolesAsync(IReadOnlyList<AccessRole> roles, CancellationToken cancellationToken)

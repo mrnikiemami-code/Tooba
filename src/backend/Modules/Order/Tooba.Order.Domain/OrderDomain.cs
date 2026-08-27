@@ -188,6 +188,11 @@ public sealed class OrderLine
     public DateTimeOffset? PromotionAppliedAtSnapshot { get; init; }
 
     /// <summary>
+    /// تصویر ردهٔ اصلی گونه در لحظهٔ checkout برای authorization؛ FK به جداول Catalog نیست.
+    /// </summary>
+    public Guid? CategoryIdSnapshot { get; init; }
+
+    /// <summary>
     /// خط را از نقل‌قول تازه، تخفیف ارزیابی‌شده و نتیجهٔ مالیات می‌سازد.
     /// </summary>
     public static OrderLine FromCheckout(
@@ -213,7 +218,8 @@ public sealed class OrderLine
         string? discountKind = null,
         decimal? preDiscountTaxExclusive = null,
         decimal? postDiscountTaxExclusive = null,
-        DateTimeOffset? promotionAppliedAt = null)
+        DateTimeOffset? promotionAppliedAt = null,
+        Guid? categoryIdSnapshot = null)
     {
         if (quantity <= 0)
         {
@@ -252,6 +258,7 @@ public sealed class OrderLine
             PreDiscountTaxExclusiveSnapshot = preDiscountTaxExclusive ?? decimal.Multiply(unitPrice, quantity),
             PostDiscountTaxExclusiveSnapshot = postDiscountTaxExclusive ?? decimal.Multiply(unitPrice, quantity) - discountAmount,
             PromotionAppliedAtSnapshot = promotionAppliedAt,
+            CategoryIdSnapshot = categoryIdSnapshot,
         };
     }
 }

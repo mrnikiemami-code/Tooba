@@ -18,6 +18,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
+import { ScopeEditor, type ScopeResourceItem } from "./scope-editor";
 
 export type AccMode = "admin" | "seller" | "admin-seller";
 
@@ -47,6 +48,7 @@ export type RolePermissionGrant = {
   permissionId: string;
   scopeKind: number;
   scopeResourceId: string | null;
+  scopeDisplayName?: string | null;
   enabled: boolean;
 };
 
@@ -66,6 +68,7 @@ export type EffectiveAccess = {
     module: string;
     scopeKind: number;
     scopeResourceId: string | null;
+    scopeDisplayName?: string | null;
     inheritedViaRoleCodes: string[];
     deniedByCeiling: boolean;
   }>;
@@ -76,6 +79,14 @@ export type CeilingEntry = {
   enabled: boolean;
   delegable: boolean;
   module: string;
+  scopeKind?: number;
+  scopeResourceId?: string | null;
+  scopeDisplayName?: string | null;
+};
+
+export type ScopeResourcesResult = {
+  deferred?: boolean;
+  items: ScopeResourceItem[];
 };
 
 export type AccApi = {
@@ -94,7 +105,32 @@ export type AccApi = {
   getCeiling?: () => Promise<CeilingEntry[]>;
   setCeiling?: (entries: CeilingEntry[]) => Promise<void>;
   bootstrap?: () => Promise<void>;
+  listScopeResources: (kind: number, q: string) => Promise<ScopeResourcesResult>;
+  getMyCapabilities: () => Promise<EffectiveAccess>;
 };
+
+const SCOPE_KIND_LABELS: Record<number, string> = {
+  1: "کل محدوده",
+  2: "دسته",
+  3: "محصول",
+  4: "برند",
+  5: "انبار",
+  6: "فروشگاه",
+  7: "قطعه سفارش",
+};
+
+function supportsScopedEditor(p: PermissionDef): boolean {
+  return p.scopeKinds.some((k) => k !== 1);
+}
+
+function formatScopeLabel(scopeKind: number, scopeDisplayName?: string | null, scopeResourceId?: string | null): string {
+  const kindLabel = SCOPE_KIND_LABELS[scopeKind] ?? `scope ${scopeKind}`;
+  if (scopeKind === 1 || !scopeResourceId) {
+    return kindLabel;
+  }
+  const name = scopeDisplayName?.trim();
+  return name ? `${kindLabel}: ${name}` : `${kindLabel}: ${scopeResourceId.slice(0, 8)}…`;
+}
 
 type TabId = "roles" | "users" | "ceiling";
 
@@ -163,10 +199,38 @@ export function AccessControlCenter({
 
   useEffect(() => {
     if (!selectedRoleId) return;
-    void api.getRolePermissions(selectedRoleId).then((g) => {
-      setGrants(g);
+    void (async () => {
+      const g = await api.getRolePermissions(selectedRoleId);
+      const missing = g.filter((row) => row.enabled && row.scopeResourceId && !row.scopeDisplayName && row.scopeKind !== 1);
+      if (missing.length === 0) {
+        setGrants(g);
+        setDirty(false);
+        return;
+      }
+      const byKind = new Map<number, string[]>();
+      for (const row of missing) {
+        const list = byKind.get(row.scopeKind) ?? [];
+        list.push(row.scopeResourceId!);
+        byKind.set(row.scopeKind, list);
+      }
+      const nameById = new Map<string, string>();
+      await Promise.all(
+        Array.from(byKind.entries()).map(async ([kind, ids]) => {
+          const res = await api.listScopeResources(kind, "");
+          for (const item of res.items) {
+            if (ids.includes(item.id)) nameById.set(item.id, item.name);
+          }
+        }),
+      );
+      setGrants(
+        g.map((row) =>
+          row.scopeResourceId && !row.scopeDisplayName && nameById.has(row.scopeResourceId)
+            ? { ...row, scopeDisplayName: nameById.get(row.scopeResourceId) }
+            : row,
+        ),
+      );
       setDirty(false);
-    });
+    })();
   }, [api, selectedRoleId]);
 
   const modules = useMemo(() => {
@@ -175,6 +239,20 @@ export function AccessControlCenter({
   }, [catalog]);
 
   const enabledSet = useMemo(() => new Set(grants.filter((g) => g.enabled).map((g) => g.permissionId)), [grants]);
+
+  const grantByPermission = useMemo(() => {
+    const map = new Map<string, RolePermissionGrant>();
+    for (const g of grants) {
+      if (!g.enabled) continue;
+      if (!map.has(g.permissionId)) map.set(g.permissionId, g);
+    }
+    return map;
+  }, [grants]);
+
+  const loadResources = useCallback(
+    (kind: number, q: string) => api.listScopeResources(kind, q),
+    [api],
+  );
 
   const grouped = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -202,13 +280,34 @@ export function AccessControlCenter({
     if (p.disabledByCeiling || p.platformOnly) return;
     setDirty(true);
     setGrants((prev) => {
-      const exists = prev.find((g) => g.permissionId === p.permissionId && g.scopeKind === 1);
-      if (exists?.enabled) {
-        return prev.filter((g) => !(g.permissionId === p.permissionId && g.scopeKind === 1));
+      const on = prev.some((g) => g.permissionId === p.permissionId && g.enabled);
+      if (on) {
+        return prev.filter((g) => g.permissionId !== p.permissionId);
       }
       return [
-        ...prev.filter((g) => !(g.permissionId === p.permissionId && g.scopeKind === 1)),
-        { permissionId: p.permissionId, scopeKind: 1, scopeResourceId: null, enabled: true },
+        ...prev.filter((g) => g.permissionId !== p.permissionId),
+        { permissionId: p.permissionId, scopeKind: 1, scopeResourceId: null, scopeDisplayName: null, enabled: true },
+      ];
+    });
+  }
+
+  function updateGrantScope(
+    permissionId: string,
+    next: { scopeKind: number; scopeResourceId: string | null; scopeDisplayName?: string | null },
+  ) {
+    if (!canManage) return;
+    setDirty(true);
+    setGrants((prev) => {
+      const rest = prev.filter((g) => g.permissionId !== permissionId);
+      return [
+        ...rest,
+        {
+          permissionId,
+          scopeKind: next.scopeKind,
+          scopeResourceId: next.scopeKind === 1 ? null : next.scopeResourceId,
+          scopeDisplayName: next.scopeKind === 1 ? null : (next.scopeDisplayName ?? null),
+          enabled: true,
+        },
       ];
     });
   }
@@ -217,10 +316,16 @@ export function AccessControlCenter({
     if (!canManage) return;
     setDirty(true);
     setGrants((prev) => {
-      const next = prev.filter((g) => !items.some((i) => i.permissionId === g.permissionId && g.scopeKind === 1));
+      const next = prev.filter((g) => !items.some((i) => i.permissionId === g.permissionId));
       for (const p of items) {
         if (p.disabledByCeiling || p.platformOnly) continue;
-        next.push({ permissionId: p.permissionId, scopeKind: 1, scopeResourceId: null, enabled: true });
+        next.push({
+          permissionId: p.permissionId,
+          scopeKind: 1,
+          scopeResourceId: null,
+          scopeDisplayName: null,
+          enabled: true,
+        });
       }
       return next;
     });
@@ -230,6 +335,38 @@ export function AccessControlCenter({
     if (!canManage) return;
     setDirty(true);
     setGrants((prev) => prev.filter((g) => !items.some((i) => i.permissionId === g.permissionId)));
+  }
+
+  async function loadEffectivePreview(userId: string) {
+    const raw = await api.getEffective(userId);
+    const missing = raw.permissions.filter((p) => p.scopeResourceId && !p.scopeDisplayName && p.scopeKind !== 1);
+    if (missing.length === 0) {
+      setEffective(raw);
+      return;
+    }
+    const byKind = new Map<number, string[]>();
+    for (const p of missing) {
+      const list = byKind.get(p.scopeKind) ?? [];
+      list.push(p.scopeResourceId!);
+      byKind.set(p.scopeKind, list);
+    }
+    const nameById = new Map<string, string>();
+    await Promise.all(
+      Array.from(byKind.entries()).map(async ([kind, ids]) => {
+        const res = await api.listScopeResources(kind, "");
+        for (const item of res.items) {
+          if (ids.includes(item.id)) nameById.set(item.id, item.name);
+        }
+      }),
+    );
+    setEffective({
+      ...raw,
+      permissions: raw.permissions.map((p) =>
+        p.scopeResourceId && !p.scopeDisplayName && nameById.has(p.scopeResourceId)
+          ? { ...p, scopeDisplayName: nameById.get(p.scopeResourceId) }
+          : p,
+      ),
+    });
   }
 
   async function savePermissions() {
@@ -490,30 +627,51 @@ export function AccessControlCenter({
                         {items.map((p) => {
                           const on = enabledSet.has(p.permissionId);
                           const blocked = Boolean(p.disabledByCeiling || p.platformOnly);
+                          const grant = grantByPermission.get(p.permissionId);
+                          const showScope = on && supportsScopedEditor(p);
                           return (
-                            <li key={p.permissionId} className={`px-4 py-3 flex items-start gap-3 ${blocked ? "opacity-60" : ""}`}>
-                              <input
-                                type="checkbox"
-                                className="mt-1"
-                                checked={on}
-                                disabled={!canManage || blocked || selectedRole?.isSystem}
-                                onChange={() => togglePermission(p)}
-                              />
-                              <div className="flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-sm font-bold">{p.permissionId}</span>
-                                  {p.disabledByCeiling ? (
-                                    <span className="text-[10px] rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 font-bold">
-                                      غیرفعال توسط سقف پلتفرم
-                                    </span>
-                                  ) : null}
-                                  {p.platformOnly ? (
-                                    <span className="text-[10px] rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 font-bold">
-                                      فقط پلتفرم
-                                    </span>
+                            <li key={p.permissionId} className={`px-4 py-3 ${blocked ? "opacity-60" : ""}`}>
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  className="mt-1"
+                                  checked={on}
+                                  disabled={!canManage || blocked || selectedRole?.isSystem}
+                                  onChange={() => togglePermission(p)}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm font-bold">{p.permissionId}</span>
+                                    {p.disabledByCeiling ? (
+                                      <span className="text-[10px] rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 font-bold">
+                                        غیرفعال توسط سقف پلتفرم
+                                      </span>
+                                    ) : null}
+                                    {p.platformOnly ? (
+                                      <span className="text-[10px] rounded-full bg-rose-50 text-rose-700 px-2 py-0.5 font-bold">
+                                        فقط پلتفرم
+                                      </span>
+                                    ) : null}
+                                    {grant && grant.scopeKind !== 1 && grant.scopeResourceId ? (
+                                      <span className="text-[10px] rounded-full bg-[#2563EB]/10 text-[#2563EB] px-2 py-0.5 font-bold">
+                                        {formatScopeLabel(grant.scopeKind, grant.scopeDisplayName, grant.scopeResourceId)}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1">{p.descriptionKey}</p>
+                                  {showScope ? (
+                                    <ScopeEditor
+                                      permissionId={p.permissionId}
+                                      scopeKind={grant?.scopeKind ?? 1}
+                                      scopeResourceId={grant?.scopeResourceId ?? null}
+                                      scopeDisplayName={grant?.scopeDisplayName ?? null}
+                                      disabled={blocked || Boolean(selectedRole?.isSystem)}
+                                      canManage={canManage && Boolean(selectedRole?.isMutable)}
+                                      loadResources={loadResources}
+                                      onChange={(next) => updateGrantScope(p.permissionId, next)}
+                                    />
                                   ) : null}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">{p.descriptionKey}</p>
                               </div>
                             </li>
                           );
@@ -600,9 +758,7 @@ export function AccessControlCenter({
               <button
                 type="button"
                 className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold hover:bg-gray-50"
-                onClick={() =>
-                  void api.getEffective(effectiveUserId.trim()).then(setEffective)
-                }
+                onClick={() => void loadEffectivePreview(effectiveUserId.trim())}
               >
                 نمایش
               </button>
@@ -616,7 +772,8 @@ export function AccessControlCenter({
                       <p className="text-sm font-bold">{p.permissionId}</p>
                       <p className="text-[11px] text-gray-500 mt-1">
                         {p.module}
-                        {p.scopeResourceId ? ` · scope ${p.scopeResourceId}` : " · کل محدوده"}
+                        {" · "}
+                        {formatScopeLabel(p.scopeKind, p.scopeDisplayName, p.scopeResourceId)}
                         {" · از "}
                         {p.inheritedViaRoleCodes.join("، ")}
                       </p>
@@ -635,24 +792,75 @@ export function AccessControlCenter({
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
           <h2 className="font-black text-sm mb-3">سقف مجوز قابل تفویض فروشنده</h2>
           <ul className="divide-y divide-gray-50">
-            {ceiling.map((c) => (
-              <li key={c.permissionId} className="py-2 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold">{c.permissionId}</p>
-                  <p className="text-[11px] text-gray-500">{c.module}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={c.enabled}
-                  disabled={!canManage}
-                  onChange={(e) =>
-                    setCeiling((prev) =>
-                      prev.map((row) => (row.permissionId === c.permissionId ? { ...row, enabled: e.target.checked } : row)),
-                    )
-                  }
-                />
-              </li>
-            ))}
+            {ceiling.map((c) => {
+              const def = catalog.find((p) => p.permissionId === c.permissionId);
+              const scopeKind = c.scopeKind ?? 1;
+              const showScope = c.enabled && def && supportsScopedEditor(def);
+              const rowKey = `${c.permissionId}-${scopeKind}-${c.scopeResourceId ?? ""}`;
+              return (
+                <li key={rowKey} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold">{c.permissionId}</p>
+                      <p className="text-[11px] text-gray-500">
+                        {c.module}
+                        {c.enabled && scopeKind !== 1
+                          ? ` · ${formatScopeLabel(scopeKind, c.scopeDisplayName, c.scopeResourceId ?? null)}`
+                          : ""}
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={c.enabled}
+                      disabled={!canManage}
+                      onChange={(e) =>
+                        setCeiling((prev) =>
+                          prev.map((row) =>
+                            row.permissionId === c.permissionId &&
+                            (row.scopeKind ?? 1) === scopeKind &&
+                            (row.scopeResourceId ?? null) === (c.scopeResourceId ?? null)
+                              ? {
+                                  ...row,
+                                  enabled: e.target.checked,
+                                  scopeKind: e.target.checked ? (row.scopeKind ?? 1) : 1,
+                                  scopeResourceId: e.target.checked ? row.scopeResourceId ?? null : null,
+                                  scopeDisplayName: e.target.checked ? row.scopeDisplayName ?? null : null,
+                                }
+                              : row,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                  {showScope ? (
+                    <ScopeEditor
+                      permissionId={c.permissionId}
+                      scopeKind={scopeKind}
+                      scopeResourceId={c.scopeResourceId ?? null}
+                      scopeDisplayName={c.scopeDisplayName ?? null}
+                      canManage={canManage}
+                      loadResources={loadResources}
+                      onChange={(next) =>
+                        setCeiling((prev) =>
+                          prev.map((row) =>
+                            row.permissionId === c.permissionId &&
+                            (row.scopeKind ?? 1) === scopeKind &&
+                            (row.scopeResourceId ?? null) === (c.scopeResourceId ?? null)
+                              ? {
+                                  ...row,
+                                  scopeKind: next.scopeKind,
+                                  scopeResourceId: next.scopeKind === 1 ? null : next.scopeResourceId,
+                                  scopeDisplayName: next.scopeKind === 1 ? null : (next.scopeDisplayName ?? null),
+                                }
+                              : row,
+                          ),
+                        )
+                      }
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
           {canManage ? (
             <button

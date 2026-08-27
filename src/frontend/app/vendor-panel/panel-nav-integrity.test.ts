@@ -37,7 +37,12 @@ function extractMenuItemsBlock(source: string): string {
 
 test("vendor shell exports deferred hrefs and filters live-only nav", () => {
   assert.ok(shellSource.includes("export const VENDOR_DEFERRED_NAV_HREFS"), "missing VENDOR_DEFERRED_NAV_HREFS export");
-  assert.ok(shellSource.includes("visibleMenuItems = menuItems.filter((item) => item.live)"), "missing live-only filter");
+  // live gate + capability projection (TB-P06-T024-R1): itemAllowed requires item.live
+  assert.ok(shellSource.includes("if (!item.live) return false"), "missing live-only gate inside itemAllowed");
+  assert.ok(
+    shellSource.includes("visibleMenuItems = useMemo(() => menuItems.filter((item) => itemAllowed(item, caps)), [caps])"),
+    "missing capability-aware live nav filter",
+  );
   assert.ok(shellSource.includes("visibleMenuItems.map"), "nav must render visibleMenuItems");
 
   for (const href of DEFERRED_HREFS) {

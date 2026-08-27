@@ -89,7 +89,15 @@ public sealed record UserRoleAssignmentDto(
 /// <param name="Enabled">فعال.</param>
 /// <param name="Delegable">قابل تفویض.</param>
 /// <param name="Module">ماژول.</param>
-public sealed record SellerCeilingEntryDto(string PermissionId, bool Enabled, bool Delegable, string Module);
+/// <param name="ScopeKind">گونهٔ scope سقف.</param>
+/// <param name="ScopeResourceId">منبع scope.</param>
+public sealed record SellerCeilingEntryDto(
+    string PermissionId,
+    bool Enabled,
+    bool Delegable,
+    string Module,
+    AccessScopeKind ScopeKind = AccessScopeKind.GlobalWithinOwner,
+    Guid? ScopeResourceId = null);
 
 /// <summary>یک مجوز مؤثر با محدوده.</summary>
 /// <param name="PermissionId">مجوز.</param>
@@ -98,13 +106,15 @@ public sealed record SellerCeilingEntryDto(string PermissionId, bool Enabled, bo
 /// <param name="ScopeResourceId">منبع.</param>
 /// <param name="InheritedViaRoleCodes">نقش‌ها.</param>
 /// <param name="DeniedByCeiling">ردشده توسط سقف.</param>
+/// <param name="ScopeDisplayName">نام خوانای منبع scope.</param>
 public sealed record EffectivePermissionDto(
     string PermissionId,
     string Module,
     AccessScopeKind ScopeKind,
     Guid? ScopeResourceId,
     IReadOnlyList<string> InheritedViaRoleCodes,
-    bool DeniedByCeiling);
+    bool DeniedByCeiling,
+    string? ScopeDisplayName = null);
 
 /// <summary>پیش‌نمایش دسترسی مؤثر.</summary>
 /// <param name="UserId">کاربر.</param>
@@ -176,8 +186,13 @@ public interface IAccessControlDirectory
     /// <summary>خواندن سقف فروشنده.</summary>
     Task<IReadOnlyList<SellerCeilingEntryDto>> GetSellerCeilingAsync(Guid sellerPartyId, CancellationToken cancellationToken);
 
-    /// <summary>تنظیم سقف فروشنده.</summary>
-    Task SetSellerCeilingAsync(Guid sellerPartyId, IReadOnlyList<(string PermissionId, bool Enabled)> entries, Guid actorUserId, string? traceId, CancellationToken cancellationToken);
+    /// <summary>تنظیم سقف فروشنده با scope اختیاری.</summary>
+    Task SetSellerCeilingAsync(
+        Guid sellerPartyId,
+        IReadOnlyList<(string PermissionId, bool Enabled, AccessScopeKind ScopeKind, Guid? ScopeResourceId)> entries,
+        Guid actorUserId,
+        string? traceId,
+        CancellationToken cancellationToken);
 
     /// <summary>دسترسی مؤثر.</summary>
     Task<EffectiveAccessDto> GetEffectiveAccessAsync(Guid userId, AccessOwnerScope owner, CancellationToken cancellationToken);

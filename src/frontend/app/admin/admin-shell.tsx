@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   LayoutDashboard,
@@ -25,6 +25,11 @@ import {
   X,
 } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
+import {
+  capabilityPermissionIds,
+  createAdminAccessApi,
+  hasViewCapability,
+} from "../access-control/access-control-api";
 
 type NavItem = {
   id: string;
@@ -33,6 +38,8 @@ type NavItem = {
   icon: typeof LayoutDashboard;
   live: boolean;
   exact?: boolean;
+  /** مجوز *.view لازم برای نمایش در ناوبری؛ بدون آن همیشه (در صورت live) دیده می‌شود. */
+  viewPermission?: string;
 };
 
 type NavGroup = {
@@ -47,23 +54,23 @@ const navGroups: NavGroup[] = [
     id: "ops",
     label: "عملیات",
     items: [
-      { id: "dashboard", label: "داشبورد", href: "/admin", icon: LayoutDashboard, live: true, exact: true },
-      { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true },
-      { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true },
-      { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true },
-      { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true },
-      { id: "settlement", label: "تسویه فروشندگان", href: "/admin/settlement", icon: Wallet, live: true },
-      { id: "payouts", label: "صف payout", href: "/admin/payouts", icon: Wallet, live: true },
-      { id: "content", label: "محتوا / بلاگ", href: "/admin/content", icon: FileText, live: true },
-      { id: "stories", label: "استوری‌ها", href: "/admin/stories", icon: Sparkles, live: true },
-      { id: "page-composition", label: "ترکیب صفحهٔ خانه", href: "/admin/page-composition", icon: LayoutTemplate, live: true },
+      { id: "dashboard", label: "داشبورد", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
+      { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
+      { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
+      { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
+      { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
+      { id: "settlement", label: "تسویه فروشندگان", href: "/admin/settlement", icon: Wallet, live: true, viewPermission: "settlement.view" },
+      { id: "payouts", label: "صف payout", href: "/admin/payouts", icon: Wallet, live: true, viewPermission: "settlement.view" },
+      { id: "content", label: "محتوا / بلاگ", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
+      { id: "stories", label: "استوری‌ها", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
+      { id: "page-composition", label: "ترکیب صفحهٔ خانه", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
     ],
   },
   {
     id: "market",
     label: "بازار",
     items: [
-      { id: "sellers", label: "فروشندگان", href: "/admin/sellers", icon: Store, live: true },
+      { id: "sellers", label: "فروشندگان", href: "/admin/sellers", icon: Store, live: true, viewPermission: "seller.view" },
       { id: "customers", label: "مشتریان", href: "/admin/customers", icon: Users, live: true },
     ],
   },
@@ -71,8 +78,8 @@ const navGroups: NavGroup[] = [
     id: "moderation",
     label: "نظارت",
     items: [
-      { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true },
-      { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true },
+      { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true, viewPermission: "review.view" },
+      { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
     ],
   },
   {
@@ -80,7 +87,7 @@ const navGroups: NavGroup[] = [
     label: "سامانه",
     items: [
       { id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: false },
-      { id: "access-control", label: "کنترل دسترسی", href: "/admin/access-control", icon: Shield, live: true },
+      { id: "access-control", label: "کنترل دسترسی", href: "/admin/access-control", icon: Shield, live: true, viewPermission: "accesscontrol.view" },
     ],
   },
 ];
@@ -106,6 +113,13 @@ function crumbFor(pathname: string): string {
   return "عملیات";
 }
 
+function itemAllowed(item: NavItem, caps: Set<string> | null): boolean {
+  if (!item.live) return false;
+  if (!item.viewPermission) return true;
+  if (caps === null) return true;
+  return hasViewCapability(caps, item.viewPermission);
+}
+
 /**
  * پوستهٔ Admin حرفه‌ای با زبان بصری Shopeiva Vendor/Account
  * (header چسبان + sidebar + drawer) و هویت عملیاتی جدا از Seller Panel.
@@ -116,9 +130,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [caps, setCaps] = useState<Set<string> | null>(null);
 
   useEffect(() => {
-    void prepareAdminDevActor().finally(() => setReady(true));
+    void prepareAdminDevActor()
+      .then(async () => {
+        try {
+          const effective = await createAdminAccessApi().getMyCapabilities();
+          setCaps(capabilityPermissionIds(effective));
+        } catch {
+          setCaps(null);
+        }
+      })
+      .finally(() => setReady(true));
   }, []);
 
   useEffect(() => {
@@ -127,6 +151,17 @@ export function AdminShell({ children }: { children: ReactNode }) {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  const visibleGroups = useMemo(
+    () =>
+      navGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => itemAllowed(item, caps)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [caps],
+  );
 
   if (!ready) {
     return (
@@ -189,22 +224,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           data-testid="admin-panel-sidebar"
         >
           <div className="p-4 space-y-5 min-w-[250px]">
-            {navGroups.map((group) => {
-              const liveItems = group.items.filter((item) => item.live);
-              if (liveItems.length === 0) {
-                return null;
-              }
-              return (
-                <div key={group.id}>
-                  <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{group.label}</p>
-                  <nav className="space-y-1" aria-label={group.label} data-testid={group.id === "ops" ? "admin-panel-nav-live-only" : undefined}>
-                    {liveItems.map((item) => (
-                      <NavLink key={item.id} item={item} pathname={pathname} />
-                    ))}
-                  </nav>
-                </div>
-              );
-            })}
+            {visibleGroups.map((group) => (
+              <div key={group.id}>
+                <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{group.label}</p>
+                <nav className="space-y-1" aria-label={group.label} data-testid={group.id === "ops" ? "admin-panel-nav-live-only" : undefined}>
+                  {group.items.map((item) => (
+                    <NavLink key={item.id} item={item} pathname={pathname} />
+                  ))}
+                </nav>
+              </div>
+            ))}
           </div>
         </aside>
 
@@ -229,22 +258,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-5">
-              {navGroups.map((group) => {
-                const liveItems = group.items.filter((item) => item.live);
-                if (liveItems.length === 0) {
-                  return null;
-                }
-                return (
-                  <div key={group.id}>
-                    <p className="px-3 mb-1 text-[10px] font-bold text-gray-400">{group.label}</p>
-                    <nav className="space-y-1">
-                      {liveItems.map((item) => (
-                        <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
-                      ))}
-                    </nav>
-                  </div>
-                );
-              })}
+              {visibleGroups.map((group) => (
+                <div key={group.id}>
+                  <p className="px-3 mb-1 text-[10px] font-bold text-gray-400">{group.label}</p>
+                  <nav className="space-y-1">
+                    {group.items.map((item) => (
+                      <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
+                    ))}
+                  </nav>
+                </div>
+              ))}
             </div>
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <Link

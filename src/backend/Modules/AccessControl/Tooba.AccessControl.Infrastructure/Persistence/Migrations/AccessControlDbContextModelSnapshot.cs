@@ -179,6 +179,14 @@ namespace Tooba.AccessControl.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("seller_party_id");
 
+                    b.Property<int>("ScopeKind")
+                        .HasColumnType("integer")
+                        .HasColumnName("scope_kind");
+
+                    b.Property<Guid?>("ScopeResourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("scope_resource_id");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -189,9 +197,9 @@ namespace Tooba.AccessControl.Infrastructure.Persistence.Migrations
                     b.HasIndex("SellerPartyId")
                         .HasDatabaseName("ix_platform_seller_ceilings_seller_party_id");
 
-                    b.HasIndex("SellerPartyId", "PermissionId")
+                    b.HasIndex("SellerPartyId", "PermissionId", "ScopeKind", "ScopeResourceId")
                         .IsUnique()
-                        .HasDatabaseName("ix_platform_seller_ceilings_seller_party_id_permission_id");
+                        .HasDatabaseName("ix_platform_seller_ceilings_seller_party_id_permission_id_scop");
 
                     b.ToTable("platform_seller_ceilings", "access_control");
                 });

@@ -151,6 +151,10 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("catalog_variant_id");
 
+                    b.Property<Guid?>("CategoryIdSnapshot")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id_snapshot");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -197,6 +201,9 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
 
                     b.HasKey("LineId")
                         .HasName("pk_order_lines");
+
+                    b.HasIndex("CategoryIdSnapshot")
+                        .HasDatabaseName("ix_order_lines_category_id_snapshot");
 
                     b.HasIndex("SellerOrderId")
                         .HasDatabaseName("ix_order_lines_seller_order_id");

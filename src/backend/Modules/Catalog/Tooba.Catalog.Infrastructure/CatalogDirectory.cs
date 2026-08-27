@@ -48,6 +48,16 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<CategoryReference?> FindCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        var category = await _db.Categories.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.CategoryId == categoryId, cancellationToken);
+        return category is null
+            ? null
+            : new CategoryReference(category.CategoryId, category.ParentCategoryId, category.Status);
+    }
+
+    /// <inheritdoc />
     public async Task<ReviewableProductReference?> FindReviewableProductBySlugAsync(
         string slug,
         CancellationToken cancellationToken)
@@ -93,6 +103,134 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             .ThenBy(x => x.Locale)
             .ToListAsync(cancellationToken);
         return rows.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.First().Value);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, string>> GetCategoryNamesAsync(
+        IReadOnlyCollection<Guid> categoryIds,
+        CancellationToken cancellationToken)
+    {
+        if (categoryIds.Count == 0) return new Dictionary<Guid, string>();
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Category
+                && x.FieldKey == "name" && categoryIds.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenByDescending(x => x.Locale.StartsWith("fa"))
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.First().Value);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetPrimaryCategoryIdsByVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0) return new Dictionary<Guid, Guid?>();
+        var distinct = variantIds.Distinct().ToArray();
+        var variantRows = await _db.Variants.AsNoTracking()
+            .Where(v => distinct.Contains(v.VariantId))
+            .Select(v => new { v.VariantId, v.ProductId })
+            .ToListAsync(cancellationToken);
+        if (variantRows.Count == 0) return distinct.ToDictionary(id => id, _ => (Guid?)null);
+
+        var productIds = variantRows.Select(v => v.ProductId).Distinct().ToArray();
+        var categoryLinks = await _db.ProductCategories.AsNoTracking()
+            .Where(pc => productIds.Contains(pc.ProductId))
+            .Select(pc => new { pc.ProductId, pc.CategoryId, pc.AssignmentId })
+            .ToListAsync(cancellationToken);
+        var primaryByProduct = categoryLinks
+            .GroupBy(x => x.ProductId)
+            .ToDictionary(g => g.Key, g => (Guid?)g.OrderBy(x => x.AssignmentId).First().CategoryId);
+
+        var result = new Dictionary<Guid, Guid?>();
+        foreach (var id in distinct)
+        {
+            result[id] = null;
+        }
+
+        foreach (var row in variantRows)
+        {
+            result[row.VariantId] = primaryByProduct.GetValueOrDefault(row.ProductId);
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlCategoryItem>> ListCategoriesForAccessControlAsync(
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var categories = await _db.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        if (categories.Count == 0) return [];
+        var names = await GetCategoryNamesAsync(categories.Select(c => c.CategoryId).ToArray(), cancellationToken);
+        IEnumerable<AccessControlCategoryItem> items = categories.Select(c =>
+            new AccessControlCategoryItem(
+                c.CategoryId,
+                c.ParentCategoryId,
+                names.GetValueOrDefault(c.CategoryId) ?? "رده",
+                c.Status.ToString()));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var needle = search.Trim();
+            items = items.Where(i =>
+                i.Name.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || i.CategoryId.ToString("D").Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return items.OrderBy(i => i.Name, StringComparer.Ordinal).Take(200).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlBrandItem>> ListBrandsForAccessControlAsync(
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var brands = await _db.Brands.AsNoTracking().ToListAsync(cancellationToken);
+        if (brands.Count == 0) return [];
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand
+                && x.FieldKey == "name"
+                && brands.Select(b => b.BrandId).Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        var names = rows.GroupBy(x => x.OwnerId).ToDictionary(g => g.Key, g => g.First().Value);
+        IEnumerable<AccessControlBrandItem> items = brands.Select(b =>
+            new AccessControlBrandItem(b.BrandId, names.GetValueOrDefault(b.BrandId) ?? b.SlugSeam ?? "برند", b.Status.ToString()));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var needle = search.Trim();
+            items = items.Where(i => i.Name.Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return items.OrderBy(i => i.Name, StringComparer.Ordinal).Take(200).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AccessControlProductItem>> ListProductsForAccessControlAsync(
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var products = await _db.Products.AsNoTracking()
+            .Where(p => p.Status == CatalogPublicationStatus.Published)
+            .Take(500)
+            .ToListAsync(cancellationToken);
+        if (products.Count == 0) return [];
+        var titles = await GetProductTitlesAsync(products.Select(p => p.ProductId).ToArray(), cancellationToken);
+        IEnumerable<AccessControlProductItem> items = products.Select(p =>
+            new AccessControlProductItem(
+                p.ProductId,
+                titles.GetValueOrDefault(p.ProductId) ?? p.SlugSeam ?? p.ProductId.ToString("N"),
+                p.Status.ToString()));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var needle = search.Trim();
+            items = items.Where(i => i.Title.Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return items.OrderBy(i => i.Title, StringComparer.Ordinal).Take(200).ToList();
     }
 
     /// <inheritdoc />

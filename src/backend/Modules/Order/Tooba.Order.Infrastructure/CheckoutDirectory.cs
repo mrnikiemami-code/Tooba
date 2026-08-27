@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Cart.Domain;
+using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
@@ -41,6 +42,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IInventoryDirectory _inventory;
     private readonly ITaxCalculator _taxes;
     private readonly IPromotionEvaluator _promotions;
+    private readonly ICatalogLookupGateway _catalog;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -54,7 +56,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IPriceLookupGateway prices,
         IInventoryDirectory inventory,
         ITaxCalculator taxes,
-        IPromotionEvaluator promotions)
+        IPromotionEvaluator promotions,
+        ICatalogLookupGateway catalog)
     {
         _db = db;
         _guard = guard;
@@ -65,6 +68,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _inventory = inventory;
         _taxes = taxes;
         _promotions = promotions;
+        _catalog = catalog;
     }
 
     /// <inheritdoc />
@@ -264,6 +268,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     {
         var sellerOrders = new List<SellerOrder>();
         var sequence = 0;
+        var categoryByVariant = await _catalog.GetPrimaryCategoryIdsByVariantIdsAsync(
+            cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
         {
             sequence++;
@@ -373,7 +380,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     promotion.Applied.FirstOrDefault()?.DiscountKind.ToString(),
                     lineExclusive,
                     promotion.PostDiscountTaxExclusiveAmount,
-                    promotion.Applied.Count == 0 ? null : now));
+                    promotion.Applied.Count == 0 ? null : now,
+                    categoryByVariant.GetValueOrDefault(cartLine.CatalogVariantId)));
             }
 
             sellerOrders.Add(SellerOrder.Open(

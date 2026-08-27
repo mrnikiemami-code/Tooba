@@ -15,7 +15,9 @@ import type {
   PermissionDef,
   RolePermissionGrant,
   RoleRow,
+  ScopeResourcesResult,
 } from "./access-control-center";
+import type { ScopeResourceItem } from "./scope-editor";
 
 async function readJson<T>(path: string, headers: Record<string, string>, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -58,6 +60,109 @@ function mapPermission(raw: Record<string, unknown>): PermissionDef {
   };
 }
 
+function mapGrant(raw: Record<string, unknown>): RolePermissionGrant {
+  return {
+    permissionId: String(raw.permissionId),
+    scopeKind: Number(raw.scopeKind ?? 1),
+    scopeResourceId: raw.scopeResourceId == null ? null : String(raw.scopeResourceId),
+    scopeDisplayName: raw.scopeDisplayName == null ? null : String(raw.scopeDisplayName),
+    enabled: Boolean(raw.enabled),
+  };
+}
+
+function mapCeiling(raw: Record<string, unknown>): CeilingEntry {
+  return {
+    permissionId: String(raw.permissionId),
+    enabled: Boolean(raw.enabled),
+    delegable: Boolean(raw.delegable),
+    module: String(raw.module ?? ""),
+    scopeKind: Number(raw.scopeKind ?? 1),
+    scopeResourceId: raw.scopeResourceId == null ? null : String(raw.scopeResourceId),
+    scopeDisplayName: raw.scopeDisplayName == null ? null : String(raw.scopeDisplayName),
+  };
+}
+
+function mapEffective(raw: Record<string, unknown>): EffectiveAccess {
+  const permissions = Array.isArray(raw.permissions) ? raw.permissions : [];
+  return {
+    userId: String(raw.userId),
+    roleCodes: Array.isArray(raw.roleCodes) ? raw.roleCodes.map(String) : [],
+    permissions: permissions.map((p) => {
+      const row = p as Record<string, unknown>;
+      return {
+        permissionId: String(row.permissionId),
+        module: String(row.module ?? ""),
+        scopeKind: Number(row.scopeKind ?? 1),
+        scopeResourceId: row.scopeResourceId == null ? null : String(row.scopeResourceId),
+        scopeDisplayName: row.scopeDisplayName == null ? null : String(row.scopeDisplayName),
+        inheritedViaRoleCodes: Array.isArray(row.inheritedViaRoleCodes)
+          ? row.inheritedViaRoleCodes.map(String)
+          : [],
+        deniedByCeiling: Boolean(row.deniedByCeiling),
+      };
+    }),
+  };
+}
+
+/** مسیر scope-resources بر اساس ScopeKind عددی. */
+export const SCOPE_KIND_PATH: Record<number, string> = {
+  2: "categories",
+  3: "products",
+  4: "brands",
+  5: "warehouses",
+  6: "stores",
+  7: "order-segments",
+};
+
+function mapScopeItems(kind: number, items: unknown[]): ScopeResourceItem[] {
+  return items.map((raw) => {
+    const item = raw as Record<string, unknown>;
+    if (kind === 2) {
+      return {
+        id: String(item.categoryId ?? item.id),
+        parentId: item.parentCategoryId == null ? null : String(item.parentCategoryId),
+        name: String(item.name ?? ""),
+      };
+    }
+    if (kind === 3) {
+      return {
+        id: String(item.productId ?? item.id),
+        name: String(item.title ?? item.name ?? ""),
+      };
+    }
+    if (kind === 4) {
+      return {
+        id: String(item.brandId ?? item.id),
+        name: String(item.name ?? ""),
+      };
+    }
+    return {
+      id: String(item.id ?? ""),
+      name: String(item.name ?? item.id ?? ""),
+      deferred: Boolean(item.deferred),
+    };
+  });
+}
+
+async function fetchScopeResources(
+  base: string,
+  headers: Record<string, string>,
+  kind: number,
+  q: string,
+): Promise<ScopeResourcesResult> {
+  const pathSeg = SCOPE_KIND_PATH[kind];
+  if (!pathSeg) {
+    return { deferred: kind !== 1, items: [] };
+  }
+  const qs = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
+  const raw = await readJson<Record<string, unknown>>(`${base}/scope-resources/${pathSeg}${qs}`, headers);
+  const items = Array.isArray(raw.items) ? raw.items : [];
+  return {
+    deferred: Boolean(raw.deferred),
+    items: mapScopeItems(kind, items),
+  };
+}
+
 /** API کلاینت Admin برای Access Control پلتفرم. */
 export function createAdminAccessApi(): AccApi {
   const headers = () => adminHeaders({ "Content-Type": "application/json" });
@@ -78,9 +183,22 @@ export function createAdminAccessApi(): AccApi {
     cloneRole: async (id, body) =>
       mapRole(await readJson(`${base}/roles/${id}/clone`, headers(), { method: "POST", body: JSON.stringify(body) })),
     archiveRole: (id) => readJson(`${base}/roles/${id}`, headers(), { method: "DELETE" }),
-    getRolePermissions: (id) => readJson<RolePermissionGrant[]>(`${base}/roles/${id}/permissions`, headers()),
+    getRolePermissions: async (id) => {
+      const rows = await readJson<Record<string, unknown>[]>(`${base}/roles/${id}/permissions`, headers());
+      return rows.map(mapGrant);
+    },
     setRolePermissions: (id, grants) =>
-      readJson(`${base}/roles/${id}/permissions`, headers(), { method: "PUT", body: JSON.stringify(grants) }),
+      readJson(`${base}/roles/${id}/permissions`, headers(), {
+        method: "PUT",
+        body: JSON.stringify(
+          grants.map((g) => ({
+            permissionId: g.permissionId,
+            scopeKind: g.scopeKind,
+            scopeResourceId: g.scopeResourceId,
+            enabled: g.enabled,
+          })),
+        ),
+      }),
     listAssignments: async () => {
       const rows = await readJson<Record<string, unknown>[]>(`${base}/assignments`, headers());
       return rows.map(
@@ -96,7 +214,9 @@ export function createAdminAccessApi(): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
-    getEffective: (userId) => readJson<EffectiveAccess>(`${base}/users/${userId}/effective`, headers()),
+    getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
+    listScopeResources: (kind, q) => fetchScopeResources(base, headers(), kind, q),
+    getMyCapabilities: async () => mapEffective(await readJson(`${base}/me/capabilities`, headers())),
   };
 }
 
@@ -105,6 +225,7 @@ export function createAdminSellerAccessApi(sellerId: string): AccApi {
   const headers = () => adminHeaders({ "Content-Type": "application/json" });
   const base = `/v1/admin/sellers/${encodeURIComponent(sellerId)}/access-control`;
   const platform = createAdminAccessApi();
+  const platformBase = "/v1/admin/access-control";
   return {
     listCatalog: platform.listCatalog,
     listRoles: async () => {
@@ -117,9 +238,22 @@ export function createAdminSellerAccessApi(sellerId: string): AccApi {
     cloneRole: async (id, body) =>
       mapRole(await readJson(`${base}/roles/${id}/clone`, headers(), { method: "POST", body: JSON.stringify(body) })),
     archiveRole: (id) => readJson(`${base}/roles/${id}`, headers(), { method: "DELETE" }),
-    getRolePermissions: (id) => readJson<RolePermissionGrant[]>(`${base}/roles/${id}/permissions`, headers()),
+    getRolePermissions: async (id) => {
+      const rows = await readJson<Record<string, unknown>[]>(`${base}/roles/${id}/permissions`, headers());
+      return rows.map(mapGrant);
+    },
     setRolePermissions: (id, grants) =>
-      readJson(`${base}/roles/${id}/permissions`, headers(), { method: "PUT", body: JSON.stringify(grants) }),
+      readJson(`${base}/roles/${id}/permissions`, headers(), {
+        method: "PUT",
+        body: JSON.stringify(
+          grants.map((g) => ({
+            permissionId: g.permissionId,
+            scopeKind: g.scopeKind,
+            scopeResourceId: g.scopeResourceId,
+            enabled: g.enabled,
+          })),
+        ),
+      }),
     listAssignments: async () => {
       const rows = await readJson<Record<string, unknown>[]>(`${base}/assignments`, headers());
       return rows.map(
@@ -135,29 +269,43 @@ export function createAdminSellerAccessApi(sellerId: string): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
-    getEffective: (userId) => readJson<EffectiveAccess>(`${base}/users/${userId}/effective`, headers()),
-    getCeiling: () => readJson<CeilingEntry[]>(`${base}/ceiling`, headers()),
+    getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
+    getCeiling: async () => {
+      const rows = await readJson<Record<string, unknown>[]>(`${base}/ceiling`, headers());
+      return rows.map(mapCeiling);
+    },
     setCeiling: (entries) =>
       readJson(`${base}/ceiling`, headers(), {
         method: "PUT",
-        body: JSON.stringify({ entries: entries.map((e) => ({ permissionId: e.permissionId, enabled: e.enabled })) }),
+        body: JSON.stringify({
+          entries: entries.map((e) => ({
+            permissionId: e.permissionId,
+            enabled: e.enabled,
+            scopeKind: e.scopeKind ?? 1,
+            scopeResourceId: e.scopeResourceId ?? null,
+          })),
+        }),
       }),
+    listScopeResources: (kind, q) => fetchScopeResources(platformBase, headers(), kind, q),
+    getMyCapabilities: platform.getMyCapabilities,
   };
+}
+
+function sellerHeaders(): Record<string, string> {
+  const sellerPartyId = readSellerPartyId(typeof window !== "undefined" ? window.location.search : "") ?? "";
+  const actor = readActorUserId();
+  const h: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    [SELLER_PARTY_HEADER]: sellerPartyId,
+  };
+  if (actor) h[DEV_ACTOR_HEADER] = actor;
+  return h;
 }
 
 /** API کلاینت Seller. */
 export function createSellerAccessApi(): AccApi {
-  const headers = (): Record<string, string> => {
-    const sellerPartyId = readSellerPartyId(typeof window !== "undefined" ? window.location.search : "") ?? "";
-    const actor = readActorUserId();
-    const h: Record<string, string> = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      [SELLER_PARTY_HEADER]: sellerPartyId,
-    };
-    if (actor) h[DEV_ACTOR_HEADER] = actor;
-    return h;
-  };
+  const headers = (): Record<string, string> => sellerHeaders();
   const base = "/v1/seller/access-control";
   return {
     listCatalog: async () => {
@@ -174,9 +322,22 @@ export function createSellerAccessApi(): AccApi {
     cloneRole: async (id, body) =>
       mapRole(await readJson(`${base}/roles/${id}/clone`, headers(), { method: "POST", body: JSON.stringify(body) })),
     archiveRole: (id) => readJson(`${base}/roles/${id}`, headers(), { method: "DELETE" }),
-    getRolePermissions: (id) => readJson<RolePermissionGrant[]>(`${base}/roles/${id}/permissions`, headers()),
+    getRolePermissions: async (id) => {
+      const rows = await readJson<Record<string, unknown>[]>(`${base}/roles/${id}/permissions`, headers());
+      return rows.map(mapGrant);
+    },
     setRolePermissions: (id, grants) =>
-      readJson(`${base}/roles/${id}/permissions`, headers(), { method: "PUT", body: JSON.stringify(grants) }),
+      readJson(`${base}/roles/${id}/permissions`, headers(), {
+        method: "PUT",
+        body: JSON.stringify(
+          grants.map((g) => ({
+            permissionId: g.permissionId,
+            scopeKind: g.scopeKind,
+            scopeResourceId: g.scopeResourceId,
+            enabled: g.enabled,
+          })),
+        ),
+      }),
     listAssignments: async () => {
       const rows = await readJson<Record<string, unknown>[]>(`${base}/assignments`, headers());
       return rows.map(
@@ -192,7 +353,23 @@ export function createSellerAccessApi(): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
-    getEffective: (userId) => readJson<EffectiveAccess>(`${base}/users/${userId}/effective`, headers()),
-    getCeiling: () => readJson<CeilingEntry[]>(`${base}/ceiling`, headers()),
+    getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
+    getCeiling: async () => {
+      const rows = await readJson<Record<string, unknown>[]>(`${base}/ceiling`, headers());
+      return rows.map(mapCeiling);
+    },
+    listScopeResources: (kind, q) => fetchScopeResources(base, headers(), kind, q),
+    getMyCapabilities: async () => mapEffective(await readJson(`${base}/me/capabilities`, headers())),
   };
+}
+
+/** آیا مجموعهٔ capabilities شامل مجوز view است (بدون hardcode نقش). */
+export function hasViewCapability(permissionIds: ReadonlySet<string>, viewPermissionId: string): boolean {
+  return permissionIds.has(viewPermissionId);
+}
+
+/** شناسه‌های مجوز فعال از پاسخ me/capabilities. */
+export function capabilityPermissionIds(effective: EffectiveAccess | null): Set<string> {
+  if (!effective) return new Set();
+  return new Set(effective.permissions.filter((p) => !p.deniedByCeiling).map((p) => p.permissionId));
 }
