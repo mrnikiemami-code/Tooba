@@ -51,10 +51,16 @@ public sealed class StorefrontCheckoutComposer
     /// <summary>
     /// بازبینی تجاری سبد را بدون ساخت سفارش برمی‌گرداند.
     /// </summary>
-    public async Task<StorefrontCheckoutPage> PreviewAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
+    public async Task<StorefrontCheckoutPage> PreviewAsync(
+        Guid cartId,
+        string? guestSecret,
+        string? couponCode,
+        CancellationToken cancellationToken)
     {
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
-        var quoted = await _checkouts.PreviewAsync(BuildCommand(cart, guestSecret, "preview", StorefrontGuestActorId), cancellationToken);
+        var quoted = await _checkouts.PreviewAsync(
+            BuildCommand(cart, guestSecret, "preview", StorefrontGuestActorId, shipping: null, couponCode),
+            cancellationToken);
         return MapPage(quoted, cart, persisted: false);
     }
 
@@ -68,6 +74,7 @@ public sealed class StorefrontCheckoutComposer
         int expectedVersion,
         string idempotencyKey,
         StorefrontCheckoutShippingInput shipping,
+        string? couponCode,
         CancellationToken cancellationToken)
     {
         var prepared = await PrepareShippingAsync(shipping, cancellationToken);
@@ -78,7 +85,7 @@ public sealed class StorefrontCheckoutComposer
         }
 
         var submitted = await _checkouts.SubmitAsync(
-            BuildCommand(cart, guestSecret, idempotencyKey, prepared.PlacedByUserId, prepared.Shipping),
+            BuildCommand(cart, guestSecret, idempotencyKey, prepared.PlacedByUserId, prepared.Shipping, couponCode),
             cancellationToken);
         return MapPage(submitted, cart, persisted: true);
     }
@@ -186,7 +193,8 @@ public sealed class StorefrontCheckoutComposer
         string? guestSecret,
         string idempotencyKey,
         Guid placedByUserId,
-        StorefrontCheckoutShippingInput? shipping = null) =>
+        StorefrontCheckoutShippingInput? shipping = null,
+        string? couponCode = null) =>
         new(
             cart.CartId,
             new CartAccess(null, guestSecret),
@@ -196,7 +204,7 @@ public sealed class StorefrontCheckoutComposer
             placedByUserId,
             idempotencyKey,
             TaxJurisdiction,
-            null,
+            string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim(),
             null,
             shipping?.RecipientName ?? string.Empty,
             shipping?.ContactMobile ?? string.Empty,

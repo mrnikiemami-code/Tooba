@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P05-T025
+TB-P06-T019-R1
 ```
 
 Last Architect Accepted Gate:
@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T019-R1
+TB-P06-T020
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P06-T019-R1 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completed TB-P06-T020 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -97,8 +97,13 @@ TB-P06-T012 = ACCEPTED
 TB-P06-T013 = ACCEPTED
 TB-P06-T014 = ACCEPTED
 TB-P06-T015 = ACCEPTED
-TB-P06-T016 = REPAIR_REQUIRED
-TB-P06-T016-R1 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T016 = ACCEPTED
+TB-P06-T016-R1 = ACCEPTED
+TB-P06-T017 = ACCEPTED
+TB-P06-T018 = ACCEPTED
+TB-P06-T019 = SUPERSEDED_BY_ARCHITECT_RESCOPE
+TB-P06-T019-R1 = ACCEPTED
+TB-P06-T020 = AWAITING_ARCHITECT_ACCEPT
 PUBLIC_LOCALE_ROUTING = PREFIXED
 SUPPORTED_LOCALES = fa,en
 MULTILINGUAL_SEO = LIVE
@@ -122,6 +127,15 @@ NEW_UI_RULE = SOURCE_DERIVED_NATIVE_FIT
 COMMERCIAL_UI_READINESS = AUDITED
 FAKE_DATA_ACTION_AUDIT = AUDITED
 CSS_JS_MOTION_PARITY = AUDITED
+COMMERCIAL_PANEL_WAVE1_LIVE = YES
+COMMERCIAL_PANEL_WAVE2_LIVE = YES
+SHARED_STORY_MANAGEMENT_LIVE = YES
+SELLER_PROMOTIONS = LIVE
+SELLER_REVIEWS = LIVE
+ADMIN_PROMOTIONS = LIVE
+ADMIN_REVIEWS = LIVE
+NOTIFICATIONS = DEFERRED_WITH_REASON
+PANEL_NAVIGATION = HONEST_LIVE_ONLY
 SETTLEMENT_BACKEND = LIVE
 PAYOUT_BACKEND = LIVE_FOUNDATION
 SETTLEMENT_SELLER_UI = LIVE
@@ -140,6 +154,7 @@ AUTHORIZATION = SPICEDB_REBAC
 MESSAGING_TRANSPORT = MASSTRANSIT_POSTGRESQL_SQL_TRANSPORT
 HOME_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
+PRODUCT_FULLY_READY = NO
 ```
 
 Accepted ledger (selected):
@@ -614,4 +629,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 Worker PASS = AWAITING_ARCHITECT_ACCEPT (`COMMERCIAL_PANEL_WAVE1_LIVE`). TB-P06-T019 interrupted by Architect; replacement TB-P06-T019-R1 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Shared Story Management — recovered backend review/ownership WIP (`AddStoryReviewOwnership`), one `StoryManagementScreen` for Admin+Seller (capability-scoped actions), seller `/vendor-panel/stories` submit/resubmit own-only, admin approve/reject/schedule/activate in existing `/admin/stories`, storefront Shopeiva Story rail untouched, readiness `SHARED_STORY_MANAGEMENT_LIVE` (not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T019-R1/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T017 = ACCEPTED. TB-P06-T018 = ACCEPTED (`COMMERCIAL_PANEL_WAVE1_LIVE`). TB-P06-T019 = SUPERSEDED_BY_ARCHITECT_RESCOPE. TB-P06-T019-R1 = ACCEPTED (`SHARED_STORY_MANAGEMENT_LIVE`). TB-P06-T020 Worker PASS = AWAITING_ARCHITECT_ACCEPT: Commercial Panel Wave 2 — seller coupons/promotions LIVE (`/vendor-panel/coupons` + Host `/v1/seller/promotions*` + checkout coupon apply), seller reviews LIVE (read-only list; reply deferred), admin promotions + reviews LIVE, notifications DEFERRED_WITH_REASON (nav hidden), tickets still deferred, readiness `COMMERCIAL_PANEL_WAVE2_LIVE` (not PRODUCT_FULLY_READY). Evidence under `docs/evidence/TB-P06-T020/`.

@@ -284,7 +284,8 @@ public sealed record StorefrontSubmitCheckoutRequest(
     Guid CartId,
     int ExpectedCartVersion,
     string IdempotencyKey,
-    StorefrontCheckoutShippingInput Shipping);
+    StorefrontCheckoutShippingInput Shipping,
+    string? CouponCode = null);
 
 /// <summary>
 /// خط بازبینی checkout. مبلغ از Order/Tax است نه جمع React.

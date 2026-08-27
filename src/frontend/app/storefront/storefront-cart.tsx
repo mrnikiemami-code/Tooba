@@ -26,18 +26,29 @@ import {
   toCustomerCartMessage,
   type StorefrontCartPage,
 } from "./storefront-cart-api.ts";
+import {
+  previewStorefrontCheckout,
+  readStoredCouponCode,
+  writeStoredCouponCode,
+  toCustomerCheckoutMessage,
+} from "./storefront-checkout-api.ts";
 
 /**
  * سبد خرید با پوستهٔ Shopeiva روی حقیقت Cart Host.
- * کوپن/حمل جعلی و OfferId مشتری‌نما نمایش داده نمی‌شود.
+ * کوپن از Host ارزیابی می‌شود؛ تخفیف جعلی در UI ساخته نمی‌شود.
  */
 export function StorefrontShopeivaCart() {
   const [cart, setCart] = useState<StorefrontCartPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
   useEffect(() => {
+    setCouponInput(readStoredCouponCode() ?? "");
     void loadStorefrontCart()
       .then((page) => {
         setCart(page);
@@ -49,6 +60,36 @@ export function StorefrontShopeivaCart() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  async function applyCoupon() {
+    if (!cart) {
+      return;
+    }
+    const code = couponInput.trim();
+    if (!code) {
+      writeStoredCouponCode(null);
+      setCouponDiscount(null);
+      setCouponMessage("کد تخفیف پاک شد.");
+      return;
+    }
+    setCouponBusy(true);
+    setCouponMessage(null);
+    try {
+      const preview = await previewStorefrontCheckout(cart.cartId, code);
+      writeStoredCouponCode(code);
+      setCouponDiscount(preview.discountAmount);
+      setCouponMessage(
+        preview.discountAmount > 0
+          ? `تخفیف ${formatOfferAmount(preview.discountAmount, preview.currency)} از Host اعمال شد.`
+          : "این کد برای سبد فعلی قابل اعمال نیست.",
+      );
+    } catch (cause) {
+      setCouponMessage(toCustomerCheckoutMessage(cause));
+      setCouponDiscount(null);
+    } finally {
+      setCouponBusy(false);
+    }
+  }
 
   async function mutate(action: () => Promise<StorefrontCartPage>) {
     setBusy(true);
@@ -249,22 +290,31 @@ export function StorefrontShopeivaCart() {
                   </h4>
                   <div className="flex gap-2">
                     <input
+                      id="cart-coupon"
                       type="text"
-                      disabled
-                      placeholder="فعلاً در دسترس نیست"
-                      className="flex-1 px-3.5 py-2.5 rounded-xl text-xs bg-gray-50 border border-gray-200 text-gray-400 outline-none"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="کد تخفیف"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl text-xs bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:ring-2 focus:ring-[#2563EB] font-mono uppercase"
                     />
                     <button
                       type="button"
-                      disabled
-                      className="px-4 py-2.5 rounded-xl bg-gray-200 text-gray-500 text-xs font-bold cursor-not-allowed shrink-0"
+                      disabled={couponBusy || busy}
+                      onClick={() => void applyCoupon()}
+                      className="px-4 py-2.5 rounded-xl bg-[#2563EB] text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-60 shrink-0"
                     >
-                      اعمال
+                      {couponBusy ? "…" : "اعمال"}
                     </button>
                   </div>
-                  <p className="text-[10px] md:text-xs mt-2 text-amber-700 leading-5">
-                    موتور کوپن امن در Backend وصل نیست؛ پذیرش جعلی کد تخفیف انجام نمی‌شود.
-                  </p>
+                  {couponMessage ? (
+                    <p className={`text-[10px] md:text-xs mt-2 leading-5 ${couponDiscount && couponDiscount > 0 ? "text-emerald-700" : "text-amber-700"}`}>
+                      {couponMessage}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] md:text-xs mt-2 text-gray-500 leading-5">
+                      تخفیف فقط پس از ارزیابی Host اعمال می‌شود؛ مبلغ جعلی در مرورگر ساخته نمی‌شود.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

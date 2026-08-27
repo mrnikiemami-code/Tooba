@@ -26,6 +26,7 @@ using Tooba.Host.AddressBook;
 using Tooba.Host.Content;
 using Tooba.Host.PageComposition;
 using Tooba.Host.Story;
+using Tooba.Host.Promotion;
 using Tooba.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -121,6 +122,7 @@ builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Story.StoryPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Promotion.PromotionPanelComposer>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -268,6 +270,7 @@ app.MapSettlementEndpoints();
 app.MapContentEndpoints();
 app.MapPageCompositionEndpoints();
 app.MapStoryEndpoints();
+app.MapPromotionEndpoints();
 
 HostHealthEndpoints.Map(app, enableCors: true);
 

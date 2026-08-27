@@ -105,6 +105,31 @@ export interface SellerOrderDetail {
   lines: SellerOrderLineRow[];
 }
 
+export interface SellerReviewRow {
+  id: string;
+  reviewId: string;
+  productTitle: string;
+  authorDisplayName: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  statusLabel: string;
+  status: string;
+  verifiedPurchase: boolean;
+  createdAt: string;
+}
+
+export interface SellerReviewsPage {
+  rows: SellerReviewRow[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  publishedCount: number;
+  pendingCount: number;
+  rejectedCount: number;
+  sellerResponseSupported: boolean;
+}
+
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
   return record[camel] ?? record[pascal];
 }
@@ -588,5 +613,291 @@ export async function loadSellerOrderDetail(
     return detail ? { source: "host", detail } : { source: "error", detail: null, message: "seller-order-invalid" };
   } catch {
     return { source: "error", detail: null, message: "host-unreachable" };
+  }
+}
+
+/**
+ * نگاشت پاسخ فهرست نظرات فروشنده از Host.
+ */
+export function mapSellerReviewsPage(payload: unknown): SellerReviewsPage | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+  const root = payload as Record<string, unknown>;
+  const raw = readProp(root, "reviews", "Reviews");
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+  const rows = raw
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item) => {
+      const reviewId = asString(readProp(item, "reviewId", "ReviewId"));
+      return {
+        id: reviewId,
+        reviewId,
+        productTitle: asString(readProp(item, "productTitle", "ProductTitle"), "محصول"),
+        authorDisplayName: asString(readProp(item, "authorDisplayName", "AuthorDisplayName"), "مشتری"),
+        rating: asNumber(readProp(item, "rating", "Rating")),
+        title: asNullableString(readProp(item, "title", "Title")),
+        body: asString(readProp(item, "body", "Body")),
+        statusLabel: asString(readProp(item, "statusLabel", "StatusLabel"), asString(readProp(item, "status", "Status"))),
+        status: asString(readProp(item, "status", "Status")),
+        verifiedPurchase: asBoolean(readProp(item, "verifiedPurchase", "VerifiedPurchase")),
+        createdAt: asString(readProp(item, "createdAt", "CreatedAt")),
+      };
+    })
+    .filter((row) => row.reviewId.length > 0);
+  return {
+    rows,
+    page: Math.max(1, asNumber(readProp(root, "page", "Page"), 1)),
+    pageSize: Math.max(1, asNumber(readProp(root, "pageSize", "PageSize"), 20)),
+    totalCount: Math.max(0, asNumber(readProp(root, "totalCount", "TotalCount"))),
+    publishedCount: Math.max(0, asNumber(readProp(root, "publishedCount", "PublishedCount"))),
+    pendingCount: Math.max(0, asNumber(readProp(root, "pendingCount", "PendingCount"))),
+    rejectedCount: Math.max(0, asNumber(readProp(root, "rejectedCount", "RejectedCount"))),
+    sellerResponseSupported: asBoolean(readProp(root, "sellerResponseSupported", "SellerResponseSupported")),
+  };
+}
+
+/**
+ * فهرست نظرات محصولات متعلق به فروشنده را از Host می‌خواند.
+ */
+export async function loadSellerReviews(
+  sellerPartyId: string,
+  options?: { status?: string; page?: number; pageSize?: number },
+): Promise<{ source: HostReadSource; page: SellerReviewsPage | null; message?: string; denied?: boolean }> {
+  try {
+    const params = new URLSearchParams();
+    if (options?.status && options.status !== "all") {
+      params.set("status", options.status);
+    }
+    params.set("page", String(options?.page ?? 1));
+    params.set("pageSize", String(options?.pageSize ?? 50));
+    const response = await fetch(`/v1/seller/reviews?${params.toString()}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", page: null, message: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", page: null, message: "seller-reviews-http-" + String(response.status) };
+    }
+    const page = mapSellerReviewsPage(await readJson(response));
+    return page
+      ? { source: "host", page }
+      : { source: "error", page: null, message: "seller-reviews-invalid" };
+  } catch {
+    return { source: "error", page: null, message: "host-unreachable" };
+  }
+}
+
+/** مرجع پروموشن فروشنده از Host. */
+export interface SellerPromotionRow {
+  promotionId: string;
+  name: string;
+  status: string;
+  priority: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  discountKind: string;
+  percentageRate: number;
+  fixedAmount: number;
+  fixedAmountCurrency: string | null;
+  couponCode: string | null;
+  sellerPartyId: string | null;
+  minimumSubtotal: number | null;
+}
+
+export interface UpsertSellerPromotionInput {
+  name: string;
+  couponCode: string;
+  discountKind: "PercentageOff" | "FixedAmountOff";
+  discountValue: number;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  currency?: string | null;
+  minimumSubtotal?: number | null;
+}
+
+export function mapSellerPromotion(payload: unknown): SellerPromotionRow | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+  const item = payload as Record<string, unknown>;
+  const promotionId = asString(readProp(item, "promotionId", "PromotionId"));
+  if (!promotionId) {
+    return null;
+  }
+  return {
+    promotionId,
+    name: asString(readProp(item, "name", "Name")),
+    status: normalizePromotionStatus(readProp(item, "status", "Status")),
+    priority: asNumber(readProp(item, "priority", "Priority")),
+    effectiveFrom: asString(readProp(item, "effectiveFrom", "EffectiveFrom")),
+    effectiveTo: asNullableString(readProp(item, "effectiveTo", "EffectiveTo")),
+    discountKind: normalizeDiscountKind(readProp(item, "discountKind", "DiscountKind")),
+    percentageRate: asNumber(readProp(item, "percentageRate", "PercentageRate")),
+    fixedAmount: asNumber(readProp(item, "fixedAmount", "FixedAmount")),
+    fixedAmountCurrency: asNullableString(readProp(item, "fixedAmountCurrency", "FixedAmountCurrency")),
+    couponCode: asNullableString(readProp(item, "couponCode", "CouponCode")),
+    sellerPartyId: asNullableString(readProp(item, "sellerPartyId", "SellerPartyId")),
+    minimumSubtotal: (() => {
+      const raw = readProp(item, "minimumSubtotal", "MinimumSubtotal");
+      return raw == null ? null : asNumber(raw);
+    })(),
+  };
+}
+
+function normalizePromotionStatus(value: unknown): string {
+  if (value === 0 || value === "0") return "Draft";
+  if (value === 1 || value === "1") return "Active";
+  if (value === 2 || value === "2") return "Expired";
+  return asString(value, "Draft");
+}
+
+function normalizeDiscountKind(value: unknown): string {
+  if (value === 0 || value === "0") return "PercentageOff";
+  if (value === 1 || value === "1") return "FixedAmountOff";
+  return asString(value, "PercentageOff");
+}
+
+export function mapSellerPromotionList(payload: unknown): SellerPromotionRow[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+  return payload.map(mapSellerPromotion).filter((row): row is SellerPromotionRow => row != null);
+}
+
+/** فهرست پروموشن‌های فروشنده. */
+export async function loadSellerPromotions(
+  sellerPartyId: string,
+): Promise<{ source: HostReadSource; rows: SellerPromotionRow[]; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/promotions", {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { source: "error", rows: [], message: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", rows: [], message: "seller-promotions-http-" + String(response.status) };
+    }
+    return { source: "host", rows: mapSellerPromotionList(await readJson(response)) };
+  } catch {
+    return { source: "error", rows: [], message: "host-unreachable" };
+  }
+}
+
+/** جزئیات یک پروموشن فروشنده. */
+export async function loadSellerPromotion(
+  sellerPartyId: string,
+  promotionId: string,
+): Promise<{ source: HostReadSource; detail: SellerPromotionRow | null; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/promotions/${encodeURIComponent(promotionId)}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status) || response.status === 404) {
+      return { source: "error", detail: null, message: "seller.promotion.missing", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", detail: null, message: "seller-promotion-http-" + String(response.status) };
+    }
+    const detail = mapSellerPromotion(await readJson(response));
+    return detail
+      ? { source: "host", detail }
+      : { source: "error", detail: null, message: "seller-promotion-invalid" };
+  } catch {
+    return { source: "error", detail: null, message: "host-unreachable" };
+  }
+}
+
+/** ایجاد پروموشن پیش‌نویس فروشنده. */
+export async function createSellerPromotion(
+  sellerPartyId: string,
+  input: UpsertSellerPromotionInput,
+): Promise<{ ok: true; detail: SellerPromotionRow } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/seller/promotions", {
+      method: "POST",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify(input),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "seller.promotion.create-failed" };
+    }
+    const detail = mapSellerPromotion(await readJson(response));
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.promotion.create-failed" };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/** به‌روزرسانی پیش‌نویس/منقضی. */
+export async function updateSellerPromotion(
+  sellerPartyId: string,
+  promotionId: string,
+  input: UpsertSellerPromotionInput,
+): Promise<{ ok: true; detail: SellerPromotionRow } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/promotions/${encodeURIComponent(promotionId)}`, {
+      method: "PUT",
+      headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
+      body: JSON.stringify(input),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "seller.promotion.update-failed" };
+    }
+    const detail = mapSellerPromotion(await readJson(response));
+    return detail ? { ok: true, detail } : { ok: false, errorCode: "seller.promotion.update-failed" };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
+  }
+}
+
+/** فعال‌سازی پروموشن فروشنده. */
+export async function activateSellerPromotion(
+  sellerPartyId: string,
+  promotionId: string,
+): Promise<{ ok: true; detail: SellerPromotionRow | null } | { ok: false; errorCode: string; denied?: boolean }> {
+  return mutateSellerPromotionAction(sellerPartyId, promotionId, "activate");
+}
+
+/** غیرفعال‌سازی پروموشن فروشنده. */
+export async function deactivateSellerPromotion(
+  sellerPartyId: string,
+  promotionId: string,
+): Promise<{ ok: true; detail: SellerPromotionRow | null } | { ok: false; errorCode: string; denied?: boolean }> {
+  return mutateSellerPromotionAction(sellerPartyId, promotionId, "deactivate");
+}
+
+async function mutateSellerPromotionAction(
+  sellerPartyId: string,
+  promotionId: string,
+  action: "activate" | "deactivate",
+): Promise<{ ok: true; detail: SellerPromotionRow | null } | { ok: false; errorCode: string; denied?: boolean }> {
+  try {
+    const response = await fetch(`/v1/seller/promotions/${encodeURIComponent(promotionId)}/${action}`, {
+      method: "POST",
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) {
+      return { ok: false, errorCode: "seller.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? `seller.promotion.${action}-failed` };
+    }
+    return { ok: true, detail: mapSellerPromotion(await readJson(response)) };
+  } catch {
+    return { ok: false, errorCode: "host-unreachable" };
   }
 }

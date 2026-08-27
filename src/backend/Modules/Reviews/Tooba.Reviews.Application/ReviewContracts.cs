@@ -32,6 +32,18 @@ public sealed record ModerationReview(Guid ReviewId, Guid ProductId, string Auth
 /// <summary>صف شمارش‌دار صف مدیریت.</summary>
 public sealed record ModerationReviewPage(IReadOnlyList<ModerationReview> Items, int Page, int PageSize, long TotalCount);
 
+/// <summary>
+/// صفحهٔ بررسی‌های محدود به مجموعهٔ ProductId مالک فروشنده؛ پاسخ فروشنده در دامنه پشتیبانی نمی‌شود.
+/// </summary>
+public sealed record SellerScopedReviewPage(
+    IReadOnlyList<ModerationReview> Items,
+    int Page,
+    int PageSize,
+    long TotalCount,
+    long PublishedCount,
+    long PendingCount,
+    long RejectedCount);
+
 /// <summary>محاسبهٔ قطعی خلاصه از امتیازهای Published که لایهٔ زیرساخت فیلتر کرده است.</summary>
 public static class ReviewSummaryCalculator
 {
@@ -62,6 +74,16 @@ public interface IReviewDirectory
     Task<PublishedReviewPage?> GetPublishedAsync(string productSlug, int page, int pageSize, CancellationToken cancellationToken);
     /// <summary>صف Pending را برای مرز مدیر برمی‌گرداند.</summary>
     Task<ModerationReviewPage> GetPendingAsync(int page, int pageSize, CancellationToken cancellationToken);
+    /// <summary>
+    /// بررسی‌های متعلق به مجموعهٔ ProductId داده‌شده را برای مرز فروشنده برمی‌گرداند؛
+    /// مالکیت فروشنده باید قبلاً در Host از Offer/Catalog ترکیب شده باشد.
+    /// </summary>
+    Task<SellerScopedReviewPage> ListForProductsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        ReviewStatus? statusFilter,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
     /// <summary>بررسی Pending را منتشر می‌کند.</summary>
     Task PublishAsync(Guid reviewId, Guid moderatorUserId, CancellationToken cancellationToken);
     /// <summary>بررسی Pending را با دلیل رد می‌کند.</summary>

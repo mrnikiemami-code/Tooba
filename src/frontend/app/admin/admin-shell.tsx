@@ -21,6 +21,7 @@ import {
   Users,
   Wallet,
   FileText,
+  Tag,
   X,
 } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
@@ -69,7 +70,10 @@ const navGroups: NavGroup[] = [
   {
     id: "moderation",
     label: "نظارت",
-    items: [{ id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true }],
+    items: [
+      { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true },
+      { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true },
+    ],
   },
   {
     id: "system",

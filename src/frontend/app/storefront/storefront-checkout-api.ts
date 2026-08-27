@@ -2,6 +2,25 @@ import { cartHeaders, readCartSession, StorefrontCartApiError, toCustomerCartMes
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 
 const IDEMPOTENCY_KEY = "tooba.storefront.checkoutIdempotency";
+const COUPON_KEY = "tooba.storefront.couponCode";
+
+export function readStoredCouponCode(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.sessionStorage.getItem(COUPON_KEY);
+}
+
+export function writeStoredCouponCode(code: string | null): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (!code || !code.trim()) {
+    window.sessionStorage.removeItem(COUPON_KEY);
+    return;
+  }
+  window.sessionStorage.setItem(COUPON_KEY, code.trim().toUpperCase());
+}
 
 export interface StorefrontCheckoutShipping {
   recipientName: string;
@@ -220,8 +239,16 @@ export function toCustomerCheckoutMessage(error: unknown): string {
   return toCustomerCartMessage(error);
 }
 
-export async function previewStorefrontCheckout(cartId: string): Promise<StorefrontCheckoutPage> {
-  const response = await fetch(`/v1/storefront/checkout/preview?cartId=${encodeURIComponent(cartId)}`, {
+export async function previewStorefrontCheckout(
+  cartId: string,
+  couponCode?: string | null,
+): Promise<StorefrontCheckoutPage> {
+  const code = couponCode?.trim() || readStoredCouponCode();
+  const query = new URLSearchParams({ cartId });
+  if (code) {
+    query.set("couponCode", code);
+  }
+  const response = await fetch(`/v1/storefront/checkout/preview?${query.toString()}`, {
     method: "POST",
     cache: "no-store",
     headers: cartHeaders(),
@@ -234,11 +261,13 @@ export async function submitStorefrontCheckout(
   expectedCartVersion: number,
   shipping: StorefrontCheckoutShipping,
   savedAddressId?: string | null,
+  couponCode?: string | null,
 ): Promise<StorefrontCheckoutPage> {
   const headers = { ...(cartHeaders(expectedCartVersion) as Record<string, string>) };
   if (savedAddressId) {
     Object.assign(headers, customerAuthHeaders(true));
   }
+  const code = couponCode?.trim() || readStoredCouponCode();
   const response = await fetch("/v1/storefront/checkout", {
     method: "POST",
     cache: "no-store",
@@ -248,6 +277,7 @@ export async function submitStorefrontCheckout(
       expectedCartVersion,
       idempotencyKey: checkoutIdempotencyKey(),
       shipping: toCheckoutShippingBody(shipping, savedAddressId),
+      couponCode: code || null,
     }),
   });
   return parseCheckout(response);

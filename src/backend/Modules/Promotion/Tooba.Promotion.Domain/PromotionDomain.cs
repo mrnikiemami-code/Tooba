@@ -380,6 +380,88 @@ public sealed class PromotionDefinition : IHasDomainEvents
     }
 
     /// <summary>
+    /// فیلدهای پیش‌نویس یا منقضی را به‌روز می‌کند. پروموشن Active قابل ویرایش اقتصادی نیست.
+    /// </summary>
+    public void UpdateEditableFields(
+        string name,
+        DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveTo,
+        PromotionDiscountKind discountKind,
+        decimal percentageRate,
+        decimal fixedAmount,
+        string? fixedAmountCurrency,
+        string? couponCode,
+        decimal? minimumSubtotal,
+        DateTimeOffset now)
+    {
+        if (Status == PromotionStatus.Active)
+        {
+            throw new InvalidOperationException("پروموشن فعال قابل ویرایش فیلدهای اقتصادی نیست.");
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new InvalidOperationException("نام پروموشن خالی نیست.");
+        }
+
+        if (effectiveTo is not null && effectiveTo <= effectiveFrom)
+        {
+            throw new InvalidOperationException("پنجرهٔ اعتبار پروموشن نامعتبر است.");
+        }
+
+        if (discountKind == PromotionDiscountKind.PercentageOff)
+        {
+            if (percentageRate <= 0 || percentageRate > 1)
+            {
+                throw new InvalidOperationException("نرخ درصدی باید کسری بین صفر و یک باشد.");
+            }
+
+            if (fixedAmount != 0)
+            {
+                throw new InvalidOperationException("پروموشن درصدی مبلغ ثابت ندارد.");
+            }
+        }
+        else
+        {
+            if (fixedAmount <= 0)
+            {
+                throw new InvalidOperationException("مبلغ ثابت باید مثبت باشد.");
+            }
+
+            if (string.IsNullOrWhiteSpace(fixedAmountCurrency))
+            {
+                throw new InvalidOperationException("مبلغ ثابت بدون ارز اعمال نمی‌شود.");
+            }
+
+            if (percentageRate != 0)
+            {
+                throw new InvalidOperationException("پروموشن مبلغ ثابت نرخ درصد ندارد.");
+            }
+        }
+
+        if (minimumSubtotal is < 0)
+        {
+            throw new InvalidOperationException("حداقل جمع منفی نیست.");
+        }
+
+        Name = name.Trim();
+        EffectiveFrom = effectiveFrom;
+        EffectiveTo = effectiveTo;
+        DiscountKind = discountKind;
+        PercentageRate = percentageRate;
+        FixedAmount = fixedAmount;
+        FixedAmountCurrency = string.IsNullOrWhiteSpace(fixedAmountCurrency)
+            ? null
+            : fixedAmountCurrency.Trim().ToUpperInvariant();
+        CouponCode = string.IsNullOrWhiteSpace(couponCode)
+            ? null
+            : PromotionCouponNormalizer.Normalize(couponCode);
+        MinimumSubtotal = minimumSubtotal;
+        UpdatedAt = now;
+        _domainEvents.Add(new PromotionChangedDomainEvent(PromotionId));
+    }
+
+    /// <summary>
     /// پروموشن را منقضی می‌کند. سفارش‌های ثبت‌شده را لمس نمی‌کند.
     /// </summary>
     public void Expire(DateTimeOffset now)

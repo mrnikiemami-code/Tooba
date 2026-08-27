@@ -1,12 +1,18 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
+using Testcontainers.PostgreSql;
+using Tooba.BuildingBlocks;
+using Tooba.Host.Reviews;
+using Tooba.Host.Seller;
+using Tooba.Host.Storefront;
+using Tooba.Identity.Application;
+using Tooba.Persistence;
 using Tooba.Reviews.Application;
 using Tooba.Reviews.Domain;
-using Tooba.Reviews.Infrastructure.Persistence;
-using Tooba.Host.Reviews;
-using Tooba.Host.Storefront;
-using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 using Tooba.Reviews.Infrastructure;
-using Tooba.Persistence;
+using Tooba.Reviews.Infrastructure.Persistence;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -127,9 +133,99 @@ public sealed class ReviewsFoundationTests
         Assert.Null(body.DefaultValue);
     }
 
+    /// <summary>مرز فروشنده فقط لیست دارد؛ پاسخ فروشنده و تعدیل در دامنه نیست.</summary>
+    [Fact]
+    public void Seller_host_list_exists_without_seller_response_or_moderation_routes()
+    {
+        var source = File.ReadAllText(Path.Combine(RepoRoot(), "src", "backend", "Host", "Tooba.Host", "Reviews", "ReviewEndpoints.cs"));
+        Assert.Contains("/v1/seller/reviews", source, StringComparison.Ordinal);
+        Assert.Contains("SellerPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
+        Assert.Contains("ListOwnedProductIdsAsync", source, StringComparison.Ordinal);
+        Assert.Contains("SellerResponseSupported: false", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("/v1/seller/reviews/", source, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/reviews", source, StringComparison.Ordinal);
+        Assert.Contains("/v1/admin/reviews/{reviewId:guid}/publish", source, StringComparison.Ordinal);
+
+        var page = typeof(SellerReviewsResponse).GetProperties().Select(x => x.Name).ToArray();
+        Assert.Equal(
+            ["Reviews", "Page", "PageSize", "TotalCount", "PublishedCount", "PendingCount", "RejectedCount", "SellerResponseSupported"],
+            page);
+        var item = typeof(SellerReviewItem).GetProperties().Select(x => x.Name).ToArray();
+        Assert.Contains("ProductTitle", item);
+        Assert.Contains("StatusLabel", item);
+        Assert.DoesNotContain("AuthorUserId", item);
+        Assert.DoesNotContain("ProductId", item);
+        Assert.DoesNotContain("SellerReply", item);
+
+        Assert.NotNull(typeof(IReviewDirectory).GetMethod(nameof(IReviewDirectory.ListForProductsAsync)));
+    }
+
+    /// <summary>فروشندهٔ خارجی از طریق SellerPanelAccess به Party دیگری دسترسی ندارد.</summary>
+    [Fact]
+    public async Task Foreign_seller_party_header_is_denied_by_seller_panel_access()
+    {
+        var auth = CreateInMemoryAuth();
+        var actorA = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001");
+        var sellerA = Guid.Parse("01a030d1-40cb-7000-8abe-6d31739956c5");
+        var sellerB = Guid.Parse("01a030d1-40db-7000-b90c-a0705133f0eb");
+        await auth.Writer.WriteAsync(
+            new AuthorizationRelationshipWrite
+            {
+                Subject = AuthorizationSubject.ForUser(actorA),
+                Resource = new AuthorizationResource { Type = AuthorizationObjectTypes.Party, Id = sellerA.ToString("D") },
+                Relation = AuthorizationRelations.Member,
+            },
+            CancellationToken.None);
+
+        var request = new DefaultHttpContext().Request;
+        request.Headers[SellerPanelAccess.SellerPartyHeader] = sellerB.ToString("D");
+        request.Headers[SellerPanelAccess.DevActorHeader] = actorA.ToString("D");
+        var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+            SellerPanelAccess.RequireAuthorizedAsync(
+                request,
+                new CurrentAuthenticatedSession(),
+                auth.Guard,
+                new ReviewsStubHostEnvironment(),
+                CancellationToken.None));
+        Assert.Equal(403, denied.StatusCode);
+        Assert.Equal("seller.authorization.denied", denied.ErrorCode);
+    }
+
     private static ProductReview Create(int rating) => ProductReview.Create(
         Guid.NewGuid(), Guid.NewGuid(), "نویسنده", rating, null, "متن بررسی معتبر",
         false, null, DateTimeOffset.UtcNow);
+
+    private static string RepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root was not found.");
+    }
+
+    private static (IAuthorizationTupleWriter Writer, IAuthorizationGuard Guard) CreateInMemoryAuth()
+    {
+        var telemetry = new AuthorizationInstrumentation();
+        var audit = new InMemoryAuthorizationSecurityEventSink();
+        var adapter = new InMemoryAuthorizationAdapter(telemetry, audit);
+        return (adapter, new AuthorizationGuard(adapter));
+    }
+
+    private sealed class ReviewsStubHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "Tooba.Host.Tests";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
 }
 
 /// <summary>آزمون PostgreSQL برای فیلتر Published و گروه‌بندی یک‌مرحله‌ای خلاصه‌ها.</summary>
@@ -185,4 +281,45 @@ public sealed class ReviewsPostgresTests : IAsyncLifetime
         Assert.Equal(4m, summaries[product].AverageRating);
         Assert.DoesNotContain(zeroProduct, summaries.Keys);
     }
+
+    /// <summary>فهرست فروشنده فقط ProductIdهای مالک را می‌بیند؛ محصول فروشندهٔ دیگر حذف می‌شود.</summary>
+    [SkippableFact]
+    public async Task Seller_scoped_list_includes_own_products_and_excludes_foreign()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var builder = new DbContextOptionsBuilder<ReviewsDbContext>();
+        ToobaNpgsql.ConfigureModuleContext(builder, _container!.GetConnectionString(), ReviewsDbContext.Schema, typeof(ReviewsDbContext));
+        await using var db = new ReviewsDbContext(builder.Options);
+        await db.Database.MigrateAsync();
+
+        var ownProduct = Guid.NewGuid();
+        var foreignProduct = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var ownPublished = ProductReview.Create(ownProduct, Guid.NewGuid(), "مالک", 5, null, "نظر محصول خودم", false, null, now);
+        ownPublished.Publish(Guid.NewGuid(), now);
+        var ownPending = ProductReview.Create(ownProduct, Guid.NewGuid(), "مالک۲", 3, null, "نظر در انتظار خودم", false, null, now);
+        var foreign = ProductReview.Create(foreignProduct, Guid.NewGuid(), "خارجی", 4, null, "نظر محصول دیگری", false, null, now);
+        foreign.Publish(Guid.NewGuid(), now);
+        db.Reviews.AddRange(ownPublished, ownPending, foreign);
+        await db.SaveChangesAsync();
+
+        var directory = new ReviewDirectory(db, null!, null!);
+        var ownPage = await directory.ListForProductsAsync([ownProduct], null, 1, 20, CancellationToken.None);
+        Assert.Equal(2, ownPage.TotalCount);
+        Assert.Equal(1, ownPage.PublishedCount);
+        Assert.Equal(1, ownPage.PendingCount);
+        Assert.Equal(0, ownPage.RejectedCount);
+        Assert.All(ownPage.Items, item => Assert.Equal(ownProduct, item.ProductId));
+        Assert.DoesNotContain(ownPage.Items, item => item.ProductId == foreignProduct);
+
+        var foreignPage = await directory.ListForProductsAsync([foreignProduct], null, 1, 20, CancellationToken.None);
+        Assert.Equal(1, foreignPage.TotalCount);
+        Assert.Contains(foreignPage.Items, item => item.ProductId == foreignProduct);
+        Assert.DoesNotContain(foreignPage.Items, item => item.ProductId == ownProduct);
+
+        var empty = await directory.ListForProductsAsync([], null, 1, 20, CancellationToken.None);
+        Assert.Equal(0, empty.TotalCount);
+        Assert.Empty(empty.Items);
+    }
 }
+

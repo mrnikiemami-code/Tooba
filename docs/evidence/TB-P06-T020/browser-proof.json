@@ -1,0 +1,34 @@
+{
+  "taskId": "TB-P06-T020",
+  "probes": {
+    "sellerCoupons": {
+      "ready": true,
+      "hasNew": true,
+      "text": "فروشگاه آرمان\n\nپنل فروشنده\n\nزمینهٔ مجاز\nاپراتور آرمان → فروشگاه آرمان\nاپراتور دیجی‌استایل → دیجی‌استایل نمونه\nداشبورد\nمح"
+    },
+    "sellerReviews": {
+      "ready": true,
+      "hasReviewUi": true,
+      "text": "فروشگاه آرمان\n\nپنل فروشنده\n\nزمینهٔ مجاز\nاپراتور آرمان → فروشگاه آرمان\nاپراتور دیجی‌استایل → دیجی‌استایل نمونه\nداشبورد\nمح"
+    },
+    "adminPromotions": {
+      "ready": true,
+      "hasGrid": true,
+      "text": "مرکز عملیات توبا\n\nپنل مدیریت · پروموشن‌ها\n\nدسترسی مدیر\n\nعملیات\n\nداشبورد\nکاتالوگ / محصولات\nسفارش‌ها و پرداخت\nارسال / fulf"
+    },
+    "adminReviews": {
+      "ready": true,
+      "text": "مرکز عملیات توبا\n\nپنل مدیریت · نظرات\n\nدسترسی مدیر\n\nعملیات\n\nداشبورد\nکاتالوگ / محصولات\nسفارش‌ها و پرداخت\nارسال / fulfillme"
+    },
+    "home": {
+      "ok": true
+    }
+  },
+  "captures": [
+    "01-seller-coupons.png",
+    "02-seller-reviews.png",
+    "03-admin-promotions.png",
+    "04-admin-reviews.png",
+    "05-home-fa.png"
+  ]
+}

@@ -10,6 +10,7 @@ import {
   mapSellerOfferList,
   mapSellerOrderDetail,
   mapSellerOrderList,
+  mapSellerReviewsPage,
   SELLER_PARTY_HEADER,
 } from "./seller-api.ts";
 
@@ -124,4 +125,36 @@ test("persian operator formatting for status and money", () => {
 test("authorized route context keeps actor distinct from seller party", () => {
   assert.notEqual(DEV_ACTOR_HEADER, SELLER_PARTY_HEADER);
   assert.equal(formatOfferStatus("Suspended"), "معلق");
+});
+
+test("seller reviews mapper keeps live counts and no fake reply surface", () => {
+  const page = mapSellerReviewsPage({
+    reviews: [
+      {
+        reviewId: "r1",
+        productTitle: "پیراهن",
+        authorDisplayName: "علی",
+        rating: 5,
+        title: null,
+        body: "عالی",
+        statusLabel: "تایید شده",
+        status: "Published",
+        verifiedPurchase: true,
+        createdAt: "2026-08-27T00:00:00Z",
+      },
+    ],
+    page: 1,
+    pageSize: 50,
+    totalCount: 1,
+    publishedCount: 1,
+    pendingCount: 0,
+    rejectedCount: 0,
+    sellerResponseSupported: false,
+  });
+  assert.ok(page);
+  assert.equal(page?.rows[0]?.reviewId, "r1");
+  assert.equal(page?.publishedCount, 1);
+  assert.equal(page?.sellerResponseSupported, false);
+  assert.equal("image" in (page?.rows[0] ?? {}), false);
+  assert.equal("reply" in (page?.rows[0] ?? {}), false);
 });

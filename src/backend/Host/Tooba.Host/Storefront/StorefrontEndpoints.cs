@@ -188,8 +188,13 @@ public static class StorefrontEndpoints
         Guid cartId,
         StorefrontCheckoutComposer composer,
         HttpRequest request,
-        CancellationToken cancellationToken)
-        => ExecuteCheckoutAsync(() => composer.PreviewAsync(cartId, ReadGuestSecret(request), cancellationToken));
+        string? couponCode = null,
+        CancellationToken cancellationToken = default)
+        => ExecuteCheckoutAsync(() => composer.PreviewAsync(
+            cartId,
+            ReadGuestSecret(request),
+            couponCode ?? request.Query["couponCode"].FirstOrDefault(),
+            cancellationToken));
 
     private static Task<IResult> SubmitCheckoutAsync(
         StorefrontSubmitCheckoutRequest body,
@@ -202,6 +207,7 @@ public static class StorefrontEndpoints
             body.ExpectedCartVersion,
             body.IdempotencyKey,
             body.Shipping,
+            body.CouponCode,
             cancellationToken));
 
     private static async Task<IResult> GetCheckoutAsync(

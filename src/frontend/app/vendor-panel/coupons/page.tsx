@@ -1,12 +1,8 @@
-﻿import { Tag } from "lucide-react";
-import { VendorCapabilityShell } from "../vendor-capability-shell";
+﻿"use client";
 
-export default function VendorcouponsPage() {
-  return (
-    <VendorCapabilityShell
-      title="تخفیف‌ها"
-      description="کوپن و پروموشن فروشنده"
-      icon={<Tag className="w-5 h-5" />}
-    />
-  );
+import { CouponsList } from "./coupons-list";
+
+/** مسیر زندهٔ تخفیف‌های فروشنده. */
+export default function VendorCouponsPage() {
+  return <CouponsList />;
 }

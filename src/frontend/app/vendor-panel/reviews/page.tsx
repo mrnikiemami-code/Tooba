@@ -1,12 +1,6 @@
-﻿import { Star } from "lucide-react";
-import { VendorCapabilityShell } from "../vendor-capability-shell";
+﻿import { VendorReviewsPageClient } from "../vendor-reviews-ui";
 
-export default function VendorreviewsPage() {
-  return (
-    <VendorCapabilityShell
-      title="نظرات"
-      description="نظرات محصولات فروشنده"
-      icon={<Star className="w-5 h-5" />}
-    />
-  );
+/** نظرات زندهٔ محصولات فروشنده — ساختار Shopeiva reviewsList، داده Host. */
+export default function VendorReviewsPage() {
+  return <VendorReviewsPageClient />;
 }

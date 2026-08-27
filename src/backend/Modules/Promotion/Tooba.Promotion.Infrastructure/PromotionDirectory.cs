@@ -128,6 +128,194 @@ public sealed class PromotionDirectory : IPromotionDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<PromotionReference>> ListBySellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        var rows = await _db.Promotions.AsNoTracking()
+            .Where(x => x.SellerPartyId == sellerPartyId)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenBy(x => x.PromotionId)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToReference).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<PromotionReference?> GetForSellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        var promotion = await _db.Promotions.AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.PromotionId == promotionId && x.SellerPartyId == sellerPartyId,
+                cancellationToken);
+        return promotion is null ? null : ToReference(promotion);
+    }
+
+    /// <inheritdoc />
+    public async Task<PromotionReference> CreateForSellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        string name,
+        DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveTo,
+        PromotionDiscountKind discountKind,
+        decimal percentageRate,
+        decimal fixedAmount,
+        string? fixedAmountCurrency,
+        string? couponCode,
+        decimal? minimumSubtotal,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        if (sellerPartyId == Guid.Empty)
+        {
+            throw new InvalidOperationException("شناسهٔ فروشنده برای پروموشن لازم است.");
+        }
+
+        return await CreateAsync(
+            name,
+            priority: 100,
+            effectiveFrom,
+            effectiveTo,
+            PromotionStackingPolicy.Exclusive,
+            discountKind,
+            percentageRate,
+            fixedAmount,
+            fixedAmountCurrency,
+            couponCode,
+            offerId: null,
+            catalogVariantId: null,
+            categoryId: null,
+            sellerPartyId,
+            market: null,
+            salesChannel: null,
+            currency: discountKind == PromotionDiscountKind.FixedAmountOff
+                ? (fixedAmountCurrency ?? "IRR")
+                : null,
+            customerPartyId: null,
+            organizationPartyId: null,
+            minimumQuantity: null,
+            minimumSubtotal,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<PromotionReference> UpdateForSellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        Guid promotionId,
+        string name,
+        DateTimeOffset effectiveFrom,
+        DateTimeOffset? effectiveTo,
+        PromotionDiscountKind discountKind,
+        decimal percentageRate,
+        decimal fixedAmount,
+        string? fixedAmountCurrency,
+        string? couponCode,
+        decimal? minimumSubtotal,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
+        promotion.UpdateEditableFields(
+            name,
+            effectiveFrom,
+            effectiveTo,
+            discountKind,
+            percentageRate,
+            fixedAmount,
+            fixedAmountCurrency,
+            couponCode,
+            minimumSubtotal,
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToReference(promotion);
+    }
+
+    /// <inheritdoc />
+    public async Task ActivateForSellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
+        promotion.Activate(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task DeactivateForSellerAsync(
+        Guid? tenantId,
+        Guid sellerPartyId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var promotion = await RequireOwnedAsync(sellerPartyId, promotionId, cancellationToken);
+        promotion.Expire(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PromotionReference>> ListForAdminAsync(
+        Guid? tenantId,
+        Guid? sellerPartyId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        var query = _db.Promotions.AsNoTracking().AsQueryable();
+        if (sellerPartyId is Guid seller && seller != Guid.Empty)
+        {
+            query = query.Where(x => x.SellerPartyId == seller);
+        }
+
+        var rows = await query
+            .OrderByDescending(x => x.UpdatedAt)
+            .ThenBy(x => x.PromotionId)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToReference).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<PromotionReference?> GetForAdminAsync(
+        Guid? tenantId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        var promotion = await _db.Promotions.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PromotionId == promotionId, cancellationToken);
+        return promotion is null ? null : ToReference(promotion);
+    }
+
+    /// <inheritdoc />
+    public async Task DeactivateForAdminAsync(
+        Guid? tenantId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        _ = tenantId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var promotion = await _db.Promotions.SingleOrDefaultAsync(
+            x => x.PromotionId == promotionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("پروموشن یافت نشد.");
+        promotion.Expire(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<PromotionEvaluationResult> EvaluateAsync(
         PromotionEvaluationRequest request,
         CancellationToken cancellationToken)
@@ -216,6 +404,22 @@ public sealed class PromotionDirectory : IPromotionDirectory
         return new PromotionEvaluationResult(totalDiscount, post, applied, rejections);
     }
 
+    private async Task<PromotionDefinition> RequireOwnedAsync(
+        Guid sellerPartyId,
+        Guid promotionId,
+        CancellationToken cancellationToken)
+    {
+        var promotion = await _db.Promotions.SingleOrDefaultAsync(
+            x => x.PromotionId == promotionId && x.SellerPartyId == sellerPartyId,
+            cancellationToken);
+        if (promotion is null)
+        {
+            throw new InvalidOperationException("پروموشن متعلق به این فروشنده نیست یا یافت نشد.");
+        }
+
+        return promotion;
+    }
+
     private static PromotionReference ToReference(PromotionDefinition promotion) =>
         new(
             promotion.PromotionId,
@@ -229,5 +433,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
             promotion.PercentageRate,
             promotion.FixedAmount,
             promotion.FixedAmountCurrency,
-            promotion.CouponCode);
+            promotion.CouponCode,
+            promotion.SellerPartyId,
+            promotion.MinimumSubtotal);
 }

@@ -80,6 +80,29 @@ public sealed class SellerPanelComposer
     }
 
     /// <summary>
+    /// شناسهٔ محصولات Catalog متعلق به Offerهای غیرآرشیو همین فروشنده را بدون JOIN بین‌schema برمی‌گرداند.
+    /// </summary>
+    public async Task<IReadOnlyList<Guid>> ListOwnedProductIdsAsync(Guid sellerPartyId, CancellationToken cancellationToken)
+    {
+        await EnsureSellerAsync(sellerPartyId, cancellationToken);
+        var variantIds = await _offers.Offers.AsNoTracking()
+            .Where(x => x.SellerPartyId == sellerPartyId && x.Status != OfferStatus.Archived)
+            .Select(x => x.CatalogVariantId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        if (variantIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await _catalog.Variants.AsNoTracking()
+            .Where(x => variantIds.Contains(x.VariantId))
+            .Select(x => x.ProductId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// جزئیات Offer فقط اگر متعلق به فروشندهٔ جاری باشد.
     /// </summary>
     public async Task<SellerOfferDetailPage?> GetOfferAsync(Guid sellerPartyId, Guid offerId, CancellationToken cancellationToken)

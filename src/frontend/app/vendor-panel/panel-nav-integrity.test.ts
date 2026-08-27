@@ -12,6 +12,8 @@ const LIVE_HREFS = [
   "/vendor-panel/products",
   "/vendor-panel/orders",
   "/vendor-panel/stories",
+  "/vendor-panel/coupons",
+  "/vendor-panel/reviews",
   "/vendor-panel/fulfillments",
   "/vendor-panel/returns",
   "/vendor-panel/analytics",
@@ -21,8 +23,6 @@ const LIVE_HREFS = [
 
 const DEFERRED_HREFS = [
   "/vendor-panel/customers",
-  "/vendor-panel/coupons",
-  "/vendor-panel/reviews",
   "/vendor-panel/tickets",
   "/vendor-panel/gift-cards",
 ] as const;

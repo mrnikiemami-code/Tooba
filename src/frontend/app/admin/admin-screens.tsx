@@ -17,6 +17,8 @@ import {
   loadAdminSellers,
   loadAdminReviews,
   moderateAdminReview,
+  loadAdminPromotions,
+  deactivateAdminPromotion,
   type AdminCustomerRow,
   type AdminDashboard,
   type AdminLoadState,
@@ -25,6 +27,7 @@ import {
   type AdminResult,
   type AdminSellerRow,
   type AdminReviewRow,
+  type AdminPromotionRow,
 } from "./admin-api";
 import {
   formatFulfillmentStatus,
@@ -448,6 +451,147 @@ export function AdminReviewsScreen() {
       <div className="p-2 md:p-4">{state === "error" ? <ErrorState title="نظرها خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : <DataGrid columns={columns} queryAdapter={queryAdapter} />}</div>
     </section>
   </main>;
+}
+
+const promotionColumns = (deactivate: (id: string) => void): GridColumnDef<AdminPromotionRow>[] => [
+  {
+    id: "code",
+    header: "کد",
+    accessor: (row) => row.couponCode ?? "",
+    cell: (row) => <strong className="font-mono" dir="ltr">{row.couponCode ?? "—"}</strong>,
+    width: 140,
+    minWidth: 110,
+    maxWidth: 200,
+    sticky: "start",
+  },
+  { id: "name", header: "نام", accessor: (row) => row.name, width: 180, minWidth: 130, maxWidth: 260 },
+  {
+    id: "discount",
+    header: "تخفیف",
+    accessor: (row) =>
+      row.discountKind === "FixedAmountOff"
+        ? row.fixedAmount
+        : Math.round(row.percentageRate * 100),
+    cell: (row) =>
+      row.discountKind === "FixedAmountOff"
+        ? formatAdminMoney(row.fixedAmount, "IRR")
+        : `${Math.round(row.percentageRate * 100).toLocaleString("fa-IR")}٪`,
+    width: 120,
+    minWidth: 100,
+    maxWidth: 160,
+  },
+  {
+    id: "seller",
+    header: "فروشنده",
+    accessor: (row) => row.sellerPartyId ?? "",
+    cell: (row) => (
+      <span className="font-mono text-xs" dir="ltr">
+        {row.sellerPartyId ? `${row.sellerPartyId.slice(0, 8)}…` : "—"}
+      </span>
+    ),
+    width: 130,
+    minWidth: 110,
+    maxWidth: 180,
+  },
+  {
+    id: "status",
+    header: "وضعیت",
+    accessor: (row) => row.status,
+    cell: (row) => <Status value={row.status} />,
+    width: 110,
+    minWidth: 90,
+    maxWidth: 150,
+  },
+  {
+    id: "expires",
+    header: "انقضا",
+    accessor: (row) => row.effectiveTo ?? "",
+    cell: (row) => (row.effectiveTo ? formatAdminDate(row.effectiveTo) : "باز"),
+    width: 120,
+    minWidth: 100,
+    maxWidth: 150,
+  },
+  {
+    id: "actions",
+    header: "عملیات",
+    accessor: () => "",
+    cell: (row) =>
+      row.status === "Active" ? (
+        <button
+          type="button"
+          onClick={() => deactivate(row.promotionId)}
+          className="rounded-lg bg-red-600 px-3 py-1.5 text-xs text-white"
+        >
+          غیرفعال
+        </button>
+      ) : (
+        "—"
+      ),
+    width: 120,
+    minWidth: 100,
+    maxWidth: 150,
+  },
+];
+
+/** نظارت ادمین بر پروموشن/کوپن فروشندگان — DataGrid نازک. */
+export function AdminPromotionsScreen() {
+  const [state, setState] = useState<AdminLoadState | "loading">("loading");
+  const [rows, setRows] = useState<AdminPromotionRow[]>([]);
+  const [message, setMessage] = useState<string>();
+  const refresh = useCallback(
+    () =>
+      void loadAdminPromotions().then((result) => {
+        setState(result.state);
+        setRows(result.data ?? []);
+        setMessage(result.message);
+      }),
+    [],
+  );
+  useEffect(refresh, [refresh]);
+  const deactivate = useCallback(
+    (id: string) =>
+      void deactivateAdminPromotion(id).then((result) => {
+        if (result.state === "denied") {
+          setState("denied");
+        } else if (result.state === "error") {
+          setState("error");
+          setMessage(result.message);
+        } else {
+          refresh();
+        }
+      }),
+    [refresh],
+  );
+  const columns = useMemo(() => promotionColumns(deactivate), [deactivate]);
+  const queryAdapter = useMemo(
+    () => async (query: GridServerQuery) => executeGridQuery(rows, columns, query),
+    [rows, columns],
+  );
+  if (state === "denied") {
+    return <Denied retry={refresh} />;
+  }
+  return (
+    <main data-testid="admin-promotions">
+      <PageHeading title="نظارت پروموشن‌ها" description="فهرست و غیرفعال‌سازی نظارتی کدهای تخفیف فروشندگان" />
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="border-b border-border px-5 py-3 text-sm text-muted">
+          {rows.length.toLocaleString("fa-IR")} پروموشن
+        </div>
+        <div className="p-2 md:p-4">
+          {state === "error" ? (
+            <ErrorState
+              title="پروموشن‌ها خوانده نشد"
+              detail={message}
+              onRetry={refresh}
+              retryLabel={faWorkspaceMessages.retry}
+            />
+          ) : (
+            <DataGrid columns={columns} queryAdapter={queryAdapter} />
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }
 
 /** جزئیات checkout شامل snapshot ارسال و خطوط هر فروشنده. */

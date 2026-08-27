@@ -122,6 +122,59 @@ public sealed class ReviewDirectory : IReviewDirectory
     }
 
     /// <inheritdoc />
+    public async Task<SellerScopedReviewPage> ListForProductsAsync(
+        IReadOnlyCollection<Guid> productIds,
+        ReviewStatus? statusFilter,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        if (productIds.Count == 0)
+        {
+            return new SellerScopedReviewPage([], page, pageSize, 0, 0, 0, 0);
+        }
+
+        var owned = productIds.Where(id => id != Guid.Empty).Distinct().ToArray();
+        if (owned.Length == 0)
+        {
+            return new SellerScopedReviewPage([], page, pageSize, 0, 0, 0, 0);
+        }
+
+        var baseQuery = _db.Reviews.AsNoTracking().Where(x => owned.Contains(x.ProductId));
+        var statusGroups = await baseQuery
+            .GroupBy(x => x.Status)
+            .Select(g => new { Status = g.Key, Count = g.LongCount() })
+            .ToListAsync(cancellationToken);
+        long CountOf(ReviewStatus status) => statusGroups.SingleOrDefault(x => x.Status == status)?.Count ?? 0;
+        var publishedCount = CountOf(ReviewStatus.Published);
+        var pendingCount = CountOf(ReviewStatus.Pending);
+        var rejectedCount = CountOf(ReviewStatus.Rejected);
+
+        var filtered = statusFilter is null ? baseQuery : baseQuery.Where(x => x.Status == statusFilter.Value);
+        var totalCount = await filtered.LongCountAsync(cancellationToken);
+        var items = await filtered
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenBy(x => x.ReviewId)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new ModerationReview(
+                x.ReviewId,
+                x.ProductId,
+                x.AuthorDisplayName,
+                x.Rating,
+                x.Title,
+                x.Body,
+                x.IsVerifiedPurchase,
+                x.CreatedAt,
+                x.Status))
+            .ToListAsync(cancellationToken);
+        return new SellerScopedReviewPage(
+            items, page, pageSize, totalCount, publishedCount, pendingCount, rejectedCount);
+    }
+
+    /// <inheritdoc />
     public async Task PublishAsync(Guid reviewId, Guid moderatorUserId, CancellationToken cancellationToken)
     {
         var review = await _db.Reviews.SingleOrDefaultAsync(x => x.ReviewId == reviewId, cancellationToken)
