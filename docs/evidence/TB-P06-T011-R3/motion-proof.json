@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-08-27T00:10:30.539Z",
+  "interactions": [
+    {
+      "surface": "tooba-customer-return-modal",
+      "before": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 24, 27)",
+        "borderRadius": "8px",
+        "opacity": "1",
+        "transitionProperty": "color, background-color, border-color, text-decoration-color, fill, stroke",
+        "transitionDuration": "0.15s"
+      },
+      "after": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "color": "rgb(24, 24, 27)",
+        "borderRadius": "8px",
+        "opacity": "1",
+        "transitionProperty": "color, background-color, border-color, text-decoration-color, fill, stroke",
+        "transitionDuration": "0.15s"
+      }
+    },
+    {
+      "surface": "tooba-seller-review-modal",
+      "before": null,
+      "after": null
+    }
+  ]
+}

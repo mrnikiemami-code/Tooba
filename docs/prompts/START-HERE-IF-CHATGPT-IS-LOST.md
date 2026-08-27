@@ -7,10 +7,11 @@ Current Phase: P06 — Core API Integration / Operational Hardening
 Last Architect Accepted Gate: TB-P05-GATE
 P05: COMPLETE
 P06: IN_PROGRESS
-Last Implementation Task: TB-P06-T011-R2
+Last Implementation Task: TB-P06-T011-R3
 TB-P06-T011 = REPAIR_REQUIRED
 TB-P06-T011-R1 = REPAIR_REQUIRED
-TB-P06-T011-R2 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T011-R2 = REPAIR_REQUIRED
+TB-P06-T011-R3 = AWAITING_ARCHITECT_ACCEPT
 FULFILLMENT_BACKEND = LIVE
 FULFILLMENT_CUSTOMER_UI = LIVE
 FULFILLMENT_SELLER_UI = LIVE
@@ -31,4 +32,4 @@ PDP_VISUAL_REVIEW = OPEN_FOR_USER_FEEDBACK
 
 Worker PASS is not Architect ACCEPT.
 
-Evidence for current task: `docs/evidence/TB-P06-T011-R2/`.
+Evidence for current task: `docs/evidence/TB-P06-T011-R3/`.

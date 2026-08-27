@@ -1,0 +1,64 @@
+{
+  "createdAt": "2026-08-27T00:07:11.775Z",
+  "method": "HTTP APIs via Host (storefront checkout + seller fulfillment lifecycle)",
+  "directDbMutation": false,
+  "customerActor": "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+  "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+  "sellerActor": "01a03628-3f68-7000-844d-99f1cadb54b0",
+  "checkoutId": "01a0408a-be00-7000-94a1-db0d82532d27",
+  "sellerOrderId": "01a0408a-be05-7000-a0c3-6d03a887e6b7",
+  "fulfillmentId": "3667d5ba-d9e2-4f81-bc28-1354419288c5",
+  "shipmentId": "ab52a945-70dd-40cb-a206-040a4d9ccdf9",
+  "orderLineId": "01a0408a-be2f-7000-837e-cb64ab2fdce5",
+  "quantity": 1,
+  "fulfillmentStatus": 5,
+  "returnIdempotencyKey": "return-r3-01a0408a-be00-7000-94a1-db0d82532d27",
+  "returnRequestId": "72528d83-a924-4ce4-8d25-8fe9bba88af5",
+  "orderReference": "TB-20260827000709-01-307c5a",
+  "customerOrderUrl": "http://127.0.0.1:3000/customer-panel/orders/01a0408a-be00-7000-94a1-db0d82532d27",
+  "sellerReturnsUrl": "http://127.0.0.1:3000/vendor-panel/returns?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+  "sellerReturnDetailUrl": "http://127.0.0.1:3000/vendor-panel/returns/72528d83-a924-4ce4-8d25-8fe9bba88af5?sellerPartyId=01a030d1-40cb-7000-8abe-6d31739956c5",
+  "fulfillments": [
+    {
+      "fulfillmentId": "3667d5ba-d9e2-4f81-bc28-1354419288c5",
+      "sellerOrderId": "01a0408a-be05-7000-a0c3-6d03a887e6b7",
+      "checkoutId": "01a0408a-be00-7000-94a1-db0d82532d27",
+      "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "status": 5,
+      "recipientName": "خریدار R3 مرجوعی",
+      "contactMobile": "09121234567",
+      "provinceName": "تهران",
+      "cityName": "تهران",
+      "postalAddress": "خیابان آزادی، پلاک ۱",
+      "postalCode": "1234567890",
+      "shippingMethodCode": "storefront-default",
+      "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+      "items": [
+        {
+          "fulfillmentItemId": "f4082c66-fb70-45ac-95a8-ac01a4c74d7e",
+          "orderLineId": "01a0408a-be2f-7000-837e-cb64ab2fdce5",
+          "quantityOrdered": 1,
+          "quantityShipped": 1,
+          "reservationId": "01a0408a-bd4a-7000-a3b2-deb99e76e36d"
+        }
+      ],
+      "shipments": [
+        {
+          "shipmentId": "ab52a945-70dd-40cb-a206-040a4d9ccdf9",
+          "status": 3,
+          "carrierDisplayName": "Post R3 Demo",
+          "trackingReference": "TRK-R3-1787789231631",
+          "dispatchedAt": "2026-08-27T00:07:11.686726+00:00",
+          "deliveredAt": "2026-08-27T00:07:11.74432+00:00",
+          "items": [
+            {
+              "orderLineId": "01a0408a-be2f-7000-837e-cb64ab2fdce5",
+              "quantity": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "returnStatus": 0
+}

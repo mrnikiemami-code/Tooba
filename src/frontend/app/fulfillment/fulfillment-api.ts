@@ -87,6 +87,41 @@ function nullableText(value: unknown): string | null {
   return value == null || String(value).length === 0 ? null : String(value);
 }
 
+const FULFILLMENT_STATUS_BY_NUMBER: Record<number, string> = {
+  0: "ReadyToFulfill",
+  1: "Processing",
+  2: "Packed",
+  3: "Dispatched",
+  4: "InTransit",
+  5: "Delivered",
+  6: "Failed",
+  7: "Cancelled",
+};
+
+const SHIPMENT_STATUS_BY_NUMBER: Record<number, string> = {
+  0: "Created",
+  1: "Dispatched",
+  2: "InTransit",
+  3: "Delivered",
+  4: "Failed",
+  5: "Cancelled",
+};
+
+/** Host may serialize enums as numbers; UI gates compare canonical names. */
+export function normalizeFulfillmentStatus(value: unknown): string {
+  if (typeof value === "number" && FULFILLMENT_STATUS_BY_NUMBER[value]) {
+    return FULFILLMENT_STATUS_BY_NUMBER[value];
+  }
+  return text(value);
+}
+
+export function normalizeShipmentStatus(value: unknown): string {
+  if (typeof value === "number" && SHIPMENT_STATUS_BY_NUMBER[value]) {
+    return SHIPMENT_STATUS_BY_NUMBER[value];
+  }
+  return text(value);
+}
+
 function mapShipmentLine(value: unknown): FulfillmentShipmentLine | null {
   const item = record(value);
   if (!item) return null;
@@ -106,7 +141,7 @@ function mapShipment(value: unknown): FulfillmentShipment | null {
     : [];
   return {
     shipmentId,
-    status: text(prop(item, "status", "Status")),
+    status: normalizeShipmentStatus(prop(item, "status", "Status")),
     carrierDisplayName: text(prop(item, "carrierDisplayName", "CarrierDisplayName")),
     trackingReference: nullableText(prop(item, "trackingReference", "TrackingReference")),
     dispatchedAt: nullableText(prop(item, "dispatchedAt", "DispatchedAt")),
@@ -143,7 +178,7 @@ export function mapFulfillmentSnapshot(value: unknown): FulfillmentSnapshot | nu
     sellerOrderId: text(prop(item, "sellerOrderId", "SellerOrderId")),
     checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
     sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
-    status: text(prop(item, "status", "Status")),
+    status: normalizeFulfillmentStatus(prop(item, "status", "Status")),
     recipientName: text(prop(item, "recipientName", "RecipientName")),
     contactMobile: text(prop(item, "contactMobile", "ContactMobile")),
     provinceName: text(prop(item, "provinceName", "ProvinceName")),

@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P06-T011-R2
+TB-P06-T011-R3
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P06-T011-R2 — AWAITING_ARCHITECT_ACCEPT)
+NONE (Worker completed TB-P06-T011-R3 — AWAITING_ARCHITECT_ACCEPT)
 ```
 
 Current Gate:
@@ -91,7 +91,8 @@ TB-P06-T007 = AWAITING_ARCHITECT_ACCEPT
 TB-P06-T010-R1 = AWAITING_ARCHITECT_ACCEPT
 TB-P06-T011 = REPAIR_REQUIRED
 TB-P06-T011-R1 = REPAIR_REQUIRED
-TB-P06-T011-R2 = AWAITING_ARCHITECT_ACCEPT
+TB-P06-T011-R2 = REPAIR_REQUIRED
+TB-P06-T011-R3 = AWAITING_ARCHITECT_ACCEPT
 RETURNS_BACKEND = LIVE
 REFUNDS_BACKEND = LIVE_FOUNDATION
 INVENTORY_RESTOCK = LIVE
@@ -579,4 +580,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T011 = REPAIR_REQUIRED. TB-P06-T011-R1 = REPAIR_REQUIRED. TB-P06-T011-R2 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT: mandatory Shopeiva vs Tooba browser side-by-side PNG evidence (15 captures), motion/CDP proof, CSS/JS/responsive parity matrix, live-data honesty, restock regression re-verified. RETURNS_* = LIVE. INVENTORY_RESTOCK = LIVE. Evidence under `docs/evidence/TB-P06-T011-R2/`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = IN_PROGRESS. TB-P06-T011 = REPAIR_REQUIRED. TB-P06-T011-R1/R2 = REPAIR_REQUIRED. TB-P06-T011-R3 Worker PASS submitted = AWAITING_ARCHITECT_ACCEPT: legitimate dev scenario (Paid→Delivered→Return Requested) via Host HTTP APIs; real Tooba customer/seller return modals captured desktop+mobile with side-by-side Shopeiva proof; minimal fulfillment enum normalization fix. Evidence under `docs/evidence/TB-P06-T011-R3/`.

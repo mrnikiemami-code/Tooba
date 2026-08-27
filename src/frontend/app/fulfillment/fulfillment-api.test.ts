@@ -6,7 +6,35 @@ import {
   formatShipmentStatus,
   mapFulfillmentList,
   mapFulfillmentSnapshot,
+  normalizeFulfillmentStatus,
 } from "./fulfillment-api.ts";
+
+test("normalizeFulfillmentStatus maps numeric Host enum to canonical name", () => {
+  assert.equal(normalizeFulfillmentStatus(5), "Delivered");
+  assert.equal(normalizeFulfillmentStatus("Packed"), "Packed");
+});
+
+test("mapFulfillmentSnapshot maps numeric fulfillment status from Host", () => {
+  const snapshot = mapFulfillmentSnapshot({
+    fulfillmentId: "f1",
+    sellerOrderId: "so1",
+    checkoutId: "c1",
+    sellerPartyId: "s1",
+    status: 5,
+    recipientName: "علی",
+    contactMobile: "09120000000",
+    provinceName: "تهران",
+    cityName: "تهران",
+    postalAddress: "خیابان ۱",
+    postalCode: "1234567890",
+    shippingMethodCode: "standard",
+    shippingMethodLabel: "پست",
+    items: [],
+    shipments: [{ shipmentId: "sh1", status: 3, carrierDisplayName: "پost", trackingReference: "TRK", items: [] }],
+  });
+  assert.equal(snapshot?.status, "Delivered");
+  assert.equal(snapshot?.shipments[0]?.status, "Delivered");
+});
 
 test("mapFulfillmentSnapshot maps host PascalCase payload", () => {
   const snapshot = mapFulfillmentSnapshot({
