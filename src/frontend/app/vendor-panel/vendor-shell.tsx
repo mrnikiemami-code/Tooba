@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3,
+  Bell,
   ChevronLeft,
   Images,
   LayoutDashboard,
@@ -44,6 +45,7 @@ const menuItems: NavItem[] = [
   { id: "dashboard", label: "داشبورد", icon: LayoutDashboard, href: "/vendor-panel", live: true },
   { id: "products", label: "محصولات", icon: Package, href: "/vendor-panel/products", live: true },
   { id: "orders", label: "سفارشات", icon: ShoppingBag, href: "/vendor-panel/orders", live: true },
+  { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/vendor-panel/notifications", live: true },
   { id: "stories", label: "استوری‌ها", icon: Images, href: "/vendor-panel/stories", live: true },
   { id: "coupons", label: "تخفیف‌ها", icon: Tag, href: "/vendor-panel/coupons", live: true },
   { id: "reviews", label: "نظرات", icon: Star, href: "/vendor-panel/reviews", live: true },

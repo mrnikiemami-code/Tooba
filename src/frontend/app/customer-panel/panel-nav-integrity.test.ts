@@ -12,6 +12,7 @@ const LIVE_HREFS = [
   "/customer-panel/orders",
   "/customer-panel/wishlist",
   "/customer-panel/addresses",
+  "/customer-panel/notifications",
   "/customer-panel/profile",
   "/customer-panel/settings",
 ] as const;
@@ -20,7 +21,6 @@ const DEFERRED_HREFS = [
   "/customer-panel/wallet",
   "/customer-panel/tickets",
   "/customer-panel/gift-cards",
-  "/customer-panel/notifications",
 ] as const;
 
 function extractMenuItemsBlock(source: string): string {

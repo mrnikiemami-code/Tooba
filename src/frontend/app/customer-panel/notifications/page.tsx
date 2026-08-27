@@ -1,13 +1,13 @@
-import { Bell } from "lucide-react";
-import { CustomerCapabilityShell } from "../customer-capability-shell";
+"use client";
 
-/** پوستهٔ اعلان‌های مشتری تا زمان وجود منبع اعلان معتبر. */
+import { NotificationInbox } from "../notification-inbox";
+
+/** اینباکس اعلان مشتری — Host واقعی + قفل UI شاپیوا. */
 export default function CustomerNotificationsPage() {
   return (
-    <CustomerCapabilityShell
-      title="اعلان‌ها"
-      description="پیام‌ها و رویدادهای حساب مشتری"
-      icon={<Bell className="w-5 h-5" />}
+    <NotificationInbox
+      kind="customer"
+      emptyHint="پس از رویدادهای واقعی پرداخت، ارسال یا مرجوعی، اعلان اینجا ظاهر می‌شود."
     />
   );
 }

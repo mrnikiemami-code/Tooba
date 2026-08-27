@@ -11,6 +11,7 @@ const LIVE_HREFS = [
   "/vendor-panel",
   "/vendor-panel/products",
   "/vendor-panel/orders",
+  "/vendor-panel/notifications",
   "/vendor-panel/stories",
   "/vendor-panel/coupons",
   "/vendor-panel/reviews",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Bell,
   ChevronLeft,
   Heart,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const menuItems: NavItem[] = [
   { id: "orders", label: "سفارشات", icon: Package, href: "/customer-panel/orders", live: true },
   { id: "wishlist", label: "علاقه‌مندی‌ها", icon: Heart, href: "/customer-panel/wishlist", live: true },
   { id: "addresses", label: "آدرس‌ها", icon: MapPin, href: "/customer-panel/addresses", live: true },
+  { id: "notifications", label: "اطلاعیه‌ها", icon: Bell, href: "/customer-panel/notifications", live: true },
   { id: "profile", label: "پروفایل", icon: User, href: "/customer-panel/profile", live: true },
   { id: "settings", label: "تنظیمات", icon: Settings, href: "/customer-panel/settings", live: true },
 ];
@@ -42,7 +44,6 @@ export const CUSTOMER_DEFERRED_NAV_HREFS = [
   "/customer-panel/wallet",
   "/customer-panel/tickets",
   "/customer-panel/gift-cards",
-  "/customer-panel/notifications",
 ] as const;
 
 const visibleMenuItems = menuItems.filter((item) => item.live);

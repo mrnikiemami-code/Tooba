@@ -34,6 +34,7 @@ public sealed class OrderModule : IToobaModule
         services.AddScoped<IOrderPaymentProjection, OrderPaymentBridge>();
         services.AddScoped<IOrderFulfillmentReader, OrderFulfillmentBridge>();
         services.AddScoped<IOrderReturnReader, OrderReturnBridge>();
+        services.AddScoped<IOrderNotificationReader, OrderNotificationBridge>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, OrderPaymentSucceededHandler>();
         services.AddDbContext<OrderDbContext>((sp, options) =>
         {

@@ -11,6 +11,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
 using Tooba.Settlement.Infrastructure.Persistence;
+using Tooba.Notification.Infrastructure.Persistence;
 
 namespace Tooba.Host;
 
@@ -45,6 +46,7 @@ internal static class MarketplaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<OrderDbContext>());
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
         await MigrateAsync(provider.GetRequiredService<SettlementDbContext>());
+        await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());

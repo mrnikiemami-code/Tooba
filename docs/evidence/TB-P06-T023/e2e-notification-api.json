@@ -1,0 +1,77 @@
+﻿{
+    "at":  "2026-08-27T11:26:37.7839781Z",
+    "sellerUnread":  {
+                         "unreadCount":  2
+                     },
+    "customer":  {
+                     "items":  [
+                                   {
+                                       "notificationId":  "01a042f8-17bf-7000-9aa0-3b69cef233b9",
+                                       "type":  "fulfillment.created",
+                                       "category":  "order",
+                                       "title":  "آماده‌سازی سفارش",
+                                       "body":  "سفارش شما برای آماده‌سازی ثبت شد.",
+                                       "targetRoute":  "/customer-panel/orders/01a042f8-0a37-7000-bbaf-ea78a750a8a2",
+                                       "isRead":  false,
+                                       "createdAt":  "2026-08-27T11:25:50.399389+00:00"
+                                   },
+                                   {
+                                       "notificationId":  "01a042f8-101b-7000-b946-a625335d3860",
+                                       "type":  "payment.succeeded",
+                                       "category":  "order",
+                                       "title":  "پرداخت موفق",
+                                       "body":  "پرداخت به مبلغ 272500.0000 IRR با موفقیت انجام شد.",
+                                       "targetRoute":  "/customer-panel/orders/01a042f8-0a37-7000-bbaf-ea78a750a8a2",
+                                       "isRead":  false,
+                                       "createdAt":  "2026-08-27T11:25:48.443532+00:00"
+                                   },
+                                   {
+                                       "notificationId":  "01a042f7-c825-7000-93c7-159831c1fbfc",
+                                       "type":  "payment.failed",
+                                       "category":  "order",
+                                       "title":  "پرداخت ناموفق",
+                                       "body":  "پرداخت سفارش شما انجام نشد. در صورت کسر وجه، وضعیت را بررسی کنید.",
+                                       "targetRoute":  "/payment/result?checkoutId=01a042f7-c0ee-7000-967f-760280c83a71",
+                                       "isRead":  true,
+                                       "createdAt":  "2026-08-27T11:25:30.021634+00:00"
+                                   }
+                               ],
+                     "skip":  0,
+                     "take":  20,
+                     "totalCount":  3,
+                     "unreadCount":  2
+                 },
+    "notes":  "payment.succeeded + fulfillment.created projected to customer and seller after sandbox outcome=success",
+    "customerUnread":  {
+                           "unreadCount":  2
+                       },
+    "seller":  {
+                   "items":  [
+                                 {
+                                     "notificationId":  "01a042f8-17c2-7000-b9be-96e06edecbb0",
+                                     "type":  "fulfillment.created",
+                                     "category":  "order",
+                                     "title":  "آماده‌سازی سفارش",
+                                     "body":  "سفارش شما برای آماده‌سازی ثبت شد.",
+                                     "targetRoute":  "/vendor-panel/orders/01a042f8-0a37-7000-8d2b-bea61750c463",
+                                     "isRead":  false,
+                                     "createdAt":  "2026-08-27T11:25:50.402606+00:00"
+                                 },
+                                 {
+                                     "notificationId":  "01a042f8-101e-7000-b8a2-9fc5c30894dd",
+                                     "type":  "order.paid.seller",
+                                     "category":  "order",
+                                     "title":  "سفارش جدید پرداخت‌شده",
+                                     "body":  "یک سفارش پرداخت‌شده آمادهٔ اقدام شماست.",
+                                     "targetRoute":  "/vendor-panel/orders/01a042f8-0a37-7000-8d2b-bea61750c463",
+                                     "isRead":  false,
+                                     "createdAt":  "2026-08-27T11:25:48.446638+00:00"
+                                 }
+                             ],
+                   "skip":  0,
+                   "take":  20,
+                   "totalCount":  2,
+                   "unreadCount":  2
+               },
+    "claim":  "TRANSACTIONAL_NOTIFICATIONS_LIVE"
+}
