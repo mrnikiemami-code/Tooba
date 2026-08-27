@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BlogDetailClient } from "./blog-detail-ui";
 import { loadPublishedArticleBySlug } from "../../content/content-api";
 import { blogOpenGraphLocale, resolveRequestLocale } from "../../../lib/i18n/resolve-request-locale";
+import { canonicalForLocale } from "../../../lib/i18n/routing.ts";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -19,8 +20,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return {
     title: article.seoTitle || article.title,
     description: article.seoDescription || article.excerpt,
-    // Canonical stays fa path; no fabricated hreflang until a second locale is published.
-    alternates: { canonical: `/blogs/${article.slug}` },
+    alternates: { canonical: canonicalForLocale(locale, `/blogs/${article.slug}`) },
     openGraph: {
       title: article.seoTitle || article.title,
       description: article.seoDescription || article.excerpt,

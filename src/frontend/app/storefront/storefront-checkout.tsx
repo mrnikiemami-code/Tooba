@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {

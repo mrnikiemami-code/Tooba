@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Calendar, ChevronLeft, Flame, Image as ImageIcon, User } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";

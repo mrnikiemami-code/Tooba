@@ -2,27 +2,40 @@
 
 import { useEffect, useState } from "react";
 import { chromeMessagesFor } from "./messages.ts";
-import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "./locale-cookie.ts";
-import { DEFAULT_LOCALE, type Locale } from "./locale.ts";
+import { writeBrowserLocaleCookie } from "./locale-cookie.ts";
+import { type Locale } from "./locale.ts";
+import { useLocale, useSwitchLocalePath } from "./locale-context.tsx";
 
 /**
- * سوییچر فشرده FA|EN مطابق تراکم هدر Shopeiva.
- * فقط locale نمایش را عوض می‌کند؛ market/currency را تغییر نمی‌دهد.
+ * سوییچر FA|EN — locale را در URL prefix عوض می‌کند؛ market/currency را تغییر نمی‌دهد.
  */
 export function LocaleSwitcher({ className = "" }: { className?: string }) {
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE);
+  const locale = useLocale();
+  const switchLocalePath = useSwitchLocalePath();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setLocale(readBrowserLocaleCookie());
-  }, []);
+    setMounted(true);
+    writeBrowserLocaleCookie(locale);
+  }, [locale]);
 
   const messages = chromeMessagesFor(locale);
 
   function select(next: Locale) {
     if (next === locale) return;
     writeBrowserLocaleCookie(next);
-    setLocale(next);
-    window.location.reload();
+    const target = switchLocalePath(next);
+    window.location.href = `${target}${window.location.search}`;
+  }
+
+  if (!mounted) {
+    return (
+      <div className={`inline-flex items-center gap-0.5 text-[11px] font-bold text-gray-500 ${className}`} aria-hidden="true">
+        <span className="px-1.5 py-0.5">FA</span>
+        <span className="text-gray-300">|</span>
+        <span className="px-1.5 py-0.5">EN</span>
+      </div>
+    );
   }
 
   return (

@@ -1,0 +1,20 @@
+{
+  "recordedAtUtc": "2026-08-27T03:00:41.994Z",
+  "runtime": {
+    "hostLive": 200,
+    "hostReady": 200,
+    "faHome": 200,
+    "enHome": 200,
+    "faBlogs": 200,
+    "enBlogs": 200,
+    "faProducts": 200,
+    "enProducts": 200,
+    "shopeiva": 200
+  },
+  "redirects": {
+    "rootToFa": "/fa",
+    "productsToPrefixed": "/fa/products",
+    "blogsToPrefixed": "/fa/blogs",
+    "invalidLocale": 404
+  }
+}

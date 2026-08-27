@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 

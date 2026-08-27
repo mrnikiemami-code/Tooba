@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { Eye, Heart, Share2, ShoppingBag, Sparkles, Star, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";

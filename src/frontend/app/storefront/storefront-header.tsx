@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
+import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Award,
@@ -50,6 +51,7 @@ export function StorefrontShopeivaHeader({
   const [cartCount, setCartCount] = useState(0);
   const [brands, setBrands] = useState<StorefrontBrandItem[]>([]);
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lp = useLocalizedPath();
 
   useEffect(() => {
     const refreshBadge = () => {
@@ -173,7 +175,7 @@ export function StorefrontShopeivaHeader({
             <span className="hidden md:block font-black text-xl text-[#2563EB]">توبا</span>
           </Link>
 
-          <form action="/products" method="get" className="hidden lg:block flex-1 max-w-xl mx-4">
+          <form action={lp("/products")} method="get" className="hidden lg:block flex-1 max-w-xl mx-4">
             <div className="relative">
               <input
                 name="q"
@@ -266,7 +268,7 @@ export function StorefrontShopeivaHeader({
                               type="button"
                               onMouseEnter={() => setSelectedCategoryId(cat.categoryId)}
                               onClick={() => {
-                                window.location.href = `/products?categoryId=${cat.categoryId}`;
+                                window.location.href = `${lp("/products")}?categoryId=${cat.categoryId}`;
                                 closeMegaMenu();
                               }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-right transition-all ${
@@ -410,7 +412,7 @@ export function StorefrontShopeivaHeader({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-1">
-            <form action="/products" method="get" className="mb-2">
+            <form action={lp("/products")} method="get" className="mb-2">
               <div className="relative">
                 <input name="q" placeholder="جستجو در کالاها..." className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pr-10 pl-3 text-sm" aria-label="جستجوی کالا در موبایل" />
                 <Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" />

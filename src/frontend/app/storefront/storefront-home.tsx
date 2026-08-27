@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, Flame } from "lucide-react";
 import {

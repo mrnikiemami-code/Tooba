@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { AppProviders } from "./providers";
+import { LocaleProvider } from "../lib/i18n/locale-context";
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_NAME,
   dirForLocale,
+  isLocale,
   langForLocale,
   parseLocale,
 } from "../lib/i18n/locale";
+import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
 import "./globals.css";
 
 /**
@@ -20,16 +23,23 @@ export const metadata: Metadata = {
 };
 
 /**
- * لایهٔ ریشه. lang/dir از کوکی tooba_locale؛ فارسی پیش‌فرض و RTL.
+ * لایهٔ ریشه. lang/dir از prefix URL (x-tooba-locale) یا کوکی ترجیحی.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
+  const headerStore = await headers();
+  const headerLocale = headerStore.get(LOCALE_HEADER_NAME);
   const jar = await cookies();
-  const locale = parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
+  const locale =
+    headerLocale && isLocale(headerLocale)
+      ? headerLocale
+      : parseLocale(jar.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
 
   return (
     <html lang={langForLocale(locale)} dir={dirForLocale(locale)} suppressHydrationWarning>
       <body>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        </AppProviders>
       </body>
     </html>
   );
