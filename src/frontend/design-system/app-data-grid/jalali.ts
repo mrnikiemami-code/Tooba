@@ -14,6 +14,14 @@ export function formatJalaliDate(iso: string | null | undefined, locale: "fa" | 
   return d.format("YYYY-MM-DD");
 }
 
+/** اجزای جلالی از ISO — برای تقویم و chip. */
+export function isoToJalaliDisplay(iso: string): { year: number; month: number; day: number } | null {
+  const d = dayjs(iso);
+  if (!d.isValid()) return null;
+  const j = d.calendar("jalali");
+  return { year: j.year(), month: j.month() + 1, day: j.date() };
+}
+
 /** تبدیل ورودی جلالی yyyy/mm/dd به ISO UTC برای API. */
 export function jalaliInputToIso(input: string): string | undefined {
   const trimmed = input.trim();

@@ -34,7 +34,14 @@ export type LocaleKey =
   | "andConnector"
   | "orConnector"
   | "addCondition"
-  | "removeCondition";
+  | "removeCondition"
+  | "clearAllFilters"
+  | "setDefault"
+  | "updateView"
+  | "systemDefault"
+  | "totalRows"
+  | "showingRows"
+  | "advancedFilterEntry";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -56,6 +63,7 @@ export const faGridLocale: Record<LocaleKey, string> = {
   selectedPage: "انتخاب صفحهٔ جاری",
   clearSelection: "پاک کردن انتخاب",
   clearFilters: "پاک کردن فیلترها",
+  clearAllFilters: "حذف همه فیلترها",
   advancedFilter: "فیلتر پیشرفته",
   apply: "اعمال",
   cancel: "انصراف",
@@ -73,6 +81,12 @@ export const faGridLocale: Record<LocaleKey, string> = {
   orConnector: "یا",
   addCondition: "افزودن شرط",
   removeCondition: "حذف",
+  setDefault: "پیش‌فرض باشد",
+  updateView: "به‌روزرسانی با وضعیت فعلی",
+  systemDefault: "پیش‌فرض",
+  totalRows: "تعداد کل",
+  showingRows: "نمایش",
+  advancedFilterEntry: "فیلتر پیشرفته",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -95,6 +109,7 @@ export const enGridLocale: Record<LocaleKey, string> = {
   selectedPage: "Select current page",
   clearSelection: "Clear selection",
   clearFilters: "Clear filters",
+  clearAllFilters: "Clear all filters",
   advancedFilter: "Advanced filter",
   apply: "Apply",
   cancel: "Cancel",
@@ -112,6 +127,12 @@ export const enGridLocale: Record<LocaleKey, string> = {
   orConnector: "OR",
   addCondition: "Add condition",
   removeCondition: "Remove",
+  setDefault: "Set as default",
+  updateView: "Update with current state",
+  systemDefault: "Default",
+  totalRows: "Total",
+  showingRows: "Showing",
+  advancedFilterEntry: "Advanced filter",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {

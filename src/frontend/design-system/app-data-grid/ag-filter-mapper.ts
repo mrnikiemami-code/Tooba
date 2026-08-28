@@ -1,5 +1,12 @@
 import type { FilterModel } from "ag-grid-community";
 import type { GridFilterValue } from "../data-grid/types";
+import { filterOperatorLabelsFor } from "../data-grid/messages.ts";
+import { formatJalaliDate } from "./jalali.ts";
+
+export type FilterChipOptions = {
+  enumLabels?: Record<string, string>;
+  locale?: "fa" | "en";
+};
 
 type AgFilterEntry = {
   filterType?: string;
@@ -248,17 +255,52 @@ export function filterChipLabel(
   header: string,
   value: GridFilterValue,
   locale: "fa" | "en",
+  options?: FilterChipOptions,
 ): string {
+  const enumLabels = options?.enumLabels ?? {};
+  const formatNum = (n: number) => n.toLocaleString(locale === "fa" ? "fa-IR" : "en-US");
+
   switch (value.kind) {
     case "text":
       return `${header}: ${value.query}`;
-    case "number":
-      return `${header}: ${value.value}${value.valueTo != null ? `–${value.valueTo}` : ""}`;
-    case "date":
-      return `${header}: ${value.iso.slice(0, 10)}${value.isoTo ? `–${value.isoTo.slice(0, 10)}` : ""}`;
+    case "number": {
+      if (value.operator === "between" && value.valueTo != null) {
+        return `${header}: ${formatNum(value.value)} ${locale === "fa" ? "تا" : "to"} ${formatNum(value.valueTo)}`;
+      }
+      const ops = filterOperatorLabelsFor(locale);
+      const opLabel =
+        value.operator === "greaterThan" || value.operator === "greaterThanOrEqual"
+          ? ops.greaterThan
+          : value.operator === "lessThan" || value.operator === "lessThanOrEqual"
+            ? ops.lessThan
+            : ops.equals;
+      return `${header}: ${opLabel} ${formatNum(value.value)}`;
+    }
+    case "money": {
+      const amount = value.money.amount;
+      const amountTo = value.money.amountTo;
+      const currency = value.money.currency || (locale === "fa" ? "تومان" : "");
+      if (value.operator === "between" && amountTo != null) {
+        return `${header}: ${formatNum(amount)} ${locale === "fa" ? "تا" : "to"} ${formatNum(amountTo)} ${currency}`.trim();
+      }
+      return `${header}: ${formatNum(amount)} ${currency}`.trim();
+    }
+    case "date": {
+      const from = formatJalaliDate(value.iso, locale);
+      if (value.operator === "between" && value.isoTo) {
+        const to = formatJalaliDate(value.isoTo, locale);
+        return `${header}: ${from} ${locale === "fa" ? "تا" : "to"} ${to}`;
+      }
+      const ops = filterOperatorLabelsFor(locale);
+      const opLabel =
+        value.operator === "before" ? ops.before : value.operator === "after" ? ops.after : ops.on;
+      return `${header}: ${opLabel} ${from}`;
+    }
     case "enum":
-    case "status":
-      return `${header}: ${value.values.join(locale === "fa" ? "، " : ", ")}`;
+    case "status": {
+      const labels = value.values.map((v) => enumLabels[v] ?? v);
+      return `${header}: ${labels.join(locale === "fa" ? "، " : ", ")}`;
+    }
     default:
       return header;
   }

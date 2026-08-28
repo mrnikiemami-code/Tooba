@@ -1,11 +1,11 @@
 "use client";
 
-import { Input, Select } from "../primitives/core";
+import { Select } from "../primitives/core";
 import type { GridFilterValue } from "../data-grid/types";
 import { filterOperatorLabelsFor } from "../data-grid/messages";
-import { formatJalaliDate, jalaliInputToIso } from "./jalali";
+import { JalaliDatePicker } from "./jalali-date-picker";
 
-/** فیلتر تاریخ با ورودی جلالی → ISO برای API. */
+/** فیلتر تاریخ با تقویم/ورودی جلالی → ISO برای API. */
 export function JalaliDateFilterControl({
   header,
   value,
@@ -22,14 +22,9 @@ export function JalaliDateFilterControl({
   const iso = value?.kind === "date" ? value.iso : "";
   const isoTo = value?.kind === "date" ? value.isoTo : undefined;
 
-  function jalaliDisplay(isoValue: string): string {
-    if (!isoValue) return "";
-    return formatJalaliDate(isoValue, locale);
-  }
-
   return (
-    <label className="block text-sm">
-      {header}
+    <div className="grid gap-2 text-sm">
+      <span className="font-medium">{header}</span>
       <Select
         aria-label={`${header} — ${ops.on}`}
         value={operator}
@@ -47,35 +42,56 @@ export function JalaliDateFilterControl({
         <option value="after">{ops.after}</option>
         <option value="between">{ops.between}</option>
       </Select>
-      <Input
-        placeholder={locale === "fa" ? "۱۴۰۴/۰۱/۰۱" : "YYYY-MM-DD"}
-        value={iso ? jalaliDisplay(iso) : ""}
-        onChange={(event) => {
-          const parsed = locale === "fa" ? jalaliInputToIso(event.target.value) : event.target.value;
-          onChange({
-            kind: "date",
-            operator,
-            iso: parsed ?? event.target.value,
-            isoTo,
-          });
-        }}
-      />
       {operator === "between" ? (
-        <Input
-          placeholder={locale === "fa" ? "تا تاریخ" : "To date"}
-          aria-label={`${header} — ${ops.between}`}
-          value={isoTo ? jalaliDisplay(isoTo) : ""}
-          onChange={(event) => {
-            const parsed = locale === "fa" ? jalaliInputToIso(event.target.value) : event.target.value;
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="grid gap-1">
+            <span className="text-xs text-muted">{locale === "fa" ? "از تاریخ" : "From"}</span>
+            <JalaliDatePicker
+              ariaLabel={`${header} — ${locale === "fa" ? "از تاریخ" : "From"}`}
+              locale={locale}
+              value={iso || undefined}
+              onChange={(next) =>
+                onChange({
+                  kind: "date",
+                  operator,
+                  iso: next ?? iso ?? new Date().toISOString(),
+                  isoTo,
+                })
+              }
+            />
+          </label>
+          <label className="grid gap-1">
+            <span className="text-xs text-muted">{locale === "fa" ? "تا تاریخ" : "To"}</span>
+            <JalaliDatePicker
+              ariaLabel={`${header} — ${locale === "fa" ? "تا تاریخ" : "To"}`}
+              locale={locale}
+              value={isoTo || undefined}
+              onChange={(next) =>
+                onChange({
+                  kind: "date",
+                  operator,
+                  iso: next ?? iso ?? new Date().toISOString(),
+                  isoTo: next,
+                })
+              }
+            />
+          </label>
+        </div>
+      ) : (
+        <JalaliDatePicker
+          ariaLabel={header}
+          locale={locale}
+          value={iso || undefined}
+          onChange={(next) =>
             onChange({
               kind: "date",
               operator,
-              iso: iso || parsed || new Date().toISOString(),
-              isoTo: parsed ?? event.target.value,
-            });
-          }}
+              iso: next ?? iso ?? new Date().toISOString(),
+              isoTo,
+            })
+          }
         />
-      ) : null}
-    </label>
+      )}
+    </div>
   );
 }

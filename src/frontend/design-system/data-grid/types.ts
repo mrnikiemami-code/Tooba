@@ -128,6 +128,8 @@ export interface SavedViewStore {
   list(): Promise<SavedGridView[]>;
   save(view: SavedGridView): Promise<void>;
   remove(id: string): Promise<void>;
+  getDefaultViewId?(): Promise<string | null>;
+  setDefaultViewId?(id: string | null): Promise<void>;
 }
 
 export interface EntityFilterAdapter {

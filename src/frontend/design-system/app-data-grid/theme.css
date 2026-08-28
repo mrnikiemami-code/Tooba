@@ -1,19 +1,20 @@
-/** تم AG Grid — هم‌خوان با توکن‌های Tooba/Shopeiva-native Admin. */
+/** تم AG Grid — هم‌خوان با mockup تأییدشده Admin Products. */
 .ag-theme-tooba {
   --ag-font-family: inherit;
   --ag-font-size: 14px;
-  --ag-grid-size: 6px;
-  --ag-row-height: 44px;
-  --ag-header-height: 44px;
+  --ag-grid-size: 8px;
+  --ag-row-height: 56px;
+  --ag-header-height: 48px;
+  --ag-cell-horizontal-padding: 12px;
   --ag-border-color: hsl(var(--border));
   --ag-secondary-border-color: hsl(var(--border));
   --ag-background-color: hsl(var(--surface-elevated));
   --ag-foreground-color: hsl(var(--foreground));
-  --ag-header-background-color: hsl(var(--secondary));
+  --ag-header-background-color: hsl(var(--secondary) / 0.55);
   --ag-header-foreground-color: hsl(var(--foreground));
   --ag-odd-row-background-color: hsl(var(--surface-elevated));
-  --ag-row-hover-color: hsl(var(--secondary) / 0.65);
-  --ag-selected-row-background-color: hsl(var(--primary) / 0.12);
+  --ag-row-hover-color: hsl(var(--secondary) / 0.45);
+  --ag-selected-row-background-color: hsl(var(--primary) / 0.1);
   --ag-range-selection-border-color: hsl(var(--primary));
   --ag-input-focus-border-color: hsl(var(--primary));
   --ag-checkbox-checked-color: hsl(var(--primary));
@@ -25,9 +26,21 @@
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-ds, 0.5rem);
   overflow: hidden;
+  box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
 }
 
 .ag-theme-tooba .ag-header-cell-label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ag-theme-tooba .ag-cell {
+  display: flex;
+  align-items: center;
+  line-height: 1.35;
+}
+
+.ag-theme-tooba .ag-header-cell {
   font-weight: 600;
 }
 
@@ -37,24 +50,112 @@
   outline-offset: -2px;
 }
 
+.ag-theme-tooba .ag-row {
+  border-bottom: 1px solid hsl(var(--border) / 0.65);
+}
+
+[data-app-grid-shell] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 [data-app-grid-toolbar] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem 0.25rem;
+}
+
+[data-app-grid-toolbar-row] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
-  padding: 0.75rem 0;
 }
 
-[data-app-grid-toolbar] input,
-[data-app-grid-toolbar] select,
-[data-app-grid-toolbar] button {
+[data-app-grid-search] {
+  min-width: min(100%, 18rem);
+  flex: 1 1 14rem;
   min-height: 2.75rem;
   border-radius: var(--radius-ds, 0.5rem);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  padding-inline: 2.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+[data-app-grid-search-wrap] {
+  position: relative;
+  flex: 1 1 14rem;
+  min-width: min(100%, 18rem);
+}
+
+[data-app-grid-search-wrap]::before {
+  content: "⌕";
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: hsl(var(--muted));
+  pointer-events: none;
+}
+
+[data-app-grid-chip] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary) / 0.35);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+[data-app-grid-chip]:hover {
+  background: hsl(var(--secondary) / 0.65);
+}
+
+[data-app-grid-clear-filters] {
+  color: hsl(var(--danger));
+  border-color: hsl(var(--danger) / 0.35);
+  background: hsl(var(--danger) / 0.06);
+}
+
+[data-app-grid-pagination] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.875rem;
+}
+
+[data-app-grid-page-btn] {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border-radius: var(--radius-ds, 0.5rem);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  font-size: 0.8125rem;
+}
+
+[data-app-grid-page-btn][data-active="true"] {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 @media (max-width: 767px) {
   .ag-theme-tooba {
     --ag-font-size: 13px;
-    --ag-row-height: 40px;
+    --ag-row-height: 52px;
+  }
+
+  [data-app-grid-toolbar-row] {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

@@ -6,7 +6,11 @@ import { migrateSavedView } from "../../design-system/app-data-grid/saved-view-s
 export const ADMIN_PRODUCT_GRID_VIEW_KEY = "grid.admin.products";
 export const ADMIN_ORDER_GRID_VIEW_KEY = "grid.admin.orders";
 
+export const SAVED_VIEW_COLLECTION_SCHEMA_VERSION = 1;
+
 type UiPreferencePayload = {
+  schemaVersion?: number;
+  defaultViewId?: string | null;
   views?: SavedGridView[];
 };
 
@@ -15,37 +19,50 @@ type UiPreferencePayload = {
  * شکست شبکه را خاموش می‌بلعد تا گرید بدون persistence هم کار کند.
  */
 export function createHostSavedViewStore(preferenceKey: string): SavedViewStore {
-  let cache: SavedGridView[] | null = null;
+  let cache: UiPreferencePayload | null = null;
 
-  async function readViews(): Promise<SavedGridView[]> {
+  async function readCollection(): Promise<UiPreferencePayload> {
     if (cache) {
-      return cache.map(cloneView);
+      return {
+        schemaVersion: cache.schemaVersion ?? SAVED_VIEW_COLLECTION_SCHEMA_VERSION,
+        defaultViewId: cache.defaultViewId ?? null,
+        views: (cache.views ?? []).map(cloneView),
+      };
     }
     try {
       const response = await fetch(`/v1/admin/ui-preferences/${encodeURIComponent(preferenceKey)}`, {
         headers: adminHeaders(),
       });
       if (!response.ok) {
-        cache = [];
-        return [];
+        cache = { schemaVersion: SAVED_VIEW_COLLECTION_SCHEMA_VERSION, defaultViewId: null, views: [] };
+        return readCollection();
       }
       const body = (await response.json()) as { json?: UiPreferencePayload | null };
-      const views = Array.isArray(body.json?.views) ? body.json!.views! : [];
-      cache = views.map(cloneView);
-      return cache.map(cloneView);
+      const raw = body.json ?? {};
+      const views = Array.isArray(raw.views) ? raw.views.map(cloneView) : [];
+      cache = {
+        schemaVersion: raw.schemaVersion ?? SAVED_VIEW_COLLECTION_SCHEMA_VERSION,
+        defaultViewId: raw.defaultViewId ?? null,
+        views,
+      };
+      return readCollection();
     } catch {
-      cache = [];
-      return [];
+      cache = { schemaVersion: SAVED_VIEW_COLLECTION_SCHEMA_VERSION, defaultViewId: null, views: [] };
+      return readCollection();
     }
   }
 
-  async function writeViews(views: SavedGridView[]): Promise<void> {
-    cache = views.map(cloneView);
+  async function writeCollection(next: UiPreferencePayload): Promise<void> {
+    cache = {
+      schemaVersion: SAVED_VIEW_COLLECTION_SCHEMA_VERSION,
+      defaultViewId: next.defaultViewId ?? null,
+      views: (next.views ?? []).map(cloneView),
+    };
     try {
       await fetch(`/v1/admin/ui-preferences/${encodeURIComponent(preferenceKey)}`, {
         method: "PUT",
         headers: adminHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ json: { views: cache } }),
+        body: JSON.stringify({ json: cache }),
       });
     } catch {
       // گرید باید بدون Host هم بماند؛ persistence بعداً دوباره تلاش می‌شود.
@@ -54,17 +71,28 @@ export function createHostSavedViewStore(preferenceKey: string): SavedViewStore 
 
   return {
     async list() {
-      return readViews();
+      const collection = await readCollection();
+      return collection.views ?? [];
     },
     async save(view) {
-      const views = await readViews();
-      const next = views.filter((item) => item.id !== view.id);
-      next.push(cloneView(view));
-      await writeViews(next);
+      const collection = await readCollection();
+      const views = (collection.views ?? []).filter((item) => item.id !== view.id);
+      views.push(cloneView(view));
+      await writeCollection({ ...collection, views });
     },
     async remove(id) {
-      const views = await readViews();
-      await writeViews(views.filter((item) => item.id !== id));
+      const collection = await readCollection();
+      const views = (collection.views ?? []).filter((item) => item.id !== id);
+      const defaultViewId = collection.defaultViewId === id ? null : collection.defaultViewId ?? null;
+      await writeCollection({ ...collection, views, defaultViewId });
+    },
+    async getDefaultViewId() {
+      const collection = await readCollection();
+      return collection.defaultViewId ?? null;
+    },
+    async setDefaultViewId(id) {
+      const collection = await readCollection();
+      await writeCollection({ ...collection, defaultViewId: id });
     },
   };
 }
