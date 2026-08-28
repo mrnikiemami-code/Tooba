@@ -40,7 +40,9 @@ Runtime:
 
 Git:
 - branch: main
-- commit: (at ship)
+- commit: fix complete Community AG Grid features advanced filters columns [TB-P07-T002-R3]
+- final HEAD: bd8f04c441fb3e828284c1ca960310e280339f64
+- origin/main: bd8f04c441fb3e828284c1ca960310e280339f64
 - push: YES
 - synchronized: YES
 
