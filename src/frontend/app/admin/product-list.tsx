@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
+import { COLUMN_FILTER_APPLY_PARAMS } from "../../design-system/app-data-grid/filter-commit";
 import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
@@ -148,6 +149,7 @@ function buildColumnDefs(
       flex: 1.4,
       cellRenderer: ProductCell,
       filter: "agTextColumnFilter",
+      filterParams: COLUMN_FILTER_APPLY_PARAMS,
     },
     {
       field: "status",
@@ -159,13 +161,14 @@ function buildColumnDefs(
       ),
       filter: false,
     },
-    { field: "categorySummary", headerName: "دسته", width: 130, filter: "agTextColumnFilter" },
+    { field: "categorySummary", headerName: "دسته", width: 130, filter: "agTextColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
     { field: "offerAmountRange", headerName: "قیمت (تومان)", width: 150, filter: false },
     {
       field: "sellableUnits",
       headerName: "موجودی",
       width: 100,
       filter: "agNumberColumnFilter",
+      filterParams: COLUMN_FILTER_APPLY_PARAMS,
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
         <span className={stockClass(Number(params.value ?? 0))}>{Number(params.value ?? 0).toLocaleString("fa-IR")}</span>
       ),
@@ -175,11 +178,12 @@ function buildColumnDefs(
       headerName: "به‌روزرسانی",
       width: 120,
       valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
-      filter: false,
+      filter: "jalaliDateColumnFilter",
+      filterParams: { locale: "fa", ...COLUMN_FILTER_APPLY_PARAMS },
     },
-    { field: "variantCount", headerName: "گونه", width: 90, hide: true, filter: "agNumberColumnFilter" },
-    { field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true, filter: "agNumberColumnFilter" },
-    { field: "locationCount", headerName: "محل", width: 90, hide: true, filter: "agNumberColumnFilter" },
+    { field: "variantCount", headerName: "گونه", width: 90, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
+    { field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
+    { field: "locationCount", headerName: "محل", width: 90, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
   ];
 }
 
@@ -308,7 +312,7 @@ export function ProductListScreen() {
           </button>
         </section>
       ) : null}
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">
+      <section className="rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">
         {gridError ? (
           <p className="mb-2 text-sm text-danger" data-testid="list-source">
             اتصال فروشگاه برقرار نیست ({gridError})

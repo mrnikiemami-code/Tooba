@@ -10,7 +10,7 @@
   --ag-secondary-border-color: hsl(var(--border));
   --ag-background-color: hsl(var(--surface-elevated));
   --ag-foreground-color: hsl(var(--foreground));
-  --ag-header-background-color: hsl(var(--secondary) / 0.55);
+  --ag-header-background-color: hsl(var(--surface-elevated));
   --ag-header-foreground-color: hsl(var(--foreground));
   --ag-odd-row-background-color: hsl(var(--surface-elevated));
   --ag-row-hover-color: hsl(var(--secondary) / 0.45);
@@ -22,11 +22,74 @@
   --ag-wrapper-border-radius: var(--radius-ds, 0.5rem);
 }
 
+[data-app-grid-viewport] {
+  width: 100%;
+  min-width: 0;
+  isolation: isolate;
+}
+
+[data-app-grid-viewport] .ag-theme-tooba {
+  width: 100%;
+}
+
 .ag-theme-tooba .ag-root-wrapper {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-ds, 0.5rem);
   overflow: hidden;
   box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
+}
+
+.ag-theme-tooba .ag-header {
+  position: relative;
+  z-index: 4;
+  background-color: hsl(var(--surface-elevated));
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
+}
+
+.ag-theme-tooba .ag-header-row {
+  background-color: hsl(var(--surface-elevated));
+}
+
+.ag-theme-tooba .ag-header-cell,
+.ag-theme-tooba .ag-header-group-cell {
+  background-color: hsl(var(--surface-elevated));
+}
+
+.ag-theme-tooba .ag-pinned-left-header,
+.ag-theme-tooba .ag-pinned-right-header {
+  z-index: 5;
+  background-color: hsl(var(--surface-elevated));
+  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
+}
+
+.ag-theme-tooba .ag-pinned-left-cols-container,
+.ag-theme-tooba .ag-pinned-right-cols-container {
+  z-index: 2;
+  background-color: hsl(var(--surface-elevated));
+}
+
+.ag-theme-tooba .ag-center-cols-viewport,
+.ag-theme-tooba .ag-body-viewport,
+.ag-theme-tooba .ag-body-horizontal-scroll-viewport {
+  z-index: 1;
+}
+
+.ag-theme-tooba .ag-row {
+  z-index: 1;
+  background-color: hsl(var(--surface-elevated));
+}
+
+.ag-theme-tooba .ag-floating-filter,
+.ag-theme-tooba .ag-popup {
+  z-index: var(--z-overlay, 50);
+}
+
+.ag-theme-tooba .ag-filter {
+  min-width: 14rem;
+  border-radius: var(--radius-ds, 0.5rem);
+  background: hsl(var(--surface-elevated));
+  box-shadow: 0 4px 16px hsl(var(--foreground) / 0.12);
 }
 
 .ag-theme-tooba .ag-header-cell-label {
@@ -35,9 +98,13 @@
 }
 
 .ag-theme-tooba .ag-cell {
+  line-height: 1.35;
+}
+
+.ag-theme-tooba .ag-cell-wrapper {
   display: flex;
   align-items: center;
-  line-height: 1.35;
+  height: 100%;
 }
 
 .ag-theme-tooba .ag-header-cell {

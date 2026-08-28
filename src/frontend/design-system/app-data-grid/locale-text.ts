@@ -41,14 +41,15 @@ export type LocaleKey =
   | "systemDefault"
   | "totalRows"
   | "showingRows"
-  | "advancedFilterEntry";
+  | "advancedFilterEntry"
+  | "selectedCount";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
   filters: "فیلترها",
   columns: "ستون‌ها",
-  exportCsv: "خروجی CSV (صفحهٔ جاری)",
-  exportExcel: "خروجی Excel (صفحهٔ جاری)",
+  exportCsv: "خروجی CSV",
+  exportExcel: "خروجی Excel",
   savedViews: "نمای ذخیره‌شده",
   saveView: "ذخیره نما",
   deleteView: "حذف نما",
@@ -87,14 +88,15 @@ export const faGridLocale: Record<LocaleKey, string> = {
   totalRows: "تعداد کل",
   showingRows: "نمایش",
   advancedFilterEntry: "فیلتر پیشرفته",
+  selectedCount: "انتخاب‌شده",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
   search: "Search…",
   filters: "Filters",
   columns: "Columns",
-  exportCsv: "Export CSV (current page)",
-  exportExcel: "Export Excel (current page)",
+  exportCsv: "Export CSV",
+  exportExcel: "Export Excel",
   savedViews: "Saved view",
   saveView: "Save view",
   deleteView: "Delete view",
@@ -133,6 +135,7 @@ export const enGridLocale: Record<LocaleKey, string> = {
   totalRows: "Total",
   showingRows: "Showing",
   advancedFilterEntry: "Advanced filter",
+  selectedCount: "Selected",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {
@@ -141,6 +144,27 @@ export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string
 
 export function buildAgGridLocaleText(locale: "fa" | "en"): Record<string, string> {
   const m = resolveGridLocale(locale);
+  const ops = locale === "en"
+    ? {
+        equals: "Equals",
+        notEqual: "Not equal",
+        contains: "Contains",
+        notContains: "Not contains",
+        startsWith: "Starts with",
+        endsWith: "Ends with",
+        lessThan: "Less than",
+        greaterThan: "Greater than",
+      }
+    : {
+        equals: "برابر",
+        notEqual: "نابرابر",
+        contains: "شامل",
+        notContains: "شامل نباشد",
+        startsWith: "شروع با",
+        endsWith: "پایان با",
+        lessThan: "کمتر از",
+        greaterThan: "بیشتر از",
+      };
   return {
     next: m.next,
     previous: m.previous,
@@ -150,14 +174,7 @@ export function buildAgGridLocaleText(locale: "fa" | "en"): Record<string, strin
     applyFilter: m.apply,
     resetFilter: m.clearFilters,
     clearFilter: m.clearFilters,
-    equals: "برابر",
-    notEqual: "نابرابر",
-    contains: "شامل",
-    notContains: "شامل نباشد",
-    startsWith: "شروع با",
-    endsWith: "پایان با",
-    lessThan: "کمتر از",
-    greaterThan: "بیشتر از",
+    ...ops,
     columns: m.columns,
     searchOoo: m.search,
   };

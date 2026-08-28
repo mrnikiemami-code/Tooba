@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import dayjs from "dayjs";
 import { cn } from "../cn";
 import { formatJalaliDate, isoToJalaliDisplay, jalaliInputToIso } from "./jalali";
@@ -25,12 +25,20 @@ const FA_WEEKDAYS = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
 export function JalaliDatePicker({
   value,
   onChange,
+  onDraftIsoChange,
+  onCommit,
+  commitOnChange = true,
   placeholder = "۱۴۰۴/۰۱/۰۱",
   ariaLabel,
   locale = "fa",
 }: {
   value?: string;
-  onChange: (iso: string | undefined) => void;
+  onChange?: (iso: string | undefined) => void;
+  /** وقتی commitOnChange=false — فقط draft را به والد اطلاع می‌دهد. */
+  onDraftIsoChange?: (iso: string | undefined) => void;
+  /** Enter یا انتخاب از تقویم — commit صریح. */
+  onCommit?: (iso: string | undefined) => void;
+  commitOnChange?: boolean;
   placeholder?: string;
   ariaLabel: string;
   locale?: "fa" | "en";
@@ -90,13 +98,34 @@ export function JalaliDatePicker({
   function commitText(raw: string) {
     setText(raw);
     const iso = locale === "fa" ? jalaliInputToIso(raw) : raw.trim() || undefined;
-    onChange(iso);
+    if (commitOnChange) {
+      onChange?.(iso);
+    } else {
+      onDraftIsoChange?.(iso);
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    const iso = locale === "fa" ? jalaliInputToIso(text) : text.trim() || undefined;
+    onCommit?.(iso);
+    if (!commitOnChange) {
+      onDraftIsoChange?.(iso);
+    } else {
+      onChange?.(iso);
+    }
+    setOpen(false);
   }
 
   function selectIso(iso: string | undefined) {
     if (!iso) return;
-    onChange(iso);
     setText(formatJalaliDate(iso, locale));
+    if (commitOnChange) {
+      onChange?.(iso);
+    } else {
+      onDraftIsoChange?.(iso);
+      onCommit?.(iso);
+    }
     setOpen(false);
   }
 
@@ -126,6 +155,7 @@ export function JalaliDatePicker({
         placeholder={placeholder}
         value={text}
         onChange={(event) => commitText(event.target.value)}
+        onKeyDown={handleKeyDown}
         onFocus={() => locale === "fa" && setOpen(true)}
         className="min-h-10 w-full rounded-ds border border-border bg-surface px-3 text-sm"
         dir={locale === "fa" ? "rtl" : "ltr"}

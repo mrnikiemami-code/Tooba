@@ -50,6 +50,8 @@ import {
 import type { AppGridFilterColumnDef } from "./filter-column-def";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
+import { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";
+import { JalaliDateColumnFilter } from "./jalali-date-column-filter";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -114,7 +116,6 @@ export function AppDataGrid<T extends { id: string }>({
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const filterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
   const suppressGridEventsRef = useRef(false);
@@ -213,7 +214,10 @@ export function AppDataGrid<T extends { id: string }>({
   );
 
   const load = useCallback(
-    async (nextQuery: GridServerQuery) => {
+    async (nextQuery: GridServerQuery, options?: { force?: boolean }) => {
+      if (!options?.force && !shouldCommitGridQuery(queryRef.current, nextQuery)) {
+        return;
+      }
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -236,7 +240,7 @@ export function AppDataGrid<T extends { id: string }>({
   );
 
   useEffect(() => {
-    void load(defaultQuery);
+    void load(defaultQuery, { force: true });
     return () => abortRef.current?.abort();
   }, [load, defaultQuery]);
 
@@ -277,20 +281,22 @@ export function AppDataGrid<T extends { id: string }>({
     [load],
   );
 
+  const commitColumnFilters = useCallback(() => {
+    if (suppressGridEventsRef.current) return;
+    const api = gridApiRef.current;
+    if (!api) return;
+    const agFilters = fromAgFilterModel(api.getFilterModel());
+    const filters = mergeFilters(queryRef.current.filters, agFilters);
+    if (filtersEqual(filters, queryRef.current.filters)) return;
+    setActiveViewId(null);
+    void load({ ...queryRef.current, page: 1, filters });
+  }, [load, mergeFilters]);
+
   const onFilterChanged = useCallback(
     (_event: FilterChangedEvent<T>) => {
-      if (suppressGridEventsRef.current) return;
-      const api = gridApiRef.current;
-      if (!api) return;
-      if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
-      filterTimerRef.current = setTimeout(() => {
-        const agFilters = fromAgFilterModel(api.getFilterModel());
-        const filters = mergeFilters(queryRef.current.filters, agFilters);
-        setActiveViewId(null);
-        void load({ ...queryRef.current, page: 1, filters });
-      }, 300);
+      commitColumnFilters();
     },
-    [load, mergeFilters],
+    [commitColumnFilters],
   );
 
   function applyDraftAdvancedFilter() {
@@ -507,6 +513,14 @@ export function AppDataGrid<T extends { id: string }>({
       resizable: true,
       minWidth: 72,
       flex: 1,
+      filterParams: COLUMN_FILTER_APPLY_PARAMS,
+    }),
+    [],
+  );
+
+  const gridComponents = useMemo(
+    () => ({
+      jalaliDateColumnFilter: JalaliDateColumnFilter,
     }),
     [],
   );
@@ -590,6 +604,11 @@ export function AppDataGrid<T extends { id: string }>({
               </button>
             </>
           ) : null}
+          {selected.length > 0 ? (
+            <span className="text-sm text-muted tabular-nums" data-testid="app-grid-selected-count">
+              {messages.selectedCount}: {selected.length.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")}
+            </span>
+          ) : null}
         </div>
         {savedViewStore ? (
           <SavedViewsToolbar
@@ -651,7 +670,6 @@ export function AppDataGrid<T extends { id: string }>({
             ))}
           </div>
         ) : null}
-        <p className="text-xs text-muted">{messages.exportScopeNote}</p>
       </div>
 
       <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={messages.advancedFilterEntry}>
@@ -755,10 +773,6 @@ export function AppDataGrid<T extends { id: string }>({
         </div>
       </Drawer>
 
-      {pageSelectionOnly ? (
-        <p className="px-1 py-2 text-xs text-muted">{messages.pageSelectionNote}</p>
-      ) : null}
-
       {error ? (
         <div className="rounded-ds border border-danger/30 bg-danger/5 p-4 text-sm">
           <p>{error}</p>
@@ -768,7 +782,7 @@ export function AppDataGrid<T extends { id: string }>({
         </div>
       ) : null}
 
-      <div className="ag-theme-quartz ag-theme-tooba w-full" style={{ height: 560 }}>
+      <div data-app-grid-viewport className="ag-theme-quartz ag-theme-tooba w-full" style={{ height: 560 }}>
         <AgGridReact<T>
           theme="legacy"
           rowHeight={GRID_ROW_HEIGHT}
@@ -776,9 +790,12 @@ export function AppDataGrid<T extends { id: string }>({
           rowData={loading ? [] : rows}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          components={gridComponents}
+          context={{ locale }}
           getRowId={(params) => params.data.id}
           localeText={localeText}
           enableRtl={direction === "rtl"}
+          ensureDomOrder
           animateRows
           suppressDragLeaveHidesColumns
           rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }}
