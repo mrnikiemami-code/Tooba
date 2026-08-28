@@ -10,6 +10,8 @@ using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 
+using Tooba.Host.Grid;
+
 namespace Tooba.Host.Admin;
 
 /// <summary>
@@ -49,9 +51,17 @@ public sealed class ProductWorkspaceComposer
     /// <summary>
     /// فهرست محصولات Catalog برای ورود به Workspace.
     /// </summary>
-    public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken) =>
+        await BuildListItemsAsync(maxRows: 100, cancellationToken);
+
+    private async Task<IReadOnlyList<AdminProductListItem>> BuildListItemsAsync(
+        int? maxRows,
+        CancellationToken cancellationToken)
     {
-        var products = await _catalog.Products.AsNoTracking().OrderByDescending(x => x.UpdatedAt).Take(100).ToListAsync(cancellationToken);
+        var productQuery = _catalog.Products.AsNoTracking().OrderByDescending(x => x.UpdatedAt);
+        var products = maxRows.HasValue
+            ? await productQuery.Take(maxRows.Value).ToListAsync(cancellationToken)
+            : await productQuery.ToListAsync(cancellationToken);
         var productIds = products.Select(x => x.ProductId).ToList();
         var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, productIds, cancellationToken);
         var variantRows = await _catalog.Variants.AsNoTracking().Select(x => new { x.ProductId, x.VariantId }).ToListAsync(cancellationToken);
@@ -116,6 +126,18 @@ public sealed class ProductWorkspaceComposer
                 product.UpdatedAt,
                 primaryMedia?.MediaAssetId);
         }).ToList();
+    }
+
+    /// <summary>
+    /// فهرست محصولات Admin با قرارداد GridQuery/GridPage — فیلتر/مرتب‌سازی/صفحه‌بندی سمت Host.
+    /// </summary>
+    public async Task<GridPageResponse<AdminProductListItem>> QueryGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await BuildListItemsAsync(maxRows: null, cancellationToken);
+        var filtered = AdminProductGridEvaluator.Apply(rows, request);
+        return AdminProductGridEvaluator.Page(filtered, request);
     }
 
     /// <summary>

@@ -1,0 +1,60 @@
+/** تم AG Grid — هم‌خوان با توکن‌های Tooba/Shopeiva-native Admin. */
+.ag-theme-tooba {
+  --ag-font-family: inherit;
+  --ag-font-size: 14px;
+  --ag-grid-size: 6px;
+  --ag-row-height: 44px;
+  --ag-header-height: 44px;
+  --ag-border-color: hsl(var(--border));
+  --ag-secondary-border-color: hsl(var(--border));
+  --ag-background-color: hsl(var(--surface-elevated));
+  --ag-foreground-color: hsl(var(--foreground));
+  --ag-header-background-color: hsl(var(--secondary));
+  --ag-header-foreground-color: hsl(var(--foreground));
+  --ag-odd-row-background-color: hsl(var(--surface-elevated));
+  --ag-row-hover-color: hsl(var(--secondary) / 0.65);
+  --ag-selected-row-background-color: hsl(var(--primary) / 0.12);
+  --ag-range-selection-border-color: hsl(var(--primary));
+  --ag-input-focus-border-color: hsl(var(--primary));
+  --ag-checkbox-checked-color: hsl(var(--primary));
+  --ag-border-radius: var(--radius-ds, 0.5rem);
+  --ag-wrapper-border-radius: var(--radius-ds, 0.5rem);
+}
+
+.ag-theme-tooba .ag-root-wrapper {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-ds, 0.5rem);
+  overflow: hidden;
+}
+
+.ag-theme-tooba .ag-header-cell-label {
+  font-weight: 600;
+}
+
+.ag-theme-tooba .ag-cell:focus,
+.ag-theme-tooba .ag-header-cell:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+}
+
+[data-app-grid-toolbar] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+[data-app-grid-toolbar] input,
+[data-app-grid-toolbar] select,
+[data-app-grid-toolbar] button {
+  min-height: 2.75rem;
+  border-radius: var(--radius-ds, 0.5rem);
+}
+
+@media (max-width: 767px) {
+  .ag-theme-tooba {
+    --ag-font-size: 13px;
+    --ag-row-height: 40px;
+  }
+}

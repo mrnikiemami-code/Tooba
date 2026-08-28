@@ -1,5 +1,7 @@
 using Tooba.BuildingBlocks;
 
+using Tooba.Host.Grid;
+
 namespace Tooba.Host.Admin;
 
 /// <summary>
@@ -14,6 +16,7 @@ public static class ProductWorkspaceEndpoints
     {
         var group = app.MapGroup("/v1/admin/products");
         group.MapGet("/", ListAsync);
+        group.MapPost("/query", QueryGridAsync);
         group.MapPost("/", CreateAsync);
         group.MapGet("/{productId:guid}", GetAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
@@ -42,6 +45,29 @@ public static class ProductWorkspaceEndpoints
         }
 
         return new ProductWorkspacePermissions(true, true, true, true, true);
+    }
+
+    private static async Task<IResult> QueryGridAsync(
+        GridQueryRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var normalized = AdminProductGridQueryPolicy.Normalize(body);
+            return Results.Json(await composer.QueryGridAsync(normalized, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
     }
 
     private static async Task<IResult> ListAsync(

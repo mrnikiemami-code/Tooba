@@ -1,5 +1,7 @@
 import type { ProductWorkspaceView } from "./workspace-model.ts";
 import { adminHeaders } from "./admin-api.ts";
+import type { GridServerQuery, GridServerPage } from "../../design-system/data-grid/types";
+import { fromHostGridPage, toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
 
 /**
  * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
@@ -212,6 +214,45 @@ export async function loadAdminProductList(): Promise<{ source: HostReadSource; 
     return { source: "host", rows };
   } catch {
     return { source: "error", rows: [], message: "host-unreachable" };
+  }
+}
+
+/**
+ * فهرست محصولات Admin با قرارداد GridQuery/GridPage — server-side paging/filter/sort.
+ */
+export async function queryAdminProductGrid(
+  query: GridServerQuery,
+): Promise<{ source: HostReadSource; page: GridServerPage<AdminProductListRow>; message?: string; denied?: boolean }> {
+  try {
+    const response = await fetch("/v1/admin/products/query", {
+      method: "POST",
+      headers: { ...adminHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(toHostGridQuery(query)),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { source: "error", page: { rows: [], total: 0 }, message: "admin.authorization.denied", denied: true };
+    }
+    if (!response.ok) {
+      return { source: "error", page: { rows: [], total: 0 }, message: "host-grid-http-" + String(response.status) };
+    }
+    const payload = (await response.json()) as {
+      items?: unknown[];
+      totalCount?: number;
+      page?: number;
+      pageSize?: number;
+    };
+    const page = fromHostGridPage(
+      {
+        items: payload.items ?? [],
+        page: payload.page ?? query.page,
+        pageSize: payload.pageSize ?? query.pageSize,
+        totalCount: payload.totalCount ?? 0,
+      },
+      (item) => mapAdminProductList([item])[0],
+    );
+    return { source: "host", page };
+  } catch {
+    return { source: "error", page: { rows: [], total: 0 }, message: "host-unreachable" };
   }
 }
 
