@@ -296,6 +296,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapCatalogAttributeEndpoints();
+app.MapCatalogFacetEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();

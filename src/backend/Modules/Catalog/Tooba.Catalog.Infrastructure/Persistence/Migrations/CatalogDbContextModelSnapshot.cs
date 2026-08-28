@@ -275,6 +275,63 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                     b.ToTable("category_attribute_bindings", "catalog");
                 });
 
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration", b =>
+                {
+                    b.Property<Guid>("FacetConfigurationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("facet_configuration_id");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("DefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("definition_id");
+
+                    b.Property<string>("DisplayType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("display_type");
+
+                    b.Property<bool>("IsCollapsedByDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_collapsed_by_default");
+
+                    b.Property<bool>("IsSearchable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_searchable");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_visible");
+
+                    b.Property<bool>("ShowCounts")
+                        .HasColumnType("boolean")
+                        .HasColumnName("show_counts");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("FacetConfigurationId")
+                        .HasName("pk_category_facet_configurations");
+
+                    b.HasIndex("DefinitionId")
+                        .HasDatabaseName("ix_category_facet_configurations_definition_id");
+
+                    b.HasIndex("CategoryId", "DefinitionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_category_facet_configurations_category_id_definition_id");
+
+                    b.ToTable("category_facet_configurations", "catalog");
+                });
+
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategorySlugHistory", b =>
                 {
                     b.Property<Guid>("HistoryId")
@@ -806,6 +863,23 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_category_attribute_bindings_attribute_definitions_definitio");
+                });
+
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration", b =>
+                {
+                    b.HasOne("Tooba.Catalog.Domain.CatalogCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_category_facet_configurations_categories_category_id");
+
+                    b.HasOne("Tooba.Catalog.Domain.CatalogAttributeDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("DefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_category_facet_configurations_attribute_definitions_definitio");
                 });
 
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategorySlugHistory", b =>

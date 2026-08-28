@@ -931,6 +931,184 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<EffectiveCategoryFacet>> GetEffectiveCategoryFacetsAsync(
+        Guid categoryId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await ResolveEffectiveFacetsAsync(categoryId, cancellationToken);
+        if (resolved.Count == 0)
+        {
+            return Array.Empty<EffectiveCategoryFacet>();
+        }
+
+        var names = await GetAttributeDefinitionNamesAsync(
+            resolved.Select(x => x.DefinitionId).ToArray(),
+            locale,
+            cancellationToken);
+        return resolved.Select(x => new EffectiveCategoryFacet(
+            x.DefinitionId,
+            x.Definition.Code,
+            names.GetValueOrDefault(x.DefinitionId) ?? x.Definition.Code,
+            x.Definition.ValueKind,
+            x.DisplayType,
+            x.SortOrder,
+            x.IsVisible,
+            x.IsSearchable,
+            x.IsCollapsedByDefault,
+            x.ShowCounts,
+            x.SourceCategoryId,
+            x.SourceCategoryId != categoryId)).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CategoryFacetConfigurationView>> ListLocalFacetConfigurationsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
+        {
+            throw new InvalidOperationException("رده در Catalog این Tenant نیست.");
+        }
+
+        var configs = await _db.CategoryFacetConfigurations.AsNoTracking()
+            .Where(x => x.CategoryId == categoryId)
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync(cancellationToken);
+        if (configs.Count == 0)
+        {
+            return Array.Empty<CategoryFacetConfigurationView>();
+        }
+
+        var definitionIds = configs.Select(x => x.DefinitionId).ToArray();
+        var definitions = await _db.AttributeDefinitions.AsNoTracking()
+            .Where(x => definitionIds.Contains(x.DefinitionId))
+            .ToDictionaryAsync(x => x.DefinitionId, cancellationToken);
+        return configs.Select(config =>
+        {
+            if (!definitions.TryGetValue(config.DefinitionId, out var definition))
+            {
+                throw new InvalidOperationException("تعریف ویژگی facet در Catalog نیست.");
+            }
+
+            return new CategoryFacetConfigurationView(
+                config.FacetConfigurationId,
+                config.CategoryId,
+                config.DefinitionId,
+                definition.Code,
+                definition.ValueKind,
+                config.DisplayType,
+                config.SortOrder,
+                config.IsVisible,
+                config.IsSearchable,
+                config.IsCollapsedByDefault,
+                config.ShowCounts);
+        }).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task UpsertCategoryFacetConfigurationAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CategoryFacetConfigurationInput input,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(input);
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
+        {
+            throw new InvalidOperationException("رده در Catalog این Tenant نیست.");
+        }
+
+        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
+            x => x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("تعریف ویژگی در Catalog این Tenant نیست.");
+
+        var effective = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
+        var schemaRow = effective.SingleOrDefault(x => x.DefinitionId == definitionId)
+            ?? throw new InvalidOperationException("این ویژگی در schema مؤثر این رده نیست.");
+        if (!schemaRow.IsFilterable)
+        {
+            throw new InvalidOperationException("فقط ویژگی‌های قابل فیلتر برای این رده مجاز به پیکربندی فیلتر هستند.");
+        }
+
+        CatalogCategoryFacetRules.ValidateDisplayType(definition, input.DisplayType);
+        var isSearchable = input.IsSearchable && CatalogCategoryFacetRules.IsSearchableAllowed(input.DisplayType);
+
+        var existing = await _db.CategoryFacetConfigurations.SingleOrDefaultAsync(
+            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
+            cancellationToken);
+        if (existing is null)
+        {
+            _db.CategoryFacetConfigurations.Add(
+                CatalogCategoryFacetConfiguration.Create(
+                    categoryId,
+                    definitionId,
+                    input.DisplayType,
+                    input.SortOrder,
+                    input.IsVisible,
+                    isSearchable,
+                    input.IsCollapsedByDefault,
+                    input.ShowCounts,
+                    DateTimeOffset.UtcNow));
+        }
+        else
+        {
+            existing.DisplayType = input.DisplayType;
+            existing.SortOrder = input.SortOrder;
+            existing.IsVisible = input.IsVisible;
+            existing.IsSearchable = isSearchable;
+            existing.IsCollapsedByDefault = input.IsCollapsedByDefault;
+            existing.ShowCounts = input.ShowCounts;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RemoveCategoryFacetOverrideAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var config = await _db.CategoryFacetConfigurations.SingleOrDefaultAsync(
+            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("پیکربندی facet محلی پیدا نشد.");
+        _db.CategoryFacetConfigurations.Remove(config);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReorderCategoryFacetConfigurationsAsync(
+        Guid categoryId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(orderedDefinitionIds);
+        var configs = await _db.CategoryFacetConfigurations
+            .Where(x => x.CategoryId == categoryId)
+            .ToListAsync(cancellationToken);
+        if (configs.Count != orderedDefinitionIds.Count
+            || orderedDefinitionIds.Distinct().Count() != orderedDefinitionIds.Count
+            || configs.Select(c => c.DefinitionId).ToHashSet().SetEquals(orderedDefinitionIds) is false)
+        {
+            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همان پیکربندی‌های محلی رده باشد.");
+        }
+
+        for (var i = 0; i < orderedDefinitionIds.Count; i++)
+        {
+            var config = configs.Single(c => c.DefinitionId == orderedDefinitionIds[i]);
+            config.SortOrder = i;
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<ProductReference> CreateProductAsync(
         CatalogProductKind kind,
         string? slugSeam,
@@ -1417,6 +1595,58 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var definitions = await _db.AttributeDefinitions.AsNoTracking().ToListAsync(cancellationToken);
         var definitionsById = definitions.ToDictionary(x => x.DefinitionId);
         return CatalogCategorySchemaResolver.ResolveEffectiveSchema(categoryId, categoriesById, bindings, definitionsById);
+    }
+
+    private async Task<IReadOnlyList<CatalogEffectiveFacetBinding>> ResolveEffectiveFacetsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        var categories = await _db.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var categoriesById = categories.ToDictionary(x => x.CategoryId);
+        var configs = await _db.CategoryFacetConfigurations.AsNoTracking().ToListAsync(cancellationToken);
+        var effectiveSchema = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
+        var definitions = await _db.AttributeDefinitions.AsNoTracking().ToListAsync(cancellationToken);
+        var definitionsById = definitions.ToDictionary(x => x.DefinitionId);
+        return CatalogCategoryFacetResolver.ResolveEffectiveFacets(
+            categoryId,
+            categoriesById,
+            configs,
+            effectiveSchema,
+            definitionsById);
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> GetAttributeDefinitionNamesAsync(
+        IReadOnlyCollection<Guid> definitionIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (definitionIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var normalizedLocale = locale.Trim();
+        var localePrefix = normalizedLocale.Split('-')[0];
+        var ids = definitionIds.Distinct().ToArray();
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.AttributeDefinition
+                && x.FieldKey == "name"
+                && ids.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == normalizedLocale)
+            .ThenByDescending(x => x.Locale.StartsWith(localePrefix))
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        var names = rows.GroupBy(x => x.OwnerId).ToDictionary(g => g.Key, g => g.First().Value);
+        var definitions = await _db.AttributeDefinitions.AsNoTracking()
+            .Where(x => ids.Contains(x.DefinitionId))
+            .Select(x => new { x.DefinitionId, x.Code })
+            .ToListAsync(cancellationToken);
+        foreach (var def in definitions)
+        {
+            names.TryAdd(def.DefinitionId, def.Code);
+        }
+
+        return names;
     }
 
     private static AttributeDefinitionView ToDefinitionView(CatalogAttributeDefinition definition) =>

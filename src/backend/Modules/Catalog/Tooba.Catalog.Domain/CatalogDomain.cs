@@ -645,6 +645,300 @@ public static class CatalogCategoryAttributeAssignmentRules
 }
 
 /// <summary>
+/// نوع نمایش فیلتر در PLP — نه نام کامپوننت frontend.
+/// </summary>
+public enum CatalogFacetDisplayType
+{
+    /// <summary>چندانتخابی با checkbox.</summary>
+    CheckboxList = 0,
+
+    /// <summary>انتخاب با جستجو.</summary>
+    SearchableSelect = 1,
+
+    /// <summary>بازهٔ عددی.</summary>
+    Range = 2,
+
+    /// <summary>نمایش رنگ (نیاز به متادیتای رنگ گزینه).</summary>
+    ColorSwatch = 3,
+
+    /// <summary>کلید روشن/خاموش برای بولی.</summary>
+    BooleanToggle = 4,
+}
+
+/// <summary>
+/// پیکربندی نمایش فیلتر PLP برای یک ویژگی در یک رده.
+/// </summary>
+public sealed class CatalogCategoryFacetConfiguration
+{
+    /// <summary>
+    /// شناسهٔ پیکربندی facet.
+    /// </summary>
+    public Guid FacetConfigurationId { get; init; }
+
+    /// <summary>
+    /// ردهٔ مالک پیکربندی.
+    /// </summary>
+    public Guid CategoryId { get; init; }
+
+    /// <summary>
+    /// تعریف ویژگیٔ فیلتر.
+    /// </summary>
+    public Guid DefinitionId { get; init; }
+
+    /// <summary>
+    /// نوع نمایش فیلتر در PLP.
+    /// </summary>
+    public CatalogFacetDisplayType DisplayType { get; set; }
+
+    /// <summary>
+    /// ترتیب نمایش در بین facetهای محلی این رده.
+    /// </summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>
+    /// آیا فیلتر در PLP نمایش داده شود.
+    /// </summary>
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// آیا گزینه‌ها قابل جستجو باشند.
+    /// </summary>
+    public bool IsSearchable { get; set; }
+
+    /// <summary>
+    /// آیا فیلتر پیش‌فرض بسته باشد.
+    /// </summary>
+    public bool IsCollapsedByDefault { get; set; }
+
+    /// <summary>
+    /// آیا تعداد محصول کنار گزینه نمایش داده شود.
+    /// </summary>
+    public bool ShowCounts { get; set; }
+
+    /// <summary>
+    /// زمان ایجاد.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// ایجاد پیکربندی facet برای یک ویژگی در رده.
+    /// </summary>
+    public static CatalogCategoryFacetConfiguration Create(
+        Guid categoryId,
+        Guid definitionId,
+        CatalogFacetDisplayType displayType,
+        int sortOrder,
+        bool isVisible,
+        bool isSearchable,
+        bool isCollapsedByDefault,
+        bool showCounts,
+        DateTimeOffset now) =>
+        new()
+        {
+            FacetConfigurationId = UuidV7.New(),
+            CategoryId = categoryId,
+            DefinitionId = definitionId,
+            DisplayType = displayType,
+            SortOrder = sortOrder,
+            IsVisible = isVisible,
+            IsSearchable = isSearchable,
+            IsCollapsedByDefault = isCollapsedByDefault,
+            ShowCounts = showCounts,
+            CreatedAt = now,
+        };
+}
+
+/// <summary>
+/// ردیف میانی facet مؤثر.
+/// </summary>
+public sealed record CatalogEffectiveFacetBinding(
+    Guid DefinitionId,
+    CatalogFacetDisplayType DisplayType,
+    int SortOrder,
+    bool IsVisible,
+    bool IsSearchable,
+    bool IsCollapsedByDefault,
+    bool ShowCounts,
+    Guid SourceCategoryId,
+    CatalogAttributeDefinition Definition);
+
+/// <summary>
+/// اعتبارسنجی نوع نمایش facet بر اساس ValueKind.
+/// </summary>
+public static class CatalogCategoryFacetRules
+{
+    /// <summary>
+    /// پیشنهاد نوع نمایش بر اساس ValueKind.
+    /// </summary>
+    public static CatalogFacetDisplayType SuggestDisplayType(CatalogAttributeValueKind valueKind) =>
+        valueKind switch
+        {
+            CatalogAttributeValueKind.Boolean => CatalogFacetDisplayType.BooleanToggle,
+            CatalogAttributeValueKind.Number => CatalogFacetDisplayType.Range,
+            CatalogAttributeValueKind.Enumeration => CatalogFacetDisplayType.CheckboxList,
+            CatalogAttributeValueKind.Text => CatalogFacetDisplayType.SearchableSelect,
+            _ => CatalogFacetDisplayType.CheckboxList,
+        };
+
+    /// <summary>
+    /// اعتبارسنجی ترکیب ValueKind و DisplayType.
+    /// </summary>
+    public static void ValidateDisplayType(CatalogAttributeDefinition definition, CatalogFacetDisplayType displayType)
+    {
+        if (displayType == CatalogFacetDisplayType.ColorSwatch)
+        {
+            throw new InvalidOperationException("نمایش رنگ هنوز به متادیتای رنگ گزینه نیاز دارد؛ از چندانتخابی استفاده کنید.");
+        }
+
+        switch (definition.ValueKind)
+        {
+            case CatalogAttributeValueKind.Boolean:
+                if (displayType != CatalogFacetDisplayType.BooleanToggle)
+                {
+                    throw new InvalidOperationException("برای ویژگی بولی فقط کلید روشن/خاموش مجاز است.");
+                }
+
+                break;
+            case CatalogAttributeValueKind.Number:
+                if (displayType != CatalogFacetDisplayType.Range)
+                {
+                    throw new InvalidOperationException("برای ویژگی عددی فقط بازه مجاز است.");
+                }
+
+                break;
+            case CatalogAttributeValueKind.Text:
+                if (displayType is CatalogFacetDisplayType.Range or CatalogFacetDisplayType.BooleanToggle or CatalogFacetDisplayType.ColorSwatch)
+                {
+                    throw new InvalidOperationException("نوع نمایش برای متن مجاز نیست.");
+                }
+
+                break;
+            case CatalogAttributeValueKind.Enumeration:
+                if (displayType is CatalogFacetDisplayType.Range or CatalogFacetDisplayType.BooleanToggle)
+                {
+                    throw new InvalidOperationException("نوع نمایش برای فهرست گزینه‌ها مجاز نیست.");
+                }
+
+                break;
+            case CatalogAttributeValueKind.Instant:
+                throw new InvalidOperationException("فیلتر برای این نوع تاریخ/زمان هنوز پشتیبانی نمی‌شود.");
+        }
+
+        if (displayType == CatalogFacetDisplayType.BooleanToggle && definition.ValueKind != CatalogAttributeValueKind.Boolean)
+        {
+            throw new InvalidOperationException("کلید روشن/خاموش فقط برای بولی است.");
+        }
+    }
+
+    /// <summary>
+    /// آیا IsSearchable برای این DisplayType مجاز است.
+    /// </summary>
+    public static bool IsSearchableAllowed(CatalogFacetDisplayType displayType) =>
+        displayType is CatalogFacetDisplayType.CheckboxList or CatalogFacetDisplayType.SearchableSelect;
+}
+
+/// <summary>
+/// حل facet مؤثر رده با ارث والدین؛ eligibility از schema مؤثر IsFilterable.
+/// </summary>
+public static class CatalogCategoryFacetResolver
+{
+    /// <summary>
+    /// حل facet مؤثر رده با ارث والدین و eligibility از schema.
+    /// </summary>
+    public static IReadOnlyList<CatalogEffectiveFacetBinding> ResolveEffectiveFacets(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, CatalogCategory> categoriesById,
+        IReadOnlyList<CatalogCategoryFacetConfiguration> allConfigurations,
+        IReadOnlyList<CatalogEffectiveSchemaBinding> effectiveSchema,
+        IReadOnlyDictionary<Guid, CatalogAttributeDefinition> definitionsById)
+    {
+        ArgumentNullException.ThrowIfNull(categoriesById);
+        ArgumentNullException.ThrowIfNull(allConfigurations);
+        ArgumentNullException.ThrowIfNull(effectiveSchema);
+        ArgumentNullException.ThrowIfNull(definitionsById);
+
+        if (!categoriesById.ContainsKey(categoryId))
+        {
+            throw new InvalidOperationException("رده برای حل facet در Catalog این Tenant نیست.");
+        }
+
+        var filterable = effectiveSchema.Where(x => x.IsFilterable).ToDictionary(x => x.DefinitionId);
+        if (filterable.Count == 0)
+        {
+            return Array.Empty<CatalogEffectiveFacetBinding>();
+        }
+
+        var ancestry = WalkAncestry(categoryId, categoriesById);
+        var merged = new Dictionary<Guid, CatalogCategoryFacetConfiguration>();
+        var sourceCategory = new Dictionary<Guid, Guid>();
+        foreach (var ancestorId in ancestry)
+        {
+            foreach (var config in allConfigurations
+                         .Where(c => c.CategoryId == ancestorId)
+                         .OrderBy(c => c.SortOrder)
+                         .ThenBy(c => c.FacetConfigurationId))
+            {
+                if (!filterable.ContainsKey(config.DefinitionId))
+                {
+                    continue;
+                }
+
+                merged[config.DefinitionId] = config;
+                sourceCategory[config.DefinitionId] = ancestorId;
+            }
+        }
+
+        return merged.Values
+            .Select(config =>
+            {
+                if (!definitionsById.TryGetValue(config.DefinitionId, out var definition))
+                {
+                    throw new InvalidOperationException("تعریف ویژگی facet در Catalog نیست.");
+                }
+
+                return new CatalogEffectiveFacetBinding(
+                    config.DefinitionId,
+                    config.DisplayType,
+                    config.SortOrder,
+                    config.IsVisible,
+                    config.IsSearchable,
+                    config.IsCollapsedByDefault,
+                    config.ShowCounts,
+                    sourceCategory[config.DefinitionId],
+                    definition);
+            })
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Definition.Code, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static List<Guid> WalkAncestry(Guid categoryId, IReadOnlyDictionary<Guid, CatalogCategory> categoriesById)
+    {
+        var chain = new List<Guid>();
+        var seen = new HashSet<Guid>();
+        var current = categoryId;
+        while (true)
+        {
+            if (!seen.Add(current))
+            {
+                throw new InvalidOperationException("حلقه در درخت ردهٔ Catalog تشخیص داده شد؛ facet قابل حل نیست.");
+            }
+
+            chain.Add(current);
+            if (!categoriesById.TryGetValue(current, out var category) || category.ParentCategoryId is not Guid parent)
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        chain.Reverse();
+        return chain;
+    }
+}
+
+/// <summary>
 /// محورهای Variant انتخاب‌شده برای یک محصول. ماتریس کامل ترکیبی اینجا تولید نمی‌شود.
 /// </summary>
 public sealed class CatalogProductVariantAxis

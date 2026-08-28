@@ -2,7 +2,7 @@
 
 /**
  * صفحهٔ Admin Category: درخت + workspace با VIEW/EDIT صریح (T005-R1 / T006).
- * تب‌های عمومی، ترجمه‌ها و ویژگی‌ها واقعی‌اند؛ بقیه progressive placeholder.
+ * تب‌های عمومی، ترجمه‌ها، ویژگی‌ها و فیلترها واقعی‌اند؛ بقیه progressive placeholder.
  */
 
 import Link from "next/link";
@@ -42,6 +42,7 @@ import {
   type CategoryWorkspaceSummary,
 } from "./catalog-category-api.ts";
 import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
+import { CategoryFacetsPanel } from "./category-facets-panel.tsx";
 
 const API_LOCALE = "fa-IR";
 
@@ -58,7 +59,7 @@ const TABS = [
   { id: "general", label: "عمومی", implemented: true },
   { id: "translations", label: "ترجمه‌ها", implemented: true },
   { id: "attributes", label: "ویژگی‌ها", implemented: true },
-  { id: "facets", label: "فیلترها", implemented: false },
+  { id: "facets", label: "فیلترها", implemented: true },
   { id: "mega-menu", label: "مگامنو", implemented: false },
   { id: "products", label: "محصولات", implemented: false },
   { id: "seo", label: "SEO", implemented: false },
@@ -67,7 +68,7 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
-type EditSurface = "general" | "translations" | "attributes";
+type EditSurface = "general" | "translations" | "attributes" | "facets";
 
 interface GeneralDraft {
   name: string;
@@ -1383,6 +1384,16 @@ export function CategoryAdminScreen() {
     formMode.onCancel();
   };
 
+  const handleEnterFacetsEdit = () => {
+    if (!canEdit) return;
+    setEditSurface("facets");
+    formMode.onEdit();
+  };
+
+  const handleCancelFacetsEdit = () => {
+    formMode.onCancel();
+  };
+
   const handleSaveTranslation = async () => {
     if (!categoryId || !workspace || !translationDraft) return;
     if (translationDraft.locale !== selectedLocale) return;
@@ -1467,6 +1478,7 @@ export function CategoryAdminScreen() {
   const isGeneralEdit = isEdit && editSurface === "general" && activeTab === "general";
   const isTranslationEdit = isEdit && editSurface === "translations" && activeTab === "translations";
   const isAttributesEdit = isEdit && editSurface === "attributes" && activeTab === "attributes";
+  const isFacetsEdit = isEdit && editSurface === "facets" && activeTab === "facets";
 
   const headerEditVisible =
     !isEdit && formMode.canEdit && activeTab === "general";
@@ -1635,7 +1647,9 @@ export function CategoryAdminScreen() {
                             ? "translations"
                             : tab.id === "attributes"
                               ? "attributes"
-                              : "general",
+                              : tab.id === "facets"
+                                ? "facets"
+                                : "general",
                         );
                       }}
                       className={
@@ -1718,7 +1732,21 @@ export function CategoryAdminScreen() {
                     onCancelEdit={handleCancelAttributesEdit}
                   />
                 ) : null}
-                {activeTab !== "general" && activeTab !== "translations" && activeTab !== "attributes" ? (
+                {activeTab === "facets" && categoryId ? (
+                  <CategoryFacetsPanel
+                    categoryId={categoryId}
+                    treeNodes={flatNodes}
+                    isEdit={isFacetsEdit}
+                    canEdit={formMode.canEdit}
+                    busy={saveBusy}
+                    onEnterEdit={handleEnterFacetsEdit}
+                    onCancelEdit={handleCancelFacetsEdit}
+                  />
+                ) : null}
+                {activeTab !== "general" &&
+                activeTab !== "translations" &&
+                activeTab !== "attributes" &&
+                activeTab !== "facets" ? (
                   <ComingSoonPanel />
                 ) : null}
               </div>

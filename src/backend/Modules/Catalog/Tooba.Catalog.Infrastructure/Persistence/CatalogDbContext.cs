@@ -93,6 +93,9 @@ public sealed class CatalogDbContext : DbContext
     /// </summary>
     public DbSet<CatalogCategoryAttributeBinding> CategoryAttributeBindings => Set<CatalogCategoryAttributeBinding>();
 
+    /// <summary>پیکربندی facet PLP رده.</summary>
+    public DbSet<CatalogCategoryFacetConfiguration> CategoryFacetConfigurations => Set<CatalogCategoryFacetConfiguration>();
+
     /// <summary>
     /// محورهای Variant انتخاب‌شدهٔ محصول.
     /// </summary>
@@ -200,6 +203,23 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("category_attribute_bindings");
             entity.HasKey(x => x.BindingId);
             entity.Property(x => x.BindingId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.CategoryId, x.DefinitionId }).IsUnique();
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogAttributeDefinition>()
+                .WithMany()
+                .HasForeignKey(x => x.DefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogCategoryFacetConfiguration>(entity =>
+        {
+            entity.ToTable("category_facet_configurations");
+            entity.HasKey(x => x.FacetConfigurationId);
+            entity.Property(x => x.FacetConfigurationId).ValueGeneratedNever();
+            entity.Property(x => x.DisplayType).HasConversion<string>().HasMaxLength(32);
             entity.HasIndex(x => new { x.CategoryId, x.DefinitionId }).IsUnique();
             entity.HasOne<CatalogCategory>()
                 .WithMany()

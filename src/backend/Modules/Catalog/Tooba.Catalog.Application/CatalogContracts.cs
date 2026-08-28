@@ -260,6 +260,46 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// facetهای مؤثر رده برای PLP را برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyList<EffectiveCategoryFacet>> GetEffectiveCategoryFacetsAsync(
+        Guid categoryId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پیکربندی‌های facet محلی رده را برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyList<CategoryFacetConfigurationView>> ListLocalFacetConfigurationsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پیکربندی facet رده را درج یا به‌روزرسانی می‌کند.
+    /// </summary>
+    Task UpsertCategoryFacetConfigurationAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CategoryFacetConfigurationInput input,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// override محلی facet را حذف می‌کند (بازگشت به والد).
+    /// </summary>
+    Task RemoveCategoryFacetOverrideAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ترتیب facetهای محلی رده را بازنویسی می‌کند.
+    /// </summary>
+    Task ReorderCategoryFacetConfigurationsAsync(
+        Guid categoryId,
+        IReadOnlyList<Guid> orderedDefinitionIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// محصول توصیفی می‌سازد.
     /// </summary>
     Task<ProductReference> CreateProductAsync(CatalogProductKind kind, string? slugSeam, Guid? brandId, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
@@ -419,6 +459,50 @@ public sealed record EffectiveSchemaEntry(
     int DisplayOrder,
     Guid InheritedFromCategoryId,
     bool DefinitionIsActive);
+
+/// <summary>
+/// ورودی پیکربندی facet رده.
+/// </summary>
+public sealed record CategoryFacetConfigurationInput(
+    CatalogFacetDisplayType DisplayType,
+    int SortOrder,
+    bool IsVisible,
+    bool IsSearchable,
+    bool IsCollapsedByDefault,
+    bool ShowCounts);
+
+/// <summary>
+/// نمای محلی پیکربندی facet.
+/// </summary>
+public sealed record CategoryFacetConfigurationView(
+    Guid FacetConfigurationId,
+    Guid CategoryId,
+    Guid DefinitionId,
+    string Code,
+    CatalogAttributeValueKind ValueKind,
+    CatalogFacetDisplayType DisplayType,
+    int SortOrder,
+    bool IsVisible,
+    bool IsSearchable,
+    bool IsCollapsedByDefault,
+    bool ShowCounts);
+
+/// <summary>
+/// facet مؤثر رده برای Admin/Storefront.
+/// </summary>
+public sealed record EffectiveCategoryFacet(
+    Guid DefinitionId,
+    string Code,
+    string LocalizedName,
+    CatalogAttributeValueKind ValueKind,
+    CatalogFacetDisplayType DisplayType,
+    int SortOrder,
+    bool IsVisible,
+    bool IsSearchable,
+    bool IsCollapsedByDefault,
+    bool ShowCounts,
+    Guid SourceCategoryId,
+    bool IsInherited);
 
 /// <summary>
 /// گزارش تأثیر تغییر رده؛ حذف خاموش انجام نمی‌شود.
