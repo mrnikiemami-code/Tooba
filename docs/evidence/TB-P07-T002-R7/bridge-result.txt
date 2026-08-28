@@ -1,0 +1,360 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R7
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Admin Products grid visual/UX repaired to approved mockup: legacy AG Grid theme (#239 fix), Jalali date picker, toolbar/saved-views/filter-chips/pagination polish, comfortable row density, compact actions, multi-view persistence with explicit update.
+
+Visual-Contract:
+
+approved user mockup used:
+yes — toolbar, chips, saved views, table density, pagination, RTL
+
+toolbar parity:
+search + clear-all + advanced entry + columns + export + saved-view pills
+
+table density:
+56px rows, 48px header, cell vertical centering
+
+row height:
+comfortable (56px canonical)
+
+filter chips:
+rounded pills with human labels + remove X
+
+saved views:
+SavedViewsToolbar pills + save popover + context menu
+
+pagination:
+numbered pages + row range + page size
+
+actions:
+compact ⋮ menu button
+
+RTL:
+full RTL toolbar/grid
+
+responsive:
+toolbar wraps; mobile row 52px
+
+AG-Grid-239:
+
+root cause:
+AG Grid v36 default Theming API conflicted with legacy CSS imports (ag-grid.css + ag-theme-quartz.css) without theme prop
+
+fix:
+theme="legacy" on AgGridReact + AllCommunityModule registration unchanged
+
+module registration:
+ModuleRegistry.registerModules([AllCommunityModule]) at module load
+
+console error remains:
+no (legacy theme contract test)
+
+Enterprise module used:
+no
+
+Jalali-Date-UX:
+
+component/path:
+jalali-date-picker.tsx + JalaliDateFilterControl.tsx
+
+native Gregorian picker removed:
+yes for fa advanced date filters
+
+Persian calendar:
+interactive Jalali month grid + typed yyyy/mm/dd input
+
+equals:
+برابر / در تاریخ
+
+before:
+قبل از
+
+after:
+بعد از
+
+between:
+از تاریخ / تا تاریخ dual inputs
+
+visible Jalali:
+YYYY/MM/DD fa-IR display
+
+canonical ISO:
+API unchanged ISO UTC
+
+saved view restore:
+Jalali chips + filter state restored via existing sanitize/apply
+
+tests:
+jalali-date-ui.test.ts (3)
+
+Filters:
+
+standalone Filters button removed:
+yes — replaced with compact "فیلتر پیشرفته" entry
+
+clear-all filters:
+حذف همه فیلترها visible when search/filters active
+
+clears native:
+yes setFilterModel(null)
+
+clears advanced:
+yes empty expression
+
+clears status:
+yes via advanced clear
+
+clears Jalali:
+yes via advanced clear
+
+clears search:
+yes
+
+chips:
+human-readable rounded pills
+
+human labels:
+enum/status/date localized
+
+raw operators visible:
+no
+
+Saved-Views:
+
+component/path:
+SavedViewsToolbar.tsx + saved-view-store.ts collection
+
+collection persistence:
+{ schemaVersion, defaultViewId, views[] } in ui-preferences key
+
+multiple views:
+yes
+
+create:
+popover with name + optional default — always new UUID
+
+update explicit:
+context menu "به‌روزرسانی با وضعیت فعلی"
+
+load:
+pill click applies view
+
+rename:
+context menu
+
+delete:
+context menu
+
+set default:
+context menu + create checkbox
+
+restore system default:
+system default pill
+
+no overwrite on create:
+verified by collection upsert by id + tests
+
+schema/version:
+collection schemaVersion 1; view schema v3 preserved
+
+reload:
+Host ui-preferences PUT/GET
+
+tests:
+saved-view-multiplicity.test.ts (5)
+
+Column-Manager:
+
+visual:
+drawer with drag handles + checkboxes polished
+
+show/hide:
+yes
+
+drag reorder:
+yes
+
+restore:
+yes
+
+widths:
+persisted in saved views
+
+persistence:
+layout in SavedGridView
+
+mobile:
+drawer full-height usable
+
+Admin-Products:
+
+route:
+/admin/products
+
+toolbar:
+mockup-aligned composition
+
+columns:
+عملیات | رسانه | محصول | وضعیت | دسته | قیمت | موجودی | به‌روزرسانی
+
+media:
+thumbnail column
+
+product hierarchy:
+title + PRD code subtitle
+
+status:
+color badges
+
+category:
+categorySummary
+
+price projection:
+offerAmountRange
+
+inventory projection:
+sellableUnits color-coded
+
+updatedAt:
+Jalali formatter
+
+compact actions:
+⋮ icon menu
+
+pagination:
+numbered + total range
+
+selection:
+multi-row page scope
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (img warning only)
+
+grid tests:
+34 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+backend restore/build/test if touched:
+skipped
+
+warnings:
+next/img advisory on product thumbnail (existing pattern)
+
+errors:
+0
+
+failed:
+0
+
+skipped:
+backend (not touched)
+
+git diff --check:
+clean on committed files
+
+AG Grid Enterprise audit:
+no ag-grid-enterprise dependency
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+clear-all test:
+apply filters → حذف همه فیلترها
+
+Jalali test:
+advanced filter → updatedAt → Persian calendar
+
+AND/OR test:
+advanced drawer → و/یا toggles → Apply
+
+create View A/B test:
+ذخیره نما twice with different names — both pills remain
+
+rename/default/update/delete test:
+⋮ menu on saved view pill
+
+column state test:
+columns drawer hide/reorder/width
+
+reload test:
+F5 restores Host-persisted views
+
+export test:
+CSV/XLSX current page
+
+mobile test:
+narrow viewport toolbar wraps
+
+Git:
+
+branch:
+main
+
+commit:
+420613e15acdf76029be052d976bfaa91c881f0e
+
+push:
+origin/main
+
+final HEAD:
+420613e15acdf76029be052d976bfaa91c881f0e
+
+origin/main:
+420613e15acdf76029be052d976bfaa91c881f0e
+
+synchronized:
+yes
+
+tracked tree:
+clean on committed scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually reviews against approved mockup.
+
+Architectural-Concerns:
+none — ui-preferences collection shape extended client-side only; no new backend module.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
