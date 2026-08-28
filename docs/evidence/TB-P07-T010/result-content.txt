@@ -1,0 +1,32 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T010
+Parent-Task:
+TB-P07-T009
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Implemented storefront Category PLP at /{locale}/category/{localizedSlug}: Host GetCategoryPlpAsync + GET /v1/storefront/category-plp/{slug} with resolve/redirect, taxonomy subtree Product Master listing, T008 dynamic facets, typed filters (AND across attrs / OR within multi-select), sort/paging, applied chips; FE page + sidebar/drawer; SEO canonical with filtered noindex; Mega Menu destinations resolve to PLP; LocalizedLink accepts locale-prefixed hrefs. Full validation green; runtimes kept alive. USER_VISUAL_ACCEPTED remains NO.
+
+HEAD:
+6103e91b9c1d96f1dd823a8af36ddf966af1bdad
+
+origin/main:
+6103e91b9c1d96f1dd823a8af36ddf966af1bdad
+
+synchronized:
+yes
+
+Bridge-Result-ID:
+4f0bd9d4-09d9-4746-b620-a57923aa5db9
+
+USER_VISUAL_ACCEPTED:
+NO
+
+END_TOOBA_WORKER_RESULT
