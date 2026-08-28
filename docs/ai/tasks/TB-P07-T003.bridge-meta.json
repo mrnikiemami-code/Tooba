@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-P07-T003",
+  "channelId": "tooba-main",
+  "bridgeTaskUuid": "aee1bca5-5356-4233-98bd-de0c179c50eb",
+  "resultId": "6f16c103-5392-4f52-b062-62860237a56b",
+  "status": "BLOCKED",
+  "commits": ["b661f3b", "6067f6e"],
+  "head": "6067f6e60f5b0c11b1156c3bbb7314b2d13c3ed8",
+  "blocker": "github.com:443 unreachable; push/fetch failed; HEAD ahead of origin/main"
+}

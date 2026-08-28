@@ -1,0 +1,283 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T003
+Channel:
+tooba-main
+Status:
+BLOCKED
+
+Summary:
+Canonicalized AppDataGrid (capabilities, row actions, shared cells, filter-header helpers, pinned actions, gridId, messageOverrides) and BuildingBlocks GridQuery contracts/IGridQueryPolicy/GridQueryPolicyBase; Product remains reference adapter; docs/ui/APP-DATA-GRID.md written; frontend validation green; Host tests 313 + MigrationRunner 4 green; runtimes alive. Push to origin/main blocked by GitHub 443 connectivity failure (TcpTestSucceeded=false). Local commits exist: checkpoint b661f3b + canonicalization 6067f6e. Cannot claim PASS until HEAD == origin/main.
+
+User-Manual-Baseline:
+
+initial uncommitted files:
+product-list actions/tooltip/RTL/theme + text operators + overflow tooltip + package.json test:grid (and related app-data-grid/data-grid diffs)
+
+tooltip:
+yes (use-overflow-tooltip)
+
+view action:
+yes
+
+edit action:
+yes
+
+delete action:
+yes
+
+RTL alignment:
+yes
+
+row borders:
+yes
+
+CSS refinements:
+yes (theme.css preserved chrome/filter panel)
+
+checkpoint commit:
+b661f3ba54e34a161635bbc9c7a083eee829d954
+
+preserved:
+yes
+
+Frontend-Canonicalization:
+
+AppDataGrid path:
+src/frontend/design-system/app-data-grid/AppDataGrid.tsx
+
+generic theme path:
+src/frontend/design-system/app-data-grid/theme.css
+
+page-specific generic CSS removed:
+yes (no product-list grid chrome CSS)
+
+column metadata:
+applyAppGridFilterHeader + AppGridFilterSpec
+
+capability config:
+AppGridCapabilities / resolveAppGridCapabilities
+
+tooltip-when-truncated:
+useOverflowTooltip / AppGridTruncatedCell + shared cells
+
+standard row actions:
+AppGridRowAction + AppGridRowActionsCell
+
+RTL/LTR:
+grid-direction + theme RTL rules
+
+filter infrastructure:
+app-grid-filter-header + existing header panels
+
+advanced filter:
+shared (messageOverrides for product titles)
+
+Jalali:
+existing shared panels
+
+Saved Views:
+gridId-scoped via gridId prop + ADMIN_PRODUCT_GRID_VIEW_KEY store
+
+gridId isolation:
+data-grid-id + store key per page
+
+Column Manager:
+generic (unchanged, capability-gated)
+
+CSV:
+capability-gated
+
+XLSX:
+capability-gated
+
+paging:
+generic rowCountNoun
+
+loading/empty/error:
+shared
+
+responsive:
+shared theme/shell
+
+Product-Reference-Adapter:
+
+Product-specific config path:
+src/frontend/app/admin/product-list.tsx + product-grid-filter-matrix.ts
+
+Product API adapter:
+queryAdminProductGrid
+
+Product-specific renderers:
+status/stock class helpers; media URL via storefrontMediaUrl
+
+Product actions:
+view/edit/delete callbacks/routes
+
+generic concerns remaining in Product page:
+none for chrome; only domain columns/actions/API
+
+visual regression:
+not intended (extraction only)
+
+Backend-Canonicalization:
+
+shared GridQuery contracts:
+Tooba.BuildingBlocks.Grid.GridQueryContracts
+
+shared validation:
+GridQueryPolicyBase + GridQueryOperators + GridQueryValidationException
+
+policy abstraction:
+IGridQueryPolicy
+
+Product policy:
+AdminProductGridQueryPolicy : IGridQueryPolicy
+
+Product query engine:
+AdminProductGridQueryEngine (module-owned)
+
+module ownership preserved:
+yes
+
+raw AG model accepted by backend:
+no
+
+generic dynamic SQL introduced:
+no
+
+cross-module SQL joins:
+no (unchanged)
+
+max page size:
+1000
+
+cancellation:
+preserved on existing engine path
+
+security validation:
+field/operator whitelist preserved
+
+Documentation:
+
+path:
+docs/ui/APP-DATA-GRID.md
+
+new-grid instructions:
+yes
+
+no-page-specific-CSS rule:
+yes
+
+backend module policy guidance:
+yes
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors
+
+grid tests:
+96 pass / 0 fail / 0 skipped
+
+admin tests:
+13 pass / 0 fail / 0 skipped
+
+frontend build:
+0 errors
+
+backend restore:
+ok (existing)
+
+backend build:
+0 errors
+
+backend full tests:
+313 Host + 4 MigrationRunner passed
+
+passed:
+317
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0 new
+
+new warnings:
+0
+
+git diff --check:
+clean for staged/task files (unrelated historical log whitespace remains uncommitted)
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+none
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/fa/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+Admin Products:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+checkpoint commit:
+b661f3ba54e34a161635bbc9c7a083eee829d954
+
+canonicalization commit(s):
+6067f6e60f5b0c11b1156c3bbb7314b2d13c3ed8
+
+push:
+FAILED — github.com:443 unreachable
+
+final HEAD:
+6067f6e60f5b0c11b1156c3bbb7314b2d13c3ed8
+
+origin/main:
+b9494cc70bc7cd78f0984323f1b4257c36797d3c (stale local remote ref; push/fetch failed)
+
+synchronized:
+no
+
+tracked tree:
+clean for T003 scope
+
+unrelated user changes:
+not committed
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains product-approved baseline; no redesign.
+
+Blockers:
+GitHub HTTPS push/fetch blocked (port 443 TcpTestSucceeded=false). Worker cannot synchronize HEAD with origin/main. Retry push when network restores, then re-post PASS.
+
+END_TOOBA_WORKER_RESULT
