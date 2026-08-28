@@ -1,0 +1,912 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import { buildCategoryPath, type AppCategoryTreeNode } from "../../design-system";
+import {
+  addAttributeOption,
+  bindCategoryAttribute,
+  createAttributeDefinition,
+  listAttributeDefinitions,
+  loadEffectiveCategorySchema,
+  reorderCategoryBindings,
+  unbindCategoryAttribute,
+  updateAttributeDefinition,
+  valueKindLabel,
+  type AttributeDefinition,
+  type CatalogAttributeValueKind,
+  type EffectiveSchemaEntry,
+} from "./catalog-attribute-api.ts";
+import { slugifyCategoryName } from "./catalog-category-api.ts";
+
+const VALUE_KINDS: CatalogAttributeValueKind[] = [
+  "Text",
+  "Number",
+  "Boolean",
+  "Enumeration",
+  "Instant",
+];
+
+/** برچسب‌های کاربرپسند برای پرچم‌های schema — بدون اصطلاحات فنی. */
+export const ATTRIBUTE_FLAG_LABELS = {
+  required: "برای ثبت محصول الزامی است",
+  filterable: "نمایش در فیلتر محصولات",
+  variant: "برای ساخت تنوع محصول",
+  comparable: "نمایش در مقایسه محصولات",
+} as const;
+
+/** تبدیل کد داخلی به عنوان قابل‌خواندن (بدون نمایش GUID). */
+export function humanizeAttributeCode(code: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) return "—";
+  return trimmed
+    .replace(/[-_.]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** کد پایدار از نام فارسی/لاتین برای ایجاد تعریف. */
+export function attributeCodeFromLabel(label: string): string {
+  const slug = slugifyCategoryName(label.trim());
+  if (slug) return slug.slice(0, 64);
+  return `attr-${Date.now().toString(36)}`;
+}
+
+/** آیا assignment در همین رده تعریف شده (نه ارثی). */
+export function isLocalSchemaEntry(entry: EffectiveSchemaEntry, categoryId: string): boolean {
+  return entry.inheritedFromCategoryId === categoryId;
+}
+
+export function partitionEffectiveSchema(
+  entries: EffectiveSchemaEntry[],
+  categoryId: string,
+): { inherited: EffectiveSchemaEntry[]; local: EffectiveSchemaEntry[] } {
+  const inherited: EffectiveSchemaEntry[] = [];
+  const local: EffectiveSchemaEntry[] = [];
+  for (const row of entries) {
+    if (isLocalSchemaEntry(row, categoryId)) local.push(row);
+    else inherited.push(row);
+  }
+  return { inherited, local };
+}
+
+function badgeClass(tone: "blue" | "slate" | "amber" | "violet" | "emerald"): string {
+  switch (tone) {
+    case "blue":
+      return "rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-800";
+    case "amber":
+      return "rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900";
+    case "violet":
+      return "rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-900";
+    case "emerald":
+      return "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-900";
+    default:
+      return "rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700";
+  }
+}
+
+function AttributeBadges({ row }: { row: EffectiveSchemaEntry }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {row.isRequired ? (
+        <span className={badgeClass("amber")} data-testid="attr-badge-required">
+          الزامی
+        </span>
+      ) : null}
+      {row.isFilterable ? (
+        <span className={badgeClass("blue")} data-testid="attr-badge-filter">
+          فیلتر
+        </span>
+      ) : null}
+      {row.isVariantAxisAllowed ? (
+        <span className={badgeClass("violet")} data-testid="attr-badge-variant">
+          تنوع
+        </span>
+      ) : null}
+      {row.isComparable ? (
+        <span className={badgeClass("emerald")} data-testid="attr-badge-compare">
+          مقایسه
+        </span>
+      ) : null}
+      {!row.definitionIsActive ? (
+        <span className={badgeClass("slate")} data-testid="attr-badge-inactive">
+          غیرفعال
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function AttributeRowView({
+  row,
+  sourceLabel,
+  showSource,
+}: {
+  row: EffectiveSchemaEntry;
+  sourceLabel?: string;
+  showSource?: boolean;
+}) {
+  return (
+    <li
+      className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      data-testid={`category-attribute-row-${row.code}`}
+    >
+      <div className="min-w-0">
+        <div className="font-medium text-slate-900">{humanizeAttributeCode(row.code)}</div>
+        <div className="mt-0.5 text-xs text-slate-500">
+          نوع: {valueKindLabel(row.valueKind)}
+          {row.unit ? ` · واحد: ${row.unit}` : ""}
+        </div>
+        {showSource && sourceLabel ? (
+          <div className="mt-1 text-xs text-slate-500" data-testid="attr-source-category">
+            از «{sourceLabel}»
+          </div>
+        ) : null}
+      </div>
+      <AttributeBadges row={row} />
+    </li>
+  );
+}
+
+function AttributeRowEdit({
+  row,
+  index,
+  total,
+  busy,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: {
+  row: EffectiveSchemaEntry;
+  index: number;
+  total: number;
+  busy: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <li
+      className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+      data-testid={`category-attribute-edit-row-${row.code}`}
+    >
+      <div className="min-w-0">
+        <div className="font-medium text-slate-900">{humanizeAttributeCode(row.code)}</div>
+        <div className="mt-0.5 text-xs text-slate-500">نوع: {valueKindLabel(row.valueKind)}</div>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <AttributeBadges row={row} />
+        <div className="flex gap-1">
+          <button
+            type="button"
+            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-gray-200 text-sm disabled:opacity-40"
+            disabled={busy || index === 0}
+            onClick={onMoveUp}
+            aria-label="بالا"
+            data-testid={`attr-move-up-${row.code}`}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-gray-200 text-sm disabled:opacity-40"
+            disabled={busy || index >= total - 1}
+            onClick={onMoveDown}
+            aria-label="پایین"
+            data-testid={`attr-move-down-${row.code}`}
+          >
+            ↓
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-9 items-center justify-center rounded-lg border border-red-200 px-3 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-40"
+            disabled={busy}
+            onClick={onRemove}
+            data-testid={`attr-remove-${row.code}`}
+          >
+            حذف از این دسته
+          </button>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+interface BindFlags {
+  isRequired: boolean;
+  isFilterable: boolean;
+  isVariantAxisAllowed: boolean;
+  isComparable: boolean;
+}
+
+const defaultBindFlags = (): BindFlags => ({
+  isRequired: false,
+  isFilterable: false,
+  isVariantAxisAllowed: false,
+  isComparable: false,
+});
+
+function BindFlagsEditor({
+  flags,
+  valueKind,
+  onChange,
+}: {
+  flags: BindFlags;
+  valueKind: CatalogAttributeValueKind;
+  onChange: (next: BindFlags) => void;
+}) {
+  const variantDisabled =
+    valueKind === "Text" || valueKind === "Instant" || valueKind === "Boolean";
+
+  return (
+    <div className="space-y-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm">
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={flags.isRequired}
+          onChange={(e) => onChange({ ...flags, isRequired: e.target.checked })}
+          data-testid="attr-flag-required"
+        />
+        {ATTRIBUTE_FLAG_LABELS.required}
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={flags.isFilterable}
+          onChange={(e) => onChange({ ...flags, isFilterable: e.target.checked })}
+          data-testid="attr-flag-filterable"
+        />
+        {ATTRIBUTE_FLAG_LABELS.filterable}
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={flags.isVariantAxisAllowed}
+          disabled={variantDisabled}
+          onChange={(e) => onChange({ ...flags, isVariantAxisAllowed: e.target.checked })}
+          data-testid="attr-flag-variant"
+        />
+        {ATTRIBUTE_FLAG_LABELS.variant}
+        {variantDisabled ? (
+          <span className="text-xs text-slate-500">(برای این نوع مقدار مناسب نیست)</span>
+        ) : null}
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={flags.isComparable}
+          onChange={(e) => onChange({ ...flags, isComparable: e.target.checked })}
+          data-testid="attr-flag-comparable"
+        />
+        {ATTRIBUTE_FLAG_LABELS.comparable}
+      </label>
+    </div>
+  );
+}
+
+/**
+ * تب ویژگی‌های workspace — schema مؤثر با ارث‌بری و assignment محلی.
+ */
+export function CategoryAttributesPanel({
+  categoryId,
+  treeNodes,
+  isEdit,
+  canEdit,
+  busy: externalBusy,
+  onEnterEdit,
+  onCancelEdit,
+}: {
+  categoryId: string;
+  treeNodes: AppCategoryTreeNode[];
+  isEdit: boolean;
+  canEdit: boolean;
+  busy?: boolean;
+  onEnterEdit: () => void;
+  onCancelEdit: () => void;
+}) {
+  const [schema, setSchema] = useState<EffectiveSchemaEntry[]>([]);
+  const [definitions, setDefinitions] = useState<AttributeDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+  const [selectedDefId, setSelectedDefId] = useState<string | null>(null);
+  const [bindFlags, setBindFlags] = useState<BindFlags>(defaultBindFlags());
+
+  const [createName, setCreateName] = useState("");
+  const [createKind, setCreateKind] = useState<CatalogAttributeValueKind>("Text");
+  const [createMultivalue, setCreateMultivalue] = useState(false);
+  const [createFlags, setCreateFlags] = useState<BindFlags>(defaultBindFlags());
+  const [createAdvanced, setCreateAdvanced] = useState(false);
+  const [createCode, setCreateCode] = useState("");
+  const [createOptions, setCreateOptions] = useState<{ code: string; name: string }[]>([]);
+  const [newOptionName, setNewOptionName] = useState("");
+
+  const categoryNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const n of treeNodes) map.set(n.id, n.name);
+    return map;
+  }, [treeNodes]);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const [schemaResult, defsResult] = await Promise.all([
+      loadEffectiveCategorySchema(categoryId),
+      listAttributeDefinitions(),
+    ]);
+    setLoading(false);
+    if (schemaResult.state === "denied" || defsResult.state === "denied") {
+      setError("دسترسی مجاز نیست");
+      setSchema([]);
+      setDefinitions([]);
+      return;
+    }
+    if (schemaResult.state !== "ok" || !schemaResult.data) {
+      setError(schemaResult.message ?? "بارگذاری schema ناموفق بود");
+      setSchema([]);
+    } else {
+      setSchema(schemaResult.data);
+    }
+    if (defsResult.state === "ok" && defsResult.data) {
+      setDefinitions(defsResult.data);
+    } else {
+      setDefinitions([]);
+    }
+  }, [categoryId]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  const { inherited, local } = useMemo(
+    () => partitionEffectiveSchema(schema, categoryId),
+    [schema, categoryId],
+  );
+
+  const effectiveIds = useMemo(() => new Set(schema.map((r) => r.definitionId)), [schema]);
+
+  const addCandidates = useMemo(() => {
+    const q = addSearch.trim().toLowerCase();
+    return definitions
+      .filter((d) => d.isActive && !effectiveIds.has(d.definitionId))
+      .filter((d) => {
+        if (!q) return true;
+        const label = humanizeAttributeCode(d.code).toLowerCase();
+        return label.includes(q) || d.code.toLowerCase().includes(q);
+      })
+      .sort((a, b) => a.code.localeCompare(b.code, "fa"));
+  }, [definitions, effectiveIds, addSearch]);
+
+  const selectedDefinition = selectedDefId
+    ? definitions.find((d) => d.definitionId === selectedDefId) ?? null
+    : null;
+
+  const resolveSourceName = (sourceCategoryId: string): string => {
+    if (sourceCategoryId === categoryId) return "این دسته";
+    const direct = categoryNameById.get(sourceCategoryId);
+    if (direct) return direct;
+    const path = buildCategoryPath(treeNodes, sourceCategoryId);
+    return path.length ? path.join(" / ") : "دستهٔ والد";
+  };
+
+  const runMutation = async (fn: () => Promise<void>) => {
+    if (externalBusy || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+      await reload();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applyDefinitionFlags = async (definitionId: string, flags: BindFlags) => {
+    const def = definitions.find((d) => d.definitionId === definitionId);
+    if (!def) return;
+    const needsUpdate =
+      def.isFilterable !== flags.isFilterable
+      || def.isComparable !== flags.isComparable
+      || def.isRequired !== flags.isRequired;
+    if (!needsUpdate) return;
+    const result = await updateAttributeDefinition(definitionId, {
+      unit: def.unit,
+      isRequired: flags.isRequired,
+      isFilterable: flags.isFilterable,
+      isComparable: flags.isComparable,
+      isMultivalue: def.isMultivalue,
+      displayOrder: def.displayOrder,
+      validationMin: def.validationMin,
+      validationMax: def.validationMax,
+      validationMaxLength: def.validationMaxLength,
+      isActive: def.isActive,
+    });
+    if (result.state !== "ok") {
+      throw new Error(result.message ?? "به‌روزرسانی ویژگی ناموفق بود");
+    }
+  };
+
+  const handleBindExisting = async () => {
+    if (!selectedDefinition) return;
+    await runMutation(async () => {
+      await applyDefinitionFlags(selectedDefinition.definitionId, bindFlags);
+      const result = await bindCategoryAttribute(categoryId, {
+        definitionId: selectedDefinition.definitionId,
+        displayOrder: local.length,
+        isRequiredOverride: bindFlags.isRequired ? true : null,
+      });
+      if (result.state !== "ok") {
+        throw new Error(result.message ?? "افزودن ویژگی ناموفق بود");
+      }
+      toast.success("ویژگی به این دسته اضافه شد");
+      setAddOpen(false);
+      setAddSearch("");
+      setSelectedDefId(null);
+      setBindFlags(defaultBindFlags());
+    });
+  };
+
+  const handleCreateAndBind = async () => {
+    const name = createName.trim();
+    if (!name) return;
+    const code = (createAdvanced && createCode.trim()) || attributeCodeFromLabel(name);
+    await runMutation(async () => {
+      const createResult = await createAttributeDefinition({
+        code,
+        valueKind: createKind,
+        isVariantAxisAllowed: createFlags.isVariantAxisAllowed,
+        localizedNames: { "fa-IR": name },
+        metadata: {
+          isRequired: createFlags.isRequired,
+          isFilterable: createFlags.isFilterable,
+          isComparable: createFlags.isComparable,
+          isMultivalue: createMultivalue,
+          displayOrder: 0,
+          isActive: true,
+        },
+      });
+      if (createResult.state !== "ok" || !createResult.data) {
+        throw new Error(createResult.message ?? "ایجاد ویژگی ناموفق بود");
+      }
+      const definitionId = createResult.data.definitionId;
+      if (createKind === "Enumeration") {
+        for (const opt of createOptions) {
+          const optCode = attributeCodeFromLabel(opt.code || opt.name);
+          const optResult = await addAttributeOption(definitionId, optCode, {
+            "fa-IR": opt.name.trim() || optCode,
+          });
+          if (optResult.state !== "ok") {
+            throw new Error(optResult.message ?? "افزودن گزینه ناموفق بود");
+          }
+        }
+      }
+      const bindResult = await bindCategoryAttribute(categoryId, {
+        definitionId,
+        displayOrder: local.length,
+        isRequiredOverride: createFlags.isRequired ? true : null,
+      });
+      if (bindResult.state !== "ok") {
+        throw new Error(bindResult.message ?? "پیوند به دسته ناموفق بود");
+      }
+      toast.success("ویژگی جدید ایجاد و به این دسته اضافه شد");
+      setCreateOpen(false);
+      setCreateName("");
+      setCreateKind("Text");
+      setCreateMultivalue(false);
+      setCreateFlags(defaultBindFlags());
+      setCreateAdvanced(false);
+      setCreateCode("");
+      setCreateOptions([]);
+      setNewOptionName("");
+    });
+  };
+
+  const handleReorderLocal = async (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= local.length) return;
+    const ids = local.map((r) => r.definitionId);
+    const [moved] = ids.splice(fromIndex, 1);
+    ids.splice(toIndex, 0, moved!);
+    await runMutation(async () => {
+      const result = await reorderCategoryBindings(categoryId, ids);
+      if (result.state !== "ok") {
+        throw new Error(result.message ?? "تغییر ترتیب ناموفق بود");
+      }
+      toast.success("ترتیب ویژگی‌ها به‌روز شد");
+    });
+  };
+
+  const handleRemoveLocal = async (definitionId: string) => {
+    if (!window.confirm("این ویژگی فقط از این دسته حذف می‌شود؛ تعریف سراسری باقی می‌ماند.")) {
+      return;
+    }
+    await runMutation(async () => {
+      const result = await unbindCategoryAttribute(categoryId, definitionId);
+      if (result.state !== "ok") {
+        throw new Error(result.message ?? "حذف از دسته ناموفق بود");
+      }
+      toast.success("ویژگی از این دسته حذف شد");
+    });
+  };
+
+  const combinedBusy = busy || Boolean(externalBusy);
+
+  if (loading) {
+    return (
+      <p className="text-sm text-slate-500" data-testid="category-attributes-loading">
+        در حال بارگذاری ویژگی‌ها…
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-5" data-testid="category-attributes-panel">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-slate-600">
+            ویژگی‌هایی که محصولات این دسته باید داشته باشند — شامل موارد ارث‌برده از والد و موارد
+            اختصاصی این دسته.
+          </p>
+        </div>
+        {!isEdit && canEdit ? (
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            onClick={onEnterEdit}
+            data-testid="category-attributes-edit"
+          >
+            ویرایش ویژگی‌ها
+          </button>
+        ) : null}
+        {isEdit ? (
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            onClick={onCancelEdit}
+            disabled={combinedBusy}
+            data-testid="category-attributes-cancel"
+          >
+            پایان ویرایش
+          </button>
+        ) : null}
+      </div>
+
+      {error ? (
+        <p className="text-sm text-red-600" role="alert" data-testid="category-attributes-error">
+          {error}
+        </p>
+      ) : null}
+
+      {!isEdit ? (
+        <div className="space-y-6" data-testid="category-attributes-view" data-form-mode="view">
+          <section data-testid="category-attributes-inherited-section">
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های ارث‌برده‌شده</h2>
+            {inherited.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">ویژگی ارثی ثبت نشده است.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {inherited.map((row) => (
+                  <AttributeRowView
+                    key={row.definitionId}
+                    row={row}
+                    showSource
+                    sourceLabel={resolveSourceName(row.inheritedFromCategoryId)}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section data-testid="category-attributes-local-section">
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های این دسته</h2>
+            {local.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">هنوز ویژگی اختصاصی برای این دسته تعریف نشده است.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {local.map((row) => (
+                  <AttributeRowView key={row.definitionId} row={row} />
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      ) : (
+        <div className="space-y-5" data-testid="category-attributes-edit" data-form-mode="edit">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-50"
+              disabled={combinedBusy}
+              onClick={() => {
+                setAddOpen(true);
+                setBindFlags(defaultBindFlags());
+                setSelectedDefId(null);
+                setAddSearch("");
+              }}
+              data-testid="category-attributes-add-existing"
+            >
+              افزودن ویژگی
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              disabled={combinedBusy}
+              onClick={() => {
+                setCreateOpen(true);
+                setCreateFlags(defaultBindFlags());
+              }}
+              data-testid="category-attributes-create-new"
+            >
+              ایجاد ویژگی جدید
+            </button>
+          </div>
+
+          {inherited.length > 0 ? (
+            <section>
+              <h2 className="text-sm font-semibold text-slate-800">ارث‌برده‌شده (فقط مشاهده)</h2>
+              <ul className="mt-3 space-y-2">
+                {inherited.map((row) => (
+                  <AttributeRowView
+                    key={row.definitionId}
+                    row={row}
+                    showSource
+                    sourceLabel={resolveSourceName(row.inheritedFromCategoryId)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          <section data-testid="category-attributes-local-edit-section">
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های این دسته</h2>
+            {local.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">با دکمه‌های بالا ویژگی اضافه کنید.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {local.map((row, index) => (
+                  <AttributeRowEdit
+                    key={row.definitionId}
+                    row={row}
+                    index={index}
+                    total={local.length}
+                    busy={combinedBusy}
+                    onMoveUp={() => void handleReorderLocal(index, index - 1)}
+                    onMoveDown={() => void handleReorderLocal(index, index + 1)}
+                    onRemove={() => void handleRemoveLocal(row.definitionId)}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
+
+      {addOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-attr-title"
+          data-testid="category-attributes-add-dialog"
+        >
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+            <h3 id="add-attr-title" className="text-lg font-semibold text-slate-900">
+              افزودن ویژگی موجود
+            </h3>
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              جستجو
+              <input
+                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={addSearch}
+                onChange={(e) => setAddSearch(e.target.value)}
+                placeholder="نام یا نوع ویژگی"
+                data-testid="attr-add-search"
+              />
+            </label>
+            <ul className="mt-3 max-h-48 space-y-1 overflow-y-auto" data-testid="attr-add-candidates">
+              {addCandidates.length === 0 ? (
+                <li className="text-sm text-slate-500">ویژگی قابل افزودن یافت نشد.</li>
+              ) : (
+                addCandidates.map((d) => {
+                  const selected = selectedDefId === d.definitionId;
+                  return (
+                    <li key={d.definitionId}>
+                      <button
+                        type="button"
+                        className={
+                          selected
+                            ? "w-full rounded-xl border border-[#2563EB] bg-blue-50 px-3 py-2 text-start text-sm"
+                            : "w-full rounded-xl border border-gray-100 px-3 py-2 text-start text-sm hover:bg-slate-50"
+                        }
+                        onClick={() => {
+                          setSelectedDefId(d.definitionId);
+                          setBindFlags({
+                            isRequired: d.isRequired,
+                            isFilterable: d.isFilterable,
+                            isComparable: d.isComparable,
+                            isVariantAxisAllowed: d.isVariantAxisAllowed,
+                          });
+                        }}
+                        data-testid={`attr-add-option-${d.code}`}
+                      >
+                        <span className="font-medium">{humanizeAttributeCode(d.code)}</span>
+                        <span className="mt-0.5 block text-xs text-slate-500">
+                          {valueKindLabel(d.valueKind)}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+            {selectedDefinition ? (
+              <div className="mt-4">
+                <BindFlagsEditor
+                  flags={bindFlags}
+                  valueKind={selectedDefinition.valueKind}
+                  onChange={setBindFlags}
+                />
+              </div>
+            ) : null}
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 px-4 text-sm"
+                onClick={() => setAddOpen(false)}
+                disabled={combinedBusy}
+                data-testid="attr-add-cancel"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={combinedBusy || !selectedDefinition}
+                onClick={() => void handleBindExisting().catch((e) => {
+                  setError(e instanceof Error ? e.message : "خطا");
+                  toast.error(e instanceof Error ? e.message : "خطا");
+                })}
+                data-testid="attr-add-confirm"
+              >
+                افزودن به این دسته
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {createOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-attr-title"
+          data-testid="category-attributes-create-dialog"
+        >
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+            <h3 id="create-attr-title" className="text-lg font-semibold text-slate-900">
+              ایجاد ویژگی جدید
+            </h3>
+            <div className="mt-4 space-y-4">
+              <label className="block text-sm font-medium text-slate-700">
+                نام
+                <input
+                  className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  data-testid="attr-create-name"
+                />
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                نوع مقدار
+                <select
+                  className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm"
+                  value={createKind}
+                  onChange={(e) => setCreateKind(e.target.value as CatalogAttributeValueKind)}
+                  data-testid="attr-create-kind"
+                >
+                  {VALUE_KINDS.map((k) => (
+                    <option key={k} value={k}>
+                      {valueKindLabel(k)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={createMultivalue}
+                  onChange={(e) => setCreateMultivalue(e.target.checked)}
+                  data-testid="attr-create-multivalue"
+                />
+                چندمقداری (چند مقدار برای یک محصول)
+              </label>
+              <BindFlagsEditor flags={createFlags} valueKind={createKind} onChange={setCreateFlags} />
+              {createKind === "Enumeration" ? (
+                <div className="rounded-xl border border-gray-100 p-3">
+                  <div className="text-sm font-medium text-slate-700">گزینه‌ها</div>
+                  <ul className="mt-2 space-y-1">
+                    {createOptions.map((opt, i) => (
+                      <li key={`${opt.code}-${i}`} className="text-sm text-slate-700">
+                        {opt.name}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      className="min-h-10 flex-1 rounded-xl border border-gray-200 px-3 text-sm"
+                      value={newOptionName}
+                      onChange={(e) => setNewOptionName(e.target.value)}
+                      placeholder="نام گزینه"
+                      data-testid="attr-create-option-name"
+                    />
+                    <button
+                      type="button"
+                      className="rounded-xl border border-gray-200 px-3 text-sm"
+                      onClick={() => {
+                        const name = newOptionName.trim();
+                        if (!name) return;
+                        setCreateOptions((prev) => [...prev, { code: attributeCodeFromLabel(name), name }]);
+                        setNewOptionName("");
+                      }}
+                      data-testid="attr-create-option-add"
+                    >
+                      افزودن
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+              <button
+                type="button"
+                className="text-sm font-medium text-[#2563EB]"
+                onClick={() => setCreateAdvanced((v) => !v)}
+                data-testid="attr-create-advanced-toggle"
+              >
+                {createAdvanced ? "بستن تنظیمات پیشرفته" : "تنظیمات پیشرفته"}
+              </button>
+              {createAdvanced ? (
+                <label className="block text-sm font-medium text-slate-700">
+                  کد فنی (اختیاری)
+                  <input
+                    className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm"
+                    dir="ltr"
+                    value={createCode}
+                    onChange={(e) => setCreateCode(e.target.value)}
+                    placeholder={attributeCodeFromLabel(createName || "ویژگی")}
+                    data-testid="attr-create-code"
+                  />
+                </label>
+              ) : null}
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 px-4 text-sm"
+                onClick={() => setCreateOpen(false)}
+                disabled={combinedBusy}
+                data-testid="attr-create-cancel"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={combinedBusy || !createName.trim()}
+                onClick={() => void handleCreateAndBind().catch((e) => {
+                  setError(e instanceof Error ? e.message : "خطا");
+                  toast.error(e instanceof Error ? e.message : "خطا");
+                })}
+                data-testid="attr-create-confirm"
+              >
+                ایجاد و افزودن
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

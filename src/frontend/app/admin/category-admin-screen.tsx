@@ -2,7 +2,7 @@
 
 /**
  * صفحهٔ Admin Category: درخت + workspace با VIEW/EDIT صریح (T005-R1 / T006).
- * تب‌های عمومی و ترجمه‌ها واقعی‌اند؛ بقیه progressive placeholder.
+ * تب‌های عمومی، ترجمه‌ها و ویژگی‌ها واقعی‌اند؛ بقیه progressive placeholder.
  */
 
 import Link from "next/link";
@@ -41,6 +41,7 @@ import {
   type CategoryTreeNodeDto,
   type CategoryWorkspaceSummary,
 } from "./catalog-category-api.ts";
+import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
 
 const API_LOCALE = "fa-IR";
 
@@ -56,7 +57,7 @@ const LOCALE_DISPLAY: Record<string, string> = {
 const TABS = [
   { id: "general", label: "عمومی", implemented: true },
   { id: "translations", label: "ترجمه‌ها", implemented: true },
-  { id: "attributes", label: "ویژگی‌ها", implemented: false },
+  { id: "attributes", label: "ویژگی‌ها", implemented: true },
   { id: "facets", label: "فیلترها", implemented: false },
   { id: "mega-menu", label: "مگامنو", implemented: false },
   { id: "products", label: "محصولات", implemented: false },
@@ -66,7 +67,7 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
-type EditSurface = "general" | "translations";
+type EditSurface = "general" | "translations" | "attributes";
 
 interface GeneralDraft {
   name: string;
@@ -1372,6 +1373,16 @@ export function CategoryAdminScreen() {
     formMode.onCancel();
   };
 
+  const handleEnterAttributesEdit = () => {
+    if (!canEdit) return;
+    setEditSurface("attributes");
+    formMode.onEdit();
+  };
+
+  const handleCancelAttributesEdit = () => {
+    formMode.onCancel();
+  };
+
   const handleSaveTranslation = async () => {
     if (!categoryId || !workspace || !translationDraft) return;
     if (translationDraft.locale !== selectedLocale) return;
@@ -1455,6 +1466,7 @@ export function CategoryAdminScreen() {
   const isEdit = formMode.mode === "edit";
   const isGeneralEdit = isEdit && editSurface === "general" && activeTab === "general";
   const isTranslationEdit = isEdit && editSurface === "translations" && activeTab === "translations";
+  const isAttributesEdit = isEdit && editSurface === "attributes" && activeTab === "attributes";
 
   const headerEditVisible =
     !isEdit && formMode.canEdit && activeTab === "general";
@@ -1616,9 +1628,15 @@ export function CategoryAdminScreen() {
                           e.preventDefault();
                           return;
                         }
-                        if (formMode.isDirty) formMode.onCancel();
+                        if (formMode.mode === "edit") formMode.onCancel();
                         setSlugFieldError(null);
-                        setEditSurface(tab.id === "translations" ? "translations" : "general");
+                        setEditSurface(
+                          tab.id === "translations"
+                            ? "translations"
+                            : tab.id === "attributes"
+                              ? "attributes"
+                              : "general",
+                        );
                       }}
                       className={
                         active
@@ -1689,7 +1707,20 @@ export function CategoryAdminScreen() {
                     onCancel={handleCancelTranslationEdit}
                   />
                 ) : null}
-                {activeTab !== "general" && activeTab !== "translations" ? <ComingSoonPanel /> : null}
+                {activeTab === "attributes" && categoryId ? (
+                  <CategoryAttributesPanel
+                    categoryId={categoryId}
+                    treeNodes={flatNodes}
+                    isEdit={isAttributesEdit}
+                    canEdit={formMode.canEdit}
+                    busy={saveBusy}
+                    onEnterEdit={handleEnterAttributesEdit}
+                    onCancelEdit={handleCancelAttributesEdit}
+                  />
+                ) : null}
+                {activeTab !== "general" && activeTab !== "translations" && activeTab !== "attributes" ? (
+                  <ComingSoonPanel />
+                ) : null}
               </div>
             </div>
           ) : null}

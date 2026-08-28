@@ -243,11 +243,41 @@ test("AppCategoryTree file untouched by T006 workspace work", () => {
   assert.match(tree, /direction/);
 });
 
-test("future tabs remain progressive placeholders", () => {
+test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
+  const screen = fs.readFileSync(screenPath, "utf8");
+  const panelPath = path.join(root, "app/admin/category-attributes-panel.tsx");
+  const panel = fs.readFileSync(panelPath, "utf8");
+  assert.match(screen, /implemented: true/);
+  assert.match(screen, /CategoryAttributesPanel/);
+  assert.match(screen, /activeTab === "attributes"/);
+  assert.match(screen, /handleEnterAttributesEdit/);
+  assert.match(screen, /editSurface === "attributes"/);
+  assert.match(panel, /category-attributes-panel/);
+  assert.match(panel, /category-attributes-view/);
+  assert.match(panel, /category-attributes-edit/);
+  assert.match(panel, /category-attributes-inherited-section/);
+  assert.match(panel, /category-attributes-local-section/);
+  assert.match(panel, /attr-source-category/);
+  assert.match(panel, /category-attributes-add-existing/);
+  assert.match(panel, /category-attributes-create-new/);
+  assert.match(panel, /افزودن ویژگی/);
+  assert.match(panel, /ایجاد ویژگی جدید/);
+  assert.match(panel, /ATTRIBUTE_FLAG_LABELS/);
+  assert.match(panel, /برای ثبت محصول الزامی است/);
+  assert.match(panel, /نمایش در فیلتر محصولات/);
+  assert.match(panel, /برای ساخت تنوع محصول/);
+  assert.match(panel, /category-attributes-edit/);
+  assert.match(panel, /canEdit/);
+  assert.equal(panel.includes("definitionId"), true);
+  assert.equal(panel.match(/data-testid=.*definitionId/g)?.length ?? 0, 0);
+});
+
+test("future tabs remain progressive placeholders (except attributes)", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
   assert.match(screen, /category-tab-coming-soon/);
   assert.match(screen, /این بخش در تسک بعدی تکمیل می‌شود/);
   assert.match(screen, /implemented: false/);
+  assert.match(screen, /id: "facets"/);
 });
 
 test("mobile layout markers present", () => {

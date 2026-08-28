@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T006
+TB-P07-T007
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T006 — Category Workspace General + Translations editor (USER_VISUAL_ACCEPTED=NO)
+TB-P07-T007 — Category Attributes schema tab (USER_VISUAL_ACCEPTED=NO)
 ```
 
 Current Gate:
