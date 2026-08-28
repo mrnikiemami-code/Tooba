@@ -1,5 +1,5 @@
 import type { FilterModel } from "ag-grid-community";
-import type { GridFilterValue } from "../data-grid/types";
+import type { GridFilterValue, NumberFilterOperator } from "../data-grid/types";
 import { filterOperatorLabelsFor } from "../data-grid/messages.ts";
 import { formatJalaliDate } from "./jalali.ts";
 
@@ -96,11 +96,13 @@ function reverseTextOperator(operator: "contains" | "equals" | "startsWith"): st
 }
 
 function reverseNumberOperator(
-  operator: "equals" | "greaterThan" | "greaterThanOrEqual" | "lessThan" | "lessThanOrEqual" | "between",
+  operator: NumberFilterOperator,
 ): string {
   switch (operator) {
     case "equals":
       return "equals";
+    case "notEqual":
+      return "notEqual";
     case "greaterThan":
       return "greaterThan";
     case "greaterThanOrEqual":
@@ -111,6 +113,10 @@ function reverseNumberOperator(
       return "lessThanOrEqual";
     case "between":
       return "inRange";
+    case "blank":
+      return "blank";
+    case "notBlank":
+      return "notBlank";
     default:
       return "equals";
   }
@@ -146,6 +152,9 @@ function mapAgFilterEntry(field: string, raw: AgFilterEntry | undefined): GridFi
   }
 
   if (raw.filterType === "number" || typeof raw.filter === "number") {
+    if (raw.type === "blank" || raw.type === "notBlank") {
+      return { kind: "number", operator: raw.type, value: 0 };
+    }
     const value = Number(raw.filter);
     if (!Number.isFinite(value)) {
       return undefined;
@@ -200,10 +209,12 @@ function mapTextOperator(type: string | undefined): "contains" | "equals" | "sta
 
 function mapNumberOperator(
   type: string | undefined,
-): "equals" | "greaterThan" | "greaterThanOrEqual" | "lessThan" | "lessThanOrEqual" | "between" {
+): NumberFilterOperator {
   switch (type) {
     case "equals":
       return "equals";
+    case "notEqual":
+      return "notEqual";
     case "greaterThan":
       return "greaterThan";
     case "greaterThanOrEqual":
@@ -214,6 +225,10 @@ function mapNumberOperator(
       return "lessThanOrEqual";
     case "inRange":
       return "between";
+    case "blank":
+      return "blank";
+    case "notBlank":
+      return "notBlank";
     default:
       return "equals";
   }

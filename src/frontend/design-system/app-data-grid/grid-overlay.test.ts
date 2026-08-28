@@ -9,12 +9,15 @@ const dir = dirname(fileURLToPath(import.meta.url));
 test("theme uses official AG Grid legacy variables for header and borders", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
   assert.match(css, /--ag-header-background-color/);
-  assert.match(css, /--ag-data-background-color/);
+  assert.match(css, /--app-grid-chrome-bg/);
+  assert.match(css, /--ag-subheader-background-color/);
+  assert.match(css, /--app-grid-filter-control-bg/);
   assert.match(css, /\.ag-grid-pinned-right-cells/);
   assert.match(css, /--ag-header-column-separator-display/);
   assert.match(css, /--ag-row-border-color/);
   assert.match(css, /--ag-cell-horizontal-border/);
   assert.match(css, /\.ag-header-row\.ag-header-row-column/);
+  assert.match(css, /\.ag-header-cell-filter-button[\s\S]*display:\s*none/);
   assert.match(css, /\.ag-theme-tooba \.ag-filter/);
   assert.doesNotMatch(css, /\.ag-cell-wrapper/);
 });
@@ -27,11 +30,10 @@ test("AppDataGrid uses app-owned header filters and external filter fields", () 
   assert.doesNotMatch(source, /jalaliDateColumnFilter/);
 });
 
-test("product list externalizes title and updatedAt header filters", () => {
+test("product list externalizes all matrix filter fields", () => {
   const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
-  assert.match(source, /externalFilterFields=\{\["title",\s*"updatedAt"\]\}/);
-  assert.match(source, /externalFilter:\s*"jalali-date"/);
-  assert.match(source, /externalFilter:\s*"text"/);
+  assert.match(source, /externalFilterFields=\{ADMIN_PRODUCT_EXTERNAL_FILTER_FIELDS\}/);
+  assert.match(source, /applyProductGridFilterHeader\(/);
   assert.doesNotMatch(source, /jalaliDateColumnFilter/);
 });
 

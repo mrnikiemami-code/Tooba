@@ -118,6 +118,7 @@ export function isFilterActive(value: GridFilterValue | undefined): boolean {
     case "text":
       return value.query.trim().length > 0;
     case "number":
+      if (value.operator === "blank" || value.operator === "notBlank") return true;
       return Number.isFinite(value.value);
     case "money":
       return Number.isFinite(value.money.amount);

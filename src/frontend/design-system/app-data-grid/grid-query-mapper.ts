@@ -78,6 +78,9 @@ function mapFilter(field: string, value: GridFilterValue): GridFilterRequest {
         value: value.query,
       };
     case "number":
+      if (value.operator === "blank" || value.operator === "notBlank") {
+        return { field, operator: value.operator };
+      }
       return {
         field,
         operator: value.operator,

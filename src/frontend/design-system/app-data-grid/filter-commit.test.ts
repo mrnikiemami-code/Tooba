@@ -61,8 +61,9 @@ const dir = dirname(fileURLToPath(import.meta.url));
 
 test("theme uses opaque header tokens without structural AG overrides", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
-  assert.match(css, /--ag-header-background-color:\s*hsl\(var\(--surface-elevated\)\)/);
-  assert.match(css, /--app-grid-body-height/);
+  assert.match(css, /--app-grid-chrome-bg:\s*rgb\(243,\s*242,\s*242\)/);
+  assert.match(css, /--app-filter-panel-bg:\s*lightgrey/);
+  assert.match(css, /--ag-header-background-color:\s*var\(--app-grid-chrome-bg\)/);
   assert.doesNotMatch(css, /\.ag-cell-wrapper/);
 });
 
@@ -76,9 +77,8 @@ test("AppDataGrid registers app column header and apply-only filter params", () 
   assert.doesNotMatch(source, /pageSelectionNote/);
 });
 
-test("product list externalizes updatedAt via header filter", () => {
+test("product list externalizes updatedAt via filter matrix", () => {
   const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
   assert.match(source, /field:\s*"updatedAt"/);
-  assert.match(source, /externalFilter:\s*"jalali-date"/);
-  assert.match(source, /filter:\s*false/);
+  assert.match(source, /applyProductGridFilterHeader\(/);
 });

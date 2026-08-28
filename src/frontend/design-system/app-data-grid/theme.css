@@ -10,15 +10,21 @@
   --ag-header-height: 48px;
   --ag-cell-horizontal-padding: 12px;
 
+  /* chrome surfaces — user-selected header tone preserved */
+  --app-grid-chrome-bg: rgb(243, 242, 242);
+  --app-grid-filter-control-bg: hsl(var(--secondary) / 0.58);
+  --app-filter-panel-bg: lightgrey;
+
   /* surfaces */
   --ag-background-color: hsl(var(--surface-elevated));
   --ag-data-background-color: hsl(var(--surface-elevated));
   --ag-foreground-color: hsl(var(--foreground));
   --ag-odd-row-background-color: hsl(var(--surface-elevated));
-  --ag-header-background-color: hsl(var(--surface-elevated));
+  --ag-header-background-color: var(--app-grid-chrome-bg);
+  --ag-subheader-background-color: var(--app-grid-chrome-bg);
   --ag-header-foreground-color: hsl(var(--foreground));
-  --ag-header-cell-hover-background-color: hsl(var(--secondary) / 0.55);
-  --ag-header-cell-moving-background-color: hsl(var(--secondary) / 0.7);
+  --ag-header-cell-hover-background-color: hsl(var(--secondary) / 0.88);
+  --ag-header-cell-moving-background-color: hsl(var(--secondary));
 
   /* header separators & resize */
   --ag-header-column-separator-display: block;
@@ -75,13 +81,20 @@
 }
 
 /* narrow fallback: ensure runtime .ag-header-row.ag-header-row-column is opaque */
-.ag-theme-tooba .ag-header-row.ag-header-row-column {
+.ag-theme-tooba .ag-header-row.ag-header-row-column,
+.ag-theme-tooba .ag-header-row.ag-header-row-floating-filter {
+  background-color: var(--ag-header-background-color);
+}
+
+.ag-theme-tooba .ag-header-cell,
+.ag-theme-tooba .ag-header-group-cell {
   background-color: var(--ag-header-background-color);
 }
 
 /*
  * Pinned column opaque surfaces + boundary (AG Grid v36 .ag-grid-pinned-*-cells)
- * Official: --ag-data-background-color, --ag-borders-critical; color/border only.
+ * Official: --ag-header-background-color, --ag-borders-critical; color/border only.
+ * Pinned body uses same chrome tone as header per product UX contract.
  */
 .ag-theme-tooba .ag-header-row > .ag-grid-pinned-right-cells,
 .ag-theme-tooba .ag-header-row > .ag-grid-pinned-left-cells {
@@ -91,13 +104,13 @@
 
 .ag-theme-tooba .ag-row:not(.ag-header-row) > .ag-grid-pinned-right-cells,
 .ag-theme-tooba .ag-row:not(.ag-header-row) > .ag-grid-pinned-left-cells {
-  background-color: var(--ag-data-background-color);
-  background-image: linear-gradient(var(--ag-data-background-color), var(--ag-data-background-color));
+  background-color: var(--app-grid-chrome-bg);
+  background-image: linear-gradient(var(--app-grid-chrome-bg), var(--app-grid-chrome-bg));
 }
 
 .ag-theme-tooba .ag-cell.ag-cell-first-right-pinned,
 .ag-theme-tooba .ag-cell.ag-cell-last-left-pinned {
-  background-color: var(--ag-data-background-color);
+  background-color: var(--app-grid-chrome-bg);
 }
 
 .ag-theme-tooba .ag-header-cell.ag-header-cell-first-right-pinned,
@@ -108,6 +121,43 @@
 .ag-theme-tooba .ag-header-row .ag-grid-pinned-right-cells .ag-grid-container-wrapper,
 .ag-theme-tooba .ag-header-row .ag-grid-pinned-left-cells .ag-grid-container-wrapper {
   background-color: var(--ag-header-background-color);
+}
+
+/* column filter controls — unified app-owned trigger; hide native AG duplicate */
+.ag-theme-tooba .ag-header-cell-filter-button {
+  display: none;
+}
+
+.ag-theme-tooba .ag-floating-filter-button-button {
+  background-color: var(--app-grid-filter-control-bg);
+  border-radius: var(--radius-ds, 0.5rem);
+}
+
+.ag-theme-tooba .ag-header-cell-filter-button:hover,
+.ag-theme-tooba .ag-header-cell-filter-button.ag-filter-active,
+.ag-theme-tooba .ag-floating-filter-button-button:hover,
+.ag-theme-tooba .ag-floating-filter-button-button.ag-has-menu-open {
+  background-color: hsl(var(--secondary) / 0.88);
+}
+
+.ag-theme-tooba .ag-floating-filter-body,
+.ag-theme-tooba .ag-floating-filter-full-body {
+  background-color: var(--ag-subheader-background-color);
+}
+
+.ag-theme-tooba .ag-floating-filter-input .ag-input-field-input,
+.ag-theme-tooba .ag-floating-filter-input .ag-text-field-input {
+  background-color: var(--app-grid-filter-control-bg);
+  border-color: hsl(var(--border));
+}
+
+.ag-theme-tooba [data-app-column-header] [data-testid^="header-filter-trigger-"] {
+  background-color: var(--app-grid-filter-control-bg);
+}
+
+.ag-theme-tooba [data-app-column-header] [data-testid^="header-filter-trigger-"][data-filter-active="true"] {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .ag-theme-tooba .ag-header-cell-label {
@@ -129,7 +179,7 @@
 .ag-theme-tooba .ag-filter,
 .ag-theme-tooba .ag-menu,
 .ag-theme-tooba .ag-popup-child {
-  background-color: hsl(var(--surface-elevated));
+  background-color: var(--app-filter-panel-bg);
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-ds, 0.5rem);
   box-shadow: var(--ag-popup-shadow);
@@ -150,7 +200,8 @@
 }
 
 [data-app-filter-panel] {
-  background: hsl(var(--surface-elevated));
+  --app-filter-panel-bg: lightgrey;
+  background: var(--app-filter-panel-bg);
   border-radius: 1rem;
 }
 

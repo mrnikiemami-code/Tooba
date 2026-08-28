@@ -16,7 +16,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "./theme.css";
 
-import { FileDown, FileSpreadsheet, FilterX, Search as SearchIcon } from "lucide-react";
+import { FileDown, FileSpreadsheet, Filter, FilterX, Search as SearchIcon } from "lucide-react";
 import { Button } from "../primitives/core";
 import { moveColumn } from "../data-grid/serialize";
 import type {
@@ -56,6 +56,7 @@ import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 import { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";
 import { commitSearchQuery } from "./search-commit";
 import { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";
+import type { StatusFilterOption } from "./status-header-filter-panel";
 import { AppColumnHeader } from "./app-column-header";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -76,6 +77,8 @@ export interface AppDataGridProps<T extends { id: string }> {
   defaultQuery?: GridServerQuery;
   /** ستون‌هایی که فیلتر app-owned دارند (خارج از AG popup) */
   externalFilterFields?: string[];
+  /** گزینه‌های فیلتر وضعیت برای header filter */
+  statusFilterOptions?: StatusFilterOption[];
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
 }
@@ -102,6 +105,7 @@ export function AppDataGrid<T extends { id: string }>({
   pageSelectionOnly = true,
   defaultQuery = DEFAULT_GRID_QUERY,
   externalFilterFields = [],
+  statusFilterOptions = [],
 }: AppDataGridProps<T>) {
   const messages = useMemo(() => resolveGridLocale(locale), [locale]);
   const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);
@@ -289,8 +293,9 @@ export function AppDataGrid<T extends { id: string }>({
       locale,
       externalFilters: query.filters,
       onExternalFilterApply,
+      statusFilterOptions,
     }),
-    [locale, onExternalFilterApply, query.filters],
+    [locale, onExternalFilterApply, query.filters, statusFilterOptions],
   );
 
   useEffect(() => {
@@ -677,12 +682,12 @@ export function AppDataGrid<T extends { id: string }>({
           {advancedFilterColumns.length > 0 ? (
             <button
               type="button"
-              className="inline-flex min-h-9 items-center gap-1 rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
               onClick={() => setFiltersOpen(true)}
               data-testid="app-grid-advanced-filters"
               aria-label={messages.advancedFilterEntry}
             >
-              <span aria-hidden>⚲</span>
+              <Filter className="size-4 shrink-0 text-muted" aria-hidden />
               {messages.advancedFilterEntry}
               {activeFilterCount > 0 ? (
                 <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">{activeFilterCount}</span>

@@ -435,17 +435,35 @@ internal sealed class AdminProductGridQueryEngine
 
     private async Task<HashSet<Guid>> ResolveOfferAmountRangeProductIdsAsync(GridFilterRequest filter, CancellationToken cancellationToken)
     {
-        if (filter.Operator is "blank" or "notBlank")
+        var ranges = await BuildOfferAmountRangeMetricsAsync(cancellationToken);
+        if (filter.Operator is "blank")
+        {
+            var all = await _catalog.Products.AsNoTracking().Select(p => p.ProductId).ToListAsync(cancellationToken);
+            return all.Except(ranges.Keys).ToHashSet();
+        }
+
+        if (filter.Operator is "notBlank")
+        {
+            return ranges.Keys.ToHashSet();
+        }
+
+        if (!decimal.TryParse(filter.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out var n))
         {
             return [];
         }
 
+        decimal? nTo = decimal.TryParse(filter.ValueTo, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) ? parsed : null;
+        return ranges.Where(kv => OfferAmountMatch(kv.Value, filter.Operator, n, nTo)).Select(kv => kv.Key).ToHashSet();
+    }
+
+    private async Task<Dictionary<Guid, (decimal Min, decimal Max)>> BuildOfferAmountRangeMetricsAsync(CancellationToken cancellationToken)
+    {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
         var offerToVariant = await _offers.Offers.AsNoTracking()
             .Select(o => new { o.OfferId, o.CatalogVariantId })
             .ToDictionaryAsync(x => x.OfferId, x => x.CatalogVariantId, cancellationToken);
-        var prices = await _prices.Prices.AsNoTracking().Select(p => new { p.OfferId, p.Amount, p.Currency }).ToListAsync(cancellationToken);
-        var byProduct = new Dictionary<Guid, List<(decimal Amount, string Currency)>>();
+        var prices = await _prices.Prices.AsNoTracking().Select(p => new { p.OfferId, p.Amount }).ToListAsync(cancellationToken);
+        var byProduct = new Dictionary<Guid, List<decimal>>();
         foreach (var price in prices)
         {
             if (!offerToVariant.TryGetValue(price.OfferId, out var variantId) || !variantToProduct.TryGetValue(variantId, out var productId))
@@ -459,15 +477,23 @@ internal sealed class AdminProductGridQueryEngine
                 byProduct[productId] = list;
             }
 
-            list.Add((price.Amount, price.Currency));
+            list.Add(price.Amount);
         }
 
-        var term = filter.Value ?? string.Empty;
-        return byProduct
-            .Where(kv => MatchText(FormatOfferAmountRange(kv.Value), filter))
-            .Select(kv => kv.Key)
-            .ToHashSet();
+        return byProduct.ToDictionary(kv => kv.Key, kv => (kv.Value.Min(), kv.Value.Max()));
     }
+
+    private static bool OfferAmountMatch((decimal Min, decimal Max) range, string op, decimal n, decimal? nTo) => op switch
+    {
+        "equals" => range.Min <= n && n <= range.Max,
+        "notEqual" => !(range.Min <= n && n <= range.Max),
+        "greaterThan" => range.Max > n,
+        "greaterThanOrEqual" => range.Max >= n,
+        "lessThan" => range.Min < n,
+        "lessThanOrEqual" => range.Min <= n,
+        "between" when nTo.HasValue => range.Min <= nTo.Value && range.Max >= n,
+        _ => true,
+    };
 
     private static bool MatchText(string value, GridFilterRequest filter) =>
         filter.Operator switch

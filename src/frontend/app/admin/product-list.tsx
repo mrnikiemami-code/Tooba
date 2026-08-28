@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
-import { COLUMN_FILTER_APPLY_PARAMS } from "../../design-system/app-data-grid/filter-commit";
+import {
+  ADMIN_PRODUCT_EXTERNAL_FILTER_FIELDS,
+  applyProductGridFilterHeader,
+} from "./product-grid-filter-matrix";
 import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
@@ -123,43 +126,44 @@ function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
   );
 }
 
+const PRODUCT_STATUS_FILTER_OPTIONS = [
+  { value: "Published", label: "منتشر شده" },
+  { value: "Draft", label: "پیش‌نویس" },
+  { value: "Archived", label: "بایگانی" },
+] as const;
+
 function buildColumnDefs(
   onLifecycle: (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => Promise<void>,
 ): ColDef<AdminProductListRow>[] {
   return [
-    {
+    applyProductGridFilterHeader({
       colId: "actions",
       headerName: "عملیات",
       width: 72,
       minWidth: 72,
       maxWidth: 80,
       sortable: false,
-      filter: false,
       lockVisible: true,
       pinned: directionPin(),
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
         params.data ? <ProductActionMenu row={params.data} onLifecycle={onLifecycle} /> : null,
-    },
-    {
+    }),
+    applyProductGridFilterHeader({
       colId: "media",
       headerName: "رسانه",
       width: 88,
       minWidth: 80,
       sortable: false,
-      filter: false,
       cellRenderer: MediaCell,
-    },
-    {
+    }),
+    applyProductGridFilterHeader({
       field: "title",
       headerName: "محصول",
       minWidth: 220,
       flex: 1.4,
       cellRenderer: ProductCell,
-      filter: false,
-      headerComponent: "appColumnHeader",
-      headerComponentParams: { externalFilter: "text" },
-    },
-    {
+    }),
+    applyProductGridFilterHeader({
       field: "status",
       headerName: "وضعیت",
       width: 120,
@@ -167,34 +171,28 @@ function buildColumnDefs(
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
         <span className={productStatusClass(String(params.value ?? ""))}>{formatAdminStatus(String(params.value ?? ""))}</span>
       ),
-      filter: false,
-    },
-    { field: "categorySummary", headerName: "دسته", width: 130, filter: "agTextColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
-    { field: "offerAmountRange", headerName: "قیمت (تومان)", width: 150, filter: false },
-    {
+    }),
+    applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 130 }),
+    applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "قیمت (تومان)", width: 150 }),
+    applyProductGridFilterHeader({
       field: "sellableUnits",
       headerName: "موجودی",
       width: 100,
-      filter: "agNumberColumnFilter",
-      filterParams: COLUMN_FILTER_APPLY_PARAMS,
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
         <div className="app-grid-cell-content">
           <span className={stockClass(Number(params.value ?? 0))}>{Number(params.value ?? 0).toLocaleString("fa-IR")}</span>
         </div>
       ),
-    },
-    {
+    }),
+    applyProductGridFilterHeader({
       field: "updatedAt",
       headerName: "به‌روزرسانی",
       width: 120,
       valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
-      filter: false,
-      headerComponent: "appColumnHeader",
-      headerComponentParams: { externalFilter: "jalali-date" },
-    },
-    { field: "variantCount", headerName: "گونه", width: 90, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
-    { field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
-    { field: "locationCount", headerName: "محل", width: 90, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
+    }),
+    applyProductGridFilterHeader({ field: "variantCount", headerName: "گونه", width: 90, hide: true }),
+    applyProductGridFilterHeader({ field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true }),
+    applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
   ];
 }
 
@@ -217,6 +215,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   { id: "variantCount", header: "گونه", filterKind: "number" },
   { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
   { id: "categorySummary", header: "دسته", filterKind: "text" },
+  { id: "offerAmountRange", header: "قیمت (تومان)", filterKind: "number" },
   { id: "sellableUnits", header: "موجودی", filterKind: "number" },
   { id: "locationCount", header: "محل", filterKind: "number" },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
@@ -333,7 +332,8 @@ export function ProductListScreen() {
           columnDefs={columnDefs}
           queryAdapter={queryAdapter}
           advancedFilterColumns={PRODUCT_GRID_ADVANCED_FILTERS}
-          externalFilterFields={["title", "updatedAt"]}
+          externalFilterFields={ADMIN_PRODUCT_EXTERNAL_FILTER_FIELDS}
+          statusFilterOptions={[...PRODUCT_STATUS_FILTER_OPTIONS]}
           locale="fa"
           direction="rtl"
           savedViewStore={savedViewStore}

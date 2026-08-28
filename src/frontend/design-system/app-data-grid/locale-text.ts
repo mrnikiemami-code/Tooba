@@ -1,3 +1,7 @@
+export function resolveGridLocale(locale: "fa" | "en"): Record<string, string> {
+  return locale === "en" ? enGridLocale : faGridLocale;
+}
+
 export type LocaleKey =
   | "search"
   | "filters"
@@ -177,10 +181,7 @@ export const enGridLocale: Record<LocaleKey, string> = {
   searchApply: "Apply search",
 };
 
-export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {
-  return locale === "en" ? enGridLocale : faGridLocale;
-}
-
+/** localeText رسمی AG Grid — فیلترها، عملگرها، دکمه‌ها. */
 export function buildAgGridLocaleText(locale: "fa" | "en"): Record<string, string> {
   const m = resolveGridLocale(locale);
   const ops = locale === "en"
@@ -192,29 +193,53 @@ export function buildAgGridLocaleText(locale: "fa" | "en"): Record<string, strin
         startsWith: "Starts with",
         endsWith: "Ends with",
         lessThan: "Less than",
+        lessThanOrEqual: "Less than or equal to",
         greaterThan: "Greater than",
+        greaterThanOrEqual: "Greater than or equal to",
+        inRange: "Between",
+        blank: "Blank",
+        notBlank: "Not blank",
+        andCondition: "AND",
+        orCondition: "OR",
       }
     : {
         equals: "برابر",
         notEqual: "نابرابر",
         contains: "شامل",
-        notContains: "شامل نباشد",
+        notContains: "شامل نمی‌شود",
         startsWith: "شروع با",
         endsWith: "پایان با",
         lessThan: "کمتر از",
+        lessThanOrEqual: "کمتر یا مساوی",
         greaterThan: "بیشتر از",
+        greaterThanOrEqual: "بیشتر یا مساوی",
+        inRange: "بین",
+        blank: "خالی",
+        notBlank: "غیرخالی",
+        andCondition: "و",
+        orCondition: "یا",
       };
+
   return {
     next: m.next,
     previous: m.previous,
     loadingOoo: m.loading,
     noRowsToShow: m.empty,
-    filterOoo: m.filters,
+    filterOoo: locale === "fa" ? "مقدار فیلتر" : "Filter value",
     applyFilter: m.apply,
-    resetFilter: m.clearFilters,
-    clearFilter: m.clearFilters,
-    ...ops,
+    resetFilter: locale === "fa" ? "پاک کردن فیلتر" : "Reset filter",
+    clearFilter: locale === "fa" ? "پاک کردن" : "Clear",
+    cancelFilter: m.cancel,
+    textFilter: locale === "fa" ? "فیلتر متنی" : "Text filter",
+    numberFilter: locale === "fa" ? "فیلتر عددی" : "Number filter",
+    dateFilter: locale === "fa" ? "فیلتر تاریخ" : "Date filter",
     columns: m.columns,
     searchOoo: m.search,
+    ...ops,
   };
+}
+
+/** برچسب‌های عملگر برای تست — بدون متن انگلیسی در fa. */
+export function faAgFilterOperatorLabels(): Record<string, string> {
+  return buildAgGridLocaleText("fa");
 }

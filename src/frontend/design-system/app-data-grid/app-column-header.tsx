@@ -5,22 +5,27 @@ import type { IHeaderParams } from "ag-grid-community";
 import type { GridFilterValue } from "../data-grid/types";
 import { isFilterActive } from "../data-grid/serialize";
 import { ColumnFilterPopover } from "./column-filter-popover";
+import { ColumnFilterIcon } from "./column-filter-icon";
 import { JalaliHeaderFilterPanel } from "./jalali-header-filter-panel";
+import { NumberHeaderFilterPanel } from "./number-header-filter-panel";
+import { StatusHeaderFilterPanel, type StatusFilterOption } from "./status-header-filter-panel";
 import { TextHeaderFilterPanel } from "./text-header-filter-panel";
 
-export type ExternalHeaderFilterKind = "text" | "jalali-date";
+export type ExternalHeaderFilterKind = "text" | "jalali-date" | "number" | "status";
 
 export type AppGridHeaderContext = {
   locale?: "fa" | "en";
   externalFilters?: Record<string, GridFilterValue>;
   onExternalFilterApply?: (field: string, value: GridFilterValue | null) => void;
+  statusFilterOptions?: StatusFilterOption[];
 };
 
 export type AppColumnHeaderParams = {
   externalFilter?: ExternalHeaderFilterKind;
+  filterValueLabel?: string;
 };
 
-/** هدر ستون با فیلتر app-owned — بدون AG Grid filter popup. */
+/** هدر ستون با فیلتر app-owned — آیکون یکپارچه؛ بدون AG Grid filter popup. */
 export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
   const field = String(props.column.getColDef().field ?? props.column.getColId());
   const displayName = props.displayName ?? field;
@@ -59,15 +64,14 @@ export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
           <button
             ref={triggerRef}
             type="button"
-            className={`inline-flex size-7 shrink-0 items-center justify-center rounded-ds text-sm ${
-              isActive ? "bg-primary text-primary-foreground" : "text-muted hover:bg-secondary"
-            }`}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-ds text-sm hover:bg-secondary/90"
             aria-label={`فیلتر ${displayName}`}
             aria-expanded={open}
+            data-filter-active={isActive ? "true" : "false"}
             data-testid={`header-filter-trigger-${field}`}
             onClick={() => setOpen((value) => !value)}
           >
-            ⚲
+            <ColumnFilterIcon active={isActive} />
           </button>
           <ColumnFilterPopover
             open={open}
@@ -76,7 +80,7 @@ export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
               triggerRef.current?.focus();
             }}
             anchorRef={triggerRef}
-            title={filterKind === "jalali-date" ? `فیلتر ${displayName}` : `فیلتر ${displayName}`}
+            title={`فیلتر ${displayName}`}
             width={filterKind === "jalali-date" ? 400 : 360}
             testId={`header-filter-popover-${field}`}
           >
@@ -84,6 +88,22 @@ export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
               <JalaliHeaderFilterPanel
                 locale={locale}
                 value={activeFilter?.kind === "date" ? activeFilter : undefined}
+                onApply={applyFilter}
+                onClear={() => applyFilter(null)}
+              />
+            ) : filterKind === "number" ? (
+              <NumberHeaderFilterPanel
+                locale={locale}
+                value={activeFilter?.kind === "number" ? activeFilter : undefined}
+                valueLabel={props.filterValueLabel}
+                onApply={applyFilter}
+                onClear={() => applyFilter(null)}
+              />
+            ) : filterKind === "status" ? (
+              <StatusHeaderFilterPanel
+                locale={locale}
+                value={activeFilter?.kind === "status" ? activeFilter : undefined}
+                options={ctx.statusFilterOptions ?? []}
                 onApply={applyFilter}
                 onClear={() => applyFilter(null)}
               />

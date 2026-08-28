@@ -1,0 +1,301 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R14
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Complete FA AG Grid filter operator localization; unified lucide Filter icon for all filterable columns via filterability matrix + appColumnHeader; price (offerAmountRange) number filter with backend whitelist; removed detached ⚲ from Advanced Filter toolbar; preserved user header/filter-panel CSS (rgb(243,242,242) + lightgrey).
+
+User-CSS-Preservation:
+
+initial uncommitted file:
+src/frontend/design-system/app-data-grid/theme.css
+
+exact header rule/variable:
+--app-grid-chrome-bg: rgb(243, 242, 242); --ag-header-background-color: var(--app-grid-chrome-bg)
+
+preserved:
+yes — not reverted
+
+filter-panel variable/rule:
+--app-filter-panel-bg: lightgrey on .ag-theme-tooba and [data-app-filter-panel]
+
+included commit:
+(pending)
+
+AG-Grid-Localization:
+
+locale module/path:
+src/frontend/design-system/app-data-grid/locale-text.ts buildAgGridLocaleText
+
+equals:
+برابر
+notEqual:
+نابرابر
+lessThan:
+کمتر از
+lessThanOrEqual:
+کمتر یا مساوی
+greaterThan:
+بیشتر از
+greaterThanOrEqual:
+بیشتر یا مساوی
+inRange:
+بین
+blank:
+خالی
+notBlank:
+غیرخالی
+contains:
+شامل
+notContains:
+شامل نمی‌شود
+startsWith:
+شروع با
+endsWith:
+پایان با
+
+English operator remaining:
+none in fa localeText
+
+tests:
+locale-text.test.ts
+
+Column-Filterability:
+
+selection:
+none (documented matrix)
+title:
+text app header
+status:
+status app header
+variantCount:
+number app header
+offerCount:
+number app header
+categorySummary:
+text app header
+offerAmountRange:
+number app header (required)
+sellableUnits:
+number app header
+location:
+locationCount number app header
+updatedAt:
+jalali-date app header
+media:
+none
+actions:
+none
+
+backend whitelist changes:
+offerAmountRange added to FilterableFields + NumberOperators
+
+Price-Filter:
+
+component/type:
+NumberHeaderFilterPanel + offerAmountRange column
+
+operators:
+برابر، نابرابر، بیشتر از، بیشتر یا مساوی، کمتر از، کمتر یا مساوی، بین، خالی، غیرخالی
+
+display/canonical value semantics:
+user enters تومان amount; Host receives decimal strings; min/max offer Amount metric — docs/evidence/TB-P07-T002-R14/01-price-filter-contract.md
+
+draft requests:
+0 (Enter/Apply only)
+
+Enter requests:
+1
+
+Apply requests:
+1
+
+between:
+value + valueTo serialized
+
+server contract:
+AdminProductGridQueryEngine OfferAmountMatch on min/max range
+
+tests:
+product-grid-filter-matrix.test.ts + AdminProductGridOfferAmountFilterPolicyTests.cs
+
+Filter-Icon-System:
+
+icon library:
+lucide-react Filter
+
+shared icon/component:
+column-filter-icon.tsx ColumnFilterIcon
+
+built-in columns:
+AG native header filter button hidden; all via appColumnHeader
+
+custom/Jalali columns:
+same ColumnFilterIcon
+
+active state:
+data-filter-active + primary background
+
+duplicate/inconsistent symbols removed:
+⚲ removed from headers/toolbar advanced filter
+
+Toolbar:
+
+detached search icon removed:
+yes (⚲ removed from Advanced Filter button)
+
+search control:
+input + embedded SearchIcon apply button + Enter commit
+
+Advanced Filter:
+Filter lucide icon + label
+
+Columns:
+unchanged
+
+Clear All:
+FilterX when active
+
+CSV:
+FileDown
+
+Excel:
+FileSpreadsheet
+
+Visual:
+
+header background:
+rgb(243, 242, 242) user preserved
+
+pinned header/background preserved:
+yes opaque chrome
+
+filter panel background:
+lightgrey opaque
+
+opaque:
+yes
+
+column separators:
+visible
+
+manual scroll test:
+pending user
+
+Validation:
+
+frontend typecheck:
+pre-existing test file regex flags only (not R14 regressions)
+
+frontend lint:
+not run separately
+
+grid tests:
+78 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+yes (offerAmountRange whitelist + numeric engine)
+
+backend tests:
+AdminProductGrid* 9 pass
+
+live API:
+5088 health 200
+
+warnings:
+0 new
+
+new warnings:
+0
+
+git diff --check:
+clean on R14 paths
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+none
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/fa/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/fa/admin/products
+
+Persian filter test:
+number operators localized in localeText
+
+price filter test:
+offerAmountRange header filter trigger present
+
+filter-icon consistency test:
+ColumnFilterIcon on all filterable headers
+
+toolbar test:
+no detached magnifier on Advanced Filter
+
+header color test:
+rgb(243,242,242) preserved
+
+Git:
+
+branch:
+main
+
+commit:
+(pending)
+
+push:
+origin/main
+
+final HEAD:
+(pending)
+
+origin/main:
+(pending)
+
+synchronized:
+(pending)
+
+tracked tree:
+clean R14 scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually verifies filters, icons, price filter, header tone.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

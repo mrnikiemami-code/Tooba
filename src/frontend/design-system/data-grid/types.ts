@@ -13,11 +13,14 @@ export type GridFilterKind = "text" | "number" | "money" | "date" | "enum" | "bo
 export type TextFilterOperator = "contains" | "equals" | "startsWith";
 export type NumberFilterOperator =
   | "equals"
+  | "notEqual"
   | "greaterThan"
   | "greaterThanOrEqual"
   | "lessThan"
   | "lessThanOrEqual"
-  | "between";
+  | "between"
+  | "blank"
+  | "notBlank";
 export type DateFilterOperator = "on" | "before" | "after" | "between";
 export type EnumFilterOperator = "equals" | "notEqual" | "in" | "notIn";
 

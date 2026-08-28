@@ -23,6 +23,7 @@ public static class AdminProductGridQueryPolicy
         "sellableUnits",
         "locationCount",
         "updatedAt",
+        "offerAmountRange",
     ];
 
     private static readonly HashSet<string> FilterableFields = SortableFields;
@@ -139,9 +140,9 @@ public static class AdminProductGridQueryPolicy
     {
         var allowed = field switch
         {
-            "title" or "categorySummary" or "offerAmountRange" => TextOperators,
+            "title" or "categorySummary" => TextOperators,
+            "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => NumberOperators,
             "status" => EnumOperators,
-            "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => NumberOperators,
             "updatedAt" => DateOperators,
             _ => throw new PlatformHttpException(400, "فیلد فیلتر نامعتبر است.", "grid.filter.field.invalid"),
         };

@@ -83,11 +83,17 @@ export type FilterOperatorLabels = {
   in: string;
   notIn: string;
   contains: string;
+  notContains: string;
   equals: string;
   startsWith: string;
+  endsWith: string;
   greaterThan: string;
+  greaterThanOrEqual: string;
   lessThan: string;
+  lessThanOrEqual: string;
   between: string;
+  blank: string;
+  notBlank: string;
   on: string;
   before: string;
   after: string;
@@ -98,14 +104,20 @@ export type FilterOperatorLabels = {
 
 export const faFilterOperatorLabels: FilterOperatorLabels = {
   contains: "شامل",
-  equals: "برابر با",
-  notEqual: "نابرابر با",
+  notContains: "شامل نمی‌شود",
+  equals: "برابر",
+  notEqual: "نابرابر",
   in: "یکی از",
   notIn: "هیچ‌کدام از",
-  startsWith: "شروع می‌شود با",
+  startsWith: "شروع با",
+  endsWith: "پایان با",
   greaterThan: "بیشتر از",
+  greaterThanOrEqual: "بیشتر یا مساوی",
   lessThan: "کمتر از",
+  lessThanOrEqual: "کمتر یا مساوی",
   between: "بین",
+  blank: "خالی",
+  notBlank: "غیرخالی",
   on: "در تاریخ",
   before: "قبل از",
   after: "بعد از",
@@ -116,14 +128,20 @@ export const faFilterOperatorLabels: FilterOperatorLabels = {
 
 export const enFilterOperatorLabels: FilterOperatorLabels = {
   contains: "Contains",
+  notContains: "Not contains",
   equals: "Equals",
   notEqual: "Not equal",
   in: "In",
   notIn: "Not in",
   startsWith: "Starts with",
+  endsWith: "Ends with",
   greaterThan: "Greater than",
+  greaterThanOrEqual: "Greater than or equal to",
   lessThan: "Less than",
+  lessThanOrEqual: "Less than or equal to",
   between: "Between",
+  blank: "Blank",
+  notBlank: "Not blank",
   on: "On date",
   before: "Before",
   after: "After",
