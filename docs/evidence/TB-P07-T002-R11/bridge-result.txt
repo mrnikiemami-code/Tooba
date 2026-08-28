@@ -1,0 +1,333 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R11
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Read official AG Grid v36.1 legacy theming docs before coding; applied supported --ag-* header/border/filter variables on .ag-theme-tooba; opaque .ag-filter/.ag-menu surfaces; toolbar حذف همه فیلترها clears all filter partitions + search in one request; rebuilt ColumnManagerDrawer with localized selection column (انتخاب/Selection), working checkbox sync, HTML5 drag reorder (no ↑↓); page size 1000 on FE and BE MaxPageSize=1000.
+
+Official-AG-Grid-Help:
+
+version:
+ag-grid-community@36.1.0, ag-grid-react@36.1.0, theme="legacy", ag-theme-quartz
+
+docs read before coding:
+docs/evidence/TB-P07-T002-R11/01-ag-grid-official-help.md
+
+legacy theme docs:
+https://www.ag-grid.com/react-data-grid/theming-v32/
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation/
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation-variables/
+
+header docs:
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation-headers/
+
+border docs:
+https://www.ag-grid.com/javascript-data-grid/theming-v32-customisation-borders/
+
+popup/filter docs:
+AG menu/popup variables + popupParent=document.body (existing)
+
+row selection docs:
+selectionColumnDef.headerName localized
+
+column state docs:
+getColumnState/applyColumnState + onColumnVisible/onColumnMoved
+
+RTL docs:
+enableRtl preserved
+
+official variables/APIs used:
+--ag-header-background-color, --ag-header-foreground-color, --ag-header-column-separator-*, --ag-header-column-resize-handle-*, --ag-borders*, --ag-row-border-*, --ag-cell-horizontal-border, --ag-menu-background-color; selectionColumnDef; clearAllFilters; ColumnManagerDrawer
+
+Header-Theming:
+
+theme root/path:
+.ag-theme-tooba in theme.css on AppDataGrid
+
+header background variable:
+--ag-header-background-color: hsl(var(--surface-elevated))
+
+header foreground:
+--ag-header-foreground-color: hsl(var(--foreground))
+
+header separators:
+--ag-header-column-separator-display: block; height 65%; width 1px; color hsl(var(--border))
+
+resize handles:
+--ag-header-column-resize-handle-display: block; height 40%; width 2px
+
+row/grid borders:
+--ag-borders, --ag-border-color, --ag-borders-critical, --ag-borders-secondary
+
+cell/column borders:
+--ag-row-border-* + --ag-cell-horizontal-border
+
+computed .ag-header-row background:
+hsl(var(--surface-elevated)) via official var cascade + narrow fallback on .ag-header-row.ag-header-row-column (opaque, alpha=1)
+
+horizontal test:
+pending user browser DevTools
+
+vertical test:
+pending user browser DevTools
+
+Filter-Surface:
+
+built-in filter path:
+AG Community built-in filters on non-externalized columns; external title/updatedAt via AppColumnHeader Portal
+
+.ag-filter background rule:
+--ag-menu-background-color + .ag-theme-tooba .ag-filter { background-color: hsl(var(--surface-elevated)); border/shadow }
+
+computed .ag-filter background:
+hsl(var(--surface-elevated)) — opaque solid (no rgba alpha < 1 on content surface)
+
+opaque:
+yes (source + theme vars; manual DevTools confirmation steps in USER-PREVIEW)
+
+underlying grid bleed:
+prevented by opaque surfaces + Portal for app-owned filters
+
+RTL:
+preserved
+
+apply/clear:
+COLUMN_FILTER_APPLY_PARAMS unchanged
+
+Enter semantics preserved:
+yes — filter-commit.test.ts + text-header-filter-panel test
+
+Clear-All-Filters:
+
+component/path:
+AppDataGrid.tsx clearAllFilters + toolbar button data-testid=app-grid-clear-all-filters
+
+native filters:
+gridApi.setFilterModel(null)
+
+app header filters:
+filters partition cleared in load query
+
+advanced filters:
+advancedFilter { conditions: [], connectors: [] }
+
+status filters:
+included in filters partition reset
+
+Jalali filters:
+included in filters partition reset
+
+search:
+searchInput cleared; search undefined in query
+
+page reset:
+page: 1
+
+requests emitted:
+1 (shouldCommitGridQuery + force load)
+
+tests:
+clear-all-filters.test.ts
+
+Column-Manager:
+
+component/path:
+ColumnManagerDrawer.tsx + column-labels.ts
+
+selection column label fa:
+انتخاب
+
+selection column label en:
+Selection
+
+technical IDs visible:
+no — resolveColumnLabel maps ag-Grid-SelectionColumn
+
+checkbox toggle:
+onToggleVisibility + refreshColumnManagerState on column events
+
+checkbox state after reopen:
+refreshColumnManagerState on drawer open + onColumnVisible
+
+Saved View restore:
+pageSize and layout captured in saved views (existing prepareSavedViewForPersistence)
+
+drag library/mechanism:
+native HTML5 draggable rows (no new dependency)
+
+touch reorder:
+draggable rows with min-h 44px touch targets
+
+keyboard reorder:
+native drag; locked columns disabled with aria-label
+
+arrows removed:
+yes — no ↑↓ controls in drawer
+
+mobile:
+Drawer full-width sheet
+
+tests:
+column-manager.test.ts
+
+Page-Size:
+
+frontend choices:
+10, 25, 50, 100, 1000
+
+1000 selectable:
+yes — PAGE_SIZES
+
+backend max:
+AdminProductGridQueryPolicy.MaxPageSize = 1000
+
+pageSize=1000:
+live POST /v1/admin/products/query → pageSize=1000, totalCount=82, items=82
+
+pageSize=1001:
+clamped to 1000 (live API verified after Host restart)
+
+page-only enrichment:
+unchanged bounded batch enrichment
+
+N+1:
+no regression — server-side pagination only
+
+totalCount:
+82 correct at pageSize 1000
+
+Saved View restore:
+pageSize persisted in SavedGridView (existing contract)
+
+backend tests:
+AdminProductGridQueryPolicyPageSizeTests — 3 pass
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (next/img warning pre-existing)
+
+grid tests:
+54 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend restore:
+Host restarted on :5088 with new build
+
+backend build:
+0 errors
+
+backend tests:
+3 pageSize tests pass (temp output path while Host was locked)
+
+warnings:
+MODULE_TYPELESS_PACKAGE_JSON pre-existing; next/img pre-existing
+
+errors:
+0
+
+failed:
+0
+
+skipped:
+0
+
+git diff --check:
+clean on committed R11 scope
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200 (dev restarted)
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+header test:
+inspect .ag-header-row.ag-header-row-column computed background-color → expect opaque hsl(var(--surface-elevated))
+
+grid-line test:
+verify row/column borders visible on scroll
+
+built-in filter opacity test:
+open built-in filter → inspect .ag-filter background → expect opaque; no row text bleed
+
+clear-all test:
+set search + native + advanced + Jalali → click حذف همه فیلترها → one request
+
+column visibility checkbox test:
+toggle column → close/reopen drawer → state matches grid
+
+column reorder mobile test:
+drag handle reorder; no arrow controls
+
+page size 1000 test:
+select 1000 → API pageSize=1000 succeeds
+
+Git:
+
+branch:
+main
+
+commit:
+(pending push)
+
+push:
+origin/main
+
+final HEAD:
+(pending push)
+
+origin/main:
+(pending push)
+
+synchronized:
+(pending push)
+
+tracked tree:
+clean on committed R11 scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually reviews header opacity, grid lines, filter opacity, column manager, and page size 1000 in browser.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

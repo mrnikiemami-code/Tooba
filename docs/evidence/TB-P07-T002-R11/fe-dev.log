@@ -1,0 +1,15 @@
+﻿
+> tooba-web@0.0.1 dev
+> next dev
+
+   ▲ Next.js 15.5.23
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.100:3000
+
+ ✓ Starting...
+ ✓ Ready in 1796ms
+ ✓ Compiled /middleware in 142ms (117 modules)
+ ○ Compiling /admin/products ...
+ ✓ Compiled /admin/products in 3.1s (1370 modules)
+ GET /admin/products 200 in 4871ms
+ GET /admin/products 200 in 227ms
