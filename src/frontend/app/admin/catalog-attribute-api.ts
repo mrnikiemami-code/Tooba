@@ -52,7 +52,10 @@ export interface EffectiveSchemaEntry {
   definitionId: string;
   code: string;
   valueKind: CatalogAttributeValueKind;
+  /** capability: آیا این نوع ویژگی اصلاً می‌تواند محور تنوع باشد */
   isVariantAxisAllowed: boolean;
+  /** effective: آیا در این رده به‌عنوان محور تنوع فعال است */
+  isVariantAxis: boolean;
   unit: string | null;
   isRequired: boolean;
   isFilterable: boolean;
@@ -89,7 +92,17 @@ export interface CreateAttributeDefinitionInput {
 export interface BindCategoryAttributeInput {
   definitionId: string;
   displayOrder: number;
-  isRequiredOverride?: boolean | null;
+  isRequired: boolean;
+  isFilterable: boolean;
+  isVariantAxis: boolean;
+  isComparable: boolean;
+}
+
+export interface UpdateCategoryAttributeBindingInput {
+  isRequired: boolean;
+  isFilterable: boolean;
+  isVariantAxis: boolean;
+  isComparable: boolean;
 }
 
 export interface SetProductAttributeInput {
@@ -279,6 +292,7 @@ export function mapEffectiveSchemaEntry(payload: unknown): EffectiveSchemaEntry 
     code,
     valueKind: parseValueKind(prop(item, "valueKind", "ValueKind")),
     isVariantAxisAllowed: bool(prop(item, "isVariantAxisAllowed", "IsVariantAxisAllowed")),
+    isVariantAxis: bool(prop(item, "isVariantAxis", "IsVariantAxis")),
     unit: (() => {
       const u = prop(item, "unit", "Unit");
       return u == null || u === "" ? null : text(u);
@@ -400,7 +414,30 @@ export async function bindCategoryAttribute(
     {
       definitionId: input.definitionId,
       displayOrder: input.displayOrder,
-      isRequiredOverride: input.isRequiredOverride ?? null,
+      isRequired: input.isRequired,
+      isFilterable: input.isFilterable,
+      isVariantAxis: input.isVariantAxis,
+      isComparable: input.isComparable,
+    },
+  );
+  if (response.state !== "ok") return { ...response, data: null };
+  return { ...response, data: { ok: true } };
+}
+
+/** به‌روزرسانی assignment محلی رده. */
+export async function updateCategoryAttributeBinding(
+  categoryId: string,
+  definitionId: string,
+  input: UpdateCategoryAttributeBindingInput,
+): Promise<AdminResult<{ ok: true }>> {
+  const response = await adminWrite(
+    `/v1/admin/catalog/categories/${categoryId}/attribute-schema/bindings/${definitionId}`,
+    "PATCH",
+    {
+      isRequired: input.isRequired,
+      isFilterable: input.isFilterable,
+      isVariantAxis: input.isVariantAxis,
+      isComparable: input.isComparable,
     },
   );
   if (response.state !== "ok") return { ...response, data: null };

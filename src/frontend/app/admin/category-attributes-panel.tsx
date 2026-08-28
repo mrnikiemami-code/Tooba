@@ -11,7 +11,7 @@ import {
   loadEffectiveCategorySchema,
   reorderCategoryBindings,
   unbindCategoryAttribute,
-  updateAttributeDefinition,
+  updateCategoryAttributeBinding,
   valueKindLabel,
   type AttributeDefinition,
   type CatalogAttributeValueKind,
@@ -98,7 +98,7 @@ function AttributeBadges({ row }: { row: EffectiveSchemaEntry }) {
           فیلتر
         </span>
       ) : null}
-      {row.isVariantAxisAllowed ? (
+      {row.isVariantAxis ? (
         <span className={badgeClass("violet")} data-testid="attr-badge-variant">
           تنوع
         </span>
@@ -156,6 +156,7 @@ function AttributeRowEdit({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onConfigure,
 }: {
   row: EffectiveSchemaEntry;
   index: number;
@@ -164,6 +165,7 @@ function AttributeRowEdit({
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
+  onConfigure: () => void;
 }) {
   return (
     <li
@@ -177,6 +179,15 @@ function AttributeRowEdit({
       <div className="flex flex-wrap items-center gap-2">
         <AttributeBadges row={row} />
         <div className="flex gap-1">
+          <button
+            type="button"
+            className="inline-flex min-h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+            disabled={busy}
+            onClick={onConfigure}
+            data-testid={`attr-configure-${row.code}`}
+          >
+            تنظیم رفتار
+          </button>
           <button
             type="button"
             className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-gray-200 text-sm disabled:opacity-40"
@@ -215,28 +226,42 @@ function AttributeRowEdit({
 interface BindFlags {
   isRequired: boolean;
   isFilterable: boolean;
-  isVariantAxisAllowed: boolean;
+  isVariantAxis: boolean;
   isComparable: boolean;
 }
 
 const defaultBindFlags = (): BindFlags => ({
   isRequired: false,
   isFilterable: false,
-  isVariantAxisAllowed: false,
+  isVariantAxis: false,
   isComparable: false,
 });
+
+function flagsFromEntry(row: EffectiveSchemaEntry): BindFlags {
+  return {
+    isRequired: row.isRequired,
+    isFilterable: row.isFilterable,
+    isVariantAxis: row.isVariantAxis,
+    isComparable: row.isComparable,
+  };
+}
 
 function BindFlagsEditor({
   flags,
   valueKind,
+  variantCapabilityAllowed,
   onChange,
 }: {
   flags: BindFlags;
   valueKind: CatalogAttributeValueKind;
+  variantCapabilityAllowed: boolean;
   onChange: (next: BindFlags) => void;
 }) {
   const variantDisabled =
-    valueKind === "Text" || valueKind === "Instant" || valueKind === "Boolean";
+    !variantCapabilityAllowed
+    || valueKind === "Text"
+    || valueKind === "Instant"
+    || valueKind === "Boolean";
 
   return (
     <div className="space-y-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm">
@@ -261,9 +286,9 @@ function BindFlagsEditor({
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
-          checked={flags.isVariantAxisAllowed}
+          checked={flags.isVariantAxis}
           disabled={variantDisabled}
-          onChange={(e) => onChange({ ...flags, isVariantAxisAllowed: e.target.checked })}
+          onChange={(e) => onChange({ ...flags, isVariantAxis: e.target.checked })}
           data-testid="attr-flag-variant"
         />
         {ATTRIBUTE_FLAG_LABELS.variant}
@@ -324,6 +349,11 @@ export function CategoryAttributesPanel({
   const [createCode, setCreateCode] = useState("");
   const [createOptions, setCreateOptions] = useState<{ code: string; name: string }[]>([]);
   const [newOptionName, setNewOptionName] = useState("");
+
+  const [configureOpen, setConfigureOpen] = useState(false);
+  const [configureTarget, setConfigureTarget] = useState<EffectiveSchemaEntry | null>(null);
+  const [configureFlags, setConfigureFlags] = useState<BindFlags>(defaultBindFlags());
+  const [configureMode, setConfigureMode] = useState<"local-update" | "inherited-override">("local-update");
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -405,39 +435,34 @@ export function CategoryAttributesPanel({
     }
   };
 
-  const applyDefinitionFlags = async (definitionId: string, flags: BindFlags) => {
-    const def = definitions.find((d) => d.definitionId === definitionId);
-    if (!def) return;
-    const needsUpdate =
-      def.isFilterable !== flags.isFilterable
-      || def.isComparable !== flags.isComparable
-      || def.isRequired !== flags.isRequired;
-    if (!needsUpdate) return;
-    const result = await updateAttributeDefinition(definitionId, {
-      unit: def.unit,
-      isRequired: flags.isRequired,
-      isFilterable: flags.isFilterable,
-      isComparable: flags.isComparable,
-      isMultivalue: def.isMultivalue,
-      displayOrder: def.displayOrder,
-      validationMin: def.validationMin,
-      validationMax: def.validationMax,
-      validationMaxLength: def.validationMaxLength,
-      isActive: def.isActive,
-    });
-    if (result.state !== "ok") {
-      throw new Error(result.message ?? "به‌روزرسانی ویژگی ناموفق بود");
-    }
+  const toBindInput = (flags: BindFlags) => ({
+    isRequired: flags.isRequired,
+    isFilterable: flags.isFilterable,
+    isVariantAxis: flags.isVariantAxis,
+    isComparable: flags.isComparable,
+  });
+
+  const openConfigureLocal = (row: EffectiveSchemaEntry) => {
+    setConfigureTarget(row);
+    setConfigureFlags(flagsFromEntry(row));
+    setConfigureMode("local-update");
+    setConfigureOpen(true);
+  };
+
+  const openConfigureInherited = (row: EffectiveSchemaEntry) => {
+    setConfigureTarget(row);
+    setConfigureFlags(flagsFromEntry(row));
+    setConfigureMode("inherited-override");
+    setConfigureOpen(true);
   };
 
   const handleBindExisting = async () => {
     if (!selectedDefinition) return;
     await runMutation(async () => {
-      await applyDefinitionFlags(selectedDefinition.definitionId, bindFlags);
       const result = await bindCategoryAttribute(categoryId, {
         definitionId: selectedDefinition.definitionId,
         displayOrder: local.length,
-        isRequiredOverride: bindFlags.isRequired ? true : null,
+        ...toBindInput(bindFlags),
       });
       if (result.state !== "ok") {
         throw new Error(result.message ?? "افزودن ویژگی ناموفق بود");
@@ -458,12 +483,12 @@ export function CategoryAttributesPanel({
       const createResult = await createAttributeDefinition({
         code,
         valueKind: createKind,
-        isVariantAxisAllowed: createFlags.isVariantAxisAllowed,
+        isVariantAxisAllowed: createFlags.isVariantAxis,
         localizedNames: { "fa-IR": name },
         metadata: {
-          isRequired: createFlags.isRequired,
-          isFilterable: createFlags.isFilterable,
-          isComparable: createFlags.isComparable,
+          isRequired: false,
+          isFilterable: false,
+          isComparable: false,
           isMultivalue: createMultivalue,
           displayOrder: 0,
           isActive: true,
@@ -487,7 +512,7 @@ export function CategoryAttributesPanel({
       const bindResult = await bindCategoryAttribute(categoryId, {
         definitionId,
         displayOrder: local.length,
-        isRequiredOverride: createFlags.isRequired ? true : null,
+        ...toBindInput(createFlags),
       });
       if (bindResult.state !== "ok") {
         throw new Error(bindResult.message ?? "پیوند به دسته ناموفق بود");
@@ -502,6 +527,36 @@ export function CategoryAttributesPanel({
       setCreateCode("");
       setCreateOptions([]);
       setNewOptionName("");
+    });
+  };
+
+  const handleSaveConfigure = async () => {
+    if (!configureTarget) return;
+    await runMutation(async () => {
+      if (configureMode === "local-update") {
+        const result = await updateCategoryAttributeBinding(
+          categoryId,
+          configureTarget.definitionId,
+          toBindInput(configureFlags),
+        );
+        if (result.state !== "ok") {
+          throw new Error(result.message ?? "ذخیره تنظیمات ناموفق بود");
+        }
+        toast.success("رفتار ویژگی برای این دسته به‌روز شد");
+      } else {
+        const result = await bindCategoryAttribute(categoryId, {
+          definitionId: configureTarget.definitionId,
+          displayOrder: local.length,
+          ...toBindInput(configureFlags),
+        });
+        if (result.state !== "ok") {
+          throw new Error(result.message ?? "تنظیم برای این دسته ناموفق بود");
+        }
+        toast.success("تنظیمات فقط برای این دسته اعمال شد");
+      }
+      setConfigureOpen(false);
+      setConfigureTarget(null);
+      setConfigureFlags(defaultBindFlags());
     });
   };
 
@@ -645,16 +700,37 @@ export function CategoryAttributesPanel({
           </div>
 
           {inherited.length > 0 ? (
-            <section>
-              <h2 className="text-sm font-semibold text-slate-800">ارث‌برده‌شده (فقط مشاهده)</h2>
+            <section data-testid="category-attributes-inherited-edit-section">
+              <h2 className="text-sm font-semibold text-slate-800">ارث‌برده‌شده</h2>
               <ul className="mt-3 space-y-2">
                 {inherited.map((row) => (
-                  <AttributeRowView
+                  <li
                     key={row.definitionId}
-                    row={row}
-                    showSource
-                    sourceLabel={resolveSourceName(row.inheritedFromCategoryId)}
-                  />
+                    className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    data-testid={`category-attribute-inherited-edit-${row.code}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-slate-900">{humanizeAttributeCode(row.code)}</div>
+                      <div className="mt-0.5 text-xs text-slate-500">
+                        نوع: {valueKindLabel(row.valueKind)}
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500" data-testid="attr-source-category">
+                        از «{resolveSourceName(row.inheritedFromCategoryId)}»
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AttributeBadges row={row} />
+                      <button
+                        type="button"
+                        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                        disabled={combinedBusy}
+                        onClick={() => openConfigureInherited(row)}
+                        data-testid={`attr-customize-inherited-${row.code}`}
+                      >
+                        تنظیم برای این دسته
+                      </button>
+                    </div>
+                  </li>
                 ))}
               </ul>
             </section>
@@ -676,6 +752,7 @@ export function CategoryAttributesPanel({
                     onMoveUp={() => void handleReorderLocal(index, index - 1)}
                     onMoveDown={() => void handleReorderLocal(index, index + 1)}
                     onRemove={() => void handleRemoveLocal(row.definitionId)}
+                    onConfigure={() => openConfigureLocal(row)}
                   />
                 ))}
               </ul>
@@ -723,12 +800,7 @@ export function CategoryAttributesPanel({
                         }
                         onClick={() => {
                           setSelectedDefId(d.definitionId);
-                          setBindFlags({
-                            isRequired: d.isRequired,
-                            isFilterable: d.isFilterable,
-                            isComparable: d.isComparable,
-                            isVariantAxisAllowed: d.isVariantAxisAllowed,
-                          });
+                          setBindFlags(defaultBindFlags());
                         }}
                         data-testid={`attr-add-option-${d.code}`}
                       >
@@ -747,6 +819,7 @@ export function CategoryAttributesPanel({
                 <BindFlagsEditor
                   flags={bindFlags}
                   valueKind={selectedDefinition.valueKind}
+                  variantCapabilityAllowed={selectedDefinition.isVariantAxisAllowed}
                   onChange={setBindFlags}
                 />
               </div>
@@ -824,7 +897,12 @@ export function CategoryAttributesPanel({
                 />
                 چندمقداری (چند مقدار برای یک محصول)
               </label>
-              <BindFlagsEditor flags={createFlags} valueKind={createKind} onChange={setCreateFlags} />
+              <BindFlagsEditor
+                flags={createFlags}
+                valueKind={createKind}
+                variantCapabilityAllowed
+                onChange={setCreateFlags}
+              />
               {createKind === "Enumeration" ? (
                 <div className="rounded-xl border border-gray-100 p-3">
                   <div className="text-sm font-medium text-slate-700">گزینه‌ها</div>
@@ -902,6 +980,63 @@ export function CategoryAttributesPanel({
                 data-testid="attr-create-confirm"
               >
                 ایجاد و افزودن
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {configureOpen && configureTarget ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="configure-attr-title"
+          data-testid="category-attributes-configure-dialog"
+        >
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+            <h3 id="configure-attr-title" className="text-lg font-semibold text-slate-900">
+              {configureMode === "inherited-override"
+                ? "تنظیم برای این دسته"
+                : "تنظیم رفتار ویژگی"}
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              {configureMode === "inherited-override"
+                ? "این تغییرات فقط برای دستهٔ فعلی اعمال می‌شود و دسته‌های دیگر را تحت تأثیر قرار نمی‌دهد."
+                : "رفتار این ویژگی در همین دسته را مشخص کنید."}
+            </p>
+            <div className="mt-4">
+              <BindFlagsEditor
+                flags={configureFlags}
+                valueKind={configureTarget.valueKind}
+                variantCapabilityAllowed={configureTarget.isVariantAxisAllowed}
+                onChange={setConfigureFlags}
+              />
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 px-4 text-sm"
+                onClick={() => {
+                  setConfigureOpen(false);
+                  setConfigureTarget(null);
+                }}
+                disabled={combinedBusy}
+                data-testid="attr-configure-cancel"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={combinedBusy}
+                onClick={() => void handleSaveConfigure().catch((e) => {
+                  setError(e instanceof Error ? e.message : "خطا");
+                  toast.error(e instanceof Error ? e.message : "خطا");
+                })}
+                data-testid="attr-configure-save"
+              >
+                ذخیره
               </button>
             </div>
           </div>

@@ -803,15 +803,21 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         Guid categoryId,
         Guid definitionId,
         int displayOrder,
-        bool? isRequiredOverride,
+        CategoryAttributeAssignmentFlags flags,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken)
-            || !await _db.AttributeDefinitions.AnyAsync(x => x.DefinitionId == definitionId, cancellationToken))
+        ArgumentNullException.ThrowIfNull(flags);
+        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
+            x => x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("رده یا تعریف ویژگی در Catalog این Tenant نیست.");
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
             throw new InvalidOperationException("رده یا تعریف ویژگی در Catalog این Tenant نیست.");
         }
+
+        CatalogCategoryAttributeAssignmentRules.ValidateVariantAxis(definition, flags.IsVariantAxis);
 
         if (await _db.CategoryAttributeBindings.AnyAsync(
                 x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
@@ -821,7 +827,42 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         }
 
         _db.CategoryAttributeBindings.Add(
-            CatalogCategoryAttributeBinding.Bind(categoryId, definitionId, displayOrder, isRequiredOverride, DateTimeOffset.UtcNow));
+            CatalogCategoryAttributeBinding.Bind(
+                categoryId,
+                definitionId,
+                displayOrder,
+                flags.IsRequired,
+                flags.IsFilterable,
+                flags.IsVariantAxis,
+                flags.IsComparable,
+                DateTimeOffset.UtcNow));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateCategoryAttributeBindingAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CategoryAttributeAssignmentFlags flags,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(flags);
+        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
+            x => x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("تعریف ویژگی در Catalog این Tenant نیست.");
+        var binding = await _db.CategoryAttributeBindings.SingleOrDefaultAsync(
+            x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("پیوند schema رده پیدا نشد.");
+
+        CatalogCategoryAttributeAssignmentRules.ValidateVariantAxis(definition, flags.IsVariantAxis);
+
+        binding.IsRequired = flags.IsRequired;
+        binding.IsFilterable = flags.IsFilterable;
+        binding.IsVariantAxis = flags.IsVariantAxis;
+        binding.IsComparable = flags.IsComparable;
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -878,10 +919,11 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             x.Definition.Code,
             x.Definition.ValueKind,
             x.Definition.IsVariantAxisAllowed,
+            x.IsVariantAxis,
             x.Definition.Unit,
             x.IsRequired,
-            x.Definition.IsFilterable,
-            x.Definition.IsComparable,
+            x.IsFilterable,
+            x.IsComparable,
             x.Definition.IsMultivalue,
             x.DisplayOrder,
             x.InheritedFromCategoryId,
@@ -1107,6 +1149,32 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             }
         }
 
+        var categoryIds = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.CategoryId)
+            .ToListAsync(cancellationToken);
+        if (categoryIds.Count > 0)
+        {
+            foreach (var definitionId in orderedDefinitionIds)
+            {
+                var enabled = false;
+                foreach (var categoryId in categoryIds)
+                {
+                    var schema = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
+                    if (schema.Any(x => x.DefinitionId == definitionId && x.IsVariantAxis))
+                    {
+                        enabled = true;
+                        break;
+                    }
+                }
+
+                if (!enabled)
+                {
+                    throw new InvalidOperationException("محور تنوع در schema مؤثر رده‌های محصول فعال نیست.");
+                }
+            }
+        }
+
         var existing = await _db.ProductVariantAxes.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
         _db.ProductVariantAxes.RemoveRange(existing);
         for (var i = 0; i < orderedDefinitionIds.Count; i++)
@@ -1175,7 +1243,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         {
             foreach (var entry in await ResolveEffectiveBindingsAsync(categoryId, cancellationToken))
             {
-                if (entry.IsRequired && entry.Definition.IsActive && !entry.Definition.IsVariantAxis)
+                if (entry.IsRequired && entry.Definition.IsActive && !entry.IsVariantAxis)
                 {
                     required.Add(entry.DefinitionId);
                 }

@@ -227,7 +227,16 @@ public interface ICatalogDirectory
         Guid categoryId,
         Guid definitionId,
         int displayOrder,
-        bool? isRequiredOverride,
+        CategoryAttributeAssignmentFlags flags,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رفتار assignment محلی رده را به‌روزرسانی می‌کند.
+    /// </summary>
+    Task UpdateCategoryAttributeBindingAsync(
+        Guid categoryId,
+        Guid definitionId,
+        CategoryAttributeAssignmentFlags flags,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -365,6 +374,15 @@ public interface ICatalogDirectory
 }
 
 /// <summary>
+/// پرچم‌های رفتار category-specific روی assignment.
+/// </summary>
+public sealed record CategoryAttributeAssignmentFlags(
+    bool IsRequired,
+    bool IsFilterable,
+    bool IsVariantAxis,
+    bool IsComparable);
+
+/// <summary>
 /// نمای تعریف ویژگی برای schema authoring بدون نشت EF.
 /// </summary>
 public sealed record AttributeDefinitionView(
@@ -392,6 +410,7 @@ public sealed record EffectiveSchemaEntry(
     string Code,
     CatalogAttributeValueKind ValueKind,
     bool IsVariantAxisAllowed,
+    bool IsVariantAxis,
     string? Unit,
     bool IsRequired,
     bool IsFilterable,

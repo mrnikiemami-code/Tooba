@@ -565,9 +565,24 @@ public sealed class CatalogCategoryAttributeBinding
     public int DisplayOrder { get; set; }
 
     /// <summary>
-    /// override الزام؛ null یعنی از تعریف ارث ببرد.
+    /// الزام در همین رده (assignment-level).
     /// </summary>
-    public bool? IsRequiredOverride { get; set; }
+    public bool IsRequired { get; set; }
+
+    /// <summary>
+    /// نمایش در فیلتر محصولات برای همین رده.
+    /// </summary>
+    public bool IsFilterable { get; set; }
+
+    /// <summary>
+    /// استفاده به‌عنوان محور تنوع در همین رده (نیاز به IsVariantAxisAllowed روی تعریف).
+    /// </summary>
+    public bool IsVariantAxis { get; set; }
+
+    /// <summary>
+    /// نمایش در مقایسه محصولات برای همین رده.
+    /// </summary>
+    public bool IsComparable { get; set; }
 
     /// <summary>
     /// زمان ایجاد.
@@ -581,7 +596,10 @@ public sealed class CatalogCategoryAttributeBinding
         Guid categoryId,
         Guid definitionId,
         int displayOrder,
-        bool? isRequiredOverride,
+        bool isRequired,
+        bool isFilterable,
+        bool isVariantAxis,
+        bool isComparable,
         DateTimeOffset now) =>
         new()
         {
@@ -589,9 +607,41 @@ public sealed class CatalogCategoryAttributeBinding
             CategoryId = categoryId,
             DefinitionId = definitionId,
             DisplayOrder = displayOrder,
-            IsRequiredOverride = isRequiredOverride,
+            IsRequired = isRequired,
+            IsFilterable = isFilterable,
+            IsVariantAxis = isVariantAxis,
+            IsComparable = isComparable,
             CreatedAt = now,
         };
+}
+
+/// <summary>
+/// قواعد اعتبارسنجی assignment رفتار category-specific.
+/// </summary>
+public static class CatalogCategoryAttributeAssignmentRules
+{
+    /// <summary>
+    /// فعال‌سازی محور تنوع را در برابر capability/type تعریف بررسی می‌کند.
+    /// </summary>
+    public static void ValidateVariantAxis(CatalogAttributeDefinition definition, bool isVariantAxisEnabled)
+    {
+        if (!isVariantAxisEnabled)
+        {
+            return;
+        }
+
+        if (!definition.IsVariantAxisAllowed)
+        {
+            throw new InvalidOperationException("این نوع ویژگی مجاز به‌عنوان محور تنوع نیست.");
+        }
+
+        if (definition.ValueKind is CatalogAttributeValueKind.Text
+            or CatalogAttributeValueKind.Boolean
+            or CatalogAttributeValueKind.Instant)
+        {
+            throw new InvalidOperationException("این نوع مقدار برای ساخت تنوع محصول مناسب نیست.");
+        }
+    }
 }
 
 /// <summary>
@@ -1268,6 +1318,9 @@ public sealed record CatalogEffectiveSchemaBinding(
     Guid DefinitionId,
     int DisplayOrder,
     bool IsRequired,
+    bool IsFilterable,
+    bool IsVariantAxis,
+    bool IsComparable,
     Guid InheritedFromCategoryId,
     CatalogAttributeDefinition Definition);
 
@@ -1325,11 +1378,14 @@ public static class CatalogCategorySchemaResolver
                     throw new InvalidOperationException("تعریف ویژگی پیوندشده در Catalog نیست.");
                 }
 
-                var required = binding.IsRequiredOverride ?? definition.IsRequired;
+                var isVariantAxis = binding.IsVariantAxis && definition.IsVariantAxisAllowed;
                 return new CatalogEffectiveSchemaBinding(
                     binding.DefinitionId,
                     binding.DisplayOrder,
-                    required,
+                    binding.IsRequired,
+                    binding.IsFilterable,
+                    isVariantAxis,
+                    binding.IsComparable,
                     inheritedFrom[binding.DefinitionId],
                     definition);
             })

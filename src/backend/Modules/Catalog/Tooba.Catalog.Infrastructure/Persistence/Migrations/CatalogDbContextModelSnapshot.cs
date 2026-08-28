@@ -246,9 +246,21 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("display_order");
 
-                    b.Property<bool?>("IsRequiredOverride")
+                    b.Property<bool>("IsComparable")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_required_override");
+                        .HasColumnName("is_comparable");
+
+                    b.Property<bool>("IsFilterable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_filterable");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<bool>("IsVariantAxis")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_variant_axis");
 
                     b.HasKey("BindingId")
                         .HasName("pk_category_attribute_bindings");

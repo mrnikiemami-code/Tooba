@@ -1,142 +1,107 @@
 # Category Attribute Schema
 
-> **Task:** TB-P07-T007 · **Phase:** P07 Advanced Catalog
-> **Baseline:** Category Workspace (General + Translations) + T004 attribute foundation
+> **Task:** TB-P07-T007 / TB-P07-T007-R1 · **Phase:** P07 Advanced Catalog
+> **Baseline:** Category Workspace + T004 attribute foundation
 
 ## Purpose
 
-Each catalog category has an **effective attribute schema**: the set of product attributes that apply to products in that category, including attributes inherited from ancestor categories and attributes assigned locally.
+Each catalog category has an **effective attribute schema**: product attributes that apply to products in that category, including inherited and local assignments.
 
-This schema later drives:
+## Definition vs Assignment (canonical separation)
 
-- Product Master data entry and validation
-- Variant axis selection (standardized product variants)
-- PLP dynamic facets (T008)
-- Product comparison eligibility
+### AttributeDefinition = intrinsic identity / capability
 
-## Concepts
+Global, Admin-owned. Describes **what** the attribute is:
 
-### AttributeDefinition (global, Admin-owned)
-
-Canonical attribute metadata shared across categories:
-
-| Field | Meaning |
-|-------|---------|
-| `Code` | Stable internal identifier (not shown as primary UI label) |
+| Field | Role |
+|-------|------|
+| `Code` | Stable internal identifier |
 | `ValueKind` | Text, Number, Boolean, Enumeration, Instant |
-| `LocalizedNames` | Translation-backed display names (fa/en/ar) |
-| `IsFilterable` | Eligible for product filters (PLP) |
-| `IsComparable` | Eligible for product comparison |
-| `IsVariantAxisAllowed` | Can be used as a variant axis when creating variants |
-| `IsRequired` | Default required flag (overridable per category binding) |
+| `LocalizedNames` | Translation-backed labels |
+| `IsVariantAxisAllowed` | **Capability:** this type *may* be used as a variant axis |
+| `Unit`, validation bounds, `IsMultivalue`, `IsActive` | Intrinsic metadata |
 
-**Seller cannot create or mutate canonical definitions.**
+Definition-level `IsRequired`, `IsFilterable`, `IsComparable` remain as **legacy defaults** for migrations/bootstrap only. **Effective category behavior is NOT read from these fields after T007-R1.**
 
-Backend path: `CatalogAttributeDefinition` · API `/v1/admin/catalog/attribute-definitions`
+### CategoryAttributeAssignment = category-specific behavior
 
-### CategoryAttributeAssignment (local binding)
+`CatalogCategoryAttributeBinding` per category:
 
-Links a definition to a specific category:
+| Field | Role |
+|-------|------|
+| `IsRequired` | Required for products in this category |
+| `IsFilterable` | Eligible for PLP filters in this category (T008 consumes) |
+| `IsVariantAxis` | **Enabled here** as variant axis (requires `IsVariantAxisAllowed`) |
+| `IsComparable` | Eligible for comparison in this category |
+| `DisplayOrder` | Order among bindings owned by this category |
 
-| Field | Meaning |
-|-------|---------|
-| `CategoryId` | Category that owns this binding |
-| `DefinitionId` | Attribute definition |
-| `DisplayOrder` | Sort order among **local** bindings |
-| `IsRequiredOverride` | Optional override of definition-level required |
+**Allowed vs enabled:**
 
-Backend path: `CatalogCategoryAttributeBinding` · API bind/unbind/reorder on category schema endpoints.
+- `AttributeDefinition.IsVariantAxisAllowed` → *may* be variant axis
+- `CategoryAttributeAssignment.IsVariantAxis` → *is* variant axis **in this category**
 
-**Removing a binding from a child does not delete the global definition.**
+Same pattern for filter/compare/required: resolved at **assignment** level.
 
-### Effective schema (resolved, not copied)
+## Effective schema
 
-`CatalogCategorySchemaResolver` walks ancestry root → leaf, merging bindings. Child binding on the same `DefinitionId` overrides parent. No physical copy into every descendant.
+`CatalogCategorySchemaResolver` walks ancestry root → leaf. Nearest binding for each `DefinitionId` wins. No physical copy to descendants.
 
-Each effective row includes:
+Effective row exposes:
 
-- Merged flags (`IsRequired`, filter/compare/variant from definition)
-- `InheritedFromCategoryId` — source category of the winning binding
+- `IsRequired`, `IsFilterable`, `IsVariantAxis`, `IsComparable` from winning binding
+- `IsVariantAxisAllowed` from definition (capability)
+- `InheritedFromCategoryId` — source category of winning binding
 
-**Local vs inherited in Admin UI:**
+**Precedence:** child/local binding overrides parent for the same `DefinitionId`.
 
-- `InheritedFromCategoryId === currentCategoryId` → **local**
-- otherwise → **inherited** (show source category name from tree)
+**Local vs inherited UI:**
 
-## Admin UX (Category Workspace → ویژگی‌ها)
+- `InheritedFromCategoryId === currentCategoryId` → local assignment
+- otherwise → inherited (show source category name)
 
-### VIEW mode
+**Child override:** create a local binding on the child with the same `DefinitionId` and different flags (`تنظیم برای این دسته` in Admin UI).
 
-- Section **ویژگی‌های ارث‌برده‌شده** with source category name
-- Section **ویژگی‌های این دسته**
-- Badges: الزامی، فیلتر، تنوع، مقایسه
-- No raw GUIDs in primary UI
+## Migration (T007-R1)
 
-### EDIT mode
+Migration `AddCategoryAttributeBindingBehavior` copies prior effective behavior into bindings:
 
-- **افزودن ویژگی** — searchable list of existing definitions; duplicate effective attributes prevented
-- **ایجاد ویژگی جدید** — name, value type, multivalue, enum options, human flag labels; code auto-generated (advanced override optional)
-- Reorder **local** assignments only (↑/↓)
-- Remove **local** assignment only (inherited rows are read-only in child)
-
-User-facing flag labels:
-
-| Internal | Persian label |
-|----------|----------------|
-| Required | برای ثبت محصول الزامی است |
-| Filterable | نمایش در فیلتر محصولات |
-| Variant axis | برای ساخت تنوع محصول |
-| Comparable | نمایش در مقایسه محصولات |
-
-### Override policy (current)
-
-- **Required:** assignment-level override via `IsRequiredOverride` on bind
-- **Filter / compare / variant eligibility:** definition-level in current architecture (T004). Per-category override is documented as a future extension if needed.
-
-## Product Master handoff (future)
-
-```
-Category selected
-  → GET effective category attribute schema
-  → Product Master editor renders typed fields
-  → Required validation from effective schema
-  → Variant-axis attributes → standardized Product Variants
+```sql
+is_required = COALESCE(is_required_override, definition.is_required)
+is_filterable = definition.is_filterable
+is_comparable = definition.is_comparable
+is_variant_axis = definition.is_variant_axis
 ```
 
-Product != Offer. Attribute values live on Product; pricing/stock remain on Offer.
+Then drops `is_required_override`. Existing effective behavior is preserved.
 
-## Facet handoff (T008)
+## Admin UX (ویژگی‌ها tab)
 
-T007 establishes **filter eligibility** (`IsFilterable`) and typed attributes.
+- VIEW: inherited + local sections, badges from **effective** flags
+- EDIT: add/create with per-category flags on bind; **تنظیم رفتار** for local; **تنظیم برای این دسته** for inherited override
+- Create definition: intrinsic type/capability only; assignment flags applied on bind to current category
+- No raw GUIDs; Persian user-facing labels
 
-T008 owns facet presentation: checkbox, range, color swatch, order, collapsed state, count behavior.
-
-## API summary
+## API
 
 | Operation | Endpoint |
 |-----------|----------|
-| List definitions | `GET /v1/admin/catalog/attribute-definitions` |
-| Create definition | `POST /v1/admin/catalog/attribute-definitions` |
-| Update definition metadata | `PATCH /v1/admin/catalog/attribute-definitions/{id}` |
-| Effective schema | `GET /v1/admin/catalog/categories/{id}/attribute-schema/effective` |
-| Bind | `POST .../categories/{id}/attribute-schema/bindings` |
-| Unbind | `DELETE .../bindings/{definitionId}` |
+| Effective schema | `GET .../categories/{id}/attribute-schema/effective` |
+| Bind (with flags) | `POST .../bindings` |
+| Update local assignment | `PATCH .../bindings/{definitionId}` |
+| Unbind local | `DELETE .../bindings/{definitionId}` |
 | Reorder local | `PUT .../bindings/order` |
 
-## Frontend integration
+## Handoffs
 
-- Workspace tab: `src/frontend/app/admin/category-attributes-panel.tsx`
-- Wired in: `category-admin-screen.tsx` (`attributes` tab, VIEW/EDIT)
-- API client: `catalog-attribute-api.ts`
-- Legacy standalone screens remain for dev (`CategorySchemaScreen`, `AttributeDefinitionsScreen`)
+**T008 Facets:** consume category-specific `IsFilterable` from effective schema.
 
-## Deletion policy
+**Product Master:** consume category-specific `IsRequired`, `IsVariantAxis`.
 
-- **Unbind** from category: removes local assignment only
-- **Hard delete** of shared `AttributeDefinition`: not exposed in workspace; must be governed separately if used elsewhere
+**Comparison:** consume category-specific `IsComparable`.
+
+Product != Offer. Catalog owns schema; Seller cannot define canonical definitions.
 
 ## Locks
 
-- `AppCategoryTree` — USER-APPROVED, do not redesign
-- No raw `AgGridReact`; use `AppDataGrid` only if a grid is needed
-- Public category URL: `/{locale}/category/{localizedSlug}` (no CategoryId suffix)
+- `AppCategoryTree` USER-APPROVED — do not redesign
+- Public URL: `/{locale}/category/{localizedSlug}`

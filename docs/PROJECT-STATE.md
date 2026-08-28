@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T007
+TB-P07-T007-R1
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T007 — Category Attributes schema tab (USER_VISUAL_ACCEPTED=NO)
+TB-P07-T007-R1 — Category assignment behavior repair (USER_VISUAL_ACCEPTED=NO)
 ```
 
 Current Gate:

@@ -123,15 +123,36 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
             displayOrder: 5, validationMin: 4m, validationMax: 10m, validationMaxLength: null, isActive: true,
             CancellationToken.None);
 
-        await dirA.BindCategoryAttributeAsync(parent.CategoryId, colorId, 10, null, CancellationToken.None);
-        await dirA.BindCategoryAttributeAsync(parent.CategoryId, screenId, 20, false, CancellationToken.None);
-        await dirA.BindCategoryAttributeAsync(child.CategoryId, screenId, 1, true, CancellationToken.None);
-        await dirA.BindCategoryAttributeAsync(child.CategoryId, storageId, 2, null, CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(
+            parent.CategoryId,
+            colorId,
+            10,
+            new CategoryAttributeAssignmentFlags(false, true, true, false),
+            CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(
+            parent.CategoryId,
+            screenId,
+            20,
+            new CategoryAttributeAssignmentFlags(false, true, false, true),
+            CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(
+            child.CategoryId,
+            screenId,
+            1,
+            new CategoryAttributeAssignmentFlags(true, false, false, false),
+            CancellationToken.None);
+        await dirA.BindCategoryAttributeAsync(
+            child.CategoryId,
+            storageId,
+            2,
+            new CategoryAttributeAssignmentFlags(false, true, true, false),
+            CancellationToken.None);
 
         var effective = await dirA.GetEffectiveCategorySchemaAsync(child.CategoryId, CancellationToken.None);
         Assert.Equal(3, effective.Count);
         Assert.Equal(screenId, effective[0].DefinitionId);
-        Assert.True(effective[0].IsRequired); // 3 child override required
+        Assert.True(effective[0].IsRequired); // child override required
+        Assert.False(effective[0].IsFilterable);
         Assert.Equal(child.CategoryId, effective[0].InheritedFromCategoryId);
         Assert.Contains(effective, e => e.DefinitionId == colorId && e.InheritedFromCategoryId == parent.CategoryId);
         Assert.Contains(effective, e => e.DefinitionId == storageId);
@@ -216,6 +237,88 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         Assert.Null(await dirB.FindProductAsync(product.ProductId, CancellationToken.None));
         Assert.Null(await dirA.FindProductAsync(otherTenantProduct.ProductId, CancellationToken.None));
         Assert.Empty(await dirB.ListAttributeDefinitionsAsync(CancellationToken.None));
+    }
+
+    [SkippableFact]
+    public async Task Category_assignment_flags_are_per_category_not_global()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-per-cat-flags", "tenant-per-cat-flags"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var catA = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "پوشاک" }, CancellationToken.None);
+        var catB = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
+        var brandId = await dir.CreateAttributeDefinitionAsync(
+            "brand",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "برند" },
+            CancellationToken.None);
+
+        await dir.BindCategoryAttributeAsync(
+            catA.CategoryId,
+            brandId,
+            0,
+            new CategoryAttributeAssignmentFlags(false, true, false, false),
+            CancellationToken.None);
+        await dir.BindCategoryAttributeAsync(
+            catB.CategoryId,
+            brandId,
+            0,
+            new CategoryAttributeAssignmentFlags(false, false, true, true),
+            CancellationToken.None);
+
+        var schemaA = await dir.GetEffectiveCategorySchemaAsync(catA.CategoryId, CancellationToken.None);
+        var schemaB = await dir.GetEffectiveCategorySchemaAsync(catB.CategoryId, CancellationToken.None);
+        var rowA = Assert.Single(schemaA);
+        var rowB = Assert.Single(schemaB);
+        Assert.True(rowA.IsFilterable);
+        Assert.False(rowA.IsVariantAxis);
+        Assert.False(rowB.IsFilterable);
+        Assert.True(rowB.IsVariantAxis);
+        Assert.True(rowB.IsComparable);
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dir.BindCategoryAttributeAsync(
+                catB.CategoryId,
+                brandId,
+                1,
+                new CategoryAttributeAssignmentFlags(false, false, true, false),
+                CancellationToken.None));
+    }
+
+    [SkippableFact]
+    public async Task Variant_axis_requires_global_capability_even_when_assignment_requests_it()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-variant-cap", "tenant-variant-cap"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var category = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var weightId = await dir.CreateAttributeDefinitionAsync(
+            "weight",
+            CatalogAttributeValueKind.Number,
+            false,
+            new Dictionary<string, string> { ["fa-IR"] = "وزن" },
+            CancellationToken.None);
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            dir.BindCategoryAttributeAsync(
+                category.CategoryId,
+                weightId,
+                0,
+                new CategoryAttributeAssignmentFlags(false, false, true, false),
+                CancellationToken.None));
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

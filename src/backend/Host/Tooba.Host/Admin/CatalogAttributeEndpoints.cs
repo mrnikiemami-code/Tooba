@@ -25,6 +25,7 @@ public static class CatalogAttributeEndpoints
         var categories = app.MapGroup("/v1/admin/catalog/categories/{categoryId:guid}/attribute-schema");
         categories.MapGet("/effective", GetEffectiveSchemaAsync);
         categories.MapPost("/bindings", BindAsync);
+        categories.MapPatch("/bindings/{definitionId:guid}", UpdateBindingAsync);
         categories.MapDelete("/bindings/{definitionId:guid}", UnbindAsync);
         categories.MapPut("/bindings/order", ReorderBindingsAsync);
 
@@ -247,9 +248,50 @@ public static class CatalogAttributeEndpoints
                 categoryId,
                 body.DefinitionId,
                 body.DisplayOrder,
-                body.IsRequiredOverride,
+                new CategoryAttributeAssignmentFlags(
+                    body.IsRequired,
+                    body.IsFilterable,
+                    body.IsVariantAxis,
+                    body.IsComparable),
                 cancellationToken);
             return Results.Json(new { ok = true }, statusCode: StatusCodes.Status201Created);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(new { title = ex.Message, errorCode = "catalog.schema.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    private static async Task<IResult> UpdateBindingAsync(
+        Guid categoryId,
+        Guid definitionId,
+        UpdateCategoryAttributeBindingRequest body,
+        ICatalogDirectory catalog,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            await catalog.UpdateCategoryAttributeBindingAsync(
+                categoryId,
+                definitionId,
+                new CategoryAttributeAssignmentFlags(
+                    body.IsRequired,
+                    body.IsFilterable,
+                    body.IsVariantAxis,
+                    body.IsComparable),
+                cancellationToken);
+            return Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {
@@ -468,7 +510,20 @@ public sealed record UpdateAttributeDefinitionRequest(
 public sealed record AddAttributeOptionRequest(string Code, Dictionary<string, string>? LocalizedNames);
 
 /// <summary>بدنهٔ پیوند schema رده.</summary>
-public sealed record BindCategoryAttributeRequest(Guid DefinitionId, int DisplayOrder, bool? IsRequiredOverride);
+public sealed record BindCategoryAttributeRequest(
+    Guid DefinitionId,
+    int DisplayOrder,
+    bool IsRequired,
+    bool IsFilterable,
+    bool IsVariantAxis,
+    bool IsComparable);
+
+/// <summary>بدنهٔ به‌روزرسانی assignment محلی.</summary>
+public sealed record UpdateCategoryAttributeBindingRequest(
+    bool IsRequired,
+    bool IsFilterable,
+    bool IsVariantAxis,
+    bool IsComparable);
 
 /// <summary>بدنهٔ ترتیب پیوندها.</summary>
 public sealed record ReorderCategoryBindingsRequest(List<Guid>? OrderedDefinitionIds);

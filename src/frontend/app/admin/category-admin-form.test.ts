@@ -243,6 +243,16 @@ test("AppCategoryTree file untouched by T006 workspace work", () => {
   assert.match(tree, /direction/);
 });
 
+test("Attributes tab: per-category assignment flags and customize inherited", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-attributes-panel.tsx"), "utf8");
+  assert.match(panel, /updateCategoryAttributeBinding/);
+  assert.match(panel, /attr-customize-inherited-/);
+  assert.match(panel, /تنظیم برای این دسته/);
+  assert.match(panel, /category-attributes-configure-dialog/);
+  assert.match(panel, /isVariantAxis/);
+  assert.equal(panel.includes("updateAttributeDefinition"), false);
+});
+
 test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
   const panelPath = path.join(root, "app/admin/category-attributes-panel.tsx");

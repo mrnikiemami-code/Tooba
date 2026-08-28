@@ -15,6 +15,7 @@ function entry(
   return {
     valueKind: "Text",
     isVariantAxisAllowed: false,
+    isVariantAxis: false,
     unit: null,
     isRequired: false,
     isFilterable: false,

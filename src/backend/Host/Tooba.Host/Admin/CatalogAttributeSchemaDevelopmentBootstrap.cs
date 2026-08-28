@@ -98,10 +98,10 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
             names: new Dictionary<string, string> { ["fa-IR"] = "اندازه صفحه", ["en-US"] = "Screen Size" },
             meta: ("inch", false, true, true, false, 40, 4m, 10m, null, true));
 
-        await EnsureBoundAsync(catalog, db, mobile, colorId, 10, null);
-        await EnsureBoundAsync(catalog, db, mobile, storageId, 20, null);
-        await EnsureBoundAsync(catalog, db, mobile, ramId, 30, null);
-        await EnsureBoundAsync(catalog, db, mobile, screenId, 40, true);
+        await EnsureBoundAsync(catalog, db, mobile, colorId, 10, new CategoryAttributeAssignmentFlags(false, true, true, false));
+        await EnsureBoundAsync(catalog, db, mobile, storageId, 20, new CategoryAttributeAssignmentFlags(false, true, true, false));
+        await EnsureBoundAsync(catalog, db, mobile, ramId, 30, new CategoryAttributeAssignmentFlags(false, true, false, true));
+        await EnsureBoundAsync(catalog, db, mobile, screenId, 40, new CategoryAttributeAssignmentFlags(true, true, false, true));
 
         var black = await EnsureOptionAsync(catalog, db, colorId, "black", new Dictionary<string, string> { ["fa-IR"] = "مشکی", ["en-US"] = "Black" });
         var blue = await EnsureOptionAsync(catalog, db, colorId, "blue", new Dictionary<string, string> { ["fa-IR"] = "آبی", ["en-US"] = "Blue" });
@@ -308,14 +308,14 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         Guid categoryId,
         Guid definitionId,
         int displayOrder,
-        bool? requiredOverride)
+        CategoryAttributeAssignmentFlags flags)
     {
         if (await db.CategoryAttributeBindings.AnyAsync(b => b.CategoryId == categoryId && b.DefinitionId == definitionId))
         {
             return;
         }
 
-        await catalog.BindCategoryAttributeAsync(categoryId, definitionId, displayOrder, requiredOverride, CancellationToken.None);
+        await catalog.BindCategoryAttributeAsync(categoryId, definitionId, displayOrder, flags, CancellationToken.None);
     }
 
     private static async Task<Guid> EnsureOptionAsync(

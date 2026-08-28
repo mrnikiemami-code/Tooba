@@ -501,6 +501,10 @@ export function CategorySchemaScreen() {
     const result = await bindCategoryAttribute(categoryId.trim(), {
       definitionId: bindDefId.trim(),
       displayOrder: Number(bindOrder) || 0,
+      isRequired: false,
+      isFilterable: false,
+      isVariantAxis: false,
+      isComparable: false,
     });
     setBusy(false);
     if (result.state !== "ok") {
