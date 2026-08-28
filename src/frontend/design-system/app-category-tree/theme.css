@@ -1,0 +1,428 @@
+/**
+ * پوستهٔ بصری Tooba برای AppCategoryTree — Ant پیش‌فرض را خنثی می‌کند.
+ */
+
+.app-category-tree {
+  --act-primary: #2563eb;
+  --act-border: #e5e7eb;
+  --act-surface: #ffffff;
+  --act-muted: #6b7280;
+  --act-hover: #f8fafc;
+  --act-selected: #eff6ff;
+  --act-danger: #dc2626;
+  --act-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--act-surface);
+  border: 1px solid var(--act-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.app-category-tree__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--act-border);
+}
+
+.app-category-tree__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.app-category-tree__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.app-category-tree__search {
+  position: relative;
+}
+
+.app-category-tree__search-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--act-border);
+  border-radius: var(--act-radius);
+  background: #f9fafb;
+  padding-inline: 2.5rem 2.75rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-category-tree__search-input:focus {
+  border-color: var(--act-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: #fff;
+}
+
+.app-category-tree__search-icon {
+  position: absolute;
+  inset-inline-start: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--act-muted);
+  pointer-events: none;
+}
+
+.app-category-tree__search-clear {
+  position: absolute;
+  inset-inline-end: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--act-muted);
+  cursor: pointer;
+}
+
+.app-category-tree__search-clear:hover,
+.app-category-tree__search-clear:focus-visible {
+  color: #0f172a;
+  background: #eef2ff;
+  outline: none;
+}
+
+.app-category-tree__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: var(--act-radius);
+  background: var(--act-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.app-category-tree__create:hover {
+  filter: brightness(0.96);
+}
+
+.app-category-tree__create:focus-visible {
+  outline: 2px solid var(--act-primary);
+  outline-offset: 2px;
+}
+
+.app-category-tree__body {
+  flex: 1;
+  min-height: 180px;
+  overflow: auto;
+  padding: 0.5rem 0.35rem 0.75rem;
+}
+
+.app-category-tree__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 220px;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--act-muted);
+  font-size: 0.875rem;
+}
+
+.app-category-tree__state strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.app-category-tree__state-error {
+  color: var(--act-danger);
+}
+
+.app-category-tree__retry {
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid var(--act-border);
+  border-radius: var(--act-radius);
+  background: #fff;
+  cursor: pointer;
+}
+
+.app-category-tree__retry:focus-visible {
+  outline: 2px solid var(--act-primary);
+  outline-offset: 2px;
+}
+
+/* Ant Tree skin overrides */
+.app-category-tree .ant-tree {
+  background: transparent;
+  color: #0f172a;
+  font-size: 0.875rem;
+}
+
+.app-category-tree .ant-tree .ant-tree-treenode {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border-radius: 8px;
+}
+
+.app-category-tree .ant-tree .ant-tree-treenode:hover {
+  background: var(--act-hover);
+}
+
+.app-category-tree .ant-tree .ant-tree-treenode-selected {
+  background: var(--act-selected);
+}
+
+.app-category-tree .ant-tree .ant-tree-node-content-wrapper {
+  flex: 1;
+  min-width: 0;
+  padding: 0 !important;
+  background: transparent !important;
+  cursor: default;
+}
+
+.app-category-tree .ant-tree .ant-tree-node-content-wrapper:hover,
+.app-category-tree .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background: transparent !important;
+}
+
+.app-category-tree .ant-tree .ant-tree-switcher {
+  display: none !important;
+  width: 0 !important;
+}
+
+.app-category-tree .ant-tree .ant-tree-indent-unit {
+  width: 16px;
+}
+
+.app-category-tree .ant-tree-draggable-icon {
+  width: auto;
+  opacity: 1;
+  cursor: grab;
+}
+
+.app-category-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 44px;
+  padding-inline: 0.35rem 0.5rem;
+}
+
+.app-category-tree-node__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.app-category-tree-node__chevron:hover,
+.app-category-tree-node__chevron:focus-visible {
+  background: #e2e8f0;
+  color: #0f172a;
+  outline: none;
+}
+
+.app-category-tree-node__chevron[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.app-category-tree-node__chevron-icon {
+  transition: transform 0.15s ease;
+}
+
+.app-category-tree-node__chevron[aria-expanded="true"] .app-category-tree-node__chevron-icon {
+  transform: rotate(90deg);
+}
+
+[dir="rtl"] .app-category-tree-node__chevron-icon {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .app-category-tree-node__chevron[aria-expanded="true"] .app-category-tree-node__chevron-icon {
+  transform: rotate(90deg);
+}
+
+.app-category-tree-node__icon {
+  display: inline-flex;
+  color: #94a3b8;
+  flex: 0 0 auto;
+}
+
+.app-category-tree-node__title {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.app-category-tree-node__title:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.app-category-tree-node__title:focus-visible {
+  outline: 2px solid var(--act-primary);
+  outline-offset: 1px;
+}
+
+.app-category-tree-node__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.app-category-tree-node__mark {
+  background: #fde68a;
+  border-radius: 3px;
+  padding: 0 0.1rem;
+}
+
+.app-category-tree-node__status {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: var(--act-muted);
+  border: 1px solid var(--act-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.app-category-tree-node__status--published {
+  color: #047857;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.app-category-tree-node__status--draft {
+  color: #b45309;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.app-category-tree-node__status--archived {
+  color: #64748b;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.app-category-tree-node__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+
+.app-category-tree-node:hover .app-category-tree-node__actions,
+.app-category-tree-node:focus-within .app-category-tree-node__actions {
+  opacity: 1;
+}
+
+.app-category-tree-node__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.app-category-tree-node__icon-btn:hover,
+.app-category-tree-node__icon-btn:focus-visible {
+  background: #e2e8f0;
+  color: #0f172a;
+  outline: none;
+}
+
+.app-category-tree-node__drag {
+  cursor: grab;
+  color: #94a3b8;
+}
+
+.app-category-tree-node__drag:active {
+  cursor: grabbing;
+}
+
+.app-category-tree .ant-tree-drop-indicator {
+  background: var(--act-primary);
+}
+
+.app-category-tree .ant-tree .ant-tree-treenode-drop-container {
+  outline: 1px dashed var(--act-primary);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.app-category-tree__menu {
+  position: absolute;
+  z-index: 40;
+  min-width: 180px;
+  padding: 0.35rem;
+  border: 1px solid var(--act-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.app-category-tree__menu button {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.app-category-tree__menu button:hover,
+.app-category-tree__menu button:focus-visible {
+  background: var(--act-hover);
+  outline: none;
+}

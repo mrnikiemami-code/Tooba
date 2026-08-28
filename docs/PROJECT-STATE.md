@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T004
+TB-P07-T005
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T004 — Category catalog foundation (translations + route + tree contracts; UI deferred to T005)
+TB-P07-T005 — Category Admin UI (AppCategoryTree + workspace shell; USER_VISUAL_ACCEPTED=NO)
 ```
 
 Current Gate:
@@ -749,4 +749,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P06-T029 = ACCEPTED. COMMERCIAL_READINESS_GATE = PASSED. TB-P07-T001/R1/R2/R3/R4 = SUPERSEDED. TB-P07-T001-R5 = AWAITING_ARCHITECT_ACCEPT (Admin+Seller UI/UX polish; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; T001 catalog/variant foundation kept). `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED; not `USER_VISUAL_ACCEPTED`; not `PRODUCT_FULLY_READY`; not `PRODUCTION_GO_LIVE_READY`; not `SELLER_PANEL_COMPLETE`; not `FULL_VARIANT_MATRIX_LIVE`. Evidence: `docs/evidence/TB-P07-T001-R5/`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T004 = ACCEPTED (category foundation). TB-P07-T005 = Category Admin UI shell (`AppCategoryTree` + workspace; `USER_VISUAL_ACCEPTED` = NO). Evidence: `docs/evidence/TB-P07-T005/`. Preview: `http://localhost:3000/fa/admin/catalog/categories`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`.

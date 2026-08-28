@@ -26,6 +26,7 @@ import {
   FileText,
   Tag,
   Tags,
+  FolderTree,
   ListTree,
   X,
 } from "lucide-react";
@@ -65,6 +66,7 @@ const navGroupDefs: NavGroupDef[] = [
     items: [
       { id: "dashboard", labelKey: "dashboard", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
       { id: "products", labelKey: "products", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
+      { id: "catalog-categories", labelKey: "catalogCategories", href: "/admin/catalog/categories", icon: FolderTree, live: true, viewPermission: "product.view" },
       { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
       { id: "category-schema", labelKey: "categorySchema", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
       { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },

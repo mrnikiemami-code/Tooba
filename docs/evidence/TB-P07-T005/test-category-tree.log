@@ -1,0 +1,44 @@
+﻿
+> tooba-web@0.0.1 test:category-tree
+> node --experimental-strip-types --test design-system/app-category-tree/tree-model.test.ts design-system/app-category-tree/app-category-tree.contract.test.ts app/admin/catalog-category-api.test.ts
+
+(node:18436) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-category-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugifyCategoryName mirrors kebab + unicode keep (0.9077ms)
+✔ mapCategoryTreeNode reads mixed casing (0.1888ms)
+✔ mapCategoryWorkspace requires categoryId (0.0973ms)
+(node:41620) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-category-tree/app-category-tree.contract.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AppCategoryTree wraps antd Tree without exporting Ant types to pages (1.556ms)
+✔ category admin routes exist under app/admin/catalog/categories (0.1699ms)
+✔ nav includes categories labels (0.2967ms)
+✔ drag handle is separate from title/chevron contract in markup (0.3652ms)
+✔ mobile layout branch uses data-layout and back control (0.2846ms)
+✔ create flow fields stay progressive (no SEO/attrs on create) (0.4798ms)
+✔ API mappers tolerate camel and Pascal payloads (0.4719ms)
+✔ USER_VISUAL_ACCEPTED remains NO in task contract notes (0.2954ms)
+(node:40128) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-category-tree/tree-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ buildCategoryForest nests children by parentId (0.5729ms)
+✔ search filters and keeps ancestors + autoExpand (0.1864ms)
+✔ clear search restores full forest (0.0784ms)
+✔ highlight splits matched segment (0.4499ms)
+✔ self and descendant moves are invalid (0.1162ms)
+✔ isSelfOrDescendant walks parent chain (0.2334ms)
+✔ resolveCategoryDropPlan inside and reorder (0.246ms)
+✔ deep link ancestors and path (0.1582ms)
+✔ translation readiness statuses (0.1568ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.8669

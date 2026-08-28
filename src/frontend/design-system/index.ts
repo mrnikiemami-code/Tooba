@@ -43,5 +43,29 @@ export { DataGrid, createMemorySavedViewStore, enGridMessages, faGridMessages } 
 export type { DataGridProps } from "./data-grid";
 export { AppDataGrid, toHostGridQuery, fromHostGridPage, formatJalaliDate } from "./app-data-grid";
 export type { AppDataGridProps } from "./app-data-grid";
+export {
+  AppCategoryTree,
+  buildCategoryForest,
+  buildCategoryPath,
+  buildParentMap,
+  buildTranslationStatuses,
+  categoryStatusLabel,
+  collectAncestorIds,
+  countDirectChildren,
+  filterCategoryForest,
+  isValidCategoryDrop,
+  resolveCategoryDropPlan,
+  resolveTranslationReadiness,
+  translationReadinessLabel,
+} from "./app-category-tree";
+export type {
+  AppCategoryTreeNode,
+  AppCategoryTreeProps,
+  CategoryDropPosition,
+  CategoryDropRequest,
+  CategoryNodeStatus,
+  LocaleTranslationStatus,
+  TranslationReadiness,
+} from "./app-category-tree";
 export { WorkspaceShell, enWorkspaceMessages, faWorkspaceMessages } from "./workspace";
 export type { WorkspaceShellProps } from "./workspace";
