@@ -1,7 +1,10 @@
 ﻿{
-    "bridgeTaskId":  "6d800950-c681-435e-b100-fbc7a3aa1f5b",
-    "claimedAtUtc":  "2026-08-27T23:02:05.2213306Z",
-    "channelId":  "tooba-main",
-    "status":  "Claimed",
-    "taskId":  "TB-P07-T001-R3"
+  "bridgeTaskId": "6d800950-c681-435e-b100-fbc7a3aa1f5b",
+  "claimedAtUtc": "2026-08-27T23:02:05.2213306Z",
+  "channelId": "tooba-main",
+  "status": "Completed",
+  "taskId": "TB-P07-T001-R3",
+  "resultId": "d852f7fe-f270-4dfe-8168-7d274355c17d",
+  "completedAtUtc": "2026-08-28T00:23:00Z",
+  "headSha": "e8011bdb5be042d166bdd31920446ce3f0370021"
 }
