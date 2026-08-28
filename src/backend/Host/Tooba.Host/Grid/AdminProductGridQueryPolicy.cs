@@ -8,7 +8,7 @@ namespace Tooba.Host.Grid;
 public static class AdminProductGridQueryPolicy
 {
     /// <summary>حداکثر اندازهٔ صفحهٔ مجاز.</summary>
-    public const int MaxPageSize = 100;
+    public const int MaxPageSize = 1000;
 
     /// <summary>اندازهٔ پیش‌فرض صفحه.</summary>
     public const int DefaultPageSize = 20;

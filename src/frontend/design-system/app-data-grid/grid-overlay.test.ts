@@ -6,13 +6,15 @@ import { dirname, join } from "node:path";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
-test("theme avoids unsafe AG Grid structural overrides", () => {
+test("theme uses official AG Grid legacy variables for header and borders", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
-  assert.match(css, /--ag-header-background-color:\s*hsl\(var\(--surface-elevated\)\)/);
-  assert.match(css, /\.app-grid-cell-content/);
+  assert.match(css, /--ag-header-background-color/);
+  assert.match(css, /--ag-header-column-separator-display/);
+  assert.match(css, /--ag-row-border-color/);
+  assert.match(css, /--ag-cell-horizontal-border/);
+  assert.match(css, /\.ag-header-row\.ag-header-row-column/);
+  assert.match(css, /\.ag-theme-tooba \.ag-filter/);
   assert.doesNotMatch(css, /\.ag-cell-wrapper/);
-  assert.doesNotMatch(css, /z-index:\s*var\(--z-grid/);
-  assert.doesNotMatch(css, /isolation:\s*isolate/);
 });
 
 test("AppDataGrid uses app-owned header filters and external filter fields", () => {

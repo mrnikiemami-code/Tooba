@@ -1,4 +1,7 @@
-/** تم AG Grid — فقط توکن‌های بصری؛ بدون override ساختاری داخلی AG Grid. */
+/**
+ * تم AG Grid legacy — متغیرهای رسمی v36 روی .ag-theme-tooba
+ * مرجع: AG Grid Theming v32+ parameter docs (legacy mode)
+ */
 .ag-theme-tooba {
   --ag-font-family: inherit;
   --ag-font-size: 14px;
@@ -6,20 +9,49 @@
   --ag-row-height: 56px;
   --ag-header-height: 48px;
   --ag-cell-horizontal-padding: 12px;
-  --ag-border-color: hsl(var(--border));
-  --ag-secondary-border-color: hsl(var(--border));
+
+  /* surfaces */
   --ag-background-color: hsl(var(--surface-elevated));
   --ag-foreground-color: hsl(var(--foreground));
+  --ag-odd-row-background-color: hsl(var(--surface-elevated));
   --ag-header-background-color: hsl(var(--surface-elevated));
   --ag-header-foreground-color: hsl(var(--foreground));
-  --ag-odd-row-background-color: hsl(var(--surface-elevated));
+  --ag-header-cell-hover-background-color: hsl(var(--secondary) / 0.55);
+  --ag-header-cell-moving-background-color: hsl(var(--secondary) / 0.7);
+
+  /* header separators & resize */
+  --ag-header-column-separator-display: block;
+  --ag-header-column-separator-height: 65%;
+  --ag-header-column-separator-width: 1px;
+  --ag-header-column-separator-color: hsl(var(--border));
+  --ag-header-column-resize-handle-display: block;
+  --ag-header-column-resize-handle-height: 40%;
+  --ag-header-column-resize-handle-width: 2px;
+  --ag-header-column-resize-handle-color: hsl(var(--border));
+
+  /* borders / grid lines */
+  --ag-borders: solid 1px;
+  --ag-border-color: hsl(var(--border));
+  --ag-borders-critical: solid 1px;
+  --ag-critical-border-color: hsl(var(--border));
+  --ag-borders-secondary: solid 1px;
+  --ag-secondary-border-color: hsl(var(--border) / 0.75);
+  --ag-row-border-style: solid;
+  --ag-row-border-width: 1px;
+  --ag-row-border-color: hsl(var(--border) / 0.7);
+  --ag-cell-horizontal-border: solid hsl(var(--border) / 0.55);
+
+  /* interaction */
   --ag-row-hover-color: hsl(var(--secondary) / 0.45);
   --ag-selected-row-background-color: hsl(var(--primary) / 0.1);
   --ag-range-selection-border-color: hsl(var(--primary));
   --ag-input-focus-border-color: hsl(var(--primary));
   --ag-checkbox-checked-color: hsl(var(--primary));
+  --ag-menu-background-color: hsl(var(--surface-elevated));
+  --ag-popup-shadow: 0 8px 24px hsl(var(--foreground) / 0.14);
   --ag-border-radius: var(--radius-ds, 0.5rem);
   --ag-wrapper-border-radius: var(--radius-ds, 0.5rem);
+
   --app-grid-body-height: clamp(560px, calc(100vh - 17rem), 680px);
 }
 
@@ -40,17 +72,9 @@
   box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
 }
 
-.ag-theme-tooba .ag-header,
-.ag-theme-tooba .ag-header-viewport,
-.ag-theme-tooba .ag-header-row,
-.ag-theme-tooba .ag-header-cell,
-.ag-theme-tooba .ag-header-group-cell {
-  background-color: hsl(var(--surface-elevated));
-}
-
-.ag-theme-tooba .ag-header {
-  border-bottom: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
+/* narrow fallback: ensure runtime .ag-header-row.ag-header-row-column is opaque */
+.ag-theme-tooba .ag-header-row.ag-header-row-column {
+  background-color: var(--ag-header-background-color);
 }
 
 .ag-theme-tooba .ag-header-cell-label {
@@ -62,19 +86,26 @@
   line-height: 1.35;
 }
 
-.ag-theme-tooba .ag-header-cell {
-  font-weight: 600;
-}
-
 .ag-theme-tooba .ag-cell:focus,
 .ag-theme-tooba .ag-header-cell:focus {
   outline: 2px solid hsl(var(--primary));
   outline-offset: -2px;
 }
 
-.ag-theme-tooba .ag-row {
-  border-bottom: 1px solid hsl(var(--border) / 0.65);
+/* opaque filter/menu surfaces — no grid bleed */
+.ag-theme-tooba .ag-filter,
+.ag-theme-tooba .ag-menu,
+.ag-theme-tooba .ag-popup-child {
   background-color: hsl(var(--surface-elevated));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-ds, 0.5rem);
+  box-shadow: var(--ag-popup-shadow);
+  min-width: 14rem;
+}
+
+.ag-theme-tooba .ag-filter-apply-panel button {
+  min-height: 2.25rem;
+  border-radius: var(--radius-ds, 0.5rem);
 }
 
 .app-grid-cell-content {

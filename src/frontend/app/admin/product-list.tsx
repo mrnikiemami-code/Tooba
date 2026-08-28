@@ -135,6 +135,7 @@ function buildColumnDefs(
       maxWidth: 80,
       sortable: false,
       filter: false,
+      lockVisible: true,
       pinned: directionPin(),
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
         params.data ? <ProductActionMenu row={params.data} onLifecycle={onLifecycle} /> : null,

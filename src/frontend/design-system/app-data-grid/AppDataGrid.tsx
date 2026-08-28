@@ -6,6 +6,7 @@ import {
   AllCommunityModule,
   ModuleRegistry,
   type ColDef,
+  type ColumnState,
   type FilterChangedEvent,
   type GridApi,
   type GridReadyEvent,
@@ -15,8 +16,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "./theme.css";
 
-import { Drawer } from "../primitives/overlays";
-import { Button, Checkbox } from "../primitives/core";
+import { Button } from "../primitives/core";
 import { moveColumn } from "../data-grid/serialize";
 import type {
   AdvancedFilterExpression,
@@ -38,6 +38,7 @@ import {
 } from "./advanced-filter-expression";
 import { AdvancedFilterBuilder } from "./AdvancedFilterBuilder";
 import { AdvancedFilterDrawer } from "./AdvancedFilterDrawer";
+import { ColumnManagerDrawer } from "./ColumnManagerDrawer";
 import { SavedViewsToolbar } from "./SavedViewsToolbar";
 import {
   agFilterModelForSavedView,
@@ -76,7 +77,7 @@ export interface AppDataGridProps<T extends { id: string }> {
   pageSelectionOnly?: boolean;
 }
 
-const PAGE_SIZES = [10, 20, 50, 100];
+const PAGE_SIZES = [10, 25, 50, 100, 1000];
 const GRID_ROW_HEIGHT = 56;
 const GRID_HEADER_HEIGHT = 48;
 
@@ -116,7 +117,7 @@ export function AppDataGrid<T extends { id: string }>({
     DEFAULT_GRID_QUERY.advancedFilter ?? { conditions: [], connectors: [] },
   );
   const [columnsOpen, setColumnsOpen] = useState(false);
-  const [drawerDragId, setDrawerDragId] = useState<string | null>(null);
+  const [columnManagerState, setColumnManagerState] = useState<ColumnState[]>([]);
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -374,23 +375,30 @@ export function AppDataGrid<T extends { id: string }>({
     });
   }
 
+  function refreshColumnManagerState() {
+    const api = gridApiRef.current;
+    if (!api) return;
+    setColumnManagerState(api.getColumnState());
+  }
+
+  useEffect(() => {
+    if (!columnsOpen) return;
+    refreshColumnManagerState();
+  }, [columnsOpen]);
+
   function clearAllFilters() {
     gridApiRef.current?.setFilterModel(null);
     setSearchInput("");
     setActiveViewId(null);
-    void load({
+    const nextQuery: GridServerQuery = {
       ...queryRef.current,
       page: 1,
       filters: {},
       search: undefined,
       advancedFilter: { conditions: [], connectors: [] },
-    });
-  }
-
-  function columnStateForDrawer() {
-    const api = gridApiRef.current;
-    if (!api) return [];
-    return api.getColumnState().filter((col) => col.colId && col.colId !== "actions");
+    };
+    if (!shouldCommitGridQuery(queryRef.current, nextQuery)) return;
+    void load(nextQuery, { force: true });
   }
 
   function clearFilter(columnId: string) {
@@ -808,79 +816,34 @@ export function AppDataGrid<T extends { id: string }>({
         />
       </AdvancedFilterDrawer>
 
-      <Drawer open={columnsOpen} onClose={() => setColumnsOpen(false)} title={messages.columns}>
-        <div className="flex flex-col gap-1.5">
-          {columnStateForDrawer().map((col, index, cols) => (
-            <div
-              key={col.colId}
-              draggable
-              onDragStart={() => setDrawerDragId(col.colId!)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => {
-                if (!drawerDragId || !gridApiRef.current) return;
-                const order = cols.map((item) => item.colId!);
-                const nextOrder = moveColumn(order, drawerDragId, col.colId!);
-                gridApiRef.current.applyColumnState({ state: nextOrder.map((colId) => ({ colId })), applyOrder: true });
-                setDrawerDragId(null);
-              }}
-              className="flex items-center gap-2 rounded-ds border border-border bg-surface px-2 py-1.5"
-            >
-              <span className="cursor-grab text-muted" aria-label={messages.dragColumn}>
-                ⋮⋮
-              </span>
-              <Checkbox
-                label={columnLabels[col.colId!] ?? col.colId!}
-                checked={!col.hide}
-                onChange={() => {
-                  gridApiRef.current?.applyColumnState({
-                    state: [{ colId: col.colId!, hide: !col.hide }],
-                  });
-                }}
-              />
-              <button
-                type="button"
-                className="text-xs text-muted"
-                aria-label={messages.moveColumnUp}
-                disabled={index === 0}
-                onClick={() => {
-                  if (index === 0 || !gridApiRef.current) return;
-                  const order = cols.map((item) => item.colId!);
-                  gridApiRef.current.applyColumnState({
-                    state: moveColumn(order, col.colId!, order[index - 1]!).map((colId) => ({ colId })),
-                    applyOrder: true,
-                  });
-                }}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="text-xs text-muted"
-                aria-label={messages.moveColumnDown}
-                disabled={index === cols.length - 1}
-                onClick={() => {
-                  if (index >= cols.length - 1 || !gridApiRef.current) return;
-                  const order = cols.map((item) => item.colId!);
-                  gridApiRef.current.applyColumnState({
-                    state: moveColumn(order, col.colId!, order[index + 1]!).map((colId) => ({ colId })),
-                    applyOrder: true,
-                  });
-                }}
-              >
-                ↓
-              </button>
-            </div>
-          ))}
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Button type="button" tone="secondary" onClick={() => setColumnsOpen(false)}>
-              {messages.close}
-            </Button>
-            <Button type="button" tone="ghost" onClick={restoreColumns}>
-              {messages.restoreColumns}
-            </Button>
-          </div>
-        </div>
-      </Drawer>
+      <ColumnManagerDrawer
+        open={columnsOpen}
+        onClose={() => setColumnsOpen(false)}
+        locale={locale}
+        title={messages.columns}
+        searchPlaceholder={messages.columnManagerSearch}
+        dragLabel={messages.dragColumn}
+        closeLabel={messages.close}
+        restoreLabel={messages.restoreColumns}
+        lockedVisibilityLabel={messages.lockedColumnVisibility}
+        columnLabels={columnLabels}
+        columnState={columnManagerState}
+        onReorder={(fromColId, toColId) => {
+          const api = gridApiRef.current;
+          if (!api) return;
+          const order = columnManagerState.map((col) => col.colId!).filter(Boolean);
+          api.applyColumnState({
+            state: moveColumn(order, fromColId, toColId).map((colId) => ({ colId })),
+            applyOrder: true,
+          });
+          refreshColumnManagerState();
+        }}
+        onToggleVisibility={(colId, hide) => {
+          gridApiRef.current?.applyColumnState({ state: [{ colId, hide }] });
+          refreshColumnManagerState();
+        }}
+        onRestore={restoreColumns}
+      />
 
       {error ? (
         <div className="rounded-ds border border-danger/30 bg-danger/5 p-4 text-sm">
@@ -909,9 +872,21 @@ export function AppDataGrid<T extends { id: string }>({
           animateRows
           suppressDragLeaveHidesColumns
           rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }}
+          selectionColumnDef={{
+            headerName: locale === "fa" ? "انتخاب" : "Selection",
+            width: 52,
+            minWidth: 48,
+            maxWidth: 56,
+          }}
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}
           onFilterChanged={onFilterChanged}
+          onColumnVisible={() => {
+            if (columnsOpen) refreshColumnManagerState();
+          }}
+          onColumnMoved={() => {
+            if (columnsOpen) refreshColumnManagerState();
+          }}
           onSelectionChanged={(event) => {
             setSelected(event.api.getSelectedRows());
           }}
