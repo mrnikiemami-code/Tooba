@@ -1,0 +1,226 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T005-R1
+Parent-Task:
+TB-P07-T005
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Category workspace repaired with explicit VIEW/EDIT modes and clean human slug UX. Approved AppCategoryTree visuals untouched. VIEW is default with readable presentation; ویرایش enters EDIT for authorized Admin users; Save/Cancel predictable; General fields wired to T004 APIs; public route preview is /fa/category/{localizedSlug} with no CategoryId suffix; duplicate slug mapped to ordinary Persian message; slug history preserved. useAdminFormMode documented. Validation green. USER_VISUAL_ACCEPTED remains NO.
+
+Scope:
+
+Tree touched:
+no (AppCategoryTree.tsx unchanged; contract test only)
+
+Tree visual changed:
+no
+
+Workspace repaired:
+yes
+
+Slug UX repaired:
+yes
+
+View-Mode:
+
+default mode:
+VIEW
+
+field presentation:
+readable SummaryCard values
+
+editable controls exposed:
+no
+
+Edit action:
+ویرایش when canEdit
+
+view-only behavior:
+no editable controls / no mutation CTAs
+
+Edit-Mode:
+
+enter edit:
+explicit ویرایش
+
+editable fields:
+Name, Slug, Status, SortOrder, IsVisible, Parent (via Move)
+
+Save:
+primary → VIEW + toast + soft tree label refresh
+
+Cancel:
+discard → VIEW
+
+dirty-state:
+confirm on navigate away
+
+post-save mode:
+VIEW
+
+Authorization:
+
+SpiceDB path:
+AdminPanelAccess (backend authoritative)
+
+canView:
+admin panel access
+
+canEdit:
+same Admin mutation gate (UI); backend enforces
+
+backend authoritative:
+yes
+
+Slug:
+
+user-entered value:
+human localized slug only
+
+ID suffix appended:
+no
+
+route preview:
+/fa/category/{slug}
+
+uniqueness:
+(Locale, Slug) preserved
+
+duplicate UX:
+این نامک برای یک دسته‌بندی دیگر استفاده شده است. یک نامک متفاوت انتخاب کنید.
+
+slug history:
+preserved (T004)
+
+redirect behavior:
+preserved
+
+Tree-Preservation:
+
+expanded state:
+preserved
+
+selected node:
+preserved
+
+scroll/context:
+soft refresh
+
+label refresh:
+yes on Name change
+
+API:
+
+frontend-only:
+no
+
+backend touched:
+yes (minimal slug.duplicate error mapping)
+
+endpoints/commands added:
+none new; CatalogCategoryEndpoints conflict mapping refined
+
+gaps:
+none for R1
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0
+
+frontend tests:
+293 passed
+
+frontend build:
+success
+
+backend restore:
+ok
+
+backend build:
+ok
+
+backend full tests:
+Host 317 passed
+
+passed:
+610
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0
+
+new warnings:
+0
+
+git diff --check:
+clean
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088/health — 200
+
+Frontend:
+http://localhost:3000 — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+Category Admin:
+http://localhost:3000/fa/admin/catalog/categories — 200
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+d682d98 fix category workspace view edit modes and clean slug ux [TB-P07-T005-R1]
+
+push:
+ok
+
+final HEAD:
+d682d98639def86969c38dd48091abeec347e496
+
+origin/main:
+d682d98639def86969c38dd48091abeec347e496
+
+synchronized:
+yes
+
+tracked tree:
+clean for R1 scope
+
+unrelated user changes:
+preserved
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED = NO until manual review of VIEW/EDIT + slug preview
+
+Architectural-Concerns:
+none; Tree remains approved baseline
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
