@@ -138,9 +138,45 @@ public interface ICatalogUseCaseGuard
 public interface ICatalogDirectory
 {
     /// <summary>
-    /// رده می‌سازد.
+    /// رده می‌سازد (نام‌ها + auto-slug در ترجمه؛ LocalizedText برای سازگاری عقب‌رو).
     /// </summary>
     Task<CategoryReference> CreateCategoryAsync(Guid? parentCategoryId, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رده با فیلدهای هسته و ترجمه‌های صریح می‌سازد.
+    /// </summary>
+    Task<CategoryReference> CreateCategoryAsync(CategoryCreateRequest request, CancellationToken cancellationToken);
+
+    /// <summary>هستهٔ غیرمحلی رده را به‌روز می‌کند؛ Parent فقط از Move.</summary>
+    Task UpdateCategoryCoreAsync(Guid categoryId, CategoryCoreUpdateRequest request, CancellationToken cancellationToken);
+
+    /// <summary>ترجمهٔ locale را درج/به‌روز می‌کند؛ تغییر slug تاریخچه می‌سازد.</summary>
+    Task<CategoryTranslationDto> UpsertCategoryTranslationAsync(
+        Guid categoryId,
+        CategoryTranslationUpsertRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>رده را زیر والد جدید جابه‌جا می‌کند با جلوگیری از حلقه.</summary>
+    Task MoveCategoryAsync(Guid categoryId, Guid? newParentId, DateTimeOffset? expectedUpdatedAt, CancellationToken cancellationToken);
+
+    /// <summary>ترتیب خواهر/برادرها را بازنویسی می‌کند.</summary>
+    Task ReorderCategorySiblingsAsync(Guid? parentId, IReadOnlyList<Guid> orderedCategoryIds, CancellationToken cancellationToken);
+
+    /// <summary>درخت رده را یک‌باره برای locale می‌خواند (بدون N+1).</summary>
+    Task<IReadOnlyList<CategoryTreeNodeDto>> GetCategoryTreeAsync(string locale, string? search, CancellationToken cancellationToken);
+
+    /// <summary>خلاصهٔ workspace رده برای Admin.</summary>
+    Task<CategoryWorkspaceSummaryDto?> GetCategoryWorkspaceAsync(Guid categoryId, string? locale, CancellationToken cancellationToken);
+
+    /// <summary>مسیر locale+slug را به رده جاری یا redirect تاریخی resolve می‌کند.</summary>
+    Task<CategoryRouteResolveResult?> ResolveCategoryRouteAsync(
+        string locale,
+        string slug,
+        bool forStorefront,
+        CancellationToken cancellationToken);
+
+    /// <summary>رده را آرشیو می‌کند.</summary>
+    Task ArchiveCategoryAsync(Guid categoryId, CancellationToken cancellationToken);
 
     /// <summary>
     /// برند تحریری می‌سازد.
@@ -378,3 +414,80 @@ public sealed record CategoryChangeImpact(
 /// مقدار ویژگی محصول که در schema جدید جایی ندارد.
 /// </summary>
 public sealed record OrphanProductAttributeValue(Guid DefinitionId, string CanonicalValue);
+
+/// <summary>گره درخت Admin Category برای Ant Tree آینده.</summary>
+public sealed record CategoryTreeNodeDto(
+    Guid Id,
+    Guid? ParentId,
+    string Name,
+    string Slug,
+    CatalogPublicationStatus Status,
+    int SortOrder,
+    bool IsVisible,
+    bool HasChildren,
+    int? ProductCount);
+
+/// <summary>ترجمهٔ رده بدون نشت EF.</summary>
+public sealed record CategoryTranslationDto(
+    Guid CategoryId,
+    string Locale,
+    string Name,
+    string Slug,
+    string? ShortDescription,
+    string? Description,
+    string? SeoTitle,
+    string? SeoDescription,
+    string? MetaKeywords,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>خلاصهٔ workspace رده برای Admin.</summary>
+public sealed record CategoryWorkspaceSummaryDto(
+    Guid CategoryId,
+    Guid? ParentCategoryId,
+    CatalogPublicationStatus Status,
+    int SortOrder,
+    bool IsVisible,
+    Guid? ImageMediaAssetId,
+    Guid? IconMediaAssetId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    IReadOnlyList<CategoryTranslationDto> Translations);
+
+/// <summary>نتیجهٔ resolve مسیر رده.</summary>
+public sealed record CategoryRouteResolveResult(
+    Guid CategoryId,
+    string Locale,
+    string CurrentSlug,
+    bool IsRedirect,
+    string CanonicalPath);
+
+/// <summary>درخواست ایجاد رده با ترجمه‌های صریح.</summary>
+public sealed record CategoryCreateRequest(
+    Guid? ParentCategoryId,
+    int SortOrder,
+    bool IsVisible,
+    Guid? ImageMediaAssetId,
+    Guid? IconMediaAssetId,
+    IReadOnlyList<CategoryTranslationUpsertRequest> Translations);
+
+/// <summary>به‌روزرسانی هستهٔ غیرمحلی.</summary>
+public sealed record CategoryCoreUpdateRequest(
+    CatalogPublicationStatus? Status,
+    int? SortOrder,
+    bool? IsVisible,
+    Guid? ImageMediaAssetId,
+    Guid? IconMediaAssetId,
+    bool ClearImage = false,
+    bool ClearIcon = false,
+    DateTimeOffset? ExpectedUpdatedAt = null);
+
+/// <summary>درج/به‌روزرسانی ترجمهٔ یک locale.</summary>
+public sealed record CategoryTranslationUpsertRequest(
+    string Locale,
+    string Name,
+    string Slug,
+    string? ShortDescription = null,
+    string? Description = null,
+    string? SeoTitle = null,
+    string? SeoDescription = null,
+    string? MetaKeywords = null);

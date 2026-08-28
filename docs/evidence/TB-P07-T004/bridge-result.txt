@@ -1,0 +1,255 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T004
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Category catalog foundation delivered without Admin Tree UI. Extended CatalogCategory (SortOrder, IsVisible, media refs, Archive/Move rules). Added CatalogCategoryTranslation + slug history + locale+slug uniqueness. Implemented tree/move/reorder/workspace/route-resolver contracts and Admin/Storefront APIs. Migration 20260828172727_AddCategoryFoundation applied. docs/catalog/CATEGORY-ARCHITECTURE.md written. Host tests 316 + MigrationRunner 4 green. AppDataGrid untouched. Visual contract preserved for T005 AppCategoryTree. Runtimes kept alive.
+
+Visual-Contract:
+
+reference image received:
+yes (docs/evidence/TB-P07-T004/visual-contract-admin-categories.png)
+
+redesign performed:
+no
+
+canonical AppDataGrid preserved:
+yes
+
+future AppCategoryTree direction:
+AppCategoryTree wrapper over Ant Design Tree (T005)
+
+Category:
+
+module:
+Catalog (schema catalog)
+
+entity/path:
+Tooba.Catalog.Domain.CatalogCategory
+
+parent model:
+ParentCategoryId adjacency
+
+status:
+Draft / Published / Archived
+
+sort:
+SortOrder among siblings
+
+cycle prevention:
+CatalogCategoryTreeRules (self + descendant forbidden)
+
+move/reorder:
+MoveCategoryAsync + ReorderCategorySiblingsAsync
+
+Translations:
+
+entity/path:
+CatalogCategoryTranslation
+
+locale:
+normalized BCP-47; one row per CategoryId+Locale
+
+name:
+required
+
+slug:
+required; locale-specific kebab normalize
+
+unique rule:
+unique (Locale, Slug)
+
+SEO fields:
+SeoTitle, SeoDescription, MetaKeywords, ShortDescription, Description
+
+locale columns introduced:
+no (no NameFa/NameEn)
+
+Slug-History:
+
+entity/path:
+CatalogCategorySlugHistory
+
+history creation:
+on slug change via UpsertCategoryTranslationAsync
+
+redirect resolution:
+ResolveCategoryRouteAsync historical match → IsRedirect=true
+
+loop/conflict prevention:
+skip history append if old slug collides with another current slug; current wins on resolve
+
+Routing:
+
+resolver:
+GET /v1/storefront/category-routes/resolve
+
+current slug:
+canonical match IsRedirect=false
+
+historical slug:
+redirect to current
+
+canonical path:
+/{locale}/category/{currentSlug}
+
+hierarchy dependency:
+none (hierarchy != URL identity)
+
+Tree-Contract:
+
+query/API:
+GET /v1/admin/catalog/categories/tree?locale=
+
+node DTO:
+CategoryTreeNodeDto
+
+locale-aware:
+yes
+
+N+1:
+no (bulk load)
+
+search readiness:
+search? keeps ancestor chain
+
+lazy/whole-tree strategy:
+whole-tree in-memory for Admin T005
+
+Future-Extensions:
+
+attributes:
+existing CategoryAttributeBinding / effective schema
+
+inheritance:
+CatalogCategorySchemaResolver kept
+
+facets:
+CategoryFacetConfiguration extension-point type only
+
+variant axes:
+existing product axes; category extension documented
+
+mega menu:
+MegaMenuItem→CategoryId separation; Category does not own menu layout
+
+PLP:
+documented CategoryId → listing/facets flow
+
+Authorization:
+
+SpiceDB:
+AdminPanelAccess.RequireAuthorizedAsync on admin category routes
+
+permissions:
+view/create/edit/move/publish/archive via Admin panel path
+
+Validation:
+
+backend restore:
+ok
+
+backend build:
+0 errors 0 warnings
+
+backend full tests:
+Host 316 passed; MigrationRunner 4 passed
+
+passed:
+320
+
+failed:
+0
+
+skipped:
+0
+
+frontend touched:
+no
+
+frontend typecheck:
+n/a
+
+frontend lint:
+n/a
+
+frontend tests:
+n/a
+
+frontend build:
+n/a
+
+warnings:
+0
+
+new warnings:
+0
+
+git diff --check:
+clean on staged T004 paths
+
+Documentation:
+
+category architecture:
+docs/catalog/CATEGORY-ARCHITECTURE.md
+
+recovery/state docs:
+PROJECT-STATE + TOOBA-RECOVERY-CONTEXT updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088/health — 200
+
+Frontend:
+http://localhost:3000/fa — 200
+
+Shopeiva:
+http://127.0.0.1:3001/ — 200
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+(pending)
+
+push:
+(pending)
+
+final HEAD:
+(pending)
+
+origin/main:
+(pending)
+
+synchronized:
+(pending)
+
+tracked tree:
+(pending)
+
+unrelated user changes:
+preserved (logs/bridge temps/unrelated evidence not committed)
+
+Architectural-Concerns:
+none for foundation scope; T005 owns Ant Tree UI; PLP/facet config tables deferred as typed extension points
+
+Visual-Concerns:
+none; reference mockup locked, no UI built
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

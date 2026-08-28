@@ -1,0 +1,279 @@
+﻿{"Timestamp":"2026-08-28T17:47:01.4603304\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Catalog edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=catalog current=20260828172727_AddCategoryFoundation pendingCount=0 durationMs=968 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Catalog edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=catalog current=20260828172727_AddCategoryFoundation pendingCount=0 durationMs=968 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Catalog","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"catalog","CurrentMigration":"20260828172727_AddCategoryFoundation","PendingCount":0,"DurationMs":968,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:01.8464313\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Offer edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=offer current=20260823082919_InitialOffer pendingCount=0 durationMs=381 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Offer edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=offer current=20260823082919_InitialOffer pendingCount=0 durationMs=381 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Offer","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"offer","CurrentMigration":"20260823082919_InitialOffer","PendingCount":0,"DurationMs":381,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:02.1375136\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Pricing edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=pricing current=20260823085546_InitialPricing pendingCount=0 durationMs=290 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Pricing edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=pricing current=20260823085546_InitialPricing pendingCount=0 durationMs=290 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Pricing","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"pricing","CurrentMigration":"20260823085546_InitialPricing","PendingCount":0,"DurationMs":290,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:02.4124055\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Inventory edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=inventory current=20260827023000_ReturnRestockInbox pendingCount=0 durationMs=274 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Inventory edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=inventory current=20260827023000_ReturnRestockInbox pendingCount=0 durationMs=274 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Inventory","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"inventory","CurrentMigration":"20260827023000_ReturnRestockInbox","PendingCount":0,"DurationMs":274,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:02.6385107\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Tax edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=tax current=20260823190000_InitialTax pendingCount=0 durationMs=226 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Tax edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=tax current=20260823190000_InitialTax pendingCount=0 durationMs=226 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Tax","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"tax","CurrentMigration":"20260823190000_InitialTax","PendingCount":0,"DurationMs":226,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:02.6767503\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Party edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=party current=20260827215300_OrganizationProfileFields pendingCount=0 durationMs=38 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Party edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=party current=20260827215300_OrganizationProfileFields pendingCount=0 durationMs=38 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Party","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"party","CurrentMigration":"20260827215300_OrganizationProfileFields","PendingCount":0,"DurationMs":38,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:02.9291127\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Identity edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=identity current=20260823064756_SessionCredentialLifecycle pendingCount=0 durationMs=252 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Identity edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=identity current=20260823064756_SessionCredentialLifecycle pendingCount=0 durationMs=252 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Identity","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"identity","CurrentMigration":"20260823064756_SessionCredentialLifecycle","PendingCount":0,"DurationMs":252,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:03.1032619\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Cart edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=cart current=20260823100150_InitialCart pendingCount=0 durationMs=174 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Cart edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=cart current=20260823100150_InitialCart pendingCount=0 durationMs=174 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Cart","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"cart","CurrentMigration":"20260823100150_InitialCart","PendingCount":0,"DurationMs":174,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:03.8333025\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Order edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=order current=20260827180000_AddOrderLineCategoryIdSnapshot pendingCount=0 durationMs=729 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Order edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=order current=20260827180000_AddOrderLineCategoryIdSnapshot pendingCount=0 durationMs=729 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Order","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"order","CurrentMigration":"20260827180000_AddOrderLineCategoryIdSnapshot","PendingCount":0,"DurationMs":729,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:04.2147185\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Payment edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=payment current=20260823140000_InitialPayment pendingCount=0 durationMs=381 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Payment edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=payment current=20260823140000_InitialPayment pendingCount=0 durationMs=381 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Payment","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"payment","CurrentMigration":"20260823140000_InitialPayment","PendingCount":0,"DurationMs":381,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:04.5271245\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Fulfillment edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=fulfillment current=20260827010000_InitialFulfillment pendingCount=0 durationMs=312 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Fulfillment edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=fulfillment current=20260827010000_InitialFulfillment pendingCount=0 durationMs=312 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Fulfillment","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"fulfillment","CurrentMigration":"20260827010000_InitialFulfillment","PendingCount":0,"DurationMs":312,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:04.8551580\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Returns edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=returns current=20260827200000_AddRefundDestination pendingCount=0 durationMs=327 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Returns edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=returns current=20260827200000_AddRefundDestination pendingCount=0 durationMs=327 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Returns","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"returns","CurrentMigration":"20260827200000_AddRefundDestination","PendingCount":0,"DurationMs":327,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:05.2282505\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Settlement edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=settlement current=20260827030000_InitialSettlement pendingCount=0 durationMs=372 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Settlement edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=settlement current=20260827030000_InitialSettlement pendingCount=0 durationMs=372 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Settlement","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"settlement","CurrentMigration":"20260827030000_InitialSettlement","PendingCount":0,"DurationMs":372,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:05.6880174\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Support edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=support current=20260827120000_InitialSupport pendingCount=0 durationMs=459 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Support edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=support current=20260827120000_InitialSupport pendingCount=0 durationMs=459 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Support","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"support","CurrentMigration":"20260827120000_InitialSupport","PendingCount":0,"DurationMs":459,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:05.8402105\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Wallet edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=wallet current=20260827180000_InitialWallet pendingCount=0 durationMs=152 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Wallet edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=wallet current=20260827180000_InitialWallet pendingCount=0 durationMs=152 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Wallet","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"wallet","CurrentMigration":"20260827180000_InitialWallet","PendingCount":0,"DurationMs":152,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:06.0660663\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Notification edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=notification current=20260827111240_InitialNotification pendingCount=0 durationMs=225 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Notification edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=notification current=20260827111240_InitialNotification pendingCount=0 durationMs=225 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Notification","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"notification","CurrentMigration":"20260827111240_InitialNotification","PendingCount":0,"DurationMs":225,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:06.3390892\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=AccessControl edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=access_control current=20260827181000_AddSellerCeilingScope pendingCount=0 durationMs=272 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=AccessControl edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=access_control current=20260827181000_AddSellerCeilingScope pendingCount=0 durationMs=272 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"AccessControl","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"access_control","CurrentMigration":"20260827181000_AddSellerCeilingScope","PendingCount":0,"DurationMs":272,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:06.5283295\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Promotion edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=promotion current=20260823210000_InitialPromotion pendingCount=0 durationMs=189 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Promotion edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=promotion current=20260823210000_InitialPromotion pendingCount=0 durationMs=189 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Promotion","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"promotion","CurrentMigration":"20260823210000_InitialPromotion","PendingCount":0,"DurationMs":189,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:06.5478860\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=PlatformProbe edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=platform_probe current=20260823010100_AddPlatformProbeOutbox pendingCount=0 durationMs=19 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=PlatformProbe edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=platform_probe current=20260823010100_AddPlatformProbeOutbox pendingCount=0 durationMs=19 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"PlatformProbe","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"platform_probe","CurrentMigration":"20260823010100_AddPlatformProbeOutbox","PendingCount":0,"DurationMs":19,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:06.8901848\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Reviews edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=reviews current=20260825151244_InitialReviews pendingCount=0 durationMs=342 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Reviews edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=reviews current=20260825151244_InitialReviews pendingCount=0 durationMs=342 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Reviews","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"reviews","CurrentMigration":"20260825151244_InitialReviews","PendingCount":0,"DurationMs":342,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.0842104\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=ProductQnA edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=product_qna current=20260826120000_InitialProductQnA pendingCount=0 durationMs=193 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=ProductQnA edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=product_qna current=20260826120000_InitialProductQnA pendingCount=0 durationMs=193 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"ProductQnA","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"product_qna","CurrentMigration":"20260826120000_InitialProductQnA","PendingCount":0,"DurationMs":193,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.2883053\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=BulkInquiry edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=bulk_inquiry current=20260826120000_InitialBulkInquiry pendingCount=0 durationMs=204 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=BulkInquiry edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=bulk_inquiry current=20260826120000_InitialBulkInquiry pendingCount=0 durationMs=204 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"BulkInquiry","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"bulk_inquiry","CurrentMigration":"20260826120000_InitialBulkInquiry","PendingCount":0,"DurationMs":204,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.3985781\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Wishlist edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=wishlist current=20260825162434_InitialWishlist pendingCount=0 durationMs=110 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Wishlist edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=wishlist current=20260825162434_InitialWishlist pendingCount=0 durationMs=110 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Wishlist","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"wishlist","CurrentMigration":"20260825162434_InitialWishlist","PendingCount":0,"DurationMs":110,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.6084296\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=AddressBook edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=address_book current=20260825171858_InitialAddressBook pendingCount=0 durationMs=209 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=AddressBook edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=address_book current=20260825171858_InitialAddressBook pendingCount=0 durationMs=209 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"AddressBook","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"address_book","CurrentMigration":"20260825171858_InitialAddressBook","PendingCount":0,"DurationMs":209,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.7398756\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=CustomerProfile edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=customer_profile current=20260825225000_InitialCustomerProfile pendingCount=0 durationMs=131 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=CustomerProfile edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=customer_profile current=20260825225000_InitialCustomerProfile pendingCount=0 durationMs=131 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"CustomerProfile","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"customer_profile","CurrentMigration":"20260825225000_InitialCustomerProfile","PendingCount":0,"DurationMs":131,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.8528360\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=UserPreference edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=user_preference current=20260828020000_AddUiPreferences pendingCount=0 durationMs=112 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=UserPreference edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=user_preference current=20260828020000_AddUiPreferences pendingCount=0 durationMs=112 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"UserPreference","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"user_preference","CurrentMigration":"20260828020000_AddUiPreferences","PendingCount":0,"DurationMs":112,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:07.9573206\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=OperatorProfile edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=operator_profile current=20260827215300_InitialOperatorProfile pendingCount=0 durationMs=104 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=OperatorProfile edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=operator_profile current=20260827215300_InitialOperatorProfile pendingCount=0 durationMs=104 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"OperatorProfile","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"operator_profile","CurrentMigration":"20260827215300_InitialOperatorProfile","PendingCount":0,"DurationMs":104,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:08.2722738\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Content edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=content current=20260827043200_InitialContentExpand pendingCount=0 durationMs=314 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Content edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=content current=20260827043200_InitialContentExpand pendingCount=0 durationMs=314 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Content","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"content","CurrentMigration":"20260827043200_InitialContentExpand","PendingCount":0,"DurationMs":314,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:08.7021516\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=PageComposition edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=page_composition current=20260827021507_InitialPageComposition pendingCount=0 durationMs=429 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=PageComposition edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=page_composition current=20260827021507_InitialPageComposition pendingCount=0 durationMs=429 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"PageComposition","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"page_composition","CurrentMigration":"20260827021507_InitialPageComposition","PendingCount":0,"DurationMs":429,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{"Timestamp":"2026-08-28T17:47:09.1428631\u002B00:00","EventId":0,"LogLevel":"Information","Category":"Tooba.MigrationRunner.MigrationOrchestrator","Message":"Migration Apply module=Story edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=story current=20260827080717_AddStoryReviewOwnership pendingCount=0 durationMs=440 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","State":{"Message":"Migration Apply module=Story edition=SingleStore tenantId=store-alpha database=tooba_alpha connectionRef=tenant-alpha schema=story current=20260827080717_AddStoryReviewOwnership pendingCount=0 durationMs=440 result=ok traceId=cb7ffd3f7c7a57d051e6c68a261766a7","Command":"Apply","Module":"Story","Edition":"SingleStore","TenantId":"store-alpha","Database":"tooba_alpha","ConnectionReference":"tenant-alpha","Schema":"story","CurrentMigration":"20260827080717_AddStoryReviewOwnership","PendingCount":0,"DurationMs":440,"Result":"ok","TraceId":"cb7ffd3f7c7a57d051e6c68a261766a7","{OriginalFormat}":"Migration {Command} module={Module} edition={Edition} tenantId={TenantId} database={Database} connectionRef={ConnectionReference} schema={Schema} current={CurrentMigration} pendingCount={PendingCount} durationMs={DurationMs} result={Result} traceId={TraceId}"},"Scopes":[]}
+{
+  "command": "Apply",
+  "edition": "SingleStore",
+  "tenantId": "store-alpha",
+  "database": "tooba_alpha",
+  "connectionReference": "tenant-alpha",
+  "modules": [
+    {
+      "module": "Catalog",
+      "schema": "catalog",
+      "currentMigration": "20260828172727_AddCategoryFoundation",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 968
+    },
+    {
+      "module": "Offer",
+      "schema": "offer",
+      "currentMigration": "20260823082919_InitialOffer",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 381
+    },
+    {
+      "module": "Pricing",
+      "schema": "pricing",
+      "currentMigration": "20260823085546_InitialPricing",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 290
+    },
+    {
+      "module": "Inventory",
+      "schema": "inventory",
+      "currentMigration": "20260827023000_ReturnRestockInbox",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 274
+    },
+    {
+      "module": "Tax",
+      "schema": "tax",
+      "currentMigration": "20260823190000_InitialTax",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 226
+    },
+    {
+      "module": "Party",
+      "schema": "party",
+      "currentMigration": "20260827215300_OrganizationProfileFields",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 38
+    },
+    {
+      "module": "Identity",
+      "schema": "identity",
+      "currentMigration": "20260823064756_SessionCredentialLifecycle",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 252
+    },
+    {
+      "module": "Cart",
+      "schema": "cart",
+      "currentMigration": "20260823100150_InitialCart",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 174
+    },
+    {
+      "module": "Order",
+      "schema": "order",
+      "currentMigration": "20260827180000_AddOrderLineCategoryIdSnapshot",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 729
+    },
+    {
+      "module": "Payment",
+      "schema": "payment",
+      "currentMigration": "20260823140000_InitialPayment",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 381
+    },
+    {
+      "module": "Fulfillment",
+      "schema": "fulfillment",
+      "currentMigration": "20260827010000_InitialFulfillment",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 312
+    },
+    {
+      "module": "Returns",
+      "schema": "returns",
+      "currentMigration": "20260827200000_AddRefundDestination",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 327
+    },
+    {
+      "module": "Settlement",
+      "schema": "settlement",
+      "currentMigration": "20260827030000_InitialSettlement",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 372
+    },
+    {
+      "module": "Support",
+      "schema": "support",
+      "currentMigration": "20260827120000_InitialSupport",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 459
+    },
+    {
+      "module": "Wallet",
+      "schema": "wallet",
+      "currentMigration": "20260827180000_InitialWallet",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 152
+    },
+    {
+      "module": "Notification",
+      "schema": "notification",
+      "currentMigration": "20260827111240_InitialNotification",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 225
+    },
+    {
+      "module": "AccessControl",
+      "schema": "access_control",
+      "currentMigration": "20260827181000_AddSellerCeilingScope",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 272
+    },
+    {
+      "module": "Promotion",
+      "schema": "promotion",
+      "currentMigration": "20260823210000_InitialPromotion",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 189
+    },
+    {
+      "module": "PlatformProbe",
+      "schema": "platform_probe",
+      "currentMigration": "20260823010100_AddPlatformProbeOutbox",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 19
+    },
+    {
+      "module": "Reviews",
+      "schema": "reviews",
+      "currentMigration": "20260825151244_InitialReviews",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 342
+    },
+    {
+      "module": "ProductQnA",
+      "schema": "product_qna",
+      "currentMigration": "20260826120000_InitialProductQnA",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 193
+    },
+    {
+      "module": "BulkInquiry",
+      "schema": "bulk_inquiry",
+      "currentMigration": "20260826120000_InitialBulkInquiry",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 204
+    },
+    {
+      "module": "Wishlist",
+      "schema": "wishlist",
+      "currentMigration": "20260825162434_InitialWishlist",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 110
+    },
+    {
+      "module": "AddressBook",
+      "schema": "address_book",
+      "currentMigration": "20260825171858_InitialAddressBook",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 209
+    },
+    {
+      "module": "CustomerProfile",
+      "schema": "customer_profile",
+      "currentMigration": "20260825225000_InitialCustomerProfile",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 131
+    },
+    {
+      "module": "UserPreference",
+      "schema": "user_preference",
+      "currentMigration": "20260828020000_AddUiPreferences",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 112
+    },
+    {
+      "module": "OperatorProfile",
+      "schema": "operator_profile",
+      "currentMigration": "20260827215300_InitialOperatorProfile",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 104
+    },
+    {
+      "module": "Content",
+      "schema": "content",
+      "currentMigration": "20260827043200_InitialContentExpand",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 314
+    },
+    {
+      "module": "PageComposition",
+      "schema": "page_composition",
+      "currentMigration": "20260827021507_InitialPageComposition",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 429
+    },
+    {
+      "module": "Story",
+      "schema": "story",
+      "currentMigration": "20260827080717_AddStoryReviewOwnership",
+      "pendingMigrations": [],
+      "succeeded": true,
+      "durationMs": 440
+    }
+  ]
+}

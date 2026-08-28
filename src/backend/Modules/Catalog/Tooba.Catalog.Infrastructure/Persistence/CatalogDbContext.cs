@@ -39,6 +39,16 @@ public sealed class CatalogDbContext : DbContext
     public DbSet<CatalogCategory> Categories => Set<CatalogCategory>();
 
     /// <summary>
+    /// ترجمه‌های محلی رده (نام/slug/SEO).
+    /// </summary>
+    public DbSet<CatalogCategoryTranslation> CategoryTranslations => Set<CatalogCategoryTranslation>();
+
+    /// <summary>
+    /// تاریخچهٔ slug محلی برای redirect.
+    /// </summary>
+    public DbSet<CatalogCategorySlugHistory> CategorySlugHistories => Set<CatalogCategorySlugHistory>();
+
+    /// <summary>
     /// برندهای تحریری.
     /// </summary>
     public DbSet<CatalogBrand> Brands => Set<CatalogBrand>();
@@ -104,10 +114,48 @@ public sealed class CatalogDbContext : DbContext
             entity.HasKey(x => x.CategoryId);
             entity.Property(x => x.CategoryId).ValueGeneratedNever();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SortOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsVisible).HasDefaultValue(true);
+            entity.HasIndex(x => new { x.ParentCategoryId, x.SortOrder });
             entity.HasOne<CatalogCategory>()
                 .WithMany()
                 .HasForeignKey(x => x.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogCategoryTranslation>(entity =>
+        {
+            entity.ToTable("category_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.ShortDescription).HasMaxLength(512);
+            entity.Property(x => x.Description).HasMaxLength(4000);
+            entity.Property(x => x.SeoTitle).HasMaxLength(256);
+            entity.Property(x => x.SeoDescription).HasMaxLength(512);
+            entity.Property(x => x.MetaKeywords).HasMaxLength(512);
+            entity.HasIndex(x => new { x.CategoryId, x.Locale }).IsUnique();
+            entity.HasIndex(x => new { x.Locale, x.Slug }).IsUnique();
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CatalogCategorySlugHistory>(entity =>
+        {
+            entity.ToTable("category_slug_histories");
+            entity.HasKey(x => x.HistoryId);
+            entity.Property(x => x.HistoryId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OldSlug).HasMaxLength(160).IsRequired();
+            entity.HasIndex(x => new { x.Locale, x.OldSlug });
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<CatalogBrand>(entity =>

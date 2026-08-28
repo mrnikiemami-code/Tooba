@@ -111,14 +111,36 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         CancellationToken cancellationToken)
     {
         if (categoryIds.Count == 0) return new Dictionary<Guid, string>();
-        var rows = await _db.LocalizedTexts.AsNoTracking()
-            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Category
-                && x.FieldKey == "name" && categoryIds.Contains(x.OwnerId))
+        var ids = categoryIds.Distinct().ToArray();
+        var translations = await _db.CategoryTranslations.AsNoTracking()
+            .Where(x => ids.Contains(x.CategoryId))
             .OrderByDescending(x => x.Locale == "fa-IR")
             .ThenByDescending(x => x.Locale.StartsWith("fa"))
             .ThenBy(x => x.Locale)
             .ToListAsync(cancellationToken);
-        return rows.GroupBy(x => x.OwnerId).ToDictionary(x => x.Key, x => x.First().Value);
+        var fromTranslations = translations
+            .GroupBy(x => x.CategoryId)
+            .ToDictionary(g => g.Key, g => g.First().Name);
+
+        var missing = ids.Where(id => !fromTranslations.ContainsKey(id)).ToArray();
+        if (missing.Length == 0)
+        {
+            return fromTranslations;
+        }
+
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Category
+                && x.FieldKey == "name" && missing.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenByDescending(x => x.Locale.StartsWith("fa"))
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        foreach (var group in rows.GroupBy(x => x.OwnerId))
+        {
+            fromTranslations[group.Key] = group.First().Value;
+        }
+
+        return fromTranslations;
     }
 
     /// <inheritdoc />
@@ -271,19 +293,407 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         IReadOnlyDictionary<string, string> localizedNames,
         CancellationToken cancellationToken)
     {
+        var maxSibling = await _db.Categories
+            .Where(x => x.ParentCategoryId == parentCategoryId)
+            .Select(x => (int?)x.SortOrder)
+            .MaxAsync(cancellationToken);
+        var sortOrder = (maxSibling ?? -1) + 1;
+        var translations = localizedNames
+            .Where(p => !string.IsNullOrWhiteSpace(p.Value))
+            .Select(p => new CategoryTranslationUpsertRequest(
+                p.Key,
+                p.Value,
+                CatalogCategorySlugNormalizer.SlugifyFromName(p.Value)))
+            .ToList();
+        return await CreateCategoryAsync(
+            new CategoryCreateRequest(parentCategoryId, sortOrder, true, null, null, translations),
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryReference> CreateCategoryAsync(
+        CategoryCreateRequest request,
+        CancellationToken cancellationToken)
+    {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        if (parentCategoryId is Guid parent
+        if (request.Translations.Count == 0)
+        {
+            throw new InvalidOperationException("حداقل یک ترجمهٔ محلی برای رده لازم است.");
+        }
+
+        if (request.ParentCategoryId is Guid parent
             && !await _db.Categories.AnyAsync(x => x.CategoryId == parent, cancellationToken))
         {
             throw new InvalidOperationException("ردهٔ والد در Catalog این Tenant وجود ندارد.");
         }
 
         var now = DateTimeOffset.UtcNow;
-        var category = CatalogCategory.Create(parentCategoryId, now);
+        var category = CatalogCategory.Create(
+            request.ParentCategoryId,
+            now,
+            request.SortOrder,
+            request.IsVisible);
+        category.ImageMediaAssetId = request.ImageMediaAssetId;
+        category.IconMediaAssetId = request.IconMediaAssetId;
         _db.Categories.Add(category);
-        AddLocalizedNames(CatalogLocalizedOwnerKind.Category, category.CategoryId, localizedNames);
+
+        var nameDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var t in request.Translations)
+        {
+            await EnsureSlugAvailableAsync(t.Locale, t.Slug, excludeCategoryId: null, cancellationToken);
+            var translation = CatalogCategoryTranslation.Create(
+                category.CategoryId,
+                t.Locale,
+                t.Name,
+                t.Slug,
+                now,
+                t.ShortDescription,
+                t.Description,
+                t.SeoTitle,
+                t.SeoDescription,
+                t.MetaKeywords);
+            _db.CategoryTranslations.Add(translation);
+            nameDict[translation.Locale] = translation.Name;
+        }
+
+        AddLocalizedNames(CatalogLocalizedOwnerKind.Category, category.CategoryId, nameDict);
         await _db.SaveChangesAsync(cancellationToken);
         return new CategoryReference(category.CategoryId, category.ParentCategoryId, category.Status);
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateCategoryCoreAsync(
+        Guid categoryId,
+        CategoryCoreUpdateRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        EnsureExpectedUpdatedAt(category, request.ExpectedUpdatedAt);
+        category.SetCoreFields(
+            request.Status,
+            request.SortOrder,
+            request.IsVisible,
+            request.ImageMediaAssetId,
+            request.IconMediaAssetId,
+            request.ClearImage,
+            request.ClearIcon,
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryTranslationDto> UpsertCategoryTranslationAsync(
+        Guid categoryId,
+        CategoryTranslationUpsertRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
+        {
+            throw new InvalidOperationException("رده در Catalog این Tenant وجود ندارد.");
+        }
+
+        var locale = CatalogCategorySlugNormalizer.NormalizeLocale(request.Locale);
+        var now = DateTimeOffset.UtcNow;
+        var existing = await _db.CategoryTranslations
+            .SingleOrDefaultAsync(x => x.CategoryId == categoryId && x.Locale == locale, cancellationToken);
+
+        if (existing is null)
+        {
+            await EnsureSlugAvailableAsync(locale, request.Slug, excludeCategoryId: null, cancellationToken);
+            var created = CatalogCategoryTranslation.Create(
+                categoryId,
+                locale,
+                request.Name,
+                request.Slug,
+                now,
+                request.ShortDescription,
+                request.Description,
+                request.SeoTitle,
+                request.SeoDescription,
+                request.MetaKeywords);
+            _db.CategoryTranslations.Add(created);
+            await UpsertLocalizedNameAsync(categoryId, locale, created.Name, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            return ToTranslationDto(created);
+        }
+
+        await EnsureSlugAvailableAsync(locale, request.Slug, excludeCategoryId: categoryId, cancellationToken);
+        var previousSlug = existing.Update(
+            request.Name,
+            request.Slug,
+            now,
+            request.ShortDescription,
+            request.Description,
+            request.SeoTitle,
+            request.SeoDescription,
+            request.MetaKeywords);
+        if (previousSlug is not null)
+        {
+            // اگر old slug الان slug جاری رده دیگری است، history ننویس تا resolve همیشه current را ببرد.
+            var collisionWithCurrent = await _db.CategoryTranslations.AsNoTracking().AnyAsync(
+                x => x.Locale == locale
+                    && x.Slug == previousSlug
+                    && x.CategoryId != categoryId,
+                cancellationToken);
+            if (!collisionWithCurrent)
+            {
+                _db.CategorySlugHistories.Add(
+                    CatalogCategorySlugHistory.Create(categoryId, locale, previousSlug, now));
+            }
+        }
+
+        await UpsertLocalizedNameAsync(categoryId, locale, existing.Name, cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        category.UpdatedAt = now;
+        await _db.SaveChangesAsync(cancellationToken);
+        return ToTranslationDto(existing);
+    }
+
+    /// <inheritdoc />
+    public async Task MoveCategoryAsync(
+        Guid categoryId,
+        Guid? newParentId,
+        DateTimeOffset? expectedUpdatedAt,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        EnsureExpectedUpdatedAt(category, expectedUpdatedAt);
+
+        var parentMap = await _db.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        CatalogCategoryTreeRules.ValidateMove(categoryId, newParentId, parentMap);
+
+        var now = DateTimeOffset.UtcNow;
+        category.Move(newParentId, now);
+
+        var maxSibling = await _db.Categories
+            .Where(x => x.ParentCategoryId == newParentId && x.CategoryId != categoryId)
+            .Select(x => (int?)x.SortOrder)
+            .MaxAsync(cancellationToken);
+        category.SortOrder = (maxSibling ?? -1) + 1;
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReorderCategorySiblingsAsync(
+        Guid? parentId,
+        IReadOnlyList<Guid> orderedCategoryIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (orderedCategoryIds.Count == 0)
+        {
+            throw new InvalidOperationException("فهرست ترتیب خواهر/برادر خالی است.");
+        }
+
+        var siblings = await _db.Categories
+            .Where(x => x.ParentCategoryId == parentId)
+            .ToListAsync(cancellationToken);
+        var siblingIds = siblings.Select(x => x.CategoryId).ToHashSet();
+        if (orderedCategoryIds.Count != siblingIds.Count
+            || orderedCategoryIds.Any(id => !siblingIds.Contains(id))
+            || orderedCategoryIds.Distinct().Count() != orderedCategoryIds.Count)
+        {
+            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همهٔ خواهر/برادرهای همان والد را پوشش دهد.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var byId = siblings.ToDictionary(x => x.CategoryId);
+        for (var i = 0; i < orderedCategoryIds.Count; i++)
+        {
+            byId[orderedCategoryIds[i]].SetSortOrder(i, now);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CategoryTreeNodeDto>> GetCategoryTreeAsync(
+        string locale,
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var normalizedLocale = CatalogCategorySlugNormalizer.NormalizeLocale(locale);
+        var categories = await _db.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        if (categories.Count == 0) return [];
+
+        var translations = await _db.CategoryTranslations.AsNoTracking().ToListAsync(cancellationToken);
+        var preferred = translations
+            .GroupBy(t => t.CategoryId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.FirstOrDefault(t => t.Locale == normalizedLocale)
+                    ?? g.OrderByDescending(t => t.Locale == "fa-IR")
+                        .ThenByDescending(t => t.Locale.StartsWith("fa"))
+                        .ThenBy(t => t.Locale)
+                        .First());
+
+        var productCounts = await _db.ProductCategories.AsNoTracking()
+            .GroupBy(x => x.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count, cancellationToken);
+
+        var childCounts = categories
+            .Where(c => c.ParentCategoryId is not null)
+            .GroupBy(c => c.ParentCategoryId!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        IEnumerable<CatalogCategory> filtered = categories;
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var needle = search.Trim();
+            var matchingIds = preferred
+                .Where(p =>
+                    p.Value.Name.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                    || p.Value.Slug.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                    || p.Key.ToString("D").Contains(needle, StringComparison.OrdinalIgnoreCase))
+                .Select(p => p.Key)
+                .ToHashSet();
+
+            // include ancestors so tree remains coherent for Ant Tree
+            var parentById = categories.ToDictionary(c => c.CategoryId, c => c.ParentCategoryId);
+            var keep = new HashSet<Guid>(matchingIds);
+            foreach (var id in matchingIds)
+            {
+                var current = id;
+                while (parentById.TryGetValue(current, out var parent) && parent is Guid p)
+                {
+                    keep.Add(p);
+                    current = p;
+                }
+            }
+
+            filtered = categories.Where(c => keep.Contains(c.CategoryId));
+        }
+
+        return filtered
+            .OrderBy(c => c.ParentCategoryId.HasValue ? 1 : 0)
+            .ThenBy(c => c.SortOrder)
+            .ThenBy(c => c.CategoryId)
+            .Select(c =>
+            {
+                preferred.TryGetValue(c.CategoryId, out var t);
+                return new CategoryTreeNodeDto(
+                    c.CategoryId,
+                    c.ParentCategoryId,
+                    t?.Name ?? "",
+                    t?.Slug ?? "",
+                    c.Status,
+                    c.SortOrder,
+                    c.IsVisible,
+                    childCounts.GetValueOrDefault(c.CategoryId) > 0,
+                    productCounts.GetValueOrDefault(c.CategoryId));
+            })
+            .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryWorkspaceSummaryDto?> GetCategoryWorkspaceAsync(
+        Guid categoryId,
+        string? locale,
+        CancellationToken cancellationToken)
+    {
+        var category = await _db.Categories.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.CategoryId == categoryId, cancellationToken);
+        if (category is null) return null;
+
+        var translations = await _db.CategoryTranslations.AsNoTracking()
+            .Where(x => x.CategoryId == categoryId)
+            .OrderBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(locale))
+        {
+            var normalized = CatalogCategorySlugNormalizer.NormalizeLocale(locale);
+            translations = translations.Where(t => t.Locale == normalized).ToList();
+        }
+
+        return new CategoryWorkspaceSummaryDto(
+            category.CategoryId,
+            category.ParentCategoryId,
+            category.Status,
+            category.SortOrder,
+            category.IsVisible,
+            category.ImageMediaAssetId,
+            category.IconMediaAssetId,
+            category.CreatedAt,
+            category.UpdatedAt,
+            translations.Select(ToTranslationDto).ToList());
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryRouteResolveResult?> ResolveCategoryRouteAsync(
+        string locale,
+        string slug,
+        bool forStorefront,
+        CancellationToken cancellationToken)
+    {
+        var normalizedLocale = CatalogCategorySlugNormalizer.NormalizeLocale(locale);
+        var normalizedSlug = CatalogCategorySlugNormalizer.NormalizeSlug(slug);
+
+        var current = await _db.CategoryTranslations.AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Locale == normalizedLocale && x.Slug == normalizedSlug,
+                cancellationToken);
+        if (current is not null)
+        {
+            var category = await _db.Categories.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.CategoryId == current.CategoryId, cancellationToken);
+            if (category is null) return null;
+            if (forStorefront && !IsStorefrontEligible(category)) return null;
+            return new CategoryRouteResolveResult(
+                category.CategoryId,
+                normalizedLocale,
+                current.Slug,
+                IsRedirect: false,
+                CanonicalPath: BuildCanonicalPath(normalizedLocale, current.Slug));
+        }
+
+        var history = await _db.CategorySlugHistories.AsNoTracking()
+            .Where(x => x.Locale == normalizedLocale && x.OldSlug == normalizedSlug)
+            .OrderByDescending(x => x.ChangedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (history is null) return null;
+
+        // current slug always wins — if history target somehow lost translation, fail closed
+        var live = await _db.CategoryTranslations.AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.CategoryId == history.CategoryId && x.Locale == normalizedLocale,
+                cancellationToken);
+        if (live is null) return null;
+
+        // loop/conflict: if historical slug equals another category's current slug, current already handled above
+        var categoryHist = await _db.Categories.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.CategoryId == history.CategoryId, cancellationToken);
+        if (categoryHist is null) return null;
+        if (forStorefront && !IsStorefrontEligible(categoryHist)) return null;
+
+        return new CategoryRouteResolveResult(
+            categoryHist.CategoryId,
+            normalizedLocale,
+            live.Slug,
+            IsRedirect: true,
+            CanonicalPath: BuildCanonicalPath(normalizedLocale, live.Slug));
+    }
+
+    /// <inheritdoc />
+    public async Task ArchiveCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        category.Archive(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PublishCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        category.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -817,15 +1227,6 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
-    public async Task PublishCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
-    {
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var category = await _db.Categories.SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
-        category.Publish(DateTimeOffset.UtcNow);
-        await _db.SaveChangesAsync(cancellationToken);
-    }
-
-    /// <inheritdoc />
     public async Task PublishBrandAsync(Guid brandId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -980,4 +1381,74 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             _db.LocalizedTexts.Add(CatalogLocalizedText.Create(ownerKind, ownerId, "name", pair.Key, pair.Value));
         }
     }
+
+    private async Task EnsureSlugAvailableAsync(
+        string locale,
+        string slug,
+        Guid? excludeCategoryId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedLocale = CatalogCategorySlugNormalizer.NormalizeLocale(locale);
+        var normalizedSlug = CatalogCategorySlugNormalizer.NormalizeSlug(slug);
+        var conflict = await _db.CategoryTranslations.AsNoTracking().AnyAsync(
+            x => x.Locale == normalizedLocale
+                && x.Slug == normalizedSlug
+                && (excludeCategoryId == null || x.CategoryId != excludeCategoryId),
+            cancellationToken);
+        if (conflict)
+        {
+            throw new InvalidOperationException("slug رده برای این locale تکراری است.");
+        }
+    }
+
+    private async Task UpsertLocalizedNameAsync(
+        Guid categoryId,
+        string locale,
+        string name,
+        CancellationToken cancellationToken)
+    {
+        var existing = await _db.LocalizedTexts.SingleOrDefaultAsync(
+            x => x.OwnerKind == CatalogLocalizedOwnerKind.Category
+                && x.OwnerId == categoryId
+                && x.FieldKey == "name"
+                && x.Locale == locale,
+            cancellationToken);
+        if (existing is null)
+        {
+            _db.LocalizedTexts.Add(
+                CatalogLocalizedText.Create(CatalogLocalizedOwnerKind.Category, categoryId, "name", locale, name));
+        }
+        else
+        {
+            existing.Value = name.Trim();
+        }
+    }
+
+    private static void EnsureExpectedUpdatedAt(CatalogCategory category, DateTimeOffset? expectedUpdatedAt)
+    {
+        if (expectedUpdatedAt is { } expected
+            && category.UpdatedAt != expected)
+        {
+            throw new InvalidOperationException("تعارض همزمانی روی رده؛ UpdatedAt تغییر کرده است.");
+        }
+    }
+
+    private static bool IsStorefrontEligible(CatalogCategory category) =>
+        category.Status == CatalogPublicationStatus.Published && category.IsVisible;
+
+    private static string BuildCanonicalPath(string locale, string slug) =>
+        $"/{locale}/category/{slug}";
+
+    private static CategoryTranslationDto ToTranslationDto(CatalogCategoryTranslation t) =>
+        new(
+            t.CategoryId,
+            t.Locale,
+            t.Name,
+            t.Slug,
+            t.ShortDescription,
+            t.Description,
+            t.SeoTitle,
+            t.SeoDescription,
+            t.MetaKeywords,
+            t.UpdatedAt);
 }

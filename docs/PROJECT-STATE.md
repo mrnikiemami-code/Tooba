@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T002-R6
+TB-P07-T004
 ```
 
 Current Issued Task:
 
 ```text
-NONE (Worker completed TB-P07-T002-R6 — AWAITING_ARCHITECT_ACCEPT; PROFESSIONAL_DATA_GRID focus)
+TB-P07-T004 — Category catalog foundation (translations + route + tree contracts; UI deferred to T005)
 ```
 
 Current Gate:
