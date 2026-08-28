@@ -1,0 +1,188 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R13
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Search draft/applied split with Enter+icon commit (0 requests while typing); Saved View selection stable on filter/sort/layout changes with dirty indicator; switching views preserves active transient filters via resolveViewApplyQuery; removed انتخاب from grid selection header (Column Manager only); polished toolbar icons for clear-all/CSV/Excel.
+
+Search-Draft-Applied:
+
+draft state:
+searchInput
+
+applied state:
+query.search
+
+typing requests:
+0 (updateSearchDraft only)
+
+Enter commit:
+onSearchKeyDown → commitSearch → commitSearchQuery → load once
+
+search icon:
+data-app-grid-search-apply button
+
+duplicate Enter:
+commitSearchQuery returns null
+
+clear search:
+clearAppliedSearch + chip uses query.search
+
+Escape:
+restores draft from applied search
+
+Saved-View-Stability:
+
+selectedViewId:
+activeViewId — not cleared on filter/search/sort/column changes
+
+dirty indicator:
+isSelectedViewDirty + SavedViewsToolbar • تغییر یافته
+
+explicit deselect only:
+restoreSystemDefault, deleteView, initial null
+
+setActiveViewId(null) removed from:
+onExternalFilterApply, commitColumnFilters, applyDraftAdvancedFilter, clearAdvancedCondition, clearAllFilters, clearFilter, scheduleSearch (removed)
+
+View-Switch-Merge:
+
+module:
+saved-view-dirty.ts resolveViewApplyQuery
+
+layout from view:
+column order/visibility/widths, pageSize, sorts
+
+transient preserved when active:
+filters, advancedFilter, search
+
+no transient:
+restore view filters/search
+
+documented:
+docs/evidence/TB-P07-T002-R13/01-saved-view-merge-precedence.md
+
+Selection-Header:
+
+grid headerName:
+"" (empty)
+
+column manager label:
+انتخاب / Selection via column-labels.ts
+
+Toolbar-Polish:
+
+clear all:
+FilterX icon + data-app-grid-toolbar-btn styling
+
+CSV:
+FileDown icon data-testid=app-grid-export-csv
+
+Excel:
+FileSpreadsheet icon data-testid=app-grid-export-xlsx
+
+theme:
+theme.css toolbar btn + search apply button
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (img warning pre-existing)
+
+grid tests:
+66 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+errors:
+0
+
+failed:
+0
+
+skipped:
+0
+
+ag-grid-enterprise:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+search typing:
+0 requests until Enter
+
+saved view dirty:
+change filter while view selected → • تغییر یافته
+
+view switch:
+active filters preserved when switching views
+
+selection header:
+no انتخاب text in grid header
+
+Git:
+
+branch:
+main
+
+commit:
+(pending)
+
+push:
+origin/main
+
+final HEAD:
+(pending)
+
+origin/main:
+(pending)
+
+synchronized:
+(pending)
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually verifies search, saved views, and toolbar polish.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
