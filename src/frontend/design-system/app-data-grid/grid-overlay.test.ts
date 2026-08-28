@@ -9,6 +9,8 @@ const dir = dirname(fileURLToPath(import.meta.url));
 test("theme uses official AG Grid legacy variables for header and borders", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
   assert.match(css, /--ag-header-background-color/);
+  assert.match(css, /--ag-data-background-color/);
+  assert.match(css, /\.ag-grid-pinned-right-cells/);
   assert.match(css, /--ag-header-column-separator-display/);
   assert.match(css, /--ag-row-border-color/);
   assert.match(css, /--ag-cell-horizontal-border/);

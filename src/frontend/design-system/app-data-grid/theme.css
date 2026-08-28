@@ -12,6 +12,7 @@
 
   /* surfaces */
   --ag-background-color: hsl(var(--surface-elevated));
+  --ag-data-background-color: hsl(var(--surface-elevated));
   --ag-foreground-color: hsl(var(--foreground));
   --ag-odd-row-background-color: hsl(var(--surface-elevated));
   --ag-header-background-color: hsl(var(--surface-elevated));
@@ -33,7 +34,8 @@
   --ag-borders: solid 1px;
   --ag-border-color: hsl(var(--border));
   --ag-borders-critical: solid 1px;
-  --ag-critical-border-color: hsl(var(--border));
+  --ag-critical-border-color: hsl(var(--border) / 0.85);
+  --ag-pinned-column-border: solid 1px hsl(var(--border) / 0.85);
   --ag-borders-secondary: solid 1px;
   --ag-secondary-border-color: hsl(var(--border) / 0.75);
   --ag-row-border-style: solid;
@@ -74,6 +76,37 @@
 
 /* narrow fallback: ensure runtime .ag-header-row.ag-header-row-column is opaque */
 .ag-theme-tooba .ag-header-row.ag-header-row-column {
+  background-color: var(--ag-header-background-color);
+}
+
+/*
+ * Pinned column opaque surfaces + boundary (AG Grid v36 .ag-grid-pinned-*-cells)
+ * Official: --ag-data-background-color, --ag-borders-critical; color/border only.
+ */
+.ag-theme-tooba .ag-header-row > .ag-grid-pinned-right-cells,
+.ag-theme-tooba .ag-header-row > .ag-grid-pinned-left-cells {
+  background-color: var(--ag-header-background-color);
+  background-image: linear-gradient(var(--ag-header-background-color), var(--ag-header-background-color));
+}
+
+.ag-theme-tooba .ag-row:not(.ag-header-row) > .ag-grid-pinned-right-cells,
+.ag-theme-tooba .ag-row:not(.ag-header-row) > .ag-grid-pinned-left-cells {
+  background-color: var(--ag-data-background-color);
+  background-image: linear-gradient(var(--ag-data-background-color), var(--ag-data-background-color));
+}
+
+.ag-theme-tooba .ag-cell.ag-cell-first-right-pinned,
+.ag-theme-tooba .ag-cell.ag-cell-last-left-pinned {
+  background-color: var(--ag-data-background-color);
+}
+
+.ag-theme-tooba .ag-header-cell.ag-header-cell-first-right-pinned,
+.ag-theme-tooba .ag-header-cell.ag-header-cell-last-left-pinned {
+  background-color: var(--ag-header-background-color);
+}
+
+.ag-theme-tooba .ag-header-row .ag-grid-pinned-right-cells .ag-grid-container-wrapper,
+.ag-theme-tooba .ag-header-row .ag-grid-pinned-left-cells .ag-grid-container-wrapper {
   background-color: var(--ag-header-background-color);
 }
 
