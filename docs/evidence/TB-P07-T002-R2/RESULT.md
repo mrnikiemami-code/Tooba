@@ -43,7 +43,9 @@ Runtime:
 
 Git:
 - branch: main
-- commit: (at ship)
+- commit: fix wire AG Grid server filters and filter chips [TB-P07-T002-R2]
+- final HEAD: 3cce48637662246c481d46883bc1a3fb075793cf
+- origin/main: 3cce48637662246c481d46883bc1a3fb075793cf
 - push: YES
 - synchronized: YES
 
