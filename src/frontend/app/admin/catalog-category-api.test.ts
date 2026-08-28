@@ -1,14 +1,32 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildStorefrontCategoryRoute,
+  mapCategoryMutationError,
   mapCategoryTreeNode,
   mapCategoryWorkspace,
   slugifyCategoryName,
+  slugLooksLikeIdSuffixed,
+  CATEGORY_SLUG_DUPLICATE_MESSAGE,
 } from "./catalog-category-api.ts";
 
 test("slugifyCategoryName mirrors kebab + unicode keep", () => {
   assert.equal(slugifyCategoryName("Hello World"), "hello-world");
   assert.equal(slugifyCategoryName("  کتاب  خانه  "), "کتاب-خانه");
+  assert.equal(slugifyCategoryName("گوشی موبایل"), "گوشی-موبایل");
+});
+
+test("storefront route never appends category id", () => {
+  assert.equal(buildStorefrontCategoryRoute("fa", "گوشی-موبایل"), "/fa/category/گوشی-موبایل");
+  assert.equal(slugLooksLikeIdSuffixed("گوشی-موبایل"), false);
+  assert.equal(slugLooksLikeIdSuffixed("گوشی-موبایل-01a03826"), true);
+});
+
+test("duplicate slug error maps to Persian message", () => {
+  assert.equal(
+    mapCategoryMutationError({ message: "x (catalog.category.slug.duplicate)" }),
+    CATEGORY_SLUG_DUPLICATE_MESSAGE,
+  );
 });
 
 test("mapCategoryTreeNode reads mixed casing", () => {

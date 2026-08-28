@@ -71,6 +71,14 @@ public sealed class CatalogCategoryFoundationTests : IAsyncLifetime
         Assert.Equal("fa-IR", CatalogCategorySlugNormalizer.NormalizeLocale(" fa-IR "));
     }
 
+    [Fact]
+    public void Slug_normalizer_keeps_persian_letters_without_id_suffix()
+    {
+        Assert.Equal("گوشی-موبایل", CatalogCategorySlugNormalizer.NormalizeSlug("گوشی موبایل"));
+        Assert.Equal("گوشی-موبایل", CatalogCategorySlugNormalizer.SlugifyFromName("گوشی موبایل"));
+        Assert.DoesNotContain("01a03826", CatalogCategorySlugNormalizer.NormalizeSlug("گوشی موبایل"));
+    }
+
     [SkippableFact]
     public async Task Category_foundation_tree_translation_route_and_move_rules()
     {

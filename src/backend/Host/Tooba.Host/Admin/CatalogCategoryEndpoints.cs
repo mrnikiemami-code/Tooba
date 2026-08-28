@@ -59,7 +59,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -143,7 +143,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -182,7 +182,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -222,7 +222,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -250,7 +250,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -280,7 +280,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -307,7 +307,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -334,7 +334,7 @@ public static class CatalogCategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryInvalid(ex);
         }
     }
 
@@ -363,6 +363,26 @@ public static class CatalogCategoryEndpoints
         {
             return Results.Json(new { title = ex.Message, errorCode = "catalog.category.route.invalid" }, statusCode: StatusCodes.Status400BadRequest);
         }
+    }
+
+    private static IResult MapCategoryInvalid(InvalidOperationException ex)
+    {
+        // کوچک‌ترین نگاشت برای تعارض نامک تکراری — بدون پسوند CategoryId.
+        if (ex.Message.Contains("slug", StringComparison.OrdinalIgnoreCase)
+            && ex.Message.Contains("تکراری", StringComparison.Ordinal))
+        {
+            return Results.Json(
+                new
+                {
+                    title = "این نامک برای یک دسته‌بندی دیگر استفاده شده است. یک نامک متفاوت انتخاب کنید.",
+                    errorCode = "catalog.category.slug.duplicate",
+                },
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        return Results.Json(
+            new { title = ex.Message, errorCode = "catalog.category.invalid" },
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>

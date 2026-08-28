@@ -69,3 +69,18 @@ export type {
 } from "./app-category-tree";
 export { WorkspaceShell, enWorkspaceMessages, faWorkspaceMessages } from "./workspace";
 export type { WorkspaceShellProps } from "./workspace";
+export {
+  cancelAdminEditMode,
+  clearAdminFormDirty,
+  completeAdminSave,
+  createAdminFormModeState,
+  enterAdminEditMode,
+  markAdminFormDirty,
+  reduceAdminFormMode,
+  useAdminFormMode,
+} from "./admin-form-mode";
+export type {
+  AdminFormModeController,
+  AdminFormModeKind,
+  AdminFormModeState,
+} from "./admin-form-mode";

@@ -68,6 +68,15 @@ test("mobile layout branch uses data-layout and back control", () => {
   assert.match(screen, /max-width: 1023px/);
 });
 
+test("R1 view/edit mode and clean slug UX markers", () => {
+  const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");
+  assert.match(screen, /useAdminFormMode/);
+  assert.match(screen, /category-edit-action/);
+  assert.match(screen, /buildStorefrontCategoryRoute/);
+  assert.match(screen, /upsertCategoryTranslation/);
+  assert.match(screen, /updateCategoryCore/);
+});
+
 test("create flow fields stay progressive (no SEO/attrs on create)", () => {
   const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");
   assert.match(screen, /create-category-name/);

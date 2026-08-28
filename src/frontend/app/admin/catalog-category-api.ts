@@ -64,6 +64,34 @@ export interface ReorderCategoriesInput {
   orderedCategoryIds: string[];
 }
 
+export interface UpdateCategoryCoreInput {
+  status?: CategoryPublicationStatus | null;
+  sortOrder?: number | null;
+  isVisible?: boolean | null;
+  imageMediaAssetId?: string | null;
+  iconMediaAssetId?: string | null;
+  clearImage?: boolean;
+  clearIcon?: boolean;
+  expectedUpdatedAt?: string | null;
+}
+
+export interface UpsertCategoryTranslationInput {
+  locale: string;
+  name: string;
+  slug: string;
+  shortDescription?: string | null;
+  description?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  metaKeywords?: string | null;
+}
+
+/** پیام فارسی تعارض نامک تکراری (T005-R1). */
+export const CATEGORY_SLUG_DUPLICATE_MESSAGE =
+  "این نامک برای یک دسته‌بندی دیگر استفاده شده است. یک نامک متفاوت انتخاب کنید.";
+
+export const CATEGORY_SLUG_DUPLICATE_ERROR_CODE = "catalog.category.slug.duplicate";
+
 function recordOf(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -119,10 +147,46 @@ function errorMessage(payload: unknown, status: number): string {
   if (item) {
     const title = text(prop(item, "title", "Title"));
     const code = text(prop(item, "errorCode", "ErrorCode"));
+    if (code === CATEGORY_SLUG_DUPLICATE_ERROR_CODE) {
+      return CATEGORY_SLUG_DUPLICATE_MESSAGE;
+    }
     if (title) return code ? `${title} (${code})` : title;
     if (code) return code;
   }
   return `admin.http.${status}`;
+}
+
+/** نگاشت خطای mutation رده به متن کاربرپسند (نامک تکراری و غیره). */
+export function mapCategoryMutationError(result: {
+  message?: string;
+  status?: number;
+  data?: unknown;
+}): string {
+  const message = result.message ?? "";
+  if (
+    message.includes(CATEGORY_SLUG_DUPLICATE_ERROR_CODE)
+    || message.includes(CATEGORY_SLUG_DUPLICATE_MESSAGE)
+    || message.includes("slug رده برای این locale تکراری")
+  ) {
+    return CATEGORY_SLUG_DUPLICATE_MESSAGE;
+  }
+  return message || `admin.http.${result.status ?? 0}`;
+}
+
+/**
+ * مسیر عمومی ویترین رده — فقط locale + slug انسانی؛ بدون پسوند CategoryId.
+ */
+export function buildStorefrontCategoryRoute(uiLocale: string, slug: string): string {
+  const localeSegment = uiLocale === "en" || uiLocale === "en-US" ? "en"
+    : uiLocale === "ar" || uiLocale === "ar-SA" ? "ar"
+      : "fa";
+  const clean = slug.trim().replace(/^\/+|\/+$/g, "");
+  return `/${localeSegment}/category/${clean}`;
+}
+
+/** آیا مسیر/نامک پسوند شناسهٔ GUID کوتاه دارد؟ (سیاست ممنوع). */
+export function slugLooksLikeIdSuffixed(slug: string): boolean {
+  return /-[0-9a-f]{8}$/i.test(slug.trim());
 }
 
 async function adminRead(path: string): Promise<AdminResult<unknown>> {
@@ -295,7 +359,9 @@ export async function createCategory(
     localizedNames: null,
   };
   const response = await adminWrite("/v1/admin/catalog/categories", "POST", body);
-  if (response.state !== "ok") return { ...response, data: null };
+  if (response.state !== "ok") {
+    return { ...response, data: null, message: mapCategoryMutationError(response) };
+  }
   const item = recordOf(response.data);
   const categoryId = item ? text(prop(item, "categoryId", "CategoryId")) : "";
   if (!categoryId) {
@@ -346,6 +412,69 @@ export async function publishCategory(
   const response = await adminWrite(`/v1/admin/catalog/categories/${categoryId}/publish`, "POST");
   if (response.state !== "ok") return { ...response, data: null };
   const data = mapCategoryWorkspace(response.data);
+  return data
+    ? { ...response, data }
+    : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+}
+
+/** آرشیو رده. */
+export async function archiveCategory(
+  categoryId: string,
+): Promise<AdminResult<CategoryWorkspaceSummary>> {
+  const response = await adminWrite(`/v1/admin/catalog/categories/${categoryId}/archive`, "POST");
+  if (response.state !== "ok") return { ...response, data: null };
+  const data = mapCategoryWorkspace(response.data);
+  return data
+    ? { ...response, data }
+    : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+}
+
+/** به‌روزرسانی هسته (وضعیت، ترتیب، نمایش، رسانه). */
+export async function updateCategoryCore(
+  categoryId: string,
+  input: UpdateCategoryCoreInput,
+): Promise<AdminResult<CategoryWorkspaceSummary>> {
+  const response = await adminWrite(`/v1/admin/catalog/categories/${categoryId}`, "PATCH", {
+    status: input.status ?? null,
+    sortOrder: input.sortOrder ?? null,
+    isVisible: input.isVisible ?? null,
+    imageMediaAssetId: input.imageMediaAssetId ?? null,
+    iconMediaAssetId: input.iconMediaAssetId ?? null,
+    clearImage: input.clearImage ?? false,
+    clearIcon: input.clearIcon ?? false,
+    expectedUpdatedAt: input.expectedUpdatedAt ?? null,
+  });
+  if (response.state !== "ok") {
+    return { ...response, data: null, message: mapCategoryMutationError(response) };
+  }
+  const data = mapCategoryWorkspace(response.data);
+  return data
+    ? { ...response, data }
+    : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+}
+
+/** upsert ترجمهٔ محلی (نام + نامک انسانی بدون پسوند Id). */
+export async function upsertCategoryTranslation(
+  categoryId: string,
+  input: UpsertCategoryTranslationInput,
+): Promise<AdminResult<CategoryTranslationDto>> {
+  const response = await adminWrite(
+    `/v1/admin/catalog/categories/${categoryId}/translations/${encodeURIComponent(input.locale)}`,
+    "PUT",
+    {
+      name: input.name,
+      slug: input.slug,
+      shortDescription: input.shortDescription ?? null,
+      description: input.description ?? null,
+      seoTitle: input.seoTitle ?? null,
+      seoDescription: input.seoDescription ?? null,
+      metaKeywords: input.metaKeywords ?? null,
+    },
+  );
+  if (response.state !== "ok") {
+    return { ...response, data: null, message: mapCategoryMutationError(response) };
+  }
+  const data = mapTranslation(response.data);
   return data
     ? { ...response, data }
     : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };

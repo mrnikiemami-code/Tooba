@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * صفحهٔ Admin Category: درخت + workspace shell (T005).
+ * صفحهٔ Admin Category: درخت + workspace با VIEW/EDIT صریح (T005-R1).
  * تب‌های آینده فقط پوستهٔ progressive disclosure هستند.
  */
 
@@ -19,17 +19,22 @@ import {
   countDirectChildren,
   resolveCategoryDropPlan,
   translationReadinessLabel,
+  useAdminFormMode,
   type AppCategoryTreeNode,
   type CategoryDropRequest,
 } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
 import {
+  buildStorefrontCategoryRoute,
   createCategory,
   fetchCategoryTree,
   fetchCategoryWorkspace,
+  mapCategoryMutationError,
   moveCategory,
   reorderCategories,
   slugifyCategoryName,
+  updateCategoryCore,
+  upsertCategoryTranslation,
   type CategoryPublicationStatus,
   type CategoryTreeNodeDto,
   type CategoryWorkspaceSummary,
@@ -51,6 +56,16 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+interface GeneralDraft {
+  name: string;
+  slug: string;
+  status: CategoryPublicationStatus;
+  sortOrder: number;
+  isVisible: boolean;
+  parentId: string | null;
+  slugTouched: boolean;
+}
 
 function isTabId(value: string | undefined): value is TabId {
   return Boolean(value && TABS.some((t) => t.id === value));
@@ -74,6 +89,40 @@ function statusBadgeClass(status: CategoryPublicationStatus): string {
   if (status === "Published") return "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (status === "Archived") return "bg-slate-50 text-slate-600 border-slate-200";
   return "bg-amber-50 text-amber-800 border-amber-200";
+}
+
+function collectDescendantIds(nodes: AppCategoryTreeNode[], rootId: string): Set<string> {
+  const byParent = new Map<string | null, string[]>();
+  for (const n of nodes) {
+    const list = byParent.get(n.parentId) ?? [];
+    list.push(n.id);
+    byParent.set(n.parentId, list);
+  }
+  const out = new Set<string>();
+  const stack = [...(byParent.get(rootId) ?? [])];
+  while (stack.length) {
+    const id = stack.pop()!;
+    if (out.has(id)) continue;
+    out.add(id);
+    for (const child of byParent.get(id) ?? []) stack.push(child);
+  }
+  return out;
+}
+
+function draftFromWorkspace(
+  workspace: CategoryWorkspaceSummary,
+  localeName: string,
+  localeSlug: string,
+): GeneralDraft {
+  return {
+    name: localeName,
+    slug: localeSlug,
+    status: workspace.status,
+    sortOrder: workspace.sortOrder,
+    isVisible: workspace.isVisible,
+    parentId: workspace.parentCategoryId,
+    slugTouched: true,
+  };
 }
 
 function CreateCategoryDialog({
@@ -105,6 +154,7 @@ function CreateCategoryDialog({
   if (!open) return null;
 
   const isChild = Boolean(parentId);
+  const preview = slug.trim() ? buildStorefrontCategoryRoute("fa", slug.trim()) : null;
 
   return (
     <div
@@ -152,6 +202,11 @@ function CreateCategoryDialog({
             data-testid="create-category-slug"
           />
         </label>
+        {preview ? (
+          <p className="mt-2 text-xs text-slate-500" dir="ltr" data-testid="create-category-route-preview">
+            پیش‌نمایش: {preview}
+          </p>
+        ) : null}
 
         <p className="mt-3 text-xs text-slate-500">
           وضعیت پیش‌فرض: پیش‌نویس · SEO و ویژگی‌ها بعداً تکمیل می‌شوند.
@@ -193,7 +248,18 @@ function ComingSoonPanel() {
   );
 }
 
-function GeneralSummary({
+function SummaryCard({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="text-xs font-medium text-slate-500">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-slate-900" dir={ltr ? "ltr" : undefined}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function GeneralViewSummary({
   workspace,
   parentName,
   childrenCount,
@@ -214,7 +280,7 @@ function GeneralSummary({
   const completeCount = coverage.filter((c) => c.readiness === "complete").length;
 
   return (
-    <div className="space-y-4" data-testid="category-general-summary">
+    <div className="space-y-4" data-testid="category-general-summary" data-form-mode="view">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SummaryCard label="والد" value={parentName} />
         <SummaryCard label="وضعیت" value={categoryStatusLabel(workspace.status)} />
@@ -250,12 +316,147 @@ function GeneralSummary({
   );
 }
 
-function SummaryCard({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
+function GeneralEditForm({
+  draft,
+  fieldError,
+  parentOptions,
+  busy,
+  onChange,
+  onSave,
+  onCancel,
+}: {
+  draft: GeneralDraft;
+  fieldError: string | null;
+  parentOptions: { id: string | null; label: string }[];
+  busy: boolean;
+  onChange: (next: GeneralDraft) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const preview = draft.slug.trim()
+    ? buildStorefrontCategoryRoute("fa", draft.slug.trim())
+    : null;
+
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-slate-900" dir={ltr ? "ltr" : undefined}>
-        {value}
+    <div className="space-y-4" data-testid="category-general-edit" data-form-mode="edit">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-medium text-slate-700">
+          نام (فارسی)
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={draft.name}
+            onChange={(e) => {
+              const name = e.target.value;
+              onChange({
+                ...draft,
+                name,
+                slug: draft.slugTouched ? draft.slug : slugifyCategoryName(name),
+              });
+            }}
+            data-testid="category-edit-name"
+          />
+        </label>
+
+        <label className="block text-sm font-medium text-slate-700">
+          نامک (Slug)
+          <input
+            className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            dir="ltr"
+            value={draft.slug}
+            onChange={(e) => onChange({ ...draft, slug: e.target.value, slugTouched: true })}
+            data-testid="category-edit-slug"
+            aria-invalid={Boolean(fieldError)}
+          />
+          {fieldError ? (
+            <span className="mt-1 block text-xs text-red-600" data-testid="category-slug-error">
+              {fieldError}
+            </span>
+          ) : null}
+          {preview ? (
+            <span className="mt-1 block text-xs text-slate-500" dir="ltr" data-testid="category-route-preview">
+              پیش‌نمایش: {preview}
+            </span>
+          ) : null}
+        </label>
+
+        <label className="block text-sm font-medium text-slate-700">
+          وضعیت
+          <select
+            className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={draft.status}
+            onChange={(e) =>
+              onChange({ ...draft, status: e.target.value as CategoryPublicationStatus })
+            }
+            data-testid="category-edit-status"
+          >
+            <option value="Draft">پیش‌نویس</option>
+            <option value="Published">منتشرشده</option>
+            <option value="Archived">بایگانی</option>
+          </select>
+        </label>
+
+        <label className="block text-sm font-medium text-slate-700">
+          ترتیب
+          <input
+            type="number"
+            className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={draft.sortOrder}
+            onChange={(e) =>
+              onChange({ ...draft, sortOrder: Number.parseInt(e.target.value || "0", 10) || 0 })
+            }
+            data-testid="category-edit-sort-order"
+          />
+        </label>
+
+        <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300"
+            checked={draft.isVisible}
+            onChange={(e) => onChange({ ...draft, isVisible: e.target.checked })}
+            data-testid="category-edit-visible"
+          />
+          نمایش در ویترین
+        </label>
+
+        <label className="block text-sm font-medium text-slate-700">
+          والد
+          <select
+            className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={draft.parentId ?? ""}
+            onChange={(e) =>
+              onChange({ ...draft, parentId: e.target.value ? e.target.value : null })
+            }
+            data-testid="category-edit-parent"
+          >
+            {parentOptions.map((opt) => (
+              <option key={opt.id ?? "root"} value={opt.id ?? ""}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4">
+        <button
+          type="button"
+          className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-gray-50"
+          onClick={onCancel}
+          disabled={busy}
+          data-testid="category-edit-cancel"
+        >
+          انصراف
+        </button>
+        <button
+          type="button"
+          className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-50"
+          onClick={onSave}
+          disabled={busy || !draft.name.trim() || !draft.slug.trim()}
+          data-testid="category-edit-save"
+        >
+          {busy ? "در حال ذخیره…" : "ذخیره"}
+        </button>
       </div>
     </div>
   );
@@ -308,6 +509,7 @@ export function CategoryAdminScreen() {
   const [ready, setReady] = useState(false);
   const [loadingTree, setLoadingTree] = useState(true);
   const [treeError, setTreeError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [flatNodes, setFlatNodes] = useState<AppCategoryTreeNode[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -321,6 +523,16 @@ export function CategoryAdminScreen() {
   const [createBusy, setCreateBusy] = useState(false);
   const [mobileWorkspace, setMobileWorkspace] = useState(false);
   const [isNarrow, setIsNarrow] = useState(false);
+
+  const [draft, setDraft] = useState<GeneralDraft | null>(null);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [slugFieldError, setSlugFieldError] = useState<string | null>(null);
+
+  const canView = ready && !accessDenied;
+  // همان دروازهٔ AdminPanelAccess که mutationهای catalog را هم باز می‌کند؛ FE مرجع امنیت نیست.
+  const canEdit = canView;
+
+  const formMode = useAdminFormMode({ canView, canEdit });
 
   const localePrefix = useMemo(() => {
     const m = pathname.match(/^\/(fa|en|ar)(?=\/|$)/);
@@ -347,6 +559,7 @@ export function CategoryAdminScreen() {
     const result = await fetchCategoryTree(API_LOCALE);
     setLoadingTree(false);
     if (result.state === "denied") {
+      setAccessDenied(true);
       setTreeError("دسترسی مجاز نیست");
       setFlatNodes([]);
       return [];
@@ -356,6 +569,7 @@ export function CategoryAdminScreen() {
       setFlatNodes([]);
       return [];
     }
+    setAccessDenied(false);
     const mapped = toTreeNodes(result.data);
     setFlatNodes(mapped);
     return mapped;
@@ -370,11 +584,16 @@ export function CategoryAdminScreen() {
     if (!categoryId || !ready) {
       setWorkspace(null);
       setWorkspaceError(null);
+      setDraft(null);
+      formMode.resetToView();
+      setSlugFieldError(null);
       return;
     }
     let cancelled = false;
     setWorkspaceLoading(true);
     setWorkspaceError(null);
+    formMode.resetToView();
+    setSlugFieldError(null);
     void fetchCategoryWorkspace(categoryId).then((result) => {
       if (cancelled) return;
       setWorkspaceLoading(false);
@@ -389,11 +608,16 @@ export function CategoryAdminScreen() {
         return;
       }
       setWorkspace(result.data);
+      const tr =
+        result.data.translations.find((t) => t.locale === API_LOCALE) ?? result.data.translations[0];
+      setDraft(draftFromWorkspace(result.data, tr?.name ?? "", tr?.slug ?? ""));
       setMobileWorkspace(true);
     });
     return () => {
       cancelled = true;
     };
+    // resetToView is stable; omit formMode object to avoid reload loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- category open defaults to VIEW
   }, [categoryId, ready]);
 
   useEffect(() => {
@@ -409,11 +633,14 @@ export function CategoryAdminScreen() {
 
   const navigateToCategory = useCallback(
     (id: string, tab: TabId = "general") => {
+      if (formMode.isDirty && !formMode.confirmDiscardIfDirty()) return;
+      formMode.resetToView();
+      setSlugFieldError(null);
       const href = tab === "general" ? `${basePath}/${id}` : `${basePath}/${id}/${tab}`;
       router.push(href);
       if (isNarrow) setMobileWorkspace(true);
     },
-    [basePath, isNarrow, router],
+    [basePath, formMode, isNarrow, router],
   );
 
   const openCreateRoot = () => {
@@ -438,7 +665,7 @@ export function CategoryAdminScreen() {
     });
     setCreateBusy(false);
     if (result.state !== "ok" || !result.data) {
-      toast.error(result.message ?? "ایجاد دسته‌بندی ناموفق بود");
+      toast.error(mapCategoryMutationError(result));
       return;
     }
     toast.success("دسته‌بندی ایجاد شد");
@@ -459,7 +686,6 @@ export function CategoryAdminScreen() {
       return;
     }
 
-    // optimistic: local reorder for snappy UX; rollback on fail
     const optimistic = snapshot.map((n) => {
       if (n.id !== request.dragId) return n;
       return { ...n, parentId: plan.newParentId };
@@ -497,6 +723,115 @@ export function CategoryAdminScreen() {
     await reloadTree();
   };
 
+  const handleEnterEdit = () => {
+    if (!workspace || !draft) return;
+    const tr =
+      workspace.translations.find((t) => t.locale === API_LOCALE) ?? workspace.translations[0];
+    setDraft(draftFromWorkspace(workspace, tr?.name ?? draft.name, tr?.slug ?? draft.slug));
+    setSlugFieldError(null);
+    formMode.onEdit();
+  };
+
+  const handleCancelEdit = () => {
+    if (!formMode.confirmDiscardIfDirty()) return;
+    if (workspace) {
+      const tr =
+        workspace.translations.find((t) => t.locale === API_LOCALE) ?? workspace.translations[0];
+      setDraft(draftFromWorkspace(workspace, tr?.name ?? "", tr?.slug ?? ""));
+    }
+    setSlugFieldError(null);
+    formMode.onCancel();
+  };
+
+  const handleSave = async () => {
+    if (!categoryId || !workspace || !draft) return;
+    setSaveBusy(true);
+    setSlugFieldError(null);
+
+    const nameChanged =
+      draft.name.trim()
+      !== (workspace.translations.find((t) => t.locale === API_LOCALE)?.name
+        ?? workspace.translations[0]?.name
+        ?? "");
+    const slugChanged =
+      draft.slug.trim()
+      !== (workspace.translations.find((t) => t.locale === API_LOCALE)?.slug
+        ?? workspace.translations[0]?.slug
+        ?? "");
+    const coreChanged =
+      draft.status !== workspace.status
+      || draft.sortOrder !== workspace.sortOrder
+      || draft.isVisible !== workspace.isVisible;
+    const parentChanged = draft.parentId !== workspace.parentCategoryId;
+
+    if (parentChanged) {
+      const moveResult = await moveCategory(categoryId, {
+        newParentId: draft.parentId,
+        expectedUpdatedAt: workspace.updatedAt,
+      });
+      if (moveResult.state !== "ok") {
+        setSaveBusy(false);
+        toast.error(mapCategoryMutationError(moveResult));
+        return;
+      }
+      if (moveResult.data) setWorkspace(moveResult.data);
+    }
+
+    if (coreChanged) {
+      const coreResult = await updateCategoryCore(categoryId, {
+        status: draft.status,
+        sortOrder: draft.sortOrder,
+        isVisible: draft.isVisible,
+        expectedUpdatedAt: undefined,
+      });
+      if (coreResult.state !== "ok" || !coreResult.data) {
+        setSaveBusy(false);
+        toast.error(mapCategoryMutationError(coreResult));
+        return;
+      }
+      setWorkspace(coreResult.data);
+    }
+
+    if (nameChanged || slugChanged) {
+      const trResult = await upsertCategoryTranslation(categoryId, {
+        locale: API_LOCALE,
+        name: draft.name.trim(),
+        slug: draft.slug.trim(),
+      });
+      if (trResult.state !== "ok" || !trResult.data) {
+        setSaveBusy(false);
+        const mapped = mapCategoryMutationError(trResult);
+        setSlugFieldError(mapped);
+        toast.error(mapped);
+        return;
+      }
+    }
+
+    const refreshed = await fetchCategoryWorkspace(categoryId);
+    setSaveBusy(false);
+    if (refreshed.state === "ok" && refreshed.data) {
+      setWorkspace(refreshed.data);
+      const tr =
+        refreshed.data.translations.find((t) => t.locale === API_LOCALE)
+        ?? refreshed.data.translations[0];
+      setDraft(draftFromWorkspace(refreshed.data, tr?.name ?? "", tr?.slug ?? ""));
+
+      // برچسب درخت را بدون ریست expanded/selected به‌روز کن
+      if (tr) {
+        setFlatNodes((prev) =>
+          prev.map((n) =>
+            n.id === categoryId
+              ? { ...n, name: tr.name, slug: tr.slug, status: refreshed.data!.status, sortOrder: refreshed.data!.sortOrder, isVisible: refreshed.data!.isVisible, parentId: refreshed.data!.parentCategoryId }
+              : n,
+          ),
+        );
+      }
+    }
+
+    formMode.onSaved();
+    toast.success("دسته‌بندی ذخیره شد");
+  };
+
   const selectedNode = categoryId ? flatNodes.find((n) => n.id === categoryId) : undefined;
   const pathNames = categoryId ? buildCategoryPath(flatNodes, categoryId) : [];
   const parentName = workspace?.parentCategoryId
@@ -506,17 +841,30 @@ export function CategoryAdminScreen() {
   const activeTranslation =
     workspace?.translations.find((t) => t.locale === API_LOCALE) ?? workspace?.translations[0];
   const storefrontRoute = activeTranslation?.slug
-    ? `/fa/category/${activeTranslation.slug}`
+    ? buildStorefrontCategoryRoute("fa", activeTranslation.slug)
     : selectedNode?.slug
-      ? `/fa/category/${selectedNode.slug}`
+      ? buildStorefrontCategoryRoute("fa", selectedNode.slug)
       : null;
 
   const createParentName = createParentId
     ? flatNodes.find((n) => n.id === createParentId)?.name || null
     : null;
 
+  const parentOptions = useMemo(() => {
+    if (!categoryId) return [{ id: null as string | null, label: "ریشه" }];
+    const blocked = collectDescendantIds(flatNodes, categoryId);
+    blocked.add(categoryId);
+    const opts: { id: string | null; label: string }[] = [{ id: null, label: "ریشه" }];
+    for (const n of flatNodes) {
+      if (blocked.has(n.id)) continue;
+      opts.push({ id: n.id, label: n.name });
+    }
+    return opts;
+  }, [categoryId, flatNodes]);
+
   const showTreePane = !isNarrow || !mobileWorkspace || !categoryId;
   const showWorkspacePane = !isNarrow || (mobileWorkspace && Boolean(categoryId));
+  const isEdit = formMode.mode === "edit";
 
   if (!ready) {
     return <div className="p-6 text-sm text-slate-500">در حال آماده‌سازی…</div>;
@@ -527,6 +875,7 @@ export function CategoryAdminScreen() {
       className="flex min-h-[calc(100vh-7rem)] flex-col gap-4 lg:flex-row-reverse"
       data-testid="category-admin-screen"
       data-layout={isNarrow ? "mobile" : "desktop"}
+      data-form-mode={categoryId ? formMode.mode : undefined}
     >
       {showTreePane ? (
         <aside className="w-full shrink-0 lg:w-[360px] xl:w-[400px]" data-testid="category-tree-pane">
@@ -593,7 +942,9 @@ export function CategoryAdminScreen() {
                     type="button"
                     className="mb-3 inline-flex min-h-11 items-center rounded-xl border border-gray-200 px-3 text-sm"
                     onClick={() => {
+                      if (formMode.isDirty && !formMode.confirmDiscardIfDirty()) return;
                       setMobileWorkspace(false);
+                      formMode.resetToView();
                       router.push(basePath);
                     }}
                     data-testid="category-workspace-back"
@@ -604,18 +955,38 @@ export function CategoryAdminScreen() {
                 <div className="text-xs text-slate-500" data-testid="category-breadcrumb">
                   {["دسته‌بندی‌ها", ...pathNames].join(" / ")}
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-bold text-slate-900" data-testid="category-workspace-title">
-                    {activeTranslation?.name || selectedNode?.name || "دسته‌بندی"}
-                  </h1>
-                  <span
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(workspace.status)}`}
-                  >
-                    {categoryStatusLabel(workspace.status)}
-                  </span>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-bold text-slate-900" data-testid="category-workspace-title">
+                      {isEdit && draft
+                        ? draft.name || activeTranslation?.name || selectedNode?.name || "دسته‌بندی"
+                        : activeTranslation?.name || selectedNode?.name || "دسته‌بندی"}
+                    </h1>
+                    <span
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusBadgeClass(isEdit && draft ? draft.status : workspace.status)}`}
+                    >
+                      {categoryStatusLabel(isEdit && draft ? draft.status : workspace.status)}
+                    </span>
+                    <span
+                      className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600"
+                      data-testid="category-form-mode-badge"
+                    >
+                      {isEdit ? "ویرایش" : "مشاهده"}
+                    </span>
+                  </div>
+                  {!isEdit && formMode.canEdit ? (
+                    <button
+                      type="button"
+                      className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                      onClick={handleEnterEdit}
+                      data-testid="category-edit-action"
+                    >
+                      ویرایش
+                    </button>
+                  ) : null}
                 </div>
-                {storefrontRoute ? (
-                  <p className="mt-1 text-xs text-slate-500" dir="ltr">
+                {storefrontRoute && !isEdit ? (
+                  <p className="mt-1 text-xs text-slate-500" dir="ltr" data-testid="category-storefront-route">
                     مسیر ویترین: {storefrontRoute}
                   </p>
                 ) : null}
@@ -636,6 +1007,13 @@ export function CategoryAdminScreen() {
                     <Link
                       key={tab.id}
                       href={href}
+                      onClick={(e) => {
+                        if (formMode.isDirty && !formMode.confirmDiscardIfDirty()) {
+                          e.preventDefault();
+                          return;
+                        }
+                        if (formMode.isDirty) formMode.onCancel();
+                      }}
                       className={
                         active
                           ? "inline-flex min-h-10 shrink-0 items-center rounded-xl bg-[#2563EB] px-3 text-sm font-semibold text-white"
@@ -655,15 +1033,31 @@ export function CategoryAdminScreen() {
 
               <div className="flex-1 p-4 lg:p-6">
                 {activeTab === "general" ? (
-                  <GeneralSummary
-                    workspace={workspace}
-                    parentName={parentName}
-                    childrenCount={childrenCount}
-                    productCount={selectedNode?.productCount ?? null}
-                    storefrontRoute={storefrontRoute}
-                    activeLocaleName={activeTranslation?.name || selectedNode?.name || ""}
-                    activeLocaleSlug={activeTranslation?.slug || selectedNode?.slug || ""}
-                  />
+                  isEdit && draft ? (
+                    <GeneralEditForm
+                      draft={draft}
+                      fieldError={slugFieldError}
+                      parentOptions={parentOptions}
+                      busy={saveBusy}
+                      onChange={(next) => {
+                        setDraft(next);
+                        formMode.markDirty();
+                        if (slugFieldError) setSlugFieldError(null);
+                      }}
+                      onSave={() => void handleSave()}
+                      onCancel={handleCancelEdit}
+                    />
+                  ) : (
+                    <GeneralViewSummary
+                      workspace={workspace}
+                      parentName={parentName}
+                      childrenCount={childrenCount}
+                      productCount={selectedNode?.productCount ?? null}
+                      storefrontRoute={storefrontRoute}
+                      activeLocaleName={activeTranslation?.name || selectedNode?.name || ""}
+                      activeLocaleSlug={activeTranslation?.slug || selectedNode?.slug || ""}
+                    />
+                  )
                 ) : null}
                 {activeTab === "translations" ? <TranslationsPanel workspace={workspace} /> : null}
                 {activeTab !== "general" && activeTab !== "translations" ? <ComingSoonPanel /> : null}
