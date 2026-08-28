@@ -51,21 +51,42 @@ public sealed class ProductWorkspaceComposer
     /// <summary>
     /// فهرست محصولات Catalog برای ورود به Workspace.
     /// </summary>
-    public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken) =>
-        await BuildListItemsAsync(maxRows: 100, cancellationToken);
+    public async Task<IReadOnlyList<AdminProductListItem>> ListAsync(CancellationToken cancellationToken)
+    {
+        var productIds = await _catalog.Products.AsNoTracking()
+            .OrderByDescending(x => x.UpdatedAt)
+            .Take(100)
+            .Select(x => x.ProductId)
+            .ToListAsync(cancellationToken);
+        return await BuildListItemsForProductIdsAsync(productIds, cancellationToken);
+    }
 
-    private async Task<IReadOnlyList<AdminProductListItem>> BuildListItemsAsync(
-        int? maxRows,
+    private async Task<IReadOnlyList<AdminProductListItem>> BuildListItemsForProductIdsAsync(
+        IReadOnlyList<Guid> productIds,
         CancellationToken cancellationToken)
     {
-        var productQuery = _catalog.Products.AsNoTracking().OrderByDescending(x => x.UpdatedAt);
-        var products = maxRows.HasValue
-            ? await productQuery.Take(maxRows.Value).ToListAsync(cancellationToken)
-            : await productQuery.ToListAsync(cancellationToken);
-        var productIds = products.Select(x => x.ProductId).ToList();
+        if (productIds.Count == 0)
+        {
+            return [];
+        }
+
+        var products = await _catalog.Products.AsNoTracking()
+            .Where(x => productIds.Contains(x.ProductId))
+            .ToListAsync(cancellationToken);
+        var byId = products.ToDictionary(x => x.ProductId);
+        products = productIds.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
         var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Product, productIds, cancellationToken);
-        var variantRows = await _catalog.Variants.AsNoTracking().Select(x => new { x.ProductId, x.VariantId }).ToListAsync(cancellationToken);
-        var offerRows = await _offers.Offers.AsNoTracking().Select(x => new { x.OfferId, x.CatalogVariantId }).ToListAsync(cancellationToken);
+        var variantRows = await _catalog.Variants.AsNoTracking()
+            .Where(x => productIds.Contains(x.ProductId))
+            .Select(x => new { x.ProductId, x.VariantId })
+            .ToListAsync(cancellationToken);
+        var variantIds = variantRows.Select(x => x.VariantId).ToList();
+        var offerRows = variantIds.Count == 0
+            ? []
+            : await _offers.Offers.AsNoTracking()
+                .Where(x => variantIds.Contains(x.CatalogVariantId))
+                .Select(x => new { x.OfferId, x.CatalogVariantId })
+                .ToListAsync(cancellationToken);
         var offerIds = offerRows.Select(x => x.OfferId).ToList();
         var amountRows = offerIds.Count == 0
             ? []
@@ -135,9 +156,15 @@ public sealed class ProductWorkspaceComposer
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await BuildListItemsAsync(maxRows: null, cancellationToken);
-        var filtered = AdminProductGridEvaluator.Apply(rows, request);
-        return AdminProductGridEvaluator.Page(filtered, request);
+        var engine = new AdminProductGridQueryEngine(_catalog, _offers, _prices, _inventory);
+        var (pageIds, totalCount) = await engine.ResolvePageProductIdsAsync(request, cancellationToken);
+        if (pageIds.Count == 0)
+        {
+            return new GridPageResponse<AdminProductListItem>([], request.Page, request.PageSize, totalCount);
+        }
+
+        var items = await BuildListItemsForProductIdsAsync(pageIds, cancellationToken);
+        return new GridPageResponse<AdminProductListItem>(items, request.Page, request.PageSize, totalCount);
     }
 
     /// <summary>
