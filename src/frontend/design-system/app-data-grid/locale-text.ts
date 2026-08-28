@@ -27,7 +27,8 @@ export type LocaleKey =
   | "close"
   | "dragColumn"
   | "moveColumnUp"
-  | "moveColumnDown";
+  | "moveColumnDown"
+  | "defaultViewName";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -59,6 +60,7 @@ export const faGridLocale: Record<LocaleKey, string> = {
   dragColumn: "جابجایی ستون",
   moveColumnUp: "بالا",
   moveColumnDown: "پایین",
+  defaultViewName: "نمای جدید",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -91,6 +93,7 @@ export const enGridLocale: Record<LocaleKey, string> = {
   dragColumn: "Drag column",
   moveColumnUp: "Up",
   moveColumnDown: "Down",
+  defaultViewName: "New view",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {

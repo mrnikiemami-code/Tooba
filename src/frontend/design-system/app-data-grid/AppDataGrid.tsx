@@ -17,6 +17,7 @@ import "./theme.css";
 
 import { Drawer } from "../primitives/overlays";
 import { Button, Checkbox } from "../primitives/core";
+import { cn } from "../cn";
 import { FilterControl } from "../data-grid/FilterControl";
 import { moveColumn } from "../data-grid/serialize";
 import type {
@@ -30,6 +31,12 @@ import type {
 import { isFilterActive } from "../data-grid/serialize";
 import { DEFAULT_GRID_QUERY } from "./grid-query-mapper";
 import { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";
+import {
+  agFilterModelForSavedView,
+  buildAgColumnApplyState,
+  captureColumnLayoutFromApi,
+  normalizeSavedViewForPersistence,
+} from "./saved-view-state";
 import type { AppGridFilterColumnDef } from "./filter-column-def";
 import { toFilterControlColumn } from "./filter-column-def";
 import { JalaliDateFilterControl } from "./JalaliDateFilterControl";
@@ -83,6 +90,7 @@ export function AppDataGrid<T extends { id: string }>({
   const [searchInput, setSearchInput] = useState("");
   const [selected, setSelected] = useState<T[]>([]);
   const [savedViews, setSavedViews] = useState<SavedGridView[]>([]);
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [viewName, setViewName] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -93,6 +101,12 @@ export function AppDataGrid<T extends { id: string }>({
   const filterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
+  const suppressGridEventsRef = useRef(false);
+
+  const defaultColumnIds = useMemo(
+    () => columnDefs.map((col) => col.colId ?? col.field).filter((id): id is string => Boolean(id)),
+    [columnDefs],
+  );
 
   const columnLabels = useMemo(() => {
     const labels: Record<string, string> = {};
@@ -169,10 +183,12 @@ export function AppDataGrid<T extends { id: string }>({
 
   const onSortChanged = useCallback(
     (event: SortChangedEvent<T>) => {
+      if (suppressGridEventsRef.current) return;
       const colState = event.api.getColumnState().find((col) => col.sort);
       const sorts = colState?.colId && colState.sort
         ? [{ columnId: colState.colId, direction: colState.sort as "asc" | "desc" }]
         : DEFAULT_GRID_QUERY.sorts;
+      setActiveViewId(null);
       void load({ ...queryRef.current, page: 1, sorts });
     },
     [load],
@@ -180,12 +196,14 @@ export function AppDataGrid<T extends { id: string }>({
 
   const onFilterChanged = useCallback(
     (_event: FilterChangedEvent<T>) => {
+      if (suppressGridEventsRef.current) return;
       const api = gridApiRef.current;
       if (!api) return;
       if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
       filterTimerRef.current = setTimeout(() => {
         const agFilters = fromAgFilterModel(api.getFilterModel());
         const filters = mergeFilters(queryRef.current.filters, agFilters);
+        setActiveViewId(null);
         void load({ ...queryRef.current, page: 1, filters });
       }, 300);
     },
@@ -197,6 +215,7 @@ export function AppDataGrid<T extends { id: string }>({
     if (!isFilterActive(value)) {
       delete next[columnId];
     }
+    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters: next });
   }
 
@@ -215,12 +234,14 @@ export function AppDataGrid<T extends { id: string }>({
     }
     const next = { ...queryRef.current.filters };
     delete next[columnId];
+    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters: next });
   }
 
   function clearAllFilters() {
     gridApiRef.current?.setFilterModel(null);
     setSearchInput("");
+    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters: {}, search: undefined });
   }
 
@@ -233,45 +254,59 @@ export function AppDataGrid<T extends { id: string }>({
     setSearchInput(value);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
+      setActiveViewId(null);
       void load({ ...queryRef.current, page: 1, search: value.trim() || undefined });
     }, 350);
   }
 
   async function saveCurrentView() {
-    if (!savedViewStore || !viewName.trim()) return;
-    const api = gridApiRef.current;
-    const order = api?.getColumnState().map((c) => c.colId!).filter(Boolean) ?? columnDefs.map((c) => c.field!).filter(Boolean);
-    const visibility = Object.fromEntries(
-      (api?.getColumnState() ?? []).map((c) => [c.colId!, !c.hide]),
-    );
-    const view: SavedGridView = {
-      id: `view-${Date.now()}`,
-      name: viewName.trim(),
-      filters: query.filters,
-      sorts: query.sorts,
-      layout: { order, visibility, widths: {} },
-      pageSize: query.pageSize,
-    };
+    if (!savedViewStore) return;
+    const trimmed = viewName.trim() || messages.defaultViewName;
+    const currentQuery = queryRef.current;
+    const layout = captureColumnLayoutFromApi(gridApiRef.current, defaultColumnIds);
+    const view: SavedGridView = normalizeSavedViewForPersistence({
+      id: crypto.randomUUID(),
+      name: trimmed,
+      filters: currentQuery.filters,
+      sorts: currentQuery.sorts,
+      layout,
+      pageSize: currentQuery.pageSize,
+    });
     await savedViewStore.save(view);
     setSavedViews(await savedViewStore.list());
+    setActiveViewId(view.id);
     setViewName("");
   }
 
   async function applyView(view: SavedGridView) {
-    void load({
-      page: 1,
-      pageSize: view.pageSize,
-      sorts: view.sorts,
-      filters: view.filters,
-      search: query.search,
-    });
-    gridApiRef.current?.applyColumnState({
-      state: view.layout.order.map((colId) => ({
-        colId,
-        hide: view.layout.visibility[colId] === false,
-      })),
-      applyOrder: true,
-    });
+    const api = gridApiRef.current;
+    suppressGridEventsRef.current = true;
+    try {
+      setActiveViewId(view.id);
+      api?.setFilterModel(agFilterModelForSavedView(view.filters, advancedFieldIds));
+      api?.applyColumnState({
+        state: buildAgColumnApplyState(view),
+        applyOrder: true,
+      });
+      await load({
+        page: 1,
+        pageSize: view.pageSize,
+        sorts: view.sorts,
+        filters: view.filters,
+        search: queryRef.current.search,
+      });
+    } finally {
+      suppressGridEventsRef.current = false;
+    }
+  }
+
+  async function deleteView(viewId: string) {
+    if (!savedViewStore) return;
+    await savedViewStore.remove(viewId);
+    setSavedViews(await savedViewStore.list());
+    if (activeViewId === viewId) {
+      setActiveViewId(null);
+    }
   }
 
   async function exportCurrent(format: "csv" | "xlsx") {
@@ -327,33 +362,57 @@ export function AppDataGrid<T extends { id: string }>({
           {messages.columns}
         </button>
         {savedViewStore ? (
-          <>
-            <select
-              className="border border-border bg-surface px-2 text-sm"
-              defaultValue=""
-              onChange={(e) => {
-                const view = savedViews.find((v) => v.id === e.target.value);
-                if (view) void applyView(view);
-                e.currentTarget.value = "";
-              }}
-            >
-              <option value="">{messages.savedViews}</option>
-              {savedViews.map((view) => (
-                <option key={view.id} value={view.id}>
-                  {view.name}
-                </option>
-              ))}
-            </select>
-            <input
-              value={viewName}
-              onChange={(e) => setViewName(e.target.value)}
-              placeholder={messages.saveView}
-              className="border border-border bg-surface px-2 text-sm"
-            />
-            <button type="button" className="border border-border bg-surface px-3 text-sm" onClick={() => void saveCurrentView()}>
-              {messages.saveView}
-            </button>
-          </>
+          <div
+            className="flex min-w-[14rem] flex-col gap-2 rounded-ds border border-border bg-secondary/40 p-2"
+            data-testid="app-grid-saved-views"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                aria-label={messages.saveView}
+                value={viewName}
+                onChange={(e) => setViewName(e.target.value)}
+                placeholder={messages.defaultViewName}
+                className="min-w-[10rem] flex-1 border border-border bg-surface px-2 text-sm"
+              />
+              <button type="button" className="border border-border bg-surface px-3 text-sm" onClick={() => void saveCurrentView()}>
+                {messages.saveView}
+              </button>
+            </div>
+            {savedViews.length > 0 ? (
+              <ul className="flex flex-wrap gap-2">
+                {savedViews.map((view) => {
+                  const active = activeViewId === view.id;
+                  return (
+                    <li key={view.id} className="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "border border-border bg-surface hover:bg-secondary",
+                        )}
+                        aria-pressed={active}
+                        onClick={() => void applyView(view)}
+                      >
+                        {view.name || messages.defaultViewName}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-danger/10 hover:text-danger"
+                        aria-label={`${messages.deleteView}: ${view.name || messages.defaultViewName}`}
+                        onClick={() => void deleteView(view.id)}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="px-1 text-xs text-muted">{messages.savedViews}</p>
+            )}
+          </div>
         ) : null}
         {getExportRow ? (
           <>

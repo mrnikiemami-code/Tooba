@@ -11,6 +11,24 @@ type AgFilterEntry = {
   values?: string[] | null;
 };
 
+/** GridFilterValue را به AG FilterModel برمی‌گرداند — فقط فیلترهای Community-safe ستونی. */
+export function toAgFilterModel(
+  filters: Record<string, GridFilterValue>,
+  options?: { excludeFields?: ReadonlySet<string> },
+): FilterModel {
+  const model: FilterModel = {};
+  for (const [field, value] of Object.entries(filters)) {
+    if (options?.excludeFields?.has(field)) {
+      continue;
+    }
+    const entry = mapGridFilterToAg(field, value);
+    if (entry) {
+      model[field] = entry;
+    }
+  }
+  return model;
+}
+
 /** AG Grid FilterModel را به قرارداد GridServerQuery پروژه نگاشت می‌کند — backend مدل AG را نمی‌بیند. */
 export function fromAgFilterModel(model: FilterModel | null | undefined): Record<string, GridFilterValue> {
   if (!model) {
@@ -26,6 +44,82 @@ export function fromAgFilterModel(model: FilterModel | null | undefined): Record
   }
 
   return filters;
+}
+
+function mapGridFilterToAg(field: string, value: GridFilterValue): AgFilterEntry | undefined {
+  switch (value.kind) {
+    case "text":
+      return {
+        filterType: "text",
+        type: reverseTextOperator(value.operator),
+        filter: value.query,
+      };
+    case "number":
+      return {
+        filterType: "number",
+        type: reverseNumberOperator(value.operator),
+        filter: value.value,
+        filterTo: value.operator === "between" ? value.valueTo : undefined,
+      };
+    case "date":
+      return {
+        filterType: "date",
+        type: reverseDateOperator(value.operator),
+        dateFrom: value.iso,
+        dateTo: value.operator === "between" ? value.isoTo : undefined,
+      };
+    case "enum":
+    case "status":
+      // enum/status در کشوی پیشرفته Community-safe است — AG Set filter Enterprise-only است.
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
+function reverseTextOperator(operator: "contains" | "equals" | "startsWith"): string {
+  switch (operator) {
+    case "equals":
+      return "equals";
+    case "startsWith":
+      return "startsWith";
+    default:
+      return "contains";
+  }
+}
+
+function reverseNumberOperator(
+  operator: "equals" | "greaterThan" | "greaterThanOrEqual" | "lessThan" | "lessThanOrEqual" | "between",
+): string {
+  switch (operator) {
+    case "equals":
+      return "equals";
+    case "greaterThan":
+      return "greaterThan";
+    case "greaterThanOrEqual":
+      return "greaterThanOrEqual";
+    case "lessThan":
+      return "lessThan";
+    case "lessThanOrEqual":
+      return "lessThanOrEqual";
+    case "between":
+      return "inRange";
+    default:
+      return "equals";
+  }
+}
+
+function reverseDateOperator(operator: "on" | "before" | "after" | "between"): string {
+  switch (operator) {
+    case "before":
+      return "lessThan";
+    case "after":
+      return "greaterThan";
+    case "between":
+      return "inRange";
+    default:
+      return "equals";
+  }
 }
 
 function mapAgFilterEntry(field: string, raw: AgFilterEntry | undefined): GridFilterValue | undefined {
