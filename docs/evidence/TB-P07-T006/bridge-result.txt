@@ -1,0 +1,244 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T006
+Parent-Task:
+TB-P07-T005-R1
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Category Workspace upgraded to production General + Translations editor on approved Tree/VIEW-EDIT baseline. General VIEW/EDIT wires parent path selector, localized status, sort, visibility, name/slug, media placeholder. Translations tab is first-class: locale switcher, ایجاد نشده/ناقص/کامل, create translation, Name/Slug/descriptions + light SEO fields, clean slug preview without CategoryId, dirty-state guards, soft tree label refresh. Future tabs remain placeholders. AppCategoryTree untouched. FE 313 tests green. USER_VISUAL_ACCEPTED remains NO.
+
+Tree-Lock:
+
+AppCategoryTree touched:
+no
+
+visual changed:
+no
+
+behavior changed:
+no
+
+General:
+
+VIEW:
+readable cards
+
+EDIT:
+yes
+
+fields:
+Parent, Status, SortOrder, IsVisible, Name, Slug; media deferred placeholder
+
+parent selector:
+searchable path/name; self/descendant blocked; no raw IDs
+
+status localization:
+پیش‌نویس / منتشرشده / بایگانی‌شده
+
+media:
+به‌زودی placeholder (no fake upload)
+
+save:
+→ VIEW + toast
+
+cancel:
+→ VIEW
+
+dirty-state:
+confirm on navigate/tab/category
+
+Translations:
+
+locale source:
+Catalog UI locales fa-IR/en-US/ar-SA with display names
+
+locale switcher:
+yes
+
+statuses:
+ایجاد نشده / ناقص / کامل
+
+missing translation:
+yes
+
+create translation:
+ایجاد ترجمه
+
+fields:
+Name, Slug, ShortDescription, Description, SeoTitle, SeoDescription, MetaKeywords (light)
+
+VIEW:
+yes
+
+EDIT:
+yes
+
+save:
+real upsertCategoryTranslation
+
+cancel:
+discard → VIEW
+
+dirty locale switch:
+protected
+
+Slug:
+
+human-only:
+yes
+
+ID suffix:
+no
+
+auto-suggest:
+yes (does not overwrite manual)
+
+canonical preview:
+/{locale}/category/{slug}
+
+duplicate handling:
+Persian message near slug
+
+history preserved:
+yes (T004)
+
+Authorization:
+
+SpiceDB path:
+AdminPanelAccess
+
+view-only:
+no Edit when denied
+
+edit:
+ویرایش when canEdit
+
+backend authoritative:
+yes
+
+API:
+
+existing APIs:
+workspace, updateCore, upsertTranslation, move, create
+
+backend touched:
+no
+
+endpoints/contracts added:
+none
+
+gaps:
+none for T006
+
+Canonical-AppDataGrid:
+
+used:
+no
+
+raw AgGridReact:
+no
+
+new grid wrapper:
+no
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0
+
+frontend tests:
+313 passed
+
+frontend build:
+success
+
+backend restore:
+n/a
+
+backend build:
+n/a
+
+backend full tests:
+n/a
+
+passed:
+313
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0
+
+new warnings:
+0
+
+git diff --check:
+clean
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088/health — 200
+
+Frontend:
+http://localhost:3000 — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+Category Admin:
+http://localhost:3000/fa/admin/catalog/categories — 200
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+cd9568e feat category general and translations workspace editor [TB-P07-T006]
+
+push:
+ok
+
+final HEAD:
+cd9568e2b3dfacb3707235b11441817c8cae53e0
+
+origin/main:
+cd9568e2b3dfacb3707235b11441817c8cae53e0
+
+synchronized:
+yes
+
+tracked tree:
+clean for T006 scope
+
+unrelated user changes:
+preserved
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED = NO until manual review of General + Translations
+
+Architectural-Concerns:
+none; Tree remains approved baseline; SEO advanced remains later
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
