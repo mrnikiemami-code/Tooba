@@ -1,0 +1,260 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R8
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Fixed AG Grid horizontal scroll header stacking (opaque header, z-index, cell-wrapper alignment), restored Jalali column filter on updatedAt, implemented apply-on-Enter column filter semantics with query dedup, removed rejected verbose UI copy.
+
+Horizontal-Scroll-Header:
+
+root cause:
+semi-transparent header background + flex on .ag-cell breaking scroll alignment; parent overflow-hidden clipping grid scroll context
+
+fix:
+opaque --ag-header-background-color; header/pinned z-index stacking; cell-wrapper flex instead of cell; data-app-grid-viewport isolation; removed section overflow-hidden
+
+header/body alignment:
+ensureDomOrder + cell-wrapper pattern
+
+sticky header:
+opaque surface + border/shadow on .ag-header
+
+background:
+hsl(var(--surface-elevated)) fully opaque
+
+z-index/stacking:
+header z-index 4-5, pinned headers 5, body rows z-index 1
+
+pinned columns:
+pinned container opaque background z-index 2
+
+RTL horizontal scroll:
+enableRtl + ensureDomOrder
+
+manual verification:
+pending user browser — FE restarted for preview
+
+Jalali-Column-Filter:
+
+component/path:
+jalali-date-column-filter.tsx + jalali-date-picker.tsx (commitOnChange draft mode)
+
+Product date field:
+updatedAt
+
+native Gregorian removed:
+yes — custom Jalali picker only
+
+equals:
+on / برابر
+
+before:
+before / قبل از
+
+after:
+after / بعد از
+
+between:
+from/to Jalali inputs
+
+Jalali visible UI:
+YYYY/MM/DD fa-IR + calendar panel
+
+canonical ISO:
+AG date model → fromAgFilterModel → GridFilterValue ISO
+
+column filter path:
+filter: jalaliDateColumnFilter on updatedAt
+
+advanced filter preserved:
+yes — AdvancedFilterBuilder unchanged
+
+tests:
+filter-commit.test.ts + jalali-date-ui.test.ts
+
+Filter-Commit-Semantics:
+
+draft state:
+JalaliDatePicker commitOnChange=false; AG built-in filters buttons apply/reset
+
+applied state:
+onFilterChanged → commitColumnFilters → load
+
+text typing requests:
+0 until Apply/Enter (buttons: apply, reset)
+
+number typing requests:
+0 until Apply/Enter
+
+Jalali typing requests:
+0 until Enter/Apply/calendar select
+
+Enter commit:
+JalaliDatePicker onKeyDown Enter → onCommit
+
+Apply commit:
+COLUMN_FILTER_APPLY_PARAMS buttons + Jalali Apply button
+
+enum selection:
+N/A column path (status uses advanced drawer)
+
+duplicate query suppression:
+shouldCommitGridQuery + filtersEqual
+
+AbortController/stale response:
+preserved in load()
+
+tests:
+filter-commit.test.ts (8 tests)
+
+Column-Filter-UX:
+
+RTL:
+filter popover dir=rtl for Jalali
+
+localization:
+buildAgGridLocaleText locale-aware operators
+
+operator selector:
+Jalali filter select + AG apply labels fa
+
+input:
+JalaliDatePicker text + calendar
+
+apply:
+explicit Apply button
+
+clear:
+reset button
+
+z-index:
+.ag-popup z-index overlay
+
+clipping:
+removed parent overflow-hidden
+
+raw English labels:
+removed from fa localeText
+
+Removed-UI-Copy:
+
+current-page export sentence:
+removed exportScopeNote from toolbar
+
+current-page selection sentence:
+removed pageSelectionNote; replaced with concise selectedCount chip
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (img warning only)
+
+grid tests:
+42 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+live Admin Products query:
+Host 200; FE restarted
+
+warnings:
+next/img advisory pre-existing
+
+new warnings:
+0
+
+git diff --check:
+clean on committed files
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — restarting
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+horizontal scroll test:
+scroll RTL grid — header stays aligned above rows
+
+sticky header test:
+vertical scroll — opaque header readable
+
+Jalali column filter test:
+updatedAt column filter → Jalali UI
+
+Enter-to-apply test:
+type text filter → Enter → single request
+
+no-request-while-typing test:
+type without Enter → no network request
+
+Git:
+
+branch:
+main
+
+commit:
+ea45b65
+
+push:
+origin/main
+
+final HEAD:
+ea45b65
+
+origin/main:
+ea45b65
+
+synchronized:
+yes
+
+tracked tree:
+clean on committed scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually reviews.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
