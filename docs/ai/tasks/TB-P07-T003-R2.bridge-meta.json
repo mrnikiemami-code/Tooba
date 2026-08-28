@@ -1,0 +1,11 @@
+﻿{
+    "synchronized":  true,
+    "bridgeTaskUuid":  "afe319ee-204f-4e18-945c-d6b1071fb225",
+    "parentTaskId":  "TB-P07-T003-R1",
+    "originMain":  "e0501da22b775248ce248d62239faf914d96b233",
+    "taskId":  "TB-P07-T003-R2",
+    "channelId":  "tooba-main",
+    "status":  "PASS",
+    "head":  "e0501da22b775248ce248d62239faf914d96b233",
+    "resultId":  "e511e2e5-ee79-4db7-a53c-054af80953a4"
+}
