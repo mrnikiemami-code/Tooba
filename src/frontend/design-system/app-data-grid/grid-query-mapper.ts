@@ -33,11 +33,17 @@ function mapFilter(field: string, value: GridFilterValue): GridFilterRequest {
         valueTo: value.valueTo !== undefined ? String(value.valueTo) : undefined,
       };
     case "enum":
-    case "status":
       return {
         field,
         operator: "in",
         values: value.values,
+      };
+    case "status":
+      return {
+        field,
+        operator: value.values.length === 1 ? "equals" : "in",
+        value: value.values.length === 1 ? value.values[0] : undefined,
+        values: value.values.length === 1 ? undefined : value.values,
       };
     case "date":
       return {

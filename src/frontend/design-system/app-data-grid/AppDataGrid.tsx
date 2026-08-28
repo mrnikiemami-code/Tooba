@@ -6,6 +6,7 @@ import {
   AllCommunityModule,
   ModuleRegistry,
   type ColDef,
+  type FilterChangedEvent,
   type GridApi,
   type GridReadyEvent,
   type SortChangedEvent,
@@ -21,7 +22,9 @@ import type {
   SavedGridView,
   SavedViewStore,
 } from "../data-grid/types";
+import { isFilterActive } from "../data-grid/serialize";
 import { DEFAULT_GRID_QUERY } from "./grid-query-mapper";
+import { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 
@@ -73,6 +76,25 @@ export function AppDataGrid<T extends { id: string }>({
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const filterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryRef = useRef(query);
+  queryRef.current = query;
+
+  const columnLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    for (const col of columnDefs) {
+      const id = col.colId ?? col.field;
+      if (id) {
+        labels[id] = col.headerName ?? id;
+      }
+    }
+    return labels;
+  }, [columnDefs]);
+
+  const activeFilterEntries = useMemo(
+    () => Object.entries(query.filters).filter(([, value]) => isFilterActive(value)),
+    [query.filters],
+  );
 
   const load = useCallback(
     async (nextQuery: GridServerQuery) => {
@@ -119,16 +141,47 @@ export function AppDataGrid<T extends { id: string }>({
       const sorts = colState?.colId && colState.sort
         ? [{ columnId: colState.colId, direction: colState.sort as "asc" | "desc" }]
         : DEFAULT_GRID_QUERY.sorts;
-      void load({ ...query, page: 1, sorts });
+      void load({ ...queryRef.current, page: 1, sorts });
     },
-    [load, query],
+    [load],
   );
+
+  const onFilterChanged = useCallback(
+    (_event: FilterChangedEvent<T>) => {
+      const api = gridApiRef.current;
+      if (!api) return;
+      if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
+      filterTimerRef.current = setTimeout(() => {
+        const filters = fromAgFilterModel(api.getFilterModel());
+        void load({ ...queryRef.current, page: 1, filters });
+      }, 300);
+    },
+    [load],
+  );
+
+  function clearFilter(columnId: string) {
+    const api = gridApiRef.current;
+    if (api) {
+      const model = { ...api.getFilterModel() };
+      delete model[columnId];
+      api.setFilterModel(Object.keys(model).length > 0 ? model : null);
+    }
+    const next = { ...queryRef.current.filters };
+    delete next[columnId];
+    void load({ ...queryRef.current, page: 1, filters: next });
+  }
+
+  function clearAllFilters() {
+    gridApiRef.current?.setFilterModel(null);
+    setSearchInput("");
+    void load({ ...queryRef.current, page: 1, filters: {}, search: undefined });
+  }
 
   function scheduleSearch(value: string) {
     setSearchInput(value);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
-      void load({ ...query, page: 1, search: value.trim() || undefined });
+      void load({ ...queryRef.current, page: 1, search: value.trim() || undefined });
     }, 350);
   }
 
@@ -242,7 +295,28 @@ export function AppDataGrid<T extends { id: string }>({
           </>
         ) : null}
         <span className="text-xs text-muted">{messages.exportScopeNote}</span>
+        {activeFilterEntries.length > 0 ? (
+          <button type="button" className="border border-border bg-surface px-3 text-sm" onClick={clearAllFilters}>
+            {messages.clearFilters}
+          </button>
+        ) : null}
       </div>
+
+      {activeFilterEntries.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 px-1 py-2" data-testid="app-grid-filter-chips">
+          {activeFilterEntries.map(([columnId, value]) => (
+            <button
+              key={columnId}
+              type="button"
+              className="inline-flex items-center gap-2 rounded-ds border border-border bg-secondary px-2 py-1 text-xs"
+              onClick={() => clearFilter(columnId)}
+            >
+              <span>{filterChipLabel(columnId, columnLabels[columnId] ?? columnId, value, locale)}</span>
+              <span aria-hidden>×</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {pageSelectionOnly ? (
         <p className="px-1 py-2 text-xs text-muted">{messages.pageSelectionNote}</p>
@@ -270,6 +344,7 @@ export function AppDataGrid<T extends { id: string }>({
           rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }}
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}
+          onFilterChanged={onFilterChanged}
           onSelectionChanged={(event) => {
             setSelected(event.api.getSelectedRows());
           }}

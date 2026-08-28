@@ -13,5 +13,6 @@ test("toHostGridQuery maps UI contract without AG Grid leakage", () => {
   assert.equal(host.page, 1);
   assert.equal(host.search, "shirt");
   assert.equal(host.filters[0]?.field, "status");
-  assert.equal(host.filters[0]?.operator, "in");
+  assert.equal(host.filters[0]?.operator, "equals");
+  assert.equal(host.filters[0]?.value, "Published");
 });
