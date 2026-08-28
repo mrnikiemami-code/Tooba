@@ -14,6 +14,8 @@ import {
   type AdvancedFilterExpression,
 } from "./advanced-filter-expression";
 import { filterOperatorLabelsFor } from "../data-grid/messages";
+import { TEXT_OPERATORS, textFilterNeedsValue, textOperatorLabel } from "./text-filter-operators";
+import type { TextFilterOperator } from "../data-grid/types";
 
 export function AdvancedFilterBuilder({
   columns,
@@ -164,6 +166,7 @@ export function AdvancedFilterBuilder({
                       <CompactFilterValue
                         column={column}
                         value={condition.value}
+                        locale={locale}
                         onChange={(value) => updateCondition(condition.id, { value })}
                       />
                     )}
@@ -214,14 +217,16 @@ function ConditionOperatorSelect({
         onChange={(event) =>
           onChange({
             kind: "text",
-            operator: event.target.value as "contains" | "equals" | "startsWith",
+            operator: event.target.value as TextFilterOperator,
             query: value?.kind === "text" ? value.query : "",
           })
         }
       >
-        <option value="contains">{ops.contains}</option>
-        <option value="equals">{ops.equals}</option>
-        <option value="startsWith">{ops.startsWith}</option>
+        {TEXT_OPERATORS.map((op) => (
+          <option key={op} value={op}>
+            {textOperatorLabel(op, ops)}
+          </option>
+        ))}
       </Select>
     );
   }
@@ -281,13 +286,25 @@ function ConditionOperatorSelect({
 function CompactFilterValue({
   column,
   value,
+  locale,
   onChange,
 }: {
   column: AppGridFilterColumnDef;
   value?: GridFilterValue;
+  locale: "fa" | "en";
   onChange: (value: GridFilterValue) => void;
 }) {
+  const ops = filterOperatorLabelsFor(locale);
+
   if (column.filterKind === "text") {
+    const operator = value?.kind === "text" ? value.operator : "contains";
+    if (!textFilterNeedsValue(operator)) {
+      return (
+        <div className="flex min-h-[2.75rem] items-center rounded-ds border border-border bg-secondary/40 px-3 text-sm text-muted">
+          {textOperatorLabel(operator, ops)}
+        </div>
+      );
+    }
     return (
       <Input
         className="min-h-[2.75rem] w-full"
@@ -295,7 +312,7 @@ function CompactFilterValue({
         onChange={(event) =>
           onChange({
             kind: "text",
-            operator: value?.kind === "text" ? value.operator : "contains",
+            operator,
             query: event.target.value,
           })
         }

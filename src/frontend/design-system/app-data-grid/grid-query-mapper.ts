@@ -72,6 +72,9 @@ function mapAdvancedCondition(condition: AdvancedFilterCondition): GridAdvancedF
 function mapFilter(field: string, value: GridFilterValue): GridFilterRequest {
   switch (value.kind) {
     case "text":
+      if (value.operator === "blank" || value.operator === "notBlank") {
+        return { field, operator: value.operator };
+      }
       return {
         field,
         operator: value.operator,

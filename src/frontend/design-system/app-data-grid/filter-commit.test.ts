@@ -64,7 +64,7 @@ test("theme uses opaque header tokens without structural AG overrides", () => {
   assert.match(css, /--app-grid-chrome-bg:\s*rgb\(243,\s*242,\s*242\)/);
   assert.match(css, /--app-filter-panel-bg:\s*lightgrey/);
   assert.match(css, /--ag-header-background-color:\s*var\(--app-grid-chrome-bg\)/);
-  assert.doesNotMatch(css, /\.ag-cell-wrapper/);
+  assert.match(css, /\[data-app-grid-shell\]\[dir="rtl"\][\s\S]*\.ag-cell[\s\S]*text-align:\s*right/);
 });
 
 test("AppDataGrid registers app column header and apply-only filter params", () => {

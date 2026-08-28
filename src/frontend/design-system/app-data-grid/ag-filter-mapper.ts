@@ -1,5 +1,5 @@
 import type { FilterModel } from "ag-grid-community";
-import type { GridFilterValue, NumberFilterOperator } from "../data-grid/types";
+import type { GridFilterValue, NumberFilterOperator, TextFilterOperator } from "../data-grid/types";
 import { filterOperatorLabelsFor } from "../data-grid/messages.ts";
 import { formatJalaliDate } from "./jalali.ts";
 
@@ -56,6 +56,12 @@ export function fromAgFilterModel(model: FilterModel | null | undefined): Record
 function mapGridFilterToAg(field: string, value: GridFilterValue): AgFilterEntry | undefined {
   switch (value.kind) {
     case "text":
+      if (value.operator === "blank" || value.operator === "notBlank") {
+        return {
+          filterType: "text",
+          type: reverseTextOperator(value.operator),
+        };
+      }
       return {
         filterType: "text",
         type: reverseTextOperator(value.operator),
@@ -84,12 +90,22 @@ function mapGridFilterToAg(field: string, value: GridFilterValue): AgFilterEntry
   }
 }
 
-function reverseTextOperator(operator: "contains" | "equals" | "startsWith"): string {
+function reverseTextOperator(operator: TextFilterOperator): string {
   switch (operator) {
     case "equals":
       return "equals";
+    case "notEqual":
+      return "notEqual";
     case "startsWith":
       return "startsWith";
+    case "endsWith":
+      return "endsWith";
+    case "notContains":
+      return "notContains";
+    case "blank":
+      return "blank";
+    case "notBlank":
+      return "notBlank";
     default:
       return "contains";
   }
@@ -184,6 +200,21 @@ function mapAgFilterEntry(field: string, raw: AgFilterEntry | undefined): GridFi
     };
   }
 
+  if (raw.filterType === "text") {
+    if (raw.type === "blank" || raw.type === "notBlank") {
+      return { kind: "text", operator: raw.type, query: "" };
+    }
+    const text = raw.filter != null ? String(raw.filter).trim() : "";
+    if (!text) {
+      return undefined;
+    }
+    return {
+      kind: "text",
+      operator: mapTextOperator(raw.type),
+      query: text,
+    };
+  }
+
   const text = raw.filter != null ? String(raw.filter).trim() : "";
   if (!text) {
     return undefined;
@@ -196,12 +227,22 @@ function mapAgFilterEntry(field: string, raw: AgFilterEntry | undefined): GridFi
   };
 }
 
-function mapTextOperator(type: string | undefined): "contains" | "equals" | "startsWith" {
+function mapTextOperator(type: string | undefined): TextFilterOperator {
   switch (type) {
     case "equals":
       return "equals";
+    case "notEqual":
+      return "notEqual";
     case "startsWith":
       return "startsWith";
+    case "endsWith":
+      return "endsWith";
+    case "notContains":
+      return "notContains";
+    case "blank":
+      return "blank";
+    case "notBlank":
+      return "notBlank";
     default:
       return "contains";
   }
@@ -276,8 +317,29 @@ export function filterChipLabel(
   const formatNum = (n: number) => n.toLocaleString(locale === "fa" ? "fa-IR" : "en-US");
 
   switch (value.kind) {
-    case "text":
-      return `${header}: ${value.query}`;
+    case "text": {
+      const ops = filterOperatorLabelsFor(locale);
+      const opLabel =
+        value.operator === "blank"
+          ? ops.blank
+          : value.operator === "notBlank"
+            ? ops.notBlank
+            : value.operator === "equals"
+              ? ops.equals
+              : value.operator === "notEqual"
+                ? ops.notEqual
+                : value.operator === "startsWith"
+                  ? ops.startsWith
+                  : value.operator === "endsWith"
+                    ? ops.endsWith
+                    : value.operator === "notContains"
+                      ? ops.notContains
+                      : ops.contains;
+      if (value.operator === "blank" || value.operator === "notBlank") {
+        return `${header}: ${opLabel}`;
+      }
+      return `${header}: ${opLabel} ${value.query}`;
+    }
     case "number": {
       if (value.operator === "between" && value.valueTo != null) {
         return `${header}: ${formatNum(value.value)} ${locale === "fa" ? "تا" : "to"} ${formatNum(value.valueTo)}`;

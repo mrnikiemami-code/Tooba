@@ -16,7 +16,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "./theme.css";
 
-import { FileDown, FileSpreadsheet, Filter, FilterX, Search as SearchIcon } from "lucide-react";
+import { FileDown, FileSpreadsheet, Filter, FilterX } from "lucide-react";
 import { Button } from "../primitives/core";
 import { moveColumn } from "../data-grid/serialize";
 import type {
@@ -58,6 +58,7 @@ import { commitSearchQuery } from "./search-commit";
 import { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";
 import type { StatusFilterOption } from "./status-header-filter-panel";
 import { AppColumnHeader } from "./app-column-header";
+import { gridTooltipText } from "./use-overflow-tooltip";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -618,6 +619,7 @@ export function AppDataGrid<T extends { id: string }>({
       minWidth: 72,
       flex: 1,
       filterParams: COLUMN_FILTER_APPLY_PARAMS,
+      tooltipValueGetter: (params) => gridTooltipText(params.value, params.valueFormatted),
     }),
     [],
   );
@@ -656,15 +658,6 @@ export function AppDataGrid<T extends { id: string }>({
               placeholder={messages.search}
               aria-label={messages.search}
             />
-            <button
-              type="button"
-              data-app-grid-search-apply
-              className="absolute end-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-secondary hover:text-foreground"
-              aria-label={messages.searchApply}
-              onClick={commitSearch}
-            >
-              <SearchIcon className="size-4" aria-hidden />
-            </button>
           </div>
           {hasActiveFiltering ? (
             <button
@@ -927,6 +920,7 @@ export function AppDataGrid<T extends { id: string }>({
           getRowId={(params) => params.data.id}
           localeText={localeText}
           enableRtl={direction === "rtl"}
+          tooltipShowMode="whenTruncated"
           ensureDomOrder
           animateRows
           suppressDragLeaveHidesColumns
@@ -936,6 +930,7 @@ export function AppDataGrid<T extends { id: string }>({
             width: 52,
             minWidth: 48,
             maxWidth: 56,
+            cellClass: "app-grid-cell-align-center",
           }}
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}

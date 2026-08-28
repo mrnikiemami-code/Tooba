@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { Button, Checkbox, Input, Select } from "../primitives/core";
-import type { EntityFilterAdapter, GridColumnDef, GridFilterValue } from "./types";
+import type { EntityFilterAdapter, GridColumnDef, GridFilterValue, TextFilterOperator } from "./types";
 import { filterOperatorLabelsFor, type FilterOperatorLabels } from "./messages";
+import { TEXT_OPERATORS, textFilterNeedsValue, textOperatorLabel } from "../app-data-grid/text-filter-operators";
 
 /**
  * کنترل فیلتر تایپ‌شده برای یک ستون. برچسب عملگرها محلی‌سازی شده‌اند (نه contains خام).
@@ -34,34 +35,40 @@ export function FilterControl<T>({
   }, [operatorLabels]);
 
   if (kind === "text") {
+    const operator = value?.kind === "text" ? value.operator : "contains";
+    const needsValue = textFilterNeedsValue(operator);
     return (
       <label className="block text-sm">
         {column.header}
         <Select
           aria-label={`${column.header} — ${ops.contains}`}
-          value={value?.kind === "text" ? value.operator : "contains"}
+          value={operator}
           onChange={(event) =>
             onChange({
               kind: "text",
-              operator: event.target.value as "contains" | "equals" | "startsWith",
+              operator: event.target.value as TextFilterOperator,
               query: value?.kind === "text" ? value.query : "",
             })
           }
         >
-          <option value="contains">{ops.contains}</option>
-          <option value="equals">{ops.equals}</option>
-          <option value="startsWith">{ops.startsWith}</option>
+          {TEXT_OPERATORS.map((op) => (
+            <option key={op} value={op}>
+              {textOperatorLabel(op, ops)}
+            </option>
+          ))}
         </Select>
-        <Input
-          value={value?.kind === "text" ? value.query : ""}
-          onChange={(event) =>
-            onChange({
-              kind: "text",
-              operator: value?.kind === "text" ? value.operator : "contains",
-              query: event.target.value,
-            })
-          }
-        />
+        {needsValue ? (
+          <Input
+            value={value?.kind === "text" ? value.query : ""}
+            onChange={(event) =>
+              onChange({
+                kind: "text",
+                operator,
+                query: event.target.value,
+              })
+            }
+          />
+        ) : null}
       </label>
     );
   }

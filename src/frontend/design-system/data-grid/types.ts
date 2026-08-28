@@ -10,7 +10,15 @@ export type GridDensity = "comfortable" | "compact";
 
 export type GridFilterKind = "text" | "number" | "money" | "date" | "enum" | "boolean" | "entity" | "status";
 
-export type TextFilterOperator = "contains" | "equals" | "startsWith";
+export type TextFilterOperator =
+  | "contains"
+  | "notContains"
+  | "equals"
+  | "notEqual"
+  | "startsWith"
+  | "endsWith"
+  | "blank"
+  | "notBlank";
 export type NumberFilterOperator =
   | "equals"
   | "notEqual"

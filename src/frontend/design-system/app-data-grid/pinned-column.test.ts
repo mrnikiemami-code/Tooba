@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { pinnedGridEdge } from "./grid-direction.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -26,9 +27,27 @@ test("theme reinforces AG v36 pinned cell containers with opaque surfaces", () =
   assert.doesNotMatch(css, /\.ag-(?:grid|cell|header|row)[^{]*\{[^}]*z-index:/);
 });
 
-test("product list keeps actions column pinned right only", () => {
+test("pinnedGridEdge maps rtl end to left pin", () => {
+  assert.equal(pinnedGridEdge("rtl"), "left");
+  assert.equal(pinnedGridEdge("ltr"), "right");
+});
+
+test("theme applies visible row separators", () => {
+  const css = readFileSync(join(dir, "theme.css"), "utf8");
+  assert.match(css, /--ag-row-border-color:\s*rgb\(var\(--color-border\)\)/);
+  assert.match(css, /\.ag-row:not\(\.ag-header-row\)\s*>\s*\.ag-grid-scrolling-cells/);
+});
+
+test("product list keeps actions column pinned to rtl grid end", () => {
   const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
   assert.match(source, /colId:\s*"actions"/);
-  assert.match(source, /pinned:\s*directionPin\(\)/);
-  assert.match(source, /function directionPin\(\): "left" \| "right" \{\s*return "right";/);
+  assert.match(source, /pinned:\s*actionsPin/);
+  assert.match(source, /pinnedGridEdge\("rtl"\)/);
+  assert.match(source, /lockPinned:\s*true/);
+  assert.match(source, /lockPosition:\s*actionsPin/);
+  assert.match(source, /ProductActionsCell/);
+  assert.match(source, /admin-product-view-/);
+  assert.match(source, /admin-product-edit-/);
+  assert.match(source, /admin-product-delete-/);
+  assert.match(source, /scope=view/);
 });

@@ -15,11 +15,13 @@ test("theme uses official AG Grid legacy variables for header and borders", () =
   assert.match(css, /\.ag-grid-pinned-right-cells/);
   assert.match(css, /--ag-header-column-separator-display/);
   assert.match(css, /--ag-row-border-color/);
-  assert.match(css, /--ag-cell-horizontal-border/);
-  assert.match(css, /\.ag-header-row\.ag-header-row-column/);
+  assert.match(css, /--ag-cell-horizontal-border:\s*none/);
+  assert.match(css, /--ag-header-column-separator-display:\s*none/);
+  assert.match(css, /\[data-app-grid-shell\][\s\S]*\.ag-cell[\s\S]*align-items:\s*center/);
+  assert.match(css, /\[data-app-grid-shell\][\s\S]*\.ag-cell-wrapper[\s\S]*justify-content:\s*flex-start/);
+  assert.match(css, /\[data-app-grid-shell\]\[dir="rtl"\][\s\S]*\.ag-cell[\s\S]*text-align:\s*right/);
   assert.match(css, /\.ag-header-cell-filter-button[\s\S]*display:\s*none/);
   assert.match(css, /\.ag-theme-tooba \.ag-filter/);
-  assert.doesNotMatch(css, /\.ag-cell-wrapper/);
 });
 
 test("AppDataGrid uses app-owned header filters and external filter fields", () => {
@@ -27,6 +29,8 @@ test("AppDataGrid uses app-owned header filters and external filter fields", () 
   assert.match(source, /appColumnHeader:\s*AppColumnHeader/);
   assert.match(source, /externalFilterFields/);
   assert.match(source, /onExternalFilterApply/);
+  assert.match(source, /tooltipShowMode="whenTruncated"/);
+  assert.match(source, /tooltipValueGetter/);
   assert.doesNotMatch(source, /jalaliDateColumnFilter/);
 });
 

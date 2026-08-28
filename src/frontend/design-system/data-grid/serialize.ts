@@ -116,6 +116,7 @@ export function isFilterActive(value: GridFilterValue | undefined): boolean {
   }
   switch (value.kind) {
     case "text":
+      if (value.operator === "blank" || value.operator === "notBlank") return true;
       return value.query.trim().length > 0;
     case "number":
       if (value.operator === "blank" || value.operator === "notBlank") return true;

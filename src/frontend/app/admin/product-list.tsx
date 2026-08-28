@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { Edit2, Eye, Trash2 } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
 import {
@@ -10,6 +11,8 @@ import {
   applyProductGridFilterHeader,
 } from "./product-grid-filter-matrix";
 import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
+import { pinnedGridEdge } from "../../design-system/app-data-grid/grid-direction";
+import { useOverflowTooltip } from "../../design-system/app-data-grid/use-overflow-tooltip";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
 import {
@@ -38,7 +41,7 @@ function stockClass(units: number): string {
   return "font-medium text-success";
 }
 
-function ProductActionMenu({
+function ProductActionsCell({
   row,
   onLifecycle,
 }: {
@@ -48,11 +51,14 @@ function ProductActionMenu({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
 
-  async function run(action: "publish" | "unpublish" | "archive" | "delete") {
+  async function onDelete() {
+    if (!window.confirm(`حذف «${row.title}»؟ در صورت وجود ارجاع، محصول بایگانی می‌شود.`)) {
+      return;
+    }
     setBusy(true);
     setMessage(undefined);
     try {
-      await onLifecycle(row.id, action);
+      await onLifecycle(row.id, "delete");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "خطا");
     } finally {
@@ -62,34 +68,38 @@ function ProductActionMenu({
 
   return (
     <div className="app-grid-cell-content">
-      <div className="relative flex justify-center">
-      <details className="group">
-        <summary
-          className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border border-border bg-surface text-lg marker:content-none hover:bg-secondary [&::-webkit-details-marker]:hidden"
-          aria-label="عملیات"
+      <div className="relative flex items-center justify-center gap-2 px-1">
+        <Link
+          href={`/admin/products/${row.id}?scope=view`}
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground"
+          aria-label="مشاهده"
+          title="مشاهده"
+          data-testid={`admin-product-view-${row.id}`}
         >
-          ⋮
-        </summary>
-        <div className="absolute end-0 z-[var(--z-popover)] mt-1 min-w-[10rem] rounded-ds border border-border bg-surface-elevated p-1 shadow-md">
-          <Link className="block rounded-ds px-3 py-2 text-sm hover:bg-secondary" href={`/admin/products/${row.id}`}>
-            مشاهده
-          </Link>
-          <button type="button" disabled={busy || row.status === "Published"} className="block w-full rounded-ds px-3 py-2 text-start text-sm hover:bg-secondary disabled:opacity-50" onClick={() => void run("publish")}>
-            انتشار
-          </button>
-          <button type="button" disabled={busy || row.status !== "Published"} className="block w-full rounded-ds px-3 py-2 text-start text-sm hover:bg-secondary disabled:opacity-50" onClick={() => void run("unpublish")}>
-            لغو انتشار
-          </button>
-          <button type="button" disabled={busy || row.status === "Archived"} className="block w-full rounded-ds px-3 py-2 text-start text-sm hover:bg-secondary disabled:opacity-50" onClick={() => void run("archive")}>
-            بایگانی
-          </button>
-          <button type="button" disabled={busy} className="block w-full rounded-ds px-3 py-2 text-start text-sm text-danger hover:bg-secondary disabled:opacity-50" onClick={() => void run("delete")}>
-            حذف امن
-          </button>
-        </div>
-      </details>
-      {message ? <p className="absolute top-full mt-1 max-w-[10rem] text-xs text-danger">{message}</p> : null}
-    </div>
+          <Eye className="size-4" aria-hidden />
+        </Link>
+        <Link
+          href={`/admin/products/${row.id}`}
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground"
+          aria-label="ویرایش"
+          title="ویرایش"
+          data-testid={`admin-product-edit-${row.id}`}
+        >
+          <Edit2 className="size-4" aria-hidden />
+        </Link>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void onDelete()}
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-danger/30 bg-surface text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+          aria-label="حذف"
+          title="حذف"
+          data-testid={`admin-product-delete-${row.id}`}
+        >
+          <Trash2 className="size-4" aria-hidden />
+        </button>
+        {message ? <p className="absolute top-full mt-1 max-w-[10rem] text-xs text-danger">{message}</p> : null}
+      </div>
     </div>
   );
 }
@@ -99,8 +109,8 @@ function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
   if (!row) return null;
   const thumb = row.primaryMediaAssetId ? storefrontMediaUrl(row.primaryMediaAssetId) : null;
   return (
-    <div className="app-grid-cell-content">
-      <div className="flex items-center gap-2">
+    <div className="app-grid-cell-content app-grid-cell-media">
+      <div className="flex w-full items-center justify-end gap-2">
       {thumb ? (
         <img src={thumb} alt="" className="size-11 shrink-0 rounded-ds border border-border object-cover bg-secondary" />
       ) : (
@@ -112,16 +122,46 @@ function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
 }
 
 function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const row = params.data;
+  const title = row?.title ?? "";
+  const code = row ? productCode(row.id) : "";
+  useOverflowTooltip(params, row ? `${title}\n${code}` : "", rootRef);
   if (!row) return null;
   return (
-    <div className="app-grid-cell-content">
-      <Link className="block min-w-0 hover:underline" href={`/admin/products/${row.id}`}>
-      <span className="block truncate text-sm font-semibold leading-snug">{row.title}</span>
-      <span className="mt-0.5 block truncate text-xs text-muted" dir="ltr">
-        {productCode(row.id)}
+    <div ref={rootRef} className="app-grid-cell-content">
+      <Link className="block min-w-0 text-right hover:underline" href={`/admin/products/${row.id}`}>
+      <span data-overflow-measure className="block truncate text-sm font-semibold leading-snug">{row.title}</span>
+      <span data-overflow-measure className="mt-0.5 block truncate text-xs text-muted" dir="ltr">
+        {code}
       </span>
     </Link>
+    </div>
+  );
+}
+
+function StatusCell(params: ICellRendererParams<AdminProductListRow>) {
+  const rootRef = useRef<HTMLSpanElement>(null);
+  const label = formatAdminStatus(String(params.value ?? ""));
+  useOverflowTooltip(params, label, rootRef);
+  return (
+    <div className="app-grid-cell-content">
+      <span ref={rootRef} data-overflow-measure className={productStatusClass(String(params.value ?? ""))}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function StockCell(params: ICellRendererParams<AdminProductListRow>) {
+  const rootRef = useRef<HTMLSpanElement>(null);
+  const label = Number(params.value ?? 0).toLocaleString("fa-IR");
+  useOverflowTooltip(params, label, rootRef);
+  return (
+    <div className="app-grid-cell-content">
+      <span ref={rootRef} data-overflow-measure className={stockClass(Number(params.value ?? 0))}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -135,19 +175,9 @@ const PRODUCT_STATUS_FILTER_OPTIONS = [
 function buildColumnDefs(
   onLifecycle: (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => Promise<void>,
 ): ColDef<AdminProductListRow>[] {
+  const actionsPin = pinnedGridEdge("rtl");
+
   return [
-    applyProductGridFilterHeader({
-      colId: "actions",
-      headerName: "عملیات",
-      width: 72,
-      minWidth: 72,
-      maxWidth: 80,
-      sortable: false,
-      lockVisible: true,
-      pinned: directionPin(),
-      cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
-        params.data ? <ProductActionMenu row={params.data} onLifecycle={onLifecycle} /> : null,
-    }),
     applyProductGridFilterHeader({
       colId: "media",
       headerName: "رسانه",
@@ -168,9 +198,7 @@ function buildColumnDefs(
       headerName: "وضعیت",
       width: 120,
       valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
-      cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
-        <span className={productStatusClass(String(params.value ?? ""))}>{formatAdminStatus(String(params.value ?? ""))}</span>
-      ),
+      cellRenderer: StatusCell,
     }),
     applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 130 }),
     applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "قیمت (تومان)", width: 150 }),
@@ -178,11 +206,7 @@ function buildColumnDefs(
       field: "sellableUnits",
       headerName: "موجودی",
       width: 100,
-      cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
-        <div className="app-grid-cell-content">
-          <span className={stockClass(Number(params.value ?? 0))}>{Number(params.value ?? 0).toLocaleString("fa-IR")}</span>
-        </div>
-      ),
+      cellRenderer: StockCell,
     }),
     applyProductGridFilterHeader({
       field: "updatedAt",
@@ -193,11 +217,22 @@ function buildColumnDefs(
     applyProductGridFilterHeader({ field: "variantCount", headerName: "گونه", width: 90, hide: true }),
     applyProductGridFilterHeader({ field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true }),
     applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
+    applyProductGridFilterHeader({
+      colId: "actions",
+      headerName: "عملیات",
+      width: 188,
+      minWidth: 176,
+      maxWidth: 240,
+      sortable: false,
+      lockVisible: true,
+      lockPinned: true,
+      lockPosition: actionsPin,
+      pinned: actionsPin,
+      cellClass: "app-grid-cell-align-center",
+      cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
+        params.data ? <ProductActionsCell row={params.data} onLifecycle={onLifecycle} /> : null,
+    }),
   ];
-}
-
-function directionPin(): "left" | "right" {
-  return "right";
 }
 
 const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
