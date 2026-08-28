@@ -1,0 +1,257 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T005
+Parent-Task:
+TB-P07-T004
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Admin Category Tree + Workspace shell delivered on T004 foundation. AppCategoryTree wraps antd Tree 5.27.6 inside design-system without leaking Ant APIs into pages. Real tree/workspace/create/move/reorder APIs wired. Desktop tree+workspace and mobile full-page workspace. General + translation readiness implemented; future tabs progressive «به‌زودی». AppDataGrid untouched. Preview http://localhost:3000/fa/admin/catalog/categories = 200. FE validation green (264 tests). USER_VISUAL_ACCEPTED remains NO pending manual review.
+
+Visual-Contract:
+
+reference image:
+docs/evidence/TB-P07-T004/visual-contract-admin-categories.png
+
+redesign performed:
+no
+
+composition matched:
+tree + workspace RTL Tooba shell
+
+ordinary-user UX:
+human labels; no UUID in primary UI; simple create; progressive tabs
+
+AppCategoryTree:
+
+path:
+src/frontend/design-system/app-category-tree/
+
+Ant Tree version:
+5.27.6
+
+wrapper:
+AppCategoryTree
+
+raw Ant API leakage:
+no
+
+RTL:
+yes
+
+LTR:
+capable
+
+search:
+local filter + highlight + ancestor expand
+
+virtual scroll:
+enabled where safe via antd
+
+expand:
+chevron only
+
+select:
+name/title
+
+drag handle:
+separate
+
+move:
+API MoveCategory
+
+reorder:
+API ReorderCategorySiblings
+
+invalid drop:
+rejected (self/descendant)
+
+accessibility:
+aria-labels/tooltips/focus; ~40–44px targets
+
+mobile:
+tree then full-page workspace + back
+
+Create-Flow:
+
+root category:
+دسته‌بندی جدید (name/slug/draft)
+
+child category:
+افزودن زیرمجموعه
+
+progressive disclosure:
+yes (no SEO/attrs on create)
+
+post-create selection:
+refresh tree + navigate workspace
+
+Workspace:
+
+route:
+/fa/admin/catalog/categories[/{id}[/{tab}]]
+
+selected category:
+URL-driven
+
+breadcrumb:
+path from ancestors
+
+status:
+Draft/Published/Archived labels
+
+general summary:
+yes
+
+translation status:
+کامل/ناقص/ایجاد نشده
+
+tabs:
+shell for all; content for عمومی + ترجمه‌ها only
+
+deep link:
+yes
+
+refresh:
+yes
+
+back/forward:
+yes
+
+invalid id:
+handled
+
+mobile:
+full-page workspace
+
+Canonical-AppDataGrid:
+
+raw AgGridReact used:
+no
+
+Tooba AppDataGrid reused:
+not needed for this shell
+
+page-specific grid CSS introduced:
+no
+
+API:
+
+tree:
+GET /v1/admin/catalog/categories/tree
+
+category summary:
+GET /v1/admin/catalog/categories/{id}
+
+create:
+POST /v1/admin/catalog/categories
+
+move:
+POST .../move
+
+reorder:
+POST .../reorder
+
+backend touched:
+no
+
+gaps:
+none for T005 scope
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors/warnings
+
+frontend tests:
+264 passed / 0 failed / 0 skipped
+
+frontend build:
+success
+
+backend restore:
+n/a
+
+backend build:
+n/a
+
+backend full tests:
+n/a
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0
+
+new warnings:
+0
+
+git diff --check:
+clean
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088/health — 200
+
+Frontend:
+http://localhost:3000 — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+Category Admin:
+http://localhost:3000/fa/admin/catalog/categories — 200
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+8e60008 feat admin category tree and workspace shell [TB-P07-T005]
+
+push:
+ok
+
+final HEAD:
+8e60008ec2f03fb4039308d4238be01a5a7adf31
+
+origin/main:
+8e60008ec2f03fb4039308d4238be01a5a7adf31
+
+synchronized:
+yes
+
+tracked tree:
+clean for T005 scope
+
+unrelated user changes:
+preserved
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED = NO until manual user review against locked reference
+
+Architectural-Concerns:
+none; T006 owns richer translation/SEO editors
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
