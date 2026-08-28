@@ -52,7 +52,7 @@ TB-P07-T007-R1
 Current Issued Task:
 
 ```text
-TB-P07-T007-R1 — Category assignment behavior repair (USER_VISUAL_ACCEPTED=NO)
+(none — awaiting Architect review of TB-P07-T007-R1 Worker PASS)
 ```
 
 Current Gate:
