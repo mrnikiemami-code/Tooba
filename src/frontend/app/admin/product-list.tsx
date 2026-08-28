@@ -66,7 +66,7 @@ function ProductActionMenu({
         >
           ⋮
         </summary>
-        <div className="absolute end-0 z-20 mt-1 min-w-[10rem] rounded-ds border border-border bg-surface-elevated p-1 shadow-md">
+        <div className="absolute end-0 z-[var(--z-popover)] mt-1 min-w-[10rem] rounded-ds border border-border bg-surface-elevated p-1 shadow-md">
           <Link className="block rounded-ds px-3 py-2 text-sm hover:bg-secondary" href={`/admin/products/${row.id}`}>
             مشاهده
           </Link>

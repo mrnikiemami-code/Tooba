@@ -1,4 +1,4 @@
-/** تم AG Grid — هم‌خوان با mockup تأییدشده Admin Products. */
+/** تم AG Grid — single scroll owner؛ header/body همگام AG Grid. */
 .ag-theme-tooba {
   --ag-font-family: inherit;
   --ag-font-size: 14px;
@@ -20,16 +20,18 @@
   --ag-checkbox-checked-color: hsl(var(--primary));
   --ag-border-radius: var(--radius-ds, 0.5rem);
   --ag-wrapper-border-radius: var(--radius-ds, 0.5rem);
+  --app-grid-body-height: clamp(420px, calc(100vh - 18rem), 640px);
 }
 
 [data-app-grid-viewport] {
   width: 100%;
   min-width: 0;
-  isolation: isolate;
+  height: var(--app-grid-body-height);
 }
 
 [data-app-grid-viewport] .ag-theme-tooba {
   width: 100%;
+  height: 100%;
 }
 
 .ag-theme-tooba .ag-root-wrapper {
@@ -37,14 +39,17 @@
   border-radius: var(--radius-ds, 0.5rem);
   overflow: hidden;
   box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
+  background-color: hsl(var(--surface-elevated));
 }
 
 .ag-theme-tooba .ag-header {
-  position: relative;
-  z-index: 4;
   background-color: hsl(var(--surface-elevated));
   border-bottom: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
+  box-shadow: 0 1px 0 hsl(var(--border));
+}
+
+.ag-theme-tooba .ag-header-viewport {
+  background-color: hsl(var(--surface-elevated));
 }
 
 .ag-theme-tooba .ag-header-row {
@@ -58,38 +63,40 @@
 
 .ag-theme-tooba .ag-pinned-left-header,
 .ag-theme-tooba .ag-pinned-right-header {
-  z-index: 5;
+  z-index: calc(var(--z-grid-header, 10) + 1);
   background-color: hsl(var(--surface-elevated));
-  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
+  box-shadow: 0 1px 0 hsl(var(--border));
 }
 
-.ag-theme-tooba .ag-pinned-left-cols-container,
 .ag-theme-tooba .ag-pinned-right-cols-container {
-  z-index: 2;
+  z-index: var(--z-grid-pinned, 2);
   background-color: hsl(var(--surface-elevated));
+  box-shadow: inset 8px 0 8px -8px hsl(var(--foreground) / 0.1);
 }
 
-.ag-theme-tooba .ag-center-cols-viewport,
-.ag-theme-tooba .ag-body-viewport,
-.ag-theme-tooba .ag-body-horizontal-scroll-viewport {
-  z-index: 1;
+.ag-theme-tooba .ag-pinned-left-cols-container {
+  z-index: var(--z-grid-pinned, 2);
+  background-color: hsl(var(--surface-elevated));
+  box-shadow: inset -8px 0 8px -8px hsl(var(--foreground) / 0.1);
 }
 
 .ag-theme-tooba .ag-row {
-  z-index: 1;
   background-color: hsl(var(--surface-elevated));
 }
 
 .ag-theme-tooba .ag-floating-filter,
 .ag-theme-tooba .ag-popup {
-  z-index: var(--z-overlay, 50);
+  z-index: var(--z-popover, 60);
 }
 
-.ag-theme-tooba .ag-filter {
-  min-width: 14rem;
+.ag-theme-tooba .ag-filter,
+[data-app-filter-panel] {
+  min-width: min(22.5rem, 92vw);
+  max-width: 26.25rem;
   border-radius: var(--radius-ds, 0.5rem);
   background: hsl(var(--surface-elevated));
-  box-shadow: 0 4px 16px hsl(var(--foreground) / 0.12);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 24px hsl(var(--foreground) / 0.14);
 }
 
 .ag-theme-tooba .ag-header-cell-label {
@@ -219,10 +226,17 @@
   .ag-theme-tooba {
     --ag-font-size: 13px;
     --ag-row-height: 52px;
+    --app-grid-body-height: clamp(360px, calc(100vh - 14rem), 560px);
   }
 
   [data-app-grid-toolbar-row] {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .ag-theme-tooba .ag-filter,
+  [data-app-filter-panel] {
+    min-width: min(100vw - 1rem, 100%);
+    max-width: none;
   }
 }

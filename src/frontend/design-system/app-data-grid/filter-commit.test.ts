@@ -59,16 +59,19 @@ test("gridQueryCommitKey includes page for pagination dedup", () => {
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
-test("theme uses opaque header surface for sticky scroll contract", () => {
+test("theme uses opaque header surface and popover layering tokens", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
   assert.match(css, /--ag-header-background-color:\s*hsl\(var\(--surface-elevated\)\)/);
-  assert.match(css, /\.ag-theme-tooba \.ag-header\s*\{[\s\S]*z-index:\s*4/);
-  assert.doesNotMatch(css, /--ag-header-background-color:\s*hsl\(var\(--secondary\) \/ 0\.55\)/);
+  assert.match(css, /--z-popover/);
+  assert.match(css, /--app-grid-body-height/);
+  assert.doesNotMatch(css, /isolation:\s*isolate/);
 });
 
-test("AppDataGrid registers Jalali column filter and apply-only filter params", () => {
+test("AppDataGrid portals filter popups and registers Jalali column filter", () => {
   const source = readFileSync(join(dir, "AppDataGrid.tsx"), "utf8");
+  assert.match(source, /popupParent/);
   assert.match(source, /jalaliDateColumnFilter:\s*JalaliDateColumnFilter/);
+  assert.match(source, /AdvancedFilterDrawer/);
   assert.match(source, /filterParams:\s*COLUMN_FILTER_APPLY_PARAMS/);
   assert.match(source, /commitColumnFilters/);
   assert.doesNotMatch(source, /exportScopeNote/);

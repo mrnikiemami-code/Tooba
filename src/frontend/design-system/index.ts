@@ -23,6 +23,7 @@ export {
   Textarea,
 } from "./primitives/core";
 export { Accordion, Dialog, Drawer, Popover, Tabs, ToastRegion, Tooltip } from "./primitives/overlays";
+export { Portal } from "./primitives/Portal";
 export {
   AvailabilityBadge,
   Cluster,

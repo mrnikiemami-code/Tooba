@@ -37,6 +37,7 @@ import {
   normalizeAdvancedFilterExpression,
 } from "./advanced-filter-expression";
 import { AdvancedFilterBuilder } from "./AdvancedFilterBuilder";
+import { AdvancedFilterDrawer } from "./AdvancedFilterDrawer";
 import { SavedViewsToolbar } from "./SavedViewsToolbar";
 import {
   agFilterModelForSavedView,
@@ -116,6 +117,7 @@ export function AppDataGrid<T extends { id: string }>({
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [popupParent, setPopupParent] = useState<HTMLElement | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
   const suppressGridEventsRef = useRef(false);
@@ -240,6 +242,10 @@ export function AppDataGrid<T extends { id: string }>({
   );
 
   useEffect(() => {
+    setPopupParent(document.body);
+  }, []);
+
+  useEffect(() => {
     void load(defaultQuery, { force: true });
     return () => abortRef.current?.abort();
   }, [load, defaultQuery]);
@@ -305,6 +311,23 @@ export function AppDataGrid<T extends { id: string }>({
     void load({ ...queryRef.current, page: 1, advancedFilter: normalized });
     setFiltersOpen(false);
   }
+
+  function addDraftAdvancedCondition() {
+    const first = advancedFilterColumns[0];
+    if (!first) return;
+    const normalized = normalizeAdvancedFilterExpression(draftAdvancedFilter);
+    setDraftAdvancedFilter({
+      conditions: [...normalized.conditions, createAdvancedCondition(first.id)],
+      connectors: [...normalized.connectors, "and"],
+    });
+  }
+
+  const draftActiveFilterEntries = useMemo(() => {
+    const normalized = normalizeAdvancedFilterExpression(draftAdvancedFilter);
+    return normalized.conditions
+      .filter((condition) => isFilterActive(condition.value))
+      .map((condition) => [condition.id, condition.value, condition.field] as const);
+  }, [draftAdvancedFilter]);
 
   function clearAdvancedCondition(conditionId: string) {
     const normalized = normalizeAdvancedFilterExpression(query.advancedFilter);
@@ -672,7 +695,71 @@ export function AppDataGrid<T extends { id: string }>({
         ) : null}
       </div>
 
-      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={messages.advancedFilterEntry}>
+      <AdvancedFilterDrawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title={messages.advancedFilterTitle}
+        subtitle={messages.advancedFilterSubtitle}
+        headerActions={
+          <>
+            <button
+              type="button"
+              className="inline-flex min-h-[2.75rem] items-center gap-1 rounded-ds border border-primary/40 bg-surface px-4 text-sm font-medium text-primary hover:bg-primary/5"
+              onClick={addDraftAdvancedCondition}
+              data-testid="advanced-filter-add-condition"
+            >
+              <span aria-hidden>+</span>
+              {messages.addCondition}
+            </button>
+            {hasActiveFiltering ? (
+              <button
+                type="button"
+                className="inline-flex min-h-[2.75rem] items-center gap-1 rounded-ds border border-danger/35 bg-danger/5 px-4 text-sm font-medium text-danger hover:bg-danger/10"
+                onClick={clearAllFilters}
+                data-testid="advanced-filter-clear-all"
+              >
+                <span aria-hidden>🗑</span>
+                {messages.clearAllFilters}
+              </button>
+            ) : null}
+          </>
+        }
+        activeSummary={
+          draftActiveFilterEntries.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">
+                {messages.activeFilters} ({draftActiveFilterEntries.length.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")})
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {draftActiveFilterEntries.map(([conditionId, value, fieldId]) => (
+                  <span key={conditionId} data-app-grid-chip className="inline-flex">
+                    {filterChipLabel(fieldId, columnLabels[fieldId] ?? fieldId, value, locale, { enumLabels })}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null
+        }
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              className="inline-flex min-h-[2.75rem] items-center gap-1 text-sm text-muted hover:text-foreground"
+              onClick={() => void restoreSystemDefault()}
+            >
+              ↺ {messages.resetDefault}
+            </button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
+                {messages.close}
+              </Button>
+              <Button type="button" tone="primary" onClick={applyDraftAdvancedFilter} data-testid="advanced-filter-apply">
+                ⚲ {messages.applyFilters}
+              </Button>
+            </div>
+          </div>
+        }
+      >
         <AdvancedFilterBuilder
           columns={advancedFilterColumns}
           expression={draftAdvancedFilter}
@@ -680,24 +767,12 @@ export function AppDataGrid<T extends { id: string }>({
           locale={locale}
           andLabel={messages.andConnector}
           orLabel={messages.orConnector}
-          addLabel={messages.addCondition}
-          removeLabel={messages.removeCondition}
-          fieldLabel={messages.filters}
+          removeLabel={messages.deleteCondition}
+          fieldLabel={messages.fieldLabel}
+          operatorLabel={messages.operatorLabel}
+          valueLabel={messages.valueLabel}
         />
-        <div className="flex flex-wrap gap-2 pt-3">
-          <Button type="button" tone="primary" onClick={applyDraftAdvancedFilter}>
-            {messages.apply}
-          </Button>
-          <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
-            {messages.close}
-          </Button>
-          {hasActiveFiltering ? (
-            <Button type="button" tone="ghost" onClick={clearAllFilters}>
-              {messages.clearAllFilters}
-            </Button>
-          ) : null}
-        </div>
-      </Drawer>
+      </AdvancedFilterDrawer>
 
       <Drawer open={columnsOpen} onClose={() => setColumnsOpen(false)} title={messages.columns}>
         <div className="flex flex-col gap-1.5">
@@ -782,11 +857,12 @@ export function AppDataGrid<T extends { id: string }>({
         </div>
       ) : null}
 
-      <div data-app-grid-viewport className="ag-theme-quartz ag-theme-tooba w-full" style={{ height: 560 }}>
+      <div data-app-grid-viewport className="ag-theme-quartz ag-theme-tooba w-full">
         <AgGridReact<T>
           theme="legacy"
           rowHeight={GRID_ROW_HEIGHT}
           headerHeight={GRID_HEADER_HEIGHT}
+          popupParent={popupParent ?? undefined}
           rowData={loading ? [] : rows}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}

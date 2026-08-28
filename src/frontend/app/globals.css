@@ -39,9 +39,16 @@
   --radius-lg: 1rem;
   --shadow-sm: 0 1px 2px rgb(24 24 27 / 0.06);
   --shadow-md: 0 8px 24px rgb(24 24 27 / 0.08);
+  --z-grid-row: 1;
+  --z-grid-pinned: 2;
+  --z-grid-header: 10;
+  --z-grid-menu: 40;
   --z-header: 30;
   --z-overlay: 40;
-  --z-modal: 50;
+  --z-popover: 60;
+  --z-drawer-backdrop: 80;
+  --z-drawer: 90;
+  --z-modal: 100;
   --motion-fast: 120ms;
   --font-sans: tahoma, "Segoe UI", system-ui, sans-serif;
   --type-display: 2.75rem;

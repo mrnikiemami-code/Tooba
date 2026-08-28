@@ -40,13 +40,14 @@ function agTypeToOperator(type: JalaliDateAgFilterModel["type"] | undefined): Da
   }
 }
 
-/** فیلتر ستونی تاریخ جلالی — draft تا Enter/Apply؛ بدون date picker مرورگر. */
+/** فیلتر ستونی تاریخ جلالی — پنل app-owned با عرض کافی؛ draft تا Enter/Apply. */
 export const JalaliDateColumnFilter = forwardRef(function JalaliDateColumnFilter(
   props: IFilterParams,
   ref,
 ) {
   const locale = ((props.context?.locale as "fa" | "en" | undefined) ?? "fa") as "fa" | "en";
   const ops = filterOperatorLabelsFor(locale);
+  const headerLabel = props.colDef.headerName ?? (locale === "fa" ? "تاریخ به‌روزرسانی" : "Updated at");
   const [operator, setOperator] = useState<DateOperator>("on");
   const [draftFrom, setDraftFrom] = useState<string | undefined>();
   const [draftTo, setDraftTo] = useState<string | undefined>();
@@ -107,11 +108,17 @@ export const JalaliDateColumnFilter = forwardRef(function JalaliDateColumnFilter
   );
 
   return (
-    <div className="grid min-w-[15rem] gap-2 p-3" dir={locale === "fa" ? "rtl" : "ltr"} data-testid="jalali-column-filter">
-      <label className="grid gap-1 text-sm">
-        <span className="text-xs text-muted">{locale === "fa" ? "عملگر" : "Operator"}</span>
+    <div
+      className="grid min-w-[min(22.5rem,92vw)] max-w-[26.25rem] gap-3 bg-surface-elevated p-4"
+      dir={locale === "fa" ? "rtl" : "ltr"}
+      data-testid="jalali-column-filter"
+      data-app-filter-panel
+    >
+      <p className="text-sm font-semibold">{headerLabel}</p>
+      <label className="grid gap-1.5 text-sm">
+        <span className="text-xs font-medium text-muted">{locale === "fa" ? "عملگر" : "Operator"}</span>
         <select
-          className="min-h-9 rounded-ds border border-border bg-surface px-2 text-sm"
+          className="min-h-[2.75rem] rounded-ds border border-border bg-surface px-2 text-sm"
           value={operator}
           onChange={(event) => setOperator(event.target.value as DateOperator)}
         >
@@ -121,12 +128,15 @@ export const JalaliDateColumnFilter = forwardRef(function JalaliDateColumnFilter
           <option value="between">{ops.between}</option>
         </select>
       </label>
-      <label className="grid gap-1 text-sm">
-        <span className="text-xs text-muted">{operator === "between" ? (locale === "fa" ? "از تاریخ" : "From") : locale === "fa" ? "تاریخ" : "Date"}</span>
+      <label className="grid gap-1.5 text-sm">
+        <span className="text-xs font-medium text-muted">
+          {operator === "between" ? (locale === "fa" ? "از تاریخ" : "From") : locale === "fa" ? "تاریخ" : "Date"}
+        </span>
         <JalaliDatePicker
           ariaLabel={locale === "fa" ? "تاریخ" : "Date"}
           locale={locale}
           value={draftFrom}
+          panelMinWidth={340}
           commitOnChange={false}
           onDraftIsoChange={setDraftFrom}
           onCommit={(iso) => {
@@ -136,12 +146,13 @@ export const JalaliDateColumnFilter = forwardRef(function JalaliDateColumnFilter
         />
       </label>
       {operator === "between" ? (
-        <label className="grid gap-1 text-sm">
-          <span className="text-xs text-muted">{locale === "fa" ? "تا تاریخ" : "To"}</span>
+        <label className="grid gap-1.5 text-sm">
+          <span className="text-xs font-medium text-muted">{locale === "fa" ? "تا تاریخ" : "To"}</span>
           <JalaliDatePicker
             ariaLabel={locale === "fa" ? "تا تاریخ" : "To date"}
             locale={locale}
             value={draftTo}
+            panelMinWidth={340}
             commitOnChange={false}
             onDraftIsoChange={setDraftTo}
             onCommit={(iso) => {
@@ -151,11 +162,19 @@ export const JalaliDateColumnFilter = forwardRef(function JalaliDateColumnFilter
           />
         </label>
       ) : null}
-      <div className="flex flex-wrap gap-2 pt-1">
-        <button type="button" className="min-h-9 rounded-ds bg-primary px-3 text-sm text-primary-foreground" onClick={applyFilter}>
+      <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+        <button
+          type="button"
+          className="min-h-[2.75rem] rounded-ds bg-primary px-4 text-sm text-primary-foreground"
+          onClick={applyFilter}
+        >
           {locale === "fa" ? "اعمال" : "Apply"}
         </button>
-        <button type="button" className="min-h-9 rounded-ds border border-border bg-surface px-3 text-sm" onClick={resetFilter}>
+        <button
+          type="button"
+          className="min-h-[2.75rem] rounded-ds border border-border bg-surface px-4 text-sm"
+          onClick={resetFilter}
+        >
           {locale === "fa" ? "پاک کردن" : "Clear"}
         </button>
       </div>

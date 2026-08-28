@@ -11,16 +11,72 @@ export function JalaliDateFilterControl({
   value,
   onChange,
   locale = "fa",
+  compact = false,
 }: {
   header: string;
   value?: GridFilterValue;
   onChange: (value: GridFilterValue) => void;
   locale?: "fa" | "en";
+  /** بدون برچسب/عملگر تکراری — برای کارت فیلتر پیشرفته. */
+  compact?: boolean;
 }) {
   const ops = filterOperatorLabelsFor(locale);
   const operator = value?.kind === "date" ? value.operator : "on";
   const iso = value?.kind === "date" ? value.iso : "";
   const isoTo = value?.kind === "date" ? value.isoTo : undefined;
+
+  if (compact) {
+    if (operator === "between") {
+      return (
+        <div className="grid gap-2">
+          <JalaliDatePicker
+            ariaLabel={`${header} — ${locale === "fa" ? "از تاریخ" : "From"}`}
+            locale={locale}
+            value={iso || undefined}
+            panelMinWidth={320}
+            onChange={(next) =>
+              onChange({
+                kind: "date",
+                operator,
+                iso: next ?? iso ?? new Date().toISOString(),
+                isoTo,
+              })
+            }
+          />
+          <JalaliDatePicker
+            ariaLabel={`${header} — ${locale === "fa" ? "تا تاریخ" : "To"}`}
+            locale={locale}
+            value={isoTo || undefined}
+            panelMinWidth={320}
+            onChange={(next) =>
+              onChange({
+                kind: "date",
+                operator,
+                iso: iso || new Date().toISOString(),
+                isoTo: next,
+              })
+            }
+          />
+        </div>
+      );
+    }
+    return (
+      <JalaliDatePicker
+        ariaLabel={header}
+        locale={locale}
+        value={iso || undefined}
+        panelMinWidth={320}
+        onChange={(next) =>
+          onChange({
+            kind: "date",
+            operator,
+            iso: next ?? iso ?? new Date().toISOString(),
+            isoTo,
+          })
+        }
+      />
+    );
+  }
 
   return (
     <div className="grid gap-2 text-sm">
@@ -50,6 +106,7 @@ export function JalaliDateFilterControl({
               ariaLabel={`${header} — ${locale === "fa" ? "از تاریخ" : "From"}`}
               locale={locale}
               value={iso || undefined}
+              panelMinWidth={320}
               onChange={(next) =>
                 onChange({
                   kind: "date",
@@ -66,11 +123,12 @@ export function JalaliDateFilterControl({
               ariaLabel={`${header} — ${locale === "fa" ? "تا تاریخ" : "To"}`}
               locale={locale}
               value={isoTo || undefined}
+              panelMinWidth={320}
               onChange={(next) =>
                 onChange({
                   kind: "date",
                   operator,
-                  iso: next ?? iso ?? new Date().toISOString(),
+                  iso: iso || new Date().toISOString(),
                   isoTo: next,
                 })
               }
@@ -82,6 +140,7 @@ export function JalaliDateFilterControl({
           ariaLabel={header}
           locale={locale}
           value={iso || undefined}
+          panelMinWidth={320}
           onChange={(next) =>
             onChange({
               kind: "date",

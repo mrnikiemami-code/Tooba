@@ -42,7 +42,16 @@ export type LocaleKey =
   | "totalRows"
   | "showingRows"
   | "advancedFilterEntry"
-  | "selectedCount";
+  | "selectedCount"
+  | "advancedFilterTitle"
+  | "advancedFilterSubtitle"
+  | "fieldLabel"
+  | "operatorLabel"
+  | "valueLabel"
+  | "deleteCondition"
+  | "activeFilters"
+  | "applyFilters"
+  | "resetDefault";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -89,6 +98,15 @@ export const faGridLocale: Record<LocaleKey, string> = {
   showingRows: "نمایش",
   advancedFilterEntry: "فیلتر پیشرفته",
   selectedCount: "انتخاب‌شده",
+  advancedFilterTitle: "فیلتر پیشرفته محصولات",
+  advancedFilterSubtitle: "جستجوی دقیق در کاتالوگ",
+  fieldLabel: "فیلد",
+  operatorLabel: "عملگر",
+  valueLabel: "مقدار",
+  deleteCondition: "حذف شرط",
+  activeFilters: "فیلترهای فعال",
+  applyFilters: "اعمال فیلترها",
+  resetDefault: "بازنشانی پیش‌فرض",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -136,6 +154,15 @@ export const enGridLocale: Record<LocaleKey, string> = {
   showingRows: "Showing",
   advancedFilterEntry: "Advanced filter",
   selectedCount: "Selected",
+  advancedFilterTitle: "Advanced product filter",
+  advancedFilterSubtitle: "Precise catalog search",
+  fieldLabel: "Field",
+  operatorLabel: "Operator",
+  valueLabel: "Value",
+  deleteCondition: "Remove condition",
+  activeFilters: "Active filters",
+  applyFilters: "Apply filters",
+  resetDefault: "Reset to default",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {
