@@ -1,0 +1,9 @@
+{
+    "parentTaskId":  "TB-P07-T007-R1",
+    "bridgeTaskUuid":  "68258104-4eb1-44e4-8fae-0d788de65723",
+    "channelId":  "tooba-main",
+    "resultId":  "7549ca5f-75c3-4b09-973c-ead1e801065d",
+    "head":  "1445e82",
+    "taskId":  "TB-P07-T007-R2",
+    "status":  "PASS"
+}
