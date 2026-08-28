@@ -1,0 +1,295 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R9
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Stabilized AG Grid as single scroll owner, portaled filter popups/calendar via popupParent+Portal, widened Jalali column filter panel, rebuilt Advanced Filter drawer to approved mockup with AND/OR cards and sticky footer.
+
+Grid-Scroll-Architecture:
+
+prior conflicting scroll owners:
+fixed 560px inline height + isolation:isolate + nested overflow on viewport
+
+single scroll owner:
+AG Grid root/body viewport only; toolbar/pagination outside
+
+horizontal sync:
+native AG Grid header/body sync; ensureDomOrder; no manual header translate
+
+vertical scroll:
+clamp body height inside grid viewport (--app-grid-body-height)
+
+header viewport:
+native AG header; opaque surface-elevated
+
+body viewport:
+AG center/body viewport scroll only
+
+pinned columns:
+actions pinned right only; opaque bg + inset shadow separator
+
+RTL:
+enableRtl preserved
+
+manual verification:
+pending user browser at /admin/products
+
+Header:
+
+native AG header preserved:
+yes
+
+custom sticky removed:
+yes — removed isolation and custom z-index stacking on body rows
+
+opaque:
+hsl(var(--surface-elevated))
+
+stacking:
+--z-grid-header token; pinned +1
+
+separator/shadow:
+border-bottom + pinned inset shadow
+
+body overlap:
+removed row z-index elevation above header
+
+alignment:
+cell-wrapper flex retained
+
+Overlay-Layering:
+
+portal root:
+document.body via popupParent + Portal component
+
+popover layer:
+--z-popover (60)
+
+drawer layer:
+--z-drawer (90) / backdrop 80
+
+clipping:
+popupParent escapes ag-root overflow:hidden
+
+transparency:
+all filter/drawer surfaces opaque
+
+outside click:
+Jalali picker mousedown; drawer backdrop click
+
+Escape:
+drawer + Jalali picker
+
+mobile:
+full-width drawer; responsive filter panel min-width
+
+Jalali-Column-Filter:
+
+component/path:
+jalali-date-column-filter.tsx + jalali-date-picker.tsx
+
+app-owned overlay:
+popupParent + data-app-filter-panel min 360px
+
+width:
+min 22.5rem / max 26.25rem; calendar panelMinWidth 340
+
+date field:
+updatedAt
+
+operators:
+on/before/after/between fa labels
+
+calendar layout:
+7-column grid, month header, fa-IR numerals, today/selected states
+
+between:
+from/to Jalali inputs
+
+no Gregorian browser UI:
+text input + custom calendar only
+
+canonical ISO:
+AG date model unchanged
+
+no underlying grid bleed:
+Portal fixed calendar + opaque panel
+
+Enter/Apply:
+commitOnChange=false; Apply/Clear buttons; Enter commits
+
+tests:
+grid-overlay.test.ts + filter-commit.test.ts
+
+Advanced-Filter-Visual:
+
+component/path:
+AdvancedFilterDrawer.tsx + AdvancedFilterBuilder.tsx
+
+width:
+480px desktop / full-width mobile
+
+backdrop:
+foreground/35 translucent backdrop
+
+header:
+فیلتر پیشرفته محصولات + subtitle
+
+add/clear actions:
+افزودن شرط + پاک کردن همه in header
+
+condition cards:
+spacious cards md:grid-cols-3 field/operator/value
+
+field/operator/value layout:
+labels above controls, min-h 44px
+
+AND/OR:
+segmented pill between cards
+
+delete:
+حذف شرط per card
+
+active filter summary:
+فیلترهای فعال chips near footer
+
+sticky footer:
+بازنشانی پیش‌فرض | بستن | اعمال فیلترها
+
+mobile:
+full-width drawer aside
+
+approved mockup direction:
+matched user-supplied advanced filter mockup
+
+Filter-Request-Semantics:
+
+typing requests:
+0 until Apply/Enter (COLUMN_FILTER_APPLY_PARAMS preserved)
+
+Enter requests:
+1 on Enter commit
+
+Apply requests:
+1 on Apply button
+
+duplicate suppression:
+shouldCommitGridQuery + filtersEqual
+
+tests:
+filter-commit.test.ts (8 tests)
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (pre-existing img warning)
+
+grid tests:
+46 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+live API:
+Host 200; FE restarted 200
+
+warnings:
+next/img advisory pre-existing
+
+new warnings:
+0
+
+git diff --check:
+clean on committed scope
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+horizontal scroll test:
+scroll RTL — header/body native AG sync
+
+vertical scroll test:
+scroll rows — header opaque, no row bleed
+
+Jalali overlay test:
+updatedAt filter — wide panel + portaled calendar
+
+Advanced Filter test:
+drawer 480px, 3-col cards, AND/OR, sticky footer
+
+Enter-to-apply test:
+type without Enter → no request; Enter → one request
+
+Git:
+
+branch:
+main
+
+commit:
+845b6df
+
+push:
+origin/main
+
+final HEAD:
+845b6df
+
+origin/main:
+845b6df
+
+synchronized:
+yes
+
+tracked tree:
+clean on committed R9 scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually reviews.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
