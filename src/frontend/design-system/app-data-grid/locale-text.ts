@@ -99,7 +99,7 @@ export const faGridLocale: Record<LocaleKey, string> = {
   advancedFilterEntry: "فیلتر پیشرفته",
   selectedCount: "انتخاب‌شده",
   advancedFilterTitle: "فیلتر پیشرفته محصولات",
-  advancedFilterSubtitle: "جستجوی دقیق در کاتالوگ",
+  advancedFilterSubtitle: "جستجوی دقیق میان محصولات",
   fieldLabel: "فیلد",
   operatorLabel: "عملگر",
   valueLabel: "مقدار",

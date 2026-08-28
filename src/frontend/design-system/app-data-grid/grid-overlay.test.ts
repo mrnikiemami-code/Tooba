@@ -6,28 +6,55 @@ import { dirname, join } from "node:path";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
-test("Jalali column filter panel has professional minimum width", () => {
-  const source = readFileSync(join(dir, "jalali-date-column-filter.tsx"), "utf8");
-  assert.match(source, /min-w-\[min\(22\.5rem/);
-  assert.match(source, /panelMinWidth=\{340\}/);
-  assert.match(source, /data-app-filter-panel/);
+test("theme avoids unsafe AG Grid structural overrides", () => {
+  const css = readFileSync(join(dir, "theme.css"), "utf8");
+  assert.match(css, /--ag-header-background-color:\s*hsl\(var\(--surface-elevated\)\)/);
+  assert.match(css, /\.app-grid-cell-content/);
+  assert.doesNotMatch(css, /\.ag-cell-wrapper/);
+  assert.doesNotMatch(css, /z-index:\s*var\(--z-grid/);
+  assert.doesNotMatch(css, /isolation:\s*isolate/);
 });
 
-test("Jalali date picker renders calendar through Portal", () => {
-  const source = readFileSync(join(dir, "jalali-date-picker.tsx"), "utf8");
-  assert.match(source, /Portal/);
-  assert.match(source, /fixed z-\[var\(--z-popover\)\]/);
-  assert.match(source, /data-jalali-picker-panel/);
+test("AppDataGrid uses app-owned header filters and external filter fields", () => {
+  const source = readFileSync(join(dir, "AppDataGrid.tsx"), "utf8");
+  assert.match(source, /appColumnHeader:\s*AppColumnHeader/);
+  assert.match(source, /externalFilterFields/);
+  assert.match(source, /onExternalFilterApply/);
+  assert.doesNotMatch(source, /jalaliDateColumnFilter/);
 });
 
-test("Advanced filter drawer matches approved layout structure", () => {
+test("product list externalizes title and updatedAt header filters", () => {
+  const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
+  assert.match(source, /externalFilterFields=\{\["title",\s*"updatedAt"\]\}/);
+  assert.match(source, /externalFilter:\s*"jalali-date"/);
+  assert.match(source, /externalFilter:\s*"text"/);
+  assert.doesNotMatch(source, /jalaliDateColumnFilter/);
+});
+
+test("Jalali header filter uses portal popover outside AG root", () => {
+  const header = readFileSync(join(dir, "app-column-header.tsx"), "utf8");
+  const popover = readFileSync(join(dir, "column-filter-popover.tsx"), "utf8");
+  const panel = readFileSync(join(dir, "jalali-header-filter-panel.tsx"), "utf8");
+  assert.match(header, /ColumnFilterPopover/);
+  assert.match(popover, /Portal/);
+  assert.match(popover, /data-app-filter-panel/);
+  assert.match(panel, /data-testid="jalali-header-filter-panel"/);
+});
+
+test("text header filter preserves Enter-to-apply draft semantics", () => {
+  const source = readFileSync(join(dir, "text-header-filter-panel.tsx"), "utf8");
+  assert.match(source, /event\.key === "Enter"/);
+  assert.match(source, /onApply/);
+});
+
+test("Advanced filter drawer rebuilt at 520px with portal", () => {
   const drawer = readFileSync(join(dir, "AdvancedFilterDrawer.tsx"), "utf8");
   const builder = readFileSync(join(dir, "AdvancedFilterBuilder.tsx"), "utf8");
-  assert.match(drawer, /z-\[var\(--z-drawer\)\]/);
-  assert.match(drawer, /data-advanced-filter-panel/);
+  assert.match(drawer, /520px/);
+  assert.match(drawer, /Portal/);
+  assert.match(drawer, /sticky bottom-0/);
   assert.match(builder, /data-advanced-filter-card/);
   assert.match(builder, /data-advanced-filter-connector/);
-  assert.match(builder, /md:grid-cols-3/);
 });
 
 test("globals define explicit overlay layering tokens", () => {

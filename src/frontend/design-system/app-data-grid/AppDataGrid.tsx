@@ -52,7 +52,7 @@ import type { AppGridFilterColumnDef } from "./filter-column-def";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 import { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";
-import { JalaliDateColumnFilter } from "./jalali-date-column-filter";
+import { AppColumnHeader } from "./app-column-header";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -70,6 +70,8 @@ export interface AppDataGridProps<T extends { id: string }> {
   advancedFilterColumns?: AppGridFilterColumnDef[];
   /** پرس‌وجوی پیش‌فرض برای restore system default */
   defaultQuery?: GridServerQuery;
+  /** ستون‌هایی که فیلتر app-owned دارند (خارج از AG popup) */
+  externalFilterFields?: string[];
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
 }
@@ -95,6 +97,7 @@ export function AppDataGrid<T extends { id: string }>({
   advancedFilterColumns = [],
   pageSelectionOnly = true,
   defaultQuery = DEFAULT_GRID_QUERY,
+  externalFilterFields = [],
 }: AppDataGridProps<T>) {
   const messages = useMemo(() => resolveGridLocale(locale), [locale]);
   const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);
@@ -168,6 +171,17 @@ export function AppDataGrid<T extends { id: string }>({
     [advancedFilterColumns],
   );
 
+  const externalFilterFieldIds = useMemo(
+    () => new Set(externalFilterFields),
+    [externalFilterFields],
+  );
+
+  const agExcludedFilterFieldIds = useMemo(() => {
+    const combined = new Set(advancedFieldIds);
+    for (const field of externalFilterFieldIds) combined.add(field);
+    return combined;
+  }, [advancedFieldIds, externalFilterFieldIds]);
+
   const sanitizeContext = useMemo((): SavedViewSanitizeContext => {
     const knownColumnIds = new Set(defaultColumnIds);
     const knownFilterFields = new Set([
@@ -205,14 +219,14 @@ export function AppDataGrid<T extends { id: string }>({
   const mergeFilters = useCallback(
     (base: Record<string, GridFilterValue>, agFilters: Record<string, GridFilterValue>) => {
       const fromAg = Object.fromEntries(
-        Object.entries(agFilters).filter(([key]) => !advancedFieldIds.has(key)),
+        Object.entries(agFilters).filter(([key]) => !agExcludedFilterFieldIds.has(key)),
       );
       const columnBase = Object.fromEntries(
         Object.entries(base).filter(([key]) => !advancedFieldIds.has(key)),
       );
       return { ...columnBase, ...fromAg };
     },
-    [advancedFieldIds],
+    [advancedFieldIds, agExcludedFilterFieldIds],
   );
 
   const load = useCallback(
@@ -239,6 +253,26 @@ export function AppDataGrid<T extends { id: string }>({
       }
     },
     [messages.error, queryAdapter],
+  );
+
+  const onExternalFilterApply = useCallback(
+    (field: string, value: GridFilterValue | null) => {
+      const next = { ...queryRef.current.filters };
+      if (!value) delete next[field];
+      else next[field] = value;
+      setActiveViewId(null);
+      void load({ ...queryRef.current, page: 1, filters: next });
+    },
+    [load],
+  );
+
+  const gridContext = useMemo(
+    () => ({
+      locale,
+      externalFilters: query.filters,
+      onExternalFilterApply,
+    }),
+    [locale, onExternalFilterApply, query.filters],
   );
 
   useEffect(() => {
@@ -446,7 +480,7 @@ export function AppDataGrid<T extends { id: string }>({
     try {
       setActiveViewId(view.id);
       setSearchInput(view.search ?? "");
-      api?.setFilterModel(agFilterModelForSavedView(view.filters, advancedFieldIds));
+      api?.setFilterModel(agFilterModelForSavedView(view.filters, agExcludedFilterFieldIds));
       api?.applyColumnState({
         state: buildAgColumnApplyState(view, sanitizeContext.knownColumnIds),
         applyOrder: true,
@@ -543,7 +577,7 @@ export function AppDataGrid<T extends { id: string }>({
 
   const gridComponents = useMemo(
     () => ({
-      jalaliDateColumnFilter: JalaliDateColumnFilter,
+      appColumnHeader: AppColumnHeader,
     }),
     [],
   );
@@ -867,7 +901,7 @@ export function AppDataGrid<T extends { id: string }>({
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           components={gridComponents}
-          context={{ locale }}
+          context={gridContext}
           getRowId={(params) => params.data.id}
           localeText={localeText}
           enableRtl={direction === "rtl"}

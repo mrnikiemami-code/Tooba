@@ -58,7 +58,8 @@ function ProductActionMenu({
   }
 
   return (
-    <div className="relative flex justify-center">
+    <div className="app-grid-cell-content">
+      <div className="relative flex justify-center">
       <details className="group">
         <summary
           className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border border-border bg-surface text-lg marker:content-none hover:bg-secondary [&::-webkit-details-marker]:hidden"
@@ -86,6 +87,7 @@ function ProductActionMenu({
       </details>
       {message ? <p className="absolute top-full mt-1 max-w-[10rem] text-xs text-danger">{message}</p> : null}
     </div>
+    </div>
   );
 }
 
@@ -94,12 +96,14 @@ function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
   if (!row) return null;
   const thumb = row.primaryMediaAssetId ? storefrontMediaUrl(row.primaryMediaAssetId) : null;
   return (
-    <div className="flex items-center gap-2">
+    <div className="app-grid-cell-content">
+      <div className="flex items-center gap-2">
       {thumb ? (
         <img src={thumb} alt="" className="size-11 shrink-0 rounded-ds border border-border object-cover bg-secondary" />
       ) : (
         <span className="flex size-11 shrink-0 items-center justify-center rounded-ds bg-secondary text-[10px] text-muted">بدون تصویر</span>
       )}
+      </div>
     </div>
   );
 }
@@ -108,12 +112,14 @@ function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
   const row = params.data;
   if (!row) return null;
   return (
-    <Link className="block min-w-0 hover:underline" href={`/admin/products/${row.id}`}>
+    <div className="app-grid-cell-content">
+      <Link className="block min-w-0 hover:underline" href={`/admin/products/${row.id}`}>
       <span className="block truncate text-sm font-semibold leading-snug">{row.title}</span>
       <span className="mt-0.5 block truncate text-xs text-muted" dir="ltr">
         {productCode(row.id)}
       </span>
     </Link>
+    </div>
   );
 }
 
@@ -148,8 +154,9 @@ function buildColumnDefs(
       minWidth: 220,
       flex: 1.4,
       cellRenderer: ProductCell,
-      filter: "agTextColumnFilter",
-      filterParams: COLUMN_FILTER_APPLY_PARAMS,
+      filter: false,
+      headerComponent: "appColumnHeader",
+      headerComponentParams: { externalFilter: "text" },
     },
     {
       field: "status",
@@ -170,7 +177,9 @@ function buildColumnDefs(
       filter: "agNumberColumnFilter",
       filterParams: COLUMN_FILTER_APPLY_PARAMS,
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => (
-        <span className={stockClass(Number(params.value ?? 0))}>{Number(params.value ?? 0).toLocaleString("fa-IR")}</span>
+        <div className="app-grid-cell-content">
+          <span className={stockClass(Number(params.value ?? 0))}>{Number(params.value ?? 0).toLocaleString("fa-IR")}</span>
+        </div>
       ),
     },
     {
@@ -178,8 +187,9 @@ function buildColumnDefs(
       headerName: "به‌روزرسانی",
       width: 120,
       valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
-      filter: "jalaliDateColumnFilter",
-      filterParams: { locale: "fa", ...COLUMN_FILTER_APPLY_PARAMS },
+      filter: false,
+      headerComponent: "appColumnHeader",
+      headerComponentParams: { externalFilter: "jalali-date" },
     },
     { field: "variantCount", headerName: "گونه", width: 90, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
     { field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true, filter: "agNumberColumnFilter", filterParams: COLUMN_FILTER_APPLY_PARAMS },
@@ -322,6 +332,7 @@ export function ProductListScreen() {
           columnDefs={columnDefs}
           queryAdapter={queryAdapter}
           advancedFilterColumns={PRODUCT_GRID_ADVANCED_FILTERS}
+          externalFilterFields={["title", "updatedAt"]}
           locale="fa"
           direction="rtl"
           savedViewStore={savedViewStore}

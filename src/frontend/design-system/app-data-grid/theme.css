@@ -1,4 +1,4 @@
-/** تم AG Grid — single scroll owner؛ header/body همگام AG Grid. */
+/** تم AG Grid — فقط توکن‌های بصری؛ بدون override ساختاری داخلی AG Grid. */
 .ag-theme-tooba {
   --ag-font-family: inherit;
   --ag-font-size: 14px;
@@ -20,7 +20,7 @@
   --ag-checkbox-checked-color: hsl(var(--primary));
   --ag-border-radius: var(--radius-ds, 0.5rem);
   --ag-wrapper-border-radius: var(--radius-ds, 0.5rem);
-  --app-grid-body-height: clamp(420px, calc(100vh - 18rem), 640px);
+  --app-grid-body-height: clamp(560px, calc(100vh - 17rem), 680px);
 }
 
 [data-app-grid-viewport] {
@@ -37,66 +37,20 @@
 .ag-theme-tooba .ag-root-wrapper {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius-ds, 0.5rem);
-  overflow: hidden;
   box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
-  background-color: hsl(var(--surface-elevated));
 }
 
-.ag-theme-tooba .ag-header {
-  background-color: hsl(var(--surface-elevated));
-  border-bottom: 1px solid hsl(var(--border));
-  box-shadow: 0 1px 0 hsl(var(--border));
-}
-
-.ag-theme-tooba .ag-header-viewport {
-  background-color: hsl(var(--surface-elevated));
-}
-
-.ag-theme-tooba .ag-header-row {
-  background-color: hsl(var(--surface-elevated));
-}
-
+.ag-theme-tooba .ag-header,
+.ag-theme-tooba .ag-header-viewport,
+.ag-theme-tooba .ag-header-row,
 .ag-theme-tooba .ag-header-cell,
 .ag-theme-tooba .ag-header-group-cell {
   background-color: hsl(var(--surface-elevated));
 }
 
-.ag-theme-tooba .ag-pinned-left-header,
-.ag-theme-tooba .ag-pinned-right-header {
-  z-index: calc(var(--z-grid-header, 10) + 1);
-  background-color: hsl(var(--surface-elevated));
-  box-shadow: 0 1px 0 hsl(var(--border));
-}
-
-.ag-theme-tooba .ag-pinned-right-cols-container {
-  z-index: var(--z-grid-pinned, 2);
-  background-color: hsl(var(--surface-elevated));
-  box-shadow: inset 8px 0 8px -8px hsl(var(--foreground) / 0.1);
-}
-
-.ag-theme-tooba .ag-pinned-left-cols-container {
-  z-index: var(--z-grid-pinned, 2);
-  background-color: hsl(var(--surface-elevated));
-  box-shadow: inset -8px 0 8px -8px hsl(var(--foreground) / 0.1);
-}
-
-.ag-theme-tooba .ag-row {
-  background-color: hsl(var(--surface-elevated));
-}
-
-.ag-theme-tooba .ag-floating-filter,
-.ag-theme-tooba .ag-popup {
-  z-index: var(--z-popover, 60);
-}
-
-.ag-theme-tooba .ag-filter,
-[data-app-filter-panel] {
-  min-width: min(22.5rem, 92vw);
-  max-width: 26.25rem;
-  border-radius: var(--radius-ds, 0.5rem);
-  background: hsl(var(--surface-elevated));
-  border: 1px solid hsl(var(--border));
-  box-shadow: 0 8px 24px hsl(var(--foreground) / 0.14);
+.ag-theme-tooba .ag-header {
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 0 hsl(var(--border) / 0.85);
 }
 
 .ag-theme-tooba .ag-header-cell-label {
@@ -106,12 +60,6 @@
 
 .ag-theme-tooba .ag-cell {
   line-height: 1.35;
-}
-
-.ag-theme-tooba .ag-cell-wrapper {
-  display: flex;
-  align-items: center;
-  height: 100%;
 }
 
 .ag-theme-tooba .ag-header-cell {
@@ -126,6 +74,20 @@
 
 .ag-theme-tooba .ag-row {
   border-bottom: 1px solid hsl(var(--border) / 0.65);
+  background-color: hsl(var(--surface-elevated));
+}
+
+.app-grid-cell-content {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+[data-app-filter-panel] {
+  background: hsl(var(--surface-elevated));
+  border-radius: 1rem;
 }
 
 [data-app-grid-shell] {
@@ -226,17 +188,11 @@
   .ag-theme-tooba {
     --ag-font-size: 13px;
     --ag-row-height: 52px;
-    --app-grid-body-height: clamp(360px, calc(100vh - 14rem), 560px);
+    --app-grid-body-height: clamp(400px, calc(100vh - 13rem), 560px);
   }
 
   [data-app-grid-toolbar-row] {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .ag-theme-tooba .ag-filter,
-  [data-app-filter-panel] {
-    min-width: min(100vw - 1rem, 100%);
-    max-width: none;
   }
 }

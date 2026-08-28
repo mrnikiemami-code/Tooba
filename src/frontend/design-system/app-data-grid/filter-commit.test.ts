@@ -59,27 +59,26 @@ test("gridQueryCommitKey includes page for pagination dedup", () => {
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
-test("theme uses opaque header surface and popover layering tokens", () => {
+test("theme uses opaque header tokens without structural AG overrides", () => {
   const css = readFileSync(join(dir, "theme.css"), "utf8");
   assert.match(css, /--ag-header-background-color:\s*hsl\(var\(--surface-elevated\)\)/);
-  assert.match(css, /--z-popover/);
   assert.match(css, /--app-grid-body-height/);
-  assert.doesNotMatch(css, /isolation:\s*isolate/);
+  assert.doesNotMatch(css, /\.ag-cell-wrapper/);
 });
 
-test("AppDataGrid portals filter popups and registers Jalali column filter", () => {
+test("AppDataGrid registers app column header and apply-only filter params", () => {
   const source = readFileSync(join(dir, "AppDataGrid.tsx"), "utf8");
-  assert.match(source, /popupParent/);
-  assert.match(source, /jalaliDateColumnFilter:\s*JalaliDateColumnFilter/);
-  assert.match(source, /AdvancedFilterDrawer/);
+  assert.match(source, /appColumnHeader:\s*AppColumnHeader/);
   assert.match(source, /filterParams:\s*COLUMN_FILTER_APPLY_PARAMS/);
   assert.match(source, /commitColumnFilters/);
+  assert.match(source, /onExternalFilterApply/);
   assert.doesNotMatch(source, /exportScopeNote/);
   assert.doesNotMatch(source, /pageSelectionNote/);
 });
 
-test("product list exposes Jalali column filter on updatedAt", () => {
+test("product list externalizes updatedAt via header filter", () => {
   const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
   assert.match(source, /field:\s*"updatedAt"/);
-  assert.match(source, /filter:\s*"jalaliDateColumnFilter"/);
+  assert.match(source, /externalFilter:\s*"jalali-date"/);
+  assert.match(source, /filter:\s*false/);
 });
