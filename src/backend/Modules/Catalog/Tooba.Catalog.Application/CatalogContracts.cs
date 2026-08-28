@@ -243,6 +243,15 @@ public interface ICatalogDirectory
     Task AttachMediaReferenceAsync(Guid productId, Guid mediaAssetId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// مرجع مات رسانه با alt و ترتیب اولیه می‌گذارد.
+    /// </summary>
+    Task AttachMediaReferenceAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        string? altText,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// مشخصهٔ غیرمحور روی محصول می‌گذارد (upsert). JSON آزاد نیست.
     /// </summary>
     Task SetProductAttributeAsync(Guid productId, Guid definitionId, string rawValue, Guid? enumOptionId, CancellationToken cancellationToken);
@@ -280,6 +289,16 @@ public interface ICatalogDirectory
     /// محصول را در Catalog منتشر می‌کند نه در Offer.
     /// </summary>
     Task PublishProductAsync(Guid productId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// محصول منتشرشده را به پیش‌نویس برمی‌گرداند. آرشیو جدا است.
+    /// </summary>
+    Task UnpublishProductAsync(Guid productId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// محصول را در Catalog آرشیو می‌کند؛ حذف سخت نیست.
+    /// </summary>
+    Task ArchiveProductAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
     /// رده را برای ناوبری منتشر می‌کند. رده منتشرنشده در سطوح عمومی دیده نمی‌شود،

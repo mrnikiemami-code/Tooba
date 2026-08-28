@@ -132,7 +132,15 @@ public sealed record EffectiveAccessDto(
 /// <summary>کاربر قابل جستجو در محدوده.</summary>
 /// <param name="UserId">کاربر.</param>
 /// <param name="RoleCodes">نقش‌ها.</param>
-public sealed record AccessUserHitDto(Guid UserId, IReadOnlyList<string> RoleCodes);
+/// <param name="DisplayName">نام نمایشی (توسط Host از Identity/پروفایل پر می‌شود).</param>
+/// <param name="Email">ایمیل تماس.</param>
+/// <param name="Mobile">موبایل تماس.</param>
+public sealed record AccessUserHitDto(
+    Guid UserId,
+    IReadOnlyList<string> RoleCodes,
+    string? DisplayName = null,
+    string? Email = null,
+    string? Mobile = null);
 
 /// <summary>خطای دامنهٔ Access Control با کد پایدار.</summary>
 public sealed class AccessControlException : Exception

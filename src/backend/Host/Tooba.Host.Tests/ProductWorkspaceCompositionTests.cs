@@ -38,11 +38,13 @@ public sealed class ProductWorkspaceCompositionTests
             "1790000–1850000 IRR",
             12,
             3,
-            DateTimeOffset.UnixEpoch);
+            DateTimeOffset.UnixEpoch,
+            Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"));
         var json = JsonSerializer.Serialize(item, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         Assert.DoesNotContain("\"price\"", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"offerCount\":2", json, StringComparison.Ordinal);
         Assert.Contains("\"offerAmountRange\"", json, StringComparison.Ordinal);
         Assert.Contains("\"sellableUnits\":12", json, StringComparison.Ordinal);
+        Assert.Contains("\"primaryMediaAssetId\"", json, StringComparison.Ordinal);
     }
 }

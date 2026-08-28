@@ -20,6 +20,7 @@ export interface AdminProductListRow {
   sellableUnits: number;
   locationCount: number;
   updatedAt: string;
+  primaryMediaAssetId: string | null;
 }
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -70,6 +71,11 @@ export function mapAdminProductList(payload: unknown): AdminProductListRow[] {
         sellableUnits: asNumber(readProp(item, "sellableUnits", "SellableUnits")),
         locationCount: asNumber(readProp(item, "locationCount", "LocationCount")),
         updatedAt: asString(readProp(item, "updatedAt", "UpdatedAt")),
+        primaryMediaAssetId: (() => {
+          const raw = readProp(item, "primaryMediaAssetId", "PrimaryMediaAssetId");
+          const text = asString(raw);
+          return text.length > 0 ? text : null;
+        })(),
       };
     })
     .filter((row) => row.id.length > 0);
@@ -103,11 +109,21 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
       variantId: asString(readProp(variant, "variantId", "VariantId")),
       fingerprint: asString(readProp(variant, "fingerprint", "Fingerprint")),
       status: asString(readProp(variant, "status", "Status")),
+      catalogCodeSeam: (() => {
+        const raw = readProp(variant, "catalogCodeSeam", "CatalogCodeSeam");
+        const text = asString(raw);
+        return text.length > 0 ? text : null;
+      })(),
       offerCount: asNumber(readProp(variant, "offerCount", "OfferCount")),
     })),
     media: asRecordArray(readProp(item, "media", "Media")).map((media) => ({
       mediaAssetId: asString(readProp(media, "mediaAssetId", "MediaAssetId")),
       primary: asBoolean(readProp(media, "primary", "Primary")),
+      displayOrder: asNumber(readProp(media, "displayOrder", "DisplayOrder")),
+      altText: (() => {
+        const raw = readProp(media, "altText", "AltText");
+        return raw == null ? null : asString(raw);
+      })(),
     })),
     offers: asRecordArray(readProp(item, "offers", "Offers")).map((offer) => ({
       offerId: asString(readProp(offer, "offerId", "OfferId")),
@@ -299,5 +315,225 @@ export async function createAdminProduct(input: {
       : { ok: false, errorCode: "workspace.product.create-failed" };
   } catch {
     return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+export type AdminProductLifecycleAction = "publish" | "unpublish" | "archive" | "delete";
+
+/**
+ * انتشار / لغو انتشار / بایگانی / حذف امن محصول. حذف از DELETE؛ بقیه POST.
+ */
+export async function mutateAdminProductLifecycle(
+  productId: string,
+  action: AdminProductLifecycleAction,
+): Promise<{ ok: true; view?: ProductWorkspaceView } | { ok: false; message: string }> {
+  try {
+    const method = action === "delete" ? "DELETE" : "POST";
+    const path =
+      action === "delete"
+        ? `/v1/admin/products/${productId}`
+        : `/v1/admin/products/${productId}/${action}`;
+    const response = await fetch(path, {
+      method,
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+    });
+    if (response.status === 404) {
+      return { ok: false, message: "این عملیات هنوز روی Host فعال نیست" };
+    }
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (response.status === 409) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? "حذف به دلیل ارجاع ممکن نیست؛ محصول آرشیو شد" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    if (action === "delete" || response.status === 204) {
+      return { ok: true };
+    }
+    const view = mapProductWorkspaceView(await response.json().catch(() => null));
+    return view ? { ok: true, view } : { ok: true };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+function mapMediaList(payload: unknown): ProductWorkspaceView["media"] {
+  return asRecordArray(payload).map((media) => ({
+    mediaAssetId: asString(readProp(media, "mediaAssetId", "MediaAssetId")),
+    primary: asBoolean(readProp(media, "primary", "Primary")),
+    displayOrder: asNumber(readProp(media, "displayOrder", "DisplayOrder")),
+    altText: (() => {
+      const raw = readProp(media, "altText", "AltText");
+      return raw == null ? null : asString(raw);
+    })(),
+  }));
+}
+
+async function readMediaMutation(
+  response: Response,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  if (response.status === 401 || response.status === 403) {
+    return { ok: false, message: "دسترسی مجاز نیست" };
+  }
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+    return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+  }
+  return { ok: true, media: mapMediaList(await response.json()) };
+}
+
+/** پیوست مرجع رسانه با Guid دارایی (بارگذاری باینری DEFERRED). */
+export async function attachAdminProductMedia(
+  productId: string,
+  mediaAssetId: string,
+  altText?: string | null,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media`, {
+      method: "POST",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ mediaAssetId, altText: altText ?? null }),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** بازنویسی ترتیب گالری؛ فهرست باید همهٔ شناسه‌های فعلی را پوشش دهد. */
+export async function reorderAdminProductMedia(
+  productId: string,
+  orderedMediaAssetIds: string[],
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/order`, {
+      method: "PUT",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ orderedMediaAssetIds }),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** تنظیم تصویر اصلی. */
+export async function setAdminProductMediaPrimary(
+  productId: string,
+  mediaAssetId: string,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/${mediaAssetId}/primary`, {
+      method: "PUT",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** ویرایش متن جایگزین رسانه. */
+export async function patchAdminProductMediaAlt(
+  productId: string,
+  mediaAssetId: string,
+  altText: string | null,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/${mediaAssetId}`, {
+      method: "PATCH",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ altText }),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** جدا کردن مرجع رسانه از محصول. */
+export async function removeAdminProductMedia(
+  productId: string,
+  mediaAssetId: string,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/${mediaAssetId}`, {
+      method: "DELETE",
+      headers: adminHeaders(),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+export interface AdminProductVariantAxisInput {
+  definitionId: string;
+  rawValue?: string | null;
+  enumOptionId?: string | null;
+}
+
+/** ایجاد گونه با محورها؛ بدون قیمت/موجودی. */
+export async function createAdminProductVariant(
+  productId: string,
+  input: { catalogCodeSeam?: string | null; axes: AdminProductVariantAxisInput[] },
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/variants`, {
+      method: "POST",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        catalogCodeSeam: input.catalogCodeSeam ?? null,
+        axes: input.axes.map((axis) => ({
+          definitionId: axis.definitionId,
+          rawValue: axis.rawValue ?? null,
+          enumOptionId: axis.enumOptionId ?? null,
+        })),
+      }),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    return view ? { ok: true, view } : { ok: false, message: "پاسخ گونه نامعتبر است" };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** ویرایش وضعیت یا کد Catalog گونه بدون تغییر اثرانگشت. */
+export async function patchAdminProductVariant(
+  productId: string,
+  variantId: string,
+  input: { status?: string | null; catalogCodeSeam?: string | null },
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/variants/${variantId}`, {
+      method: "PATCH",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        status: input.status ?? null,
+        catalogCodeSeam: input.catalogCodeSeam ?? null,
+      }),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    return view ? { ok: true, view } : { ok: false, message: "پاسخ گونه نامعتبر است" };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
   }
 }

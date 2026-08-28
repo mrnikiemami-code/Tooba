@@ -115,6 +115,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         if (await catalogDb.Products.AnyAsync(product => product.SlugSeam == SeedSlug))
         {
             await RefreshOperatorFacingCopyAsync(catalogDb, partyDb);
+            await EnsureAdminR3PreviewSeedAsync(provider, CancellationToken.None);
             await Seller.SellerDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await AdminDevActorBootstrap.EnsureAsync(provider, CancellationToken.None);
             await ReviewsDevelopmentSeed.ApplyAsync(provider);
@@ -167,7 +168,10 @@ internal static class ProductWorkspaceDevelopmentBootstrap
 
         var product = await catalog.CreateProductAsync(CatalogProductKind.PhysicalGood, SeedSlug, brand.BrandId, productNames, cancellation);
         await catalog.AssignCategoryAsync(product.ProductId, category.CategoryId, cancellation);
-        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), cancellation);
+        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "نمای جلو", cancellation);
+        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), "نمای پشت", cancellation);
+        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"), "جزئیات یقه", cancellation);
+        await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), "جزئیات آستین", cancellation);
         await catalog.PublishProductAsync(product.ProductId, cancellation);
         var variant = await catalog.CreateVariantAsync(
             product.ProductId,
@@ -225,6 +229,81 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await ContentDevelopmentSeed.ApplyAsync(provider, cancellation);
         await PageCompositionDevelopmentSeed.ApplyAsync(provider, cancellation);
         await StoryDevelopmentSeed.ApplyAsync(provider, cancellation);
+        await EnsureAdminR3PreviewSeedAsync(provider, cancellation);
+    }
+
+    /// <summary>
+    /// غنی‌سازی idempotent برای پیش‌نمایش Admin R3: گالری ۴+ تصویر، پیش‌نویس و بایگانی.
+    /// </summary>
+    private static async Task EnsureAdminR3PreviewSeedAsync(IServiceProvider provider, CancellationToken cancellation)
+    {
+        var catalog = provider.GetRequiredService<ICatalogDirectory>();
+        var catalogDb = provider.GetRequiredService<CatalogDbContext>();
+        var live = await catalogDb.Products.AsNoTracking()
+            .SingleOrDefaultAsync(p => p.SlugSeam == SeedSlug, cancellation);
+        if (live is null)
+        {
+            return;
+        }
+
+        var mediaIds = new (Guid Id, string Alt)[]
+        {
+            (Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), "نمای جلو"),
+            (Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), "نمای پشت"),
+            (Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"), "جزئیات یقه"),
+            (Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), "جزئیات آستین"),
+            (Guid.Parse("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"), "روی مانکن"),
+        };
+        foreach (var (id, alt) in mediaIds)
+        {
+            var exists = await catalogDb.MediaReferences.AsNoTracking()
+                .AnyAsync(m => m.ProductId == live.ProductId && m.MediaAssetId == id, cancellation);
+            if (!exists)
+            {
+                try
+                {
+                    await catalog.AttachMediaReferenceAsync(live.ProductId, id, alt, cancellation);
+                }
+                catch (InvalidOperationException)
+                {
+                    // هم‌زمانی یا اتصال تکراری — نادیده
+                }
+            }
+        }
+
+        const string draftSlug = "admin-r3-draft-scarf";
+        if (!await catalogDb.Products.AnyAsync(p => p.SlugSeam == draftSlug, cancellation))
+        {
+            var draft = await catalog.CreateProductAsync(
+                CatalogProductKind.PhysicalGood,
+                draftSlug,
+                live.BrandId,
+                new Dictionary<string, string> { ["fa-IR"] = "شال پیش‌نویس R3", ["en-US"] = "R3 Draft Scarf" },
+                cancellation);
+            await catalog.AttachMediaReferenceAsync(
+                draft.ProductId,
+                Guid.Parse("11111111-aaaa-4aaa-8aaa-aaaaaaaaaaa1"),
+                "پیش‌نمایش شال",
+                cancellation);
+        }
+
+        const string archivedSlug = "admin-r3-archived-hat";
+        if (!await catalogDb.Products.AnyAsync(p => p.SlugSeam == archivedSlug, cancellation))
+        {
+            var archived = await catalog.CreateProductAsync(
+                CatalogProductKind.PhysicalGood,
+                archivedSlug,
+                live.BrandId,
+                new Dictionary<string, string> { ["fa-IR"] = "کلاه بایگانی R3", ["en-US"] = "R3 Archived Hat" },
+                cancellation);
+            await catalog.AttachMediaReferenceAsync(
+                archived.ProductId,
+                Guid.Parse("22222222-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
+                "پیش‌نمایش کلاه",
+                cancellation);
+            await catalog.PublishProductAsync(archived.ProductId, cancellation);
+            await catalog.ArchiveProductAsync(archived.ProductId, cancellation);
+        }
     }
 
     /// <summary>

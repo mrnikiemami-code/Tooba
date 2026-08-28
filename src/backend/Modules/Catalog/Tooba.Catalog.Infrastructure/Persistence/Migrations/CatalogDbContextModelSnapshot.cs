@@ -402,6 +402,23 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("reference_id");
 
+                    b.Property<string>("AltText")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("alt_text");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("display_order");
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_primary");
+
                     b.Property<Guid>("MediaAssetId")
                         .HasColumnType("uuid")
                         .HasColumnName("media_asset_id");
@@ -412,6 +429,9 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
 
                     b.HasKey("ReferenceId")
                         .HasName("pk_product_media_references");
+
+                    b.HasIndex("ProductId", "DisplayOrder")
+                        .HasDatabaseName("ix_product_media_references_product_id_display_order");
 
                     b.HasIndex("ProductId", "MediaAssetId")
                         .IsUnique()

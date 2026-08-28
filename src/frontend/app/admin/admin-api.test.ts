@@ -71,6 +71,9 @@ test("maps admin order detail seller snapshots", () => {
 
 test("uses Persian money and status labels", () => {
   assert.equal(formatAdminStatus("PendingPayment"), "در انتظار پرداخت");
+  assert.equal(formatAdminStatus("Archived"), "بایگانی");
+  assert.equal(formatAdminStatus("Delivered"), "تحویل‌شده");
+  assert.equal(formatAdminStatus("Mixed"), "ترکیبی");
   assert.match(formatAdminMoney(125000, "IRR"), /ریال$/);
 });
 

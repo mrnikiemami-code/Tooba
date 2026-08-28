@@ -637,14 +637,37 @@ public sealed class CatalogProductMediaReference
     public Guid MediaAssetId { get; init; }
 
     /// <summary>
+    /// ترتیب نمایش گالری داخل محصول.
+    /// </summary>
+    public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// تصویر اصلی فهرست/بند انگشتی.
+    /// </summary>
+    public bool IsPrimary { get; set; }
+
+    /// <summary>
+    /// متن جایگزین دسترس‌پذیری؛ باینری نیست.
+    /// </summary>
+    public string? AltText { get; set; }
+
+    /// <summary>
     /// مرجع مات می‌سازد.
     /// </summary>
-    public static CatalogProductMediaReference Link(Guid productId, Guid mediaAssetId) =>
+    public static CatalogProductMediaReference Link(
+        Guid productId,
+        Guid mediaAssetId,
+        int displayOrder = 0,
+        bool isPrimary = false,
+        string? altText = null) =>
         new()
         {
             ReferenceId = UuidV7.New(),
             ProductId = productId,
             MediaAssetId = mediaAssetId,
+            DisplayOrder = displayOrder,
+            IsPrimary = isPrimary,
+            AltText = string.IsNullOrWhiteSpace(altText) ? null : altText.Trim(),
         };
 }
 
@@ -822,6 +845,24 @@ public sealed class CatalogVariant : IHasDomainEvents
         return variant;
     }
 
+    /// <summary>
+    /// وضعیت انتشار گونه را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
+    /// </summary>
+    public void SetStatus(CatalogPublicationStatus status, DateTimeOffset now)
+    {
+        Status = status;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// کد کاتالوگ را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
+    /// </summary>
+    public void UpdateCatalogCodeSeam(string? catalogCodeSeam, DateTimeOffset now)
+    {
+        CatalogCodeSeam = string.IsNullOrWhiteSpace(catalogCodeSeam) ? null : catalogCodeSeam.Trim();
+        UpdatedAt = now;
+    }
+
     /// <inheritdoc />
     public void ClearDomainEvents() => _domainEvents.Clear();
 }
@@ -912,6 +953,31 @@ public sealed class CatalogProduct : IHasDomainEvents
         Status = CatalogPublicationStatus.Published;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductPublishedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// لغو انتشار تحریری به پیش‌نویس. آرشیو جدا می‌ماند.
+    /// </summary>
+    public void Unpublish(DateTimeOffset now)
+    {
+        if (Status == CatalogPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException("محصول آرشیو شده را با لغو انتشار به پیش‌نویس برنمی‌گردانیم.");
+        }
+
+        Status = CatalogPublicationStatus.Draft;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// آرشیو تحریری. حذف سخت نیست و با Offer قاطی نمی‌شود.
+    /// </summary>
+    public void Archive(DateTimeOffset now)
+    {
+        Status = CatalogPublicationStatus.Archived;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
     }
 
     /// <summary>

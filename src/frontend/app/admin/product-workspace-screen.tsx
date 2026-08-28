@@ -2,9 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages } from "../../design-system";
-import { loadProductWorkspace, patchCatalogTitle, type HostReadSource } from "./host-client";
-import { type ProductWorkspaceView } from "./workspace-model";
+import { formatAdminStatus } from "./admin-api";
+import { listAttributeDefinitions, type AttributeDefinition } from "./catalog-attribute-api";
 import { ProductAttributesPanel } from "./catalog-attribute-ui";
+import {
+  attachAdminProductMedia,
+  createAdminProductVariant,
+  loadProductWorkspace,
+  mutateAdminProductLifecycle,
+  patchAdminProductVariant,
+  patchAdminProductMediaAlt,
+  patchCatalogTitle,
+  removeAdminProductMedia,
+  reorderAdminProductMedia,
+  setAdminProductMediaPrimary,
+  type HostReadSource,
+} from "./host-client";
+import { type ProductWorkspaceView } from "./workspace-model";
+import { storefrontMediaUrl } from "../storefront/storefront-api";
 
 const sections = [
   { id: "overview", label: "نمای کلی" },
@@ -18,12 +33,53 @@ const sections = [
   { id: "history", label: "تاریخچه" },
 ];
 
+const AXIS_LABELS: Record<string, string> = {
+  color: "رنگ",
+  colour: "رنگ",
+  size: "سایز",
+  storage: "حافظه",
+  memory: "حافظه",
+  ram: "رم",
+  pack: "بسته",
+};
+
 function money(amount: number | undefined, currency: string | undefined): string {
   if (amount == null) {
     return "—";
   }
   const digits = new Intl.NumberFormat("fa-IR").format(amount);
   return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency ?? ""}`.trim();
+}
+
+/** اثرانگشت خام `color=sand|size=m` را برای اپراتور خوانا می‌کند. */
+export function humanizeFingerprint(fingerprint: string): string {
+  if (!fingerprint.trim()) {
+    return "بدون ترکیب";
+  }
+  return fingerprint
+    .split("|")
+    .map((part) => {
+      const [rawKey, ...rest] = part.split("=");
+      const key = (rawKey ?? "").trim().toLowerCase();
+      const value = rest.join("=").trim() || "—";
+      const label = AXIS_LABELS[key] ?? (rawKey?.trim() || "محور");
+      return `${label}: ${value}`;
+    })
+    .join(" · ");
+}
+
+function statusTone(status: string): "success" | "warning" | "neutral" | "danger" {
+  if (status === "Published" || status === "Active") return "success";
+  if (status === "Draft") return "warning";
+  if (status === "Archived") return "neutral";
+  return "neutral";
+}
+
+function sortedMedia(media: ProductWorkspaceView["media"]) {
+  return [...media].sort((a, b) => {
+    if (a.primary !== b.primary) return a.primary ? -1 : 1;
+    return (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+  });
 }
 
 /**
@@ -39,6 +95,14 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState<Set<string>>(new Set());
   const [denied, setDenied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [attachAssetId, setAttachAssetId] = useState("");
+  const [attachAlt, setAttachAlt] = useState("");
+  const [altDrafts, setAltDrafts] = useState<Record<string, string>>({});
+  const [axisDefs, setAxisDefs] = useState<AttributeDefinition[]>([]);
+  const [createAxes, setCreateAxes] = useState<Record<string, { rawValue: string; enumOptionId: string }>>({});
+  const [createCatalogCode, setCreateCatalogCode] = useState("");
+  const [variantStatusDraft, setVariantStatusDraft] = useState<Record<string, string>>({});
 
   const reload = useCallback(() => {
     void loadProductWorkspace(productId, viewScope).then((result) => {
@@ -48,6 +112,18 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
       setConflict(null);
       setError(result.message ?? null);
       setDenied(Boolean(result.denied));
+      if (result.view) {
+        const alts: Record<string, string> = {};
+        for (const item of result.view.media) {
+          alts[item.mediaAssetId] = item.altText ?? "";
+        }
+        setAltDrafts(alts);
+        const statuses: Record<string, string> = {};
+        for (const variant of result.view.variants) {
+          statuses[variant.variantId] = variant.status;
+        }
+        setVariantStatusDraft(statuses);
+      }
     });
   }, [productId, viewScope]);
 
@@ -55,8 +131,18 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     reload();
   }, [reload]);
 
+  useEffect(() => {
+    void listAttributeDefinitions().then((result) => {
+      if (result.state === "ok" && result.data) {
+        setAxisDefs(result.data.filter((row) => row.isVariantAxisAllowed && row.isActive));
+      }
+    });
+  }, []);
+
   const readOnly = !view?.permissions.canEditCatalog || viewScope;
   const dirtySections = useMemo(() => dirty, [dirty]);
+  const mediaRows = useMemo(() => (view ? sortedMedia(view.media) : []), [view]);
+  const primaryMedia = mediaRows.find((row) => row.primary) ?? mediaRows[0] ?? null;
 
   if (!view) {
     if (denied) {
@@ -84,6 +170,17 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const priceRange = amounts.length
     ? `${money(Math.min(...amounts), view.prices[0]?.currency)} — ${money(Math.max(...amounts), view.prices[0]?.currency)}`
     : "بدون قیمت";
+  const canMutateCatalog = view.permissions.canEditCatalog && !viewScope;
+  const canPublish = view.permissions.canPublish && !viewScope;
+
+  function applyMedia(media: ProductWorkspaceView["media"]) {
+    setView((prev) => (prev ? { ...prev, media } : prev));
+    const alts: Record<string, string> = {};
+    for (const item of media) {
+      alts[item.mediaAssetId] = item.altText ?? "";
+    }
+    setAltDrafts(alts);
+  }
 
   async function onAction(actionId: string) {
     if (actionId === "save") {
@@ -100,7 +197,161 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
       setTitleDraft(result.view.title);
       setDirty(new Set());
       setConflict(null);
+      return;
     }
+    if (actionId === "publish") {
+      setBusy(true);
+      const result = await mutateAdminProductLifecycle(current.productId, "publish");
+      setBusy(false);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      if (result.view) {
+        setView(result.view);
+      } else {
+        reload();
+      }
+    }
+  }
+
+  async function runLifecycle(action: "unpublish" | "archive" | "delete") {
+    setBusy(true);
+    setError(null);
+    const result = await mutateAdminProductLifecycle(current.productId, action);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    if (action === "delete") {
+      window.location.href = "/admin/products";
+      return;
+    }
+    if (result.view) {
+      setView(result.view);
+    } else {
+      reload();
+    }
+  }
+
+  async function onAttachMedia() {
+    const assetId = attachAssetId.trim();
+    if (!assetId) {
+      setError("شناسهٔ دارایی رسانه (Guid) لازم است");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const result = await attachAdminProductMedia(current.productId, assetId, attachAlt.trim() || null);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    applyMedia(result.media);
+    setAttachAssetId("");
+    setAttachAlt("");
+  }
+
+  async function onReorder(mediaAssetId: string, direction: -1 | 1) {
+    const ordered = sortedMedia(current.media).map((row) => row.mediaAssetId);
+    const index = ordered.indexOf(mediaAssetId);
+    const swapWith = index + direction;
+    if (index < 0 || swapWith < 0 || swapWith >= ordered.length) {
+      return;
+    }
+    const next = [...ordered];
+    const tmp = next[index]!;
+    next[index] = next[swapWith]!;
+    next[swapWith] = tmp;
+    setBusy(true);
+    setError(null);
+    const result = await reorderAdminProductMedia(current.productId, next);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    applyMedia(result.media);
+  }
+
+  async function onSetPrimary(mediaAssetId: string) {
+    setBusy(true);
+    setError(null);
+    const result = await setAdminProductMediaPrimary(current.productId, mediaAssetId);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    applyMedia(result.media);
+  }
+
+  async function onSaveAlt(mediaAssetId: string) {
+    setBusy(true);
+    setError(null);
+    const result = await patchAdminProductMediaAlt(current.productId, mediaAssetId, altDrafts[mediaAssetId]?.trim() || null);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    applyMedia(result.media);
+  }
+
+  async function onRemoveMedia(mediaAssetId: string) {
+    setBusy(true);
+    setError(null);
+    const result = await removeAdminProductMedia(current.productId, mediaAssetId);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    applyMedia(result.media);
+  }
+
+  async function onCreateVariant() {
+    const axes = Object.entries(createAxes)
+      .filter(([, draft]) => draft.rawValue.trim() || draft.enumOptionId.trim())
+      .map(([definitionId, draft]) => ({
+        definitionId,
+        rawValue: draft.rawValue.trim() || (draft.enumOptionId.trim() ? "ignored" : null),
+        enumOptionId: draft.enumOptionId.trim() || null,
+      }));
+    if (axes.length === 0) {
+      setError("حداقل یک محور با مقدار برای ایجاد گونه لازم است");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const result = await createAdminProductVariant(current.productId, {
+      catalogCodeSeam: createCatalogCode.trim() || null,
+      axes,
+    });
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setView(result.view);
+    setCreateAxes({});
+    setCreateCatalogCode("");
+  }
+
+  async function onPatchVariantStatus(variantId: string) {
+    const status = variantStatusDraft[variantId];
+    if (!status) return;
+    setBusy(true);
+    setError(null);
+    const result = await patchAdminProductVariant(current.productId, variantId, { status });
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    setView(result.view);
   }
 
   return (
@@ -108,13 +359,22 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
       <WorkspaceShell
         flush
         leading={
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-ds bg-secondary text-sm text-muted md:size-20">تصویر</div>
+          primaryMedia ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={storefrontMediaUrl(primaryMedia.mediaAssetId)}
+              alt={primaryMedia.altText ?? view.title}
+              className="size-16 shrink-0 rounded-ds bg-secondary object-contain p-1 md:size-20"
+            />
+          ) : (
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-ds bg-secondary text-sm text-muted md:size-20">بدون تصویر</div>
+          )
         }
         title={view.title}
         subtitle={`${view.brandName ?? "بدون برند"} · ${view.categoryNames.join("، ") || "بدون دسته"}`}
         breadcrumbs={["عملیات", "محصولات", view.title]}
         statusItems={[
-          { id: "pub", label: view.status === "Published" ? "منتشرشده" : view.status, tone: "success" },
+          { id: "pub", label: formatAdminStatus(view.status), tone: statusTone(view.status) },
           {
             id: "ready",
             label: view.publication.purchasableHint ? "آمادهٔ فروش" : "غیرقابل‌خرید",
@@ -130,8 +390,8 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         activeSectionId={sectionId}
         onSectionChange={setSectionId}
         actions={[
-          { id: "save", label: "ذخیره", kind: "primary", permission: view.permissions.canEditCatalog && !viewScope ? "allowed" : "denied" },
-          { id: "publish", label: "انتشار", kind: "secondary", permission: view.permissions.canPublish && !viewScope ? "allowed" : "denied" },
+          { id: "save", label: "ذخیره", kind: "primary", permission: canMutateCatalog ? "allowed" : "denied" },
+          { id: "publish", label: "انتشار", kind: "secondary", permission: canPublish && !busy ? "allowed" : "denied" },
         ]}
         onAction={(actionId) => void onAction(actionId)}
         readOnly={readOnly}
@@ -161,7 +421,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <Card>
               <p className="text-sm font-medium text-muted">مشخصات نمایشی</p>
-              {view.permissions.canEditCatalog && !viewScope ? (
+              {canMutateCatalog ? (
                 <label className="mt-3 block text-sm font-medium">
                   عنوان نمایشی
                   <input
@@ -210,43 +470,310 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
           </Card>
         ) : null}
         {sectionId === "variants" ? (
-          <div className="overflow-x-auto md:overflow-visible">
-            <ul className="space-y-2 md:hidden">
-              {view.variants.map((variant, index) => (
-                <li key={variant.variantId} className="rounded-ds border border-border p-3">
-                  <p className="font-medium">گونه {index + 1}</p>
-                  <p className="mt-1 text-sm text-muted">
-                    {variant.status} · {variant.offerCount} پیشنهاد
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <table className="hidden w-full text-right text-base md:table">
-              <thead className="border-b border-border text-sm text-muted">
-                <tr>
-                  <th className="py-2">گونه</th>
-                  <th>وضعیت</th>
-                  <th>پیشنهاد</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.variants.map((variant, index) => (
-                  <tr key={variant.variantId} className="border-b border-border/70">
-                    <td className="py-3 font-medium">گونه {index + 1}</td>
-                    <td>
-                      <Badge tone="success">{variant.status}</Badge>
-                    </td>
-                    <td>{variant.offerCount}</td>
-                  </tr>
+          <div className="space-y-4" data-testid="admin-product-variants">
+            <Card>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">تنوع‌های محصول</p>
+                  <p className="mt-1 text-sm text-muted">ترکیب محورها · بدون قیمت یا موجودی روی گونه</p>
+                </div>
+                <button
+                  type="button"
+                  className="rounded-ds border border-border px-3 py-2 text-sm hover:bg-secondary"
+                  onClick={() => setSectionId("attributes")}
+                >
+                  تنظیم محورها در ویژگی‌ها
+                </button>
+              </div>
+            </Card>
+
+            <div className="overflow-x-auto md:overflow-visible">
+              <ul className="space-y-2 md:hidden">
+                {view.variants.map((variant) => (
+                  <li key={variant.variantId} className="rounded-ds border border-border p-3">
+                    <p className="font-medium">{humanizeFingerprint(variant.fingerprint)}</p>
+                    <p className="mt-1 text-sm text-muted" dir="ltr">
+                      {variant.catalogCodeSeam ?? "بدون کد Catalog"}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Badge tone={statusTone(variant.status)}>{formatAdminStatus(variant.status)}</Badge>
+                      <span className="text-sm text-muted">{variant.offerCount} پیشنهاد</span>
+                    </div>
+                    {canMutateCatalog ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <select
+                          className="min-h-10 rounded-ds border border-border bg-surface px-2 text-sm"
+                          value={variantStatusDraft[variant.variantId] ?? variant.status}
+                          onChange={(event) =>
+                            setVariantStatusDraft((prev) => ({ ...prev, [variant.variantId]: event.target.value }))
+                          }
+                        >
+                          <option value="Draft">پیش‌نویس</option>
+                          <option value="Published">منتشرشده</option>
+                          <option value="Archived">بایگانی</option>
+                        </select>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="rounded-ds bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
+                          onClick={() => void onPatchVariantStatus(variant.variantId)}
+                        >
+                          ذخیره وضعیت
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+              <table className="hidden w-full text-right text-base md:table">
+                <thead className="border-b border-border text-sm text-muted">
+                  <tr>
+                    <th className="py-2">ترکیب</th>
+                    <th>کد Catalog</th>
+                    <th>وضعیت</th>
+                    <th>پیشنهاد</th>
+                    {canMutateCatalog ? <th>عملیات</th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {view.variants.map((variant) => (
+                    <tr key={variant.variantId} className="border-b border-border/70">
+                      <td className="py-3 font-medium">{humanizeFingerprint(variant.fingerprint)}</td>
+                      <td dir="ltr">{variant.catalogCodeSeam ?? "—"}</td>
+                      <td>
+                        <Badge tone={statusTone(variant.status)}>{formatAdminStatus(variant.status)}</Badge>
+                      </td>
+                      <td>{variant.offerCount}</td>
+                      {canMutateCatalog ? (
+                        <td>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <select
+                              className="min-h-10 rounded-ds border border-border bg-surface px-2 text-sm"
+                              value={variantStatusDraft[variant.variantId] ?? variant.status}
+                              onChange={(event) =>
+                                setVariantStatusDraft((prev) => ({ ...prev, [variant.variantId]: event.target.value }))
+                              }
+                            >
+                              <option value="Draft">پیش‌نویس</option>
+                              <option value="Published">منتشرشده</option>
+                              <option value="Archived">بایگانی</option>
+                            </select>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              className="rounded-ds border border-border px-3 py-1.5 text-sm hover:bg-secondary disabled:opacity-50"
+                              onClick={() => void onPatchVariantStatus(variant.variantId)}
+                            >
+                              ذخیره
+                            </button>
+                          </div>
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {view.variants.length === 0 ? <p className="text-sm text-muted">هنوز گونه‌ای ثبت نشده است.</p> : null}
+            </div>
+
+            {canMutateCatalog ? (
+              <Card data-testid="admin-variant-create">
+                <p className="font-semibold">ایجاد گونه</p>
+                <p className="mt-1 text-sm text-muted">
+                  محورها را از تعاریف مجاز انتخاب کنید. ماتریس کامل ترکیبی در این Task نیست.
+                </p>
+                {axisDefs.length === 0 ? (
+                  <p className="mt-3 text-sm text-muted">تعریف محور مجازی نیست — ابتدا در تب ویژگی‌ها محور ذخیره کنید.</p>
+                ) : (
+                  <ul className="mt-3 space-y-3">
+                    {axisDefs.map((def) => {
+                      const draft = createAxes[def.definitionId] ?? { rawValue: "", enumOptionId: "" };
+                      return (
+                        <li key={def.definitionId} className="rounded-ds border border-border p-3">
+                          <p className="text-sm font-medium">{AXIS_LABELS[def.code.toLowerCase()] ?? def.code}</p>
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <label className="text-sm">
+                              مقدار
+                              <input
+                                className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
+                                dir="ltr"
+                                value={draft.rawValue}
+                                onChange={(event) =>
+                                  setCreateAxes((prev) => ({
+                                    ...prev,
+                                    [def.definitionId]: { ...draft, rawValue: event.target.value },
+                                  }))
+                                }
+                              />
+                            </label>
+                            <label className="text-sm">
+                              شناسه گزینه (اختیاری)
+                              <input
+                                className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
+                                dir="ltr"
+                                value={draft.enumOptionId}
+                                onChange={(event) =>
+                                  setCreateAxes((prev) => ({
+                                    ...prev,
+                                    [def.definitionId]: { ...draft, enumOptionId: event.target.value },
+                                  }))
+                                }
+                              />
+                            </label>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                <label className="mt-3 block text-sm">
+                  کد Catalog (اختیاری)
+                  <input
+                    className="mt-1 min-h-10 w-full max-w-md rounded-ds border border-border bg-surface px-3"
+                    dir="ltr"
+                    value={createCatalogCode}
+                    onChange={(event) => setCreateCatalogCode(event.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={busy || axisDefs.length === 0}
+                  className="mt-4 min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                  onClick={() => void onCreateVariant()}
+                >
+                  ایجاد گونه
+                </button>
+              </Card>
+            ) : null}
           </div>
         ) : null}
         {sectionId === "media" ? (
-          <div className="flex gap-4">
-            <div className="flex h-32 w-32 items-center justify-center rounded-ds bg-secondary text-sm text-muted">تصویر اصلی</div>
-            <p className="text-sm text-muted">رسانهٔ باینری در این Task بارگذاری نمی‌شود.</p>
+          <div className="space-y-4" data-testid="admin-product-media">
+            <Card>
+              <p className="font-semibold">گالری تصویر</p>
+              <p className="mt-1 text-sm text-muted">
+                پیش‌نمایش از <span dir="ltr">GET /v1/storefront/media/{"{id}"}</span> (SVG امن). بارگذاری باینری فایل DEFERRED است —
+                دارایی را با Guid پیوست کنید.
+              </p>
+              <p className="mt-2 hidden text-sm text-muted" data-testid="product-video-control">
+                کنترل ویدئو محصول مخفی است.
+              </p>
+            </Card>
+
+            {mediaRows.length === 0 ? (
+              <p className="text-sm text-muted">هنوز تصویری پیوست نشده است.</p>
+            ) : (
+              <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {mediaRows.map((item, index) => (
+                  <li key={item.mediaAssetId} className="rounded-ds border border-border bg-surface p-3">
+                    <div className="relative aspect-square overflow-hidden rounded-ds bg-secondary">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={storefrontMediaUrl(item.mediaAssetId)}
+                        alt={item.altText ?? `رسانه ${index + 1}`}
+                        className="h-full w-full object-contain p-3"
+                      />
+                      {item.primary ? (
+                        <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">اصلی</span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 truncate text-xs text-muted" dir="ltr">
+                      {item.mediaAssetId}
+                    </p>
+                    <label className="mt-2 block text-sm">
+                      متن جایگزین
+                      <input
+                        className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
+                        value={altDrafts[item.mediaAssetId] ?? ""}
+                        disabled={!canMutateCatalog || busy}
+                        onChange={(event) =>
+                          setAltDrafts((prev) => ({ ...prev, [item.mediaAssetId]: event.target.value }))
+                        }
+                      />
+                    </label>
+                    {canMutateCatalog ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={busy || item.primary}
+                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
+                          onClick={() => void onSetPrimary(item.mediaAssetId)}
+                        >
+                          اصلی
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy || index === 0}
+                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
+                          onClick={() => void onReorder(item.mediaAssetId, -1)}
+                        >
+                          بالا
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy || index >= mediaRows.length - 1}
+                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
+                          onClick={() => void onReorder(item.mediaAssetId, 1)}
+                        >
+                          پایین
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
+                          onClick={() => void onSaveAlt(item.mediaAssetId)}
+                        >
+                          ذخیره alt
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="rounded-ds border border-danger/40 px-2 py-1.5 text-xs text-danger hover:bg-danger/10 disabled:opacity-50"
+                          onClick={() => void onRemoveMedia(item.mediaAssetId)}
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {canMutateCatalog ? (
+              <Card>
+                <p className="font-semibold">پیوست تصویر با شناسه دارایی</p>
+                <p className="mt-1 text-sm text-muted">آپلود فایل تصویری در این Task پیاده‌سازی نشده است.</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <label className="text-sm">
+                    MediaAssetId (Guid)
+                    <input
+                      className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
+                      dir="ltr"
+                      value={attachAssetId}
+                      onChange={(event) => setAttachAssetId(event.target.value)}
+                      placeholder="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+                    />
+                  </label>
+                  <label className="text-sm">
+                    متن جایگزین (اختیاری)
+                    <input
+                      className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
+                      value={attachAlt}
+                      onChange={(event) => setAttachAlt(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="mt-6 min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    onClick={() => void onAttachMedia()}
+                  >
+                    پیوست
+                  </button>
+                </div>
+              </Card>
+            ) : null}
           </div>
         ) : null}
         {sectionId === "commercial" ? (
@@ -382,33 +909,65 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
           </div>
         ) : null}
         {sectionId === "publication" ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="mb-2 font-semibold">آمادگی محتوا</p>
-              <ul className="space-y-2">
-                <Check ok={Boolean(view.title)} label="عنوان" />
-                <Check ok={view.media.length > 0} label="رسانه" />
-              </ul>
+          <div className="space-y-4" data-testid="admin-product-publication">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="mb-2 font-semibold">آمادگی محتوا</p>
+                <ul className="space-y-2">
+                  <Check ok={Boolean(view.title)} label="عنوان" />
+                  <Check ok={view.media.length > 0} label="رسانه" />
+                </ul>
+              </div>
+              <div>
+                <p className="mb-2 font-semibold">آمادگی فروش</p>
+                <ul className="space-y-2">
+                  <Check ok={view.offers.some((row) => row.status === "Active")} label="پیشنهاد فعال" />
+                  <Check ok={view.prices.length > 0} label="قیمت" />
+                </ul>
+              </div>
+              <div>
+                <p className="mb-2 font-semibold">آمادگی موجودی و سئو</p>
+                <ul className="space-y-2">
+                  <Check ok={available > 0} label="موجودی" />
+                  <Check ok={Boolean(view.seo.slugSeam)} label="سئو" />
+                </ul>
+              </div>
+              <div>
+                <p className="mb-2 font-semibold">وضعیت انتشار</p>
+                <p className="text-lg font-semibold">{formatAdminStatus(view.status)}</p>
+                <p className="mt-2 text-sm text-muted">برای فروش باید پیشنهاد، قیمت و موجودی آماده باشند.</p>
+              </div>
             </div>
-            <div>
-              <p className="mb-2 font-semibold">آمادگی فروش</p>
-              <ul className="space-y-2">
-                <Check ok={view.offers.some((row) => row.status === "Active")} label="پیشنهاد فعال" />
-                <Check ok={view.prices.length > 0} label="قیمت" />
-              </ul>
-            </div>
-            <div>
-              <p className="mb-2 font-semibold">آمادگی موجودی و سئو</p>
-              <ul className="space-y-2">
-                <Check ok={available > 0} label="موجودی" />
-                <Check ok={Boolean(view.seo.slugSeam)} label="سئو" />
-              </ul>
-            </div>
-            <div>
-              <p className="mb-2 font-semibold">وضعیت انتشار</p>
-              <p className="text-lg font-semibold">{view.status === "Published" ? "منتشرشده" : view.status}</p>
-              <p className="mt-2 text-sm text-muted">برای فروش باید پیشنهاد، قیمت و موجودی آماده باشند.</p>
-            </div>
+            <Card>
+              <p className="font-semibold">عملیات چرخهٔ عمر</p>
+              <p className="mt-1 text-sm text-muted">انتشار از نوار Workspace؛ لغو انتشار / بایگانی / حذف امن اینجا.</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!canPublish || busy || view.status !== "Published"}
+                  className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
+                  onClick={() => void runLifecycle("unpublish")}
+                >
+                  لغو انتشار
+                </button>
+                <button
+                  type="button"
+                  disabled={!canPublish || busy || view.status === "Archived"}
+                  className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
+                  onClick={() => void runLifecycle("archive")}
+                >
+                  بایگانی
+                </button>
+                <button
+                  type="button"
+                  disabled={!canMutateCatalog || busy}
+                  className="min-h-11 rounded-ds border border-danger/40 px-4 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
+                  onClick={() => void runLifecycle("delete")}
+                >
+                  حذف امن
+                </button>
+              </div>
+            </Card>
           </div>
         ) : null}
         {sectionId === "history" ? (

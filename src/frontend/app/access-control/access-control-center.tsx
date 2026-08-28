@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * مرکز کنترل دسترسی مشترک Admin/Seller — زبان بصری Shopeiva settings + customersList.
@@ -17,8 +17,15 @@ import {
   Shield,
   Trash2,
   Users,
+  X,
 } from "lucide-react";
 import { ScopeEditor, type ScopeResourceItem } from "./scope-editor";
+import {
+  getModuleLabel,
+  getPermissionLabel,
+  resolvePermissionLocale,
+  type PermissionLocale,
+} from "./permission-labels";
 
 export type AccMode = "admin" | "seller" | "admin-seller";
 
@@ -58,6 +65,14 @@ export type AssignmentRow = {
   roleId: string;
   roleName: string;
   roleCode: string;
+};
+
+export type AccessUserHit = {
+  userId: string;
+  roleCodes: string[];
+  displayName?: string | null;
+  email?: string | null;
+  mobile?: string | null;
 };
 
 export type EffectiveAccess = {
@@ -101,6 +116,7 @@ export type AccApi = {
   listAssignments: () => Promise<AssignmentRow[]>;
   assignRole: (userId: string, roleId: string) => Promise<void>;
   removeAssignment: (id: string) => Promise<void>;
+  searchUsers: (q: string) => Promise<AccessUserHit[]>;
   getEffective: (userId: string) => Promise<EffectiveAccess>;
   getCeiling?: () => Promise<CeilingEntry[]>;
   setCeiling?: (entries: CeilingEntry[]) => Promise<void>;
@@ -124,15 +140,141 @@ function supportsScopedEditor(p: PermissionDef): boolean {
 }
 
 function formatScopeLabel(scopeKind: number, scopeDisplayName?: string | null, scopeResourceId?: string | null): string {
-  const kindLabel = SCOPE_KIND_LABELS[scopeKind] ?? `scope ${scopeKind}`;
+  const kindLabel = SCOPE_KIND_LABELS[scopeKind] ?? `محدوده ${scopeKind}`;
   if (scopeKind === 1 || !scopeResourceId) {
     return kindLabel;
   }
   const name = scopeDisplayName?.trim();
-  return name ? `${kindLabel}: ${name}` : `${kindLabel}: ${scopeResourceId.slice(0, 8)}…`;
+  if (name) {
+    return `${kindLabel}: «${name}»`;
+  }
+  return `${kindLabel}: منبع بدون نام`;
+}
+
+function userPrimaryLabel(hit: AccessUserHit | undefined): string {
+  if (!hit) return "کاربر";
+  return hit.displayName?.trim() || hit.email?.trim() || hit.mobile?.trim() || "کاربر";
+}
+
+function userSecondaryLabel(hit: AccessUserHit | undefined): string | null {
+  if (!hit) return null;
+  const parts = [hit.email, hit.mobile].filter((x) => x && x.trim());
+  return parts.length ? parts.join(" · ") : null;
 }
 
 type TabId = "roles" | "users" | "ceiling";
+
+/** انتخابگر کاربر قابل جستجو — بدون ورودی GUID. */
+function UserPicker({
+  api,
+  selected,
+  onSelect,
+  placeholder = "جستجوی نام، ایمیل یا موبایل…",
+}: {
+  api: AccApi;
+  selected: AccessUserHit | null;
+  onSelect: (hit: AccessUserHit | null) => void;
+  placeholder?: string;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const [hits, setHits] = useState<AccessUserHit[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      setBusy(true);
+      void api
+        .searchUsers(q)
+        .then((rows) => {
+          if (!cancelled) setHits(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setHits([]);
+        })
+        .finally(() => {
+          if (!cancelled) setBusy(false);
+        });
+    }, 220);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+  }, [api, open, q]);
+
+  if (selected) {
+    return (
+      <div
+        className="flex items-center justify-between gap-2 rounded-xl border border-[#2563EB]/30 bg-[#2563EB]/5 px-3 py-2"
+        data-testid="user-picker-selected"
+      >
+        <div className="min-w-0">
+          <p className="text-sm font-bold truncate">{userPrimaryLabel(selected)}</p>
+          {userSecondaryLabel(selected) ? (
+            <p className="text-[11px] text-gray-500 truncate mt-0.5">{userSecondaryLabel(selected)}</p>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          className="shrink-0 rounded-lg p-1 text-gray-500 hover:bg-white"
+          aria-label="پاک کردن انتخاب"
+          onClick={() => onSelect(null)}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" data-testid="user-picker">
+      <div className="relative">
+        <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          className="w-full rounded-xl border border-gray-200 pr-9 pl-3 py-2 text-sm"
+          placeholder={placeholder}
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+        />
+      </div>
+      {open ? (
+        <ul className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg divide-y divide-gray-50">
+          {busy ? <li className="px-3 py-2 text-xs text-gray-400">در حال جستجو…</li> : null}
+          {!busy && hits.length === 0 ? (
+            <li className="px-3 py-2 text-xs text-gray-400">نتیجه‌ای یافت نشد</li>
+          ) : null}
+          {hits.map((h) => (
+            <li key={h.userId}>
+              <button
+                type="button"
+                className="w-full text-right px-3 py-2 hover:bg-gray-50"
+                onClick={() => {
+                  onSelect(h);
+                  setOpen(false);
+                  setQ("");
+                }}
+              >
+                <p className="text-sm font-bold">{userPrimaryLabel(h)}</p>
+                {userSecondaryLabel(h) ? (
+                  <p className="text-[11px] text-gray-500 mt-0.5">{userSecondaryLabel(h)}</p>
+                ) : null}
+                {h.roleCodes.length ? (
+                  <p className="text-[10px] text-[#2563EB] mt-0.5 font-bold">{h.roleCodes.join("، ")}</p>
+                ) : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 
 /**
  * پوستهٔ مشترک Access Control Center.
@@ -162,11 +304,21 @@ export function AccessControlCenter({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [effectiveUserId, setEffectiveUserId] = useState("");
+  const [effectiveUserId, setEffectiveUserId] = useState<string | null>(null);
   const [effective, setEffective] = useState<EffectiveAccess | null>(null);
-  const [assignUserId, setAssignUserId] = useState("");
+  const [assignPick, setAssignPick] = useState<AccessUserHit | null>(null);
+  const [memberPick, setMemberPick] = useState<AccessUserHit | null>(null);
+  const [memberFilter, setMemberFilter] = useState("");
+  const [userFilter, setUserFilter] = useState("");
+  const [userHits, setUserHits] = useState<AccessUserHit[]>([]);
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleCode, setNewRoleCode] = useState("");
+  const [locale, setLocale] = useState<PermissionLocale>("fa");
+  const [usersAssignRoleId, setUsersAssignRoleId] = useState<string>("");
+
+  useEffect(() => {
+    setLocale(resolvePermissionLocale());
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -175,22 +327,31 @@ export function AccessControlCenter({
       if (api.bootstrap) {
         await api.bootstrap().catch(() => undefined);
       }
-      const [c, r, a] = await Promise.all([api.listCatalog(), api.listRoles(), api.listAssignments()]);
+      const [c, r, a, u] = await Promise.all([
+        api.listCatalog(),
+        api.listRoles(),
+        api.listAssignments(),
+        api.searchUsers("").catch(() => [] as AccessUserHit[]),
+      ]);
       setCatalog(c);
       setRoles(r);
       setAssignments(a);
+      setUserHits(u);
       if (api.getCeiling) {
         setCeiling(await api.getCeiling());
       }
       if (!selectedRoleId && r[0]) {
         setSelectedRoleId(r[0].id);
       }
+      if (!usersAssignRoleId && r[0]) {
+        setUsersAssignRoleId(r[0].id);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "خطا در بارگذاری");
     } finally {
       setLoading(false);
     }
-  }, [api, selectedRoleId]);
+  }, [api, selectedRoleId, usersAssignRoleId]);
 
   useEffect(() => {
     void refresh();
@@ -254,16 +415,75 @@ export function AccessControlCenter({
     [api],
   );
 
+  const hitByUserId = useMemo(() => {
+    const map = new Map<string, AccessUserHit>();
+    for (const h of userHits) map.set(h.userId, h);
+    return map;
+  }, [userHits]);
+
+  const roleNameByCode = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of roles) map.set(r.code, r.name);
+    return map;
+  }, [roles]);
+
+  const membersForSelectedRole = useMemo(() => {
+    if (!selectedRoleId) return [];
+    const q = memberFilter.trim().toLowerCase();
+    return assignments
+      .filter((a) => a.roleId === selectedRoleId)
+      .filter((a) => {
+        if (!q) return true;
+        const hit = hitByUserId.get(a.userId);
+        const label = userPrimaryLabel(hit).toLowerCase();
+        const secondary = (userSecondaryLabel(hit) ?? "").toLowerCase();
+        return label.includes(q) || secondary.includes(q) || a.userId.toLowerCase().includes(q);
+      });
+  }, [assignments, selectedRoleId, memberFilter, hitByUserId]);
+
+  const usersOverview = useMemo(() => {
+    const map = new Map<
+      string,
+      { userId: string; hit?: AccessUserHit; roles: AssignmentRow[] }
+    >();
+    for (const a of assignments) {
+      const row = map.get(a.userId) ?? { userId: a.userId, hit: hitByUserId.get(a.userId), roles: [] };
+      row.roles.push(a);
+      row.hit = row.hit ?? hitByUserId.get(a.userId);
+      map.set(a.userId, row);
+    }
+    for (const h of userHits) {
+      if (!map.has(h.userId)) {
+        map.set(h.userId, { userId: h.userId, hit: h, roles: [] });
+      }
+    }
+    const q = userFilter.trim().toLowerCase();
+    return Array.from(map.values())
+      .filter((u) => {
+        if (!q) return true;
+        const label = userPrimaryLabel(u.hit).toLowerCase();
+        const secondary = (userSecondaryLabel(u.hit) ?? "").toLowerCase();
+        const roleNames = u.roles.map((r) => r.roleName.toLowerCase()).join(" ");
+        return label.includes(q) || secondary.includes(q) || roleNames.includes(q);
+      })
+      .sort((a, b) =>
+        userPrimaryLabel(a.hit).localeCompare(userPrimaryLabel(b.hit), "fa"),
+      );
+  }, [assignments, userHits, hitByUserId, userFilter]);
+
   const grouped = useMemo(() => {
     const q = search.trim().toLowerCase();
     const rows = catalog.filter((p) => {
       if (moduleFilter !== "all" && p.module !== moduleFilter) return false;
       if (selectedOnly && !enabledSet.has(p.permissionId)) return false;
       if (!q) return true;
+      const label = getPermissionLabel(p.permissionId, locale);
       return (
         p.permissionId.toLowerCase().includes(q) ||
         p.module.toLowerCase().includes(q) ||
-        p.displayNameKey.toLowerCase().includes(q)
+        label.title.toLowerCase().includes(q) ||
+        label.description.toLowerCase().includes(q) ||
+        getModuleLabel(p.module, locale).toLowerCase().includes(q)
       );
     });
     const map = new Map<string, PermissionDef[]>();
@@ -273,7 +493,7 @@ export function AccessControlCenter({
       map.set(p.module, list);
     }
     return Array.from(map.entries());
-  }, [catalog, search, moduleFilter, selectedOnly, enabledSet]);
+  }, [catalog, search, moduleFilter, selectedOnly, enabledSet, locale]);
 
   function togglePermission(p: PermissionDef) {
     if (!canManage) return;
@@ -312,7 +532,7 @@ export function AccessControlCenter({
     });
   }
 
-  function selectAllGroup(module: string, items: PermissionDef[]) {
+  function selectAllGroup(_module: string, items: PermissionDef[]) {
     if (!canManage) return;
     setDirty(true);
     setGrants((prev) => {
@@ -338,6 +558,7 @@ export function AccessControlCenter({
   }
 
   async function loadEffectivePreview(userId: string) {
+    setEffectiveUserId(userId);
     const raw = await api.getEffective(userId);
     const missing = raw.permissions.filter((p) => p.scopeResourceId && !p.scopeDisplayName && p.scopeKind !== 1);
     if (missing.length === 0) {
@@ -410,7 +631,7 @@ export function AccessControlCenter({
           <div>
             <h1 className="font-black text-lg">{title}</h1>
             <p className="text-xs text-gray-500 mt-1">
-              نقش، مجوز، تخصیص و پیش‌نمایش دسترسی — بدون نمایش tupleهای SpiceDB
+              نقش، مجوز، تخصیص و پیش‌نمایش دسترسی — بدون نمایش کلیدهای فنی یا tuple
             </p>
           </div>
         </div>
@@ -469,9 +690,8 @@ export function AccessControlCenter({
                         <span className="text-[10px] rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 font-bold">سیستمی</span>
                       ) : null}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{role.code}</p>
                     <p className="text-[11px] text-gray-400 mt-1">
-                      {role.permissionCount} مجوز · {role.assignmentCount} کاربر
+                      {role.permissionCount} مجوز · {role.assignmentCount} عضو
                     </p>
                   </button>
                 </li>
@@ -487,7 +707,7 @@ export function AccessControlCenter({
                 />
                 <input
                   className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  placeholder="کد (مثلاً mobile-ops)"
+                  placeholder="کد داخلی (مثلاً mobile-ops)"
                   value={newRoleCode}
                   onChange={(e) => setNewRoleCode(e.target.value)}
                 />
@@ -508,7 +728,7 @@ export function AccessControlCenter({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="font-black text-base">{selectedRole?.name ?? "نقش را انتخاب کنید"}</h2>
-                  <p className="text-xs text-gray-500 mt-1">{selectedRole?.description || selectedRole?.code}</p>
+                  <p className="text-xs text-gray-500 mt-1">{selectedRole?.description || "مجوزها و اعضای این نقش"}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {canManage && selectedRole && !selectedRole.isSystem ? (
@@ -570,7 +790,7 @@ export function AccessControlCenter({
                 >
                   {modules.map((m) => (
                     <option key={m} value={m}>
-                      {m === "all" ? "همه ماژول‌ها" : m}
+                      {m === "all" ? "همه ماژول‌ها" : getModuleLabel(m, locale)}
                     </option>
                   ))}
                 </select>
@@ -580,6 +800,97 @@ export function AccessControlCenter({
                 </label>
               </div>
             </div>
+
+            {selectedRole ? (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 md:p-5" data-testid="role-members">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <h3 className="font-black text-sm">
+                    اعضای نقش
+                    <span className="mr-2 text-xs bg-[#2563EB]/10 text-[#2563EB] rounded-full px-2 py-0.5 font-bold">
+                      {assignments.filter((a) => a.roleId === selectedRole.id).length}
+                    </span>
+                  </h3>
+                  <div className="relative min-w-[10rem] flex-1 max-w-xs">
+                    <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      className="w-full rounded-xl border border-gray-200 pr-8 pl-3 py-1.5 text-xs"
+                      placeholder="فیلتر عضو…"
+                      value={memberFilter}
+                      onChange={(e) => setMemberFilter(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {canManage ? (
+                  <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                    <div className="flex-1">
+                      <UserPicker api={api} selected={memberPick} onSelect={setMemberPick} />
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-xl bg-[#2563EB] text-white px-4 py-2 text-sm font-bold disabled:opacity-40"
+                      disabled={!memberPick}
+                      onClick={() =>
+                        void (async () => {
+                          if (!memberPick || !selectedRoleId) return;
+                          await api.assignRole(memberPick.userId, selectedRoleId);
+                          setMemberPick(null);
+                          await refresh();
+                        })()
+                      }
+                    >
+                      افزودن عضو
+                    </button>
+                  </div>
+                ) : null}
+                <ul className="divide-y divide-gray-50 max-h-48 overflow-auto">
+                  {membersForSelectedRole.length === 0 ? (
+                    <li className="py-3 text-xs text-gray-400">هنوز عضوی برای این نقش نیست.</li>
+                  ) : (
+                    membersForSelectedRole.map((a) => {
+                      const hit = hitByUserId.get(a.userId);
+                      return (
+                        <li key={a.id} className="py-2.5 flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            className="text-right min-w-0 hover:opacity-80"
+                            onClick={() => {
+                              setTab("users");
+                              void loadEffectivePreview(a.userId);
+                            }}
+                          >
+                            <p className="text-sm font-bold truncate">{userPrimaryLabel(hit)}</p>
+                            {userSecondaryLabel(hit) ? (
+                              <p className="text-[11px] text-gray-500 truncate mt-0.5">{userSecondaryLabel(hit)}</p>
+                            ) : null}
+                          </button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              className="text-[11px] text-[#2563EB] font-bold"
+                              onClick={() => {
+                                setTab("users");
+                                void loadEffectivePreview(a.userId);
+                              }}
+                            >
+                              دسترسی مؤثر
+                            </button>
+                            {canManage ? (
+                              <button
+                                type="button"
+                                className="text-[11px] text-red-600 font-bold"
+                                onClick={() => void api.removeAssignment(a.id).then(refresh)}
+                              >
+                                حذف
+                              </button>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })
+                  )}
+                </ul>
+              </div>
+            ) : null}
 
             <div className="space-y-3" data-testid="permission-matrix">
               {grouped.map(([module, items]) => {
@@ -591,7 +902,7 @@ export function AccessControlCenter({
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50"
                       onClick={() => setExpanded((s) => ({ ...s, [module]: !open }))}
                     >
-                      <span className="font-black text-sm">{module}</span>
+                      <span className="font-black text-sm">{getModuleLabel(module, locale)}</span>
                       <span className="flex items-center gap-2">
                         {canManage ? (
                           <>
@@ -629,6 +940,7 @@ export function AccessControlCenter({
                           const blocked = Boolean(p.disabledByCeiling || p.platformOnly);
                           const grant = grantByPermission.get(p.permissionId);
                           const showScope = on && supportsScopedEditor(p);
+                          const label = getPermissionLabel(p.permissionId, locale);
                           return (
                             <li key={p.permissionId} className={`px-4 py-3 ${blocked ? "opacity-60" : ""}`}>
                               <div className="flex items-start gap-3">
@@ -641,7 +953,7 @@ export function AccessControlCenter({
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-bold">{p.permissionId}</span>
+                                    <span className="text-sm font-bold">{label.title}</span>
                                     {p.disabledByCeiling ? (
                                       <span className="text-[10px] rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 font-bold">
                                         غیرفعال توسط سقف پلتفرم
@@ -658,7 +970,7 @@ export function AccessControlCenter({
                                       </span>
                                     ) : null}
                                   </div>
-                                  <p className="text-xs text-gray-500 mt-1">{p.descriptionKey}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{label.description}</p>
                                   {showScope ? (
                                     <ScopeEditor
                                       permissionId={p.permissionId}
@@ -688,102 +1000,149 @@ export function AccessControlCenter({
 
       {tab === "users" ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-            <h2 className="font-black text-sm mb-3">تخصیص نقش</h2>
-            {canManage ? (
-              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5" data-testid="users-overview">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 className="font-black text-sm">کاربران و نقش‌های تخصیص‌یافته</h2>
+              <div className="relative min-w-[10rem] flex-1 max-w-xs">
+                <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
-                  className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  placeholder="UserId (GUID)"
-                  value={assignUserId}
-                  onChange={(e) => setAssignUserId(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 pr-8 pl-3 py-1.5 text-xs"
+                  placeholder="جستجوی کاربر…"
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
                 />
-                <select
-                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  value={selectedRoleId ?? ""}
-                  onChange={(e) => setSelectedRoleId(e.target.value)}
-                >
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="rounded-xl bg-[#2563EB] text-white px-4 py-2 text-sm font-bold"
-                  onClick={() =>
-                    void (async () => {
-                      if (!selectedRoleId || !assignUserId) return;
-                      await api.assignRole(assignUserId.trim(), selectedRoleId);
-                      setAssignUserId("");
-                      await refresh();
-                    })()
-                  }
-                >
-                  تخصیص
-                </button>
+              </div>
+            </div>
+            {canManage ? (
+              <div className="flex flex-col gap-2 mb-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                <UserPicker api={api} selected={assignPick} onSelect={setAssignPick} />
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <select
+                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                    value={usersAssignRoleId}
+                    onChange={(e) => setUsersAssignRoleId(e.target.value)}
+                  >
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="rounded-xl bg-[#2563EB] text-white px-4 py-2 text-sm font-bold disabled:opacity-40"
+                    disabled={!assignPick || !usersAssignRoleId}
+                    onClick={() =>
+                      void (async () => {
+                        if (!assignPick || !usersAssignRoleId) return;
+                        await api.assignRole(assignPick.userId, usersAssignRoleId);
+                        setAssignPick(null);
+                        await refresh();
+                      })()
+                    }
+                  >
+                    تخصیص نقش
+                  </button>
+                </div>
               </div>
             ) : null}
-            <ul className="divide-y divide-gray-50">
-              {assignments.map((a) => (
-                <li key={a.id} className="py-3 flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-bold font-mono">{a.userId}</p>
-                    <p className="text-xs text-gray-500 mt-1">{a.roleName}</p>
-                  </div>
-                  {canManage ? (
-                    <button
-                      type="button"
-                      className="text-xs text-red-600 font-bold"
-                      onClick={() => void api.removeAssignment(a.id).then(refresh)}
-                    >
-                      حذف
-                    </button>
-                  ) : null}
-                </li>
-              ))}
+            <ul className="divide-y divide-gray-50 max-h-[28rem] overflow-auto">
+              {usersOverview.length === 0 ? (
+                <li className="py-3 text-xs text-gray-400">کاربری یافت نشد.</li>
+              ) : (
+                usersOverview.map((u) => (
+                  <li key={u.userId} className="py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold truncate">{userPrimaryLabel(u.hit)}</p>
+                        {userSecondaryLabel(u.hit) ? (
+                          <p className="text-[11px] text-gray-500 truncate mt-0.5">{userSecondaryLabel(u.hit)}</p>
+                        ) : null}
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {u.roles.length === 0 ? (
+                            <span className="text-[10px] text-gray-400">بدون نقش</span>
+                          ) : (
+                            u.roles.map((r) => (
+                              <span
+                                key={r.id}
+                                className="inline-flex items-center gap-1 text-[10px] rounded-full bg-[#2563EB]/10 text-[#2563EB] px-2 py-0.5 font-bold"
+                              >
+                                {r.roleName}
+                                {canManage ? (
+                                  <button
+                                    type="button"
+                                    className="hover:text-red-600"
+                                    aria-label={`حذف نقش ${r.roleName}`}
+                                    onClick={() => void api.removeAssignment(r.id).then(refresh)}
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                ) : null}
+                              </span>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="shrink-0 text-[11px] text-[#2563EB] font-bold"
+                        onClick={() => void loadEffectivePreview(u.userId)}
+                      >
+                        دسترسی مؤثر
+                      </button>
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </section>
 
-          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5" data-testid="effective-access">
             <h2 className="font-black text-sm mb-3">پیش‌نمایش دسترسی مؤثر</h2>
-            <div className="flex gap-2 mb-4">
-              <input
-                className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                placeholder="UserId"
-                value={effectiveUserId}
-                onChange={(e) => setEffectiveUserId(e.target.value)}
-              />
-              <button
-                type="button"
-                className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold hover:bg-gray-50"
-                onClick={() => void loadEffectivePreview(effectiveUserId.trim())}
-              >
-                نمایش
-              </button>
-            </div>
+            {!effectiveUserId ? (
+              <p className="text-xs text-gray-400">یک کاربر را انتخاب کنید تا «چه کاری / کجا» نشان داده شود.</p>
+            ) : null}
             {effective ? (
               <div className="space-y-3">
-                <p className="text-xs text-gray-500">نقش‌ها: {effective.roleCodes.join("، ") || "—"}</p>
+                <div>
+                  <p className="text-sm font-bold">
+                    {userPrimaryLabel(hitByUserId.get(effective.userId))}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    نقش‌ها:{" "}
+                    {effective.roleCodes.length
+                      ? effective.roleCodes.map((c) => roleNameByCode.get(c) ?? c).join("، ")
+                      : "—"}
+                  </p>
+                </div>
                 <ul className="space-y-2 max-h-80 overflow-auto">
-                  {effective.permissions.map((p) => (
-                    <li key={`${p.permissionId}-${p.scopeKind}-${p.scopeResourceId}`} className="rounded-xl bg-gray-50 px-3 py-2">
-                      <p className="text-sm font-bold">{p.permissionId}</p>
-                      <p className="text-[11px] text-gray-500 mt-1">
-                        {p.module}
-                        {" · "}
-                        {formatScopeLabel(p.scopeKind, p.scopeDisplayName, p.scopeResourceId)}
-                        {" · از "}
-                        {p.inheritedViaRoleCodes.join("، ")}
-                      </p>
-                    </li>
-                  ))}
+                  {effective.permissions.map((p) => {
+                    const label = getPermissionLabel(p.permissionId, locale);
+                    const roleSources = p.inheritedViaRoleCodes
+                      .map((c) => roleNameByCode.get(c) ?? c)
+                      .join("، ");
+                    return (
+                      <li
+                        key={`${p.permissionId}-${p.scopeKind}-${p.scopeResourceId}`}
+                        className="rounded-xl bg-gray-50 px-3 py-2"
+                      >
+                        <p className="text-sm font-bold">{label.title}</p>
+                        <p className="text-[11px] text-gray-500 mt-1">
+                          نقش: {roleSources || "—"}
+                          {" · "}
+                          محدوده: {formatScopeLabel(p.scopeKind, p.scopeDisplayName, p.scopeResourceId)}
+                        </p>
+                        {p.deniedByCeiling ? (
+                          <p className="text-[10px] text-amber-700 font-bold mt-1">محدود توسط سقف تفویض</p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
-            ) : (
-              <p className="text-xs text-gray-400">کاربر را انتخاب کنید تا «چه کاری / کجا» نشان داده شود.</p>
-            )}
+            ) : effectiveUserId ? (
+              <p className="text-xs text-gray-400">در حال بارگذاری…</p>
+            ) : null}
           </section>
         </div>
       ) : null}
@@ -797,13 +1156,14 @@ export function AccessControlCenter({
               const scopeKind = c.scopeKind ?? 1;
               const showScope = c.enabled && def && supportsScopedEditor(def);
               const rowKey = `${c.permissionId}-${scopeKind}-${c.scopeResourceId ?? ""}`;
+              const label = getPermissionLabel(c.permissionId, locale);
               return (
                 <li key={rowKey} className="py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold">{c.permissionId}</p>
+                      <p className="text-sm font-bold">{label.title}</p>
                       <p className="text-[11px] text-gray-500">
-                        {c.module}
+                        {getModuleLabel(c.module, locale)}
                         {c.enabled && scopeKind !== 1
                           ? ` · ${formatScopeLabel(scopeKind, c.scopeDisplayName, c.scopeResourceId ?? null)}`
                           : ""}

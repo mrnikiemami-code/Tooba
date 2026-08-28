@@ -78,6 +78,11 @@ public sealed class ProductWorkspaceComposer
             CatalogLocalizedOwnerKind.Category,
             categoryLinks.Select(x => x.CategoryId).Distinct().ToList(),
             cancellationToken);
+        var mediaRows = productIds.Count == 0
+            ? []
+            : await _catalog.MediaReferences.AsNoTracking()
+                .Where(x => productIds.Contains(x.ProductId))
+                .ToListAsync(cancellationToken);
         return products.Select(product =>
         {
             var variantIds = variantRows.Where(v => v.ProductId == product.ProductId).Select(v => v.VariantId).ToList();
@@ -92,6 +97,12 @@ public sealed class ProductWorkspaceComposer
                 .Select(name => name!)
                 .Distinct()
                 .ToList();
+            var productMedia = mediaRows
+                .Where(m => m.ProductId == product.ProductId)
+                .OrderByDescending(m => m.IsPrimary)
+                .ThenBy(m => m.DisplayOrder)
+                .ToList();
+            var primaryMedia = productMedia.FirstOrDefault(m => m.IsPrimary) ?? productMedia.FirstOrDefault();
             return new AdminProductListItem(
                 product.ProductId,
                 names.GetValueOrDefault(product.ProductId) ?? product.SlugSeam ?? product.ProductId.ToString("N")[..8],
@@ -102,7 +113,8 @@ public sealed class ProductWorkspaceComposer
                 FormatOfferAmountRange(amounts.Select(row => (row.Amount, row.Currency)).ToList()),
                 units.Sum(row => row.OnHand - row.Reserved),
                 units.Select(row => row.LocationId).Distinct().Count(),
-                product.UpdatedAt);
+                product.UpdatedAt,
+                primaryMedia?.MediaAssetId);
         }).ToList();
     }
 
@@ -190,6 +202,7 @@ public sealed class ProductWorkspaceComposer
             v.VariantId,
             v.CombinationFingerprint,
             v.Status.ToString(),
+            v.CatalogCodeSeam,
             offers.Count(o => o.CatalogVariantId == v.VariantId),
             stockViews.Where(s => offers.Any(o => o.OfferId == s.OfferId && o.CatalogVariantId == v.VariantId))
                 .Select(s => s.LocationId)
@@ -204,6 +217,12 @@ public sealed class ProductWorkspaceComposer
             a.CanonicalValue,
             true))).ToList();
 
+        var mediaViews = media
+            .OrderByDescending(m => m.IsPrimary)
+            .ThenBy(m => m.DisplayOrder)
+            .Select(m => new ProductMediaView(m.MediaAssetId, m.IsPrimary, m.DisplayOrder, m.AltText))
+            .ToList();
+
         var title = productNames.GetValueOrDefault(productId) ?? product.SlugSeam ?? "untitled";
         var warnings = new List<string>();
         if (string.IsNullOrWhiteSpace(title) || title == "untitled")
@@ -211,7 +230,7 @@ public sealed class ProductWorkspaceComposer
             warnings.Add("missing-title");
         }
 
-        if (media.Count == 0)
+        if (mediaViews.Count == 0)
         {
             warnings.Add("missing-image");
         }
@@ -250,7 +269,7 @@ public sealed class ProductWorkspaceComposer
             categoryLinks.Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? l.CategoryId.ToString("N")[..8]).ToList(),
             attrViews,
             variantViews,
-            media.Select((m, i) => new ProductMediaView(m.MediaAssetId, i == 0)).ToList(),
+            mediaViews,
             offerViews,
             priceViews,
             taxViews,
@@ -262,7 +281,7 @@ public sealed class ProductWorkspaceComposer
             permissions,
             product.UpdatedAt,
             warnings,
-            ["media-binary-upload", "promotion-write", "full-content-studio"]);
+            ["media-binary-upload", "product-video-upload", "promotion-write", "full-content-studio"]);
     }
 
     /// <summary>
@@ -431,6 +450,344 @@ public sealed class ProductWorkspaceComposer
     }
 
     /// <summary>
+    /// محصول را در Catalog منتشر می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> PublishAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsurePublish(permissions);
+        try
+        {
+            await _catalogDirectory.PublishProductAsync(productId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.publish.rejected");
+        }
+
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
+    /// انتشار را لغو و وضعیت را به پیش‌نویس می‌برد.
+    /// </summary>
+    public async Task<ProductWorkspaceView> UnpublishAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsurePublish(permissions);
+        try
+        {
+            await _catalogDirectory.UnpublishProductAsync(productId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.unpublish.rejected");
+        }
+
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
+    /// محصول را آرشیو می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> ArchiveAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsurePublish(permissions);
+        try
+        {
+            await _catalogDirectory.ArchiveProductAsync(productId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.archive.rejected");
+        }
+
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
+    /// حذف امن؛ در صورت ارجاع Offer آرشیو نرم و تعارض فارسی.
+    /// </summary>
+    public async Task DeleteOrSoftArchiveAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
+
+        var variantIds = await _catalog.Variants.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.VariantId)
+            .ToListAsync(cancellationToken);
+        var hasOffers = variantIds.Count > 0
+            && await _offers.Offers.AsNoTracking().AnyAsync(x => variantIds.Contains(x.CatalogVariantId), cancellationToken);
+
+        if (hasOffers)
+        {
+            product.Archive(DateTimeOffset.UtcNow);
+            await _catalog.SaveChangesAsync(cancellationToken);
+            throw new PlatformHttpException(
+                409,
+                "حذف قطعی ممکن نیست چون پیشنهاد فروشنده به گونه‌های این محصول ارجاع دارد؛ محصول آرشیو شد.",
+                "workspace.product.delete.referenced");
+        }
+
+        var media = await _catalog.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var productAttrs = await _catalog.ProductAttributeValues.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var axes = await _catalog.ProductVariantAxes.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var categories = await _catalog.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var names = await _catalog.LocalizedTexts
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product && x.OwnerId == productId)
+            .ToListAsync(cancellationToken);
+        var variants = await _catalog.Variants.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var variantAttr = variantIds.Count == 0
+            ? []
+            : await _catalog.VariantAttributeValues.Where(x => variantIds.Contains(x.VariantId)).ToListAsync(cancellationToken);
+
+        _catalog.MediaReferences.RemoveRange(media);
+        _catalog.ProductAttributeValues.RemoveRange(productAttrs);
+        _catalog.ProductVariantAxes.RemoveRange(axes);
+        _catalog.ProductCategories.RemoveRange(categories);
+        _catalog.LocalizedTexts.RemoveRange(names);
+        _catalog.VariantAttributeValues.RemoveRange(variantAttr);
+        _catalog.Variants.RemoveRange(variants);
+        _catalog.Products.Remove(product);
+        await _catalog.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// فهرست مرجع‌های رسانهٔ محصول.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> ListMediaAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        await EnsureProductExistsAsync(productId, cancellationToken);
+        var media = await _catalog.MediaReferences.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderByDescending(x => x.IsPrimary)
+            .ThenBy(x => x.DisplayOrder)
+            .ToListAsync(cancellationToken);
+        return media.Select(m => new ProductMediaView(m.MediaAssetId, m.IsPrimary, m.DisplayOrder, m.AltText)).ToList();
+    }
+
+    /// <summary>
+    /// مرجع رسانهٔ مات اضافه می‌کند.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> AttachMediaAsync(
+        Guid productId,
+        AdminProductMediaAttachRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        if (request.MediaAssetId == Guid.Empty)
+        {
+            throw new PlatformHttpException(400, "شناسهٔ رسانه لازم است.", "workspace.media.asset.missing");
+        }
+
+        try
+        {
+            await _catalogDirectory.AttachMediaReferenceAsync(
+                productId,
+                request.MediaAssetId,
+                request.AltText,
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.media.attach.rejected");
+        }
+
+        return await ListMediaAsync(productId, cancellationToken);
+    }
+
+    /// <summary>
+    /// ترتیب گالری را بازنویسی می‌کند.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> ReorderMediaAsync(
+        Guid productId,
+        IReadOnlyList<Guid> orderedMediaAssetIds,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        var media = await _catalog.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        if (media.Count == 0)
+        {
+            throw new PlatformHttpException(404, "رسانه‌ای برای این محصول نیست.", "workspace.media.empty");
+        }
+
+        var existing = media.Select(x => x.MediaAssetId).ToHashSet();
+        var ordered = orderedMediaAssetIds ?? [];
+        if (ordered.Count != existing.Count || ordered.Any(id => !existing.Contains(id)) || ordered.Distinct().Count() != ordered.Count)
+        {
+            throw new PlatformHttpException(
+                400,
+                "فهرست ترتیب باید دقیقاً همهٔ رسانه‌های فعلی را بدون تکرار پوشش دهد.",
+                "workspace.media.order.invalid");
+        }
+
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            media.Single(m => m.MediaAssetId == ordered[i]).DisplayOrder = i;
+        }
+
+        TouchProduct(productId);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await ListMediaAsync(productId, cancellationToken);
+    }
+
+    /// <summary>
+    /// تصویر اصلی را تنظیم می‌کند.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> SetPrimaryMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        var media = await _catalog.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var target = media.SingleOrDefault(x => x.MediaAssetId == mediaAssetId)
+            ?? throw new PlatformHttpException(404, "رسانه روی این محصول پیدا نشد.", "workspace.media.missing");
+        foreach (var row in media)
+        {
+            row.IsPrimary = row.MediaAssetId == target.MediaAssetId;
+        }
+
+        TouchProduct(productId);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await ListMediaAsync(productId, cancellationToken);
+    }
+
+    /// <summary>
+    /// متن جایگزین رسانه را به‌روز می‌کند.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> PatchMediaAltAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        string? altText,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        var row = await _catalog.MediaReferences.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.MediaAssetId == mediaAssetId,
+            cancellationToken)
+            ?? throw new PlatformHttpException(404, "رسانه روی این محصول پیدا نشد.", "workspace.media.missing");
+        row.AltText = string.IsNullOrWhiteSpace(altText) ? null : altText.Trim();
+        TouchProduct(productId);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await ListMediaAsync(productId, cancellationToken);
+    }
+
+    /// <summary>
+    /// مرجع رسانه را حذف می‌کند.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductMediaView>> DetachMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        var media = await _catalog.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var row = media.SingleOrDefault(x => x.MediaAssetId == mediaAssetId)
+            ?? throw new PlatformHttpException(404, "رسانه روی این محصول پیدا نشد.", "workspace.media.missing");
+        var wasPrimary = row.IsPrimary;
+        _catalog.MediaReferences.Remove(row);
+        media.Remove(row);
+        if (wasPrimary && media.Count > 0)
+        {
+            var next = media.OrderBy(x => x.DisplayOrder).First();
+            next.IsPrimary = true;
+        }
+
+        TouchProduct(productId);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await ListMediaAsync(productId, cancellationToken);
+    }
+
+    /// <summary>
+    /// گونهٔ جدید با محورها می‌سازد.
+    /// </summary>
+    public async Task<ProductWorkspaceView> CreateVariantAsync(
+        Guid productId,
+        AdminProductVariantCreateRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        if (request.Axes is null || request.Axes.Count == 0)
+        {
+            throw new PlatformHttpException(400, "حداقل یک محور برای گونه لازم است.", "workspace.variant.axes.missing");
+        }
+
+        try
+        {
+            await _catalogDirectory.CreateVariantAsync(
+                productId,
+                request.CatalogCodeSeam,
+                request.Axes.Select(a => (a.DefinitionId, a.RawValue ?? string.Empty, a.EnumOptionId)).ToList(),
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.variant.create.rejected");
+        }
+
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
+    /// وضعیت یا کد گونه را بدون شکستن اثرانگشت به‌روز می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> PatchVariantAsync(
+        Guid productId,
+        Guid variantId,
+        AdminProductVariantPatchRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsureCatalogEdit(permissions);
+        var variant = await _catalog.Variants.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.VariantId == variantId,
+            cancellationToken)
+            ?? throw new PlatformHttpException(404, "گونه پیدا نشد.", "workspace.variant.missing");
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (!Enum.TryParse<CatalogPublicationStatus>(request.Status.Trim(), ignoreCase: true, out var status))
+            {
+                throw new PlatformHttpException(400, "وضعیت گونه نامعتبر است.", "workspace.variant.status.invalid");
+            }
+
+            variant.SetStatus(status, DateTimeOffset.UtcNow);
+        }
+
+        if (request.CatalogCodeSeam is not null)
+        {
+            variant.UpdateCatalogCodeSeam(request.CatalogCodeSeam, DateTimeOffset.UtcNow);
+        }
+
+        TouchProduct(productId);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
     /// بازهٔ مبلغ پیشنهادها را برای فهرست می‌سازد. مبلغ روی هویت Product ذخیره نمی‌شود.
     /// </summary>
     private static string FormatOfferAmountRange(IReadOnlyList<(decimal Amount, string Currency)> rows)
@@ -449,6 +806,48 @@ public sealed class ProductWorkspaceComposer
         }
 
         return $"{min:0}–{max:0} {currency}".Trim();
+    }
+
+    private async Task EnsureProductExistsAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        if (!await _catalog.Products.AsNoTracking().AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
+        }
+    }
+
+    private async Task<ProductWorkspaceView> RequireWorkspaceAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken) =>
+        await GetAsync(productId, permissions, cancellationToken)
+        ?? throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
+
+    private static void EnsureCatalogEdit(ProductWorkspacePermissions permissions)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+    }
+
+    private static void EnsurePublish(ProductWorkspacePermissions permissions)
+    {
+        if (!permissions.CanPublish)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+    }
+
+    private void TouchProduct(Guid productId)
+    {
+        var product = _catalog.Products.Local.SingleOrDefault(x => x.ProductId == productId);
+        if (product is null)
+        {
+            product = _catalog.Products.Single(x => x.ProductId == productId);
+        }
+
+        product.UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     private async Task<Dictionary<Guid, string>> LoadNamesAsync(

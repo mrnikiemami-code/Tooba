@@ -9,6 +9,7 @@ import {
 } from "../vendor-panel/seller-api";
 import type {
   AccApi,
+  AccessUserHit,
   AssignmentRow,
   CeilingEntry,
   EffectiveAccess,
@@ -104,6 +105,16 @@ function mapEffective(raw: Record<string, unknown>): EffectiveAccess {
   };
 }
 
+function mapUserHit(raw: Record<string, unknown>): AccessUserHit {
+  return {
+    userId: String(raw.userId),
+    roleCodes: Array.isArray(raw.roleCodes) ? raw.roleCodes.map(String) : [],
+    displayName: raw.displayName == null ? null : String(raw.displayName),
+    email: raw.email == null ? null : String(raw.email),
+    mobile: raw.mobile == null ? null : String(raw.mobile),
+  };
+}
+
 /** مسیر scope-resources بر اساس ScopeKind عددی. */
 export const SCOPE_KIND_PATH: Record<number, string> = {
   2: "categories",
@@ -163,6 +174,12 @@ async function fetchScopeResources(
   };
 }
 
+async function searchUsersAt(base: string, headers: Record<string, string>, q: string): Promise<AccessUserHit[]> {
+  const qs = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
+  const rows = await readJson<Record<string, unknown>[]>(`${base}/users${qs}`, headers);
+  return rows.map(mapUserHit);
+}
+
 /** API کلاینت Admin برای Access Control پلتفرم. */
 export function createAdminAccessApi(): AccApi {
   const headers = () => adminHeaders({ "Content-Type": "application/json" });
@@ -214,6 +231,7 @@ export function createAdminAccessApi(): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
+    searchUsers: (q) => searchUsersAt(base, headers(), q),
     getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
     listScopeResources: (kind, q) => fetchScopeResources(base, headers(), kind, q),
     getMyCapabilities: async () => mapEffective(await readJson(`${base}/me/capabilities`, headers())),
@@ -269,6 +287,7 @@ export function createAdminSellerAccessApi(sellerId: string): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
+    searchUsers: (q) => searchUsersAt(platformBase, headers(), q),
     getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
     getCeiling: async () => {
       const rows = await readJson<Record<string, unknown>[]>(`${base}/ceiling`, headers());
@@ -353,6 +372,7 @@ export function createSellerAccessApi(): AccApi {
     assignRole: (userId, roleId) =>
       readJson(`${base}/assignments`, headers(), { method: "POST", body: JSON.stringify({ userId, roleId }) }),
     removeAssignment: (id) => readJson(`${base}/assignments/${id}`, headers(), { method: "DELETE" }),
+    searchUsers: (q) => searchUsersAt(base, headers(), q),
     getEffective: async (userId) => mapEffective(await readJson(`${base}/users/${userId}/effective`, headers())),
     getCeiling: async () => {
       const rows = await readJson<Record<string, unknown>[]>(`${base}/ceiling`, headers());

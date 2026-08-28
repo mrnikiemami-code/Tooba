@@ -60,7 +60,8 @@ public sealed class AdminPanelCompositionTests
     {
         var source = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Admin", "ProductWorkspaceEndpoints.cs"));
-        Assert.Equal(4, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
+        // List/Create/Get/PatchTitle + publish/unpublish/archive/delete + media×6 + variants×2
+        Assert.Equal(16, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
         Assert.Contains("IAuthorizationGuard", source, StringComparison.Ordinal);
         Assert.Contains("ICurrentTenant", source, StringComparison.Ordinal);
     }

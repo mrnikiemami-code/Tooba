@@ -49,6 +49,41 @@ namespace Tooba.UserPreference.Infrastructure.Persistence.Migrations
                     b.ToTable("user_preferences", "user_preference");
                 });
 
+            modelBuilder.Entity("Tooba.UserPreference.Domain.UiPreference", b =>
+                {
+                    b.Property<Guid>("PreferenceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("preference_id");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("JsonPayload")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("json_payload");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("PreferenceId")
+                        .HasName("pk_ui_preferences");
+
+                    b.HasIndex("ActorUserId", "Key")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ui_preferences_actor_user_id_key");
+
+                    b.ToTable("ui_preferences", "user_preference");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

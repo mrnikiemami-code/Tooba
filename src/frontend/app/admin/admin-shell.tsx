@@ -35,69 +35,73 @@ import {
   createAdminAccessApi,
   hasViewCapability,
 } from "../access-control/access-control-api";
+import {
+  adminNavLabels,
+  resolveAdminChromeLocale,
+  type AdminNavLabels,
+} from "./admin-chrome-messages";
 
-type NavItem = {
+type NavItemDef = {
   id: string;
-  label: string;
+  labelKey: keyof AdminNavLabels;
   href: string;
   icon: typeof LayoutDashboard;
   live: boolean;
   exact?: boolean;
-  /** مجوز *.view لازم برای نمایش در ناوبری؛ بدون آن همیشه (در صورت live) دیده می‌شود. */
   viewPermission?: string;
 };
 
-type NavGroup = {
+type NavGroupDef = {
   id: string;
-  label: string;
-  items: NavItem[];
+  labelKey: keyof AdminNavLabels;
+  items: NavItemDef[];
 };
 
-/** ناوبری عملیاتی Admin؛ گروه‌بندی workflow نه کپی Seller. */
-const navGroups: NavGroup[] = [
+/** ناوبری عملیاتی Admin؛ برچسب‌ها از admin-chrome-messages می‌آیند نه انگلیسی خام. */
+const navGroupDefs: NavGroupDef[] = [
   {
     id: "ops",
-    label: "عملیات",
+    labelKey: "groupOps",
     items: [
-      { id: "dashboard", label: "داشبورد", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
-      { id: "products", label: "کاتالوگ / محصولات", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
-      { id: "catalog-attributes", label: "تعاریف ویژگی", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
-      { id: "category-schema", label: "Schema رده", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
-      { id: "orders", label: "سفارش‌ها و پرداخت", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
-      { id: "fulfillments", label: "ارسال / fulfillment", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
-      { id: "returns", label: "مرجوعی / refund", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
-      { id: "settlement", label: "تسویه فروشندگان", href: "/admin/settlement", icon: Wallet, live: true, viewPermission: "settlement.view" },
-      { id: "payouts", label: "صف payout", href: "/admin/payouts", icon: Wallet, live: true, viewPermission: "settlement.view" },
-      { id: "content", label: "محتوا / بلاگ", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
-      { id: "stories", label: "استوری‌ها", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
-      { id: "page-composition", label: "ترکیب صفحهٔ خانه", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
+      { id: "dashboard", labelKey: "dashboard", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
+      { id: "products", labelKey: "products", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
+      { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
+      { id: "category-schema", labelKey: "categorySchema", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
+      { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
+      { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
+      { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
+      { id: "settlement", labelKey: "settlement", href: "/admin/settlement", icon: Wallet, live: true, viewPermission: "settlement.view" },
+      { id: "payouts", labelKey: "payouts", href: "/admin/payouts", icon: Wallet, live: true, viewPermission: "settlement.view" },
+      { id: "content", labelKey: "content", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
+      { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
+      { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
     ],
   },
   {
     id: "market",
-    label: "بازار",
+    labelKey: "groupMarket",
     items: [
-      { id: "sellers", label: "فروشندگان", href: "/admin/sellers", icon: Store, live: true, viewPermission: "seller.view" },
-      { id: "customers", label: "مشتریان", href: "/admin/customers", icon: Users, live: true },
+      { id: "sellers", labelKey: "sellers", href: "/admin/sellers", icon: Store, live: true, viewPermission: "seller.view" },
+      { id: "customers", labelKey: "customers", href: "/admin/customers", icon: Users, live: true },
     ],
   },
   {
     id: "moderation",
-    label: "نظارت",
+    labelKey: "groupModeration",
     items: [
-      { id: "reviews", label: "نظرات", href: "/admin/reviews", icon: Star, live: true, viewPermission: "review.view" },
-      { id: "tickets", label: "تیکت پشتیبانی", href: "/admin/tickets", icon: Ticket, live: true, viewPermission: "support.view" },
-      { id: "gift-cards", label: "کارت هدیه", href: "/admin/gift-cards", icon: Gift, live: true, viewPermission: "giftcard.view" },
-      { id: "wallets", label: "کیف پول مشتریان", href: "/admin/wallets", icon: WalletCards, live: true, viewPermission: "wallet.view" },
-      { id: "promotions", label: "پروموشن‌ها", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
+      { id: "reviews", labelKey: "reviews", href: "/admin/reviews", icon: Star, live: true, viewPermission: "review.view" },
+      { id: "tickets", labelKey: "tickets", href: "/admin/tickets", icon: Ticket, live: true, viewPermission: "support.view" },
+      { id: "gift-cards", labelKey: "giftCards", href: "/admin/gift-cards", icon: Gift, live: true, viewPermission: "giftcard.view" },
+      { id: "wallets", labelKey: "wallets", href: "/admin/wallets", icon: WalletCards, live: true, viewPermission: "wallet.view" },
+      { id: "promotions", labelKey: "promotions", href: "/admin/promotions", icon: Tag, live: true, viewPermission: "promotion.view" },
     ],
   },
   {
     id: "system",
-    label: "سامانه",
+    labelKey: "groupSystem",
     items: [
-      { id: "settings", label: "تنظیمات", href: "/admin/settings", icon: Settings, live: true },
-      { id: "access-control", label: "کنترل دسترسی", href: "/admin/access-control", icon: Shield, live: true, viewPermission: "accesscontrol.view" },
+      { id: "settings", labelKey: "settings", href: "/admin/settings", icon: Settings, live: true },
+      { id: "access-control", labelKey: "accessControl", href: "/admin/access-control", icon: Shield, live: true, viewPermission: "accesscontrol.view" },
     ],
   },
 ];
@@ -105,25 +109,30 @@ const navGroups: NavGroup[] = [
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
 export const ADMIN_DEFERRED_NAV_HREFS = [] as const;
 
-function isActivePath(pathname: string, item: NavItem): boolean {
+/** فهرست hrefهای زنده Admin برای بستهٔ اسکرین‌شات. */
+export function listLiveAdminNavHrefs(): string[] {
+  return navGroupDefs.flatMap((g) => g.items.filter((i) => i.live).map((i) => i.href));
+}
+
+function isActivePath(pathname: string, item: NavItemDef): boolean {
   if (item.exact || item.href === "/admin") {
     return pathname === item.href;
   }
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-function crumbFor(pathname: string): string {
-  for (const group of navGroups) {
+function crumbFor(pathname: string, labels: AdminNavLabels): string {
+  for (const group of navGroupDefs) {
     for (const item of group.items) {
       if (isActivePath(pathname, item)) {
-        return item.label;
+        return labels[item.labelKey];
       }
     }
   }
-  return "عملیات";
+  return labels.operations;
 }
 
-function itemAllowed(item: NavItem, caps: Set<string> | null): boolean {
+function itemAllowed(item: NavItemDef, caps: Set<string> | null): boolean {
   if (!item.live) return false;
   if (!item.viewPermission) return true;
   if (caps === null) return true;
@@ -133,7 +142,6 @@ function itemAllowed(item: NavItem, caps: Set<string> | null): boolean {
 /**
  * پوستهٔ Admin حرفه‌ای با زبان بصری Shopeiva Vendor/Account
  * (header چسبان + sidebar + drawer) و هویت عملیاتی جدا از Seller Panel.
- * accent Tooba آبی است.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -141,8 +149,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [caps, setCaps] = useState<Set<string> | null>(null);
+  const [labels, setLabels] = useState<AdminNavLabels>(() => adminNavLabels("fa"));
 
   useEffect(() => {
+    setLabels(adminNavLabels(resolveAdminChromeLocale()));
     void prepareAdminDevActor()
       .then(async () => {
         try {
@@ -164,13 +174,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const visibleGroups = useMemo(
     () =>
-      navGroups
+      navGroupDefs
         .map((group) => ({
           ...group,
-          items: group.items.filter((item) => itemAllowed(item, caps)),
+          label: labels[group.labelKey],
+          items: group.items
+            .filter((item) => itemAllowed(item, caps))
+            .map((item) => ({ ...item, label: labels[item.labelKey] })),
         }))
         .filter((group) => group.items.length > 0),
-    [caps],
+    [caps, labels],
   );
 
   if (!ready) {
@@ -181,26 +194,26 @@ export function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const crumb = crumbFor(pathname);
+  const crumb = crumbFor(pathname, labels);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="admin-panel-shell">
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center" data-testid="admin-panel-header">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-[65px] flex items-center transition-shadow duration-200" data-testid="admin-panel-header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6 gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen((open) => !open)}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100"
-              aria-label="جمع‌کردن منو"
+              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label={labels.closeMenu}
             >
               <Menu className="w-5 h-5 text-gray-700" />
             </button>
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-              aria-label="منوی موبایل"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label={labels.openMenu}
               data-testid="admin-panel-mobile-menu"
             >
               <Menu className="w-5 h-5 text-gray-700" />
@@ -219,7 +232,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <span className="hidden sm:inline-flex items-center rounded-full bg-[#2563EB]/10 text-[#2563EB] px-3 py-1 text-[11px] font-bold">
               دسترسی مدیر
             </span>
-            <Link href="/" className="p-2 rounded-lg hover:bg-red-50 text-red-500" aria-label="خروج به فروشگاه" title="خروج">
+            <Link href="/" className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors" aria-label={labels.signOut} title={labels.signOut}>
               <LogOut className="w-5 h-5" />
             </Link>
           </div>
@@ -228,7 +241,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 relative">
         <aside
-          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto ${
+          className={`hidden lg:block bg-white border-l border-gray-200 shrink-0 transition-all duration-300 ease-out sticky top-[65px] h-[calc(100vh-65px)] overflow-y-auto motion-reduce:transition-none ${
             sidebarOpen ? "w-64" : "w-0 opacity-0"
           }`}
           data-testid="admin-panel-sidebar"
@@ -236,7 +249,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="p-4 space-y-5 min-w-[250px]">
             {visibleGroups.map((group) => (
               <div key={group.id}>
-                <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400 uppercase">{group.label}</p>
+                <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400">{group.label}</p>
                 <nav className="space-y-1" aria-label={group.label} data-testid={group.id === "ops" ? "admin-panel-nav-live-only" : undefined}>
                   {group.items.map((item) => (
                     <NavLink key={item.id} item={item} pathname={pathname} />
@@ -254,8 +267,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       {mobileOpen ? (
         <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" data-testid="admin-panel-drawer">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-[280px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 motion-reduce:animate-none">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[#2563EB] flex items-center justify-center">
@@ -263,7 +276,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </div>
                 <span className="font-bold text-gray-900">مدیریت توبا</span>
               </div>
-              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label="بستن">
+              <button type="button" onClick={() => setMobileOpen(false)} className="p-2 rounded-lg hover:bg-gray-100" aria-label={labels.closeMenu}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -301,7 +314,7 @@ function NavLink({
   onNavigate,
   dense,
 }: {
-  item: NavItem;
+  item: NavItemDef & { label: string };
   pathname: string;
   onNavigate?: () => void;
   dense?: boolean;
@@ -311,7 +324,7 @@ function NavLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all ${
+      className={`flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 motion-reduce:transition-none ${
         dense ? "px-4 py-3" : "px-3 py-2.5"
       } ${active ? "bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/20" : "text-gray-700 hover:bg-gray-100"}`}
       data-testid={`admin-nav-${item.id}`}

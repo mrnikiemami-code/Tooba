@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { CheckCircle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../design-system";
 import { executeGridQuery } from "../../design-system/data-grid/query-engine";
-import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
+import type { GridColumnDef, GridServerQuery, SavedViewStore } from "../../design-system/data-grid";
 import {
   formatAdminDate,
   formatAdminMoney,
@@ -29,6 +29,7 @@ import {
   type AdminReviewRow,
   type AdminPromotionRow,
 } from "./admin-api";
+import { ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
@@ -191,11 +192,13 @@ function GridPage<T extends { id: string }>({
   description,
   loader,
   columns,
+  savedViewStore,
 }: {
   title: string;
   description: string;
   loader: () => Promise<AdminResult<T[]>>;
   columns: GridColumnDef<T>[];
+  savedViewStore?: SavedViewStore;
 }) {
   const [state, setState] = useState<AdminLoadState | "loading">("loading");
   const [rows, setRows] = useState<T[]>([]);
@@ -217,22 +220,56 @@ function GridPage<T extends { id: string }>({
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} مورد</span>
         </div>
         <div className="p-2 md:p-4">
-          {state === "error" ? <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : <DataGrid columns={columns} queryAdapter={queryAdapter} />}
+          {state === "error" ? (
+            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : (
+            <DataGrid columns={columns} queryAdapter={queryAdapter} savedViewStore={savedViewStore} />
+          )}
         </div>
       </section>
     </main>
   );
 }
 
+const orderPaymentEnumOptions = [
+  { value: "Paid", label: formatAdminStatus("Paid") },
+  { value: "PendingPayment", label: formatAdminStatus("PendingPayment") },
+  { value: "Cancelled", label: formatAdminStatus("Cancelled") },
+];
+
+const orderStatusEnumOptions = [
+  { value: "Submitted", label: formatAdminStatus("Submitted") },
+  { value: "PendingPayment", label: formatAdminStatus("PendingPayment") },
+  { value: "ReservationRequested", label: formatAdminStatus("ReservationRequested") },
+  { value: "Paid", label: formatAdminStatus("Paid") },
+  { value: "Cancelled", label: formatAdminStatus("Cancelled") },
+  { value: "Mixed", label: formatAdminStatus("Mixed") },
+  { value: "Processing", label: formatAdminStatus("Processing") },
+];
+
 const orderColumns: GridColumnDef<AdminOrderRow>[] = [
   { id: "reference", header: "سفارش", accessor: (row) => row.reference, cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/orders/${row.checkoutId}`}>{row.reference}</Link>, width: 140, minWidth: 110, maxWidth: 190, sticky: "start", filterKind: "text", sortable: true },
   { id: "customer", header: "مشتری / گیرنده", accessor: (row) => row.customerDisplayName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
   { id: "sellers", header: "فروشنده", accessor: (row) => row.sellerCount, cell: (row) => row.sellerCount.toLocaleString("fa-IR"), width: 85, minWidth: 70, maxWidth: 110, sortable: true },
   { id: "lines", header: "قلم", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 75, minWidth: 64, maxWidth: 100, sortable: true },
-  { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, maxWidth: 170, filterKind: "status" },
-  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status" },
+  { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, maxWidth: 170, filterKind: "status", enumOptions: orderPaymentEnumOptions },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status", enumOptions: orderStatusEnumOptions },
   { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, maxWidth: 200, sortable: true },
   { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, maxWidth: 150, sortable: true },
+  {
+    id: "actions",
+    header: "عملیات",
+    accessor: (row) => row.checkoutId,
+    cell: (row) => (
+      <Link className="text-primary underline-offset-4 hover:underline" href={`/admin/orders/${row.checkoutId}`}>
+        مشاهده
+      </Link>
+    ),
+    width: 88,
+    minWidth: 80,
+    maxWidth: 120,
+    sortable: false,
+  },
 ];
 
 const sellerColumns: GridColumnDef<AdminSellerRow>[] = [
@@ -268,7 +305,16 @@ function Status({ value }: { value: string }) {
 
 /** فهرست زندهٔ سفارش‌ها. */
 export function AdminOrdersScreen() {
-  return <GridPage title="سفارش‌ها" description="پیگیری checkout و سفارش‌های فروشندگان" loader={loadAdminOrders} columns={orderColumns} />;
+  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_ORDER_GRID_VIEW_KEY), []);
+  return (
+    <GridPage
+      title="سفارش‌ها"
+      description="پیگیری تسویه و سفارش‌های فروشندگان"
+      loader={loadAdminOrders}
+      columns={orderColumns}
+      savedViewStore={savedViewStore}
+    />
+  );
 }
 
 const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
@@ -284,7 +330,7 @@ const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
     filterKind: "text",
     sortable: true,
   },
-  { id: "checkoutId", header: "Checkout", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
+  { id: "checkoutId", header: "شناسه تسویه", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
   { id: "recipientName", header: "گیرنده", accessor: (row) => row.recipientName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
   { id: "cityName", header: "شهر", accessor: (row) => row.cityName, width: 110, minWidth: 90, maxWidth: 150, filterKind: "text", sortable: true },
   { id: "shipmentCount", header: "محموله", accessor: (row) => row.shipmentCount, cell: (row) => row.shipmentCount.toLocaleString("fa-IR"), width: 90, minWidth: 72, maxWidth: 110, sortable: true },
@@ -316,8 +362,8 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <div className="flex flex-wrap gap-3 items-center">
               <span className={fulfillmentStatusBadgeClass(snapshot.status)}>{formatFulfillmentStatus(snapshot.status)}</span>
-              <span className="text-sm text-muted">Checkout: {snapshot.checkoutId.slice(0, 8)}</span>
-              <span className="text-sm text-muted">Seller order: {snapshot.sellerOrderId.slice(0, 8)}</span>
+              <span className="text-sm text-muted">تسویه: {snapshot.checkoutId.slice(0, 8)}</span>
+              <span className="text-sm text-muted">سفارش فروشنده: {snapshot.sellerOrderId.slice(0, 8)}</span>
             </div>
             <p className="mt-4 text-sm">{snapshot.recipientName} · {snapshot.provinceName}، {snapshot.cityName} · {snapshot.postalAddress}</p>
           </section>

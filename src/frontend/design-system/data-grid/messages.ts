@@ -20,6 +20,7 @@ export const faGridMessages: GridMessages = {
   selected: "انتخاب‌شده",
   selectPage: "انتخاب صفحه",
   clearSelection: "پاک‌کردن انتخاب",
+  clearAllFilters: "پاک‌کردن همهٔ فیلترها",
   loading: "در حال بارگذاری",
   empty: "داده‌ای نیست",
   emptyFiltered: "با این فیلتر نتیجه‌ای نیست",
@@ -48,6 +49,7 @@ export const enGridMessages: GridMessages = {
   selected: "Selected",
   selectPage: "Select page",
   clearSelection: "Clear selection",
+  clearAllFilters: "Clear all filters",
   loading: "Loading",
   empty: "No data",
   emptyFiltered: "No results for these filters",
@@ -58,3 +60,53 @@ export const enGridMessages: GridMessages = {
   close: "Close",
   reload: "Reload",
 };
+
+/** برچسب عملگر فیلتر — مقدار داخلی انگلیسی می‌ماند، نمایش محلی است. */
+export type FilterOperatorLabels = {
+  contains: string;
+  equals: string;
+  startsWith: string;
+  greaterThan: string;
+  lessThan: string;
+  between: string;
+  on: string;
+  before: string;
+  after: string;
+  all: string;
+  yes: string;
+  no: string;
+};
+
+export const faFilterOperatorLabels: FilterOperatorLabels = {
+  contains: "شامل",
+  equals: "برابر با",
+  startsWith: "شروع می‌شود با",
+  greaterThan: "بیشتر از",
+  lessThan: "کمتر از",
+  between: "بین",
+  on: "در تاریخ",
+  before: "قبل از",
+  after: "بعد از",
+  all: "همه",
+  yes: "بله",
+  no: "خیر",
+};
+
+export const enFilterOperatorLabels: FilterOperatorLabels = {
+  contains: "Contains",
+  equals: "Equals",
+  startsWith: "Starts with",
+  greaterThan: "Greater than",
+  lessThan: "Less than",
+  between: "Between",
+  on: "On date",
+  before: "Before",
+  after: "After",
+  all: "All",
+  yes: "Yes",
+  no: "No",
+};
+
+export function filterOperatorLabelsFor(locale: "fa" | "en" = "fa"): FilterOperatorLabels {
+  return locale === "en" ? enFilterOperatorLabels : faFilterOperatorLabels;
+}

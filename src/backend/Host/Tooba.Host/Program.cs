@@ -303,6 +303,7 @@ app.MapSellerPanelEndpoints();
 app.MapSellerSettingsEndpoints();
 app.MapCustomerPanelEndpoints();
 app.MapUserPreferenceEndpoints();
+app.MapUiPreferenceEndpoints();
 app.MapOperatorProfileEndpoints();
 app.MapReviewEndpoints();
 app.MapProductQnAEndpoints();

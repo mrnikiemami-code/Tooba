@@ -32,7 +32,8 @@ public sealed record AdminProductListItem(
     string OfferAmountRange,
     int SellableUnits,
     int LocationCount,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid? PrimaryMediaAssetId);
 
 /// <summary>
 /// مدل نمایش ترکیب‌شده. aggregate دامنه نیست.
@@ -64,10 +65,20 @@ public sealed record ProductWorkspaceView(
 public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);
 
 /// <summary>گونهٔ Catalog بدون قیمت.</summary>
-public sealed record ProductVariantView(Guid VariantId, string Fingerprint, string Status, int OfferCount, int LocationCount);
+public sealed record ProductVariantView(
+    Guid VariantId,
+    string Fingerprint,
+    string Status,
+    string? CatalogCodeSeam,
+    int OfferCount,
+    int LocationCount);
 
-/// <summary>مرجع رسانهٔ مات.</summary>
-public sealed record ProductMediaView(Guid MediaAssetId, bool Primary);
+/// <summary>مرجع رسانهٔ مات با ترتیب و تصویر اصلی.</summary>
+public sealed record ProductMediaView(
+    Guid MediaAssetId,
+    bool Primary,
+    int DisplayOrder,
+    string? AltText);
 
 /// <summary>Offer فروشنده جدا از Product. SellerDisplayName برچسب انسانی است نه کلید دامنه.</summary>
 public sealed record ProductOfferView(
@@ -111,3 +122,23 @@ public sealed record ProductPublicationView(string CatalogStatus, bool Purchasab
 
 /// <summary>رویداد Activity یا Audit.</summary>
 public sealed record ProductHistoryItem(string Kind, string Summary, DateTimeOffset At);
+
+/// <summary>بدنهٔ افزودن مرجع رسانه.</summary>
+public sealed record AdminProductMediaAttachRequest(Guid MediaAssetId, string? AltText);
+
+/// <summary>بدنهٔ ترتیب گالری.</summary>
+public sealed record AdminProductMediaOrderRequest(IReadOnlyList<Guid> OrderedMediaAssetIds);
+
+/// <summary>بدنهٔ ویرایش alt رسانه.</summary>
+public sealed record AdminProductMediaPatchRequest(string? AltText);
+
+/// <summary>محور یک گونهٔ جدید.</summary>
+public sealed record AdminProductVariantAxisRequest(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);
+
+/// <summary>بدنهٔ ایجاد گونه.</summary>
+public sealed record AdminProductVariantCreateRequest(
+    string? CatalogCodeSeam,
+    IReadOnlyList<AdminProductVariantAxisRequest> Axes);
+
+/// <summary>بدنهٔ ویرایش وضعیت/کد گونه بدون تغییر اثرانگشت.</summary>
+public sealed record AdminProductVariantPatchRequest(string? Status, string? CatalogCodeSeam);

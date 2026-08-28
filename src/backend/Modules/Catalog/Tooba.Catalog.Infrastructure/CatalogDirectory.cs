@@ -564,7 +564,15 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
-    public async Task AttachMediaReferenceAsync(Guid productId, Guid mediaAssetId, CancellationToken cancellationToken)
+    public async Task AttachMediaReferenceAsync(Guid productId, Guid mediaAssetId, CancellationToken cancellationToken) =>
+        await AttachMediaReferenceAsync(productId, mediaAssetId, altText: null, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task AttachMediaReferenceAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        string? altText,
+        CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
@@ -572,7 +580,24 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
         }
 
-        _db.MediaReferences.Add(CatalogProductMediaReference.Link(productId, mediaAssetId));
+        if (await _db.MediaReferences.AnyAsync(
+                x => x.ProductId == productId && x.MediaAssetId == mediaAssetId,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("این رسانه قبلاً به محصول وصل شده است.");
+        }
+
+        var maxOrder = await _db.MediaReferences.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => (int?)x.DisplayOrder)
+            .MaxAsync(cancellationToken) ?? -1;
+        var isFirst = maxOrder < 0;
+        _db.MediaReferences.Add(CatalogProductMediaReference.Link(
+            productId,
+            mediaAssetId,
+            displayOrder: maxOrder + 1,
+            isPrimary: isFirst,
+            altText: altText));
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -770,6 +795,24 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await ValidateProductAttributesAsync(productId, cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task UnpublishProductAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.Unpublish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ArchiveProductAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.Archive(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
 

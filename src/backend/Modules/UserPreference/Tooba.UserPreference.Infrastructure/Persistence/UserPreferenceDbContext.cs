@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Tooba.UserPreference.Domain;
 using UserPreferenceEntity = Tooba.UserPreference.Domain.UserPreference;
 using Tooba.Persistence;
 
@@ -19,6 +20,9 @@ public sealed class UserPreferenceDbContext : DbContext
     /// <summary>ردیف‌های خصوصی ترجیح کاربر.</summary>
     public DbSet<UserPreferenceEntity> Preferences => Set<UserPreferenceEntity>();
 
+    /// <summary>ترجیح‌های کلیددار UI (مثل نمایش‌های ذخیره‌شدهٔ گرید).</summary>
+    public DbSet<UiPreference> UiPreferences => Set<UiPreference>();
+
     /// <summary>پیام‌های Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -32,6 +36,16 @@ public sealed class UserPreferenceDbContext : DbContext
             entity.HasKey(x => x.OwnerUserId);
             entity.Property(x => x.OwnerUserId).ValueGeneratedNever();
             entity.Property(x => x.Locale).HasMaxLength(UserPreferenceEntity.LocaleMaxLength).IsRequired();
+        });
+        modelBuilder.Entity<UiPreference>(entity =>
+        {
+            entity.ToTable("ui_preferences");
+            entity.HasKey(x => x.PreferenceId);
+            entity.Property(x => x.PreferenceId).ValueGeneratedNever();
+            entity.Property(x => x.ActorUserId).IsRequired();
+            entity.Property(x => x.Key).HasMaxLength(UiPreference.KeyMaxLength).IsRequired();
+            entity.Property(x => x.JsonPayload).IsRequired();
+            entity.HasIndex(x => new { x.ActorUserId, x.Key }).IsUnique();
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

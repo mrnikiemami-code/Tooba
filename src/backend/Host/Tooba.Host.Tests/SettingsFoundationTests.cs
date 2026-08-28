@@ -71,6 +71,10 @@ public sealed class SettingsFoundationTests
         Assert.Contains("/v1/customer/preferences", preference, StringComparison.Ordinal);
         Assert.Contains("/v1/admin/operator/preferences", preference, StringComparison.Ordinal);
 
+        var uiPreference = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Preferences", "UiPreferenceEndpoints.cs"));
+        Assert.Contains("/v1/admin/ui-preferences", uiPreference, StringComparison.Ordinal);
+        Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", uiPreference, StringComparison.Ordinal);
+
         var operatorProfile = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "OperatorProfile", "OperatorProfileEndpoints.cs"));
         Assert.Contains("/v1/admin/operator/profile", operatorProfile, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", operatorProfile, StringComparison.Ordinal);
@@ -78,6 +82,7 @@ public sealed class SettingsFoundationTests
         var program = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Program.cs"));
         Assert.Contains("MapSellerSettingsEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapUserPreferenceEndpoints", program, StringComparison.Ordinal);
+        Assert.Contains("MapUiPreferenceEndpoints", program, StringComparison.Ordinal);
         Assert.Contains("MapOperatorProfileEndpoints", program, StringComparison.Ordinal);
     }
 

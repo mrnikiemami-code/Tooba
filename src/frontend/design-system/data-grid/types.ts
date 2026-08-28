@@ -133,6 +133,7 @@ export interface GridMessages {
   selected: string;
   selectPage: string;
   clearSelection: string;
+  clearAllFilters: string;
   loading: string;
   empty: string;
   emptyFiltered: string;

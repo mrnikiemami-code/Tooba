@@ -21,8 +21,8 @@ test("workspace mapper keeps prices on offers not product", () => {
     kind: "Physical",
     brandName: null,
     categoryNames: ["wear"],
-    variants: [{ variantId: "v1", fingerprint: "size=m", status: "Published", offerCount: 1 }],
-    media: [],
+    variants: [{ variantId: "v1", fingerprint: "size=m", status: "Published", catalogCodeSeam: "SHIRT-M", offerCount: 1 }],
+    media: [{ mediaAssetId: "m1", primary: true, displayOrder: 0, altText: "front" }],
     offers: [
       {
         offerId: "o1",
@@ -50,4 +50,8 @@ test("workspace mapper keeps prices on offers not product", () => {
   assert.equal(view?.prices[0]?.offerId, "o1");
   assert.equal(view?.stock[0]?.offerId, "o1");
   assert.equal(view?.permissions.canPublish, false);
+  assert.equal(view?.media[0]?.mediaAssetId, "m1");
+  assert.equal(view?.media[0]?.displayOrder, 0);
+  assert.equal(view?.media[0]?.altText, "front");
+  assert.equal(view?.variants[0]?.catalogCodeSeam, "SHIRT-M");
 });

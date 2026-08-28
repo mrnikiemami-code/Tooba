@@ -1,25 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button, Checkbox, Input, Select } from "../primitives/core";
 import type { EntityFilterAdapter, GridColumnDef, GridFilterValue } from "./types";
+import { filterOperatorLabelsFor, type FilterOperatorLabels } from "./messages";
 
 /**
- * کنترل فیلتر تایپ‌شده برای یک ستون. آداپتر موجودیت را از لایهٔ ویژگی می‌گیرد، نه از API دامنه.
+ * کنترل فیلتر تایپ‌شده برای یک ستون. برچسب عملگرها محلی‌سازی شده‌اند (نه contains خام).
  */
 export function FilterControl<T>({
   column,
   value,
   onChange,
   entityLookup,
+  operatorLabels,
 }: {
   column: GridColumnDef<T>;
   value?: GridFilterValue;
   onChange: (value: GridFilterValue) => void;
   entityLookup?: EntityFilterAdapter;
+  /** پیش‌فرض فارسی؛ locale انگلیسی از سند خوانده می‌شود. */
+  operatorLabels?: FilterOperatorLabels;
 }) {
   const kind = column.filterKind;
   const [entityHits, setEntityHits] = useState<{ id: string; label: string }[]>([]);
+  const ops = useMemo(() => {
+    if (operatorLabels) return operatorLabels;
+    const lang =
+      typeof document !== "undefined" && (document.documentElement.lang || "").toLowerCase().startsWith("en")
+        ? "en"
+        : "fa";
+    return filterOperatorLabelsFor(lang);
+  }, [operatorLabels]);
 
   if (kind === "text") {
     return (
@@ -36,9 +48,9 @@ export function FilterControl<T>({
             })
           }
         >
-          <option value="contains">contains</option>
-          <option value="equals">equals</option>
-          <option value="startsWith">startsWith</option>
+          <option value="contains">{ops.contains}</option>
+          <option value="equals">{ops.equals}</option>
+          <option value="startsWith">{ops.startsWith}</option>
         </Select>
         <Input
           value={value?.kind === "text" ? value.query : ""}
@@ -55,7 +67,7 @@ export function FilterControl<T>({
   }
 
   if (kind === "number" || kind === "money") {
-    const operator = value?.kind === "number" || value?.kind === "money" ? value.operator : "greaterThanOrEqual";
+    const operator = value?.kind === "number" || value?.kind === "money" ? value.operator : "equals";
     const amount = value?.kind === "number" ? value.value : value?.kind === "money" ? value.money.amount : 0;
     const amountTo = value?.kind === "number" ? value.valueTo : value?.kind === "money" ? value.money.amountTo : undefined;
     return (
@@ -73,12 +85,10 @@ export function FilterControl<T>({
             );
           }}
         >
-          <option value="equals">equals</option>
-          <option value="greaterThan">greaterThan</option>
-          <option value="greaterThanOrEqual">greaterThanOrEqual</option>
-          <option value="lessThan">lessThan</option>
-          <option value="lessThanOrEqual">lessThanOrEqual</option>
-          <option value="between">between</option>
+          <option value="equals">{ops.equals}</option>
+          <option value="greaterThan">{ops.greaterThan}</option>
+          <option value="lessThan">{ops.lessThan}</option>
+          <option value="between">{ops.between}</option>
         </Select>
         <Input
           type="number"
@@ -128,10 +138,10 @@ export function FilterControl<T>({
             })
           }
         >
-          <option value="on">on</option>
-          <option value="before">before</option>
-          <option value="after">after</option>
-          <option value="between">between</option>
+          <option value="on">{ops.on}</option>
+          <option value="before">{ops.before}</option>
+          <option value="after">{ops.after}</option>
+          <option value="between">{ops.between}</option>
         </Select>
         <Input
           type="date"
@@ -172,9 +182,9 @@ export function FilterControl<T>({
           value={value?.kind === "boolean" ? value.state : "all"}
           onChange={(event) => onChange({ kind: "boolean", state: event.target.value as "all" | "true" | "false" })}
         >
-          <option value="all">all</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
+          <option value="all">{ops.all}</option>
+          <option value="true">{ops.yes}</option>
+          <option value="false">{ops.no}</option>
         </Select>
       </label>
     );

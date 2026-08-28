@@ -25,6 +25,7 @@ import type {
   GridColumnDef,
   GridColumnLayout,
   GridDensity,
+  GridFilterValue,
   GridMessages,
   GridQueryAdapter,
   GridServerQuery,
@@ -116,9 +117,48 @@ export function DataGrid<T extends { id: string }>({
   }, [savedViewStore]);
 
   const pageCount = Math.max(1, Math.ceil(total / query.pageSize));
-  const activeFilters = Object.values(query.filters).filter(isFilterActive).length;
+  const activeFilterEntries = Object.entries(query.filters).filter(([, value]) => isFilterActive(value));
+  const activeFilters = activeFilterEntries.length;
   const rowClass = density === "compact" ? "h-12" : "h-16";
   const exportIds = columns.filter((column) => column.exportable !== false).map((column) => column.id);
+
+  function filterChipLabel(columnId: string, value: GridFilterValue): string {
+    const header = columns.find((column) => column.id === columnId)?.header ?? columnId;
+    switch (value.kind) {
+      case "text":
+        return `${header}: ${value.query}`;
+      case "number":
+        return `${header}: ${value.value}${value.valueTo != null ? `–${value.valueTo}` : ""}`;
+      case "money":
+        return `${header}: ${value.money.amount}`;
+      case "date":
+        return `${header}: ${value.iso}${value.isoTo ? `–${value.isoTo}` : ""}`;
+      case "enum":
+      case "status": {
+        const options = columns.find((column) => column.id === columnId)?.enumOptions ?? [];
+        const labels = value.values.map((code) => options.find((option) => option.value === code)?.label ?? code);
+        return `${header}: ${labels.join("، ")}`;
+      }
+      case "boolean":
+        return `${header}: ${value.state === "true" ? "بله" : "خیر"}`;
+      case "entity":
+        return `${header}: ${value.ids.length}`;
+      default:
+        return header;
+    }
+  }
+
+  function clearFilter(columnId: string) {
+    setQuery((current) => {
+      const next = { ...current.filters };
+      delete next[columnId];
+      return { ...current, page: 1, filters: next };
+    });
+  }
+
+  function clearAllFilters() {
+    setQuery((current) => ({ ...current, page: 1, filters: {}, search: undefined }));
+  }
 
   function download(content: string, name: string) {
     const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
@@ -247,6 +287,25 @@ export function DataGrid<T extends { id: string }>({
               </option>
             ))}
           </Select>
+        </div>
+      ) : null}
+      {activeFilters > 0 ? (
+        <div className="flex flex-wrap items-center gap-2" data-testid="grid-filter-chips">
+          {activeFilterEntries.map(([columnId, value]) => (
+            <button
+              key={columnId}
+              type="button"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-secondary px-3 text-sm"
+              onClick={() => clearFilter(columnId)}
+              aria-label={`پاک کردن فیلتر ${columnId}`}
+            >
+              <span>{filterChipLabel(columnId, value)}</span>
+              <span aria-hidden>×</span>
+            </button>
+          ))}
+          <Button type="button" tone="ghost" onClick={clearAllFilters}>
+            {messages.clearAllFilters}
+          </Button>
         </div>
       ) : null}
       {bulkActions.length > 0 ? (
@@ -457,9 +516,14 @@ export function DataGrid<T extends { id: string }>({
                 entityLookup={entityLookup}
               />
             ))}
-          <Button type="button" onClick={() => setFiltersOpen(false)}>
+          <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
             {messages.close}
           </Button>
+          {activeFilters > 0 ? (
+            <Button type="button" tone="ghost" onClick={clearAllFilters}>
+              {messages.clearAllFilters}
+            </Button>
+          ) : null}
         </div>
       </Drawer>
       <Drawer open={columnsOpen} onClose={() => setColumnsOpen(false)} title={messages.columns}>

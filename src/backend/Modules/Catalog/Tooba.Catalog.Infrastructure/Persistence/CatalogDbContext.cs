@@ -226,7 +226,11 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("product_media_references");
             entity.HasKey(x => x.ReferenceId);
             entity.Property(x => x.ReferenceId).ValueGeneratedNever();
+            entity.Property(x => x.AltText).HasMaxLength(512);
+            entity.Property(x => x.DisplayOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsPrimary).HasDefaultValue(false);
             entity.HasIndex(x => new { x.ProductId, x.MediaAssetId }).IsUnique();
+            entity.HasIndex(x => new { x.ProductId, x.DisplayOrder });
         });
 
         modelBuilder.Entity<CatalogProductAttributeValue>(entity =>

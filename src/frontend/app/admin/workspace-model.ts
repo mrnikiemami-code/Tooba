@@ -46,8 +46,14 @@ export interface ProductWorkspaceView {
   kind: string;
   brandName: string | null;
   categoryNames: string[];
-  variants: { variantId: string; fingerprint: string; status: string; offerCount: number }[];
-  media: { mediaAssetId: string; primary: boolean }[];
+  variants: {
+    variantId: string;
+    fingerprint: string;
+    status: string;
+    catalogCodeSeam: string | null;
+    offerCount: number;
+  }[];
+  media: { mediaAssetId: string; primary: boolean; displayOrder?: number; altText?: string | null }[];
   offers: ProductOfferRow[];
   prices: ProductPriceRow[];
   taxClassifications: { offerId: string; categoryCode: string; displayName: string }[];
@@ -97,9 +103,22 @@ export const demoProductWorkspace: ProductWorkspaceView = {
   brandName: "Tooba Studio",
   categoryNames: ["پوشاک"],
   variants: [
-    { variantId: "22111111-1111-7111-8111-111111111111", fingerprint: "color=sand|size=m", status: "Published", offerCount: 2 },
+    {
+      variantId: "22111111-1111-7111-8111-111111111111",
+      fingerprint: "color=sand|size=m",
+      status: "Published",
+      catalogCodeSeam: "LINEN-SAND-M",
+      offerCount: 2,
+    },
   ],
-  media: [{ mediaAssetId: "33111111-1111-7111-8111-111111111111", primary: true }],
+  media: [
+    {
+      mediaAssetId: "33111111-1111-7111-8111-111111111111",
+      primary: true,
+      displayOrder: 0,
+      altText: "پیراهن لینن",
+    },
+  ],
   offers: [
     {
       offerId: "44111111-1111-7111-8111-111111111111",
