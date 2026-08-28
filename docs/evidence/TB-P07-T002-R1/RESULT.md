@@ -50,7 +50,9 @@ Runtime:
 
 Git:
 - branch: main
-- commit: (at ship)
+- commit: fix scalable admin product grid query and backend validation [TB-P07-T002-R1]
+- final HEAD: 3c50ab322fba8665c6dd081cd71ae17ca431f550
+- origin/main: 3c50ab322fba8665c6dd081cd71ae17ca431f550
 - push: YES
 - synchronized: YES
 
