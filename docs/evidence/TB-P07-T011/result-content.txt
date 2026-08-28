@@ -1,0 +1,322 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T011
+Parent-Task:
+TB-P07-T010
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Built Product Catalog Admin foundation on existing AppDataGrid list: progressive Draft create with searchable category path picker + human slug, Product Workspace VIEW/EDIT via useAdminFormMode, tab shell (عمومی/ترجمه‌ها/ویژگی‌ها/تنوع‌ها/رسانه/SEO/انتشار/تاریخچه), locale LocalizedText translation foundation without NameFa/NameEn, core+category APIs, archive-preferred delete, Product!=Offer preserved. Full validation green; runtimes kept. USER_VISUAL_ACCEPTED remains NO.
+
+Canonical-AppDataGrid:
+
+existing Tooba AppDataGrid reused:
+yes
+
+raw AgGridReact:
+no
+
+new grid wrapper:
+no
+
+page-specific grid CSS:
+no
+
+current grid visual preserved:
+yes
+
+Product-List:
+
+route:
+/admin/products (/fa/admin/products via locale middleware)
+
+query API:
+POST /v1/admin/products/query
+
+columns:
+media, title, status, categorySummary, offerAmountRange, sellableUnits, updatedAt, actions
+
+row actions:
+مشاهده (?scope=view), ویرایش (?scope=edit), بایگانی/حذف امن
+
+filters:
+existing AppDataGrid filters/advanced/saved views
+
+saved views preserved:
+yes
+
+responsive:
+yes (canonical AppDataGrid)
+
+Product-Workspace:
+
+route:
+/admin/products/{productId}?scope=view|edit
+
+VIEW:
+yes (readable summary)
+
+EDIT:
+yes (Save/Cancel/dirty → VIEW after save)
+
+tabs:
+عمومی، ترجمه‌ها، ویژگی‌ها، تنوع‌ها، رسانه، SEO، انتشار، تاریخچه
+
+deep link:
+scope query preserved
+
+refresh/back-forward:
+yes
+
+mobile:
+full-width workspace shell
+
+Create-Flow:
+
+CTA:
++ محصول جدید
+
+first-step fields:
+Category, Name, Slug suggestion, Draft
+
+progressive:
+yes
+
+post-create navigation:
+workspace ?scope=edit
+
+Category:
+
+picker:
+searchable human path
+
+path labels:
+yes
+
+raw IDs visible:
+no (hidden value only)
+
+change safety:
+confirmSchemaImpact required when attrs/variants exist
+
+effective schema handoff:
+categoryId on workspace for Attributes tab
+
+Translations:
+
+model:
+CatalogLocalizedText locale fields + SlugSeam
+
+locales:
+fa-IR / en foundation
+
+fields:
+name, short/full description, seo title/description
+
+slug:
+human NormalizeSlug / SlugifyFromName
+
+uniqueness:
+enforced on SlugSeam
+
+visible ID suffix:
+no
+
+Lifecycle:
+
+statuses:
+Draft / Published / Archived
+
+publish/archive:
+existing Host endpoints
+
+delete policy:
+prefer soft-archive when referenced
+
+Architecture:
+
+Product != Offer:
+yes
+
+Product.Price introduced:
+no
+
+Product.Stock introduced:
+no
+
+Pricing join:
+no (composed reads only)
+
+Inventory join:
+no (composed reads only)
+
+Seller ownership leakage:
+no
+
+Authorization:
+
+SpiceDB:
+AdminPanelAccess Host gate + workspace scope header
+
+view:
+scope=view → read-only permissions
+
+create:
+CanEditCatalog
+
+edit:
+CanEditCatalog
+
+publish/archive:
+existing CanPublish lifecycle
+
+backend authoritative:
+yes
+
+Attributes-Handoff:
+
+CategoryId:
+yes on workspace
+
+effective schema contract:
+ready for next task
+
+next task readiness:
+yes
+
+Variants-Handoff:
+
+IsVariantAxis source:
+category schema (next task)
+
+terminology:
+تنوع
+
+next task readiness:
+yes
+
+API:
+
+existing:
+list/query/get/title/lifecycle/media/variants
+
+added:
+PATCH /core, PUT /category; Draft create semantics
+
+backend touched:
+ProductWorkspaceComposer/Endpoints/Models + tests
+
+frontend integration:
+product-list, picker, workspace, host-client
+
+gaps:
+full translation save UI / attribute editor / variant matrix deferred
+
+Validation:
+
+backend restore:
+n/a (build+test)
+
+backend build:
+pass
+
+backend full tests:
+Passed 328 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass
+
+frontend tests:
+pass
+
+frontend build:
+pass
+
+passed:
+328 BE + FE suites
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0 new
+
+new warnings:
+no
+
+git diff --check:
+pass (scoped)
+
+Documentation:
+
+PRODUCT-CATALOG-ADMIN:
+docs/catalog/PRODUCT-CATALOG-ADMIN.md
+
+recovery/state:
+docs/PROJECT-STATE.md updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+http://127.0.0.1:3001
+
+Product Admin:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+c499cbd38dfe35449e499d97ca989bf8a52a691c
+
+push:
+yes
+
+final HEAD:
+c499cbd38dfe35449e499d97ca989bf8a52a691c
+
+origin/main:
+c499cbd38dfe35449e499d97ca989bf8a52a691c
+
+synchronized:
+yes
+
+tracked tree:
+clean for T011 paths; unrelated dirty files preserved
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+none blocking; full ProductTranslation table deferred in favor of existing LocalizedText architecture documented as locale-based.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending manual Product Catalog Admin review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
