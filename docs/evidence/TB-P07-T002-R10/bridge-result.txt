@@ -1,0 +1,257 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R10
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Removed unsafe AG Grid structural CSS overrides; externalized title/updatedAt filters via app-owned header popover (Portal); rebuilt Advanced Filter drawer at 520px with sticky header/footer; preserved Enter-to-apply semantics.
+
+AG-Grid-Structural-CSS:
+
+selectors audited:
+theme.css, globals.css, product-list wrappers
+
+unsafe structural overrides removed:
+.ag-cell-wrapper flex, z-index on rows/pinned, isolation, .ag-popup/.ag-filter overrides
+
+remaining theme-only overrides:
+CSS variables, colors, borders, typography, row/header heights, focus outline
+
+app-owned cell wrappers:
+.app-grid-cell-content on product cell renderers
+
+nested overflow removed:
+no extra overflow-x on grid shell
+
+Native-Scroll:
+
+grid height:
+clamp(560px, calc(100vh - 17rem), 680px)
+
+horizontal owner:
+AG Grid center-cols viewport
+
+vertical owner:
+AG Grid body viewport
+
+header/body sync:
+native AG Grid (ensureDomOrder)
+
+pinned columns:
+actions only pinned right
+
+RTL:
+enableRtl preserved
+
+manual horizontal test:
+pending user browser
+
+manual vertical test:
+pending user browser
+
+Jalali-Header-Filter:
+
+header component/path:
+app-column-header.tsx + jalali-header-filter-panel.tsx
+
+AG default filter popup disabled:
+filter: false on updatedAt
+
+app-owned popover:
+column-filter-popover.tsx via Portal
+
+portal target:
+document.body
+
+width:
+380–420px desktop; bottom sheet mobile
+
+mobile behavior:
+full-width bottom sheet
+
+operators:
+on/before/after/between fa labels
+
+calendar:
+JalaliDatePicker Portal panel min 320px, 7-column grid
+
+underlying grid bleed:
+opaque popover + Portal outside AG root
+
+Enter/Apply:
+draft until Apply; Enter on text filter
+
+canonical ISO:
+GridFilterValue date kind unchanged
+
+tests:
+grid-overlay.test.ts + filter-commit.test.ts
+
+Advanced-Filter-Visual:
+
+component/path:
+AdvancedFilterDrawer.tsx + AdvancedFilterBuilder.tsx
+
+rebuilt visual layer:
+yes — Portal drawer 520px, sticky header/footer
+
+drawer width:
+520px desktop
+
+sticky header:
+yes
+
+condition cards:
+data-advanced-filter-card md:grid-cols-3
+
+field/operator/value alignment:
+labels above controls, min-h 44px
+
+AND/OR placement:
+centered segmented connector between cards
+
+active chips:
+فیلترهای فعال summary
+
+sticky footer:
+بازنشانی | بستن | اعمال فیلترها
+
+mobile:
+full-width drawer
+
+overlay root:
+Portal to document.body
+
+tests:
+grid-overlay.test.ts
+
+Filter-Request-Semantics:
+
+typing requests:
+0 until Enter/Apply
+
+Enter requests:
+1 on Enter (text header filter)
+
+Apply requests:
+1 on Apply button
+
+duplicate suppression:
+shouldCommitGridQuery + filtersEqual
+
+tests:
+filter-commit.test.ts + text-header-filter-panel test
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (img warning pre-existing)
+
+grid tests:
+49 pass
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+live API:
+Host 200; FE 200
+
+warnings:
+next/img advisory pre-existing
+
+new warnings:
+0
+
+git diff --check:
+clean on committed scope
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+horizontal scroll steps:
+scroll full right/left ×3 — header aligned
+
+vertical scroll steps:
+scroll middle/bottom — header opaque
+
+Jalali filter steps:
+click updatedAt ⚲ → 400px popover → calendar → apply
+
+Advanced Filter steps:
+open drawer 520px → 3 conditions → AND/OR → footer visible
+
+Enter test steps:
+type title filter → no request → Enter → one request
+
+Git:
+
+branch:
+main
+
+commit:
+d705c7c
+
+push:
+origin/main
+
+final HEAD:
+d705c7c
+
+origin/main:
+d705c7c
+
+synchronized:
+yes
+
+tracked tree:
+clean on committed R10 scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually reviews.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
