@@ -69,15 +69,67 @@ public static class AdminProductGridQueryPolicy
 
             var op = (filter.Operator ?? string.Empty).Trim();
             ValidateOperator(filter.Field, op);
-            filters.Add(new GridFilterRequest(
-                filter.Field,
-                op,
-                NormalizeScalar(filter.Value),
-                NormalizeScalar(filter.ValueTo),
-                filter.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).Take(20).ToList()));
+            filters.Add(NormalizeFilter(filter));
         }
 
-        return new GridQueryRequest(page, pageSize, search, sorts, filters);
+        var advancedFilter = NormalizeAdvancedFilter(request.AdvancedFilter);
+
+        return new GridQueryRequest(page, pageSize, search, sorts, filters, advancedFilter);
+    }
+
+    private static GridFilterRequest NormalizeFilter(GridFilterRequest filter) =>
+        new(
+            filter.Field,
+            (filter.Operator ?? string.Empty).Trim(),
+            NormalizeScalar(filter.Value),
+            NormalizeScalar(filter.ValueTo),
+            filter.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).Take(20).ToList());
+
+    internal static GridAdvancedFilterExpression? NormalizeAdvancedFilter(GridAdvancedFilterExpression? expression)
+    {
+        if (expression?.Conditions is not { Count: > 0 } conditions)
+        {
+            return null;
+        }
+
+        var expectedConnectors = Math.Max(conditions.Count - 1, 0);
+        var rawConnectors = expression.Connectors ?? [];
+        if (rawConnectors.Count != expectedConnectors)
+        {
+            throw new PlatformHttpException(400, "تعداد اتصال‌دهندهٔ فیلتر پیشرفته نامعتبر است.", "grid.advancedFilter.connector.count");
+        }
+
+        var connectors = rawConnectors.Select(c => c.ToLowerInvariant()).ToList();
+        foreach (var connector in connectors)
+        {
+            if (connector is not ("and" or "or"))
+            {
+                throw new PlatformHttpException(400, "اتصال‌دهندهٔ فیلتر پیشرفته مجاز نیست.", "grid.advancedFilter.connector.invalid");
+            }
+        }
+
+        var normalizedConditions = new List<GridAdvancedFilterCondition>();
+        foreach (var condition in conditions)
+        {
+            if (string.IsNullOrWhiteSpace(condition.Field) || !FilterableFields.Contains(condition.Field))
+            {
+                throw new PlatformHttpException(400, "فیلد فیلتر پیشرفته مجاز نیست.", "grid.advancedFilter.field.invalid");
+            }
+
+            var op = (condition.Operator ?? string.Empty).Trim();
+            ValidateOperator(condition.Field, op);
+            normalizedConditions.Add(new GridAdvancedFilterCondition(
+                string.IsNullOrWhiteSpace(condition.Id) ? Guid.NewGuid().ToString("N") : condition.Id.Trim(),
+                condition.Field.Trim(),
+                op,
+                NormalizeScalar(condition.Value),
+                NormalizeScalar(condition.ValueTo),
+                condition.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).Take(20).ToList()));
+        }
+
+        return new GridAdvancedFilterExpression(
+            normalizedConditions,
+            connectors.Select(c => c.ToLowerInvariant()).ToList());
     }
 
     private static string? NormalizeScalar(string? value) =>

@@ -30,7 +30,11 @@ export type LocaleKey =
   | "moveColumnDown"
   | "defaultViewName"
   | "renameView"
-  | "restoreDefault";
+  | "restoreDefault"
+  | "andConnector"
+  | "orConnector"
+  | "addCondition"
+  | "removeCondition";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -65,6 +69,10 @@ export const faGridLocale: Record<LocaleKey, string> = {
   defaultViewName: "نمای جدید",
   renameView: "تغییر نام",
   restoreDefault: "بازنشانی پیش‌فرض",
+  andConnector: "و",
+  orConnector: "یا",
+  addCondition: "افزودن شرط",
+  removeCondition: "حذف",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -100,6 +108,10 @@ export const enGridLocale: Record<LocaleKey, string> = {
   defaultViewName: "New view",
   renameView: "Rename",
   restoreDefault: "Restore default",
+  andConnector: "AND",
+  orConnector: "OR",
+  addCondition: "Add condition",
+  removeCondition: "Remove",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {

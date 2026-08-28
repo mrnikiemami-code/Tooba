@@ -50,23 +50,19 @@ internal sealed class AdminProductGridQueryEngine
                 continue;
             }
 
-            var ids = filter.Field switch
+            if (filter.Field is "status" or "updatedAt")
             {
-                "title" => await ResolveTitleProductIdsAsync(filter, cancellationToken),
-                "variantCount" => await ResolveVariantCountProductIdsAsync(filter, cancellationToken),
-                "offerCount" => await ResolveOfferCountProductIdsAsync(filter, cancellationToken),
-                "sellableUnits" => await ResolveSellableUnitsProductIdsAsync(filter, cancellationToken),
-                "locationCount" => await ResolveLocationCountProductIdsAsync(filter, cancellationToken),
-                "categorySummary" => await ResolveCategorySummaryProductIdsAsync(filter, cancellationToken),
-                "offerAmountRange" => await ResolveOfferAmountRangeProductIdsAsync(filter, cancellationToken),
-                "status" or "updatedAt" => null,
-                _ => null,
-            };
-
-            if (ids is not null)
-            {
-                products = products.Where(p => ids.Contains(p.ProductId));
+                continue;
             }
+
+            var ids = await ResolveFilterProductIdsAsync(filter, cancellationToken);
+            products = products.Where(p => ids.Contains(p.ProductId));
+        }
+
+        var advancedIds = await EvaluateAdvancedFilterAsync(query.AdvancedFilter, cancellationToken);
+        if (advancedIds is not null)
+        {
+            products = products.Where(p => advancedIds.Contains(p.ProductId));
         }
 
         var total = await products.CountAsync(cancellationToken);
@@ -91,6 +87,61 @@ internal sealed class AdminProductGridQueryEngine
         };
 
         return (pageIds, total);
+    }
+
+    private async Task<HashSet<Guid>?> EvaluateAdvancedFilterAsync(
+        GridAdvancedFilterExpression? expression,
+        CancellationToken cancellationToken)
+    {
+        if (expression?.Conditions is not { Count: > 0 })
+        {
+            return null;
+        }
+
+        var sets = new List<HashSet<Guid>>();
+        foreach (var condition in expression.Conditions)
+        {
+            var filter = new GridFilterRequest(
+                condition.Field,
+                condition.Operator,
+                condition.Value,
+                condition.ValueTo,
+                condition.Values);
+            sets.Add(await ResolveFilterProductIdsAsync(filter, cancellationToken));
+        }
+
+        return AdminProductGridAdvancedFilterEvaluator.EvaluateLeftToRight(sets, expression.Connectors);
+    }
+
+    private async Task<HashSet<Guid>> ResolveFilterProductIdsAsync(
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        if (filter.Field is "status" or "updatedAt")
+        {
+            var products = _catalog.Products.AsNoTracking();
+            products = filter.Field switch
+            {
+                "status" => ApplyStatusFilter(products, filter),
+                "updatedAt" => ApplyUpdatedAtFilter(products, filter),
+                _ => products,
+            };
+            return (await products.Select(p => p.ProductId).ToListAsync(cancellationToken)).ToHashSet();
+        }
+
+        var ids = filter.Field switch
+        {
+            "title" => await ResolveTitleProductIdsAsync(filter, cancellationToken),
+            "variantCount" => await ResolveVariantCountProductIdsAsync(filter, cancellationToken),
+            "offerCount" => await ResolveOfferCountProductIdsAsync(filter, cancellationToken),
+            "sellableUnits" => await ResolveSellableUnitsProductIdsAsync(filter, cancellationToken),
+            "locationCount" => await ResolveLocationCountProductIdsAsync(filter, cancellationToken),
+            "categorySummary" => await ResolveCategorySummaryProductIdsAsync(filter, cancellationToken),
+            "offerAmountRange" => await ResolveOfferAmountRangeProductIdsAsync(filter, cancellationToken),
+            _ => new HashSet<Guid>(),
+        };
+
+        return ids;
     }
 
     private static bool ShouldSkipFilter(GridFilterRequest filter) =>

@@ -1,5 +1,17 @@
-import type { GridFilterRequest, GridQueryRequest, GridSortRequest } from "./types";
-import type { GridFilterValue, GridServerQuery, GridSort } from "../data-grid/types";
+import type {
+  GridAdvancedFilterCondition,
+  GridAdvancedFilterExpression,
+  GridFilterRequest,
+  GridQueryRequest,
+  GridSortRequest,
+} from "./types.ts";
+import type { GridFilterValue, GridServerQuery, GridSort } from "../data-grid/types.ts";
+import {
+  activeAdvancedConditions,
+  normalizeAdvancedFilterExpression,
+  type AdvancedFilterCondition,
+  type AdvancedFilterExpression,
+} from "./advanced-filter-expression.ts";
 
 /** تبدیل GridServerQuery UI به قرارداد Host. AG Grid state اینجا نرمال می‌شود. */
 export function toHostGridQuery(query: GridServerQuery): GridQueryRequest {
@@ -14,6 +26,46 @@ export function toHostGridQuery(query: GridServerQuery): GridQueryRequest {
       }),
     ),
     filters: Object.entries(query.filters).map(([field, value]) => mapFilter(field, value)),
+    advancedFilter: mapAdvancedFilterExpression(query.advancedFilter),
+  };
+}
+
+function mapAdvancedFilterExpression(
+  expression: AdvancedFilterExpression | undefined,
+): GridAdvancedFilterExpression | undefined {
+  const active = activeAdvancedConditions(expression);
+  if (active.length === 0) {
+    return undefined;
+  }
+  const normalized = normalizeAdvancedFilterExpression(expression);
+  const activeIds = new Set(active.map((c) => c.id));
+  const conditions: AdvancedFilterCondition[] = [];
+  const connectors: ("and" | "or")[] = [];
+  for (let index = 0; index < normalized.conditions.length; index++) {
+    const condition = normalized.conditions[index]!;
+    if (!activeIds.has(condition.id)) {
+      continue;
+    }
+    if (conditions.length > 0) {
+      connectors.push(normalized.connectors[index - 1] ?? "and");
+    }
+    conditions.push(condition);
+  }
+  return {
+    conditions: conditions.map(mapAdvancedCondition),
+    connectors,
+  };
+}
+
+function mapAdvancedCondition(condition: AdvancedFilterCondition): GridAdvancedFilterCondition {
+  const mapped = mapFilter(condition.field, condition.value);
+  return {
+    id: condition.id,
+    field: mapped.field,
+    operator: mapped.operator,
+    value: mapped.value,
+    valueTo: mapped.valueTo,
+    values: mapped.values,
   };
 }
 
@@ -90,6 +142,7 @@ export const DEFAULT_GRID_QUERY: GridServerQuery = {
   pageSize: 20,
   sorts: [{ columnId: "updatedAt", direction: "desc" }],
   filters: {},
+  advancedFilter: { conditions: [], connectors: [] },
 };
 
 export function mergeSorts(sorts: GridSort[]): GridSort[] {

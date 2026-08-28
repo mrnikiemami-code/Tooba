@@ -14,6 +14,20 @@ public sealed record GridFilterRequest(
     string? ValueTo,
     IReadOnlyList<string>? Values);
 
+/// <summary>یک شرط فیلتر پیشرفته — application-owned، نه AG Grid.</summary>
+public sealed record GridAdvancedFilterCondition(
+    string Id,
+    string Field,
+    string Operator,
+    string? Value,
+    string? ValueTo,
+    IReadOnlyList<string>? Values);
+
+/// <summary>عبارت فیلتر پیشرفته با AND/OR صریح — left-to-right ارزیابی می‌شود.</summary>
+public sealed record GridAdvancedFilterExpression(
+    IReadOnlyList<GridAdvancedFilterCondition> Conditions,
+    IReadOnlyList<string> Connectors);
+
 /// <summary>
 /// درخواست صفحه‌بندی/مرتب‌سازی/فیلتر گرید.
 /// </summary>
@@ -22,7 +36,8 @@ public sealed record GridQueryRequest(
     int PageSize,
     string? Search,
     IReadOnlyList<GridSortRequest> Sort,
-    IReadOnlyList<GridFilterRequest> Filters);
+    IReadOnlyList<GridFilterRequest> Filters,
+    GridAdvancedFilterExpression? AdvancedFilter = null);
 
 /// <summary>
 /// پاسخ صفحه‌بندی‌شدهٔ گرید.

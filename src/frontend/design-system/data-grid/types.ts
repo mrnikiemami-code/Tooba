@@ -42,6 +42,20 @@ export interface GridSort {
   direction: "asc" | "desc";
 }
 
+export type AdvancedFilterConnector = "and" | "or";
+
+export interface AdvancedFilterCondition {
+  id: string;
+  field: string;
+  value: GridFilterValue;
+}
+
+/** عبارت فیلتر پیشرفته — AND/OR صریح، left-to-right. */
+export interface AdvancedFilterExpression {
+  conditions: AdvancedFilterCondition[];
+  connectors: AdvancedFilterConnector[];
+}
+
 /**
  * پرس‌وجوی سمت سرور. SQL/EF اینجا معنا ندارد؛ فقط قرارداد UI.
  */
@@ -51,6 +65,7 @@ export interface GridServerQuery {
   sorts: GridSort[];
   filters: Record<string, GridFilterValue>;
   search?: string;
+  advancedFilter?: AdvancedFilterExpression;
 }
 
 export interface GridServerPage<T> {
@@ -90,7 +105,7 @@ export interface GridColumnLayout {
  * نمای ذخیره‌شده. ذخیره‌سازی از مدل جداست.
  * schemaVersion برای migration-safe round-trip است.
  */
-export const SAVED_GRID_VIEW_SCHEMA_VERSION = 2;
+export const SAVED_GRID_VIEW_SCHEMA_VERSION = 3;
 
 export interface SavedGridView {
   schemaVersion?: number;
@@ -98,8 +113,10 @@ export interface SavedGridView {
   name: string;
   /** فیلترهای ادغام‌شده برای GridServerQuery (simple + advanced). */
   filters: Record<string, GridFilterValue>;
-  /** زیرمجموعهٔ project-owned advanced drawer — مستقل از AG FilterModel. */
+  /** زیرمجموعهٔ project-owned advanced drawer — legacy v2; v3 uses advancedFilterExpression. */
   advancedFilters?: Record<string, GridFilterValue>;
+  /** عبارت فیلتر پیشرفته با AND/OR صریح (schema v3). */
+  advancedFilterExpression?: AdvancedFilterExpression;
   sorts: GridSort[];
   layout: GridColumnLayout;
   pageSize: number;

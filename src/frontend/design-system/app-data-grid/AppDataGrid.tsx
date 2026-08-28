@@ -18,9 +18,9 @@ import "./theme.css";
 import { Drawer } from "../primitives/overlays";
 import { Button, Checkbox } from "../primitives/core";
 import { cn } from "../cn";
-import { FilterControl } from "../data-grid/FilterControl";
 import { moveColumn } from "../data-grid/serialize";
 import type {
+  AdvancedFilterExpression,
   GridBulkAction,
   GridColumnLayout,
   GridFilterValue,
@@ -33,6 +33,12 @@ import { isFilterActive } from "../data-grid/serialize";
 import { DEFAULT_GRID_QUERY } from "./grid-query-mapper";
 import { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";
 import {
+  activeAdvancedConditions,
+  createAdvancedCondition,
+  normalizeAdvancedFilterExpression,
+} from "./advanced-filter-expression";
+import { AdvancedFilterBuilder } from "./AdvancedFilterBuilder";
+import {
   agFilterModelForSavedView,
   buildAgColumnApplyState,
   captureColumnLayoutFromApi,
@@ -42,8 +48,6 @@ import {
   type SavedViewSanitizeContext,
 } from "./saved-view-state";
 import type { AppGridFilterColumnDef } from "./filter-column-def";
-import { toFilterControlColumn } from "./filter-column-def";
-import { JalaliDateFilterControl } from "./JalaliDateFilterControl";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 
@@ -102,6 +106,9 @@ export function AppDataGrid<T extends { id: string }>({
   const [renamingViewId, setRenamingViewId] = useState<string | null>(null);
   const [renameInput, setRenameInput] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [draftAdvancedFilter, setDraftAdvancedFilter] = useState<AdvancedFilterExpression>(
+    DEFAULT_GRID_QUERY.advancedFilter ?? { conditions: [], connectors: [] },
+  );
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [drawerDragId, setDrawerDragId] = useState<string | null>(null);
   const gridApiRef = useRef<GridApi<T> | null>(null);
@@ -129,10 +136,16 @@ export function AppDataGrid<T extends { id: string }>({
     return labels;
   }, [columnDefs]);
 
-  const activeFilterEntries = useMemo(
-    () => Object.entries(query.filters).filter(([, value]) => isFilterActive(value)),
-    [query.filters],
-  );
+  const activeFilterEntries = useMemo(() => {
+    const columnEntries = Object.entries(query.filters).filter(([, value]) => isFilterActive(value));
+    const advancedEntries = activeAdvancedConditions(query.advancedFilter).map(
+      (condition) => [condition.id, condition.value, condition.field] as const,
+    );
+    return { columnEntries, advancedEntries };
+  }, [query.filters, query.advancedFilter]);
+
+  const activeFilterCount =
+    activeFilterEntries.columnEntries.length + activeFilterEntries.advancedEntries.length;
 
   const advancedFieldIds = useMemo(
     () => new Set(advancedFilterColumns.map((column) => column.id)),
@@ -151,18 +164,37 @@ export function AppDataGrid<T extends { id: string }>({
         enumOptionsByField[column.id] = new Set(column.enumOptions.map((option) => option.value));
       }
     }
-    return { knownColumnIds, knownFilterFields, advancedFieldIds, enumOptionsByField };
+    return {
+      knownColumnIds,
+      knownFilterFields,
+      advancedFieldIds,
+      enumOptionsByField,
+      advancedFieldOrder: advancedFilterColumns.map((column) => column.id),
+    };
   }, [advancedFieldIds, advancedFilterColumns, defaultColumnIds]);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const current = normalizeAdvancedFilterExpression(query.advancedFilter);
+    if (current.conditions.length === 0 && advancedFilterColumns[0]) {
+      setDraftAdvancedFilter({
+        conditions: [createAdvancedCondition(advancedFilterColumns[0].id)],
+        connectors: [],
+      });
+      return;
+    }
+    setDraftAdvancedFilter(current);
+  }, [filtersOpen, query.advancedFilter, advancedFilterColumns]);
 
   const mergeFilters = useCallback(
     (base: Record<string, GridFilterValue>, agFilters: Record<string, GridFilterValue>) => {
-      const preservedAdvanced = Object.fromEntries(
-        Object.entries(base).filter(([key]) => advancedFieldIds.has(key)),
-      );
       const fromAg = Object.fromEntries(
         Object.entries(agFilters).filter(([key]) => !advancedFieldIds.has(key)),
       );
-      return { ...fromAg, ...preservedAdvanced };
+      const columnBase = Object.fromEntries(
+        Object.entries(base).filter(([key]) => !advancedFieldIds.has(key)),
+      );
+      return { ...columnBase, ...fromAg };
     },
     [advancedFieldIds],
   );
@@ -241,13 +273,35 @@ export function AppDataGrid<T extends { id: string }>({
     [load, mergeFilters],
   );
 
-  function updateAdvancedFilter(columnId: string, value: GridFilterValue) {
-    const next = { ...queryRef.current.filters, [columnId]: value };
-    if (!isFilterActive(value)) {
-      delete next[columnId];
-    }
+  function applyDraftAdvancedFilter() {
+    const normalized = normalizeAdvancedFilterExpression(draftAdvancedFilter);
     setActiveViewId(null);
-    void load({ ...queryRef.current, page: 1, filters: next });
+    void load({ ...queryRef.current, page: 1, advancedFilter: normalized });
+    setFiltersOpen(false);
+  }
+
+  function clearAdvancedCondition(conditionId: string) {
+    const normalized = normalizeAdvancedFilterExpression(query.advancedFilter);
+    const conditions = normalized.conditions.filter((condition) => condition.id !== conditionId);
+    setActiveViewId(null);
+    void load({
+      ...queryRef.current,
+      page: 1,
+      advancedFilter: normalizeAdvancedFilterExpression({ conditions, connectors: normalized.connectors }),
+    });
+  }
+
+  function clearAllFilters() {
+    gridApiRef.current?.setFilterModel(null);
+    setSearchInput("");
+    setActiveViewId(null);
+    void load({
+      ...queryRef.current,
+      page: 1,
+      filters: {},
+      search: undefined,
+      advancedFilter: { conditions: [], connectors: [] },
+    });
   }
 
   function columnStateForDrawer() {
@@ -267,13 +321,6 @@ export function AppDataGrid<T extends { id: string }>({
     delete next[columnId];
     setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters: next });
-  }
-
-  function clearAllFilters() {
-    gridApiRef.current?.setFilterModel(null);
-    setSearchInput("");
-    setActiveViewId(null);
-    void load({ ...queryRef.current, page: 1, filters: {}, search: undefined });
   }
 
   function restoreColumns() {
@@ -300,6 +347,7 @@ export function AppDataGrid<T extends { id: string }>({
         id: crypto.randomUUID(),
         name: trimmed,
         filters: currentQuery.filters,
+        advancedFilterExpression: normalizeAdvancedFilterExpression(currentQuery.advancedFilter),
         sorts: currentQuery.sorts,
         layout,
         pageSize: currentQuery.pageSize,
@@ -315,13 +363,12 @@ export function AppDataGrid<T extends { id: string }>({
 
   async function applyView(rawView: SavedGridView) {
     const view = sanitizeSavedView(rawView, sanitizeContext);
-    const mergedFilters = mergeSavedViewFilters(view);
     const api = gridApiRef.current;
     suppressGridEventsRef.current = true;
     try {
       setActiveViewId(view.id);
       setSearchInput(view.search ?? "");
-      api?.setFilterModel(agFilterModelForSavedView(mergedFilters, advancedFieldIds));
+      api?.setFilterModel(agFilterModelForSavedView(view.filters, advancedFieldIds));
       api?.applyColumnState({
         state: buildAgColumnApplyState(view, sanitizeContext.knownColumnIds),
         applyOrder: true,
@@ -330,7 +377,8 @@ export function AppDataGrid<T extends { id: string }>({
         page: 1,
         pageSize: view.pageSize,
         sorts: view.sorts.length > 0 ? view.sorts : defaultQuery.sorts,
-        filters: mergedFilters,
+        filters: view.filters,
+        advancedFilter: view.advancedFilterExpression ?? { conditions: [], connectors: [] },
         search: view.search,
       });
     } finally {
@@ -376,7 +424,7 @@ export function AppDataGrid<T extends { id: string }>({
       } else {
         api?.resetColumnState();
       }
-      await load({ ...defaultQuery });
+      await load({ ...defaultQuery, advancedFilter: { conditions: [], connectors: [] } });
     } finally {
       suppressGridEventsRef.current = false;
     }
@@ -432,7 +480,7 @@ export function AppDataGrid<T extends { id: string }>({
             data-testid="app-grid-advanced-filters"
           >
             {messages.filters}
-            {activeFilterEntries.length > 0 ? ` (${activeFilterEntries.length})` : ""}
+            {activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
         ) : null}
         <button
@@ -557,16 +605,16 @@ export function AppDataGrid<T extends { id: string }>({
           </>
         ) : null}
         <span className="text-xs text-muted">{messages.exportScopeNote}</span>
-        {activeFilterEntries.length > 0 ? (
+        {activeFilterCount > 0 ? (
           <button type="button" className="border border-border bg-surface px-3 text-sm" onClick={clearAllFilters}>
             {messages.clearFilters}
           </button>
         ) : null}
       </div>
 
-      {activeFilterEntries.length > 0 ? (
+      {activeFilterCount > 0 ? (
         <div className="flex flex-wrap items-center gap-2 px-1 py-2" data-testid="app-grid-filter-chips">
-          {activeFilterEntries.map(([columnId, value]) => (
+          {activeFilterEntries.columnEntries.map(([columnId, value]) => (
             <button
               key={columnId}
               type="button"
@@ -577,44 +625,44 @@ export function AppDataGrid<T extends { id: string }>({
               <span aria-hidden>×</span>
             </button>
           ))}
+          {activeFilterEntries.advancedEntries.map(([conditionId, value, fieldId]) => (
+            <button
+              key={conditionId}
+              type="button"
+              className="inline-flex items-center gap-2 rounded-ds border border-border bg-secondary px-2 py-1 text-xs"
+              onClick={() => clearAdvancedCondition(conditionId)}
+            >
+              <span>{filterChipLabel(fieldId, columnLabels[fieldId] ?? fieldId, value, locale)}</span>
+              <span aria-hidden>×</span>
+            </button>
+          ))}
         </div>
       ) : null}
 
       <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={messages.filters}>
-        <div className="flex flex-col gap-3">
-          {advancedFilterColumns.map((column) => {
-            const current = query.filters[column.id];
-            if (column.filterKind === "date" && locale === "fa") {
-              return (
-                <JalaliDateFilterControl
-                  key={column.id}
-                  header={column.header}
-                  locale={locale}
-                  value={current}
-                  onChange={(value) => updateAdvancedFilter(column.id, value)}
-                />
-              );
-            }
-
-            return (
-              <FilterControl
-                key={column.id}
-                column={toFilterControlColumn(column)}
-                value={current}
-                onChange={(value) => updateAdvancedFilter(column.id, value)}
-              />
-            );
-          })}
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
-              {messages.close}
+        <AdvancedFilterBuilder
+          columns={advancedFilterColumns}
+          expression={draftAdvancedFilter}
+          onChange={setDraftAdvancedFilter}
+          locale={locale}
+          andLabel={messages.andConnector}
+          orLabel={messages.orConnector}
+          addLabel={messages.addCondition}
+          removeLabel={messages.removeCondition}
+          fieldLabel={messages.filters}
+        />
+        <div className="flex flex-wrap gap-2 pt-3">
+          <Button type="button" tone="primary" onClick={applyDraftAdvancedFilter}>
+            {messages.apply}
+          </Button>
+          <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
+            {messages.close}
+          </Button>
+          {activeFilterCount > 0 ? (
+            <Button type="button" tone="ghost" onClick={clearAllFilters}>
+              {messages.clearFilters}
             </Button>
-            {activeFilterEntries.length > 0 ? (
-              <Button type="button" tone="ghost" onClick={clearAllFilters}>
-                {messages.clearFilters}
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </Drawer>
 
