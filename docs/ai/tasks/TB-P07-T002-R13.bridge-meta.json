@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-P07-T002-R13",
+  "parentTaskId": "TB-P07-T002",
+  "channelId": "tooba-main",
+  "bridgeTaskUuid": "1cb8403f-4b9d-4da6-91e8-b6d2b2ea2ace",
+  "resultId": "c4867a7d-07ef-487f-9117-a4bc678311c4",
+  "status": "PASS",
+  "commits": ["7fc04ef", "8d273ba"],
+  "head": "8d273ba8e57063df0cbf001d0daf0f9c21376829"
+}
