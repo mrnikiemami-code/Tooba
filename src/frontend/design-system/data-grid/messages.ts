@@ -79,6 +79,9 @@ export const enGridMessages: GridMessages = {
 
 /** برچسب عملگر فیلتر — مقدار داخلی انگلیسی می‌ماند، نمایش محلی است. */
 export type FilterOperatorLabels = {
+  notEqual: string;
+  in: string;
+  notIn: string;
   contains: string;
   equals: string;
   startsWith: string;
@@ -96,6 +99,9 @@ export type FilterOperatorLabels = {
 export const faFilterOperatorLabels: FilterOperatorLabels = {
   contains: "شامل",
   equals: "برابر با",
+  notEqual: "نابرابر با",
+  in: "یکی از",
+  notIn: "هیچ‌کدام از",
   startsWith: "شروع می‌شود با",
   greaterThan: "بیشتر از",
   lessThan: "کمتر از",
@@ -111,6 +117,9 @@ export const faFilterOperatorLabels: FilterOperatorLabels = {
 export const enFilterOperatorLabels: FilterOperatorLabels = {
   contains: "Contains",
   equals: "Equals",
+  notEqual: "Not equal",
+  in: "In",
+  notIn: "Not in",
   startsWith: "Starts with",
   greaterThan: "Greater than",
   lessThan: "Less than",

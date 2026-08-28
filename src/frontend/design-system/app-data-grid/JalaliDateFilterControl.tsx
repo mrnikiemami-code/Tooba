@@ -3,7 +3,7 @@
 import { Input, Select } from "../primitives/core";
 import type { GridFilterValue } from "../data-grid/types";
 import { filterOperatorLabelsFor } from "../data-grid/messages";
-import { jalaliInputToIso } from "./jalali";
+import { formatJalaliDate, jalaliInputToIso } from "./jalali";
 
 /** فیلتر تاریخ با ورودی جلالی → ISO برای API. */
 export function JalaliDateFilterControl({
@@ -24,9 +24,7 @@ export function JalaliDateFilterControl({
 
   function jalaliDisplay(isoValue: string): string {
     if (!isoValue) return "";
-    const d = new Date(isoValue);
-    if (Number.isNaN(d.getTime())) return isoValue.slice(0, 10);
-    return isoValue.slice(0, 10);
+    return formatJalaliDate(isoValue, locale);
   }
 
   return (

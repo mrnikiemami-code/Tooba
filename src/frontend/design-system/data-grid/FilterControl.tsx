@@ -192,19 +192,45 @@ export function FilterControl<T>({
 
   if (kind === "enum" || kind === "status") {
     const selected = value && (value.kind === "enum" || value.kind === "status") ? value.values : [];
+    const operator =
+      value && (value.kind === "enum" || value.kind === "status")
+        ? (value.operator ?? (selected.length === 1 ? "equals" : "in"))
+        : "in";
+    const singleOnly = operator === "equals" || operator === "notEqual";
+
     return (
       <fieldset className="text-sm">
         <legend>{column.header}</legend>
+        <Select
+          aria-label={`${column.header} — ${ops.equals}`}
+          value={operator}
+          onChange={(event) => {
+            const nextOperator = event.target.value as "equals" | "notEqual" | "in" | "notIn";
+            const nextValues =
+              nextOperator === "equals" || nextOperator === "notEqual"
+                ? selected.slice(0, 1)
+                : selected;
+            onChange({ kind, operator: nextOperator, values: nextValues });
+          }}
+        >
+          <option value="equals">{ops.equals}</option>
+          <option value="notEqual">{ops.notEqual}</option>
+          <option value="in">{ops.in}</option>
+          <option value="notIn">{ops.notIn}</option>
+        </Select>
         {(column.enumOptions ?? []).map((option) => (
           <Checkbox
             key={option.value}
             label={option.label}
             checked={selected.includes(option.value)}
             onChange={() => {
-              const next = selected.includes(option.value)
+              let next = selected.includes(option.value)
                 ? selected.filter((item) => item !== option.value)
-                : [...selected, option.value];
-              onChange({ kind, values: next });
+                : singleOnly
+                  ? [option.value]
+                  : [...selected, option.value];
+              if (singleOnly) next = next.slice(-1);
+              onChange({ kind, operator, values: next });
             }}
           />
         ))}

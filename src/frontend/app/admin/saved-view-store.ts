@@ -1,5 +1,6 @@
 import { adminHeaders } from "./admin-api";
 import type { SavedGridView, SavedViewStore } from "../../design-system/data-grid";
+import { migrateSavedView } from "../../design-system/app-data-grid/saved-view-state";
 
 /** کلیدهای ترجیح UI برای نمایش‌های ذخیره‌شدهٔ Admin. */
 export const ADMIN_PRODUCT_GRID_VIEW_KEY = "grid.admin.products";
@@ -69,5 +70,5 @@ export function createHostSavedViewStore(preferenceKey: string): SavedViewStore 
 }
 
 function cloneView(view: SavedGridView): SavedGridView {
-  return JSON.parse(JSON.stringify(view)) as SavedGridView;
+  return migrateSavedView(JSON.parse(JSON.stringify(view)) as SavedGridView);
 }

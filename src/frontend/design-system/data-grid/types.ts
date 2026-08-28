@@ -19,6 +19,7 @@ export type NumberFilterOperator =
   | "lessThanOrEqual"
   | "between";
 export type DateFilterOperator = "on" | "before" | "after" | "between";
+export type EnumFilterOperator = "equals" | "notEqual" | "in" | "notIn";
 
 export interface MoneyAmount {
   amount: number;
@@ -31,8 +32,8 @@ export type GridFilterValue =
   | { kind: "number"; operator: NumberFilterOperator; value: number; valueTo?: number }
   | { kind: "money"; operator: NumberFilterOperator; money: MoneyAmount }
   | { kind: "date"; operator: DateFilterOperator; iso: string; isoTo?: string }
-  | { kind: "enum"; values: string[] }
-  | { kind: "status"; values: string[] }
+  | { kind: "enum"; operator?: EnumFilterOperator; values: string[] }
+  | { kind: "status"; operator?: EnumFilterOperator; values: string[] }
   | { kind: "boolean"; state: "all" | "true" | "false" }
   | { kind: "entity"; ids: string[]; search?: string };
 
@@ -87,14 +88,22 @@ export interface GridColumnLayout {
 
 /**
  * نمای ذخیره‌شده. ذخیره‌سازی از مدل جداست.
+ * schemaVersion برای migration-safe round-trip است.
  */
+export const SAVED_GRID_VIEW_SCHEMA_VERSION = 2;
+
 export interface SavedGridView {
+  schemaVersion?: number;
   id: string;
   name: string;
+  /** فیلترهای ادغام‌شده برای GridServerQuery (simple + advanced). */
   filters: Record<string, GridFilterValue>;
+  /** زیرمجموعهٔ project-owned advanced drawer — مستقل از AG FilterModel. */
+  advancedFilters?: Record<string, GridFilterValue>;
   sorts: GridSort[];
   layout: GridColumnLayout;
   pageSize: number;
+  search?: string;
   density?: GridDensity;
 }
 

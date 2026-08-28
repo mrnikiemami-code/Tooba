@@ -22,6 +22,7 @@ import { FilterControl } from "../data-grid/FilterControl";
 import { moveColumn } from "../data-grid/serialize";
 import type {
   GridBulkAction,
+  GridColumnLayout,
   GridFilterValue,
   GridQueryAdapter,
   GridServerQuery,
@@ -35,7 +36,10 @@ import {
   agFilterModelForSavedView,
   buildAgColumnApplyState,
   captureColumnLayoutFromApi,
-  normalizeSavedViewForPersistence,
+  mergeSavedViewFilters,
+  prepareSavedViewForPersistence,
+  sanitizeSavedView,
+  type SavedViewSanitizeContext,
 } from "./saved-view-state";
 import type { AppGridFilterColumnDef } from "./filter-column-def";
 import { toFilterControlColumn } from "./filter-column-def";
@@ -57,6 +61,8 @@ export interface AppDataGridProps<T extends { id: string }> {
   exportFilenameBase?: string;
   /** فیلتر پیشرفته Community-safe (کشو) — enum/status/date جلالی و غیره */
   advancedFilterColumns?: AppGridFilterColumnDef[];
+  /** پرس‌وجوی پیش‌فرض برای restore system default */
+  defaultQuery?: GridServerQuery;
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
 }
@@ -79,6 +85,7 @@ export function AppDataGrid<T extends { id: string }>({
   exportFilenameBase = "export",
   advancedFilterColumns = [],
   pageSelectionOnly = true,
+  defaultQuery = DEFAULT_GRID_QUERY,
 }: AppDataGridProps<T>) {
   const messages = useMemo(() => resolveGridLocale(locale), [locale]);
   const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);
@@ -92,6 +99,8 @@ export function AppDataGrid<T extends { id: string }>({
   const [savedViews, setSavedViews] = useState<SavedGridView[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [viewName, setViewName] = useState("");
+  const [renamingViewId, setRenamingViewId] = useState<string | null>(null);
+  const [renameInput, setRenameInput] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [drawerDragId, setDrawerDragId] = useState<string | null>(null);
@@ -102,6 +111,7 @@ export function AppDataGrid<T extends { id: string }>({
   const queryRef = useRef(query);
   queryRef.current = query;
   const suppressGridEventsRef = useRef(false);
+  const defaultLayoutRef = useRef<GridColumnLayout | null>(null);
 
   const defaultColumnIds = useMemo(
     () => columnDefs.map((col) => col.colId ?? col.field).filter((id): id is string => Boolean(id)),
@@ -128,6 +138,21 @@ export function AppDataGrid<T extends { id: string }>({
     () => new Set(advancedFilterColumns.map((column) => column.id)),
     [advancedFilterColumns],
   );
+
+  const sanitizeContext = useMemo((): SavedViewSanitizeContext => {
+    const knownColumnIds = new Set(defaultColumnIds);
+    const knownFilterFields = new Set([
+      ...defaultColumnIds,
+      ...advancedFilterColumns.map((column) => column.id),
+    ]);
+    const enumOptionsByField: Record<string, Set<string>> = {};
+    for (const column of advancedFilterColumns) {
+      if (column.enumOptions?.length) {
+        enumOptionsByField[column.id] = new Set(column.enumOptions.map((option) => option.value));
+      }
+    }
+    return { knownColumnIds, knownFilterFields, advancedFieldIds, enumOptionsByField };
+  }, [advancedFieldIds, advancedFilterColumns, defaultColumnIds]);
 
   const mergeFilters = useCallback(
     (base: Record<string, GridFilterValue>, agFilters: Record<string, GridFilterValue>) => {
@@ -166,9 +191,9 @@ export function AppDataGrid<T extends { id: string }>({
   );
 
   useEffect(() => {
-    void load(DEFAULT_GRID_QUERY);
+    void load(defaultQuery);
     return () => abortRef.current?.abort();
-  }, [load]);
+  }, [load, defaultQuery]);
 
   useEffect(() => {
     if (!savedViewStore) return;
@@ -177,9 +202,15 @@ export function AppDataGrid<T extends { id: string }>({
 
   const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
 
-  const onGridReady = useCallback((event: GridReadyEvent<T>) => {
-    gridApiRef.current = event.api;
-  }, []);
+  const onGridReady = useCallback(
+    (event: GridReadyEvent<T>) => {
+      gridApiRef.current = event.api;
+      if (!defaultLayoutRef.current) {
+        defaultLayoutRef.current = captureColumnLayoutFromApi(event.api, defaultColumnIds);
+      }
+    },
+    [defaultColumnIds],
+  );
 
   const onSortChanged = useCallback(
     (event: SortChangedEvent<T>) => {
@@ -264,37 +295,88 @@ export function AppDataGrid<T extends { id: string }>({
     const trimmed = viewName.trim() || messages.defaultViewName;
     const currentQuery = queryRef.current;
     const layout = captureColumnLayoutFromApi(gridApiRef.current, defaultColumnIds);
-    const view: SavedGridView = normalizeSavedViewForPersistence({
-      id: crypto.randomUUID(),
-      name: trimmed,
-      filters: currentQuery.filters,
-      sorts: currentQuery.sorts,
-      layout,
-      pageSize: currentQuery.pageSize,
-    });
+    const view = prepareSavedViewForPersistence(
+      {
+        id: crypto.randomUUID(),
+        name: trimmed,
+        filters: currentQuery.filters,
+        sorts: currentQuery.sorts,
+        layout,
+        pageSize: currentQuery.pageSize,
+        search: currentQuery.search,
+      },
+      advancedFieldIds,
+    );
     await savedViewStore.save(view);
     setSavedViews(await savedViewStore.list());
     setActiveViewId(view.id);
     setViewName("");
   }
 
-  async function applyView(view: SavedGridView) {
+  async function applyView(rawView: SavedGridView) {
+    const view = sanitizeSavedView(rawView, sanitizeContext);
+    const mergedFilters = mergeSavedViewFilters(view);
     const api = gridApiRef.current;
     suppressGridEventsRef.current = true;
     try {
       setActiveViewId(view.id);
-      api?.setFilterModel(agFilterModelForSavedView(view.filters, advancedFieldIds));
+      setSearchInput(view.search ?? "");
+      api?.setFilterModel(agFilterModelForSavedView(mergedFilters, advancedFieldIds));
       api?.applyColumnState({
-        state: buildAgColumnApplyState(view),
+        state: buildAgColumnApplyState(view, sanitizeContext.knownColumnIds),
         applyOrder: true,
       });
       await load({
         page: 1,
         pageSize: view.pageSize,
-        sorts: view.sorts,
-        filters: view.filters,
-        search: queryRef.current.search,
+        sorts: view.sorts.length > 0 ? view.sorts : defaultQuery.sorts,
+        filters: mergedFilters,
+        search: view.search,
       });
+    } finally {
+      suppressGridEventsRef.current = false;
+    }
+  }
+
+  async function renameView(viewId: string) {
+    if (!savedViewStore) return;
+    const view = savedViews.find((item) => item.id === viewId);
+    if (!view) return;
+    const trimmed = renameInput.trim() || messages.defaultViewName;
+    await savedViewStore.save({ ...view, name: trimmed });
+    setSavedViews(await savedViewStore.list());
+    setRenamingViewId(null);
+    setRenameInput("");
+  }
+
+  async function restoreSystemDefault() {
+    const api = gridApiRef.current;
+    suppressGridEventsRef.current = true;
+    try {
+      setActiveViewId(null);
+      setRenamingViewId(null);
+      setSearchInput("");
+      setViewName("");
+      api?.setFilterModel(null);
+      if (defaultLayoutRef.current) {
+        api?.applyColumnState({
+          state: buildAgColumnApplyState(
+            {
+              id: "default",
+              name: "default",
+              filters: {},
+              sorts: defaultQuery.sorts,
+              layout: defaultLayoutRef.current,
+              pageSize: defaultQuery.pageSize,
+            },
+            sanitizeContext.knownColumnIds,
+          ),
+          applyOrder: true,
+        });
+      } else {
+        api?.resetColumnState();
+      }
+      await load({ ...defaultQuery });
     } finally {
       suppressGridEventsRef.current = false;
     }
@@ -377,34 +459,84 @@ export function AppDataGrid<T extends { id: string }>({
               <button type="button" className="border border-border bg-surface px-3 text-sm" onClick={() => void saveCurrentView()}>
                 {messages.saveView}
               </button>
+              <button
+                type="button"
+                className="border border-border bg-surface px-3 text-sm"
+                onClick={() => void restoreSystemDefault()}
+                data-testid="app-grid-restore-default"
+              >
+                {messages.restoreDefault}
+              </button>
             </div>
             {savedViews.length > 0 ? (
               <ul className="flex flex-wrap gap-2">
                 {savedViews.map((view) => {
                   const active = activeViewId === view.id;
+                  const renaming = renamingViewId === view.id;
                   return (
                     <li key={view.id} className="inline-flex items-center gap-1">
-                      <button
-                        type="button"
-                        className={cn(
-                          "inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium transition-colors",
-                          active
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "border border-border bg-surface hover:bg-secondary",
-                        )}
-                        aria-pressed={active}
-                        onClick={() => void applyView(view)}
-                      >
-                        {view.name || messages.defaultViewName}
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-danger/10 hover:text-danger"
-                        aria-label={`${messages.deleteView}: ${view.name || messages.defaultViewName}`}
-                        onClick={() => void deleteView(view.id)}
-                      >
-                        ×
-                      </button>
+                      {renaming ? (
+                        <>
+                          <input
+                            aria-label={messages.renameView}
+                            value={renameInput}
+                            onChange={(e) => setRenameInput(e.target.value)}
+                            className="min-w-[8rem] rounded-full border border-border bg-surface px-3 py-1 text-sm"
+                          />
+                          <button
+                            type="button"
+                            className="inline-flex min-h-9 items-center rounded-full bg-primary px-3 text-sm text-primary-foreground"
+                            onClick={() => void renameView(view.id)}
+                          >
+                            {messages.apply}
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-secondary"
+                            onClick={() => {
+                              setRenamingViewId(null);
+                              setRenameInput("");
+                            }}
+                          >
+                            ×
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className={cn(
+                              "inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium transition-colors",
+                              active
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "border border-border bg-surface hover:bg-secondary",
+                            )}
+                            aria-pressed={active}
+                            onClick={() => void applyView(view)}
+                          >
+                            {view.name || messages.defaultViewName}
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-secondary"
+                            aria-label={`${messages.renameView}: ${view.name || messages.defaultViewName}`}
+                            onClick={() => {
+                              setRenamingViewId(view.id);
+                              setRenameInput(view.name || messages.defaultViewName);
+                            }}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-danger/10 hover:text-danger"
+                            aria-label={`${messages.deleteView}: ${view.name || messages.defaultViewName}`}
+                            onClick={() => void deleteView(view.id)}
+                          >
+                            ×
+                          </button>
+                        </>
+                      )}
                     </li>
                   );
                 })}

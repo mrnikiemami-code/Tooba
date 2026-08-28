@@ -35,16 +35,21 @@ function mapFilter(field: string, value: GridFilterValue): GridFilterRequest {
     case "enum":
       return {
         field,
-        operator: "in",
-        values: value.values,
-      };
-    case "status":
-      return {
-        field,
-        operator: value.values.length === 1 ? "equals" : "in",
+        operator: value.operator ?? (value.values.length === 1 ? "equals" : "in"),
         value: value.values.length === 1 ? value.values[0] : undefined,
         values: value.values.length === 1 ? undefined : value.values,
       };
+    case "status": {
+      const operator = value.operator ?? (value.values.length === 1 ? "equals" : "in");
+      if (operator === "in" || operator === "notIn") {
+        return { field, operator, values: value.values };
+      }
+      return {
+        field,
+        operator,
+        value: value.values[0],
+      };
+    }
     case "date":
       return {
         field,
