@@ -1,0 +1,207 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R12
+Parent-Task:
+TB-P07-T002
+Channel:
+tooba-main
+Status:
+PASS
+
+Repair-Summary:
+Read official AG Grid v36.1 column-pinning + legacy theming docs before coding; set explicit --ag-data-background-color; enabled --ag-borders-critical pinned separator; added narrow v36 DOM fallbacks (.ag-grid-pinned-*-cells, pinned header/body cells) for opaque actions column surfaces and boundary — no geometry/scroll hacks.
+
+Official-AG-Grid-Help:
+
+version:
+ag-grid-community@36.1.0, theme="legacy", ag-theme-quartz
+
+docs read before coding:
+docs/evidence/TB-P07-T002-R12/01-pinned-column-official-help.md
+
+column pinning docs:
+https://www.ag-grid.com/javascript-data-grid/column-pinning/
+
+legacy theme docs:
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation/
+
+colour docs:
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation-colours/
+
+header docs:
+https://www.ag-grid.com/react-data-grid/theming-v32-customisation-headers/
+
+border docs:
+https://www.ag-grid.com/javascript-data-grid/theming-v32-customisation-borders/
+
+RTL pinning:
+enableRtl preserved; selectors cover pinned-left and pinned-right
+
+official variables/APIs used:
+--ag-data-background-color, --ag-background-color, --ag-header-background-color, --ag-borders-critical, --ag-critical-border-color, --ag-pinned-column-border; pinned: "right" on actions column
+
+Pinned-Column-Surface:
+
+column:
+actions (pinned right)
+
+theme root:
+.ag-theme-tooba in theme.css
+
+data background variable:
+--ag-data-background-color: hsl(var(--surface-elevated))
+
+header background:
+--ag-header-background-color (pinned header containers forced to same)
+
+body pinned containers:
+.ag-grid-pinned-right-cells / .ag-grid-pinned-left-cells opaque linear-gradient fallback
+
+pinned header containers:
+.ag-header-row > .ag-grid-pinned-*-cells opaque header surface
+
+pinned cells:
+.ag-cell-first-right-pinned / .ag-cell-last-left-pinned background opaque
+
+computed pinned body background:
+hsl(var(--surface-elevated)) via --ag-data-background-color cascade
+
+computed pinned header background:
+hsl(var(--surface-elevated)) via --ag-header-background-color cascade
+
+scroll bleed:
+prevented by explicit opaque surfaces on sticky pinned containers (no overlay duplicate)
+
+Pinned-Boundary:
+
+official separator:
+--ag-borders-critical + --ag-critical-border-color
+
+AG native rules preserved:
+.ag-cell-first-right-pinned border-left; header .ag-grid-container-wrapper border
+
+subtle boundary:
+hsl(var(--border) / 0.85)
+
+RTL side:
+both pinned-left and pinned-right selectors covered
+
+horizontal scroll test:
+pending user browser DevTools
+
+Header-Pinned:
+
+pinned header opaque:
+yes — header pinned containers use --ag-header-background-color
+
+center header bleed:
+prevented by opaque pinned header wrapper background
+
+Validation:
+
+frontend typecheck:
+0 errors
+
+frontend lint:
+0 errors (next/img pre-existing)
+
+grid tests:
+57 pass (includes pinned-column.test.ts)
+
+admin tests:
+13 pass
+
+frontend build:
+0 errors
+
+backend touched:
+no
+
+warnings:
+MODULE_TYPELESS_PACKAGE_JSON pre-existing; next/img pre-existing
+
+errors:
+0
+
+failed:
+0
+
+skipped:
+0
+
+git diff --check:
+clean on committed R12 scope
+
+ag-grid-enterprise installed:
+no
+
+Enterprise imports/features:
+no
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/admin/products — 200 (dev restarted after build)
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+kept alive:
+yes
+
+USER-PREVIEW:
+
+Admin Products:
+http://localhost:3000/admin/products
+
+pinned opacity test:
+horizontal scroll → inspect .ag-grid-pinned-right-cells and .ag-cell-first-right-pinned computed background — expect opaque hsl(var(--surface-elevated)); no center text visible through actions column
+
+pinned boundary test:
+verify subtle vertical separator between scrollable columns and pinned actions while scrolling
+
+pinned header test:
+inspect pinned actions header — opaque; no center header text bleed
+
+RTL test:
+enableRtl grid — pinned boundary on correct visual side
+
+Git:
+
+branch:
+main
+
+commit:
+(pending)
+
+push:
+origin/main
+
+final HEAD:
+(pending)
+
+origin/main:
+(pending)
+
+synchronized:
+(pending)
+
+tracked tree:
+clean on committed R12 scope
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO until user manually verifies pinned column opacity and boundary during horizontal scroll.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
