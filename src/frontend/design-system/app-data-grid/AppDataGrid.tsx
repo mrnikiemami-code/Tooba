@@ -15,8 +15,13 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "./theme.css";
 
+import { Drawer } from "../primitives/overlays";
+import { Button, Checkbox } from "../primitives/core";
+import { FilterControl } from "../data-grid/FilterControl";
+import { moveColumn } from "../data-grid/serialize";
 import type {
   GridBulkAction,
+  GridFilterValue,
   GridQueryAdapter,
   GridServerQuery,
   SavedGridView,
@@ -25,6 +30,9 @@ import type {
 import { isFilterActive } from "../data-grid/serialize";
 import { DEFAULT_GRID_QUERY } from "./grid-query-mapper";
 import { filterChipLabel, fromAgFilterModel } from "./ag-filter-mapper";
+import type { AppGridFilterColumnDef } from "./filter-column-def";
+import { toFilterControlColumn } from "./filter-column-def";
+import { JalaliDateFilterControl } from "./JalaliDateFilterControl";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 
@@ -40,6 +48,8 @@ export interface AppDataGridProps<T extends { id: string }> {
   getExportRow?: (row: T) => string[];
   exportHeaders?: string[];
   exportFilenameBase?: string;
+  /** فیلتر پیشرفته Community-safe (کشو) — enum/status/date جلالی و غیره */
+  advancedFilterColumns?: AppGridFilterColumnDef[];
   /** برچسب صادقانه: انتخاب فقط صفحهٔ جاری */
   pageSelectionOnly?: boolean;
 }
@@ -60,6 +70,7 @@ export function AppDataGrid<T extends { id: string }>({
   getExportRow,
   exportHeaders = [],
   exportFilenameBase = "export",
+  advancedFilterColumns = [],
   pageSelectionOnly = true,
 }: AppDataGridProps<T>) {
   const messages = useMemo(() => resolveGridLocale(locale), [locale]);
@@ -73,6 +84,9 @@ export function AppDataGrid<T extends { id: string }>({
   const [selected, setSelected] = useState<T[]>([]);
   const [savedViews, setSavedViews] = useState<SavedGridView[]>([]);
   const [viewName, setViewName] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [drawerDragId, setDrawerDragId] = useState<string | null>(null);
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -94,6 +108,24 @@ export function AppDataGrid<T extends { id: string }>({
   const activeFilterEntries = useMemo(
     () => Object.entries(query.filters).filter(([, value]) => isFilterActive(value)),
     [query.filters],
+  );
+
+  const advancedFieldIds = useMemo(
+    () => new Set(advancedFilterColumns.map((column) => column.id)),
+    [advancedFilterColumns],
+  );
+
+  const mergeFilters = useCallback(
+    (base: Record<string, GridFilterValue>, agFilters: Record<string, GridFilterValue>) => {
+      const preservedAdvanced = Object.fromEntries(
+        Object.entries(base).filter(([key]) => advancedFieldIds.has(key)),
+      );
+      const fromAg = Object.fromEntries(
+        Object.entries(agFilters).filter(([key]) => !advancedFieldIds.has(key)),
+      );
+      return { ...fromAg, ...preservedAdvanced };
+    },
+    [advancedFieldIds],
   );
 
   const load = useCallback(
@@ -152,12 +184,27 @@ export function AppDataGrid<T extends { id: string }>({
       if (!api) return;
       if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
       filterTimerRef.current = setTimeout(() => {
-        const filters = fromAgFilterModel(api.getFilterModel());
+        const agFilters = fromAgFilterModel(api.getFilterModel());
+        const filters = mergeFilters(queryRef.current.filters, agFilters);
         void load({ ...queryRef.current, page: 1, filters });
       }, 300);
     },
-    [load],
+    [load, mergeFilters],
   );
+
+  function updateAdvancedFilter(columnId: string, value: GridFilterValue) {
+    const next = { ...queryRef.current.filters, [columnId]: value };
+    if (!isFilterActive(value)) {
+      delete next[columnId];
+    }
+    void load({ ...queryRef.current, page: 1, filters: next });
+  }
+
+  function columnStateForDrawer() {
+    const api = gridApiRef.current;
+    if (!api) return [];
+    return api.getColumnState().filter((col) => col.colId && col.colId !== "actions");
+  }
 
   function clearFilter(columnId: string) {
     const api = gridApiRef.current;
@@ -175,6 +222,11 @@ export function AppDataGrid<T extends { id: string }>({
     gridApiRef.current?.setFilterModel(null);
     setSearchInput("");
     void load({ ...queryRef.current, page: 1, filters: {}, search: undefined });
+  }
+
+  function restoreColumns() {
+    gridApiRef.current?.resetColumnState();
+    setColumnsOpen(false);
   }
 
   function scheduleSearch(value: string) {
@@ -255,6 +307,25 @@ export function AppDataGrid<T extends { id: string }>({
           className="min-w-[12rem] flex-1 border border-border bg-surface px-3 text-sm"
           aria-label={messages.search}
         />
+        {advancedFilterColumns.length > 0 ? (
+          <button
+            type="button"
+            className="border border-border bg-surface px-3 text-sm"
+            onClick={() => setFiltersOpen(true)}
+            data-testid="app-grid-advanced-filters"
+          >
+            {messages.filters}
+            {activeFilterEntries.length > 0 ? ` (${activeFilterEntries.length})` : ""}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="border border-border bg-surface px-3 text-sm"
+          onClick={() => setColumnsOpen(true)}
+          data-testid="app-grid-columns"
+        >
+          {messages.columns}
+        </button>
         {savedViewStore ? (
           <>
             <select
@@ -317,6 +388,118 @@ export function AppDataGrid<T extends { id: string }>({
           ))}
         </div>
       ) : null}
+
+      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={messages.filters}>
+        <div className="flex flex-col gap-3">
+          {advancedFilterColumns.map((column) => {
+            const current = query.filters[column.id];
+            if (column.filterKind === "date" && locale === "fa") {
+              return (
+                <JalaliDateFilterControl
+                  key={column.id}
+                  header={column.header}
+                  locale={locale}
+                  value={current}
+                  onChange={(value) => updateAdvancedFilter(column.id, value)}
+                />
+              );
+            }
+
+            return (
+              <FilterControl
+                key={column.id}
+                column={toFilterControlColumn(column)}
+                value={current}
+                onChange={(value) => updateAdvancedFilter(column.id, value)}
+              />
+            );
+          })}
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button type="button" tone="secondary" onClick={() => setFiltersOpen(false)}>
+              {messages.close}
+            </Button>
+            {activeFilterEntries.length > 0 ? (
+              <Button type="button" tone="ghost" onClick={clearAllFilters}>
+                {messages.clearFilters}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </Drawer>
+
+      <Drawer open={columnsOpen} onClose={() => setColumnsOpen(false)} title={messages.columns}>
+        <div className="flex flex-col gap-1.5">
+          {columnStateForDrawer().map((col, index, cols) => (
+            <div
+              key={col.colId}
+              draggable
+              onDragStart={() => setDrawerDragId(col.colId!)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (!drawerDragId || !gridApiRef.current) return;
+                const order = cols.map((item) => item.colId!);
+                const nextOrder = moveColumn(order, drawerDragId, col.colId!);
+                gridApiRef.current.applyColumnState({ state: nextOrder.map((colId) => ({ colId })), applyOrder: true });
+                setDrawerDragId(null);
+              }}
+              className="flex items-center gap-2 rounded-ds border border-border bg-surface px-2 py-1.5"
+            >
+              <span className="cursor-grab text-muted" aria-label={messages.dragColumn}>
+                ⋮⋮
+              </span>
+              <Checkbox
+                label={columnLabels[col.colId!] ?? col.colId!}
+                checked={!col.hide}
+                onChange={() => {
+                  gridApiRef.current?.applyColumnState({
+                    state: [{ colId: col.colId!, hide: !col.hide }],
+                  });
+                }}
+              />
+              <button
+                type="button"
+                className="text-xs text-muted"
+                aria-label={messages.moveColumnUp}
+                disabled={index === 0}
+                onClick={() => {
+                  if (index === 0 || !gridApiRef.current) return;
+                  const order = cols.map((item) => item.colId!);
+                  gridApiRef.current.applyColumnState({
+                    state: moveColumn(order, col.colId!, order[index - 1]!).map((colId) => ({ colId })),
+                    applyOrder: true,
+                  });
+                }}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className="text-xs text-muted"
+                aria-label={messages.moveColumnDown}
+                disabled={index === cols.length - 1}
+                onClick={() => {
+                  if (index >= cols.length - 1 || !gridApiRef.current) return;
+                  const order = cols.map((item) => item.colId!);
+                  gridApiRef.current.applyColumnState({
+                    state: moveColumn(order, col.colId!, order[index + 1]!).map((colId) => ({ colId })),
+                    applyOrder: true,
+                  });
+                }}
+              >
+                ↓
+              </button>
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button type="button" tone="secondary" onClick={() => setColumnsOpen(false)}>
+              {messages.close}
+            </Button>
+            <Button type="button" tone="ghost" onClick={restoreColumns}>
+              {messages.restoreColumns}
+            </Button>
+          </div>
+        </div>
+      </Drawer>
 
       {pageSelectionOnly ? (
         <p className="px-1 py-2 text-xs text-muted">{messages.pageSelectionNote}</p>

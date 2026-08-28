@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
+import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
 import {
@@ -103,8 +104,7 @@ function buildColumnDefs(
       width: 120,
       valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
       cellClass: (p) => productStatusClass(String(p.value ?? "")),
-      filter: "agSetColumnFilter",
-      filterParams: { values: ["Published", "Draft", "Archived"] },
+      filter: false,
     },
     { field: "variantCount", headerName: "گونه", width: 90, filter: "agNumberColumnFilter" },
     { field: "offerCount", headerName: "پیشنهاد", width: 100, filter: "agNumberColumnFilter" },
@@ -131,6 +131,26 @@ function buildColumnDefs(
     },
   ];
 }
+
+const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
+  { id: "title", header: "عنوان", filterKind: "text" },
+  {
+    id: "status",
+    header: "انتشار",
+    filterKind: "status",
+    enumOptions: [
+      { value: "Published", label: "منتشر شده" },
+      { value: "Draft", label: "پیش‌نویس" },
+      { value: "Archived", label: "بایگانی" },
+    ],
+  },
+  { id: "variantCount", header: "گونه", filterKind: "number" },
+  { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
+  { id: "categorySummary", header: "دسته", filterKind: "text" },
+  { id: "sellableUnits", header: "موجود", filterKind: "number" },
+  { id: "locationCount", header: "محل", filterKind: "number" },
+  { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
+];
 
 /** فهرست Admin با AppDataGrid (AG Grid Community) + API GridQuery/GridPage. */
 export function ProductListScreen() {
@@ -245,6 +265,7 @@ export function ProductListScreen() {
         <AppDataGrid<AdminProductListRow>
           columnDefs={columnDefs}
           queryAdapter={queryAdapter}
+          advancedFilterColumns={PRODUCT_GRID_ADVANCED_FILTERS}
           locale="fa"
           direction="rtl"
           savedViewStore={savedViewStore}

@@ -23,7 +23,11 @@ export type LocaleKey =
   | "cancel"
   | "restoreColumns"
   | "pageSelectionNote"
-  | "exportScopeNote";
+  | "exportScopeNote"
+  | "close"
+  | "dragColumn"
+  | "moveColumnUp"
+  | "moveColumnDown";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -51,6 +55,10 @@ export const faGridLocale: Record<LocaleKey, string> = {
   restoreColumns: "بازنشانی ستون‌ها",
   pageSelectionNote: "فقط ردیف‌های صفحهٔ جاری انتخاب می‌شوند",
   exportScopeNote: "خروجی فقط شامل ردیف‌های صفحهٔ جاری است",
+  close: "بستن",
+  dragColumn: "جابجایی ستون",
+  moveColumnUp: "بالا",
+  moveColumnDown: "پایین",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -79,6 +87,10 @@ export const enGridLocale: Record<LocaleKey, string> = {
   restoreColumns: "Reset columns",
   pageSelectionNote: "Only rows on the current page can be selected",
   exportScopeNote: "Export includes current page rows only",
+  close: "Close",
+  dragColumn: "Drag column",
+  moveColumnUp: "Up",
+  moveColumnDown: "Down",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {
