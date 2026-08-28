@@ -300,6 +300,43 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// پیکربندی مگامنو برای یک رده را برمی‌گرداند.
+    /// </summary>
+    Task<CategoryMegaMenuConfigurationView> GetCategoryMegaMenuConfigurationAsync(
+        Guid categoryId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رده را به مگامنو متصل می‌کند یا به‌روزرسانی می‌کند.
+    /// </summary>
+    Task UpsertCategoryMegaMenuBindingAsync(
+        Guid categoryId,
+        string locale,
+        CategoryMegaMenuBindingInput input,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// اتصال رده را از مگامنو برمی‌دارد (رده حذف نمی‌شود).
+    /// </summary>
+    Task RemoveCategoryMegaMenuBindingAsync(Guid categoryId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// گزینه‌های والد presentation برای selector Admin.
+    /// </summary>
+    Task<IReadOnlyList<MegaMenuPlacementOption>> ListMegaMenuPlacementOptionsAsync(
+        Guid categoryId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// درخت مگامنو قابل نمایش ویترین را برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyList<StorefrontMegaMenuItem>> GetStorefrontMegaMenuAsync(
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// محصول توصیفی می‌سازد.
     /// </summary>
     Task<ProductReference> CreateProductAsync(CatalogProductKind kind, string? slugSeam, Guid? brandId, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
@@ -503,6 +540,59 @@ public sealed record EffectiveCategoryFacet(
     bool ShowCounts,
     Guid SourceCategoryId,
     bool IsInherited);
+
+/// <summary>ورودی bind/update مگامنو برای یک رده.</summary>
+public sealed record CategoryMegaMenuBindingInput(
+    Guid? ParentMegaMenuItemId,
+    int SortOrder,
+    bool IsVisible,
+    bool IsFeatured,
+    Guid? ImageMediaAssetId,
+    Guid? IconMediaAssetId,
+    string? TitleOverride,
+    string? BadgeText,
+    string? ShortLabel);
+
+/// <summary>نمای Admin پیکربندی مگامنو یک رده.</summary>
+public sealed record CategoryMegaMenuConfigurationView(
+    Guid CategoryId,
+    bool IsBound,
+    Guid? MegaMenuItemId,
+    Guid? ParentMegaMenuItemId,
+    string? ParentMenuPath,
+    int SortOrder,
+    bool IsVisible,
+    bool IsFeatured,
+    Guid? ImageMediaAssetId,
+    Guid? IconMediaAssetId,
+    string DisplayTitle,
+    string? TitleOverride,
+    string? BadgeText,
+    string? ShortLabel,
+    string DestinationPreview,
+    int PresentationLevel,
+    bool CategoryPublished,
+    bool CategoryVisible);
+
+/// <summary>گزینهٔ والد presentation با مسیر انسانی.</summary>
+public sealed record MegaMenuPlacementOption(
+    Guid MegaMenuItemId,
+    Guid CategoryId,
+    string Label,
+    string MenuPath,
+    int Level);
+
+/// <summary>آیتم flat مگامنو برای Storefront.</summary>
+public sealed record StorefrontMegaMenuItem(
+    Guid MegaMenuItemId,
+    Guid? ParentMegaMenuItemId,
+    Guid CategoryId,
+    string Title,
+    string Destination,
+    bool IsFeatured,
+    Guid? IconMediaAssetId,
+    Guid? ImageMediaAssetId,
+    int SortOrder);
 
 /// <summary>
 /// گزارش تأثیر تغییر رده؛ حذف خاموش انجام نمی‌شود.

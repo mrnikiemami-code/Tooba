@@ -939,6 +939,253 @@ public static class CatalogCategoryFacetResolver
 }
 
 /// <summary>
+/// نوع آیتم مگامنو — T009 فقط Category-backed را در Admin Category Workspace مدیریت می‌کند.
+/// </summary>
+public enum CatalogMegaMenuItemType
+{
+    /// <summary>پیوند به ردهٔ Catalog.</summary>
+    Category = 0,
+}
+
+/// <summary>
+/// آیتم presentation مگامنو؛ hierarchy منو از ParentMegaMenuItemId جدا از taxonomy رده است.
+/// </summary>
+public sealed class CatalogMegaMenuItem
+{
+    /// <summary>شناسهٔ آیتم منو.</summary>
+    public Guid MegaMenuItemId { get; init; }
+
+    /// <summary>نوع آیتم.</summary>
+    public CatalogMegaMenuItemType ItemType { get; init; }
+
+    /// <summary>ردهٔ مقصد (برای Category-backed).</summary>
+    public Guid CategoryId { get; init; }
+
+    /// <summary>والد presentation در درخت منو (نه ParentCategoryId).</summary>
+    public Guid? ParentMegaMenuItemId { get; set; }
+
+    /// <summary>ترتیب بین خواهران presentation.</summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>نمایش در مگامنو.</summary>
+    public bool IsVisible { get; set; }
+
+    /// <summary>برجسته در منو.</summary>
+    public bool IsFeatured { get; set; }
+
+    /// <summary>تصویر تبلیغاتی اختیاری.</summary>
+    public Guid? ImageMediaAssetId { get; set; }
+
+    /// <summary>آیکن اختیاری.</summary>
+    public Guid? IconMediaAssetId { get; set; }
+
+    /// <summary>زمان ایجاد.</summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>ایجاد آیتم منو برای یک رده.</summary>
+    public static CatalogMegaMenuItem BindCategory(
+        Guid categoryId,
+        Guid? parentMegaMenuItemId,
+        int sortOrder,
+        bool isVisible,
+        bool isFeatured,
+        Guid? imageMediaAssetId,
+        Guid? iconMediaAssetId,
+        DateTimeOffset now) =>
+        new()
+        {
+            MegaMenuItemId = UuidV7.New(),
+            ItemType = CatalogMegaMenuItemType.Category,
+            CategoryId = categoryId,
+            ParentMegaMenuItemId = parentMegaMenuItemId,
+            SortOrder = sortOrder,
+            IsVisible = isVisible,
+            IsFeatured = isFeatured,
+            ImageMediaAssetId = imageMediaAssetId,
+            IconMediaAssetId = iconMediaAssetId,
+            CreatedAt = now,
+        };
+}
+
+/// <summary>
+/// override نمایشی محلی برای آیتم مگامنو.
+/// </summary>
+public sealed class CatalogMegaMenuItemTranslation
+{
+    /// <summary>شناسهٔ ترجمه.</summary>
+    public Guid MegaMenuItemTranslationId { get; init; }
+
+    /// <summary>آیتم منو.</summary>
+    public Guid MegaMenuItemId { get; init; }
+
+    /// <summary>locale نرمال‌شده.</summary>
+    public string Locale { get; init; } = string.Empty;
+
+    /// <summary>عنوان متفاوت در مگامنو.</summary>
+    public string? TitleOverride { get; set; }
+
+    /// <summary>متن badge اختیاری.</summary>
+    public string? BadgeText { get; set; }
+
+    /// <summary>برچسب کوتاه اختیاری.</summary>
+    public string? ShortLabel { get; set; }
+
+    /// <summary>ایجاد یا به‌روزرسانی override.</summary>
+    public static CatalogMegaMenuItemTranslation Create(
+        Guid megaMenuItemId,
+        string locale,
+        string? titleOverride,
+        string? badgeText,
+        string? shortLabel) =>
+        new()
+        {
+            MegaMenuItemTranslationId = UuidV7.New(),
+            MegaMenuItemId = megaMenuItemId,
+            Locale = locale.Trim(),
+            TitleOverride = string.IsNullOrWhiteSpace(titleOverride) ? null : titleOverride.Trim(),
+            BadgeText = string.IsNullOrWhiteSpace(badgeText) ? null : badgeText.Trim(),
+            ShortLabel = string.IsNullOrWhiteSpace(shortLabel) ? null : shortLabel.Trim(),
+        };
+}
+
+/// <summary>
+/// اعتبارسنجی placement مگامنو — جدا از درخت taxonomy.
+/// </summary>
+public static class CatalogMegaMenuTreeRules
+{
+    /// <summary>حداکثر عمق presentation (L1/L2/L3).</summary>
+    public const int MaxPresentationDepth = 3;
+
+    /// <summary>
+    /// والد و عمق presentation را بررسی می‌کند.
+    /// </summary>
+    public static void ValidatePlacement(
+        Guid megaMenuItemId,
+        Guid? parentMegaMenuItemId,
+        IReadOnlyDictionary<Guid, CatalogMegaMenuItem> itemsById)
+    {
+        if (parentMegaMenuItemId is null)
+        {
+            return;
+        }
+
+        if (parentMegaMenuItemId == megaMenuItemId)
+        {
+            throw new InvalidOperationException("آیتم منو نمی‌تواند والد خودش باشد.");
+        }
+
+        if (!itemsById.ContainsKey(parentMegaMenuItemId.Value))
+        {
+            throw new InvalidOperationException("والد presentation در مگامنو یافت نشد.");
+        }
+
+        var depth = 1;
+        var current = parentMegaMenuItemId.Value;
+        var seen = new HashSet<Guid> { megaMenuItemId };
+        while (true)
+        {
+            if (!seen.Add(current))
+            {
+                throw new InvalidOperationException("حلقه در درخت presentation مگامنو.");
+            }
+
+            depth++;
+            if (depth > MaxPresentationDepth)
+            {
+                throw new InvalidOperationException("حداکثر سه سطح در مگامنو پشتیبانی می‌شود.");
+            }
+
+            if (!itemsById.TryGetValue(current, out var parent) || parent.ParentMegaMenuItemId is not Guid next)
+            {
+                break;
+            }
+
+            current = next;
+        }
+    }
+}
+
+/// <summary>
+/// حل عنوان و eligibility آیتم مگامنو برای locale.
+/// </summary>
+public static class CatalogMegaMenuComposer
+{
+    /// <summary>
+    /// آیتم‌های قابل نمایش در ویترین را فیلتر و مرتب می‌کند.
+    /// </summary>
+    public static IReadOnlyList<CatalogMegaMenuRenderableItem> ComposeStorefrontMenu(
+        IReadOnlyList<CatalogMegaMenuItem> items,
+        IReadOnlyDictionary<Guid, CatalogCategory> categoriesById,
+        IReadOnlyDictionary<Guid, CatalogCategoryTranslation> translationsByCategoryId,
+        IReadOnlyDictionary<Guid, CatalogMegaMenuItemTranslation> overridesByItemId,
+        string locale,
+        string uiLocaleSegment)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentNullException.ThrowIfNull(categoriesById);
+        ArgumentNullException.ThrowIfNull(translationsByCategoryId);
+        ArgumentNullException.ThrowIfNull(overridesByItemId);
+
+        var normalizedLocale = locale.Trim();
+        var result = new List<CatalogMegaMenuRenderableItem>();
+        foreach (var item in items.Where(x => x.IsVisible && x.ItemType == CatalogMegaMenuItemType.Category))
+        {
+            if (!categoriesById.TryGetValue(item.CategoryId, out var category))
+            {
+                continue;
+            }
+
+            if (category.Status != CatalogPublicationStatus.Published || !category.IsVisible)
+            {
+                continue;
+            }
+
+            if (!translationsByCategoryId.TryGetValue(item.CategoryId, out var translation)
+                || string.IsNullOrWhiteSpace(translation.Slug))
+            {
+                continue;
+            }
+
+            overridesByItemId.TryGetValue(item.MegaMenuItemId, out var overrideRow);
+            var title = overrideRow?.TitleOverride ?? translation.Name;
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                continue;
+            }
+
+            var destination = $"/{uiLocaleSegment}/category/{translation.Slug.Trim()}";
+            result.Add(new CatalogMegaMenuRenderableItem(
+                item.MegaMenuItemId,
+                item.ParentMegaMenuItemId,
+                item.CategoryId,
+                title,
+                destination,
+                item.IsFeatured,
+                item.IconMediaAssetId ?? category.IconMediaAssetId,
+                item.ImageMediaAssetId ?? category.ImageMediaAssetId,
+                item.SortOrder));
+        }
+
+        return result
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Title, StringComparer.Ordinal)
+            .ToList();
+    }
+}
+
+/// <summary>ردیف renderable مگامنو برای Storefront.</summary>
+public sealed record CatalogMegaMenuRenderableItem(
+    Guid MegaMenuItemId,
+    Guid? ParentMegaMenuItemId,
+    Guid CategoryId,
+    string Title,
+    string Destination,
+    bool IsFeatured,
+    Guid? IconMediaAssetId,
+    Guid? ImageMediaAssetId,
+    int SortOrder);
+
+/// <summary>
 /// محورهای Variant انتخاب‌شده برای یک محصول. ماتریس کامل ترکیبی اینجا تولید نمی‌شود.
 /// </summary>
 public sealed class CatalogProductVariantAxis

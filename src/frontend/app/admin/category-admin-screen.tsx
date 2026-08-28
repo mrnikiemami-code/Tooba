@@ -43,6 +43,7 @@ import {
 } from "./catalog-category-api.ts";
 import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
 import { CategoryFacetsPanel } from "./category-facets-panel.tsx";
+import { CategoryMegaMenuPanel } from "./category-mega-menu-panel.tsx";
 
 const API_LOCALE = "fa-IR";
 
@@ -60,7 +61,7 @@ const TABS = [
   { id: "translations", label: "ترجمه‌ها", implemented: true },
   { id: "attributes", label: "ویژگی‌ها", implemented: true },
   { id: "facets", label: "فیلترها", implemented: true },
-  { id: "mega-menu", label: "مگامنو", implemented: false },
+  { id: "mega-menu", label: "مگامنو", implemented: true },
   { id: "products", label: "محصولات", implemented: false },
   { id: "seo", label: "SEO", implemented: false },
   { id: "settings", label: "تنظیمات", implemented: false },
@@ -68,7 +69,7 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
-type EditSurface = "general" | "translations" | "attributes" | "facets";
+type EditSurface = "general" | "translations" | "attributes" | "facets" | "mega-menu";
 
 interface GeneralDraft {
   name: string;
@@ -1394,6 +1395,16 @@ export function CategoryAdminScreen() {
     formMode.onCancel();
   };
 
+  const handleEnterMegaMenuEdit = () => {
+    if (!canEdit) return;
+    setEditSurface("mega-menu");
+    formMode.onEdit();
+  };
+
+  const handleCancelMegaMenuEdit = () => {
+    formMode.onCancel();
+  };
+
   const handleSaveTranslation = async () => {
     if (!categoryId || !workspace || !translationDraft) return;
     if (translationDraft.locale !== selectedLocale) return;
@@ -1479,6 +1490,7 @@ export function CategoryAdminScreen() {
   const isTranslationEdit = isEdit && editSurface === "translations" && activeTab === "translations";
   const isAttributesEdit = isEdit && editSurface === "attributes" && activeTab === "attributes";
   const isFacetsEdit = isEdit && editSurface === "facets" && activeTab === "facets";
+  const isMegaMenuEdit = isEdit && editSurface === "mega-menu" && activeTab === "mega-menu";
 
   const headerEditVisible =
     !isEdit && formMode.canEdit && activeTab === "general";
@@ -1649,7 +1661,9 @@ export function CategoryAdminScreen() {
                               ? "attributes"
                               : tab.id === "facets"
                                 ? "facets"
-                                : "general",
+                                : tab.id === "mega-menu"
+                                  ? "mega-menu"
+                                  : "general",
                         );
                       }}
                       className={
@@ -1743,10 +1757,21 @@ export function CategoryAdminScreen() {
                     onCancelEdit={handleCancelFacetsEdit}
                   />
                 ) : null}
+                {activeTab === "mega-menu" && categoryId ? (
+                  <CategoryMegaMenuPanel
+                    categoryId={categoryId}
+                    isEdit={isMegaMenuEdit}
+                    canEdit={formMode.canEdit}
+                    busy={saveBusy}
+                    onEnterEdit={handleEnterMegaMenuEdit}
+                    onCancelEdit={handleCancelMegaMenuEdit}
+                  />
+                ) : null}
                 {activeTab !== "general" &&
                 activeTab !== "translations" &&
                 activeTab !== "attributes" &&
-                activeTab !== "facets" ? (
+                activeTab !== "facets" &&
+                activeTab !== "mega-menu" ? (
                   <ComingSoonPanel />
                 ) : null}
               </div>

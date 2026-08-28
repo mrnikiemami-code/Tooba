@@ -96,6 +96,12 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>پیکربندی facet PLP رده.</summary>
     public DbSet<CatalogCategoryFacetConfiguration> CategoryFacetConfigurations => Set<CatalogCategoryFacetConfiguration>();
 
+    /// <summary>آیتم‌های presentation مگامنو.</summary>
+    public DbSet<CatalogMegaMenuItem> MegaMenuItems => Set<CatalogMegaMenuItem>();
+
+    /// <summary>override محلی عنوان مگامنو.</summary>
+    public DbSet<CatalogMegaMenuItemTranslation> MegaMenuItemTranslations => Set<CatalogMegaMenuItemTranslation>();
+
     /// <summary>
     /// محورهای Variant انتخاب‌شدهٔ محصول.
     /// </summary>
@@ -229,6 +235,40 @@ public sealed class CatalogDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.DefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogMegaMenuItem>(entity =>
+        {
+            entity.ToTable("mega_menu_items");
+            entity.HasKey(x => x.MegaMenuItemId);
+            entity.Property(x => x.MegaMenuItemId).ValueGeneratedNever();
+            entity.Property(x => x.ItemType).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.CategoryId).IsUnique();
+            entity.HasIndex(x => new { x.ParentMegaMenuItemId, x.SortOrder });
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogMegaMenuItem>()
+                .WithMany()
+                .HasForeignKey(x => x.ParentMegaMenuItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogMegaMenuItemTranslation>(entity =>
+        {
+            entity.ToTable("mega_menu_item_translations");
+            entity.HasKey(x => x.MegaMenuItemTranslationId);
+            entity.Property(x => x.MegaMenuItemTranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Locale).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TitleOverride).HasMaxLength(256);
+            entity.Property(x => x.BadgeText).HasMaxLength(64);
+            entity.Property(x => x.ShortLabel).HasMaxLength(128);
+            entity.HasIndex(x => new { x.MegaMenuItemId, x.Locale }).IsUnique();
+            entity.HasOne<CatalogMegaMenuItem>()
+                .WithMany()
+                .HasForeignKey(x => x.MegaMenuItemId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<CatalogProductVariantAxis>(entity =>

@@ -282,13 +282,14 @@ test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
   assert.equal(panel.match(/data-testid=.*definitionId/g)?.length ?? 0, 0);
 });
 
-test("future tabs remain progressive placeholders (except attributes and facets)", () => {
+test("future tabs remain progressive placeholders (except attributes, facets, mega-menu)", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
   assert.match(screen, /category-tab-coming-soon/);
   assert.match(screen, /این بخش در تسک بعدی تکمیل می‌شود/);
   assert.match(screen, /implemented: false/);
   assert.match(screen, /id: "facets", label: "فیلترها", implemented: true/);
-  assert.match(screen, /id: "mega-menu"/);
+  assert.match(screen, /id: "mega-menu", label: "مگامنو", implemented: true/);
+  assert.match(screen, /id: "products"/);
 });
 
 test("mobile layout markers present", () => {

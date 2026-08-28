@@ -297,6 +297,7 @@ app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapCatalogAttributeEndpoints();
 app.MapCatalogFacetEndpoints();
+app.MapCatalogMegaMenuEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();

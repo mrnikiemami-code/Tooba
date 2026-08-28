@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
+import { loadStorefrontMegaMenu, type StorefrontMegaMenuItem } from "../admin/catalog-mega-menu-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
 import { LocaleSwitcher } from "../../lib/i18n/LocaleSwitcher.tsx";
 
@@ -41,17 +42,42 @@ export function StorefrontShopeivaHeader({
 }: {
   categories: StorefrontCategoryItem[];
 }) {
-  const rootCategories = categories.filter((category) => category.parentCategoryId === null);
-  const navigationRoots = rootCategories.length > 0 ? rootCategories : categories;
+  const lp = useLocalizedPath();
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileOpenCategories, setMobileOpenCategories] = useState<Record<string, boolean>>({ main: true });
+  const [megaMenuItems, setMegaMenuItems] = useState<StorefrontMegaMenuItem[]>([]);
+  const useConfiguredMenu = megaMenuItems.length > 0;
+
+  useEffect(() => {
+    void loadStorefrontMegaMenu("fa-IR").then(setMegaMenuItems);
+  }, []);
+
+  type NavRow = StorefrontCategoryItem & { href: string };
+
+  const navigationRoots: NavRow[] = useConfiguredMenu
+    ? megaMenuItems
+        .filter((item) => item.parentMegaMenuItemId === null)
+        .map((item) => ({
+          categoryId: item.megaMenuItemId,
+          parentCategoryId: item.parentMegaMenuItemId,
+          name: item.title,
+          href: item.destination,
+        }))
+    : (() => {
+        const roots = categories.filter((category) => category.parentCategoryId === null);
+        const list = roots.length > 0 ? roots : categories;
+        return list.map((item) => ({
+          ...item,
+          href: `${lp("/products")}?categoryId=${item.categoryId}`,
+        }));
+      })();
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(navigationRoots[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
   const [brands, setBrands] = useState<StorefrontBrandItem[]>([]);
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lp = useLocalizedPath();
 
   useEffect(() => {
     const refreshBadge = () => {
@@ -103,17 +129,28 @@ export function StorefrontShopeivaHeader({
   }, [closeMegaMenu]);
 
   useEffect(() => {
-    if (categories.length === 0) {
+    if (navigationRoots.length === 0) {
       setSelectedCategoryId(null);
       return;
     }
     if (!selectedCategoryId || !navigationRoots.some((item) => item.categoryId === selectedCategoryId)) {
       setSelectedCategoryId(navigationRoots[0]!.categoryId);
     }
-  }, [categories, navigationRoots, selectedCategoryId]);
+  }, [navigationRoots, selectedCategoryId]);
 
   const selectedCategory = navigationRoots.find((item) => item.categoryId === selectedCategoryId) ?? navigationRoots[0] ?? null;
-  const childCategories = categories.filter((item) => item.parentCategoryId === selectedCategory?.categoryId);
+  const childCategories: NavRow[] = useConfiguredMenu
+    ? megaMenuItems
+        .filter((item) => item.parentMegaMenuItemId === selectedCategory?.categoryId)
+        .map((item) => ({
+          categoryId: item.megaMenuItemId,
+          parentCategoryId: item.parentMegaMenuItemId,
+          name: item.title,
+          href: item.destination,
+        }))
+    : categories
+        .filter((item) => item.parentCategoryId === selectedCategory?.categoryId)
+        .map((item) => ({ ...item, href: `${lp("/products")}?categoryId=${item.categoryId}` }));
 
   const categoryIcon = (name: string) => {
     if (name.includes("دیجیتال") || name.includes("موبایل")) return Smartphone;
@@ -268,7 +305,7 @@ export function StorefrontShopeivaHeader({
                               type="button"
                               onMouseEnter={() => setSelectedCategoryId(cat.categoryId)}
                               onClick={() => {
-                                window.location.href = `${lp("/products")}?categoryId=${cat.categoryId}`;
+                                window.location.href = cat.href;
                                 closeMegaMenu();
                               }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-right transition-all ${
@@ -299,18 +336,29 @@ export function StorefrontShopeivaHeader({
                               })()}
                               <span className="font-bold text-sm text-gray-800">{selectedCategory.name}</span>
                             </div>
-                            <Link href={`/products?categoryId=${selectedCategory.categoryId}`} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
+                            <Link href={selectedCategory.href} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] hover:underline font-semibold">
                               مشاهده همه
                             </Link>
                           </div>
                           <div className="flex-1 overflow-y-auto mm-scroll min-h-0">
                             <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                               {childCategories.map((sub) => {
-                                const descendants = categories.filter((category) => category.parentCategoryId === sub.categoryId);
+                                const descendants: NavRow[] = useConfiguredMenu
+                                  ? megaMenuItems
+                                      .filter((item) => item.parentMegaMenuItemId === sub.categoryId)
+                                      .map((item) => ({
+                                        categoryId: item.megaMenuItemId,
+                                        parentCategoryId: item.parentMegaMenuItemId,
+                                        name: item.title,
+                                        href: item.destination,
+                                      }))
+                                  : categories
+                                      .filter((category) => category.parentCategoryId === sub.categoryId)
+                                      .map((item) => ({ ...item, href: `${lp("/products")}?categoryId=${item.categoryId}` }));
                                 return (
                                   <div key={sub.categoryId}>
                                     <Link
-                                      href={`/products?categoryId=${sub.categoryId}`}
+                                      href={sub.href}
                                       onClick={closeMegaMenu}
                                       className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-[#2563EB] transition-colors mb-1.5"
                                     >
@@ -322,7 +370,7 @@ export function StorefrontShopeivaHeader({
                                         {descendants.slice(0, 4).map((child) => (
                                           <Link
                                             key={child.categoryId}
-                                            href={`/products?categoryId=${child.categoryId}`}
+                                            href={child.href}
                                             onClick={closeMegaMenu}
                                             className="block text-[11px] text-gray-400 hover:text-[#2563EB] transition-colors truncate py-0.5"
                                           >
@@ -330,7 +378,7 @@ export function StorefrontShopeivaHeader({
                                           </Link>
                                         ))}
                                         {descendants.length > 4 ? (
-                                          <Link href={`/products?categoryId=${sub.categoryId}`} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] font-semibold hover:underline">
+                                          <Link href={sub.href} onClick={closeMegaMenu} className="text-[10px] text-[#2563EB] font-semibold hover:underline">
                                             + {(descendants.length - 4).toLocaleString("fa-IR")} بیشتر
                                           </Link>
                                         ) : null}
