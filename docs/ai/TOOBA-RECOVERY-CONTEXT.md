@@ -34,7 +34,7 @@ TB-P06-T029
 Last Implementation Task:
 
 ```text
-TB-P07-T001-R3
+TB-P07-T001-R5
 ```
 
 Issued but not accepted:
@@ -58,8 +58,13 @@ COMMERCIAL_READINESS_GATE = PASSED
 TB-P07-T001 = SUPERSEDED
 TB-P07-T001-R1 = SUPERSEDED
 TB-P07-T001-R2 = SUPERSEDED
-TB-P07-T001-R3 = AWAITING_ARCHITECT_ACCEPT
-CURRENT_UI_FOCUS = ADMIN_ONLY
+TB-P07-T001-R3 = SUPERSEDED
+TB-P07-T001-R4 = SUPERSEDED
+TB-P07-T001-R5 = AWAITING_ARCHITECT_ACCEPT
+CURRENT_FOCUS = UI_UX_ONLY
+ADMIN_UI = PRIORITY_1
+SELLER_UI = PRIORITY_2
+BACKEND_FEATURE_EXPANSION = FROZEN
 CATEGORY_ATTRIBUTE_SCHEMA = LIVE
 CATEGORY_ATTRIBUTE_INHERITANCE = LIVE
 PRODUCT_TYPED_ATTRIBUTES = LIVE
@@ -333,5 +338,5 @@ by Bridge on channel `tooba-main`.
 3. read Project State / Roadmap / Pipeline docs;
 4. recover latest accepted/active task from the repository and Bridge;
 5. follow `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; Worker is normally IDLE/OFFLINE between Tasks; External Watchdog sends `BRIDGE-WAKE` when a Pending Task appears; no continuous polling while idle; one Worker has one active Task; Worker PASS is not Architect ACCEPT; `SYSTEM-BRIDGE-ALERT` is not a Result and must not be emitted merely because the Worker is offline between Tasks;
-6. TB-P05-GATE is Architect-accepted. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P06-T029 = ACCEPTED. COMMERCIAL_READINESS_GATE = PASSED. TB-P07-T001/R1/R2 = SUPERSEDED. TB-P07-T001-R3 = AWAITING_ARCHITECT_ACCEPT — Admin-first reconciliation; `CURRENT_UI_FOCUS` = ADMIN_ONLY; T001 catalog/variant foundation kept; Admin Product CRUD + media gallery + DataGrid saved views + Access Control human UX. `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED — not `USER_VISUAL_ACCEPTED` / `PRODUCT_FULLY_READY` / `PRODUCTION_GO_LIVE_READY` / `SELLER_PANEL_COMPLETE` / `FULL_VARIANT_MATRIX_LIVE`. Evidence under `docs/evidence/TB-P07-T001-R3/`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. HOME/PDP visual review remains OPEN_FOR_USER_FEEDBACK.
+6. TB-P05-GATE is Architect-accepted. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P06-T029 = ACCEPTED. COMMERCIAL_READINESS_GATE = PASSED. TB-P07-T001/R1/R2/R3/R4 = SUPERSEDED. TB-P07-T001-R5 = AWAITING_ARCHITECT_ACCEPT — Admin+Seller UI/UX polish; `CURRENT_FOCUS` = UI_UX_ONLY; `ADMIN_UI` = PRIORITY_1; `SELLER_UI` = PRIORITY_2; `BACKEND_FEATURE_EXPANSION` = FROZEN; T001 catalog/variant foundation kept. `FULL_VARIANT_MATRIX` = DEFERRED; `FACETED_SEARCH_INTEGRATION` = DEFERRED; `VISUAL_CONTRACT` = SHOPEIVA_LOCKED — not `USER_VISUAL_ACCEPTED` / `PRODUCT_FULLY_READY` / `PRODUCTION_GO_LIVE_READY` / `SELLER_PANEL_COMPLETE` / `FULL_VARIANT_MATRIX_LIVE`. Evidence under `docs/evidence/TB-P07-T001-R5/`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. HOME/PDP visual review remains OPEN_FOR_USER_FEEDBACK.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.

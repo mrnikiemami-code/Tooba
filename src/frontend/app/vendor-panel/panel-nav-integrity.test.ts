@@ -20,6 +20,7 @@ const LIVE_HREFS = [
   "/vendor-panel/tickets",
   "/vendor-panel/analytics",
   "/vendor-panel/wallet",
+  "/vendor-panel/access-control",
   "/vendor-panel/settings",
 ] as const;
 
@@ -68,6 +69,10 @@ test("vendor shell menuItems keep tickets live behind support.view", () => {
   const ticketsEntry = menuBlock.slice(ticketsIdx, ticketsIdx + 160);
   assert.ok(ticketsEntry.includes("live: true"), "tickets must be live");
   assert.ok(ticketsEntry.includes('viewPermission: "support.view"'), "tickets must project support.view");
+
+  const accessIdx = menuBlock.indexOf('href: "/vendor-panel/access-control"');
+  assert.ok(accessIdx >= 0, "access-control href missing from live menuItems");
+  assert.ok(accessIdx < settingsIdx, "access-control must appear before settings");
 
   for (const href of DEFERRED_HREFS) {
     assert.equal(menuBlock.includes(`"${href}"`), false, `${href} must not appear in live menuItems`);

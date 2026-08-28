@@ -313,7 +313,7 @@ export function ProductListScreen() {
   if (denied) {
     return (
       <main data-testid="admin-auth-denied">
-        <ErrorState title="دسترسی مجاز نیست" detail="Host هویت فعلی را مدیر تشخیص نداد." onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+        <ErrorState title="دسترسی مجاز نیست" detail="سامانه هویت فعلی را مدیر تشخیص نداد." onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       </main>
     );
   }
@@ -336,8 +336,8 @@ export function ProductListScreen() {
       </div>
       {createOpen ? (
         <section className="mb-5 max-w-xl rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-          <h2 className="text-base font-semibold">ایجاد محصول Catalog</h2>
-          <p className="mt-1 text-sm text-muted">عنوان + slug + گونهٔ پیش‌فرض؛ قیمت و موجودی روی Product نیست</p>
+          <h2 className="text-base font-semibold">ایجاد محصول کاتالوگ</h2>
+          <p className="mt-1 text-sm text-muted">عنوان + نشانی صفحه + گونهٔ پیش‌فرض؛ قیمت و موجودی روی خود محصول نیست</p>
           <div className="mt-4 grid gap-3">
             <label className="flex flex-col gap-1 text-sm">
               عنوان
@@ -348,7 +348,7 @@ export function ProductListScreen() {
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              slug (اختیاری)
+              نشانی صفحه (اختیاری)
               <input
                 className="min-h-11 rounded-ds border border-border bg-surface px-3"
                 value={createSlug}
@@ -371,13 +371,13 @@ export function ProductListScreen() {
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
           <p className="text-sm text-muted" data-testid="list-source">
-            {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری فهرست" : "اتصال فروشگاه برقرار نیست"}
+            {source === "host" ? "دادهٔ زندهٔ فروشگاه" : source === "loading" ? "در حال بارگذاری فهرست" : "اتصال فروشگاه برقرار نیست"}
           </p>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} محصول</span>
         </div>
         <div className="p-2 md:p-4">
           {source === "error" ? (
-            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+            <ErrorState title="فروشگاه در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
             <DataGrid columns={columns} queryAdapter={queryAdapter} savedViewStore={savedViewStore} />
           )}

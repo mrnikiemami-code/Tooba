@@ -1,0 +1,36 @@
+﻿
+> tooba-web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.1s
+   Linting and checking validity of types ...
+
+./app/admin/product-list.tsx
+123:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+284:60  Warning: React Hook useMemo has a missing dependency: 'onLifecycle'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+node.exe : Failed to compile.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./app/vendor-panel/vendor-shell.tsx:82:10
+Type error: Cannot find name 'NAV'.
+
+[0m [90m 80 |[39m [90m/** فهرست hrefهای زنده Seller برای بستهٔ اسکرین‌شات. */[39m
+ [90m 81 |[39m [36mexport[39m [36mfunction[39m listLiveVendorNavHrefs()[33m:[39m string[] {
+[31m[1m>[22m[39m[90m 82 |[39m   [36mreturn[39m [33mNAV[39m[33m.[39mfilter((item) [33m=>[39m 
+item[33m.[39mlive)[33m.[39mmap((item) [33m=>[39m item[33m.[39mhref)[33m;[39m
+ [90m    |[39m          [31m[1m^[22m[39m
+ [90m 83 |[39m }
+ [90m 84 |[39m
+ [90m 85 |[39m [36mfunction[39m isActivePath(pathname[33m:[39m string[33m,[39m href[33m:[39m 
+string)[33m:[39m boolean {[0m
+Next.js build worker exited with code: 1 and signal: null

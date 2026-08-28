@@ -148,18 +148,18 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     if (denied) {
       return (
         <div className="p-6" data-testid="admin-auth-denied">
-          <ErrorState title="دسترسی مجاز نیست" detail="Host هویت فعلی را مدیر تشخیص نداد." onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
+          <ErrorState title="دسترسی مجاز نیست" detail="سامانه هویت فعلی را مدیر تشخیص نداد." onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
         </div>
       );
     }
     if (source === "error") {
       return (
         <div className="p-6">
-          <ErrorState title="Workspace از Host خوانده نشد" detail={error ?? undefined} onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
+          <ErrorState title="فضای کار محصول از فروشگاه خوانده نشد" detail={error ?? undefined} onRetry={reload} retryLabel={faWorkspaceMessages.retry} />
         </div>
       );
     }
-    return <p className="p-6 text-base">در حال بارگذاری Workspace…</p>;
+    return <p className="p-6 text-base">در حال بارگذاری فضای کار محصول…</p>;
   }
 
   const current = view;
@@ -238,7 +238,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   async function onAttachMedia() {
     const assetId = attachAssetId.trim();
     if (!assetId) {
-      setError("شناسهٔ دارایی رسانه (Guid) لازم است");
+      setError("شناسهٔ دارایی رسانه لازم است");
       return;
     }
     setBusy(true);
@@ -493,7 +493,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                   <li key={variant.variantId} className="rounded-ds border border-border p-3">
                     <p className="font-medium">{humanizeFingerprint(variant.fingerprint)}</p>
                     <p className="mt-1 text-sm text-muted" dir="ltr">
-                      {variant.catalogCodeSeam ?? "بدون کد Catalog"}
+                      {variant.catalogCodeSeam ?? "بدون کد کاتالوگ"}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Badge tone={statusTone(variant.status)}>{formatAdminStatus(variant.status)}</Badge>
@@ -529,7 +529,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                 <thead className="border-b border-border text-sm text-muted">
                   <tr>
                     <th className="py-2">ترکیب</th>
-                    <th>کد Catalog</th>
+                    <th>کد کاتالوگ</th>
                     <th>وضعیت</th>
                     <th>پیشنهاد</th>
                     {canMutateCatalog ? <th>عملیات</th> : null}
@@ -627,7 +627,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                   </ul>
                 )}
                 <label className="mt-3 block text-sm">
-                  کد Catalog (اختیاری)
+                  کد کاتالوگ (اختیاری)
                   <input
                     className="mt-1 min-h-10 w-full max-w-md rounded-ds border border-border bg-surface px-3"
                     dir="ltr"
@@ -652,8 +652,8 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
             <Card>
               <p className="font-semibold">گالری تصویر</p>
               <p className="mt-1 text-sm text-muted">
-                پیش‌نمایش از <span dir="ltr">GET /v1/storefront/media/{"{id}"}</span> (SVG امن). بارگذاری باینری فایل DEFERRED است —
-                دارایی را با Guid پیوست کنید.
+                پیش‌نمایش تصویر از مسیر امن رسانهٔ ویترین (قالب SVG). بارگذاری فایل باینری هنوز فعال نیست —
+                دارایی را با شناسه پیوست کنید.
               </p>
               <p className="mt-2 hidden text-sm text-muted" data-testid="product-video-control">
                 کنترل ویدئو محصول مخفی است.
@@ -677,8 +677,8 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                         <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">اصلی</span>
                       ) : null}
                     </div>
-                    <p className="mt-2 truncate text-xs text-muted" dir="ltr">
-                      {item.mediaAssetId}
+                    <p className="mt-2 truncate text-xs text-muted">
+                      شناسه کوتاه: <span dir="ltr">{item.mediaAssetId.slice(0, 8)}</span>
                     </p>
                     <label className="mt-2 block text-sm">
                       متن جایگزین
@@ -723,7 +723,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                           className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
                           onClick={() => void onSaveAlt(item.mediaAssetId)}
                         >
-                          ذخیره alt
+                          ذخیره متن جایگزین
                         </button>
                         <button
                           type="button"
@@ -746,7 +746,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                 <p className="mt-1 text-sm text-muted">آپلود فایل تصویری در این Task پیاده‌سازی نشده است.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                   <label className="text-sm">
-                    MediaAssetId (Guid)
+                    شناسه دارایی رسانه
                     <input
                       className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
                       dir="ltr"
@@ -889,9 +889,9 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         {sectionId === "seo" ? (
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
-              <p className="text-sm text-muted">آمادگی SEO</p>
+              <p className="text-sm text-muted">آمادگی سئو</p>
               <p className="mt-2 text-xl font-semibold">{view.seo.slugSeam && view.seo.seoTitleSeam ? "آماده" : "ناقص"}</p>
-              <p className="mt-2 text-sm text-muted">slug و عنوان جستجو باید هر دو پر باشند.</p>
+              <p className="mt-2 text-sm text-muted">نشانی صفحه و عنوان جستجو باید هر دو پر باشند.</p>
             </Card>
             <Card>
               <p className="text-sm text-muted">نشانی و عنوان</p>
@@ -940,7 +940,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
             </div>
             <Card>
               <p className="font-semibold">عملیات چرخهٔ عمر</p>
-              <p className="mt-1 text-sm text-muted">انتشار از نوار Workspace؛ لغو انتشار / بایگانی / حذف امن اینجا.</p>
+              <p className="mt-1 text-sm text-muted">انتشار از نوار فضای کار؛ لغو انتشار / بایگانی / حذف امن اینجا.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"

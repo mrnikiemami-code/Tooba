@@ -71,6 +71,7 @@ export function Dialog({
 
 /**
  * کشو با قرارگیری منطقی: در RTL از inline-start (راست) باز می‌شود نه left ثابت.
+ * باز شدن با انتقال کوتاه و لایهٔ فشرده برای کاهش فضای خالی بزرگ.
  */
 export function Drawer({
   title,
@@ -83,21 +84,34 @@ export function Drawer({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const [entered, setEntered] = useState(false);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setEntered(false);
+      return;
+    }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.cancelAnimationFrame(frame);
+    };
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[var(--z-modal)]">
+    <div className={cn("fixed inset-0 z-[var(--z-modal)] transition-opacity duration-150", entered ? "opacity-100" : "opacity-0")}>
       <button type="button" aria-label="بستن پوشش" className="absolute inset-0 bg-foreground/30" onClick={onClose} />
-      <aside className="absolute top-0 start-0 h-full w-[min(24rem,100%)] overflow-auto bg-surface p-4 shadow-ds">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{title}</h2>
+      <aside
+        className={cn(
+          "absolute top-0 start-0 h-full w-[min(22rem,100%)] overflow-auto bg-surface p-3 shadow-ds transition-transform duration-200 ease-out",
+          entered ? "translate-x-0" : "ltr:-translate-x-3 rtl:translate-x-3",
+        )}
+      >
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">{title}</h2>
           <Button type="button" tone="ghost" onClick={onClose}>
             بستن
           </Button>

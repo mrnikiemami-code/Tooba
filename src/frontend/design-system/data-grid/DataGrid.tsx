@@ -5,7 +5,7 @@ import { cn } from "../cn";
 import { Button, Checkbox, EmptyState, ErrorState, Input, Select, Skeleton, Spinner } from "../primitives/core";
 import { Drawer } from "../primitives/overlays";
 import { FilterControl } from "./FilterControl";
-import { faGridMessages } from "./messages";
+import { faFilterOperatorLabels, faGridMessages } from "./messages";
 import { rowsToCsv } from "./query-engine";
 import {
   clampWidth,
@@ -32,6 +32,9 @@ import type {
   SavedGridView,
   SavedViewStore,
 } from "./types";
+
+/** عرض ثابت ستون انتخاب — با آفست چسبان ستون‌های sticky هماهنگ است. */
+const SELECTION_COLUMN_WIDTH = 44;
 
 export interface DataGridProps<T extends { id: string }> {
   columns: GridColumnDef<T>[];
@@ -72,8 +75,10 @@ export function DataGrid<T extends { id: string }>({
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [views, setViews] = useState<SavedGridView[]>([]);
   const [viewName, setViewName] = useState("");
+  const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [drawerDragId, setDrawerDragId] = useState<string | null>(null);
   const [narrow, setNarrow] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -121,28 +126,56 @@ export function DataGrid<T extends { id: string }>({
   const activeFilters = activeFilterEntries.length;
   const rowClass = density === "compact" ? "h-12" : "h-16";
   const exportIds = columns.filter((column) => column.exportable !== false).map((column) => column.id);
+  const ops = faFilterOperatorLabels;
 
   function filterChipLabel(columnId: string, value: GridFilterValue): string {
     const header = columns.find((column) => column.id === columnId)?.header ?? columnId;
     switch (value.kind) {
       case "text":
-        return `${header}: ${value.query}`;
-      case "number":
-        return `${header}: ${value.value}${value.valueTo != null ? `–${value.valueTo}` : ""}`;
-      case "money":
-        return `${header}: ${value.money.amount}`;
-      case "date":
-        return `${header}: ${value.iso}${value.isoTo ? `–${value.isoTo}` : ""}`;
+        return `${header}: ${ops[value.operator]} ${value.query}`;
+      case "number": {
+        const opLabel =
+          value.operator === "greaterThan"
+            ? ops.greaterThan
+            : value.operator === "lessThan"
+              ? ops.lessThan
+              : value.operator === "between"
+                ? ops.between
+                : ops.equals;
+        return `${header}: ${opLabel} ${value.value}${value.valueTo != null ? `–${value.valueTo}` : ""}`;
+      }
+      case "money": {
+        const opLabel =
+          value.operator === "greaterThan"
+            ? ops.greaterThan
+            : value.operator === "lessThan"
+              ? ops.lessThan
+              : value.operator === "between"
+                ? ops.between
+                : ops.equals;
+        return `${header}: ${opLabel} ${value.money.amount}${value.money.amountTo != null ? `–${value.money.amountTo}` : ""}`;
+      }
+      case "date": {
+        const opLabel =
+          value.operator === "before"
+            ? ops.before
+            : value.operator === "after"
+              ? ops.after
+              : value.operator === "between"
+                ? ops.between
+                : ops.on;
+        return `${header}: ${opLabel} ${value.iso}${value.isoTo ? `–${value.isoTo}` : ""}`;
+      }
       case "enum":
       case "status": {
         const options = columns.find((column) => column.id === columnId)?.enumOptions ?? [];
         const labels = value.values.map((code) => options.find((option) => option.value === code)?.label ?? code);
-        return `${header}: ${labels.join("، ")}`;
+        return `${header}: ${ops.equals} ${labels.join("، ")}`;
       }
       case "boolean":
-        return `${header}: ${value.state === "true" ? "بله" : "خیر"}`;
+        return `${header}: ${value.state === "true" ? ops.yes : value.state === "false" ? ops.no : ops.all}`;
       case "entity":
-        return `${header}: ${value.ids.length}`;
+        return `${header}: ${ops.equals} ${value.ids.length}`;
       default:
         return header;
     }
@@ -154,10 +187,27 @@ export function DataGrid<T extends { id: string }>({
       delete next[columnId];
       return { ...current, page: 1, filters: next };
     });
+    setActiveViewId(null);
   }
 
   function clearAllFilters() {
     setQuery((current) => ({ ...current, page: 1, filters: {}, search: undefined }));
+    setActiveViewId(null);
+  }
+
+  function applyView(view: SavedGridView) {
+    setQuery((current) => ({
+      ...current,
+      page: 1,
+      pageSize: view.pageSize,
+      filters: view.filters,
+      sorts: view.sorts,
+    }));
+    setLayout(view.layout);
+    if (view.density) {
+      setDensity(view.density);
+    }
+    setActiveViewId(view.id);
   }
 
   function download(content: string, name: string) {
@@ -174,6 +224,7 @@ export function DataGrid<T extends { id: string }>({
     if ((event.key === "Enter" || event.key === " ") && column.sortable !== false) {
       event.preventDefault();
       setQuery((current) => ({ ...current, page: 1, sorts: cycleSort(current.sorts, column.id) }));
+      setActiveViewId(null);
     }
   }
 
@@ -184,7 +235,10 @@ export function DataGrid<T extends { id: string }>({
           aria-label={messages.search}
           placeholder={messages.search}
           value={query.search ?? ""}
-          onChange={(event) => setQuery((current) => ({ ...current, page: 1, search: event.target.value }))}
+          onChange={(event) => {
+            setQuery((current) => ({ ...current, page: 1, search: event.target.value }));
+            setActiveViewId(null);
+          }}
         />
         <Button type="button" tone="secondary" onClick={() => setFiltersOpen(true)}>
           {messages.filters}
@@ -239,54 +293,81 @@ export function DataGrid<T extends { id: string }>({
         </span>
       </div>
       {savedViewStore ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <Input aria-label={messages.saveView} value={viewName} onChange={(event) => setViewName(event.target.value)} />
-          <Button
-            type="button"
-            tone="secondary"
-            onClick={() => {
-              const view: SavedGridView = {
-                id: crypto.randomUUID(),
-                name: viewName || "view",
-                filters: query.filters,
-                sorts: query.sorts,
-                layout,
-                pageSize: query.pageSize,
-                density,
-              };
-              void savedViewStore.save(view).then(() => savedViewStore.list().then(setViews));
-            }}
-          >
-            {messages.saveView}
-          </Button>
-          <Select
-            aria-label={messages.savedViews}
-            defaultValue=""
-            onChange={(event) => {
-              const view = views.find((item) => item.id === event.target.value);
-              if (!view) {
-                return;
-              }
-              setQuery((current) => ({
-                ...current,
-                page: 1,
-                pageSize: view.pageSize,
-                filters: view.filters,
-                sorts: view.sorts,
-              }));
-              setLayout(view.layout);
-              if (view.density) {
-                setDensity(view.density);
-              }
-            }}
-          >
-            <option value="">{messages.savedViews}</option>
-            {views.map((view) => (
-              <option key={view.id} value={view.id}>
-                {view.name}
-              </option>
-            ))}
-          </Select>
+        <div className="flex flex-col gap-2 rounded-ds border border-border bg-secondary/40 p-2" data-testid="grid-saved-views">
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              aria-label={messages.saveView}
+              placeholder={messages.defaultViewName}
+              value={viewName}
+              onChange={(event) => setViewName(event.target.value)}
+              className="min-w-[10rem] flex-1"
+            />
+            <Button
+              type="button"
+              tone="secondary"
+              onClick={() => {
+                const view: SavedGridView = {
+                  id: crypto.randomUUID(),
+                  name: viewName.trim() || messages.defaultViewName,
+                  filters: query.filters,
+                  sorts: query.sorts,
+                  layout,
+                  pageSize: query.pageSize,
+                  density,
+                };
+                void savedViewStore.save(view).then(() =>
+                  savedViewStore.list().then((next) => {
+                    setViews(next);
+                    setActiveViewId(view.id);
+                    setViewName("");
+                  }),
+                );
+              }}
+            >
+              {messages.saveView}
+            </Button>
+          </div>
+          {views.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {views.map((view) => {
+                const active = activeViewId === view.id;
+                return (
+                  <li key={view.id} className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      className={cn(
+                        "inline-flex min-h-9 items-center rounded-full px-3 text-sm font-medium transition-colors",
+                        active ? "bg-primary text-primary-foreground shadow-sm" : "bg-surface border border-border hover:bg-secondary",
+                      )}
+                      aria-pressed={active}
+                      onClick={() => applyView(view)}
+                    >
+                      {view.name || messages.defaultViewName}
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex size-8 items-center justify-center rounded-full text-muted hover:bg-danger/10 hover:text-danger"
+                      aria-label={`${messages.deleteView}: ${view.name || messages.defaultViewName}`}
+                      onClick={() => {
+                        void savedViewStore.remove(view.id).then(() =>
+                          savedViewStore.list().then((next) => {
+                            setViews(next);
+                            if (activeViewId === view.id) {
+                              setActiveViewId(null);
+                            }
+                          }),
+                        );
+                      }}
+                    >
+                      ×
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="px-1 text-xs text-muted">{messages.savedViews}</p>
+          )}
         </div>
       ) : null}
       {activeFilters > 0 ? (
@@ -297,7 +378,7 @@ export function DataGrid<T extends { id: string }>({
               type="button"
               className="inline-flex min-h-9 items-center gap-2 rounded-full bg-secondary px-3 text-sm"
               onClick={() => clearFilter(columnId)}
-              aria-label={`پاک کردن فیلتر ${columnId}`}
+              aria-label={`${messages.clearFilter} ${columns.find((column) => column.id === columnId)?.header ?? columnId}`}
             >
               <span>{filterChipLabel(columnId, value)}</span>
               <span aria-hidden>×</span>
@@ -348,7 +429,7 @@ export function DataGrid<T extends { id: string }>({
         <ul className="flex flex-col gap-2">
           {rows.map((row) => (
             <li key={row.id} className="rounded-ds border border-border bg-surface p-3">
-              <Checkbox hideLabel label={messages.selectPage} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
+              <Checkbox hideLabel label={messages.selectRow} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
               {visibleColumns.map((column) => (
                 <p key={column.id} className="text-sm">
                   <span className="text-muted">{column.header}: </span>
@@ -364,7 +445,10 @@ export function DataGrid<T extends { id: string }>({
           <table className="w-full table-fixed border-separate border-spacing-0 text-base">
             <thead className="sticky top-0 z-10 bg-surface">
               <tr>
-                <th className="sticky start-0 z-20 bg-surface p-2">
+                <th
+                  className="sticky start-0 z-20 border-b border-border bg-surface p-1"
+                  style={{ width: SELECTION_COLUMN_WIDTH, minWidth: SELECTION_COLUMN_WIDTH, maxWidth: SELECTION_COLUMN_WIDTH }}
+                >
                   <Checkbox
                     label={messages.selectPage}
                     checked={rows.length > 0 && rows.every((row) => selected.has(row.id))}
@@ -385,6 +469,7 @@ export function DataGrid<T extends { id: string }>({
                         if (dragId) {
                           setLayout((current) => ({ ...current, order: moveColumn(current.order, dragId, column.id) }));
                           setDragId(null);
+                          setActiveViewId(null);
                         }
                       }}
                       tabIndex={0}
@@ -398,6 +483,7 @@ export function DataGrid<T extends { id: string }>({
                         const target = visible[index + (event.key === "ArrowRight" ? 1 : -1)];
                         if (target) {
                           setLayout((current) => ({ ...current, order: moveColumn(current.order, column.id, target) }));
+                          setActiveViewId(null);
                         }
                       }}
                       style={{
@@ -405,7 +491,7 @@ export function DataGrid<T extends { id: string }>({
                         minWidth: column.minWidth,
                         maxWidth: column.maxWidth,
                         position: column.sticky ? "sticky" : undefined,
-                        insetInlineStart: side === "inline-start" ? 48 : undefined,
+                        insetInlineStart: side === "inline-start" ? SELECTION_COLUMN_WIDTH : undefined,
                         insetInlineEnd: side === "inline-end" ? 0 : undefined,
                       }}
                       className="relative border-b border-border bg-surface p-3 text-start"
@@ -413,10 +499,13 @@ export function DataGrid<T extends { id: string }>({
                       <button
                         type="button"
                         className="font-medium"
-                        onClick={() =>
-                          column.sortable !== false &&
-                          setQuery((current) => ({ ...current, page: 1, sorts: cycleSort(current.sorts, column.id) }))
-                        }
+                        onClick={() => {
+                          if (column.sortable === false) {
+                            return;
+                          }
+                          setQuery((current) => ({ ...current, page: 1, sorts: cycleSort(current.sorts, column.id) }));
+                          setActiveViewId(null);
+                        }}
                         onKeyDown={(event) => onSortKey(column, event)}
                       >
                         {column.header}
@@ -426,7 +515,7 @@ export function DataGrid<T extends { id: string }>({
                         <span
                           role="separator"
                           aria-orientation="vertical"
-                          aria-label={`${column.header} width`}
+                          aria-label={`${messages.resizeColumn} ${column.header}`}
                           className="absolute end-0 top-0 z-10 h-full w-2 cursor-col-resize after:absolute after:inset-y-3 after:end-0 after:w-px after:bg-border hover:after:bg-primary"
                           onPointerDown={(event) => {
                             event.preventDefault();
@@ -443,6 +532,7 @@ export function DataGrid<T extends { id: string }>({
                                   [column.id]: clampWidth(initial + delta, column.minWidth, column.maxWidth),
                                 },
                               }));
+                              setActiveViewId(null);
                             };
                             const onUp = () => {
                               window.removeEventListener("pointermove", onMove);
@@ -461,8 +551,11 @@ export function DataGrid<T extends { id: string }>({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className={cn(rowClass, "bg-surface")}>
-                  <td className="sticky start-0 bg-surface p-2">
-                    <Checkbox hideLabel label="انتخاب ردیف" checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
+                  <td
+                    className="sticky start-0 bg-surface p-1"
+                    style={{ width: SELECTION_COLUMN_WIDTH, minWidth: SELECTION_COLUMN_WIDTH, maxWidth: SELECTION_COLUMN_WIDTH }}
+                  >
+                    <Checkbox hideLabel label={messages.selectRow} checked={selected.has(row.id)} onChange={() => setSelected((current) => toggleSelection(current, row.id))} />
                   </td>
                   {visibleColumns.map((column) => {
                     const side = column.sticky ? stickyLogicalSide(column.sticky) : undefined;
@@ -470,7 +563,7 @@ export function DataGrid<T extends { id: string }>({
                       <td
                         key={column.id}
                         className="border-b border-border p-3"
-                        style={{ position: column.sticky ? "sticky" : undefined, insetInlineStart: side === "inline-start" ? 48 : undefined }}
+                        style={{ position: column.sticky ? "sticky" : undefined, insetInlineStart: side === "inline-start" ? SELECTION_COLUMN_WIDTH : undefined }}
                       >
                         {(column.cell ?? ((item: T) => String(column.accessor(item))))(row)}
                       </td>
@@ -504,7 +597,7 @@ export function DataGrid<T extends { id: string }>({
         </Button>
       </div>
       <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={messages.filters}>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {columns
             .filter((column) => column.filterable !== false && column.filterKind)
             .map((column) => (
@@ -512,7 +605,10 @@ export function DataGrid<T extends { id: string }>({
                 key={column.id}
                 column={column}
                 value={query.filters[column.id]}
-                onChange={(value) => setQuery((current) => ({ ...current, page: 1, filters: { ...current.filters, [column.id]: value } }))}
+                onChange={(value) => {
+                  setQuery((current) => ({ ...current, page: 1, filters: { ...current.filters, [column.id]: value } }));
+                  setActiveViewId(null);
+                }}
                 entityLookup={entityLookup}
               />
             ))}
@@ -527,27 +623,57 @@ export function DataGrid<T extends { id: string }>({
         </div>
       </Drawer>
       <Drawer open={columnsOpen} onClose={() => setColumnsOpen(false)} title={messages.columns}>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
           {layout.order.map((id) => {
             const column = columns.find((item) => item.id === id);
             if (!column || column.hideable === false) {
               return null;
             }
             return (
-              <div key={id} className="flex items-center gap-2">
-                <Checkbox
-                  label={column.header}
-                  checked={layout.visibility[id] !== false}
-                  onChange={() => setLayout((current) => ({ ...current, visibility: { ...current.visibility, [id]: current.visibility[id] === false } }))}
-                />
+              <div
+                key={id}
+                draggable={column.reorderable !== false}
+                onDragStart={() => setDrawerDragId(id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (drawerDragId) {
+                    setLayout((current) => ({ ...current, order: moveColumn(current.order, drawerDragId, id) }));
+                    setDrawerDragId(null);
+                    setActiveViewId(null);
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-ds border border-border bg-surface px-2 py-1.5",
+                  drawerDragId === id ? "opacity-60" : null,
+                )}
+              >
+                <span
+                  className="inline-flex size-8 cursor-grab items-center justify-center rounded-ds text-muted active:cursor-grabbing"
+                  aria-label={messages.dragColumn}
+                  title={messages.dragColumn}
+                >
+                  ⋮⋮
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Checkbox
+                    label={column.header}
+                    checked={layout.visibility[id] !== false}
+                    onChange={() => {
+                      setLayout((current) => ({ ...current, visibility: { ...current.visibility, [id]: current.visibility[id] === false } }));
+                      setActiveViewId(null);
+                    }}
+                  />
+                </div>
                 <Button
                   type="button"
                   tone="ghost"
+                  aria-label={messages.moveColumnUp}
                   onClick={() => {
                     const index = layout.order.indexOf(id);
                     const target = layout.order[index - 1];
                     if (target) {
                       setLayout((current) => ({ ...current, order: moveColumn(current.order, id, target) }));
+                      setActiveViewId(null);
                     }
                   }}
                 >
@@ -556,11 +682,13 @@ export function DataGrid<T extends { id: string }>({
                 <Button
                   type="button"
                   tone="ghost"
+                  aria-label={messages.moveColumnDown}
                   onClick={() => {
                     const index = layout.order.indexOf(id);
                     const target = layout.order[index + 1];
                     if (target) {
                       setLayout((current) => ({ ...current, order: moveColumn(current.order, id, target) }));
+                      setActiveViewId(null);
                     }
                   }}
                 >
@@ -572,15 +700,16 @@ export function DataGrid<T extends { id: string }>({
           <Button
             type="button"
             tone="secondary"
-            onClick={() =>
+            onClick={() => {
               setLayout(
                 defaultLayout(
                   columns.map((column) => column.id),
                   Object.fromEntries(columns.map((column) => [column.id, column.width])),
                   Object.fromEntries(columns.map((column) => [column.id, column.defaultVisible !== false])),
                 ),
-              )
-            }
+              );
+              setActiveViewId(null);
+            }}
           >
             {messages.restoreColumns}
           </Button>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ShoppingBag } from "lucide-react";
 import { DataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { executeGridQuery } from "../../../design-system/data-grid/query-engine";
 import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
@@ -167,19 +168,32 @@ export default function VendorOrdersPage() {
     );
   }
 
+  const paidCount = rows.filter((r) => r.paymentState === "Paid").length;
+  const pendingCount = rows.filter((r) => r.paymentState !== "Paid" && r.paymentState !== "Cancelled").length;
+
   return (
-    <main>
-      <div className="mb-5">
-        <p className="text-sm text-muted">خانه / سفارش‌ها</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">سفارش‌های فروشنده</h1>
-        <p className="mt-1 text-base text-muted">فقط برش سفارش همین فروشنده</p>
+    <main className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center">
+            <ShoppingBag className="w-5 h-5 text-[#2563EB]" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">مدیریت سفارشات</h2>
+            <p className="text-xs text-gray-500">
+              {rows.length.toLocaleString("fa-IR")} سفارش · {paidCount.toLocaleString("fa-IR")} پرداخت‌شده ·{" "}
+              {pendingCount.toLocaleString("fa-IR")} در انتظار
+            </p>
+          </div>
+        </div>
       </div>
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
-          <p className="text-sm text-muted" data-testid="seller-orders-source">
+
+      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 md:px-5">
+          <p className="text-sm text-gray-500" data-testid="seller-orders-source">
             {source === "host" ? "دادهٔ زندهٔ Host" : source === "loading" ? "در حال بارگذاری" : "اتصال Host برقرار نیست"}
           </p>
-          <span className="rounded-full bg-secondary px-3 py-1 text-xs tabular-nums">
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs tabular-nums text-gray-700">
             {rows.length.toLocaleString("fa-IR")} سفارش
           </span>
         </div>

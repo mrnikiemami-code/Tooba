@@ -38,7 +38,7 @@ export function FilterControl<T>({
       <label className="block text-sm">
         {column.header}
         <Select
-          aria-label={`${column.header} operator`}
+          aria-label={`${column.header} — ${ops.contains}`}
           value={value?.kind === "text" ? value.operator : "contains"}
           onChange={(event) =>
             onChange({
@@ -74,7 +74,7 @@ export function FilterControl<T>({
       <label className="block text-sm">
         {column.header}
         <Select
-          aria-label={`${column.header} operator`}
+          aria-label={`${column.header} — ${ops.equals}`}
           value={operator}
           onChange={(event) => {
             const next = event.target.value as typeof operator;
@@ -105,7 +105,7 @@ export function FilterControl<T>({
         {operator === "between" ? (
           <Input
             type="number"
-            aria-label={`${column.header} to`}
+            aria-label={`${column.header} — ${ops.lessThan}`}
             value={amountTo ?? ""}
             onChange={(event) => {
               const nextTo = Number(event.target.value);
@@ -127,7 +127,7 @@ export function FilterControl<T>({
       <label className="block text-sm">
         {column.header}
         <Select
-          aria-label={`${column.header} operator`}
+          aria-label={`${column.header} — ${ops.on}`}
           value={operator}
           onChange={(event) =>
             onChange({
@@ -158,7 +158,7 @@ export function FilterControl<T>({
         {operator === "between" ? (
           <Input
             type="date"
-            aria-label={`${column.header} to`}
+            aria-label={`${column.header} — ${ops.between}`}
             value={value?.kind === "date" ? (value.isoTo ?? "") : ""}
             onChange={(event) =>
               onChange({

@@ -120,18 +120,27 @@ export default function VendorSettingsPage() {
               <Settings className="w-5 h-5 text-[#2563EB]" />
               <h1 className="text-lg font-bold text-gray-900">تنظیمات فروشنده</h1>
             </div>
-            <p className="text-sm text-gray-500 mt-1">پروفایل عملیاتی فروشگاه از Host</p>
           </div>
 
           <div className="flex overflow-x-auto border-b border-gray-200 scrollbar-hide">
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-[#2563EB] text-[#2563EB]"
+              className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 border-[#2563EB] text-[#2563EB]"
               data-testid="vendor-settings-tab-store"
             >
               <Store className="w-4 h-4" />
               فروشگاه
             </button>
+            {/* تب‌های Shopeiva بدون backend — فقط کروم غیرفعال */}
+            <span className="flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-400 cursor-not-allowed">
+              پروفایل
+            </span>
+            <span className="flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-400 cursor-not-allowed">
+              اطلاعیه‌ها
+            </span>
+            <span className="flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 border-transparent text-gray-400 cursor-not-allowed">
+              ظاهر
+            </span>
           </div>
 
           <div className="p-4 md:p-6">

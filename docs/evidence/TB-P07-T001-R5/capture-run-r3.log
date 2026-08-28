@@ -1,0 +1,29 @@
+﻿context {
+  adminActorUserId: '01a036c2-970e-7000-8eb7-94bf5cc2d8db',
+  sellerPartyId: '01a030d1-40cb-7000-8abe-6d31739956c5',
+  sellerActorUserId: '01a03628-3f68-7000-844d-99f1cadb54b0',
+  adminStorage: { 'tooba.adminActorUserId': '01a036c2-970e-7000-8eb7-94bf5cc2d8db' },
+  sellerStorage: {
+    'tooba.sellerActorUserId': '01a03628-3f68-7000-844d-99f1cadb54b0',
+    'tooba.sellerPartyId': '01a030d1-40cb-7000-8abe-6d31739956c5'
+  }
+}
+wrote screenshots\admin\01-admin-dashboard.png 6814
+wrote screenshots\admin\02-products.png 6814
+wrote screenshots\admin\03-catalog-attributes.png 6814
+wrote screenshots\admin\04-category-schema.png 6814
+wrote screenshots\admin\05-orders.png 6814
+wrote screenshots\admin\06-fulfillments.png 6814
+wrote screenshots\admin\07-returns.png 6814
+wrote screenshots\admin\08-settlement.png 6814
+wrote screenshots\admin\09-payouts.png 6814
+wrote screenshots\admin\10-content.png 6814
+wrote screenshots\admin\11-stories.png 6814
+wrote screenshots\admin\12-page-composition.png 6814
+wrote screenshots\admin\13-sellers.png 6814
+wrote screenshots\admin\14-customers.png 6814
+wrote screenshots\admin\15-reviews.png 6814
+wrote screenshots\admin\16-tickets.png 6814
+wrote screenshots\admin\17-gift-cards.png 6814
+wrote screenshots\admin\18-wallets.png 6814
+wrote screenshots\admin\19-promotions.png 6704

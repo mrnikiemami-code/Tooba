@@ -145,6 +145,7 @@ const MODULE_FA: Record<string, string> = {
   AccessControl: "کنترل دسترسی",
   Support: "پشتیبانی",
   Wallet: "کیف پول",
+  GiftCard: "کارت هدیه",
 };
 
 const MODULE_EN: Record<string, string> = {
@@ -166,6 +167,7 @@ const MODULE_EN: Record<string, string> = {
   AccessControl: "Access control",
   Support: "Support",
   Wallet: "Wallet",
+  GiftCard: "Gift card",
 };
 
 /** Locale از `document.documentElement.lang` — پیش‌فرض فارسی. */

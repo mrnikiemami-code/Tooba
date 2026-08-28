@@ -86,7 +86,7 @@ function Denied({ retry }: { retry: () => void }) {
     <div data-testid="admin-auth-denied">
       <ErrorState
         title="دسترسی مجاز نیست"
-        detail="Host هویت فعلی را مدیر تشخیص نداد. تغییر مسیر یا هدر مرورگر مجوز ایجاد نمی‌کند."
+        detail="سامانه هویت فعلی را مدیر تشخیص نداد. تغییر مسیر یا هدر مرورگر مجوز ایجاد نمی‌کند."
         onRetry={retry}
         retryLabel={faWorkspaceMessages.retry}
       />
@@ -116,11 +116,11 @@ export function AdminDashboardScreen() {
         <p className="text-white/80 text-sm">خانه / داشبورد</p>
         <h1 className="mt-1 text-2xl md:text-3xl font-black">مرکز عملیات توبا</h1>
         <p className="mt-2 text-sm text-white/90 max-w-2xl leading-7">
-          خلاصهٔ زنده از Host. درآمد، GMV، نرخ تبدیل و نمودار ساختگی نمایش داده نمی‌شود.
+          خلاصهٔ زنده از فروشگاه. درآمد، مجموع فروش، نرخ تبدیل و نمودار ساختگی نمایش داده نمی‌شود.
         </p>
       </div>
       {result.state === "error" ? (
-        <ErrorState title="Host در دسترس نیست" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+        <ErrorState title="فروشگاه در دسترس نیست" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -151,7 +151,7 @@ export function AdminDashboardScreen() {
           </div>
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-black">وضعیت سفارش و عرضه</h2>
-            <p className="mt-1 text-sm text-gray-500">اعداد فقط از Admin Dashboard API.</p>
+            <p className="mt-1 text-sm text-gray-500">اعداد فقط از داشبورد عملیاتی فروشگاه.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <Metric label="پیشنهاد فعال" value={result.data?.activeOffers} />
               <Metric label="پرداخت‌شده" value={result.data?.paidOrders} />
@@ -216,12 +216,12 @@ function GridPage<T extends { id: string }>({
       <PageHeading title={title} description={description} />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">{state === "ok" ? "دادهٔ زندهٔ Host" : state === "loading" ? "در حال بارگذاری" : "اتصال برقرار نیست"}</span>
+          <span className="text-sm text-muted">{state === "ok" ? "دادهٔ زندهٔ فروشگاه" : state === "loading" ? "در حال بارگذاری" : "اتصال برقرار نیست"}</span>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} مورد</span>
         </div>
         <div className="p-2 md:p-4">
           {state === "error" ? (
-            <ErrorState title="Host در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+            <ErrorState title="فروشگاه در دسترس نیست" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
             <DataGrid columns={columns} queryAdapter={queryAdapter} savedViewStore={savedViewStore} />
           )}
@@ -317,32 +317,59 @@ export function AdminOrdersScreen() {
   );
 }
 
+const fulfillmentStatusEnumOptions = [
+  { value: "ReadyToFulfill", label: formatFulfillmentStatus("ReadyToFulfill") },
+  { value: "Processing", label: formatFulfillmentStatus("Processing") },
+  { value: "Packed", label: formatFulfillmentStatus("Packed") },
+  { value: "Dispatched", label: formatFulfillmentStatus("Dispatched") },
+  { value: "InTransit", label: formatFulfillmentStatus("InTransit") },
+  { value: "Delivered", label: formatFulfillmentStatus("Delivered") },
+  { value: "Failed", label: formatFulfillmentStatus("Failed") },
+  { value: "Cancelled", label: formatFulfillmentStatus("Cancelled") },
+];
+
 const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
   {
-    id: "fulfillmentId",
-    header: "شناسه",
-    accessor: (row) => row.fulfillmentId,
-    cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/fulfillments/${row.fulfillmentId}`}>{row.fulfillmentId.slice(0, 8)}</Link>,
-    width: 120,
-    minWidth: 96,
-    maxWidth: 160,
+    id: "recipientName",
+    header: "گیرنده",
+    accessor: (row) => row.recipientName,
+    cell: (row) => (
+      <Link className="min-w-0 hover:underline" href={`/admin/fulfillments/${row.fulfillmentId}`}>
+        <span className="block truncate font-semibold text-primary">{row.recipientName || "بدون نام"}</span>
+        <span className="block truncate text-xs text-muted">شناسه کوتاه: {row.fulfillmentId.slice(0, 8)}</span>
+      </Link>
+    ),
+    width: 180,
+    minWidth: 140,
+    maxWidth: 260,
     sticky: "start",
     filterKind: "text",
     sortable: true,
   },
-  { id: "checkoutId", header: "شناسه تسویه", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
-  { id: "recipientName", header: "گیرنده", accessor: (row) => row.recipientName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
+  {
+    id: "fulfillmentId",
+    header: "شناسه کوتاه",
+    accessor: (row) => row.fulfillmentId,
+    cell: (row) => <span className="font-mono text-xs text-muted">{row.fulfillmentId.slice(0, 8)}</span>,
+    width: 110,
+    minWidth: 88,
+    maxWidth: 140,
+    filterKind: "text",
+    sortable: true,
+    defaultVisible: false,
+  },
+  { id: "checkoutId", header: "شناسه کوتاه تسویه", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
   { id: "cityName", header: "شهر", accessor: (row) => row.cityName, width: 110, minWidth: 90, maxWidth: 150, filterKind: "text", sortable: true },
   { id: "shipmentCount", header: "محموله", accessor: (row) => row.shipmentCount, cell: (row) => row.shipmentCount.toLocaleString("fa-IR"), width: 90, minWidth: 72, maxWidth: 110, sortable: true },
-  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <span className={fulfillmentStatusBadgeClass(row.status)}>{formatFulfillmentStatus(row.status)}</span>, width: 140, minWidth: 120, maxWidth: 180, filterKind: "status" },
+  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <span className={fulfillmentStatusBadgeClass(row.status)}>{formatFulfillmentStatus(row.status)}</span>, width: 140, minWidth: 120, maxWidth: 180, filterKind: "status", enumOptions: fulfillmentStatusEnumOptions },
 ];
 
-/** فهرست زندهٔ fulfillment برای Admin. */
+/** فهرست زندهٔ ارسال و تحویل برای Admin. */
 export function AdminFulfillmentsScreen() {
-  return <GridPage title="ارسال / fulfillment" description="نظارت عملیاتی بر fulfillment و محموله‌ها" loader={loadAdminFulfillments} columns={fulfillmentColumns} />;
+  return <GridPage title="ارسال و تحویل" description="نظارت عملیاتی بر ارسال و تحویل و محموله‌ها" loader={loadAdminFulfillments} columns={fulfillmentColumns} />;
 }
 
-/** جزئیات fulfillment برای Admin (read-only). */
+/** جزئیات ارسال و تحویل برای Admin (فقط‌خواندنی). */
 export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId: string }) {
   const [result, setResult] = useState<AdminResult<FulfillmentSnapshot>>({ state: "ok", data: null, status: 0 });
   const refresh = () => void loadAdminFulfillmentDetail(fulfillmentId).then(setResult);
@@ -352,18 +379,25 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
   return (
     <main>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title="جزئیات fulfillment" description={snapshot?.fulfillmentId.slice(0, 8) ?? "در حال بارگذاری"} />
+        <PageHeading
+          title="جزئیات ارسال و تحویل"
+          description={
+            snapshot
+              ? `${snapshot.recipientName || "بدون نام"} · شناسه کوتاه: ${snapshot.fulfillmentId.slice(0, 8)}`
+              : "در حال بارگذاری"
+          }
+        />
         <Link className="text-sm text-primary hover:underline" href="/admin/fulfillments">بازگشت به فهرست</Link>
       </div>
       {result.state === "error" ? (
-        <ErrorState title="fulfillment خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+        <ErrorState title="ارسال و تحویل خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : snapshot ? (
         <div className="grid gap-5">
           <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
             <div className="flex flex-wrap gap-3 items-center">
               <span className={fulfillmentStatusBadgeClass(snapshot.status)}>{formatFulfillmentStatus(snapshot.status)}</span>
-              <span className="text-sm text-muted">تسویه: {snapshot.checkoutId.slice(0, 8)}</span>
-              <span className="text-sm text-muted">سفارش فروشنده: {snapshot.sellerOrderId.slice(0, 8)}</span>
+              <span className="text-sm text-muted">تسویه (شناسه کوتاه): {snapshot.checkoutId.slice(0, 8)}</span>
+              <span className="text-sm text-muted">سفارش فروشنده (شناسه کوتاه): {snapshot.sellerOrderId.slice(0, 8)}</span>
             </div>
             <p className="mt-4 text-sm">{snapshot.recipientName} · {snapshot.provinceName}، {snapshot.cityName} · {snapshot.postalAddress}</p>
           </section>
@@ -377,12 +411,26 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
   );
 }
 
+const returnStatusEnumOptions = [
+  { value: "Requested", label: formatReturnStatus("Requested") },
+  { value: "Approved", label: formatReturnStatus("Approved") },
+  { value: "Rejected", label: formatReturnStatus("Rejected") },
+  { value: "RefundProcessing", label: formatReturnStatus("RefundProcessing") },
+  { value: "Completed", label: formatReturnStatus("Completed") },
+  { value: "RefundFailed", label: formatReturnStatus("RefundFailed") },
+  { value: "Cancelled", label: formatReturnStatus("Cancelled") },
+];
+
 const returnColumns: GridColumnDef<ReturnListRow>[] = [
   {
     id: "returnRequestId",
-    header: "شناسه",
+    header: "شناسه کوتاه",
     accessor: (row) => row.returnRequestId,
-    cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/returns/${row.returnRequestId}`}>{row.returnRequestId.slice(0, 8)}</Link>,
+    cell: (row) => (
+      <Link className="font-semibold text-primary hover:underline" href={`/admin/returns/${row.returnRequestId}`}>
+        {row.returnRequestId.slice(0, 8)}
+      </Link>
+    ),
     width: 120,
     minWidth: 96,
     maxWidth: 160,
@@ -390,7 +438,7 @@ const returnColumns: GridColumnDef<ReturnListRow>[] = [
     filterKind: "text",
     sortable: true,
   },
-  { id: "sellerOrderId", header: "سفارش", accessor: (row) => row.sellerOrderId, cell: (row) => row.sellerOrderId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
+  { id: "sellerOrderId", header: "سفارش (شناسه کوتاه)", accessor: (row) => row.sellerOrderId, cell: (row) => row.sellerOrderId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
   { id: "itemCount", header: "اقلام", accessor: (row) => row.itemCount, width: 80, minWidth: 64, maxWidth: 96, sortable: true },
   {
     id: "refundAmount",
@@ -411,6 +459,7 @@ const returnColumns: GridColumnDef<ReturnListRow>[] = [
     minWidth: 120,
     maxWidth: 180,
     filterKind: "status",
+    enumOptions: returnStatusEnumOptions,
   },
   {
     id: "createdAt",
@@ -426,7 +475,7 @@ const returnColumns: GridColumnDef<ReturnListRow>[] = [
 
 /** فهرست زندهٔ مرجوعی برای Admin. */
 export function AdminReturnsScreen() {
-  return <GridPage title="مرجوعی / بازپرداخت" description="نظارت بر درخواست‌های مرجوعی و refund" loader={loadAdminReturns} columns={returnColumns} />;
+  return <GridPage title="مرجوعی و بازپرداخت" description="نظارت بر درخواست‌های مرجوعی و بازپرداخت" loader={loadAdminReturns} columns={returnColumns} />;
 }
 
 /** جزئیات مرجوعی Admin با retry refund. */
@@ -441,7 +490,10 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
   return (
     <main>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title="جزئیات مرجوعی" description={snapshot?.returnRequestId.slice(0, 8) ?? "در حال بارگذاری"} />
+        <PageHeading
+          title="جزئیات مرجوعی"
+          description={snapshot ? `شناسه کوتاه: ${snapshot.returnRequestId.slice(0, 8)}` : "در حال بارگذاری"}
+        />
         <Link className="text-sm text-primary hover:underline" href="/admin/returns">بازگشت به فهرست</Link>
       </div>
       {result.state === "error" ? (
@@ -665,7 +717,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
           </section>
           {detail.payment ? (
             <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-              <h2 className="font-semibold">پرداخت (Host)</h2>
+              <h2 className="font-semibold">پرداخت (سامانه)</h2>
               <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Info label="PaymentId" value={detail.payment.paymentId} />
                 <Info label="وضعیت درگاه" value={formatAdminStatus(detail.payment.status)} />
@@ -756,7 +808,7 @@ const settlementBalanceColumns: GridColumnDef<SettlementBalanceRow>[] = [
   },
   {
     id: "reserved",
-    header: "رزرو payout",
+    header: "رزرو پرداخت به فروشنده",
     accessor: (row) => row.reservedPayouts,
     cell: (row) => formatSettlementMoney(row.reservedPayouts, row.currency),
     width: 130,
@@ -780,14 +832,22 @@ export function AdminSettlementScreen() {
   return (
     <GridPage
       title="تسویه فروشندگان"
-      description="ماندهٔ posted و قابل برداشت هر فروشنده marketplace"
+      description="ماندهٔ ثبت‌شده و قابل برداشت هر فروشنده بازارگاه"
       loader={loadAdminSettlementBalanceRows}
       columns={settlementBalanceColumns}
     />
   );
 }
 
-/** صف payout با پردازش admin. */
+const payoutStatusEnumOptions = [
+  { value: "Requested", label: formatPayoutStatus("Requested") },
+  { value: "Processing", label: formatPayoutStatus("Processing") },
+  { value: "Succeeded", label: formatPayoutStatus("Succeeded") },
+  { value: "Failed", label: formatPayoutStatus("Failed") },
+  { value: "Cancelled", label: formatPayoutStatus("Cancelled") },
+];
+
+/** صف پرداخت به فروشنده با پردازش admin. */
 export function AdminPayoutQueueScreen() {
   const [state, setState] = useState<AdminLoadState | "loading">("loading");
   const [rows, setRows] = useState<PayoutQueueRow[]>([]);
@@ -804,7 +864,12 @@ export function AdminPayoutQueueScreen() {
       id: "seller",
       header: "فروشنده",
       accessor: (row) => row.sellerPartyId,
-      cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}…</span>,
+      cell: (row) => (
+        <span className="text-sm">
+          <span className="block text-muted">شناسه کوتاه</span>
+          <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}</span>
+        </span>
+      ),
       width: 130,
       minWidth: 100,
       maxWidth: 170,
@@ -829,6 +894,7 @@ export function AdminPayoutQueueScreen() {
       minWidth: 95,
       maxWidth: 150,
       filterKind: "status",
+      enumOptions: payoutStatusEnumOptions,
     },
     {
       id: "created",
@@ -866,12 +932,12 @@ export function AdminPayoutQueueScreen() {
   if (state === "denied") return <Denied retry={refresh} />;
   return (
     <main data-testid="admin-payout-queue">
-      <PageHeading title="صف payout" description="درخواست‌های برداشت فروشندگان marketplace" />
+      <PageHeading title="صف پرداخت به فروشنده" description="درخواست‌های برداشت فروشندگان بازارگاه" />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} درخواست</div>
         <div className="p-2 md:p-4">
           {state === "error" ? (
-            <ErrorState title="صف payout خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+            <ErrorState title="صف پرداخت خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
             <DataGrid columns={columns} queryAdapter={queryAdapter} />
           )}
@@ -920,7 +986,7 @@ export function AdminContentScreen() {
     },
     {
       id: "slug",
-      header: "slug",
+      header: "نشانی صفحه",
       accessor: (row) => row.slug,
       cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.slug}</span>,
       width: 160,
@@ -985,7 +1051,7 @@ export function AdminContentScreen() {
   return (
     <main data-testid="admin-content">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title="محتوا / بلاگ" description="ایجاد، انتشار و SEO مقالات Content" />
+        <PageHeading title="محتوا / بلاگ" description="ایجاد، انتشار و بهینه‌سازی جستجوی مقالات" />
         <button type="button" className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white" onClick={() => setShowCreate(true)}>مقاله جدید</button>
       </div>
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
@@ -1005,14 +1071,14 @@ export function AdminContentScreen() {
             <h2 className="mb-4 text-lg font-bold">ایجاد پیش‌نویس</h2>
             <div className="space-y-3">
               {([
-                ["slug", "slug"],
+                ["slug", "نشانی صفحه"],
                 ["title", "عنوان"],
                 ["excerpt", "چکیده"],
                 ["body", "بدنه"],
                 ["authorDisplayName", "نویسنده"],
                 ["category", "دسته"],
-                ["seoTitle", "SEO title"],
-                ["seoDescription", "SEO description"],
+                ["seoTitle", "عنوان جستجو"],
+                ["seoDescription", "توضیح جستجو"],
               ] as const).map(([key, label]) => (
                 <label key={key} className="block text-sm">
                   <span className="mb-1 block text-gray-600">{label}</span>

@@ -125,6 +125,12 @@ export interface GridMessages {
   exportServer: string;
   savedViews: string;
   saveView: string;
+  deleteView: string;
+  defaultViewName: string;
+  moveColumnUp: string;
+  moveColumnDown: string;
+  dragColumn: string;
+  resizeColumn: string;
   densityComfortable: string;
   densityCompact: string;
   previous: string;
@@ -132,8 +138,10 @@ export interface GridMessages {
   pageSize: string;
   selected: string;
   selectPage: string;
+  selectRow: string;
   clearSelection: string;
   clearAllFilters: string;
+  clearFilter: string;
   loading: string;
   empty: string;
   emptyFiltered: string;

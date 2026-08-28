@@ -102,6 +102,30 @@ body {
   line-height: 1.5;
 }
 
+/* Shopeiva-native drawer motion (vendor/admin mobile shell) */
+@keyframes tooba-slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-in.slide-in-from-right {
+  animation-name: tooba-slide-in-from-right;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.animate-in.duration-200 {
+  animation-duration: 200ms;
+}
+
+.animate-in.duration-300 {
+  animation-duration: 300ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

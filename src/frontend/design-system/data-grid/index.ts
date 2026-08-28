@@ -33,6 +33,6 @@ export {
   visibleExportColumns,
 } from "./serialize";
 export { executeGridQuery, rowsToCsv } from "./query-engine";
-export { enGridMessages, faGridMessages } from "./messages";
+export { enGridMessages, faGridMessages, faFilterOperatorLabels, enFilterOperatorLabels, filterOperatorLabelsFor } from "./messages";
 export { DataGrid, createMemorySavedViewStore } from "./DataGrid";
 export type { DataGridProps } from "./DataGrid";

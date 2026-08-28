@@ -622,7 +622,7 @@ export function AccessControlCenter({
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? null;
 
   return (
-    <main className="space-y-6" data-testid="access-control-center" data-mode={mode}>
+    <div className="space-y-6" data-testid="access-control-center" data-mode={mode}>
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 md:p-6">
         <div className="flex items-center gap-3">
           <span className="w-10 h-10 bg-[#2563EB]/10 text-[#2563EB] rounded-xl flex items-center justify-center">
@@ -1242,6 +1242,6 @@ export function AccessControlCenter({
           </button>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 }
