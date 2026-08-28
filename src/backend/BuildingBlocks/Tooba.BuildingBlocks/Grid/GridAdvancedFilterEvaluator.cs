@@ -1,9 +1,9 @@
-namespace Tooba.Host.Grid;
+namespace Tooba.BuildingBlocks.Grid;
 
 /// <summary>
 /// ارزیابی left-to-right برای Advanced Filter: ((A op1 B) op2 C).
 /// </summary>
-public static class AdminProductGridAdvancedFilterEvaluator
+public static class GridAdvancedFilterEvaluator
 {
     /// <summary>اتصال‌دهنده‌های and/or را به ترتیب چپ→راست روی مجموعهٔ idها اعمال می‌کند.</summary>
     public static HashSet<Guid> EvaluateLeftToRight(

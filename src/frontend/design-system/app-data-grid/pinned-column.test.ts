@@ -40,12 +40,9 @@ test("theme applies visible row separators", () => {
 
 test("product list keeps actions column pinned to rtl grid end", () => {
   const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
-  assert.match(source, /colId:\s*"actions"/);
-  assert.match(source, /pinned:\s*actionsPin/);
-  assert.match(source, /pinnedGridEdge\("rtl"\)/);
-  assert.match(source, /lockPinned:\s*true/);
-  assert.match(source, /lockPosition:\s*actionsPin/);
-  assert.match(source, /ProductActionsCell/);
+  assert.match(source, /buildPinnedActionsColumnDef/);
+  assert.match(source, /direction:\s*"rtl"/);
+  assert.match(source, /AppGridRowActionsCell/);
   assert.match(source, /admin-product-view-/);
   assert.match(source, /admin-product-edit-/);
   assert.match(source, /admin-product-delete-/);

@@ -59,14 +59,23 @@ import { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";
 import type { StatusFilterOption } from "./status-header-filter-panel";
 import { AppColumnHeader } from "./app-column-header";
 import { gridTooltipText } from "./use-overflow-tooltip";
+import { resolveAppGridCapabilities, type AppGridCapabilities } from "./app-grid-capabilities";
+import type { LocaleKey } from "./locale-text";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 export interface AppDataGridProps<T extends { id: string }> {
+  /** شناسه پایدار گرید — برای Saved View isolation و telemetry (مثلاً grid.admin.products) */
+  gridId?: string;
   columnDefs: ColDef<T>[];
   queryAdapter: GridQueryAdapter<T>;
   locale?: "fa" | "en";
   direction?: "rtl" | "ltr";
+  capabilities?: AppGridCapabilities;
+  /** اسم موجودیت در footer صفحه‌بندی */
+  rowCountNoun?: { fa: string; en: string };
+  /** override پیام‌های toolbar/drawer بدون fork CSS */
+  messageOverrides?: Partial<Record<LocaleKey, string>>;
   savedViewStore?: SavedViewStore;
   bulkActions?: GridBulkAction<T>[];
   getExportRow?: (row: T) => string[];
@@ -93,10 +102,14 @@ const GRID_HEADER_HEIGHT = 48;
  * AG Grid state به queryAdapter نگاشت می‌شود؛ backend مدل خام AG Grid نمی‌بیند.
  */
 export function AppDataGrid<T extends { id: string }>({
+  gridId,
   columnDefs,
   queryAdapter,
   locale = "fa",
   direction = "rtl",
+  capabilities: capabilitiesInput,
+  rowCountNoun,
+  messageOverrides,
   savedViewStore,
   bulkActions = [],
   getExportRow,
@@ -108,7 +121,11 @@ export function AppDataGrid<T extends { id: string }>({
   externalFilterFields = [],
   statusFilterOptions = [],
 }: AppDataGridProps<T>) {
-  const messages = useMemo(() => resolveGridLocale(locale), [locale]);
+  const capabilities = useMemo(() => resolveAppGridCapabilities(capabilitiesInput), [capabilitiesInput]);
+  const messages = useMemo(
+    () => ({ ...resolveGridLocale(locale), ...messageOverrides }) as Record<LocaleKey, string>,
+    [locale, messageOverrides],
+  );
   const localeText = useMemo(() => buildAgGridLocaleText(locale), [locale]);
   const [query, setQuery] = useState<GridServerQuery>(DEFAULT_GRID_QUERY);
   const [rows, setRows] = useState<T[]>([]);
@@ -645,9 +662,10 @@ export function AppDataGrid<T extends { id: string }>({
   const rowTo = Math.min(query.page * query.pageSize, total);
 
   return (
-    <div dir={direction} className="w-full" data-app-grid-shell>
+    <div dir={direction} className="w-full" data-app-grid-shell data-grid-id={gridId}>
       <div data-app-grid-toolbar>
         <div data-app-grid-toolbar-row>
+          {capabilities.search ? (
           <div data-app-grid-search-wrap>
             <input
               type="search"
@@ -659,6 +677,7 @@ export function AppDataGrid<T extends { id: string }>({
               aria-label={messages.search}
             />
           </div>
+          ) : null}
           {hasActiveFiltering ? (
             <button
               type="button"
@@ -672,7 +691,7 @@ export function AppDataGrid<T extends { id: string }>({
               {messages.clearAllFilters}
             </button>
           ) : null}
-          {advancedFilterColumns.length > 0 ? (
+          {capabilities.advancedFilter && advancedFilterColumns.length > 0 ? (
             <button
               type="button"
               className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
@@ -687,6 +706,7 @@ export function AppDataGrid<T extends { id: string }>({
               ) : null}
             </button>
           ) : null}
+          {capabilities.columnManager ? (
           <button
             type="button"
             className="inline-flex min-h-9 items-center rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
@@ -695,18 +715,20 @@ export function AppDataGrid<T extends { id: string }>({
           >
             {messages.columns}
           </button>
-          {getExportRow ? (
-            <>
-              <button
-                type="button"
-                data-app-grid-toolbar-btn
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm font-medium shadow-sm hover:bg-secondary"
-                onClick={() => void exportCurrent("csv")}
-                data-testid="app-grid-export-csv"
-              >
-                <FileDown className="size-4 shrink-0 text-primary" aria-hidden />
-                {messages.exportCsv}
-              </button>
+          ) : null}
+          {capabilities.csvExport && getExportRow ? (
+            <button
+              type="button"
+              data-app-grid-toolbar-btn
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm font-medium shadow-sm hover:bg-secondary"
+              onClick={() => void exportCurrent("csv")}
+              data-testid="app-grid-export-csv"
+            >
+              <FileDown className="size-4 shrink-0 text-primary" aria-hidden />
+              {messages.exportCsv}
+            </button>
+          ) : null}
+          {capabilities.excelExport && getExportRow ? (
               <button
                 type="button"
                 data-app-grid-toolbar-btn
@@ -717,15 +739,14 @@ export function AppDataGrid<T extends { id: string }>({
                 <FileSpreadsheet className="size-4 shrink-0 text-primary" aria-hidden />
                 {messages.exportExcel}
               </button>
-            </>
           ) : null}
-          {selected.length > 0 ? (
+          {capabilities.rowSelection && selected.length > 0 ? (
             <span className="text-sm text-muted tabular-nums" data-testid="app-grid-selected-count">
               {messages.selectedCount}: {selected.length.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")}
             </span>
           ) : null}
         </div>
-        {savedViewStore ? (
+        {capabilities.savedViews && savedViewStore ? (
           <SavedViewsToolbar
             locale={locale}
             messages={{
@@ -924,14 +945,22 @@ export function AppDataGrid<T extends { id: string }>({
           ensureDomOrder
           animateRows
           suppressDragLeaveHidesColumns
-          rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }}
-          selectionColumnDef={{
-            headerName: "",
-            width: 52,
-            minWidth: 48,
-            maxWidth: 56,
-            cellClass: "app-grid-cell-align-center",
-          }}
+          rowSelection={
+            capabilities.rowSelection
+              ? { mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }
+              : undefined
+          }
+          selectionColumnDef={
+            capabilities.rowSelection
+              ? {
+                  headerName: "",
+                  width: 52,
+                  minWidth: 48,
+                  maxWidth: 56,
+                  cellClass: "app-grid-cell-align-center",
+                }
+              : undefined
+          }
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}
           onFilterChanged={onFilterChanged}
@@ -960,7 +989,8 @@ export function AppDataGrid<T extends { id: string }>({
           {messages.showingRows}{" "}
           {rowFrom.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {locale === "fa" ? "تا" : "to"}{" "}
           {rowTo.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {locale === "fa" ? "از" : "of"}{" "}
-          {total.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")} {locale === "fa" ? "محصول" : "rows"}
+          {total.toLocaleString(locale === "fa" ? "fa-IR" : "en-US")}{" "}
+          {rowCountNoun ? (locale === "fa" ? rowCountNoun.fa : rowCountNoun.en) : locale === "fa" ? "ردیف" : "rows"}
         </span>
         <div className="flex flex-wrap items-center gap-1">
           <button

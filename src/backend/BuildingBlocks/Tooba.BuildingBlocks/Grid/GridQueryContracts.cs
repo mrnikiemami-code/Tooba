@@ -1,4 +1,4 @@
-namespace Tooba.Host.Grid;
+namespace Tooba.BuildingBlocks.Grid;
 
 /// <summary>
 /// قرارداد پرس‌وجوی گرید سمت سرور. AG Grid یا هر UI دیگر نباید مستقیماً به Host برسد.
@@ -28,9 +28,7 @@ public sealed record GridAdvancedFilterExpression(
     IReadOnlyList<GridAdvancedFilterCondition> Conditions,
     IReadOnlyList<string> Connectors);
 
-/// <summary>
-/// درخواست صفحه‌بندی/مرتب‌سازی/فیلتر گرید.
-/// </summary>
+/// <summary>درخواست صفحه‌بندی/مرتب‌سازی/فیلتر گرید.</summary>
 public sealed record GridQueryRequest(
     int Page,
     int PageSize,
@@ -39,9 +37,7 @@ public sealed record GridQueryRequest(
     IReadOnlyList<GridFilterRequest> Filters,
     GridAdvancedFilterExpression? AdvancedFilter = null);
 
-/// <summary>
-/// پاسخ صفحه‌بندی‌شدهٔ گرید.
-/// </summary>
+/// <summary>پاسخ صفحه‌بندی‌شدهٔ گرید.</summary>
 public sealed record GridPageResponse<T>(
     IReadOnlyList<T> Items,
     int Page,

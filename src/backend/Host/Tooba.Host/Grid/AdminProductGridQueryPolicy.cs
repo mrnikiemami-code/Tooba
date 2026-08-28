@@ -1,17 +1,18 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 
 namespace Tooba.Host.Grid;
 
 /// <summary>
 /// اعتبارسنجی و نرمال‌سازی GridQuery برای گرید محصولات Admin.
 /// </summary>
-public static class AdminProductGridQueryPolicy
+public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
 {
     /// <summary>حداکثر اندازهٔ صفحهٔ مجاز.</summary>
-    public const int MaxPageSize = 1000;
+    public const int MaxPageSize = GridQueryPolicyBase.DefaultMaxPageSize;
 
     /// <summary>اندازهٔ پیش‌فرض صفحه.</summary>
-    public const int DefaultPageSize = 20;
+    public const int DefaultPageSize = GridQueryPolicyBase.DefaultDefaultPageSize;
 
     private static readonly HashSet<string> SortableFields =
     [
@@ -28,30 +29,36 @@ public static class AdminProductGridQueryPolicy
 
     private static readonly HashSet<string> FilterableFields = SortableFields;
 
-    private static readonly HashSet<string> TextOperators = ["contains", "equals", "startsWith", "notContains", "notEqual", "endsWith", "blank", "notBlank"];
-    private static readonly HashSet<string> NumberOperators = ["equals", "notEqual", "greaterThan", "greaterThanOrEqual", "lessThan", "lessThanOrEqual", "between", "blank", "notBlank"];
-    private static readonly HashSet<string> DateOperators = ["on", "before", "after", "between", "blank", "notBlank"];
-    private static readonly HashSet<string> EnumOperators = ["equals", "notEqual", "in", "notIn", "blank", "notBlank"];
-
-    /// <summary>
-    /// Query ورودی را sanitize می‌کند یا خطای 400 می‌دهد.
-    /// </summary>
+    /// <summary>نقطهٔ ورود static برای endpointهای موجود.</summary>
     public static GridQueryRequest Normalize(GridQueryRequest request)
     {
-        var page = request.Page < 1 ? 1 : request.Page;
-        var pageSize = request.PageSize < 1 ? DefaultPageSize : Math.Min(request.PageSize, MaxPageSize);
-        var search = string.IsNullOrWhiteSpace(request.Search) ? null : request.Search.Trim();
-        if (search?.Length > 200)
+        try
         {
-            search = search[..200];
+            return NormalizeInternal(request);
         }
+        catch (GridQueryValidationException ex)
+        {
+            throw new PlatformHttpException(ex.StatusCode, ex.Message, ex.ErrorCode);
+        }
+    }
+
+    GridQueryRequest IGridQueryPolicy.Normalize(GridQueryRequest request) => Normalize(request);
+
+    private static GridQueryRequest NormalizeInternal(GridQueryRequest request)
+    {
+        var (page, pageSize) = GridQueryPolicyBase.NormalizePaging(
+            request.Page,
+            request.PageSize,
+            MaxPageSize,
+            DefaultPageSize);
+        var search = GridQueryPolicyBase.NormalizeSearch(request.Search);
 
         var sorts = (request.Sort ?? [])
             .Where(s => !string.IsNullOrWhiteSpace(s.Field) && SortableFields.Contains(s.Field))
             .Select(s => new GridSortRequest(
                 s.Field.Trim(),
                 string.Equals(s.Direction, "asc", StringComparison.OrdinalIgnoreCase) ? "asc" : "desc"))
-            .Take(3)
+            .Take(GridQueryPolicyBase.DefaultMaxSortCount)
             .ToList();
         if (sorts.Count == 0)
         {
@@ -65,26 +72,18 @@ public static class AdminProductGridQueryPolicy
         {
             if (string.IsNullOrWhiteSpace(filter.Field) || !FilterableFields.Contains(filter.Field))
             {
-                throw new PlatformHttpException(400, "فیلد فیلتر مجاز نیست.", "grid.filter.field.invalid");
+                throw GridQueryValidationException.FilterFieldInvalid();
             }
 
             var op = (filter.Operator ?? string.Empty).Trim();
             ValidateOperator(filter.Field, op);
-            filters.Add(NormalizeFilter(filter));
+            filters.Add(GridQueryPolicyBase.NormalizeFilter(filter));
         }
 
         var advancedFilter = NormalizeAdvancedFilter(request.AdvancedFilter);
 
         return new GridQueryRequest(page, pageSize, search, sorts, filters, advancedFilter);
     }
-
-    private static GridFilterRequest NormalizeFilter(GridFilterRequest filter) =>
-        new(
-            filter.Field,
-            (filter.Operator ?? string.Empty).Trim(),
-            NormalizeScalar(filter.Value),
-            NormalizeScalar(filter.ValueTo),
-            filter.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).Take(20).ToList());
 
     internal static GridAdvancedFilterExpression? NormalizeAdvancedFilter(GridAdvancedFilterExpression? expression)
     {
@@ -93,28 +92,15 @@ public static class AdminProductGridQueryPolicy
             return null;
         }
 
-        var expectedConnectors = Math.Max(conditions.Count - 1, 0);
-        var rawConnectors = expression.Connectors ?? [];
-        if (rawConnectors.Count != expectedConnectors)
-        {
-            throw new PlatformHttpException(400, "تعداد اتصال‌دهندهٔ فیلتر پیشرفته نامعتبر است.", "grid.advancedFilter.connector.count");
-        }
-
-        var connectors = rawConnectors.Select(c => c.ToLowerInvariant()).ToList();
-        foreach (var connector in connectors)
-        {
-            if (connector is not ("and" or "or"))
-            {
-                throw new PlatformHttpException(400, "اتصال‌دهندهٔ فیلتر پیشرفته مجاز نیست.", "grid.advancedFilter.connector.invalid");
-            }
-        }
+        GridQueryPolicyBase.ValidateAdvancedConnectors(conditions.Count, expression.Connectors);
+        var connectors = (expression.Connectors ?? []).Select(c => c.ToLowerInvariant()).ToList();
 
         var normalizedConditions = new List<GridAdvancedFilterCondition>();
         foreach (var condition in conditions)
         {
             if (string.IsNullOrWhiteSpace(condition.Field) || !FilterableFields.Contains(condition.Field))
             {
-                throw new PlatformHttpException(400, "فیلد فیلتر پیشرفته مجاز نیست.", "grid.advancedFilter.field.invalid");
+                throw GridQueryValidationException.AdvancedFieldInvalid();
             }
 
             var op = (condition.Operator ?? string.Empty).Trim();
@@ -123,33 +109,33 @@ public static class AdminProductGridQueryPolicy
                 string.IsNullOrWhiteSpace(condition.Id) ? Guid.NewGuid().ToString("N") : condition.Id.Trim(),
                 condition.Field.Trim(),
                 op,
-                NormalizeScalar(condition.Value),
-                NormalizeScalar(condition.ValueTo),
-                condition.Values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.Ordinal).Take(20).ToList()));
+                GridQueryPolicyBase.NormalizeScalar(condition.Value),
+                GridQueryPolicyBase.NormalizeScalar(condition.ValueTo),
+                condition.Values?
+                    .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Select(v => v.Trim())
+                    .Distinct(StringComparer.Ordinal)
+                    .Take(20)
+                    .ToList()));
         }
 
-        return new GridAdvancedFilterExpression(
-            normalizedConditions,
-            connectors.Select(c => c.ToLowerInvariant()).ToList());
+        return new GridAdvancedFilterExpression(normalizedConditions, connectors);
     }
-
-    private static string? NormalizeScalar(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static void ValidateOperator(string field, string op)
     {
         var allowed = field switch
         {
-            "title" or "categorySummary" => TextOperators,
-            "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => NumberOperators,
-            "status" => EnumOperators,
-            "updatedAt" => DateOperators,
-            _ => throw new PlatformHttpException(400, "فیلد فیلتر نامعتبر است.", "grid.filter.field.invalid"),
+            "title" or "categorySummary" => GridQueryOperators.Text,
+            "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => GridQueryOperators.Number,
+            "status" => GridQueryOperators.Enum,
+            "updatedAt" => GridQueryOperators.Date,
+            _ => throw GridQueryValidationException.FilterFieldInvalid(),
         };
 
         if (!allowed.Contains(op))
         {
-            throw new PlatformHttpException(400, "عملگر فیلتر مجاز نیست.", "grid.filter.operator.invalid");
+            throw GridQueryValidationException.FilterOperatorInvalid();
         }
     }
 }

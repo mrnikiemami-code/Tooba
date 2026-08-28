@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
 using Xunit;
 
@@ -13,7 +14,7 @@ public sealed class AdminProductGridAdvancedFilterTests
         var b = Set(2);
         var c = Set(3, 4);
 
-        var result = AdminProductGridAdvancedFilterEvaluator.EvaluateLeftToRight(
+        var result = GridAdvancedFilterEvaluator.EvaluateLeftToRight(
             [a, b, c],
             ["and", "or"]);
 
@@ -27,7 +28,7 @@ public sealed class AdminProductGridAdvancedFilterTests
         var b = Set(1, 2);
         var c = Set(2);
 
-        var result = AdminProductGridAdvancedFilterEvaluator.EvaluateLeftToRight(
+        var result = GridAdvancedFilterEvaluator.EvaluateLeftToRight(
             [a, b, c],
             ["or", "and"]);
 

@@ -10,6 +10,7 @@ using Tooba.Pricing.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
 
 namespace Tooba.Host.Admin;

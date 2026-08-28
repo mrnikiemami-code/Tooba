@@ -6,6 +6,8 @@ using Tooba.Inventory.Infrastructure.Persistence;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Pricing.Infrastructure.Persistence;
 
+using Tooba.BuildingBlocks.Grid;
+
 namespace Tooba.Host.Grid;
 
 /// <summary>
@@ -110,7 +112,7 @@ internal sealed class AdminProductGridQueryEngine
             sets.Add(await ResolveFilterProductIdsAsync(filter, cancellationToken));
         }
 
-        return AdminProductGridAdvancedFilterEvaluator.EvaluateLeftToRight(sets, expression.Connectors);
+        return GridAdvancedFilterEvaluator.EvaluateLeftToRight(sets, expression.Connectors);
     }
 
     private async Task<HashSet<Guid>> ResolveFilterProductIdsAsync(

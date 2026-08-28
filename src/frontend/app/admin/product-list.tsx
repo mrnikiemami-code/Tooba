@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Edit2, Eye, Trash2 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
 import {
@@ -11,8 +10,14 @@ import {
   applyProductGridFilterHeader,
 } from "./product-grid-filter-matrix";
 import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
-import { pinnedGridEdge } from "../../design-system/app-data-grid/grid-direction";
-import { useOverflowTooltip } from "../../design-system/app-data-grid/use-overflow-tooltip";
+import {
+  AppGridBadgeCell,
+  AppGridLinkSubtitleCell,
+  AppGridMediaCell,
+  AppGridTruncatedCell,
+} from "../../design-system/app-data-grid/app-grid-cells";
+import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/app-grid-pinned-actions";
+import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
 import {
@@ -41,129 +46,64 @@ function stockClass(units: number): string {
   return "font-medium text-success";
 }
 
-function ProductActionsCell({
-  row,
-  onLifecycle,
-}: {
-  row: AdminProductListRow;
-  onLifecycle: (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => Promise<void>;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | undefined>();
-
-  async function onDelete() {
-    if (!window.confirm(`حذف «${row.title}»؟ در صورت وجود ارجاع، محصول بایگانی می‌شود.`)) {
-      return;
-    }
-    setBusy(true);
-    setMessage(undefined);
-    try {
-      await onLifecycle(row.id, "delete");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "خطا");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="app-grid-cell-content">
-      <div className="relative flex items-center justify-center gap-2 px-1">
-        <Link
-          href={`/admin/products/${row.id}?scope=view`}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="مشاهده"
-          title="مشاهده"
-          data-testid={`admin-product-view-${row.id}`}
-        >
-          <Eye className="size-4" aria-hidden />
-        </Link>
-        <Link
-          href={`/admin/products/${row.id}`}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="ویرایش"
-          title="ویرایش"
-          data-testid={`admin-product-edit-${row.id}`}
-        >
-          <Edit2 className="size-4" aria-hidden />
-        </Link>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void onDelete()}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-danger/30 bg-surface text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
-          aria-label="حذف"
-          title="حذف"
-          data-testid={`admin-product-delete-${row.id}`}
-        >
-          <Trash2 className="size-4" aria-hidden />
-        </button>
-        {message ? <p className="absolute top-full mt-1 max-w-[10rem] text-xs text-danger">{message}</p> : null}
-      </div>
-    </div>
-  );
+function buildProductRowActions(
+  onLifecycle: (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => Promise<void>,
+): AppGridRowAction<AdminProductListRow>[] {
+  return [
+    {
+      id: "view",
+      label: "مشاهده",
+      icon: Eye,
+      href: (row) => `/admin/products/${row.id}?scope=view`,
+      testId: (row) => `admin-product-view-${row.id}`,
+    },
+    {
+      id: "edit",
+      label: "ویرایش",
+      icon: Edit2,
+      href: (row) => `/admin/products/${row.id}`,
+      testId: (row) => `admin-product-edit-${row.id}`,
+    },
+    {
+      id: "delete",
+      label: "حذف",
+      icon: Trash2,
+      variant: "destructive",
+      confirm: (row) => `حذف «${row.title}»؟ در صورت وجود ارجاع، محصول بایگانی می‌شود.`,
+      onClick: (row) => onLifecycle(row.id, "delete"),
+      testId: (row) => `admin-product-delete-${row.id}`,
+    },
+  ];
 }
 
 function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
   const row = params.data;
   if (!row) return null;
   const thumb = row.primaryMediaAssetId ? storefrontMediaUrl(row.primaryMediaAssetId) : null;
-  return (
-    <div className="app-grid-cell-content app-grid-cell-media">
-      <div className="flex w-full items-center justify-end gap-2">
-      {thumb ? (
-        <img src={thumb} alt="" className="size-11 shrink-0 rounded-ds border border-border object-cover bg-secondary" />
-      ) : (
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-ds bg-secondary text-[10px] text-muted">بدون تصویر</span>
-      )}
-      </div>
-    </div>
-  );
+  return <AppGridMediaCell imageUrl={thumb} />;
 }
 
 function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const row = params.data;
-  const title = row?.title ?? "";
-  const code = row ? productCode(row.id) : "";
-  useOverflowTooltip(params, row ? `${title}\n${code}` : "", rootRef);
   if (!row) return null;
   return (
-    <div ref={rootRef} className="app-grid-cell-content">
-      <Link className="block min-w-0 text-right hover:underline" href={`/admin/products/${row.id}`}>
-      <span data-overflow-measure className="block truncate text-sm font-semibold leading-snug">{row.title}</span>
-      <span data-overflow-measure className="mt-0.5 block truncate text-xs text-muted" dir="ltr">
-        {code}
-      </span>
-    </Link>
-    </div>
+    <AppGridLinkSubtitleCell
+      params={params}
+      href={`/admin/products/${row.id}`}
+      title={row.title}
+      subtitle={productCode(row.id)}
+    />
   );
 }
 
 function StatusCell(params: ICellRendererParams<AdminProductListRow>) {
-  const rootRef = useRef<HTMLSpanElement>(null);
   const label = formatAdminStatus(String(params.value ?? ""));
-  useOverflowTooltip(params, label, rootRef);
-  return (
-    <div className="app-grid-cell-content">
-      <span ref={rootRef} data-overflow-measure className={productStatusClass(String(params.value ?? ""))}>
-        {label}
-      </span>
-    </div>
-  );
+  return <AppGridBadgeCell params={params} label={label} className={productStatusClass(String(params.value ?? ""))} />;
 }
 
 function StockCell(params: ICellRendererParams<AdminProductListRow>) {
-  const rootRef = useRef<HTMLSpanElement>(null);
   const label = Number(params.value ?? 0).toLocaleString("fa-IR");
-  useOverflowTooltip(params, label, rootRef);
-  return (
-    <div className="app-grid-cell-content">
-      <span ref={rootRef} data-overflow-measure className={stockClass(Number(params.value ?? 0))}>
-        {label}
-      </span>
-    </div>
-  );
+  return <AppGridTruncatedCell params={params} text={label} className={stockClass(Number(params.value ?? 0))} />;
 }
 
 const PRODUCT_STATUS_FILTER_OPTIONS = [
@@ -173,10 +113,8 @@ const PRODUCT_STATUS_FILTER_OPTIONS = [
 ] as const;
 
 function buildColumnDefs(
-  onLifecycle: (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => Promise<void>,
+  rowActions: AppGridRowAction<AdminProductListRow>[],
 ): ColDef<AdminProductListRow>[] {
-  const actionsPin = pinnedGridEdge("rtl");
-
   return [
     applyProductGridFilterHeader({
       colId: "media",
@@ -217,20 +155,10 @@ function buildColumnDefs(
     applyProductGridFilterHeader({ field: "variantCount", headerName: "گونه", width: 90, hide: true }),
     applyProductGridFilterHeader({ field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true }),
     applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
-    applyProductGridFilterHeader({
-      colId: "actions",
-      headerName: "عملیات",
-      width: 188,
-      minWidth: 176,
-      maxWidth: 240,
-      sortable: false,
-      lockVisible: true,
-      lockPinned: true,
-      lockPosition: actionsPin,
-      pinned: actionsPin,
-      cellClass: "app-grid-cell-align-center",
+    buildPinnedActionsColumnDef<AdminProductListRow>({
+      direction: "rtl",
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
-        params.data ? <ProductActionsCell row={params.data} onLifecycle={onLifecycle} /> : null,
+        params.data ? <AppGridRowActionsCell row={params.data} actions={rowActions} /> : null,
     }),
   ];
 }
@@ -256,7 +184,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
 ];
 
-/** فهرست Admin با AppDataGrid (AG Grid Community) + API GridQuery/GridPage. */
+/** فهرست Admin — adapter مرجع برای AppDataGrid canonical. */
 export function ProductListScreen() {
   const router = useRouter();
   const [denied, setDenied] = useState(false);
@@ -275,7 +203,8 @@ export function ProductListScreen() {
     setReloadToken((value) => value + 1);
   }, []);
 
-  const columnDefs = useMemo(() => buildColumnDefs(onLifecycle), [onLifecycle]);
+  const rowActions = useMemo(() => buildProductRowActions(onLifecycle), [onLifecycle]);
+  const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
@@ -364,6 +293,7 @@ export function ProductListScreen() {
           </p>
         ) : null}
         <AppDataGrid<AdminProductListRow>
+          gridId={ADMIN_PRODUCT_GRID_VIEW_KEY}
           columnDefs={columnDefs}
           queryAdapter={queryAdapter}
           advancedFilterColumns={PRODUCT_GRID_ADVANCED_FILTERS}
@@ -371,6 +301,11 @@ export function ProductListScreen() {
           statusFilterOptions={[...PRODUCT_STATUS_FILTER_OPTIONS]}
           locale="fa"
           direction="rtl"
+          rowCountNoun={{ fa: "محصول", en: "rows" }}
+          messageOverrides={{
+            advancedFilterTitle: "فیلتر پیشرفته محصولات",
+            advancedFilterSubtitle: "جستجوی دقیق میان محصولات",
+          }}
           savedViewStore={savedViewStore}
           exportFilenameBase="admin-products"
           exportHeaders={["محصول", "کد", "وضعیت", "دسته", "قیمت", "موجودی", "به‌روزرسانی"]}

@@ -18,8 +18,10 @@ test("gridTooltipText prefers formatted value", () => {
   assert.equal(gridTooltipText(42, "۴۲"), "۴۲");
 });
 
-test("product list custom cells register overflow tooltip hook", () => {
-  const source = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
-  assert.match(source, /useOverflowTooltip/);
-  assert.match(source, /data-overflow-measure/);
+test("product list uses shared overflow tooltip cells", () => {
+  const productList = readFileSync(join(dir, "..", "..", "app", "admin", "product-list.tsx"), "utf8");
+  const cells = readFileSync(join(dir, "app-grid-cells.tsx"), "utf8");
+  assert.match(productList, /AppGridLinkSubtitleCell/);
+  assert.match(cells, /useOverflowTooltip/);
+  assert.match(cells, /data-overflow-measure/);
 });

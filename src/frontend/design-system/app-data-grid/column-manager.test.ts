@@ -12,7 +12,7 @@ test("selection column label only in column manager not grid header", () => {
   assert.match(labels, /ag-Grid-SelectionColumn/);
   assert.match(labels, /انتخاب/);
   assert.match(labels, /Selection/);
-  assert.match(grid, /selectionColumnDef=\{\{\s*headerName:\s*""[\s\S]*/);
+  assert.match(grid, /selectionColumnDef=\{\s*capabilities\.rowSelection/);
 });
 
 test("column manager uses drag handle and no arrow reorder controls", () => {
