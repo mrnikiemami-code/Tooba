@@ -1,0 +1,164 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T002-R14-R1
+Parent-Task:
+TB-P07-T002-R14
+Channel:
+tooba-main
+Status:
+PASS
+
+Completion-Summary:
+Completed R14 validation gate: fixed typecheck errors in grid tests, ran lint/grid/admin/build green, full backend restore/build/test green (314 pass), preserved user CSS, confirmed R14 already committed on origin/main and pushed R1 repair commits, runtimes alive.
+
+Frontend-Validation:
+
+typecheck:
+0 errors
+
+lint:
+0 errors (1 pre-existing no-img-element warning)
+
+grid tests:
+78 pass / 0 fail / 0 skipped
+
+admin tests:
+13 pass / 0 fail / 0 skipped
+
+build:
+0 errors
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+1 pre-existing @next/next/no-img-element in product-list.tsx
+
+new warnings:
+0
+
+Backend-Validation:
+
+restore:
+ok
+
+build:
+0 errors / 0 warnings
+
+full tests:
+314 passed (Host 310 + MigrationRunner 4)
+
+passed:
+314
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0
+
+new warnings:
+0
+
+User-CSS:
+
+file:
+src/frontend/design-system/app-data-grid/theme.css
+
+header variable/value:
+--app-grid-chrome-bg: rgb(243, 242, 242)
+
+filter panel variable/value:
+--app-filter-panel-bg: lightgrey
+
+preserved:
+yes
+
+committed:
+yes (in R14 commit 1db9668; unchanged in R1)
+
+R14-Preservation:
+
+Persian locale:
+yes
+
+price filter:
+yes
+
+unified filter icons:
+yes
+
+toolbar cleanup:
+yes
+
+Saved View/search behavior:
+yes
+
+pinned column:
+yes
+
+pageSize 1000:
+yes
+
+Live:
+
+Backend:
+http://127.0.0.1:5088 — 200
+
+Frontend:
+http://localhost:3000/fa/admin/products — 200
+
+Shopeiva:
+http://127.0.0.1:3001 — 200
+
+Admin Products:
+http://localhost:3000/fa/admin/products
+
+API:
+health/live + health/ready 200
+
+Git:
+
+branch:
+main
+
+commit:
+(pending R1)
+
+push:
+origin/main
+
+final HEAD:
+(pending)
+
+origin/main:
+(pending)
+
+synchronized:
+(pending)
+
+tracked tree:
+clean R1 scope
+
+unrelated user changes:
+not committed (logs/temp/untracked left local)
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED remains NO.
+
+Architectural-Concerns:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

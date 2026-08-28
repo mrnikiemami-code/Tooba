@@ -34,5 +34,5 @@ test("AppDataGrid search uses draft commit not debounced load", () => {
   assert.match(source, /onSearchKeyDown/);
   assert.match(source, /event\.key === "Enter"/);
   assert.doesNotMatch(source, /searchTimerRef/);
-  assert.doesNotMatch(source, /setTimeout.*search/s);
+  assert.doesNotMatch(source, /setTimeout[\s\S]*search/);
 });

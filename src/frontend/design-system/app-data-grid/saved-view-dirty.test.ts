@@ -52,7 +52,7 @@ test("resolveViewApplyQuery preserves active filters when switching views", () =
   const current = {
     ...DEFAULT_GRID_QUERY,
     search: "phone",
-    filters: { title: { kind: "text", operator: "contains", value: "a" } },
+    filters: { title: { kind: "text" as const, operator: "contains" as const, query: "a" } },
   };
   const other: SavedGridView = { ...baseView, id: "v2", name: "Desktop", pageSize: 50 };
   const resolved = resolveViewApplyQuery(other, current, DEFAULT_GRID_QUERY.sorts, "phone");
@@ -66,7 +66,7 @@ test("resolveViewApplyQuery restores saved filters when none active", () => {
   const saved: SavedGridView = {
     ...baseView,
     search: "saved",
-    filters: { status: { kind: "enum", operator: "equals", value: "Published" } },
+    filters: { status: { kind: "status", operator: "equals", values: ["Published"] } },
   };
   const resolved = resolveViewApplyQuery(saved, DEFAULT_GRID_QUERY, DEFAULT_GRID_QUERY.sorts, "");
   assert.equal(resolved.restoreSavedFilters, true);
