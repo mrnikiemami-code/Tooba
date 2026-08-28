@@ -53,7 +53,9 @@ export type LocaleKey =
   | "applyFilters"
   | "resetDefault"
   | "columnManagerSearch"
-  | "lockedColumnVisibility";
+  | "lockedColumnVisibility"
+  | "viewModified"
+  | "searchApply";
 
 export const faGridLocale: Record<LocaleKey, string> = {
   search: "جستجو…",
@@ -111,6 +113,8 @@ export const faGridLocale: Record<LocaleKey, string> = {
   resetDefault: "بازنشانی پیش‌فرض",
   columnManagerSearch: "جستجوی ستون…",
   lockedColumnVisibility: "این ستون قابل پنهان‌سازی نیست",
+  viewModified: "تغییر یافته",
+  searchApply: "اعمال جستجو",
 };
 
 export const enGridLocale: Record<LocaleKey, string> = {
@@ -169,6 +173,8 @@ export const enGridLocale: Record<LocaleKey, string> = {
   resetDefault: "Reset to default",
   columnManagerSearch: "Search columns…",
   lockedColumnVisibility: "This column cannot be hidden",
+  viewModified: "Modified",
+  searchApply: "Apply search",
 };
 
 export function resolveGridLocale(locale: "fa" | "en"): Record<LocaleKey, string> {

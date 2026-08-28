@@ -6,11 +6,13 @@ import { dirname, join } from "node:path";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
-test("selection column resolves to localized label", () => {
+test("selection column label only in column manager not grid header", () => {
   const labels = readFileSync(join(dir, "column-labels.ts"), "utf8");
+  const grid = readFileSync(join(dir, "AppDataGrid.tsx"), "utf8");
   assert.match(labels, /ag-Grid-SelectionColumn/);
   assert.match(labels, /انتخاب/);
   assert.match(labels, /Selection/);
+  assert.match(grid, /selectionColumnDef=\{\{\s*headerName:\s*""/s);
 });
 
 test("column manager uses drag handle and no arrow reorder controls", () => {

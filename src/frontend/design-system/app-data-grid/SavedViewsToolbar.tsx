@@ -23,6 +23,8 @@ type SavedViewsToolbarProps = {
   savedViews: SavedGridView[];
   activeViewId: string | null;
   defaultViewId: string | null;
+  isActiveViewDirty?: boolean;
+  viewModifiedLabel?: string;
   onApply: (view: SavedGridView) => void;
   onCreate: (name: string, setAsDefault: boolean) => void;
   onUpdate: (viewId: string) => void;
@@ -39,6 +41,8 @@ export function SavedViewsToolbar({
   savedViews,
   activeViewId,
   defaultViewId,
+  isActiveViewDirty = false,
+  viewModifiedLabel = "Modified",
   onApply,
   onCreate,
   onUpdate,
@@ -120,6 +124,11 @@ export function SavedViewsToolbar({
                   onClick={() => onApply(view)}
                 >
                   {view.name || messages.defaultViewName}
+                  {active && isActiveViewDirty ? (
+                    <span className="text-[10px] font-normal opacity-90" data-testid="app-grid-view-modified">
+                      • {viewModifiedLabel}
+                    </span>
+                  ) : null}
                   {isDefault ? <span className="text-[10px] opacity-80">★</span> : null}
                 </button>
                 <button

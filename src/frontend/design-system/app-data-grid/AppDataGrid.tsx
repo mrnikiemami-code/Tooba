@@ -16,6 +16,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "./theme.css";
 
+import { FileDown, FileSpreadsheet, FilterX, Search as SearchIcon } from "lucide-react";
 import { Button } from "../primitives/core";
 import { moveColumn } from "../data-grid/serialize";
 import type {
@@ -53,6 +54,8 @@ import type { AppGridFilterColumnDef } from "./filter-column-def";
 import { buildAgGridLocaleText, resolveGridLocale } from "./locale-text";
 import { exportRowsToCsv, exportRowsToXlsx } from "./export";
 import { COLUMN_FILTER_APPLY_PARAMS, filtersEqual, shouldCommitGridQuery } from "./filter-commit";
+import { commitSearchQuery } from "./search-commit";
+import { isSelectedViewDirty, resolveViewApplyQuery } from "./saved-view-dirty";
 import { AppColumnHeader } from "./app-column-header";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -118,9 +121,9 @@ export function AppDataGrid<T extends { id: string }>({
   );
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [columnManagerState, setColumnManagerState] = useState<ColumnState[]>([]);
+  const [layoutRevision, setLayoutRevision] = useState(0);
   const gridApiRef = useRef<GridApi<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [popupParent, setPopupParent] = useState<HTMLElement | null>(null);
   const queryRef = useRef(query);
   queryRef.current = query;
@@ -165,7 +168,22 @@ export function AppDataGrid<T extends { id: string }>({
   }, [advancedFilterColumns]);
 
   const hasActiveFiltering =
-    activeFilterCount > 0 || Boolean(searchInput.trim()) || Boolean(query.search?.trim());
+    activeFilterCount > 0 || Boolean(query.search?.trim());
+
+  const activeSavedView = useMemo(
+    () => (activeViewId ? savedViews.find((view) => view.id === activeViewId) : undefined),
+    [activeViewId, savedViews],
+  );
+
+  const currentColumnLayout = useMemo(() => {
+    void layoutRevision;
+    return captureColumnLayoutFromApi(gridApiRef.current, defaultColumnIds);
+  }, [defaultColumnIds, layoutRevision]);
+
+  const isActiveViewDirty = useMemo(() => {
+    if (!activeSavedView) return false;
+    return isSelectedViewDirty(activeSavedView, query, currentColumnLayout);
+  }, [activeSavedView, query, currentColumnLayout]);
 
   const advancedFieldIds = useMemo(
     () => new Set(advancedFilterColumns.map((column) => column.id)),
@@ -261,7 +279,6 @@ export function AppDataGrid<T extends { id: string }>({
       const next = { ...queryRef.current.filters };
       if (!value) delete next[field];
       else next[field] = value;
-      setActiveViewId(null);
       void load({ ...queryRef.current, page: 1, filters: next });
     },
     [load],
@@ -316,7 +333,7 @@ export function AppDataGrid<T extends { id: string }>({
       const sorts = colState?.colId && colState.sort
         ? [{ columnId: colState.colId, direction: colState.sort as "asc" | "desc" }]
         : DEFAULT_GRID_QUERY.sorts;
-      setActiveViewId(null);
+      setLayoutRevision((revision) => revision + 1);
       void load({ ...queryRef.current, page: 1, sorts });
     },
     [load],
@@ -329,7 +346,6 @@ export function AppDataGrid<T extends { id: string }>({
     const agFilters = fromAgFilterModel(api.getFilterModel());
     const filters = mergeFilters(queryRef.current.filters, agFilters);
     if (filtersEqual(filters, queryRef.current.filters)) return;
-    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters });
   }, [load, mergeFilters]);
 
@@ -342,7 +358,6 @@ export function AppDataGrid<T extends { id: string }>({
 
   function applyDraftAdvancedFilter() {
     const normalized = normalizeAdvancedFilterExpression(draftAdvancedFilter);
-    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, advancedFilter: normalized });
     setFiltersOpen(false);
   }
@@ -367,7 +382,6 @@ export function AppDataGrid<T extends { id: string }>({
   function clearAdvancedCondition(conditionId: string) {
     const normalized = normalizeAdvancedFilterExpression(query.advancedFilter);
     const conditions = normalized.conditions.filter((condition) => condition.id !== conditionId);
-    setActiveViewId(null);
     void load({
       ...queryRef.current,
       page: 1,
@@ -389,7 +403,6 @@ export function AppDataGrid<T extends { id: string }>({
   function clearAllFilters() {
     gridApiRef.current?.setFilterModel(null);
     setSearchInput("");
-    setActiveViewId(null);
     const nextQuery: GridServerQuery = {
       ...queryRef.current,
       page: 1,
@@ -410,22 +423,41 @@ export function AppDataGrid<T extends { id: string }>({
     }
     const next = { ...queryRef.current.filters };
     delete next[columnId];
-    setActiveViewId(null);
     void load({ ...queryRef.current, page: 1, filters: next });
+  }
+
+  function updateSearchDraft(value: string) {
+    setSearchInput(value);
+  }
+
+  function commitSearch() {
+    const next = commitSearchQuery(queryRef.current, searchInput);
+    if (!next) return;
+    void load(next);
+  }
+
+  function clearAppliedSearch() {
+    setSearchInput("");
+    const next = commitSearchQuery(queryRef.current, "");
+    if (!next) return;
+    void load(next);
+  }
+
+  function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commitSearch();
+      return;
+    }
+    if (event.key === "Escape") {
+      setSearchInput(queryRef.current.search ?? "");
+    }
   }
 
   function restoreColumns() {
     gridApiRef.current?.resetColumnState();
+    setLayoutRevision((revision) => revision + 1);
     setColumnsOpen(false);
-  }
-
-  function scheduleSearch(value: string) {
-    setSearchInput(value);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      setActiveViewId(null);
-      void load({ ...queryRef.current, page: 1, search: value.trim() || undefined });
-    }, 350);
   }
 
   async function persistView(view: SavedGridView) {
@@ -484,23 +516,25 @@ export function AppDataGrid<T extends { id: string }>({
   async function applyView(rawView: SavedGridView) {
     const view = sanitizeSavedView(rawView, sanitizeContext);
     const api = gridApiRef.current;
+    const resolved = resolveViewApplyQuery(
+      view,
+      queryRef.current,
+      defaultQuery.sorts,
+      searchInput,
+    );
     suppressGridEventsRef.current = true;
     try {
       setActiveViewId(view.id);
-      setSearchInput(view.search ?? "");
-      api?.setFilterModel(agFilterModelForSavedView(view.filters, agExcludedFilterFieldIds));
+      setSearchInput(resolved.searchDraft);
+      if (resolved.restoreSavedFilters) {
+        api?.setFilterModel(agFilterModelForSavedView(view.filters, agExcludedFilterFieldIds));
+      }
       api?.applyColumnState({
         state: buildAgColumnApplyState(view, sanitizeContext.knownColumnIds),
         applyOrder: true,
       });
-      await load({
-        page: 1,
-        pageSize: view.pageSize,
-        sorts: view.sorts.length > 0 ? view.sorts : defaultQuery.sorts,
-        filters: view.filters,
-        advancedFilter: view.advancedFilterExpression ?? { conditions: [], connectors: [] },
-        search: view.search,
-      });
+      setLayoutRevision((revision) => revision + 1);
+      await load(resolved.query);
     } finally {
       suppressGridEventsRef.current = false;
     }
@@ -612,19 +646,31 @@ export function AppDataGrid<T extends { id: string }>({
               type="search"
               data-app-grid-search
               value={searchInput}
-              onChange={(e) => scheduleSearch(e.target.value)}
+              onChange={(e) => updateSearchDraft(e.target.value)}
+              onKeyDown={onSearchKeyDown}
               placeholder={messages.search}
               aria-label={messages.search}
             />
+            <button
+              type="button"
+              data-app-grid-search-apply
+              className="absolute end-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:bg-secondary hover:text-foreground"
+              aria-label={messages.searchApply}
+              onClick={commitSearch}
+            >
+              <SearchIcon className="size-4" aria-hidden />
+            </button>
           </div>
           {hasActiveFiltering ? (
             <button
               type="button"
+              data-app-grid-toolbar-btn
               data-app-grid-clear-filters
-              className="inline-flex min-h-9 items-center rounded-full border px-3 text-sm font-medium"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium"
               onClick={clearAllFilters}
               data-testid="app-grid-clear-all-filters"
             >
+              <FilterX className="size-4 shrink-0" aria-hidden />
               {messages.clearAllFilters}
             </button>
           ) : null}
@@ -655,16 +701,22 @@ export function AppDataGrid<T extends { id: string }>({
             <>
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
+                data-app-grid-toolbar-btn
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm font-medium shadow-sm hover:bg-secondary"
                 onClick={() => void exportCurrent("csv")}
+                data-testid="app-grid-export-csv"
               >
+                <FileDown className="size-4 shrink-0 text-primary" aria-hidden />
                 {messages.exportCsv}
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-full border border-border bg-surface px-3 text-sm hover:bg-secondary"
+                data-app-grid-toolbar-btn
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-sm font-medium shadow-sm hover:bg-secondary"
                 onClick={() => void exportCurrent("xlsx")}
+                data-testid="app-grid-export-xlsx"
               >
+                <FileSpreadsheet className="size-4 shrink-0 text-primary" aria-hidden />
                 {messages.exportExcel}
               </button>
             </>
@@ -694,6 +746,8 @@ export function AppDataGrid<T extends { id: string }>({
             savedViews={savedViews}
             activeViewId={activeViewId}
             defaultViewId={defaultViewId}
+            isActiveViewDirty={isActiveViewDirty}
+            viewModifiedLabel={messages.viewModified}
             onApply={(view) => void applyView(view)}
             onCreate={(name, setAsDefault) => void createSavedView(name, setAsDefault)}
             onUpdate={(viewId) => void updateSavedView(viewId)}
@@ -705,9 +759,9 @@ export function AppDataGrid<T extends { id: string }>({
         ) : null}
         {hasActiveFiltering ? (
           <div className="flex flex-wrap items-center gap-2" data-testid="app-grid-filter-chips">
-            {searchInput.trim() ? (
-              <button type="button" data-app-grid-chip onClick={() => scheduleSearch("")}>
-                <span>{locale === "fa" ? "جستجو" : "Search"}: {searchInput.trim()}</span>
+            {query.search?.trim() ? (
+              <button type="button" data-app-grid-chip onClick={clearAppliedSearch}>
+                <span>{locale === "fa" ? "جستجو" : "Search"}: {query.search.trim()}</span>
                 <span aria-hidden>×</span>
               </button>
             ) : null}
@@ -873,7 +927,7 @@ export function AppDataGrid<T extends { id: string }>({
           suppressDragLeaveHidesColumns
           rowSelection={{ mode: "multiRow", checkboxes: true, headerCheckbox: pageSelectionOnly }}
           selectionColumnDef={{
-            headerName: locale === "fa" ? "انتخاب" : "Selection",
+            headerName: "",
             width: 52,
             minWidth: 48,
             maxWidth: 56,
@@ -881,10 +935,15 @@ export function AppDataGrid<T extends { id: string }>({
           onGridReady={onGridReady}
           onSortChanged={onSortChanged}
           onFilterChanged={onFilterChanged}
+          onColumnResized={() => {
+            setLayoutRevision((revision) => revision + 1);
+          }}
           onColumnVisible={() => {
+            setLayoutRevision((revision) => revision + 1);
             if (columnsOpen) refreshColumnManagerState();
           }}
           onColumnMoved={() => {
+            setLayoutRevision((revision) => revision + 1);
             if (columnsOpen) refreshColumnManagerState();
           }}
           onSelectionChanged={(event) => {
