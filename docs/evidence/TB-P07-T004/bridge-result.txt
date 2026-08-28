@@ -223,22 +223,22 @@ branch:
 main
 
 commit:
-(pending)
+e03f984 feat category translations slug history and route foundation [TB-P07-T004]
 
 push:
-(pending)
+ok
 
 final HEAD:
-(pending)
+e03f98488f5f9e46c000cd00930cc4a4426ee552
 
 origin/main:
-(pending)
+e03f98488f5f9e46c000cd00930cc4a4426ee552
 
 synchronized:
-(pending)
+yes
 
 tracked tree:
-(pending)
+clean for T004 scope
 
 unrelated user changes:
 preserved (logs/bridge temps/unrelated evidence not committed)
