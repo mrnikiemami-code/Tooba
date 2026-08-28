@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T005
+TB-P07-T006
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T005 — Category Admin UI (AppCategoryTree + workspace shell; USER_VISUAL_ACCEPTED=NO)
+TB-P07-T006 — Category Workspace General + Translations editor (USER_VISUAL_ACCEPTED=NO)
 ```
 
 Current Gate:
@@ -749,4 +749,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T004 = ACCEPTED (category foundation). TB-P07-T005 = Category Admin UI shell (`AppCategoryTree` + workspace; `USER_VISUAL_ACCEPTED` = NO). Evidence: `docs/evidence/TB-P07-T005/`. Preview: `http://localhost:3000/fa/admin/catalog/categories`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T004 = ACCEPTED (category foundation). TB-P07-T005-R1 = ACCEPTED (VIEW/EDIT + clean slug). TB-P07-T006 = Category Workspace General + Translations editor (`AppCategoryTree` visually locked; `USER_VISUAL_ACCEPTED` = NO). Evidence: `docs/evidence/TB-P07-T006/`. Preview: `http://localhost:3000/fa/admin/catalog/categories`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`.

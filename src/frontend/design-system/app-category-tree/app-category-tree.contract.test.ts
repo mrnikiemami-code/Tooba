@@ -81,8 +81,14 @@ test("create flow fields stay progressive (no SEO/attrs on create)", () => {
   const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");
   assert.match(screen, /create-category-name/);
   assert.match(screen, /create-category-slug/);
-  assert.equal(screen.includes("seoTitle"), false);
-  assert.equal(/CreateCategoryDialog[\s\S]*attribute/i.test(screen), false);
+  // فقط دیالوگ ایجاد باید بدون SEO/attrs بماند؛ تب ترجمه‌ها فیلدهای سبک SEO دارد (T006).
+  const createBlock = screen.slice(
+    screen.indexOf("function CreateCategoryDialog"),
+    screen.indexOf("function ComingSoonPanel"),
+  );
+  assert.equal(createBlock.includes("seoTitle"), false);
+  assert.equal(createBlock.includes("SeoTitle"), false);
+  assert.equal(/attribute/i.test(createBlock), false);
 });
 
 test("API mappers tolerate camel and Pascal payloads", () => {
