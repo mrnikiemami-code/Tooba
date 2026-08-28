@@ -325,6 +325,9 @@ export async function fetchCategoryTree(
   return { ...response, data: mapTreeList(response.data) };
 }
 
+/** نام پایدار برای pickerهای محصول / فرم‌های وابسته به درخت. */
+export const loadCategoryTree = fetchCategoryTree;
+
 /** خلاصه workspace یک رده. */
 export async function fetchCategoryWorkspace(
   categoryId: string,

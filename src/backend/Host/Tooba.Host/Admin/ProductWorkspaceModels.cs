@@ -11,13 +11,42 @@ public sealed record ProductWorkspacePermissions(
     bool CanPublish);
 
 /// <summary>
-/// فرمان ایجاد سادهٔ محصول Catalog با گونهٔ پیش‌فرض برای دمو؛ قیمت و موجودی اینجا نیست.
+/// فرمان ایجاد محصول Catalog به‌صورت پیش‌نویس؛ قیمت و موجودی اینجا نیست.
 /// </summary>
 public sealed record AdminProductCreateRequest(
     string Title,
     string? Slug,
     Guid? CategoryId,
     string? Locale);
+
+/// <summary>ترجمهٔ محلی محصول از LocalizedText + SlugSeam (معماری locale-based بدون NameFa/NameEn).</summary>
+public sealed record ProductTranslationView(
+    string Locale,
+    string Name,
+    string? Slug,
+    string? ShortDescription,
+    string? Description,
+    string? SeoTitle,
+    string? SeoDescription);
+
+/// <summary>
+/// به‌روزرسانی هستهٔ محصول در یک locale (عنوان، slug انسانی، شرح‌ها، SEO).
+/// </summary>
+public sealed record AdminProductCoreUpdateRequest(
+    string Locale,
+    string Title,
+    string? Slug,
+    string? ShortDescription,
+    string? Description,
+    string? SeoTitle,
+    string? SeoDescription,
+    DateTimeOffset ExpectedUpdatedAt);
+
+/// <summary>انتساب ردهٔ محصول با تأیید صریح تغییر.</summary>
+public sealed record AdminProductCategoryAssignRequest(
+    Guid CategoryId,
+    bool ConfirmSchemaImpact,
+    DateTimeOffset ExpectedUpdatedAt);
 
 /// <summary>
 /// ردیف فهرست Admin. مبلغ و واحد قابل‌فروش از Offer/Price/Inventory ترکیب می‌شوند؛ روی هویت Product نیستند.
@@ -59,7 +88,12 @@ public sealed record ProductWorkspaceView(
     ProductWorkspacePermissions Permissions,
     DateTimeOffset CatalogUpdatedAt,
     IReadOnlyList<string> ReadinessWarnings,
-    IReadOnlyList<string> UnsupportedMutations);
+    IReadOnlyList<string> UnsupportedMutations,
+    Guid? PrimaryCategoryId = null,
+    string? CategoryPath = null,
+    string? Slug = null,
+    string? ShortDescription = null,
+    IReadOnlyList<ProductTranslationView>? Translations = null);
 
 /// <summary>مشخصهٔ Catalog.</summary>
 public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);

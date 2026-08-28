@@ -21,6 +21,21 @@ test("workspace mapper keeps prices on offers not product", () => {
     kind: "Physical",
     brandName: null,
     categoryNames: ["wear"],
+    primaryCategoryId: "cat-1",
+    categoryPath: "wear › shirts",
+    slug: "shirt",
+    shortDescription: "Cotton shirt",
+    translations: [
+      {
+        locale: "fa-IR",
+        name: "پیراهن",
+        slug: "shirt",
+        shortDescription: "پیراهن نخی",
+        description: null,
+        seoTitle: null,
+        seoDescription: null,
+      },
+    ],
     variants: [{ variantId: "v1", fingerprint: "size=m", status: "Published", catalogCodeSeam: "SHIRT-M", offerCount: 1 }],
     media: [{ mediaAssetId: "m1", primary: true, displayOrder: 0, altText: "front" }],
     offers: [
@@ -54,4 +69,10 @@ test("workspace mapper keeps prices on offers not product", () => {
   assert.equal(view?.media[0]?.displayOrder, 0);
   assert.equal(view?.media[0]?.altText, "front");
   assert.equal(view?.variants[0]?.catalogCodeSeam, "SHIRT-M");
+  assert.equal(view?.primaryCategoryId, "cat-1");
+  assert.equal(view?.categoryPath, "wear › shirts");
+  assert.equal(view?.slug, "shirt");
+  assert.equal(view?.shortDescription, "Cotton shirt");
+  assert.equal(view?.translations?.[0]?.locale, "fa-IR");
+  assert.equal(view?.translations?.[0]?.name, "پیراهن");
 });

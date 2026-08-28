@@ -39,6 +39,17 @@ export interface ProductStockRow {
   available: number;
 }
 
+/** ترجمهٔ محلی محصول — بدون NameFa/NameEn. */
+export interface ProductTranslationView {
+  locale: string;
+  name: string;
+  slug: string | null;
+  shortDescription: string | null;
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+}
+
 export interface ProductWorkspaceView {
   productId: string;
   title: string;
@@ -46,6 +57,13 @@ export interface ProductWorkspaceView {
   kind: string;
   brandName: string | null;
   categoryNames: string[];
+  /** شناسهٔ دستهٔ اصلی؛ برای schema ویژگی‌ها لازم است. */
+  primaryCategoryId?: string | null;
+  /** مسیر انسانی دسته (مثلاً کالای دیجیتال › موبایل). */
+  categoryPath?: string | null;
+  slug?: string | null;
+  shortDescription?: string | null;
+  translations?: ProductTranslationView[];
   variants: {
     variantId: string;
     fingerprint: string;
@@ -102,6 +120,30 @@ export const demoProductWorkspace: ProductWorkspaceView = {
   kind: "Physical",
   brandName: "Tooba Studio",
   categoryNames: ["پوشاک"],
+  primaryCategoryId: "66111111-1111-7111-8111-111111111111",
+  categoryPath: "پوشاک",
+  slug: "linen-admin-shirt",
+  shortDescription: "پیراهن لینن سبک اداری",
+  translations: [
+    {
+      locale: "fa-IR",
+      name: "پیراهن لینن اداری",
+      slug: "linen-admin-shirt",
+      shortDescription: "پیراهن لینن سبک اداری",
+      description: null,
+      seoTitle: "پیراهن لینن",
+      seoDescription: null,
+    },
+    {
+      locale: "en",
+      name: "Linen office shirt",
+      slug: "linen-admin-shirt",
+      shortDescription: "Light linen office shirt",
+      description: null,
+      seoTitle: "Linen shirt",
+      seoDescription: null,
+    },
+  ],
   variants: [
     {
       variantId: "22111111-1111-7111-8111-111111111111",

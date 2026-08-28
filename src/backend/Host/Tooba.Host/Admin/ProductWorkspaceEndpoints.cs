@@ -20,6 +20,8 @@ public static class ProductWorkspaceEndpoints
         group.MapPost("/", CreateAsync);
         group.MapGet("/{productId:guid}", GetAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
+        group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
+        group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
         group.MapPost("/{productId:guid}/publish", PublishAsync);
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
         group.MapPost("/{productId:guid}/archive", ArchiveAsync);
@@ -162,6 +164,52 @@ public static class ProductWorkspaceEndpoints
                 ReadPermissions(request),
                 cancellationToken);
             return Results.Json(workspace);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> PatchCoreAsync(
+        Guid productId,
+        AdminProductCoreUpdateRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.UpdateProductCoreAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> AssignCategoryAsync(
+        Guid productId,
+        AdminProductCategoryAssignRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.AssignProductCategoryAsync(productId, body, ReadPermissions(request), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

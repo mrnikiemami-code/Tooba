@@ -310,13 +310,42 @@ public sealed class ProductWorkspaceComposer
             && stockViews.Any(s => s.Available > 0);
         var publication = new ProductPublicationView(product.Status.ToString(), purchasable, warnings);
 
+        var primaryCategoryId = categoryLinks.Select(l => l.CategoryId).FirstOrDefault();
+        Guid? primaryCategory = primaryCategoryId == Guid.Empty ? null : primaryCategoryId;
+        var categoryPath = primaryCategory is Guid pcid
+            ? await BuildCategoryPathAsync(pcid, cancellationToken)
+            : null;
+
+        var localizedRows = await _catalog.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product && x.OwnerId == productId)
+            .ToListAsync(cancellationToken);
+        var locales = localizedRows.Select(x => x.Locale).Append("fa-IR").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var translations = locales.Select(loc =>
+        {
+            string? Field(string key) => localizedRows
+                .FirstOrDefault(r => r.Locale.Equals(loc, StringComparison.OrdinalIgnoreCase) && r.FieldKey == key)
+                ?.Value;
+            return new ProductTranslationView(
+                loc,
+                Field("name") ?? (loc.Equals("fa-IR", StringComparison.OrdinalIgnoreCase) ? title : string.Empty),
+                loc.Equals("fa-IR", StringComparison.OrdinalIgnoreCase) ? product.SlugSeam : null,
+                Field("short_description"),
+                Field("full_description"),
+                Field("seo_title") ?? (loc.Equals("fa-IR", StringComparison.OrdinalIgnoreCase) ? product.SeoTitleSeam : null),
+                Field("seo_description"));
+        }).Where(t => !string.IsNullOrWhiteSpace(t.Name) || !string.IsNullOrWhiteSpace(t.Slug)).ToList();
+
+        var shortDescription = localizedRows
+            .FirstOrDefault(r => r.FieldKey == "short_description" && r.Locale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase))
+            ?.Value;
+
         return new ProductWorkspaceView(
             product.ProductId,
             title,
             product.Status.ToString(),
             product.Kind.ToString(),
             brandName,
-            categoryLinks.Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? l.CategoryId.ToString("N")[..8]).ToList(),
+            categoryLinks.Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? "رده").ToList(),
             attrViews,
             variantViews,
             mediaViews,
@@ -331,21 +360,46 @@ public sealed class ProductWorkspaceComposer
             permissions,
             product.UpdatedAt,
             warnings,
-            ["media-binary-upload", "product-video-upload", "promotion-write", "full-content-studio"]);
+            ["media-binary-upload", "product-video-upload", "promotion-write", "full-content-studio"],
+            primaryCategory,
+            categoryPath,
+            product.SlugSeam,
+            shortDescription,
+            translations);
+    }
+
+    private async Task<string> BuildCategoryPathAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        var categories = await _catalog.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var byId = categories.ToDictionary(x => x.CategoryId);
+        var chain = new List<Guid>();
+        var current = categoryId;
+        var seen = new HashSet<Guid>();
+        while (byId.TryGetValue(current, out var node) && seen.Add(current))
+        {
+            chain.Add(current);
+            if (node.ParentCategoryId is not Guid parent)
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        chain.Reverse();
+        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, chain, cancellationToken);
+        return string.Join(" > ", chain.Select(id => names.GetValueOrDefault(id) ?? "رده"));
     }
 
     /// <summary>
-    /// عنوان محلی محصول را با قفل خوش‌بینانه به‌روز می‌کند.
-    /// </summary>
-    /// <summary>
-    /// محصول Catalog ساده با گونهٔ پیش‌فرض می‌سازد و منتشر می‌کند؛ قیمت/موجودی/Offer اینجا نیست.
+    /// محصول Catalog را به‌صورت پیش‌نویس می‌سازد؛ Category الزامی است و انتشار خودکار انجام نمی‌شود.
     /// </summary>
     public async Task<ProductWorkspaceView> CreateSimpleProductAsync(
         AdminProductCreateRequest request,
         ProductWorkspacePermissions permissions,
         CancellationToken cancellationToken)
     {
-        if (!permissions.CanEditCatalog || !permissions.CanPublish)
+        if (!permissions.CanEditCatalog)
         {
             throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
         }
@@ -356,10 +410,30 @@ public sealed class ProductWorkspaceComposer
             throw new PlatformHttpException(400, "عنوان محصول لازم است.", "workspace.product.title.missing");
         }
 
+        if (request.CategoryId is not Guid categoryId || categoryId == Guid.Empty)
+        {
+            throw new PlatformHttpException(400, "انتخاب رده الزامی است.", "workspace.product.category.missing");
+        }
+
+        if (!await _catalog.Categories.AsNoTracking().AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
+        {
+            throw new PlatformHttpException(400, "ردهٔ انتخاب‌شده معتبر نیست.", "workspace.product.category.invalid");
+        }
+
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
         var slugSeed = string.IsNullOrWhiteSpace(request.Slug)
-            ? $"demo-{Guid.NewGuid():N}"[..18]
-            : request.Slug.Trim();
+            ? CatalogCategorySlugNormalizer.SlugifyFromName(title)
+            : CatalogCategorySlugNormalizer.NormalizeSlug(request.Slug);
+        if (string.IsNullOrWhiteSpace(slugSeed))
+        {
+            throw new PlatformHttpException(400, "نشانی صفحه نامعتبر است.", "workspace.product.slug.invalid");
+        }
+
+        if (await _catalog.Products.AsNoTracking().AnyAsync(x => x.SlugSeam == slugSeed, cancellationToken))
+        {
+            throw new PlatformHttpException(409, "این نشانی صفحه قبلاً استفاده شده است.", "workspace.product.slug.duplicate");
+        }
+
         var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [locale] = title };
 
         try
@@ -371,91 +445,156 @@ public sealed class ProductWorkspaceComposer
                 names,
                 cancellationToken);
 
-            Guid categoryId;
-            if (request.CategoryId is Guid requested && requested != Guid.Empty)
-            {
-                categoryId = requested;
-            }
-            else
-            {
-                categoryId = await _catalog.Categories.AsNoTracking()
-                    .OrderBy(x => x.CategoryId)
-                    .Select(x => x.CategoryId)
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (categoryId == Guid.Empty)
-                {
-                    var createdCategory = await _catalogDirectory.CreateCategoryAsync(
-                        null,
-                        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [locale] = "عمومی" },
-                        cancellationToken);
-                    categoryId = createdCategory.CategoryId;
-                }
-            }
-
             await _catalogDirectory.AssignCategoryAsync(product.ProductId, categoryId, cancellationToken);
-            await _catalogDirectory.PublishProductAsync(product.ProductId, cancellationToken);
-
-            var axis = await _catalog.AttributeDefinitions.AsNoTracking()
-                .Where(x => x.IsVariantAxis)
-                .OrderBy(x => x.Code)
-                .FirstOrDefaultAsync(cancellationToken);
-            Guid definitionId;
-            Guid optionId;
-            if (axis is null)
-            {
-                definitionId = await _catalogDirectory.CreateAttributeDefinitionAsync(
-                    "default_option",
-                    CatalogAttributeValueKind.Enumeration,
-                    isVariantAxis: true,
-                    new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                    {
-                        [locale] = "گزینه",
-                        ["en-US"] = "Option",
-                    },
-                    cancellationToken);
-                optionId = await _catalogDirectory.AddAttributeOptionAsync(
-                    definitionId,
-                    "standard",
-                    new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                    {
-                        [locale] = "استاندارد",
-                        ["en-US"] = "Standard",
-                    },
-                    cancellationToken);
-            }
-            else
-            {
-                definitionId = axis.DefinitionId;
-                optionId = await _catalog.AttributeOptions.AsNoTracking()
-                    .Where(x => x.DefinitionId == definitionId)
-                    .OrderBy(x => x.Code)
-                    .Select(x => x.OptionId)
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (optionId == Guid.Empty)
-                {
-                    optionId = await _catalogDirectory.AddAttributeOptionAsync(
-                        definitionId,
-                        $"opt-{Guid.NewGuid():N}"[..12],
-                        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                        {
-                            [locale] = "استاندارد",
-                            ["en-US"] = "Standard",
-                        },
-                        cancellationToken);
-                }
-            }
-
-            await _catalogDirectory.CreateVariantAsync(
-                product.ProductId,
-                $"{slugSeed}-DEFAULT",
-                [(definitionId, "ignored", optionId)],
-                cancellationToken);
-
+            // Draft: بدون Publish خودکار؛ تنوع‌ها/رسانه در تسک‌های بعدی.
             return (await GetAsync(product.ProductId, permissions, cancellationToken))!;
         }
         catch (InvalidOperationException ex)
         {
             throw new PlatformHttpException(400, ex.Message, "workspace.product.create.rejected");
+        }
+    }
+
+    /// <summary>
+    /// هستهٔ محصول و ترجمهٔ locale فعال را به‌روز می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> UpdateProductCoreAsync(
+        Guid productId,
+        AdminProductCoreUpdateRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != request.ExpectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        var title = request.Title?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new PlatformHttpException(400, "عنوان محصول لازم است.", "workspace.product.title.missing");
+        }
+
+        var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
+        var slug = string.IsNullOrWhiteSpace(request.Slug)
+            ? CatalogCategorySlugNormalizer.SlugifyFromName(title)
+            : CatalogCategorySlugNormalizer.NormalizeSlug(request.Slug);
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            throw new PlatformHttpException(400, "نشانی صفحه نامعتبر است.", "workspace.product.slug.invalid");
+        }
+
+        if (await _catalog.Products.AsNoTracking()
+                .AnyAsync(x => x.ProductId != productId && x.SlugSeam == slug, cancellationToken))
+        {
+            throw new PlatformHttpException(409, "این نشانی صفحه قبلاً استفاده شده است.", "workspace.product.slug.duplicate");
+        }
+
+        await UpsertLocalizedTextAsync(productId, "name", locale, title, cancellationToken);
+        await UpsertLocalizedTextAsync(productId, "short_description", locale, request.ShortDescription, cancellationToken);
+        await UpsertLocalizedTextAsync(productId, "full_description", locale, request.Description, cancellationToken);
+        await UpsertLocalizedTextAsync(productId, "seo_title", locale, request.SeoTitle, cancellationToken);
+        await UpsertLocalizedTextAsync(productId, "seo_description", locale, request.SeoDescription, cancellationToken);
+
+        product.TouchDescriptiveSeams(slug, request.SeoTitle?.Trim(), product.BrandId, DateTimeOffset.UtcNow);
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return (await GetAsync(productId, permissions, cancellationToken))!;
+    }
+
+    /// <summary>
+    /// ردهٔ اصلی محصول را عوض می‌کند؛ بدون ConfirmSchemaImpact رد می‌شود اگر دادهٔ ویژگی/تنوع داشته باشد.
+    /// </summary>
+    public async Task<ProductWorkspaceView> AssignProductCategoryAsync(
+        Guid productId,
+        AdminProductCategoryAssignRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != request.ExpectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        if (!await _catalog.Categories.AsNoTracking().AnyAsync(x => x.CategoryId == request.CategoryId, cancellationToken))
+        {
+            throw new PlatformHttpException(400, "ردهٔ انتخاب‌شده معتبر نیست.", "workspace.product.category.invalid");
+        }
+
+        var hasAttrValues = await _catalog.ProductAttributeValues.AsNoTracking()
+            .AnyAsync(x => x.ProductId == productId, cancellationToken);
+        var hasVariants = await _catalog.Variants.AsNoTracking()
+            .AnyAsync(x => x.ProductId == productId, cancellationToken);
+        if ((hasAttrValues || hasVariants) && !request.ConfirmSchemaImpact)
+        {
+            throw new PlatformHttpException(
+                409,
+                "تغییر رده ممکن است ویژگی‌ها یا تنوع‌های فعلی را تحت‌تأثیر قرار دهد. تأیید صریح لازم است.",
+                "workspace.product.category.schema-impact");
+        }
+
+        try
+        {
+            await _catalogDirectory.AssignCategoryAsync(productId, request.CategoryId, cancellationToken);
+            product.TouchDescriptiveSeams(product.SlugSeam, product.SeoTitleSeam, product.BrandId, DateTimeOffset.UtcNow);
+            await _catalog.SaveChangesAsync(cancellationToken);
+            return (await GetAsync(productId, permissions, cancellationToken))!;
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.category.assign.rejected");
+        }
+    }
+
+    private async Task UpsertLocalizedTextAsync(
+        Guid productId,
+        string fieldKey,
+        string locale,
+        string? value,
+        CancellationToken cancellationToken)
+    {
+        var normalized = value?.Trim();
+        var row = await _catalog.LocalizedTexts.SingleOrDefaultAsync(
+            x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && x.OwnerId == productId
+                && x.FieldKey == fieldKey
+                && x.Locale == locale,
+            cancellationToken);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            if (row is not null)
+            {
+                _catalog.LocalizedTexts.Remove(row);
+            }
+
+            return;
+        }
+
+        if (row is null)
+        {
+            _catalog.LocalizedTexts.Add(CatalogLocalizedText.Create(
+                CatalogLocalizedOwnerKind.Product,
+                productId,
+                fieldKey,
+                locale,
+                normalized));
+        }
+        else
+        {
+            row.Value = normalized;
         }
     }
 

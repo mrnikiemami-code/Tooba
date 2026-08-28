@@ -1,0 +1,107 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const listPath = path.join(root, "app/admin/product-list.tsx");
+const workspacePath = path.join(root, "app/admin/product-workspace-screen.tsx");
+const pickerPath = path.join(root, "app/admin/product-category-picker.tsx");
+const pagePath = path.join(root, "app/admin/products/[productId]/page.tsx");
+const hostPath = path.join(root, "app/admin/host-client.ts");
+const modelPath = path.join(root, "app/admin/workspace-model.ts");
+
+test("product list keeps AppDataGrid and rejects raw AgGridReact", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  assert.match(list, /from ["'].*design-system["']/);
+  assert.match(list, /AppDataGrid/);
+  assert.equal(list.includes("AgGridReact"), false);
+  assert.equal(list.includes('from "ag-grid-react"'), false);
+});
+
+test("create CTA is draft-only with category picker", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  assert.match(list, /ایجاد پیش‌نویس/);
+  assert.equal(list.includes("ایجاد و انتشار"), false);
+  assert.match(list, /ProductCategoryPicker/);
+  assert.match(list, /categoryId:\s*createCategoryId/);
+  assert.match(list, /پیش‌نویس/);
+  assert.match(list, /admin-create-product-submit/);
+});
+
+test("row actions use view/edit scopes and safe archive label", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  assert.match(list, /scope=view/);
+  assert.match(list, /scope=edit/);
+  assert.match(list, /admin-product-view-/);
+  assert.match(list, /admin-product-edit-/);
+  assert.match(list, /admin-product-delete-/);
+  assert.match(list, /بایگانی \/ حذف امن/);
+  assert.equal(list.includes("PRD-"), false);
+  assert.equal(list.includes("productCode"), false);
+});
+
+test("variant terminology uses تنوع not گونه in product list", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  assert.match(list, /headerName:\s*"تنوع"/);
+  assert.equal(list.includes('headerName: "گونه"'), false);
+});
+
+test("product category picker loads tree with human path labels", () => {
+  const picker = fs.readFileSync(pickerPath, "utf8");
+  assert.match(picker, /data-testid="product-category-picker"/);
+  assert.match(picker, /loadCategoryTree/);
+  assert.match(picker, /buildCategoryPath/);
+  assert.match(picker, /جستجوی نام یا مسیر/);
+  assert.equal(picker.includes("option value={opt.id"), false);
+});
+
+test("workspace tabs and form mode foundation", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(screen, /label:\s*"عمومی"/);
+  assert.match(screen, /label:\s*"ترجمه‌ها"/);
+  assert.match(screen, /label:\s*"ویژگی‌ها"/);
+  assert.match(screen, /label:\s*"تنوع‌ها"/);
+  assert.match(screen, /label:\s*"رسانه"/);
+  assert.match(screen, /label:\s*"SEO"/);
+  assert.match(screen, /label:\s*"انتشار"/);
+  assert.match(screen, /label:\s*"تاریخچه"/);
+  assert.match(screen, /useAdminFormMode/);
+  assert.match(screen, /product-general-summary/);
+  assert.match(screen, /product-general-edit/);
+  assert.match(screen, /product-translations-panel/);
+  assert.equal(screen.includes("NameFa"), false);
+  assert.equal(screen.includes("NameEn"), false);
+  assert.equal(screen.includes("AgGridReact"), false);
+  assert.equal(screen.includes('label: "گونه‌ها"'), false);
+  assert.equal(screen.includes('id: "commercial"'), false);
+  assert.equal(screen.includes('id: "inventory"'), false);
+});
+
+test("attributes tab requires categoryId handoff", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(screen, /product-attributes-category-required/);
+  assert.match(screen, /primaryCategoryId/);
+  assert.match(screen, /ProductAttributesPanel/);
+});
+
+test("workspace page passes view and edit scope", () => {
+  const page = fs.readFileSync(pagePath, "utf8");
+  assert.match(page, /scope === "view"/);
+  assert.match(page, /scope === "edit"/);
+  assert.match(page, /initialEdit/);
+});
+
+test("host-client maps core/category helpers and new workspace fields", () => {
+  const host = fs.readFileSync(hostPath, "utf8");
+  assert.match(host, /updateAdminProductCore/);
+  assert.match(host, /assignAdminProductCategory/);
+  assert.match(host, /primaryCategoryId/);
+  assert.match(host, /categoryPath/);
+  assert.match(host, /shortDescription/);
+  assert.match(host, /translations/);
+  const model = fs.readFileSync(modelPath, "utf8");
+  assert.match(model, /ProductTranslationView/);
+  assert.match(model, /primaryCategoryId\?/);
+});

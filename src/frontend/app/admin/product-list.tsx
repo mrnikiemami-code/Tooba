@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import { Archive, Edit2, Eye } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
@@ -20,19 +20,16 @@ import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/a
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
+import { slugifyCategoryName } from "./catalog-category-api";
 import {
   createAdminProduct,
   mutateAdminProductLifecycle,
   queryAdminProductGrid,
   type AdminProductListRow,
 } from "./host-client";
+import { ProductCategoryPicker } from "./product-category-picker";
 import { ADMIN_PRODUCT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
-
-function productCode(id: string): string {
-  const compact = id.replace(/-/g, "").slice(0, 7).toUpperCase();
-  return `PRD-${compact}`;
-}
 
 function productStatusClass(status: string): string {
   if (status === "Published") return "inline-flex rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success";
@@ -61,16 +58,16 @@ function buildProductRowActions(
       id: "edit",
       label: "ویرایش",
       icon: Edit2,
-      href: (row) => `/admin/products/${row.id}`,
+      href: (row) => `/admin/products/${row.id}?scope=edit`,
       testId: (row) => `admin-product-edit-${row.id}`,
     },
     {
       id: "delete",
-      label: "حذف",
-      icon: Trash2,
+      label: "بایگانی / حذف امن",
+      icon: Archive,
       variant: "destructive",
-      confirm: (row) => `حذف «${row.title}»؟ در صورت وجود ارجاع، محصول بایگانی می‌شود.`,
-      onClick: (row) => onLifecycle(row.id, "delete"),
+      confirm: (row) => `بایگانی «${row.title}»؟ در صورت نیاز می‌توانید بعداً از بایگانی بازگردانید.`,
+      onClick: (row) => onLifecycle(row.id, "archive"),
       testId: (row) => `admin-product-delete-${row.id}`,
     },
   ];
@@ -86,12 +83,14 @@ function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
 function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
   const row = params.data;
   if (!row) return null;
+  const subtitle =
+    row.categorySummary && row.categorySummary !== "بدون دسته" ? row.categorySummary : "";
   return (
     <AppGridLinkSubtitleCell
       params={params}
-      href={`/admin/products/${row.id}`}
+      href={`/admin/products/${row.id}?scope=view`}
       title={row.title}
-      subtitle={productCode(row.id)}
+      subtitle={subtitle}
     />
   );
 }
@@ -152,7 +151,7 @@ function buildColumnDefs(
       width: 120,
       valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
     }),
-    applyProductGridFilterHeader({ field: "variantCount", headerName: "گونه", width: 90, hide: true }),
+    applyProductGridFilterHeader({ field: "variantCount", headerName: "تنوع", width: 90, hide: true }),
     applyProductGridFilterHeader({ field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true }),
     applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
     buildPinnedActionsColumnDef<AdminProductListRow>({
@@ -175,7 +174,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
       { value: "Archived", label: "بایگانی" },
     ],
   },
-  { id: "variantCount", header: "گونه", filterKind: "number" },
+  { id: "variantCount", header: "تنوع", filterKind: "number" },
   { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
   { id: "categorySummary", header: "دسته", filterKind: "text" },
   { id: "offerAmountRange", header: "قیمت (تومان)", filterKind: "number" },
@@ -193,6 +192,8 @@ export function ProductListScreen() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createTitle, setCreateTitle] = useState("");
   const [createSlug, setCreateSlug] = useState("");
+  const [createSlugTouched, setCreateSlugTouched] = useState(false);
+  const [createCategoryId, setCreateCategoryId] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | undefined>();
   const [reloadToken, setReloadToken] = useState(0);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_PRODUCT_GRID_VIEW_KEY), []);
@@ -225,6 +226,10 @@ export function ProductListScreen() {
   );
 
   async function onCreate() {
+    if (!createCategoryId) {
+      setCreateError("انتخاب دسته لازم است");
+      return;
+    }
     if (!createTitle.trim()) {
       setCreateError("عنوان لازم است");
       return;
@@ -234,6 +239,7 @@ export function ProductListScreen() {
     const result = await createAdminProduct({
       title: createTitle.trim(),
       slug: createSlug.trim() || null,
+      categoryId: createCategoryId,
       locale: "fa-IR",
     });
     setCreating(false);
@@ -244,7 +250,9 @@ export function ProductListScreen() {
     setCreateOpen(false);
     setCreateTitle("");
     setCreateSlug("");
-    router.push(`/admin/products/${result.productId}`);
+    setCreateSlugTouched(false);
+    setCreateCategoryId(null);
+    router.push(`/admin/products/${result.productId}?scope=edit`);
   }
 
   if (denied) {
@@ -268,21 +276,57 @@ export function ProductListScreen() {
         </button>
       </div>
       {createOpen ? (
-        <section className="mb-5 max-w-xl rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-          <h2 className="text-base font-semibold">ایجاد محصول کاتالوگ</h2>
+        <section className="mb-5 max-w-xl rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="admin-create-product-panel">
+          <h2 className="text-base font-semibold">ایجاد پیش‌نویس محصول</h2>
+          <p className="mt-1 text-sm text-muted">محصول به‌صورت پیش‌نویس ذخیره می‌شود و منتشر نمی‌شود.</p>
           <div className="mt-4 grid gap-3">
+            <ProductCategoryPicker
+              value={createCategoryId}
+              onChange={setCreateCategoryId}
+              required
+              label="دسته"
+            />
             <label className="flex flex-col gap-1 text-sm">
               عنوان
-              <input className="min-h-11 rounded-ds border border-border bg-surface px-3" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} />
+              <input
+                className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                value={createTitle}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setCreateTitle(next);
+                  if (!createSlugTouched) {
+                    setCreateSlug(slugifyCategoryName(next));
+                  }
+                }}
+                data-testid="admin-create-product-title"
+              />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              نشانی صفحه (اختیاری)
-              <input className="min-h-11 rounded-ds border border-border bg-surface px-3" value={createSlug} onChange={(e) => setCreateSlug(e.target.value)} dir="ltr" />
+              نامک (slug)
+              <input
+                className="min-h-11 rounded-ds border border-border bg-surface px-3"
+                value={createSlug}
+                onChange={(e) => {
+                  setCreateSlugTouched(true);
+                  setCreateSlug(e.target.value);
+                }}
+                dir="ltr"
+                data-testid="admin-create-product-slug"
+              />
             </label>
+            <p className="text-sm text-muted" data-testid="admin-create-product-status-hint">
+              وضعیت پس از ایجاد: <strong>پیش‌نویس</strong>
+            </p>
           </div>
           {createError ? <p className="mt-3 text-sm text-danger">{createError}</p> : null}
-          <button type="button" disabled={creating} onClick={() => void onCreate()} className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {creating ? "در حال ایجاد…" : "ایجاد و انتشار"}
+          <button
+            type="button"
+            disabled={creating}
+            onClick={() => void onCreate()}
+            className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            data-testid="admin-create-product-submit"
+          >
+            {creating ? "در حال ایجاد…" : "ایجاد پیش‌نویس"}
           </button>
         </section>
       ) : null}
@@ -308,10 +352,9 @@ export function ProductListScreen() {
           }}
           savedViewStore={savedViewStore}
           exportFilenameBase="admin-products"
-          exportHeaders={["محصول", "کد", "وضعیت", "دسته", "قیمت", "موجودی", "به‌روزرسانی"]}
+          exportHeaders={["محصول", "وضعیت", "دسته", "قیمت", "موجودی", "به‌روزرسانی"]}
           getExportRow={(row) => [
             row.title,
-            productCode(row.id),
             formatAdminStatus(row.status),
             row.categorySummary,
             row.offerAmountRange,

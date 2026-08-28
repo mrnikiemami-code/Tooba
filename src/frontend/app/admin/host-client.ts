@@ -98,6 +98,11 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
   const permissionsRaw = (readProp(item, "permissions", "Permissions") ?? {}) as Record<string, unknown>;
   const seoRaw = (readProp(item, "seo", "Seo") ?? {}) as Record<string, unknown>;
   const publicationRaw = (readProp(item, "publication", "Publication") ?? {}) as Record<string, unknown>;
+  const primaryCategoryRaw = readProp(item, "primaryCategoryId", "PrimaryCategoryId");
+  const primaryCategoryText = asString(primaryCategoryRaw);
+  const categoryPathRaw = readProp(item, "categoryPath", "CategoryPath");
+  const slugRaw = readProp(item, "slug", "Slug");
+  const shortDescriptionRaw = readProp(item, "shortDescription", "ShortDescription");
   return {
     productId,
     title: asString(readProp(item, "title", "Title"), "untitled"),
@@ -107,6 +112,38 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
     categoryNames: Array.isArray(readProp(item, "categoryNames", "CategoryNames"))
       ? (readProp(item, "categoryNames", "CategoryNames") as unknown[]).map((name) => asString(name))
       : [],
+    primaryCategoryId: primaryCategoryText.length > 0 ? primaryCategoryText : null,
+    categoryPath: categoryPathRaw == null || asString(categoryPathRaw).length === 0 ? null : asString(categoryPathRaw),
+    slug: slugRaw == null || asString(slugRaw).length === 0 ? null : asString(slugRaw),
+    shortDescription:
+      shortDescriptionRaw == null || asString(shortDescriptionRaw).length === 0
+        ? null
+        : asString(shortDescriptionRaw),
+    translations: asRecordArray(readProp(item, "translations", "Translations")).map((row) => ({
+      locale: asString(readProp(row, "locale", "Locale")),
+      name: asString(readProp(row, "name", "Name")),
+      slug: (() => {
+        const raw = readProp(row, "slug", "Slug");
+        const text = asString(raw);
+        return text.length > 0 ? text : null;
+      })(),
+      shortDescription: (() => {
+        const raw = readProp(row, "shortDescription", "ShortDescription");
+        return raw == null ? null : asString(raw);
+      })(),
+      description: (() => {
+        const raw = readProp(row, "description", "Description");
+        return raw == null ? null : asString(raw);
+      })(),
+      seoTitle: (() => {
+        const raw = readProp(row, "seoTitle", "SeoTitle");
+        return raw == null ? null : asString(raw);
+      })(),
+      seoDescription: (() => {
+        const raw = readProp(row, "seoDescription", "SeoDescription");
+        return raw == null ? null : asString(raw);
+      })(),
+    })),
     variants: asRecordArray(readProp(item, "variants", "Variants")).map((variant) => ({
       variantId: asString(readProp(variant, "variantId", "VariantId")),
       fingerprint: asString(readProp(variant, "fingerprint", "Fingerprint")),
@@ -324,7 +361,7 @@ export async function patchCatalogTitle(
   }
 }
 
-/** ایجاد سادهٔ محصول Catalog + گونهٔ پیش‌فرض؛ قیمت/موجودی اینجا نیست. */
+/** ایجاد سادهٔ محصول Catalog به‌صورت پیش‌نویس؛ قیمت/موجودی اینجا نیست. */
 export async function createAdminProduct(input: {
   title: string;
   slug?: string | null;
@@ -354,6 +391,102 @@ export async function createAdminProduct(input: {
     return productId
       ? { ok: true, productId }
       : { ok: false, errorCode: "workspace.product.create-failed" };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+export interface AdminProductCoreUpdateInput {
+  locale: string;
+  title: string;
+  slug?: string | null;
+  shortDescription?: string | null;
+  description?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  expectedUpdatedAt: string;
+}
+
+/** به‌روزرسانی هستهٔ محصول (عنوان، slug انسانی، شرح، SEO) برای یک locale. */
+export async function updateAdminProductCore(
+  productId: string,
+  input: AdminProductCoreUpdateInput,
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/core`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        locale: input.locale,
+        title: input.title,
+        slug: input.slug ?? null,
+        shortDescription: input.shortDescription ?? null,
+        description: input.description ?? null,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 409) {
+      return { ok: false, errorCode: "workspace.catalog.stale" };
+    }
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "workspace.product.core-failed" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "workspace.product.core-failed" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** انتساب / تغییر دستهٔ محصول با تأیید صریح اثر schema. */
+export async function assignAdminProductCategory(
+  productId: string,
+  input: { categoryId: string; confirmSchemaImpact: boolean; expectedUpdatedAt: string },
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/category`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        categoryId: input.categoryId,
+        confirmSchemaImpact: input.confirmSchemaImpact,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 409) {
+      return { ok: false, errorCode: "workspace.catalog.stale" };
+    }
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "workspace.product.category-failed" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "workspace.product.category-failed" };
+    }
+    return { ok: true, view };
   } catch {
     return { ok: false, errorCode: "workspace.host.unreachable" };
   }

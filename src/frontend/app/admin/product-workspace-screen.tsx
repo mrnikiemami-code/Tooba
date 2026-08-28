@@ -1,37 +1,47 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages } from "../../design-system";
+import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
 import { listAttributeDefinitions, type AttributeDefinition } from "./catalog-attribute-api";
+import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./catalog-attribute-ui";
 import {
+  assignAdminProductCategory,
   attachAdminProductMedia,
   createAdminProductVariant,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
   patchAdminProductVariant,
   patchAdminProductMediaAlt,
-  patchCatalogTitle,
   removeAdminProductMedia,
   reorderAdminProductMedia,
   setAdminProductMediaPrimary,
+  updateAdminProductCore,
   type HostReadSource,
 } from "./host-client";
-import { type ProductWorkspaceView } from "./workspace-model";
+import { ProductCategoryPicker } from "./product-category-picker";
+import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 
 const sections = [
-  { id: "overview", label: "نمای کلی" },
+  { id: "general", label: "عمومی" },
+  { id: "translations", label: "ترجمه‌ها" },
   { id: "attributes", label: "ویژگی‌ها" },
-  { id: "variants", label: "گونه‌ها" },
+  { id: "variants", label: "تنوع‌ها" },
   { id: "media", label: "رسانه" },
-  { id: "commercial", label: "فروش و قیمت" },
-  { id: "inventory", label: "موجودی" },
-  { id: "seo", label: "سئو و محتوا" },
+  { id: "seo", label: "SEO" },
   { id: "publication", label: "انتشار" },
   { id: "history", label: "تاریخچه" },
 ];
+
+const TRANSLATION_LOCALES = ["fa-IR", "en"] as const;
+
+const LOCALE_DISPLAY: Record<string, string> = {
+  "fa-IR": "فارسی",
+  en: "English",
+  "en-US": "English",
+};
 
 const AXIS_LABELS: Record<string, string> = {
   color: "رنگ",
@@ -82,15 +92,67 @@ function sortedMedia(media: ProductWorkspaceView["media"]) {
   });
 }
 
+function categoryLabel(view: ProductWorkspaceView): string {
+  return view.categoryPath || view.categoryNames.join(" › ") || "بدون دسته";
+}
+
+function resolveTranslation(
+  view: ProductWorkspaceView,
+  locale: string,
+): ProductTranslationView | undefined {
+  const list = view.translations ?? [];
+  return (
+    list.find((t) => t.locale === locale) ??
+    list.find((t) => t.locale.startsWith(locale.split("-")[0] ?? locale))
+  );
+}
+
+interface GeneralDraft {
+  title: string;
+  slug: string;
+  shortDescription: string;
+  categoryId: string | null;
+  slugTouched: boolean;
+}
+
+function draftFromView(view: ProductWorkspaceView): GeneralDraft {
+  return {
+    title: view.title,
+    slug: view.slug ?? view.seo.slugSeam ?? "",
+    shortDescription: view.shortDescription ?? "",
+    categoryId: view.primaryCategoryId ?? null,
+    slugTouched: true,
+  };
+}
+
+function SummaryCard({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
+  return (
+    <div className="rounded-ds border border-border bg-surface p-3">
+      <p className="text-sm text-muted">{label}</p>
+      <p className="mt-1 text-base font-semibold" dir={ltr ? "ltr" : undefined}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 /**
  * Workspace محصول Admin. Commercial چند فروشنده را جدا از Product.Price نشان می‌دهد.
  * SpiceDB در این کامپوننت صدا زده نمی‌شود؛ مجوز از Host می‌آید.
  */
-export function ProductWorkspaceScreen({ productId, viewScope = false }: { productId: string; viewScope?: boolean }) {
+export function ProductWorkspaceScreen({
+  productId,
+  viewScope = false,
+  initialEdit = false,
+}: {
+  productId: string;
+  viewScope?: boolean;
+  initialEdit?: boolean;
+}) {
   const [view, setView] = useState<ProductWorkspaceView | null>(null);
   const [source, setSource] = useState<HostReadSource | "loading">("loading");
-  const [sectionId, setSectionId] = useState("overview");
-  const [titleDraft, setTitleDraft] = useState("");
+  const [sectionId, setSectionId] = useState("general");
+  const [draft, setDraft] = useState<GeneralDraft | null>(null);
   const [conflict, setConflict] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState<Set<string>>(new Set());
@@ -103,12 +165,18 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
   const [createAxes, setCreateAxes] = useState<Record<string, { rawValue: string; enumOptionId: string }>>({});
   const [createCatalogCode, setCreateCatalogCode] = useState("");
   const [variantStatusDraft, setVariantStatusDraft] = useState<Record<string, string>>({});
+  const [translationLocale, setTranslationLocale] = useState<string>("fa-IR");
+  const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
+
+  const canView = Boolean(view?.permissions.canView ?? true);
+  const canEdit = Boolean(view?.permissions.canEditCatalog) && !viewScope;
+  const formMode = useAdminFormMode({ canView, canEdit });
 
   const reload = useCallback(() => {
     void loadProductWorkspace(productId, viewScope).then((result) => {
       setSource(result.source);
       setView(result.view);
-      setTitleDraft(result.view?.title ?? "");
+      setDraft(result.view ? draftFromView(result.view) : null);
       setConflict(null);
       setError(result.message ?? null);
       setDenied(Boolean(result.denied));
@@ -139,7 +207,16 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     });
   }, []);
 
-  const readOnly = !view?.permissions.canEditCatalog || viewScope;
+  useEffect(() => {
+    if (!view || enteredInitialEdit || viewScope) return;
+    if (initialEdit && canEdit) {
+      formMode.onEdit();
+      setEnteredInitialEdit(true);
+    }
+    // onEdit is stable; avoid formMode object identity loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- enter edit once after load
+  }, [view, initialEdit, viewScope, enteredInitialEdit, canEdit]);
+
   const dirtySections = useMemo(() => dirty, [dirty]);
   const mediaRows = useMemo(() => (view ? sortedMedia(view.media) : []), [view]);
   const primaryMedia = mediaRows.find((row) => row.primary) ?? mediaRows[0] ?? null;
@@ -172,6 +249,13 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     : "بدون قیمت";
   const canMutateCatalog = view.permissions.canEditCatalog && !viewScope;
   const canPublish = view.permissions.canPublish && !viewScope;
+  const isGeneralEdit = formMode.mode === "edit" && sectionId === "general";
+  const activeDraft = draft ?? draftFromView(view);
+
+  function markGeneralDirty() {
+    formMode.markDirty();
+    setDirty(new Set(["general"]));
+  }
 
   function applyMedia(media: ProductWorkspaceView["media"]) {
     setView((prev) => (prev ? { ...prev, media } : prev));
@@ -182,21 +266,105 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     setAltDrafts(alts);
   }
 
-  async function onAction(actionId: string) {
-    if (actionId === "save") {
-      const result = await patchCatalogTitle(current.productId, "fa", titleDraft, current.catalogUpdatedAt, viewScope);
-      if (!result.ok) {
-        if (result.errorCode === "workspace.catalog.stale") {
+  function handleEnterEdit() {
+    if (!formMode.canEdit) return;
+    setDraft(draftFromView(current));
+    formMode.onEdit();
+    setSectionId("general");
+  }
+
+  function handleCancelEdit() {
+    if (!formMode.confirmDiscardIfDirty()) return;
+    setDraft(draftFromView(current));
+    formMode.onCancel();
+    setDirty(new Set());
+    setConflict(null);
+  }
+
+  async function handleSaveGeneral() {
+    if (!activeDraft.title.trim()) {
+      setError("عنوان لازم است");
+      return;
+    }
+    if (!activeDraft.categoryId) {
+      setError("انتخاب دسته لازم است");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    let expectedUpdatedAt = current.catalogUpdatedAt;
+    const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
+    if (categoryChanged && activeDraft.categoryId) {
+      const needsConfirm = Boolean(current.primaryCategoryId);
+      if (
+        needsConfirm &&
+        !window.confirm(
+          "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به schema را تحت تأثیر قرار دهد. ادامه می‌دهید؟",
+        )
+      ) {
+        setBusy(false);
+        return;
+      }
+      const catResult = await assignAdminProductCategory(
+        current.productId,
+        {
+          categoryId: activeDraft.categoryId,
+          confirmSchemaImpact: needsConfirm,
+          expectedUpdatedAt,
+        },
+        viewScope,
+      );
+      if (!catResult.ok) {
+        setBusy(false);
+        if (catResult.errorCode === "workspace.catalog.stale") {
           setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
           return;
         }
-        setError(result.errorCode);
+        setError(catResult.errorCode);
         return;
       }
-      setView(result.view);
-      setTitleDraft(result.view.title);
-      setDirty(new Set());
-      setConflict(null);
+      setView(catResult.view);
+      expectedUpdatedAt = catResult.view.catalogUpdatedAt;
+    }
+
+    const coreResult = await updateAdminProductCore(
+      current.productId,
+      {
+        locale: "fa-IR",
+        title: activeDraft.title.trim(),
+        slug: activeDraft.slug.trim() || null,
+        shortDescription: activeDraft.shortDescription.trim() || null,
+        expectedUpdatedAt,
+      },
+      viewScope,
+    );
+    setBusy(false);
+    if (!coreResult.ok) {
+      if (coreResult.errorCode === "workspace.catalog.stale") {
+        setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
+        return;
+      }
+      setError(coreResult.errorCode);
+      return;
+    }
+    setView(coreResult.view);
+    setDraft(draftFromView(coreResult.view));
+    formMode.onSaved();
+    setDirty(new Set());
+    setConflict(null);
+  }
+
+  async function onAction(actionId: string) {
+    if (actionId === "edit") {
+      handleEnterEdit();
+      return;
+    }
+    if (actionId === "cancel") {
+      handleCancelEdit();
+      return;
+    }
+    if (actionId === "save") {
+      await handleSaveGeneral();
       return;
     }
     if (actionId === "publish") {
@@ -209,6 +377,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
       }
       if (result.view) {
         setView(result.view);
+        setDraft(draftFromView(result.view));
       } else {
         reload();
       }
@@ -230,6 +399,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     }
     if (result.view) {
       setView(result.view);
+      setDraft(draftFromView(result.view));
     } else {
       reload();
     }
@@ -314,14 +484,14 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
 
   async function onCreateVariant() {
     const axes = Object.entries(createAxes)
-      .filter(([, draft]) => draft.rawValue.trim() || draft.enumOptionId.trim())
-      .map(([definitionId, draft]) => ({
+      .filter(([, d]) => d.rawValue.trim() || d.enumOptionId.trim())
+      .map(([definitionId, d]) => ({
         definitionId,
-        rawValue: draft.rawValue.trim() || (draft.enumOptionId.trim() ? "ignored" : null),
-        enumOptionId: draft.enumOptionId.trim() || null,
+        rawValue: d.rawValue.trim() || (d.enumOptionId.trim() ? "ignored" : null),
+        enumOptionId: d.enumOptionId.trim() || null,
       }));
     if (axes.length === 0) {
-      setError("حداقل یک محور با مقدار برای ایجاد گونه لازم است");
+      setError("حداقل یک محور با مقدار برای ایجاد تنوع لازم است");
       return;
     }
     setBusy(true);
@@ -354,8 +524,26 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
     setView(result.view);
   }
 
+  const shellActions = isGeneralEdit
+    ? [
+        { id: "save", label: "ذخیره", kind: "primary" as const, permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const) },
+        { id: "cancel", label: "انصراف", kind: "secondary" as const, permission: "allowed" as const },
+      ]
+    : [
+        ...(formMode.canEdit && formMode.mode === "view"
+          ? [{ id: "edit", label: "ویرایش", kind: "secondary" as const, permission: "allowed" as const }]
+          : []),
+        { id: "publish", label: "انتشار", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) },
+      ];
+
+  const translationRows = TRANSLATION_LOCALES.map((locale) => {
+    const existing = resolveTranslation(view, locale);
+    return { locale, existing };
+  });
+  const activeTranslation = resolveTranslation(view, translationLocale);
+
   return (
-    <div className="w-full">
+    <div className="w-full" data-form-mode={formMode.mode} data-testid="product-workspace-screen">
       <WorkspaceShell
         flush
         leading={
@@ -371,7 +559,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
           )
         }
         title={view.title}
-        subtitle={`${view.brandName ?? "بدون برند"} · ${view.categoryNames.join("، ") || "بدون دسته"}`}
+        subtitle={`${view.brandName ?? "بدون برند"} · ${categoryLabel(view)}`}
         breadcrumbs={["عملیات", "محصولات", view.title]}
         statusItems={[
           { id: "pub", label: formatAdminStatus(view.status), tone: statusTone(view.status) },
@@ -388,13 +576,20 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         ]}
         sections={sections}
         activeSectionId={sectionId}
-        onSectionChange={setSectionId}
-        actions={[
-          { id: "save", label: "ذخیره", kind: "primary", permission: canMutateCatalog ? "allowed" : "denied" },
-          { id: "publish", label: "انتشار", kind: "secondary", permission: canPublish && !busy ? "allowed" : "denied" },
-        ]}
+        onSectionChange={(next) => {
+          if (formMode.mode === "edit" && next !== "general" && !formMode.confirmDiscardIfDirty()) {
+            return;
+          }
+          if (formMode.mode === "edit" && next !== "general") {
+            setDraft(draftFromView(current));
+            formMode.onCancel();
+            setDirty(new Set());
+          }
+          setSectionId(next);
+        }}
+        actions={shellActions}
         onAction={(actionId) => void onAction(actionId)}
-        readOnly={readOnly}
+        readOnly={formMode.mode === "view" || viewScope}
         conflict={conflict}
         onReloadConflict={reload}
         error={error}
@@ -403,9 +598,9 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         summary={
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Summary label="آمادگی فروش" value={view.publication.purchasableHint ? "آماده" : "نیاز به بررسی"} />
-            <Summary label="پیشنهاد فعال" value={String(view.offers.filter((row) => row.status === "Active").length)} />
-            <Summary label="بازهٔ قیمت" value={priceRange} />
-            <Summary label="قابل‌فروش" value={String(available)} />
+            <Summary label="تنوع‌ها" value={String(view.variants.length)} />
+            <Summary label="رسانه" value={String(view.media.length)} />
+            <Summary label="وضعیت" value={formatAdminStatus(view.status)} />
           </div>
         }
         inspector={
@@ -417,65 +612,195 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
         activity={view.activity.map((item) => ({ id: item.summary, at: item.at, actor: "ops", summary: item.summary }))}
         audit={view.audit.map((item) => ({ id: item.summary, at: item.at, actor: "system", event: item.summary }))}
       >
-        {sectionId === "overview" ? (
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-            <Card>
-              <p className="text-sm font-medium text-muted">مشخصات نمایشی</p>
-              {canMutateCatalog ? (
-                <label className="mt-3 block text-sm font-medium">
-                  عنوان نمایشی
-                  <input
-                    className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
-                    value={titleDraft}
-                    onChange={(event) => {
-                      setTitleDraft(event.target.value);
-                      setDirty(new Set(["overview"]));
+        {sectionId === "general" ? (
+          <div className="space-y-4" data-testid="product-general-panel">
+            {isGeneralEdit ? (
+              <Card data-testid="product-general-edit">
+                <p className="text-sm font-medium text-muted">ویرایش مشخصات عمومی</p>
+                <div className="mt-4 grid gap-4">
+                  <ProductCategoryPicker
+                    value={activeDraft.categoryId}
+                    onChange={(next) => {
+                      setDraft({ ...activeDraft, categoryId: next });
+                      markGeneralDirty();
                     }}
+                    required
                   />
-                </label>
-              ) : (
-                <p className="mt-2 text-lg font-semibold">{view.title}</p>
-              )}
-              <p className="mt-4 text-sm text-muted">دسته: {view.categoryNames.join("، ") || "—"}</p>
-            </Card>
+                  <label className="block text-sm font-medium">
+                    عنوان
+                    <input
+                      className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
+                      value={activeDraft.title}
+                      data-testid="product-edit-title"
+                      onChange={(event) => {
+                        const title = event.target.value;
+                        setDraft({
+                          ...activeDraft,
+                          title,
+                          slug: activeDraft.slugTouched ? activeDraft.slug : slugifyCategoryName(title),
+                        });
+                        markGeneralDirty();
+                      }}
+                    />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    نامک (slug)
+                    <input
+                      className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
+                      value={activeDraft.slug}
+                      dir="ltr"
+                      data-testid="product-edit-slug"
+                      onChange={(event) => {
+                        setDraft({ ...activeDraft, slug: event.target.value, slugTouched: true });
+                        markGeneralDirty();
+                      }}
+                    />
+                  </label>
+                  <label className="block text-sm font-medium">
+                    خلاصه کوتاه
+                    <textarea
+                      className="mt-2 min-h-24 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
+                      value={activeDraft.shortDescription}
+                      data-testid="product-edit-short-description"
+                      onChange={(event) => {
+                        setDraft({ ...activeDraft, shortDescription: event.target.value });
+                        markGeneralDirty();
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    data-testid="product-edit-save"
+                    onClick={() => void handleSaveGeneral()}
+                  >
+                    ذخیره
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
+                    data-testid="product-edit-cancel"
+                    onClick={handleCancelEdit}
+                  >
+                    انصراف
+                  </button>
+                </div>
+              </Card>
+            ) : (
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" data-testid="product-general-summary">
+                <Card>
+                  <p className="text-sm font-medium text-muted">خلاصه محصول</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <SummaryCard label="نام" value={view.title} />
+                    <SummaryCard label="مسیر دسته" value={categoryLabel(view)} />
+                    <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
+                    <SummaryCard label="نامک" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
+                    <SummaryCard label="خلاصه کوتاه" value={view.shortDescription || "—"} />
+                    <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
+                  </div>
+                </Card>
+                <Card>
+                  <p className="text-sm font-medium text-muted">آمادگی انتشار</p>
+                  {view.readinessWarnings.length === 0 ? (
+                    <p className="mt-3 text-base">مورد معلقی برای فروش دیده نمی‌شود.</p>
+                  ) : (
+                    <ul className="mt-3 space-y-2 text-base">
+                      {view.readinessWarnings.map((item) => (
+                        <li key={item} className="rounded-ds bg-warning/15 px-3 py-2">
+                          {item === "seo-incomplete"
+                            ? "عنوان جستجو یا نشانی صفحه ناقص است"
+                            : item === "no-price"
+                              ? "قیمت فروشنده ثبت نشده است"
+                              : item === "no-inventory"
+                                ? "موجودی قابل‌فروش وجود ندارد"
+                                : item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="mt-4 text-sm text-muted">
+                    {view.variants.length} تنوع · {view.media.length} رسانه
+                  </p>
+                </Card>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {sectionId === "translations" ? (
+          <div className="space-y-4" data-testid="product-translations-panel">
             <Card>
-              <p className="text-sm font-medium text-muted">هشدارهای قابل اقدام</p>
-              {view.readinessWarnings.length === 0 ? (
-                <p className="mt-3 text-base">مورد معلقی برای فروش دیده نمی‌شود.</p>
-              ) : (
-                <ul className="mt-3 space-y-2 text-base">
-                  {view.readinessWarnings.map((item) => (
-                    <li key={item} className="rounded-ds bg-warning/15 px-3 py-2">
-                      {item === "seo-incomplete"
-                        ? "عنوان جستجو یا نشانی صفحه ناقص است"
-                        : item === "no-price"
-                          ? "قیمت فروشنده ثبت نشده است"
-                          : item === "no-inventory"
-                            ? "موجودی قابل‌فروش وجود ندارد"
-                            : item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="mt-4 text-2xl font-semibold tabular-nums">{available} قابل‌فروش</p>
+              <p className="font-semibold">ترجمه‌ها</p>
               <p className="mt-1 text-sm text-muted">
-                {onHand} موجود · {reserved} رزرو · {view.stock.length} محل
+                مدل locale-based بدون فیلدهای locale-suffixed. ویرایش کامل ترجمه در تسک بعدی تکمیل می‌شود.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2" data-testid="product-locale-switcher">
+                {translationRows.map(({ locale, existing }) => (
+                  <button
+                    key={locale}
+                    type="button"
+                    className={
+                      translationLocale === locale
+                        ? "min-h-10 rounded-ds bg-primary px-3 text-sm text-primary-foreground"
+                        : "min-h-10 rounded-ds border border-border px-3 text-sm hover:bg-secondary"
+                    }
+                    data-testid={`translation-locale-${locale}`}
+                    onClick={() => setTranslationLocale(locale)}
+                  >
+                    {LOCALE_DISPLAY[locale] ?? locale}
+                    <span className="ms-2 text-xs opacity-80">{existing ? "آماده" : "ایجاد نشده"}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+            <Card data-testid="product-translation-view">
+              <p className="text-sm font-medium text-muted">{LOCALE_DISPLAY[translationLocale] ?? translationLocale}</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <SummaryCard label="نام" value={activeTranslation?.name || (translationLocale === "fa-IR" ? view.title : "—")} />
+                <SummaryCard label="نامک" value={activeTranslation?.slug || (translationLocale === "fa-IR" ? view.slug ?? "—" : "—")} ltr />
+                <SummaryCard
+                  label="خلاصه کوتاه"
+                  value={activeTranslation?.shortDescription || (translationLocale === "fa-IR" ? view.shortDescription || "—" : "—")}
+                />
+                <SummaryCard label="توضیح" value={activeTranslation?.description || "—"} />
+                <SummaryCard label="عنوان SEO" value={activeTranslation?.seoTitle || view.seo.seoTitleSeam || "—"} />
+                <SummaryCard label="توضیح SEO" value={activeTranslation?.seoDescription || "—"} />
+              </div>
             </Card>
           </div>
         ) : null}
+
         {sectionId === "attributes" ? (
-          <Card>
-            <ProductAttributesPanel productId={current.productId} />
+          <Card data-testid="product-attributes-panel">
+            {!view.primaryCategoryId ? (
+              <div data-testid="product-attributes-category-required">
+                <p className="font-semibold">دسته لازم است</p>
+                <p className="mt-2 text-sm text-muted">
+                  برای بارگذاری schema ویژگی‌های وابسته به دسته، ابتدا در تب عمومی یک دسته انتخاب و ذخیره کنید.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="mb-3 text-sm text-muted">
+                  schema ویژگی از دستهٔ انتخاب‌شده می‌آید. ویرایش کامل در تسک بعدی تکمیل می‌شود.
+                </p>
+                <ProductAttributesPanel productId={current.productId} />
+              </>
+            )}
           </Card>
         ) : null}
+
         {sectionId === "variants" ? (
           <div className="space-y-4" data-testid="admin-product-variants">
             <Card>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold">تنوع‌های محصول</p>
-                  <p className="mt-1 text-sm text-muted">ترکیب محورها · بدون قیمت یا موجودی روی گونه</p>
+                  <p className="mt-1 text-sm text-muted">ترکیب محورها · بدون قیمت یا موجودی روی تنوع</p>
                 </div>
                 <button
                   type="button"
@@ -573,12 +898,12 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                   ))}
                 </tbody>
               </table>
-              {view.variants.length === 0 ? <p className="text-sm text-muted">هنوز گونه‌ای ثبت نشده است.</p> : null}
+              {view.variants.length === 0 ? <p className="text-sm text-muted">هنوز تنوعی ثبت نشده است.</p> : null}
             </div>
 
             {canMutateCatalog ? (
               <Card data-testid="admin-variant-create">
-                <p className="font-semibold">ایجاد گونه</p>
+                <p className="font-semibold">ایجاد تنوع</p>
                 <p className="mt-1 text-sm text-muted">
                   محورها را از تعاریف مجاز انتخاب کنید. ماتریس کامل ترکیبی در این Task نیست.
                 </p>
@@ -587,7 +912,7 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                 ) : (
                   <ul className="mt-3 space-y-3">
                     {axisDefs.map((def) => {
-                      const draft = createAxes[def.definitionId] ?? { rawValue: "", enumOptionId: "" };
+                      const axisDraft = createAxes[def.definitionId] ?? { rawValue: "", enumOptionId: "" };
                       return (
                         <li key={def.definitionId} className="rounded-ds border border-border p-3">
                           <p className="text-sm font-medium">{AXIS_LABELS[def.code.toLowerCase()] ?? def.code}</p>
@@ -597,11 +922,11 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                               <input
                                 className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
                                 dir="ltr"
-                                value={draft.rawValue}
+                                value={axisDraft.rawValue}
                                 onChange={(event) =>
                                   setCreateAxes((prev) => ({
                                     ...prev,
-                                    [def.definitionId]: { ...draft, rawValue: event.target.value },
+                                    [def.definitionId]: { ...axisDraft, rawValue: event.target.value },
                                   }))
                                 }
                               />
@@ -611,11 +936,11 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                               <input
                                 className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
                                 dir="ltr"
-                                value={draft.enumOptionId}
+                                value={axisDraft.enumOptionId}
                                 onChange={(event) =>
                                   setCreateAxes((prev) => ({
                                     ...prev,
-                                    [def.definitionId]: { ...draft, enumOptionId: event.target.value },
+                                    [def.definitionId]: { ...axisDraft, enumOptionId: event.target.value },
                                   }))
                                 }
                               />
@@ -641,25 +966,21 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                   className="mt-4 min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
                   onClick={() => void onCreateVariant()}
                 >
-                  ایجاد گونه
+                  ایجاد تنوع
                 </button>
               </Card>
             ) : null}
           </div>
         ) : null}
+
         {sectionId === "media" ? (
           <div className="space-y-4" data-testid="admin-product-media">
             <Card>
               <p className="font-semibold">گالری تصویر</p>
               <p className="mt-1 text-sm text-muted">
-                پیش‌نمایش تصویر از مسیر امن رسانهٔ ویترین (قالب SVG). بارگذاری فایل باینری هنوز فعال نیست —
-                دارایی را با شناسه پیوست کنید.
-              </p>
-              <p className="mt-2 hidden text-sm text-muted" data-testid="product-video-control">
-                کنترل ویدئو محصول مخفی است.
+                پیش‌نمایش تصویر از مسیر امن رسانهٔ ویترین. بارگذاری فایل باینری هنوز فعال نیست.
               </p>
             </Card>
-
             {mediaRows.length === 0 ? (
               <p className="text-sm text-muted">هنوز تصویری پیوست نشده است.</p>
             ) : (
@@ -677,20 +998,6 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                         <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">اصلی</span>
                       ) : null}
                     </div>
-                    <p className="mt-2 truncate text-xs text-muted">
-                      شناسه کوتاه: <span dir="ltr">{item.mediaAssetId.slice(0, 8)}</span>
-                    </p>
-                    <label className="mt-2 block text-sm">
-                      متن جایگزین
-                      <input
-                        className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
-                        value={altDrafts[item.mediaAssetId] ?? ""}
-                        disabled={!canMutateCatalog || busy}
-                        onChange={(event) =>
-                          setAltDrafts((prev) => ({ ...prev, [item.mediaAssetId]: event.target.value }))
-                        }
-                      />
-                    </label>
                     {canMutateCatalog ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
@@ -735,15 +1042,24 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                         </button>
                       </div>
                     ) : null}
+                    <label className="mt-2 block text-sm">
+                      متن جایگزین
+                      <input
+                        className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
+                        value={altDrafts[item.mediaAssetId] ?? ""}
+                        disabled={!canMutateCatalog || busy}
+                        onChange={(event) =>
+                          setAltDrafts((prev) => ({ ...prev, [item.mediaAssetId]: event.target.value }))
+                        }
+                      />
+                    </label>
                   </li>
                 ))}
               </ul>
             )}
-
             {canMutateCatalog ? (
               <Card>
                 <p className="font-semibold">پیوست تصویر با شناسه دارایی</p>
-                <p className="mt-1 text-sm text-muted">آپلود فایل تصویری در این Task پیاده‌سازی نشده است.</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                   <label className="text-sm">
                     شناسه دارایی رسانه
@@ -752,7 +1068,6 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                       dir="ltr"
                       value={attachAssetId}
                       onChange={(event) => setAttachAssetId(event.target.value)}
-                      placeholder="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
                     />
                   </label>
                   <label className="text-sm">
@@ -776,138 +1091,28 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
             ) : null}
           </div>
         ) : null}
-        {sectionId === "commercial" ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {view.offers.map((offer) => {
-              const price = view.prices.find((row) => row.offerId === offer.offerId);
-              const tax = view.taxClassifications.find((row) => row.offerId === offer.offerId);
-              const stockRows = view.stock.filter((row) => row.offerId === offer.offerId);
-              const sellable = stockRows.reduce((sum, row) => sum + row.available, 0);
-              return (
-                <Card key={offer.offerId}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
-                        {offer.sellerDisplayName.slice(0, 1)}
-                      </span>
-                      <div>
-                        <p className="text-lg font-semibold">{offer.sellerDisplayName}</p>
-                        <p className="text-sm text-muted" dir="ltr">
-                          {offer.sellerSku ?? "—"}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge tone={offer.status === "Active" ? "success" : "neutral"}>{offer.status === "Active" ? "فعال" : offer.status}</Badge>
-                  </div>
-                  <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <dt className="text-muted">کانال</dt>
-                      <dd>{offer.channel}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted">مالیات</dt>
-                      <dd>{tax?.displayName ?? "—"}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted">قیمت</dt>
-                      <dd className="text-lg font-semibold tabular-nums">{money(price?.amountExclusiveOfTax, price?.currency)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted">قابل‌فروش</dt>
-                      <dd className="text-lg font-semibold tabular-nums">{sellable}</dd>
-                    </div>
-                  </dl>
-                  <p className="mt-3 text-sm text-muted">{stockRows.length} محل موجودی</p>
-                </Card>
-              );
-            })}
-          </div>
-        ) : null}
-        {sectionId === "inventory" ? (
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <Summary label="موجود" value={String(onHand)} />
-              <Summary label="رزرو" value={String(reserved)} />
-              <Summary label="قابل‌فروش" value={String(available)} />
-              <Summary label="محل‌ها" value={String(view.stock.length)} />
-              <Summary label="سلامت" value={available > 0 ? "سالم" : "کم‌موجود"} />
-            </div>
-            <ul className="space-y-2 md:hidden">
-              {view.stock.map((row) => {
-                const offer = view.offers.find((item) => item.offerId === row.offerId);
-                const healthy = row.available > 3;
-                const warning = row.available > 0 && row.available <= 3;
-                return (
-                  <li key={`${row.offerId}:${row.locationId}`} className="rounded-ds border border-border p-3">
-                    <p className="font-semibold">{row.locationName}</p>
-                    <p className="text-sm text-muted">{offer?.sellerDisplayName}</p>
-                    <p className="mt-2 text-lg font-semibold tabular-nums">{row.available} قابل‌فروش</p>
-                    <p className="text-sm text-muted">
-                      موجود {row.onHand} · رزرو {row.reserved} · {healthy ? "سالم" : warning ? "کم" : "ناموجود"}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full text-right text-base">
-                <thead className="border-b border-border text-sm text-muted">
-                  <tr>
-                    <th className="py-3">محل</th>
-                    <th>فروشنده / پیشنهاد</th>
-                    <th>موجود</th>
-                    <th>رزرو</th>
-                    <th>قابل‌فروش</th>
-                    <th>سلامت</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {view.stock.map((row) => {
-                    const offer = view.offers.find((item) => item.offerId === row.offerId);
-                    const healthy = row.available > 3;
-                    const warning = row.available > 0 && row.available <= 3;
-                    return (
-                      <tr key={`${row.offerId}:${row.locationId}`} className="border-b border-border/70">
-                        <td className="py-3">
-                          <p className="text-base font-semibold">{row.locationName}</p>
-                        </td>
-                        <td>{offer?.sellerDisplayName}</td>
-                        <td className="text-end tabular-nums">{row.onHand}</td>
-                        <td className="text-end tabular-nums">{row.reserved}</td>
-                        <td className="text-end text-lg font-semibold tabular-nums">{row.available}</td>
-                        <td>
-                          <Badge tone={healthy ? "success" : warning ? "warning" : "danger"}>{healthy ? "سالم" : warning ? "کم" : "ناموجود"}</Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : null}
+
         {sectionId === "seo" ? (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-3" data-testid="product-seo-placeholder">
             <Card>
               <p className="text-sm text-muted">آمادگی سئو</p>
               <p className="mt-2 text-xl font-semibold">{view.seo.slugSeam && view.seo.seoTitleSeam ? "آماده" : "ناقص"}</p>
-              <p className="mt-2 text-sm text-muted">نشانی صفحه و عنوان جستجو باید هر دو پر باشند.</p>
             </Card>
             <Card>
-              <p className="text-sm text-muted">نشانی و عنوان</p>
-              <p className="mt-3 text-sm text-muted">نشانی صفحه</p>
-              <p className="text-lg font-medium" dir="ltr">
-                {view.seo.slugSeam ?? "—"}
+              <p className="text-sm text-muted">نامک</p>
+              <p className="mt-3 text-lg font-medium" dir="ltr">
+                {view.slug ?? view.seo.slugSeam ?? "—"}
               </p>
               <p className="mt-3 text-sm text-muted">عنوان جستجو</p>
               <p className="text-lg font-medium">{view.seo.seoTitleSeam ?? "—"}</p>
             </Card>
             <Card>
-              <p className="text-sm text-muted">یادداشت محتوا</p>
-              <p className="mt-3 text-base">پیش‌نمایش ویترین فروشگاه در این صفحه ساخته نمی‌شود.</p>
+              <p className="text-sm text-muted">یادداشت</p>
+              <p className="mt-3 text-base">ویرایش پیشرفته SEO در تسک بعدی.</p>
             </Card>
           </div>
         ) : null}
+
         {sectionId === "publication" ? (
           <div className="space-y-4" data-testid="admin-product-publication">
             <div className="grid gap-4 md:grid-cols-2">
@@ -915,32 +1120,30 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                 <p className="mb-2 font-semibold">آمادگی محتوا</p>
                 <ul className="space-y-2">
                   <Check ok={Boolean(view.title)} label="عنوان" />
+                  <Check ok={Boolean(view.primaryCategoryId)} label="دسته" />
                   <Check ok={view.media.length > 0} label="رسانه" />
-                </ul>
-              </div>
-              <div>
-                <p className="mb-2 font-semibold">آمادگی فروش</p>
-                <ul className="space-y-2">
-                  <Check ok={view.offers.some((row) => row.status === "Active")} label="پیشنهاد فعال" />
-                  <Check ok={view.prices.length > 0} label="قیمت" />
-                </ul>
-              </div>
-              <div>
-                <p className="mb-2 font-semibold">آمادگی موجودی و سئو</p>
-                <ul className="space-y-2">
-                  <Check ok={available > 0} label="موجودی" />
-                  <Check ok={Boolean(view.seo.slugSeam)} label="سئو" />
                 </ul>
               </div>
               <div>
                 <p className="mb-2 font-semibold">وضعیت انتشار</p>
                 <p className="text-lg font-semibold">{formatAdminStatus(view.status)}</p>
-                <p className="mt-2 text-sm text-muted">برای فروش باید پیشنهاد، قیمت و موجودی آماده باشند.</p>
+                <p className="mt-2 text-sm text-muted">انتشار فقط پس از آمادگی محتوا و فروش.</p>
               </div>
             </div>
+            <Card data-testid="product-commercial-readonly">
+              <p className="font-semibold">خلاصه تجاری (فقط‌خواندنی)</p>
+              <p className="mt-1 text-sm text-muted">قیمت و موجودی متعلق به Offer هستند، نه هویت Product.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <SummaryCard label="پیشنهاد فعال" value={String(view.offers.filter((row) => row.status === "Active").length)} />
+                <SummaryCard label="بازهٔ قیمت" value={priceRange} />
+                <SummaryCard label="قابل‌فروش" value={String(available)} />
+              </div>
+              <p className="mt-2 text-sm text-muted">
+                موجود {onHand} · رزرو {reserved} · {view.stock.length} محل
+              </p>
+            </Card>
             <Card>
               <p className="font-semibold">عملیات چرخهٔ عمر</p>
-              <p className="mt-1 text-sm text-muted">انتشار از نوار فضای کار؛ لغو انتشار / بایگانی / حذف امن اینجا.</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -964,14 +1167,18 @@ export function ProductWorkspaceScreen({ productId, viewScope = false }: { produ
                   className="min-h-11 rounded-ds border border-danger/40 px-4 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
                   onClick={() => void runLifecycle("delete")}
                 >
-                  حذف امن
+                  بایگانی / حذف امن
                 </button>
               </div>
             </Card>
           </div>
         ) : null}
+
         {sectionId === "history" ? (
-          <ol className="space-y-3 border-s-2 border-border ps-4">
+          <ol className="space-y-3 border-s-2 border-border ps-4" data-testid="product-history-placeholder">
+            {view.activity.length === 0 && view.audit.length === 0 ? (
+              <li className="text-sm text-muted">تاریخچه هنوز خالی است.</li>
+            ) : null}
             {view.activity.map((item) => (
               <li key={`${item.summary}:${item.at}`}>
                 <p className="font-medium">{item.summary}</p>
