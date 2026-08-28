@@ -36,6 +36,8 @@ test("invalid locale prefix detected", () => {
 test("public vs excluded paths", () => {
   assert.equal(isPublicStorefrontPath("/"), true);
   assert.equal(isPublicStorefrontPath("/products"), true);
+  assert.equal(isPublicStorefrontPath("/category"), true);
+  assert.equal(isPublicStorefrontPath("/category/mobile"), true);
   assert.equal(isPublicStorefrontPath("/admin"), false);
   assert.equal(isExcludedFromLocalePrefix("/admin/orders"), true);
   assert.equal(isExcludedFromLocalePrefix("/customer-panel"), true);

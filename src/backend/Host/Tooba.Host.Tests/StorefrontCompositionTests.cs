@@ -61,6 +61,68 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
+    public void Category_plp_page_json_exposes_canonical_path_facets_and_no_product_price()
+    {
+        var categoryId = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+        var card = new StorefrontProductCard(
+            Guid.Parse("11111111-1111-7111-8111-111111111111"),
+            "linen-shirt",
+            "پیراهن",
+            "پوشاک",
+            categoryId,
+            Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+            Guid.Parse("33333333-3333-7333-8333-333333333333"),
+            Guid.Parse("44444444-4444-7444-8444-444444444444"),
+            "فروشگاه آرمان",
+            1850000m,
+            null,
+            "IRR",
+            4,
+            true,
+            null);
+        var page = new StorefrontCategoryPlpPage(
+            categoryId,
+            "fa-IR",
+            "poshak",
+            "پوشاک",
+            "توضیح کوتاه",
+            null,
+            "/fa/category/poshak",
+            false,
+            null,
+            1,
+            1,
+            24,
+            "default",
+            [new StorefrontCategoryBreadcrumbItem(categoryId, "پوشاک", "poshak", "/fa/category/poshak")],
+            [],
+            [
+                new StorefrontPlpFacet(
+                    Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"),
+                    "color",
+                    "رنگ",
+                    "Enumeration",
+                    "CheckboxList",
+                    true,
+                    false,
+                    true,
+                    null,
+                    null,
+                    [new StorefrontPlpFacetOption("blue", "آبی", 1)]),
+            ],
+            [new StorefrontAppliedFilterChip("color", "رنگ", "blue", "آبی")],
+            [card],
+            ["default", "newest", "price-asc", "price-desc"]);
+
+        var json = JsonSerializer.Serialize(page, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        Assert.Contains("\"canonicalPath\":\"/fa/category/poshak\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"facets\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"appliedFilters\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"offerAmountExclusiveOfTax\":1850000", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Primary_offer_prefers_in_stock_then_lowest_amount()
     {
         var expensiveInStock = new StorefrontOfferCandidate(

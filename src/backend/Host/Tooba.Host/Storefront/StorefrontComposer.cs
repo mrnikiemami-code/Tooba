@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Inventory.Infrastructure.Persistence;
@@ -31,6 +32,7 @@ public sealed class StorefrontComposer
     private readonly IPromotionEvaluator _promotions;
     private readonly IReviewDirectory _reviews;
     private readonly IContentDirectory _content;
+    private readonly ICatalogDirectory _catalogDirectory;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشگاه. نام فروشنده از Party جدا از Offer خوانده می‌شود.
@@ -44,7 +46,8 @@ public sealed class StorefrontComposer
         IPartyLookupGateway parties,
         IPromotionEvaluator promotions,
         IReviewDirectory reviews,
-        IContentDirectory content)
+        IContentDirectory content,
+        ICatalogDirectory catalogDirectory)
     {
         _catalog = catalog;
         _offers = offers;
@@ -55,6 +58,7 @@ public sealed class StorefrontComposer
         _promotions = promotions;
         _reviews = reviews;
         _content = content;
+        _catalogDirectory = catalogDirectory;
     }
 
     /// <summary>
@@ -430,6 +434,135 @@ public sealed class StorefrontComposer
             safePage,
             safePageSize,
             materialized.Count);
+    }
+
+    /// <summary>
+    /// PLP رده: resolve مسیر، subtree، facet پویا، فیلتر تایپ‌شده، صفحه‌بندی.
+    /// زیرشاخه: محصولات انتساب‌شده به رده یا هر فرزند در taxonomy (نه Parent مگامنو).
+    /// فیلتر: بین attributeها AND؛ داخل multi-select یک attribute OR.
+    /// </summary>
+    public async Task<StorefrontCategoryPlpPage?> GetCategoryPlpAsync(
+        string locale,
+        string slug,
+        IReadOnlyList<StorefrontPlpFilterInput> filters,
+        string? sort,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var catalogLocale = NormalizeCatalogLocale(locale);
+        var uiSegment = MapUiLocaleSegment(catalogLocale);
+        var resolved = await _catalogDirectory.ResolveCategoryRouteAsync(
+            catalogLocale,
+            slug,
+            forStorefront: true,
+            cancellationToken);
+        if (resolved is null)
+        {
+            return null;
+        }
+
+        var category = await _catalog.Categories.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.CategoryId == resolved.CategoryId, cancellationToken);
+        if (category is null)
+        {
+            return null;
+        }
+
+        var translation = await _catalog.CategoryTranslations.AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.CategoryId == resolved.CategoryId && x.Locale == catalogLocale,
+                cancellationToken);
+
+        var name = translation?.Name
+            ?? (await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, [resolved.CategoryId], cancellationToken))
+                .GetValueOrDefault(resolved.CategoryId)
+            ?? "رده";
+        var currentSlug = resolved.CurrentSlug;
+        var canonicalPath = $"/{uiSegment}/category/{currentSlug}";
+        var redirectTo = resolved.IsRedirect ? canonicalPath : null;
+
+        var allCategories = await _catalog.Categories.AsNoTracking()
+            .Where(x => x.Status == CatalogPublicationStatus.Published && x.IsVisible)
+            .ToListAsync(cancellationToken);
+        var categoryItems = await ListCategoriesAsync(cancellationToken);
+        var subtreeIds = DescendantCategoryIds(categoryItems, resolved.CategoryId);
+
+        var breadcrumb = await BuildBreadcrumbAsync(resolved.CategoryId, allCategories, catalogLocale, uiSegment, cancellationToken);
+        var children = await BuildSubcategoriesAsync(resolved.CategoryId, allCategories, catalogLocale, uiSegment, cancellationToken);
+
+        var facetDefs = (await _catalogDirectory.GetEffectiveCategoryFacetsAsync(
+                resolved.CategoryId,
+                catalogLocale,
+                cancellationToken))
+            .Where(f => f.IsVisible)
+            .OrderBy(f => f.SortOrder)
+            .ThenBy(f => f.LocalizedName, StringComparer.Ordinal)
+            .ToList();
+
+        var cards = await BuildProductCardsAsync(cancellationToken);
+        var inSubtree = cards
+            .Where(card => card.CategoryId is Guid cid && subtreeIds.Contains(cid))
+            .ToList();
+
+        var productIds = inSubtree
+            .Select(c => c.ProductId)
+            .Distinct()
+            .ToList();
+        var attributeValues = productIds.Count == 0
+            ? []
+            : await _catalog.ProductAttributeValues.AsNoTracking()
+                .Where(v => productIds.Contains(v.ProductId))
+                .ToListAsync(cancellationToken);
+
+        var filteredProducts = ApplyTypedFilters(inSubtree, attributeValues, filters, facetDefs);
+        var plpFacets = await BuildPlpFacetsAsync(
+            facetDefs,
+            filteredProducts,
+            attributeValues,
+            catalogLocale,
+            cancellationToken);
+        var applied = BuildAppliedChips(filters, facetDefs, plpFacets);
+
+        var normalizedSort = sort?.Trim().ToLowerInvariant() switch
+        {
+            "price-asc" => "price-asc",
+            "price-desc" => "price-desc",
+            "newest" => "newest",
+            _ => "default",
+        };
+        var ordered = normalizedSort switch
+        {
+            "price-asc" => filteredProducts.OrderBy(c => c.PromotionalAmountExclusiveOfTax ?? c.OfferAmountExclusiveOfTax).ToList(),
+            "price-desc" => filteredProducts.OrderByDescending(c => c.PromotionalAmountExclusiveOfTax ?? c.OfferAmountExclusiveOfTax).ToList(),
+            "newest" => filteredProducts.OrderByDescending(c => c.Title, StringComparer.Ordinal).ToList(),
+            _ => filteredProducts,
+        };
+
+        var safePageSize = Math.Clamp(pageSize, 1, 48);
+        var safePage = Math.Max(page, 1);
+        var pageItems = ordered.Skip((safePage - 1) * safePageSize).Take(safePageSize).ToList();
+
+        return new StorefrontCategoryPlpPage(
+            resolved.CategoryId,
+            catalogLocale,
+            currentSlug,
+            name,
+            translation?.ShortDescription,
+            translation?.Description,
+            canonicalPath,
+            resolved.IsRedirect,
+            redirectTo,
+            ordered.Count,
+            safePage,
+            safePageSize,
+            normalizedSort,
+            breadcrumb,
+            children,
+            plpFacets,
+            applied,
+            pageItems,
+            ["default", "newest", "price-asc", "price-desc"]);
     }
 
     /// <summary>
@@ -893,5 +1026,363 @@ public sealed class StorefrontComposer
             .ToDictionary(
                 group => group.Key,
                 group => group.OrderBy(item => item.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+    }
+
+    private static string NormalizeCatalogLocale(string locale)
+    {
+        var trimmed = locale.Trim();
+        if (trimmed.Equals("fa", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("fa-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "fa-IR";
+        }
+
+        if (trimmed.Equals("en", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("en-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "en-US";
+        }
+
+        if (trimmed.Equals("ar", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("ar-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ar-SA";
+        }
+
+        return trimmed;
+    }
+
+    private static string MapUiLocaleSegment(string catalogLocale)
+    {
+        if (catalogLocale.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+        {
+            return "en";
+        }
+
+        if (catalogLocale.StartsWith("ar", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ar";
+        }
+
+        return "fa";
+    }
+
+    private async Task<IReadOnlyList<StorefrontCategoryBreadcrumbItem>> BuildBreadcrumbAsync(
+        Guid categoryId,
+        IReadOnlyList<CatalogCategory> allCategories,
+        string catalogLocale,
+        string uiSegment,
+        CancellationToken cancellationToken)
+    {
+        var byId = allCategories.ToDictionary(x => x.CategoryId);
+        var chain = new List<Guid>();
+        var current = categoryId;
+        var seen = new HashSet<Guid>();
+        while (byId.TryGetValue(current, out var node) && seen.Add(current))
+        {
+            chain.Add(current);
+            if (node.ParentCategoryId is not Guid parent)
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        chain.Reverse();
+        var translations = await _catalog.CategoryTranslations.AsNoTracking()
+            .Where(t => chain.Contains(t.CategoryId) && t.Locale == catalogLocale)
+            .ToDictionaryAsync(t => t.CategoryId, cancellationToken);
+        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, chain, cancellationToken);
+        return chain.Select(id =>
+        {
+            translations.TryGetValue(id, out var tr);
+            var slug = tr?.Slug ?? id.ToString("N")[..8];
+            var label = tr?.Name ?? names.GetValueOrDefault(id) ?? "رده";
+            return new StorefrontCategoryBreadcrumbItem(id, label, slug, $"/{uiSegment}/category/{slug}");
+        }).ToList();
+    }
+
+    private async Task<IReadOnlyList<StorefrontCategoryChildItem>> BuildSubcategoriesAsync(
+        Guid categoryId,
+        IReadOnlyList<CatalogCategory> allCategories,
+        string catalogLocale,
+        string uiSegment,
+        CancellationToken cancellationToken)
+    {
+        var children = allCategories
+            .Where(c => c.ParentCategoryId == categoryId)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.CategoryId)
+            .ToList();
+        if (children.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = children.Select(c => c.CategoryId).ToList();
+        var translations = await _catalog.CategoryTranslations.AsNoTracking()
+            .Where(t => ids.Contains(t.CategoryId) && t.Locale == catalogLocale)
+            .ToDictionaryAsync(t => t.CategoryId, cancellationToken);
+        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, ids, cancellationToken);
+        return children.Select(c =>
+        {
+            translations.TryGetValue(c.CategoryId, out var tr);
+            var slug = tr?.Slug ?? c.CategoryId.ToString("N")[..8];
+            var label = tr?.Name ?? names.GetValueOrDefault(c.CategoryId) ?? "رده";
+            return new StorefrontCategoryChildItem(c.CategoryId, label, slug, $"/{uiSegment}/category/{slug}");
+        }).ToList();
+    }
+
+    private static IReadOnlyList<StorefrontProductCard> ApplyTypedFilters(
+        IReadOnlyList<StorefrontProductCard> products,
+        IReadOnlyList<CatalogProductAttributeValue> attributeValues,
+        IReadOnlyList<StorefrontPlpFilterInput> filters,
+        IReadOnlyList<EffectiveCategoryFacet> facetDefs)
+    {
+        if (filters.Count == 0)
+        {
+            return products;
+        }
+
+        var byCode = facetDefs.ToDictionary(f => f.Code, StringComparer.OrdinalIgnoreCase);
+        var valuesByProduct = attributeValues
+            .GroupBy(v => v.ProductId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return products.Where(product =>
+        {
+            if (!valuesByProduct.TryGetValue(product.ProductId, out var rows))
+            {
+                rows = [];
+            }
+
+            // Cross-attribute AND
+            foreach (var filter in filters)
+            {
+                if (!byCode.TryGetValue(filter.Code, out var facet))
+                {
+                    continue;
+                }
+
+                var matching = rows.Where(r => r.DefinitionId == facet.DefinitionId).ToList();
+                if (matching.Count == 0)
+                {
+                    return false;
+                }
+
+                var kind = filter.Kind.Trim().ToLowerInvariant();
+                if (kind is "enum" or "color" or "enumeration")
+                {
+                    // Same-attribute OR
+                    var wanted = filter.Values.Select(v => v.Trim().ToLowerInvariant()).Where(v => v.Length > 0).ToHashSet();
+                    if (wanted.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var hit = matching.Any(r =>
+                    {
+                        var canonical = r.CanonicalValue.Trim().ToLowerInvariant();
+                        if (wanted.Contains(canonical))
+                        {
+                            return true;
+                        }
+
+                        if (Guid.TryParseExact(r.CanonicalValue, "N", out var optionId))
+                        {
+                            if (wanted.Contains(optionId.ToString("N"))
+                                || wanted.Contains(optionId.ToString("D").ToLowerInvariant()))
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    });
+                    if (!hit)
+                    {
+                        return false;
+                    }
+                }
+                else if (kind is "boolean" or "bool")
+                {
+                    var expected = filter.Values.FirstOrDefault()?.Trim().ToLowerInvariant();
+                    if (expected is null)
+                    {
+                        continue;
+                    }
+
+                    var wantTrue = expected is "true" or "1" or "بله";
+                    if (!matching.Any(r => bool.TryParse(r.CanonicalValue, out var flag) && flag == wantTrue))
+                    {
+                        return false;
+                    }
+                }
+                else if (kind is "range" or "number")
+                {
+                    var numbers = matching
+                        .Select(r => decimal.TryParse(r.CanonicalValue, out var n) ? n : (decimal?)null)
+                        .Where(n => n.HasValue)
+                        .Select(n => n!.Value)
+                        .ToList();
+                    if (numbers.Count == 0)
+                    {
+                        return false;
+                    }
+
+                    var value = numbers[0];
+                    if (filter.Min is decimal min && value < min)
+                    {
+                        return false;
+                    }
+
+                    if (filter.Max is decimal max && value > max)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }).ToList();
+    }
+
+    private async Task<IReadOnlyList<StorefrontPlpFacet>> BuildPlpFacetsAsync(
+        IReadOnlyList<EffectiveCategoryFacet> facetDefs,
+        IReadOnlyList<StorefrontProductCard> filteredProducts,
+        IReadOnlyList<CatalogProductAttributeValue> allAttributeValues,
+        string catalogLocale,
+        CancellationToken cancellationToken)
+    {
+        var filteredIds = filteredProducts.Select(p => p.ProductId).ToHashSet();
+        var relevantValues = allAttributeValues.Where(v => filteredIds.Contains(v.ProductId)).ToList();
+        var result = new List<StorefrontPlpFacet>();
+
+        foreach (var facet in facetDefs)
+        {
+            var forDef = relevantValues.Where(v => v.DefinitionId == facet.DefinitionId).ToList();
+            if (facet.ValueKind == CatalogAttributeValueKind.Number || facet.DisplayType == CatalogFacetDisplayType.Range)
+            {
+                var nums = forDef
+                    .Select(v => decimal.TryParse(v.CanonicalValue, out var n) ? n : (decimal?)null)
+                    .Where(n => n.HasValue)
+                    .Select(n => n!.Value)
+                    .ToList();
+                result.Add(new StorefrontPlpFacet(
+                    facet.DefinitionId,
+                    facet.Code,
+                    facet.LocalizedName,
+                    facet.ValueKind.ToString(),
+                    facet.DisplayType.ToString(),
+                    facet.IsSearchable,
+                    facet.IsCollapsedByDefault,
+                    facet.ShowCounts,
+                    nums.Count == 0 ? null : nums.Min(),
+                    nums.Count == 0 ? null : nums.Max(),
+                    []));
+                continue;
+            }
+
+            if (facet.ValueKind == CatalogAttributeValueKind.Boolean
+                || facet.DisplayType == CatalogFacetDisplayType.BooleanToggle)
+            {
+                var trueCount = forDef.Count(v => bool.TryParse(v.CanonicalValue, out var f) && f);
+                var falseCount = forDef.Count(v => bool.TryParse(v.CanonicalValue, out var f) && !f);
+                var options = new List<StorefrontPlpFacetOption>();
+                if (trueCount > 0 || forDef.Count == 0)
+                {
+                    options.Add(new StorefrontPlpFacetOption("true", "بله", facet.ShowCounts ? trueCount : null));
+                }
+
+                if (falseCount > 0 || forDef.Count == 0)
+                {
+                    options.Add(new StorefrontPlpFacetOption("false", "خیر", facet.ShowCounts ? falseCount : null));
+                }
+
+                result.Add(new StorefrontPlpFacet(
+                    facet.DefinitionId,
+                    facet.Code,
+                    facet.LocalizedName,
+                    facet.ValueKind.ToString(),
+                    facet.DisplayType.ToString(),
+                    facet.IsSearchable,
+                    facet.IsCollapsedByDefault,
+                    facet.ShowCounts,
+                    null,
+                    null,
+                    options));
+                continue;
+            }
+
+            // Enumeration / Text — group by canonical; resolve option labels
+            var groups = forDef.GroupBy(v => v.CanonicalValue.Trim(), StringComparer.OrdinalIgnoreCase).ToList();
+            var optionIds = groups
+                .Select(g => Guid.TryParseExact(g.Key, "N", out var id) ? id : Guid.Empty)
+                .Where(id => id != Guid.Empty)
+                .Distinct()
+                .ToList();
+            var optionLabels = await LoadNamesAsync(CatalogLocalizedOwnerKind.AttributeOption, optionIds, cancellationToken);
+            var optionsEnum = groups
+                .OrderBy(g => g.Key, StringComparer.Ordinal)
+                .Select(g =>
+                {
+                    var label = Guid.TryParseExact(g.Key, "N", out var oid)
+                        ? optionLabels.GetValueOrDefault(oid) ?? g.Key
+                        : g.Key;
+                    return new StorefrontPlpFacetOption(
+                        g.Key,
+                        label,
+                        facet.ShowCounts ? g.Select(x => x.ProductId).Distinct().Count() : null);
+                })
+                .ToList();
+
+            result.Add(new StorefrontPlpFacet(
+                facet.DefinitionId,
+                facet.Code,
+                facet.LocalizedName,
+                facet.ValueKind.ToString(),
+                facet.DisplayType.ToString(),
+                facet.IsSearchable,
+                facet.IsCollapsedByDefault,
+                facet.ShowCounts,
+                null,
+                null,
+                optionsEnum));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<StorefrontAppliedFilterChip> BuildAppliedChips(
+        IReadOnlyList<StorefrontPlpFilterInput> filters,
+        IReadOnlyList<EffectiveCategoryFacet> facetDefs,
+        IReadOnlyList<StorefrontPlpFacet> plpFacets)
+    {
+        var byCode = facetDefs.ToDictionary(f => f.Code, StringComparer.OrdinalIgnoreCase);
+        var optionsByCode = plpFacets.ToDictionary(f => f.Code, f => f.Options, StringComparer.OrdinalIgnoreCase);
+        var chips = new List<StorefrontAppliedFilterChip>();
+        foreach (var filter in filters)
+        {
+            if (!byCode.TryGetValue(filter.Code, out var facet))
+            {
+                continue;
+            }
+
+            var kind = filter.Kind.Trim().ToLowerInvariant();
+            if (kind is "range" or "number")
+            {
+                var display = $"{filter.Min?.ToString() ?? "…"} – {filter.Max?.ToString() ?? "…"}";
+                chips.Add(new StorefrontAppliedFilterChip(filter.Code, facet.LocalizedName, display, display));
+                continue;
+            }
+
+            optionsByCode.TryGetValue(filter.Code, out var options);
+            foreach (var value in filter.Values)
+            {
+                var label = options?.FirstOrDefault(o => o.Value.Equals(value, StringComparison.OrdinalIgnoreCase))?.Label
+                    ?? value;
+                chips.Add(new StorefrontAppliedFilterChip(filter.Code, facet.LocalizedName, value, label));
+            }
+        }
+
+        return chips;
     }
 }

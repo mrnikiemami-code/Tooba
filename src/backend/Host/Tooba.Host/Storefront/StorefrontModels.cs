@@ -412,3 +412,56 @@ public sealed record StorefrontSandboxPaymentRequest(
     Guid AttemptId,
     string ProviderRequestReference,
     string Outcome);
+
+/// <summary>
+/// صفحهٔ PLP رده — فهرست Product Master با facet پویا و مسیر canonical.
+/// </summary>
+public sealed record StorefrontCategoryPlpPage(
+    Guid CategoryId,
+    string Locale,
+    string Slug,
+    string Name,
+    string? ShortDescription,
+    string? Description,
+    string CanonicalPath,
+    bool IsRedirect,
+    string? RedirectToPath,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    string Sort,
+    IReadOnlyList<StorefrontCategoryBreadcrumbItem> Breadcrumb,
+    IReadOnlyList<StorefrontCategoryChildItem> Subcategories,
+    IReadOnlyList<StorefrontPlpFacet> Facets,
+    IReadOnlyList<StorefrontAppliedFilterChip> AppliedFilters,
+    IReadOnlyList<StorefrontProductCard> Products,
+    IReadOnlyList<string> SupportedSorts);
+
+/// <summary>گره breadcrumb با مسیر canonical.</summary>
+public sealed record StorefrontCategoryBreadcrumbItem(Guid CategoryId, string Name, string Slug, string Path);
+
+/// <summary>زیررده برای ناوبری PLP.</summary>
+public sealed record StorefrontCategoryChildItem(Guid CategoryId, string Name, string Slug, string Path);
+
+/// <summary>facet قابل نمایش با گزینه‌های runtime.</summary>
+public sealed record StorefrontPlpFacet(
+    Guid DefinitionId,
+    string Code,
+    string LocalizedName,
+    string ValueKind,
+    string DisplayType,
+    bool IsSearchable,
+    bool IsCollapsedByDefault,
+    bool ShowCounts,
+    decimal? RangeMin,
+    decimal? RangeMax,
+    IReadOnlyList<StorefrontPlpFacetOption> Options);
+
+/// <summary>گزینهٔ enum/boolean با شمارش اختیاری.</summary>
+public sealed record StorefrontPlpFacetOption(string Value, string Label, int? Count);
+
+/// <summary>چیپ فیلتر اعمال‌شده برای UX.</summary>
+public sealed record StorefrontAppliedFilterChip(string Code, string Label, string Value, string DisplayValue);
+
+/// <summary>فیلتر تایپ‌شدهٔ ورودی PLP.</summary>
+public sealed record StorefrontPlpFilterInput(string Code, string Kind, IReadOnlyList<string> Values, decimal? Min, decimal? Max);

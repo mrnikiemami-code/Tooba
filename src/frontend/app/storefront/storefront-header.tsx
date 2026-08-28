@@ -1,7 +1,8 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { localeToContentApi } from "../../lib/i18n/routing.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Award,
@@ -43,6 +44,7 @@ export function StorefrontShopeivaHeader({
   categories: StorefrontCategoryItem[];
 }) {
   const lp = useLocalizedPath();
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -51,8 +53,8 @@ export function StorefrontShopeivaHeader({
   const useConfiguredMenu = megaMenuItems.length > 0;
 
   useEffect(() => {
-    void loadStorefrontMegaMenu("fa-IR").then(setMegaMenuItems);
-  }, []);
+    void loadStorefrontMegaMenu(localeToContentApi(locale)).then(setMegaMenuItems);
+  }, [locale]);
 
   type NavRow = StorefrontCategoryItem & { href: string };
 

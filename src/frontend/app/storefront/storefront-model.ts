@@ -154,6 +154,73 @@ export interface StorefrontSellerFilterItem {
 /** ترتیب‌های واقعی که Host روی مبلغ ترکیب‌شده یا ترتیب Catalog اعمال می‌کند. */
 export type StorefrontListingSort = "default" | "newest" | "price-asc" | "price-desc";
 
+/** گزینهٔ facet در PLP رده. */
+export interface StorefrontPlpFacetOption {
+  value: string;
+  label: string;
+  count: number | null;
+}
+
+/** facet پویا از پیکربندی رده (T008) + شمارش runtime. */
+export interface StorefrontPlpFacet {
+  definitionId: string;
+  code: string;
+  localizedName: string;
+  valueKind: string;
+  displayType: string;
+  isSearchable: boolean;
+  isCollapsedByDefault: boolean;
+  showCounts: boolean;
+  rangeMin: number | null;
+  rangeMax: number | null;
+  options: StorefrontPlpFacetOption[];
+}
+
+/** چیپ فیلتر اعمال‌شده. */
+export interface StorefrontAppliedFilterChip {
+  code: string;
+  label: string;
+  value: string;
+  displayValue: string;
+}
+
+export interface StorefrontCategoryBreadcrumbItem {
+  categoryId: string;
+  name: string;
+  slug: string;
+  path: string;
+}
+
+export interface StorefrontCategoryChildItem {
+  categoryId: string;
+  name: string;
+  slug: string;
+  path: string;
+}
+
+/** صفحهٔ PLP ردهٔ canonical. */
+export interface StorefrontCategoryPlpPage {
+  categoryId: string;
+  locale: string;
+  slug: string;
+  name: string;
+  shortDescription: string | null;
+  description: string | null;
+  canonicalPath: string;
+  isRedirect: boolean;
+  redirectToPath: string | null;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  sort: StorefrontListingSort;
+  breadcrumb: StorefrontCategoryBreadcrumbItem[];
+  subcategories: StorefrontCategoryChildItem[];
+  facets: StorefrontPlpFacet[];
+  appliedFilters: StorefrontAppliedFilterChip[];
+  products: StorefrontProductCard[];
+  supportedSorts: StorefrontListingSort[];
+}
+
 /** ورودی عمومی کشف کالا؛ UI فقط این پارامترها را به Host منتقل می‌کند. */
 export interface StorefrontListingRequest {
   query?: string;

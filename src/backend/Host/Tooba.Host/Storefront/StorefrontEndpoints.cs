@@ -22,6 +22,7 @@ public static class StorefrontEndpoints
         group.MapGet("/merchandising/{kind}", GetMerchandisingAsync);
         group.MapGet("/products", GetListingAsync);
         group.MapGet("/products/{slug}", GetDetailAsync);
+        group.MapGet("/category-plp/{slug}", GetCategoryPlpAsync);
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
         group.MapPost("/cart", CreateGuestCartAsync);
         group.MapGet("/cart/{cartId:guid}", GetCartAsync);
@@ -101,6 +102,69 @@ public static class StorefrontEndpoints
         return page is null
             ? Results.Json(new { title = "Not Found", errorCode = "storefront.product.missing" }, statusCode: StatusCodes.Status404NotFound)
             : Results.Json(page);
+    }
+
+    /// <summary>
+    /// PLP رده با مسیر slug. فیلترها از query: f_CODE=v1,v2 | r_CODE=min:max | b_CODE=true
+    /// </summary>
+    private static async Task<IResult> GetCategoryPlpAsync(
+        string slug,
+        StorefrontComposer composer,
+        HttpRequest request,
+        string? locale,
+        string? sort,
+        int page = 1,
+        int pageSize = 24,
+        CancellationToken cancellationToken = default)
+    {
+        var filters = ParsePlpFilters(request);
+        var pageModel = await composer.GetCategoryPlpAsync(
+            locale ?? "fa-IR",
+            slug,
+            filters,
+            sort,
+            page,
+            pageSize,
+            cancellationToken);
+        return pageModel is null
+            ? Results.Json(new { title = "Not Found", errorCode = "storefront.category.missing" }, statusCode: StatusCodes.Status404NotFound)
+            : Results.Json(pageModel);
+    }
+
+    private static IReadOnlyList<StorefrontPlpFilterInput> ParsePlpFilters(HttpRequest request)
+    {
+        var list = new List<StorefrontPlpFilterInput>();
+        foreach (var pair in request.Query)
+        {
+            var key = pair.Key;
+            var raw = pair.Value.ToString();
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                continue;
+            }
+
+            if (key.StartsWith("f_", StringComparison.OrdinalIgnoreCase))
+            {
+                var code = key[2..];
+                var values = raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                list.Add(new StorefrontPlpFilterInput(code, "enum", values, null, null));
+            }
+            else if (key.StartsWith("r_", StringComparison.OrdinalIgnoreCase))
+            {
+                var code = key[2..];
+                var parts = raw.Split(':', 2);
+                decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var mn) ? mn : null;
+                decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var mx) ? mx : null;
+                list.Add(new StorefrontPlpFilterInput(code, "range", [], min, max));
+            }
+            else if (key.StartsWith("b_", StringComparison.OrdinalIgnoreCase))
+            {
+                var code = key[2..];
+                list.Add(new StorefrontPlpFilterInput(code, "boolean", [raw.Trim()], null, null));
+            }
+        }
+
+        return list;
     }
 
     /// <summary>

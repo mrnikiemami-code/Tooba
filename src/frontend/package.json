@@ -28,7 +28,8 @@
     "test:home": "node --experimental-strip-types --test app/storefront/storefront-home.test.ts app/storefront/home-structure.guard.test.ts",
     "test:pdp-guard": "node --experimental-strip-types --test app/storefront/pdp-structure.guard.test.ts",
     "test:listing-guard": "node --experimental-strip-types --test app/storefront/listing-structure.guard.test.ts",
-    "test:critical-storefront": "npm run test:home && npm run test:pdp-guard && npm run test:listing-guard",
+    "test:category-plp-guard": "node --experimental-strip-types --test app/storefront/category-plp.guard.test.ts",
+    "test:critical-storefront": "npm run test:home && npm run test:pdp-guard && npm run test:listing-guard && npm run test:category-plp-guard",
     "test": "npm run test:grid && npm run test:workspace && npm run test:category-tree && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:stories && npm run test:composition && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront"
   },
   "dependencies": {

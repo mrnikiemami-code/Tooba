@@ -13,8 +13,14 @@ type Props = Omit<ComponentProps<typeof Link>, "href"> & {
 /** Link ویترین با حفظ locale فعال در URL. */
 export function LocalizedLink({ href, unprefixed = false, ...props }: Props) {
   const lp = useLocalizedPath();
-  const resolved = unprefixed || href.startsWith("/admin") || href.startsWith("/customer-panel") || href.startsWith("/vendor-panel")
-    ? href
-    : lp(href.startsWith("/") ? href : `/${href}`);
+  const alreadyLocalePrefixed = /^\/(fa|en)(\/|$)/.test(href);
+  const resolved =
+    unprefixed ||
+    alreadyLocalePrefixed ||
+    href.startsWith("/admin") ||
+    href.startsWith("/customer-panel") ||
+    href.startsWith("/vendor-panel")
+      ? href
+      : lp(href.startsWith("/") ? href : `/${href}`);
   return <Link href={resolved} {...props} />;
 }

@@ -77,7 +77,7 @@ Presentation hierarchy supports up to **3 levels** (L1/L2/L3) aligned with Shope
 | Task | Scope |
 |------|-------|
 | **T009** (this) | Menu bind model, Admin tab, storefront read model |
-| **T010+** | Category PLP page at canonical route |
+| **T010** | Category PLP at canonical route — see [CATEGORY-PLP.md](./CATEGORY-PLP.md) |
 
 ## Related files
 

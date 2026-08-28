@@ -1,9 +1,13 @@
 import type {
   StorefrontAlternateOffer,
+  StorefrontAppliedFilterChip,
   StorefrontBrandPage,
   StorefrontBrandItem,
   StorefrontBestSellerColumn,
+  StorefrontCategoryBreadcrumbItem,
+  StorefrontCategoryChildItem,
   StorefrontCategoryItem,
+  StorefrontCategoryPlpPage,
   StorefrontFeaturedReviewItem,
   StorefrontArticleItem,
   StorefrontHomePage,
@@ -12,6 +16,8 @@ import type {
   StorefrontListingSort,
   StorefrontOfferCandidate,
   StorefrontMerchandisingPage,
+  StorefrontPlpFacet,
+  StorefrontPlpFacetOption,
   StorefrontProductCard,
   StorefrontProductDetailPage,
   StorefrontProductSpecification,
@@ -733,6 +739,159 @@ export async function loadStorefrontBrand(slug: string): Promise<StorefrontBrand
   return brand && Array.isArray(products)
     ? { brand, products: products.map(mapCard).filter((row): row is StorefrontProductCard => row !== null) }
     : null;
+}
+
+function mapPlpFacetOption(value: unknown): StorefrontPlpFacetOption | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const optionValue = asString(readProp(item, "value", "Value"));
+  if (!optionValue) return null;
+  const countRaw = readProp(item, "count", "Count");
+  return {
+    value: optionValue,
+    label: asString(readProp(item, "label", "Label"), optionValue),
+    count: countRaw == null ? null : asNumber(countRaw),
+  };
+}
+
+function mapPlpFacet(value: unknown): StorefrontPlpFacet | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const definitionId = asString(readProp(item, "definitionId", "DefinitionId"));
+  const code = asString(readProp(item, "code", "Code"));
+  if (!definitionId || !code) return null;
+  const optionsRaw = readProp(item, "options", "Options");
+  const rangeMinRaw = readProp(item, "rangeMin", "RangeMin");
+  const rangeMaxRaw = readProp(item, "rangeMax", "RangeMax");
+  return {
+    definitionId,
+    code,
+    localizedName: asString(readProp(item, "localizedName", "LocalizedName"), code),
+    valueKind: asString(readProp(item, "valueKind", "ValueKind")),
+    displayType: asString(readProp(item, "displayType", "DisplayType")),
+    isSearchable: asBoolean(readProp(item, "isSearchable", "IsSearchable")),
+    isCollapsedByDefault: asBoolean(readProp(item, "isCollapsedByDefault", "IsCollapsedByDefault")),
+    showCounts: asBoolean(readProp(item, "showCounts", "ShowCounts")),
+    rangeMin: rangeMinRaw == null ? null : asNumber(rangeMinRaw),
+    rangeMax: rangeMaxRaw == null ? null : asNumber(rangeMaxRaw),
+    options: Array.isArray(optionsRaw)
+      ? optionsRaw.map(mapPlpFacetOption).filter((row): row is StorefrontPlpFacetOption => row !== null)
+      : [],
+  };
+}
+
+function mapCategoryPlp(value: unknown): StorefrontCategoryPlpPage | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const categoryId = asString(readProp(item, "categoryId", "CategoryId"));
+  const slug = asString(readProp(item, "slug", "Slug"));
+  const name = asString(readProp(item, "name", "Name"));
+  if (!categoryId || !slug || !name) return null;
+  const productsRaw = readProp(item, "products", "Products");
+  const facetsRaw = readProp(item, "facets", "Facets");
+  const breadcrumbRaw = readProp(item, "breadcrumb", "Breadcrumb");
+  const subcategoriesRaw = readProp(item, "subcategories", "Subcategories");
+  const appliedRaw = readProp(item, "appliedFilters", "AppliedFilters");
+  const sortsRaw = readProp(item, "supportedSorts", "SupportedSorts");
+  const shortRaw = readProp(item, "shortDescription", "ShortDescription");
+  const descRaw = readProp(item, "description", "Description");
+  const redirectRaw = readProp(item, "redirectToPath", "RedirectToPath");
+  const sortRaw = asString(readProp(item, "sort", "Sort"), "default");
+  const sort: StorefrontListingSort =
+    sortRaw === "newest" || sortRaw === "price-asc" || sortRaw === "price-desc" ? sortRaw : "default";
+
+  const mapNav = (row: unknown): StorefrontCategoryBreadcrumbItem | null => {
+    const r = asRecord(row);
+    if (!r) return null;
+    const id = asString(readProp(r, "categoryId", "CategoryId"));
+    if (!id) return null;
+    return {
+      categoryId: id,
+      name: asString(readProp(r, "name", "Name"), "رده"),
+      slug: asString(readProp(r, "slug", "Slug")),
+      path: asString(readProp(r, "path", "Path")),
+    };
+  };
+
+  return {
+    categoryId,
+    locale: asString(readProp(item, "locale", "Locale"), "fa-IR"),
+    slug,
+    name,
+    shortDescription: shortRaw == null ? null : asString(shortRaw),
+    description: descRaw == null ? null : asString(descRaw),
+    canonicalPath: asString(readProp(item, "canonicalPath", "CanonicalPath"), `/fa/category/${slug}`),
+    isRedirect: asBoolean(readProp(item, "isRedirect", "IsRedirect")),
+    redirectToPath: redirectRaw == null ? null : asString(redirectRaw),
+    totalCount: asNumber(readProp(item, "totalCount", "TotalCount")),
+    page: Math.max(1, asNumber(readProp(item, "page", "Page"), 1)),
+    pageSize: Math.max(1, asNumber(readProp(item, "pageSize", "PageSize"), 24)),
+    sort,
+    breadcrumb: Array.isArray(breadcrumbRaw)
+      ? breadcrumbRaw.map(mapNav).filter((row): row is StorefrontCategoryBreadcrumbItem => row !== null)
+      : [],
+    subcategories: Array.isArray(subcategoriesRaw)
+      ? subcategoriesRaw.map(mapNav).filter((row): row is StorefrontCategoryChildItem => row !== null)
+      : [],
+    facets: Array.isArray(facetsRaw)
+      ? facetsRaw.map(mapPlpFacet).filter((row): row is StorefrontPlpFacet => row !== null)
+      : [],
+    appliedFilters: Array.isArray(appliedRaw)
+      ? appliedRaw.flatMap((row): StorefrontAppliedFilterChip[] => {
+          const r = asRecord(row);
+          if (!r) return [];
+          return [{
+            code: asString(readProp(r, "code", "Code")),
+            label: asString(readProp(r, "label", "Label")),
+            value: asString(readProp(r, "value", "Value")),
+            displayValue: asString(readProp(r, "displayValue", "DisplayValue")),
+          }];
+        })
+      : [],
+    products: Array.isArray(productsRaw)
+      ? productsRaw.map(mapCard).filter((row): row is StorefrontProductCard => row !== null)
+      : [],
+    supportedSorts: Array.isArray(sortsRaw)
+      ? sortsRaw.flatMap((s): StorefrontListingSort[] => {
+          const v = asString(s);
+          return v === "newest" || v === "price-asc" || v === "price-desc" || v === "default" ? [v] : [];
+        })
+      : ["default", "newest", "price-asc", "price-desc"],
+  };
+}
+
+/**
+ * PLP رده را از Host می‌خواند. فیلترها: f_CODE / r_CODE / b_CODE مطابق قرارداد T010.
+ */
+export async function loadStorefrontCategoryPlp(
+  slug: string,
+  options: {
+    locale?: string;
+    sort?: StorefrontListingSort;
+    page?: number;
+    pageSize?: number;
+    filterQuery?: Record<string, string | undefined>;
+  } = {},
+): Promise<StorefrontCategoryPlpPage | null> {
+  let decodedSlug = slug;
+  try {
+    // Next occasionally leaves path segments percent-encoded; avoid double-encoding for Host.
+    decodedSlug = decodeURIComponent(slug);
+  } catch {
+    decodedSlug = slug;
+  }
+  const params = new URLSearchParams();
+  if (options.locale) params.set("locale", options.locale);
+  if (options.sort && options.sort !== "default") params.set("sort", options.sort);
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  if (options.pageSize) params.set("pageSize", String(options.pageSize));
+  if (options.filterQuery) {
+    for (const [key, value] of Object.entries(options.filterQuery)) {
+      if (value) params.set(key, value);
+    }
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return mapCategoryPlp(await readJson(`/v1/storefront/category-plp/${encodeURIComponent(decodedSlug)}${suffix}`));
 }
 
 /** فهرست فروشندگان عمومی را بدون پذیرش PartyId می‌خواند. */
