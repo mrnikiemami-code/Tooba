@@ -1756,13 +1756,23 @@ public sealed class CatalogProduct : IHasDomainEvents
     }
 
     /// <summary>
-    /// به‌روزرسانی درزهای غیرتجاری.
+    /// به‌روزرسانی درزهای غیرتجاری (slug/SEO). Brand از مسیر اختصاصی AssignBrand تنظیم می‌شود.
     /// </summary>
     public void TouchDescriptiveSeams(string? slugSeam, string? seoTitleSeam, Guid? brandId, DateTimeOffset now)
     {
         SlugSeam = string.IsNullOrWhiteSpace(slugSeam) ? SlugSeam : slugSeam.Trim().ToLowerInvariant();
         SeoTitleSeam = string.IsNullOrWhiteSpace(seoTitleSeam) ? SeoTitleSeam : seoTitleSeam.Trim();
         BrandId = brandId ?? BrandId;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// انتساب یا حذف برند Catalog برای محصول (شامل پاک‌کردن با null).
+    /// </summary>
+    public void AssignBrand(Guid? brandId, DateTimeOffset now)
+    {
+        BrandId = brandId;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
     }

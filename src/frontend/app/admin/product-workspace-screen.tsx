@@ -12,7 +12,6 @@ import {
 } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
 import { previewProductCategoryChange } from "./catalog-attribute-api";
-import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
@@ -27,10 +26,13 @@ import {
   useProductWorkspaceDirtyRegistry,
 } from "./product-workspace-dirty-context";
 import {
+  assignAdminProductBrand,
   assignAdminProductCategory,
+  listAdminBrandOptions,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
   updateAdminProductCore,
+  type AdminBrandOption,
   type HostReadSource,
 } from "./host-client";
 import { ProductCategoryPicker } from "./product-category-picker";
@@ -104,22 +106,17 @@ function resolveTranslation(
 }
 
 interface GeneralDraft {
-  title: string;
   slug: string;
-  shortDescription: string;
-  description: string;
   categoryId: string | null;
+  brandId: string | null;
   slugTouched: boolean;
 }
 
 function draftFromView(view: ProductWorkspaceView): GeneralDraft {
-  const fa = resolveTranslation(view, "fa-IR");
   return {
-    title: view.title,
     slug: view.slug ?? view.seo.slugSeam ?? "",
-    shortDescription: view.shortDescription ?? fa?.shortDescription ?? "",
-    description: fa?.description ?? "",
     categoryId: view.primaryCategoryId ?? null,
+    brandId: view.brandId ?? null,
     slugTouched: true,
   };
 }
@@ -171,6 +168,8 @@ function ProductWorkspaceScreenInner({
   const [busy, setBusy] = useState(false);
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
   const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
+  const [brandOptions, setBrandOptions] = useState<AdminBrandOption[]>([]);
+  const [brandQuery, setBrandQuery] = useState("");
 
   const canView = Boolean(view?.permissions.canView ?? true);
   const canEdit = Boolean(view?.permissions.canEditCatalog) && !viewScope;
@@ -191,6 +190,17 @@ function ProductWorkspaceScreenInner({
   useEffect(() => {
     reload();
   }, [reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listAdminBrandOptions(brandQuery).then((result) => {
+      if (cancelled || !result.ok) return;
+      setBrandOptions(result.items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandQuery]);
 
   useEffect(() => {
     if (!view || enteredInitialEdit || viewScope) return;
@@ -341,12 +351,12 @@ function ProductWorkspaceScreenInner({
   }
 
   async function handleSaveGeneral() {
-    if (!activeDraft.title.trim()) {
-      setError("عنوان لازم است");
-      return;
-    }
     if (!activeDraft.categoryId) {
       setError("انتخاب دسته لازم است");
+      return;
+    }
+    if (!activeDraft.slug.trim()) {
+      setError("نامک سراسری لازم است");
       return;
     }
     const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
@@ -396,14 +406,36 @@ function ProductWorkspaceScreenInner({
       expectedUpdatedAt = catResult.view.catalogUpdatedAt;
     }
 
+    const brandChanged = (activeDraft.brandId ?? null) !== (current.brandId ?? null);
+    if (brandChanged) {
+      const brandResult = await assignAdminProductBrand(
+        current.productId,
+        { brandId: activeDraft.brandId, expectedUpdatedAt },
+        viewScope,
+      );
+      if (!brandResult.ok) {
+        setBusy(false);
+        if (brandResult.errorCode === "workspace.catalog.stale") {
+          setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
+          return;
+        }
+        setError(mapAdminErrorMessage(brandResult.errorCode));
+        return;
+      }
+      setView(brandResult.view);
+      expectedUpdatedAt = brandResult.view.catalogUpdatedAt;
+    }
+
+    const faName =
+      resolveTranslation(current, "fa-IR")?.name?.trim() || current.title.trim() || "محصول";
     const coreResult = await updateAdminProductCore(
       current.productId,
       {
         locale: "fa-IR",
-        title: activeDraft.title.trim(),
+        title: faName,
         slug: activeDraft.slug.trim() || null,
-        shortDescription: activeDraft.shortDescription.trim() || null,
-        description: activeDraft.description.trim() || null,
+        shortDescription: resolveTranslation(current, "fa-IR")?.shortDescription ?? current.shortDescription ?? null,
+        description: resolveTranslation(current, "fa-IR")?.description ?? null,
         expectedUpdatedAt,
       },
       viewScope,
@@ -717,7 +749,10 @@ function ProductWorkspaceScreenInner({
             {isGeneralEdit ? (
               <div className="space-y-4" data-testid="product-general-edit">
                 <Card>
-                  <p className="text-sm font-medium text-muted">اطلاعات اصلی</p>
+                  <p className="text-sm font-medium text-muted">هویت غیرزبانی محصول</p>
+                  <p className="mt-1 text-xs text-muted">
+                    نام و توضیحات محصول در تب ترجمه‌ها به‌صورت locale-based ویرایش می‌شوند — نه به‌عنوان فیلد ثابت انگلیسی/فارسی در عمومی.
+                  </p>
                   <div className="mt-4 grid gap-4">
                     <ProductCategoryPicker
                       value={activeDraft.categoryId}
@@ -729,21 +764,33 @@ function ProductWorkspaceScreenInner({
                       invalidSelectionHint
                     />
                     <label className="block text-sm font-medium">
-                      عنوان محصول
+                      برند
                       <input
+                        className="mt-2 min-h-10 w-full rounded-ds border border-border bg-surface px-3 text-sm"
+                        placeholder="جستجوی برند…"
+                        value={brandQuery}
+                        onChange={(event) => setBrandQuery(event.target.value)}
+                        data-testid="product-brand-search"
+                      />
+                      <select
                         className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
-                        value={activeDraft.title}
-                        data-testid="product-edit-title"
+                        value={activeDraft.brandId ?? ""}
+                        data-testid="product-edit-brand"
                         onChange={(event) => {
-                          const title = event.target.value;
                           setDraft({
                             ...activeDraft,
-                            title,
-                            slug: activeDraft.slugTouched ? activeDraft.slug : slugifyCategoryName(title),
+                            brandId: event.target.value ? event.target.value : null,
                           });
                           markGeneralDirty();
                         }}
-                      />
+                      >
+                        <option value="">بدون برند</option>
+                        {brandOptions.map((brand) => (
+                          <option key={brand.brandId} value={brand.brandId}>
+                            {brand.name}
+                          </option>
+                        ))}
+                      </select>
                     </label>
                     <label className="block text-sm font-medium">
                       نامک سراسری (slug)
@@ -758,42 +805,19 @@ function ProductWorkspaceScreenInner({
                         }}
                       />
                     </label>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
-                      <SummaryCard label="وضعیت چرخه عمر" value={formatAdminStatus(view.status)} />
+                    <div className="rounded-ds border border-border bg-secondary/30 p-3 text-sm">
+                      <p className="font-medium">کد کاتالوگ</p>
+                      <p className="mt-1 text-muted">
+                        کد کاتالوگ روی هر <strong>تنوع</strong> (CatalogCodeSeam) است؛ کد سطح Product و GTIN/بارکد هنوز در دامنه تعریف نشده‌اند.
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                        onClick={() => requestSectionChange("variants")}
+                      >
+                        مدیریت کد در تب تنوع‌ها
+                      </button>
                     </div>
-                    <p className="text-xs text-muted">
-                      برند فعلاً فقط‌خواندنی است. مدل/GTIN/بارکد در دامنهٔ Catalog تعریف نشده و ساخته نمی‌شود.
-                    </p>
-                  </div>
-                </Card>
-                <Card>
-                  <p className="text-sm font-medium text-muted">توضیحات</p>
-                  <div className="mt-4 grid gap-4">
-                    <label className="block text-sm font-medium">
-                      خلاصه کوتاه
-                      <textarea
-                        className="mt-2 min-h-24 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
-                        value={activeDraft.shortDescription}
-                        data-testid="product-edit-short-description"
-                        onChange={(event) => {
-                          setDraft({ ...activeDraft, shortDescription: event.target.value });
-                          markGeneralDirty();
-                        }}
-                      />
-                    </label>
-                    <label className="block text-sm font-medium">
-                      توضیح کامل
-                      <textarea
-                        className="mt-2 min-h-40 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
-                        value={activeDraft.description}
-                        data-testid="product-edit-description"
-                        onChange={(event) => {
-                          setDraft({ ...activeDraft, description: event.target.value });
-                          markGeneralDirty();
-                        }}
-                      />
-                    </label>
                   </div>
                 </Card>
                 <Card>
@@ -808,22 +832,40 @@ function ProductWorkspaceScreenInner({
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-summary">
                 <div className="space-y-4">
                   <Card>
-                    <p className="text-sm font-medium text-muted">اطلاعات اصلی</p>
+                    <p className="text-sm font-medium text-muted">هویت غیرزبانی</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <SummaryCard label="نام" value={view.title} />
                       <SummaryCard label="مسیر دسته" value={categoryLabel(view)} />
+                      <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
                       <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
                       <SummaryCard label="نامک سراسری" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
-                      <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
                       <SummaryCard label="آخرین به‌روزرسانی" value={view.catalogUpdatedAt} ltr />
+                      <SummaryCard
+                        label="کد کاتالوگ"
+                        value={
+                          view.variants.some((v) => v.catalogCodeSeam)
+                            ? `${view.variants.filter((v) => v.catalogCodeSeam).length} تنوع دارای کد`
+                            : "روی تنوع‌ها تعریف می‌شود"
+                        }
+                      />
                     </div>
+                    <p className="mt-3 text-xs text-muted">
+                      نام و توضیحات نمایشی از تب ترجمه‌ها می‌آید (locale-based). مدل/سری و GTIN ساخته نشده‌اند.
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                      onClick={() => requestSectionChange("translations")}
+                    >
+                      ویرایش محتوای محلی در ترجمه‌ها
+                    </button>
                   </Card>
                   <Card>
-                    <p className="text-sm font-medium text-muted">توضیحات</p>
+                    <p className="text-sm font-medium text-muted">پیش‌نمایش محتوای locale فعال (فقط‌خواندنی)</p>
                     <div className="mt-3 grid gap-3">
-                      <SummaryCard label="خلاصه کوتاه" value={view.shortDescription || "—"} />
+                      <SummaryCard label="نام (fa-IR)" value={view.title || "—"} />
+                      <SummaryCard label="خلاصه کوتاه (fa-IR)" value={view.shortDescription || "—"} />
                       <SummaryCard
-                        label="توضیح کامل"
+                        label="توضیح کامل (fa-IR)"
                         value={resolveTranslation(view, "fa-IR")?.description || "—"}
                       />
                     </div>

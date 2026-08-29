@@ -58,6 +58,8 @@ export interface ProductWorkspaceView {
   status: string;
   kind: string;
   brandName: string | null;
+  /** شناسهٔ برند Catalog در صورت انتساب. */
+  brandId?: string | null;
   categoryNames: string[];
   /** شناسهٔ دستهٔ اصلی؛ برای schema ویژگی‌ها لازم است. */
   primaryCategoryId?: string | null;
@@ -145,6 +147,7 @@ export const demoProductWorkspace: ProductWorkspaceView = {
   status: "Published",
   kind: "Physical",
   brandName: "Tooba Studio",
+  brandId: "55111111-1111-7111-8111-111111111111",
   categoryNames: ["پوشاک"],
   primaryCategoryId: "66111111-1111-7111-8111-111111111111",
   categoryPath: "پوشاک > مردانه > پیراهن",

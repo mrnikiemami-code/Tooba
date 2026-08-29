@@ -48,6 +48,14 @@ public sealed record AdminProductCategoryAssignRequest(
     bool ConfirmSchemaImpact,
     DateTimeOffset ExpectedUpdatedAt);
 
+/// <summary>انتساب برند Catalog به محصول؛ null یعنی حذف برند.</summary>
+public sealed record AdminProductBrandAssignRequest(
+    Guid? BrandId,
+    DateTimeOffset ExpectedUpdatedAt);
+
+/// <summary>گزینهٔ انتخاب برند برای Admin.</summary>
+public sealed record AdminBrandOption(Guid BrandId, string Name, string Status);
+
 /// <summary>
 /// ردیف فهرست Admin. مبلغ و واحد قابل‌فروش از Offer/Price/Inventory ترکیب می‌شوند؛ روی هویت Product نیستند.
 /// </summary>
@@ -95,7 +103,8 @@ public sealed record ProductWorkspaceView(
     string? Slug = null,
     string? ShortDescription = null,
     IReadOnlyList<ProductTranslationView>? Translations = null,
-    bool IsPrimaryCategoryAssignable = false);
+    bool IsPrimaryCategoryAssignable = false,
+    Guid? BrandId = null);
 
 /// <summary>مشخصهٔ Catalog.</summary>
 public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);

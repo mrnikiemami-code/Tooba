@@ -116,6 +116,11 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
     status: asString(readProp(item, "status", "Status")),
     kind: asString(readProp(item, "kind", "Kind")),
     brandName: readProp(item, "brandName", "BrandName") == null ? null : asString(readProp(item, "brandName", "BrandName")),
+    brandId: (() => {
+      const raw = readProp(item, "brandId", "BrandId");
+      const text = asString(raw);
+      return text.length > 0 ? text : null;
+    })(),
     categoryNames: Array.isArray(readProp(item, "categoryNames", "CategoryNames"))
       ? (readProp(item, "categoryNames", "CategoryNames") as unknown[]).map((name) => asString(name))
       : [],
@@ -521,6 +526,75 @@ export async function assignAdminProductCategory(
     return { ok: true, view };
   } catch {
     return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** انتساب یا حذف برند Catalog. */
+export async function assignAdminProductBrand(
+  productId: string,
+  input: { brandId: string | null; expectedUpdatedAt: string },
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/brand`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        brandId: input.brandId,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      const code = body?.errorCode?.trim();
+      if (code) return { ok: false, errorCode: code };
+      if (response.status === 409) return { ok: false, errorCode: "workspace.catalog.stale" };
+      return { ok: false, errorCode: "workspace.product.brand-failed" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "workspace.product.brand-failed" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+export type AdminBrandOption = { brandId: string; name: string; status: string };
+
+/** فهرست برندها برای انتخابگر محصول. */
+export async function listAdminBrandOptions(
+  search?: string,
+): Promise<{ ok: true; items: AdminBrandOption[] } | { ok: false; message: string }> {
+  try {
+    const q = search?.trim() ? `?q=${encodeURIComponent(search.trim())}` : "";
+    const response = await fetch(`/v1/admin/products/brand-options${q}`, { headers: adminHeaders() });
+    if (!response.ok) {
+      return { ok: false, message: "فهرست برند خوانده نشد" };
+    }
+    const payload = await response.json();
+    const rows = Array.isArray(payload) ? payload : [];
+    return {
+      ok: true,
+      items: rows.map((row) => {
+        const item = row as Record<string, unknown>;
+        return {
+          brandId: asString(readProp(item, "brandId", "BrandId")),
+          name: asString(readProp(item, "name", "Name"), "برند"),
+          status: asString(readProp(item, "status", "Status")),
+        };
+      }),
+    };
+  } catch {
+    return { ok: false, message: "اتصال برقرار نشد" };
   }
 }
 

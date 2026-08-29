@@ -417,7 +417,8 @@ public sealed class ProductWorkspaceComposer
             product.SlugSeam,
             shortDescription,
             translations,
-            isPrimaryCategoryAssignable);
+            isPrimaryCategoryAssignable,
+            product.BrandId);
     }
 
     /// <summary>
@@ -780,6 +781,97 @@ public sealed class ProductWorkspaceComposer
         {
             throw new PlatformHttpException(400, ex.Message, "workspace.product.category.assign.rejected");
         }
+    }
+
+    /// <summary>
+    /// برند Catalog را به محصول می‌چسباند یا جدا می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> AssignProductBrandAsync(
+        Guid productId,
+        AdminProductBrandAssignRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != request.ExpectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        if (request.BrandId is { } brandId)
+        {
+            var exists = await _catalog.Brands.AsNoTracking().AnyAsync(x => x.BrandId == brandId, cancellationToken);
+            if (!exists)
+            {
+                throw new PlatformHttpException(400, "برند انتخاب‌شده معتبر نیست.", "workspace.product.brand.invalid");
+            }
+        }
+
+        var previous = product.BrandId;
+        product.AssignBrand(request.BrandId, DateTimeOffset.UtcNow);
+        await _catalog.SaveChangesAsync(cancellationToken);
+
+        await _catalogDirectory.AppendProductHistoryAsync(
+            productId,
+            ProductHistoryRules.EventGeneralChanged,
+            ProductHistoryRules.SectionGeneral,
+            "برند محصول به‌روزرسانی شد",
+            previous is null ? "بدون برند" : "برند قبلی",
+            request.BrandId is null ? "بدون برند" : "برند جدید",
+            cancellationToken);
+
+        return (await GetAsync(productId, permissions, cancellationToken))!;
+    }
+
+    /// <summary>
+    /// فهرست برندها برای انتخابگر Admin.
+    /// </summary>
+    public Task<IReadOnlyList<AdminBrandOption>> ListBrandOptionsAsync(
+        string? search,
+        CancellationToken cancellationToken) =>
+        ListBrandOptionsInternalAsync(search, cancellationToken);
+
+    private async Task<IReadOnlyList<AdminBrandOption>> ListBrandOptionsInternalAsync(
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var brands = await _catalog.Brands.AsNoTracking().ToListAsync(cancellationToken);
+        if (brands.Count == 0)
+        {
+            return [];
+        }
+
+        var brandIds = brands.Select(b => b.BrandId).ToList();
+        var nameRows = await _catalog.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand
+                && x.FieldKey == "name"
+                && brandIds.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == "fa-IR")
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        var names = nameRows
+            .GroupBy(x => x.OwnerId)
+            .ToDictionary(g => g.Key, g => g.First().Value);
+
+        IEnumerable<AdminBrandOption> items = brands.Select(b =>
+            new AdminBrandOption(
+                b.BrandId,
+                names.GetValueOrDefault(b.BrandId) ?? b.SlugSeam ?? "برند",
+                b.Status.ToString()));
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var needle = search.Trim();
+            items = items.Where(i => i.Name.Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return items.OrderBy(i => i.Name, StringComparer.Ordinal).Take(200).ToList();
     }
 
     private async Task UpsertLocalizedTextAsync(

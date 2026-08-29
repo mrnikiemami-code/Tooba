@@ -1,18 +1,18 @@
-# TB-P07-T024 — Deferred / not invented Product fields
+# TB-P07-T024-R1 — Deferred / canonical ownership
 
-## Intentionally not invented
+## Canonical decisions
 
-| Field | Reason |
-|-------|--------|
-| Model / series | Not present on `CatalogProduct`; no justified Catalog seam |
-| GTIN / EAN / UPC / barcode | Not in Catalog domain |
-| Product-level Catalog code | Code lives on `CatalogVariant.CatalogCodeSeam` |
-| Brand assign in Workspace | Brand is readable (`BrandName`); assign API not exposed on Product core yet |
-| Per-locale slug table | Global `SlugSeam` preserved; non-fa core updates no longer rewrite global slug/SEO seam |
-| Media DAM / file upload | Existing placeholder assignment seam only |
+| Concern | Decision |
+|---------|----------|
+| Product name / short / full text | Locale-based LocalizedText via **Translations** tab only — not fixed NameFa/NameEn on General |
+| Brand | Catalog `CatalogProduct.BrandId` — **assignable** in General (`PUT /brand`) |
+| Catalog code | **Variant** `CatalogCodeSeam` only — General links to Variants tab |
+| Model / Series | **Not invented** as Product scalar; use Category Attribute schema when a category needs it |
+| GTIN / EAN / UPC / barcode | **Architectural Concern** — no Catalog identifier table yet; no fake UI |
 
-## Implemented in T024
+## Implemented in R1
 
-- General: full description (LocalizedText `full_description`) + denser grouping
-- Translations: real editable locale content via `PATCH /core` with fa-IR-only global seam mutation
-- Locale readiness: کامل / ناقص / ایجاد نشده
+- General is language-neutral: category, brand assign, global slug, status/timestamps, media preview
+- Brand list: `GET /v1/admin/products/brand-options`
+- Brand assign/clear: `PUT /v1/admin/products/{id}/brand`
+- Translations remain the editable source for fa/en content with locale isolation

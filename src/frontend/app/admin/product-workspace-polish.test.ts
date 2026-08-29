@@ -40,10 +40,13 @@ test("translations tab has editable panel not deferred stub", () => {
   assert.equal(screen.includes("این تب وضعیت ترجمهٔ هر locale را نشان می‌دهد"), false);
 });
 
-test("general edit includes full description field", () => {
+test("general edit has no fixed-language title/description fields", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
-  assert.match(screen, /product-edit-description/);
-  assert.match(screen, /description: activeDraft\.description\.trim/);
+  assert.equal(screen.includes('data-testid="product-edit-title"'), false);
+  assert.equal(screen.includes('data-testid="product-edit-description"'), false);
+  assert.equal(screen.includes('data-testid="product-edit-short-description"'), false);
+  assert.match(screen, /product-edit-brand/);
+  assert.match(screen, /ProductTranslationsPanel/);
 });
 
 test("shell edit exit and mode badge", () => {

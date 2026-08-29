@@ -17,6 +17,7 @@ public static class ProductWorkspaceEndpoints
         var group = app.MapGroup("/v1/admin/products");
         group.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
         group.MapGet("/", ListAsync);
+        group.MapGet("/brand-options", ListBrandOptionsAsync);
         group.MapPost("/query", QueryGridAsync);
         group.MapPost("/", CreateAsync);
         group.MapGet("/{productId:guid}", GetAsync);
@@ -24,6 +25,7 @@ public static class ProductWorkspaceEndpoints
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
+        group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
         group.MapPost("/{productId:guid}/publish", PublishAsync);
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
         group.MapPost("/{productId:guid}/archive", ArchiveAsync);
@@ -251,6 +253,51 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AssignProductCategoryAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> AssignBrandAsync(
+        Guid productId,
+        AdminProductBrandAssignRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.AssignProductBrandAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> ListBrandOptionsAsync(
+        string? q,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.ListBrandOptionsAsync(q, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

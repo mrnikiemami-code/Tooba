@@ -58,6 +58,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "اختصاص دسته انجام نشد.",
     en: "Category assignment failed.",
   },
+  "workspace.product.brand.invalid": {
+    fa: "برند انتخاب‌شده معتبر نیست.",
+    en: "The selected brand is not valid.",
+  },
+  "workspace.product.brand-failed": {
+    fa: "انتساب برند انجام نشد.",
+    en: "Brand assignment failed.",
+  },
   "workspace.catalog.stale": {
     fa: "این مورد را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.",
     en: "Someone else changed this record. Reload the latest version.",
