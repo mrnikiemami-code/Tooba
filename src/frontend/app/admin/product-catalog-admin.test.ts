@@ -84,6 +84,7 @@ test("attributes tab requires categoryId and wires schema-driven panel", () => {
   assert.match(screen, /product-attributes-category-required/);
   assert.match(screen, /primaryCategoryId/);
   assert.match(screen, /ProductAttributesPanel/);
+  assert.match(screen, /ProductVariantsPanel/);
   assert.match(screen, /product-attributes-panel/);
   assert.match(screen, /previewProductCategoryChange/);
   assert.match(screen, /canEdit=\{canMutateCatalog\}/);

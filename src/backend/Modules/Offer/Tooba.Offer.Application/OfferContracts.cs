@@ -22,6 +22,13 @@ public interface IOfferLookupGateway
     /// Offer را در پایگاه Tenant یا Marketplace جاری پیدا می‌کند؛ Host parse نمی‌شود.
     /// </summary>
     Task<OfferReference?> FindOfferAsync(Guid offerId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تعداد Offerهای وابسته به هر CatalogVariant را بدون join به Catalog برمی‌گرداند.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountOffersByCatalogVariantIdsAsync(
+        IReadOnlyCollection<Guid> catalogVariantIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

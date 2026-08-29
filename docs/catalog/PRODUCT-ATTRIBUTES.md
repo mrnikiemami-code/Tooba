@@ -39,13 +39,13 @@ Editor fields include:
 - Current canonical + display value
 - Missing-required flag
 
-### Variant axes (T013 handoff)
+### Variant axes
 
-Effective `IsVariantAxis` fields appear as **informational** rows only:
+Effective `IsVariantAxis` fields appear as **informational** rows only (محور تنوع — در تب تنوع‌ها).
 
-> محور تنوع — در تب تنوع‌ها
+They are **not** editable product-level values. `SetProductAttribute` / batch set reject axis definitions.
 
-They are **not** editable product-level values. `SetProductAttribute` / batch set reject axis definitions. Full variant matrix is T013.
+Full matrix authoring: [PRODUCT-VARIANTS.md](./PRODUCT-VARIANTS.md).
 
 ## APIs
 

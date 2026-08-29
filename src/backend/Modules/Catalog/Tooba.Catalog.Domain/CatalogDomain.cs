@@ -1485,6 +1485,16 @@ public sealed class CatalogVariant : IHasDomainEvents
     public CatalogPublicationStatus Status { get; set; }
 
     /// <summary>
+    /// ترتیب نمایش پایدار تنوع داخل محصول.
+    /// </summary>
+    public int SortOrder { get; set; }
+
+    /// <summary>
+    /// تنوع پیش‌فرض محصول؛ حداکثر یکی میان غیرآرشیو.
+    /// </summary>
+    public bool IsDefault { get; set; }
+
+    /// <summary>
     /// زمان ایجاد.
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
@@ -1514,14 +1524,14 @@ public sealed class CatalogVariant : IHasDomainEvents
             .ToArray();
         if (parts.Length == 0)
         {
-            throw new InvalidOperationException("گونه باید حداقل یک محور ویژگی داشته باشد تا با Product ساده قاطی نشود.");
+            throw new InvalidOperationException("تنوع باید حداقل یک محور ویژگی داشته باشد تا با Product ساده قاطی نشود.");
         }
 
         return string.Join("|", parts);
     }
 
     /// <summary>
-    /// گونه می‌سازد و رویداد ایجاد را برای تصویر Search آینده صف می‌کند نه برای ایندکس کردن همین‌جا.
+    /// تنوع می‌سازد و رویداد ایجاد را برای تصویر Search آینده صف می‌کند نه برای ایندکس کردن همین‌جا.
     /// </summary>
     public static CatalogVariant Create(
         Guid productId,
@@ -1537,6 +1547,8 @@ public sealed class CatalogVariant : IHasDomainEvents
             CombinationFingerprint = combinationFingerprint,
             CatalogCodeSeam = string.IsNullOrWhiteSpace(catalogCodeSeam) ? null : catalogCodeSeam.Trim(),
             Status = CatalogPublicationStatus.Draft,
+            SortOrder = 0,
+            IsDefault = false,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -1545,11 +1557,39 @@ public sealed class CatalogVariant : IHasDomainEvents
     }
 
     /// <summary>
-    /// وضعیت انتشار گونه را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
+    /// وضعیت انتشار تنوع را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
     /// </summary>
     public void SetStatus(CatalogPublicationStatus status, DateTimeOffset now)
     {
         Status = status;
+        if (status == CatalogPublicationStatus.Archived)
+        {
+            IsDefault = false;
+        }
+
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// ترتیب نمایش تنوع را به‌روز می‌کند.
+    /// </summary>
+    public void SetSortOrder(int sortOrder, DateTimeOffset now)
+    {
+        SortOrder = sortOrder;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// پرچم پیش‌فرض را روی این موجودیت تنظیم می‌کند؛ یکتایی در دایرکتوری اعمال می‌شود.
+    /// </summary>
+    public void SetDefault(bool isDefault, DateTimeOffset now)
+    {
+        if (isDefault && Status == CatalogPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException("تنوع بایگانی‌شده نمی‌تواند پیش‌فرض باشد.");
+        }
+
+        IsDefault = isDefault;
         UpdatedAt = now;
     }
 

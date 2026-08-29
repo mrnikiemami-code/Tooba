@@ -362,6 +362,8 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.CatalogCodeSeam).HasMaxLength(64);
             entity.Property(x => x.CombinationFingerprint).HasMaxLength(512).IsRequired();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.SortOrder).HasDefaultValue(0);
+            entity.Property(x => x.IsDefault).HasDefaultValue(false);
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => new { x.ProductId, x.CombinationFingerprint }).IsUnique();
             entity.HasMany(x => x.AttributeValues).WithOne().HasForeignKey(x => x.VariantId);

@@ -172,6 +172,106 @@ export interface CategoryChangeImpactReport {
   newlyRequiredLabels: string[];
   invalidVariantAxisDefinitionIds: string[];
   messageFa: string;
+  impactedVariantCount: number;
+  variantImpactMessageFa: string | null;
+}
+
+export interface ProductVariantAxisOption {
+  optionId: string;
+  localizedLabel: string;
+  code: string;
+  isActive: boolean;
+}
+
+export interface ProductVariantAxisEditorField {
+  definitionId: string;
+  code: string;
+  localizedName: string;
+  valueKind: CatalogAttributeValueKind;
+  options: ProductVariantAxisOption[];
+  selectedOptionIds: string[];
+}
+
+export interface ProductVariantAxisLabel {
+  definitionName: string;
+  valueLabel: string;
+}
+
+export interface ProductVariantListItem {
+  variantId: string;
+  fingerprint: string;
+  status: string;
+  sortOrder: number;
+  isDefault: boolean;
+  catalogCodeSeam: string | null;
+  axisLabels: ProductVariantAxisLabel[];
+  offerCount: number | null;
+}
+
+export interface ProductVariantReadiness {
+  isValid: boolean;
+  missingAxes: string[];
+  invalidVariants: string[];
+  duplicateCombinations: string[];
+  noDefaultVariant: boolean | null;
+}
+
+export interface ProductVariantEditorState {
+  productId: string;
+  categoryPath: string | null;
+  axes: ProductVariantAxisEditorField[];
+  variants: ProductVariantListItem[];
+  readiness: ProductVariantReadiness;
+  maxCombinations: number;
+  messageFa: string | null;
+}
+
+export type ProductVariantCombinationAction = "Unchanged" | "New" | "Deactivate";
+
+export interface ProductVariantCombinationPreview {
+  desiredFingerprint: string;
+  axisLabels: ProductVariantAxisLabel[];
+  existingVariantId: string | null;
+  action: ProductVariantCombinationAction;
+  referencedByOffers: boolean | null;
+}
+
+export interface ProductVariantPreviewResult {
+  combinations: ProductVariantCombinationPreview[];
+  unchangedCount: number;
+  newCount: number;
+  deactivateCount: number;
+  totalDesired: number;
+  capped: boolean;
+  warningFa: string | null;
+  messageFa: string | null;
+}
+
+export interface ProductVariantSelectedAxisInput {
+  definitionId: string;
+  optionIds: string[];
+}
+
+export interface ProductVariantPatchInput {
+  variantId: string;
+  status?: string | null;
+  catalogCodeSeam?: string | null;
+  sortOrder?: number | null;
+  isDefault?: boolean | null;
+}
+
+export interface ProductVariantApplyInput {
+  locale?: string;
+  selectedAxes: ProductVariantSelectedAxisInput[];
+  defaultVariantId?: string | null;
+  variantPatches?: ProductVariantPatchInput[];
+}
+
+export interface ProductVariantApplyResult {
+  created: number;
+  unchanged: number;
+  deactivated: number;
+  variants: ProductVariantListItem[];
 }
 
 function recordOf(value: unknown): Record<string, unknown> | null {
@@ -721,8 +821,236 @@ export async function previewProductCategoryChange(
         ? axesRaw.map((x) => text(x)).filter(Boolean)
         : [],
       messageFa: text(prop(item, "messageFa", "MessageFa")),
+      impactedVariantCount: intOr(prop(item, "impactedVariantCount", "ImpactedVariantCount"), 0),
+      variantImpactMessageFa: text(prop(item, "variantImpactMessageFa", "VariantImpactMessageFa")) || null,
     },
   };
+}
+
+function parseVariantAxisLabel(raw: unknown): ProductVariantAxisLabel | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  return {
+    definitionName: text(prop(item, "definitionName", "DefinitionName")),
+    valueLabel: text(prop(item, "valueLabel", "ValueLabel")),
+  };
+}
+
+function parseVariantListItem(raw: unknown): ProductVariantListItem | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const variantId = text(prop(item, "variantId", "VariantId"));
+  if (!variantId) return null;
+  const labelsRaw = prop(item, "axisLabels", "AxisLabels");
+  const offerRaw = prop(item, "offerCount", "OfferCount");
+  return {
+    variantId,
+    fingerprint: text(prop(item, "fingerprint", "Fingerprint")),
+    status: text(prop(item, "status", "Status")),
+    sortOrder: intOr(prop(item, "sortOrder", "SortOrder"), 0),
+    isDefault: bool(prop(item, "isDefault", "IsDefault")),
+    catalogCodeSeam: text(prop(item, "catalogCodeSeam", "CatalogCodeSeam")) || null,
+    axisLabels: Array.isArray(labelsRaw)
+      ? labelsRaw.map(parseVariantAxisLabel).filter((x): x is ProductVariantAxisLabel => x != null)
+      : [],
+    offerCount: offerRaw == null || offerRaw === "" ? null : intOr(offerRaw, 0),
+  };
+}
+
+function parseVariantReadiness(raw: unknown): ProductVariantReadiness {
+  const item = recordOf(raw);
+  if (!item) {
+    return {
+      isValid: true,
+      missingAxes: [],
+      invalidVariants: [],
+      duplicateCombinations: [],
+      noDefaultVariant: null,
+    };
+  }
+  const missing = prop(item, "missingAxes", "MissingAxes");
+  const invalid = prop(item, "invalidVariants", "InvalidVariants");
+  const dupes = prop(item, "duplicateCombinations", "DuplicateCombinations");
+  const noDefaultRaw = prop(item, "noDefaultVariant", "NoDefaultVariant");
+  return {
+    isValid: bool(prop(item, "isValid", "IsValid"), true),
+    missingAxes: Array.isArray(missing) ? missing.map((x) => text(x)).filter(Boolean) : [],
+    invalidVariants: Array.isArray(invalid) ? invalid.map((x) => text(x)).filter(Boolean) : [],
+    duplicateCombinations: Array.isArray(dupes) ? dupes.map((x) => text(x)).filter(Boolean) : [],
+    noDefaultVariant: typeof noDefaultRaw === "boolean" ? noDefaultRaw : null,
+  };
+}
+
+function parseVariantEditorState(raw: unknown): ProductVariantEditorState | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const productId = text(prop(item, "productId", "ProductId"));
+  if (!productId) return null;
+  const axesRaw = prop(item, "axes", "Axes");
+  const variantsRaw = prop(item, "variants", "Variants");
+  const axes = Array.isArray(axesRaw)
+    ? axesRaw
+        .map((row) => {
+          const r = recordOf(row);
+          if (!r) return null;
+          const definitionId = text(prop(r, "definitionId", "DefinitionId"));
+          if (!definitionId) return null;
+          const optionsRaw = prop(r, "options", "Options");
+          const selectedRaw = prop(r, "selectedOptionIds", "SelectedOptionIds");
+          return {
+            definitionId,
+            code: text(prop(r, "code", "Code")),
+            localizedName: text(prop(r, "localizedName", "LocalizedName")),
+            valueKind: parseValueKind(prop(r, "valueKind", "ValueKind")),
+            options: Array.isArray(optionsRaw)
+              ? optionsRaw
+                  .map((opt) => {
+                    const o = recordOf(opt);
+                    if (!o) return null;
+                    const optionId = text(prop(o, "optionId", "OptionId"));
+                    if (!optionId) return null;
+                    return {
+                      optionId,
+                      localizedLabel: text(prop(o, "localizedLabel", "LocalizedLabel")),
+                      code: text(prop(o, "code", "Code")),
+                      isActive: bool(prop(o, "isActive", "IsActive"), true),
+                    } satisfies ProductVariantAxisOption;
+                  })
+                  .filter((x): x is ProductVariantAxisOption => x != null)
+              : [],
+            selectedOptionIds: Array.isArray(selectedRaw)
+              ? selectedRaw.map((x) => text(x)).filter(Boolean)
+              : [],
+          } satisfies ProductVariantAxisEditorField;
+        })
+        .filter((x): x is ProductVariantAxisEditorField => x != null)
+    : [];
+  return {
+    productId,
+    categoryPath: text(prop(item, "categoryPath", "CategoryPath")) || null,
+    axes,
+    variants: Array.isArray(variantsRaw)
+      ? variantsRaw.map(parseVariantListItem).filter((x): x is ProductVariantListItem => x != null)
+      : [],
+    readiness: parseVariantReadiness(prop(item, "readiness", "Readiness")),
+    maxCombinations: intOr(prop(item, "maxCombinations", "MaxCombinations"), 200),
+    messageFa: text(prop(item, "messageFa", "MessageFa")) || null,
+  };
+}
+
+function parseVariantPreview(raw: unknown): ProductVariantPreviewResult | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const combosRaw = prop(item, "combinations", "Combinations");
+  const combinations = Array.isArray(combosRaw)
+    ? combosRaw
+        .map((row) => {
+          const r = recordOf(row);
+          if (!r) return null;
+          const actionRaw = text(prop(r, "action", "Action"));
+          const action: ProductVariantCombinationAction =
+            actionRaw === "New" || actionRaw === "1"
+              ? "New"
+              : actionRaw === "Deactivate" || actionRaw === "2"
+                ? "Deactivate"
+                : "Unchanged";
+          const existing = prop(r, "existingVariantId", "ExistingVariantId");
+          const referenced = prop(r, "referencedByOffers", "ReferencedByOffers");
+          const labelsRaw = prop(r, "axisLabels", "AxisLabels");
+          return {
+            desiredFingerprint: text(prop(r, "desiredFingerprint", "DesiredFingerprint")),
+            axisLabels: Array.isArray(labelsRaw)
+              ? labelsRaw.map(parseVariantAxisLabel).filter((x): x is ProductVariantAxisLabel => x != null)
+              : [],
+            existingVariantId: existing == null || existing === "" ? null : text(existing),
+            action,
+            referencedByOffers: typeof referenced === "boolean" ? referenced : null,
+          } satisfies ProductVariantCombinationPreview;
+        })
+        .filter((x): x is ProductVariantCombinationPreview => x != null)
+    : [];
+  return {
+    combinations,
+    unchangedCount: intOr(prop(item, "unchangedCount", "UnchangedCount"), 0),
+    newCount: intOr(prop(item, "newCount", "NewCount"), 0),
+    deactivateCount: intOr(prop(item, "deactivateCount", "DeactivateCount"), 0),
+    totalDesired: intOr(prop(item, "totalDesired", "TotalDesired"), 0),
+    capped: bool(prop(item, "capped", "Capped")),
+    warningFa: text(prop(item, "warningFa", "WarningFa")) || null,
+    messageFa: text(prop(item, "messageFa", "MessageFa")) || null,
+  };
+}
+
+/** بارگذاری ویرایشگر ماتریس تنوع محصول. */
+export async function getProductVariantEditorState(
+  productId: string,
+  locale = "fa-IR",
+): Promise<AdminResult<ProductVariantEditorState>> {
+  const q = new URLSearchParams({ locale });
+  const response = await adminRead(`/v1/admin/catalog/products/${productId}/variants/editor?${q}`);
+  if (response.state !== "ok") return { ...response, data: null };
+  const state = parseVariantEditorState(response.data);
+  if (!state) {
+    return { state: "error", data: null, status: response.status, message: "catalog.variant.editor.parse" };
+  }
+  return { ...response, data: state };
+}
+
+/** پیش‌نمایش ترکیب‌های ماتریس تنوع. */
+export async function previewProductVariantCombinations(
+  productId: string,
+  selectedAxes: ProductVariantSelectedAxisInput[],
+  locale = "fa-IR",
+): Promise<AdminResult<ProductVariantPreviewResult>> {
+  const response = await adminWrite(`/v1/admin/catalog/products/${productId}/variants/preview`, "POST", {
+    locale,
+    selectedAxes,
+  });
+  if (response.state !== "ok") return { ...response, data: null };
+  const preview = parseVariantPreview(response.data);
+  if (!preview) {
+    return { state: "error", data: null, status: response.status, message: "catalog.variant.preview.parse" };
+  }
+  return { ...response, data: preview };
+}
+
+/** اعمال ماتریس تنوع. */
+export async function applyProductVariantMatrix(
+  productId: string,
+  input: ProductVariantApplyInput,
+): Promise<AdminResult<ProductVariantApplyResult>> {
+  const response = await adminWrite(`/v1/admin/catalog/products/${productId}/variants/apply`, "PUT", {
+    locale: input.locale ?? "fa-IR",
+    selectedAxes: input.selectedAxes,
+    defaultVariantId: input.defaultVariantId ?? null,
+    variantPatches: input.variantPatches ?? [],
+  });
+  if (response.state !== "ok") return { ...response, data: null };
+  const item = recordOf(response.data);
+  if (!item) {
+    return { state: "error", data: null, status: response.status, message: "catalog.variant.apply.parse" };
+  }
+  const variantsRaw = prop(item, "variants", "Variants");
+  return {
+    ...response,
+    data: {
+      created: intOr(prop(item, "created", "Created"), 0),
+      unchanged: intOr(prop(item, "unchanged", "Unchanged"), 0),
+      deactivated: intOr(prop(item, "deactivated", "Deactivated"), 0),
+      variants: Array.isArray(variantsRaw)
+        ? variantsRaw.map(parseVariantListItem).filter((x): x is ProductVariantListItem => x != null)
+        : [],
+    },
+  };
+}
+
+/** آمادگی تنوع‌های محصول. */
+export async function getProductVariantReadiness(
+  productId: string,
+): Promise<AdminResult<ProductVariantReadiness>> {
+  const response = await adminRead(`/v1/admin/catalog/products/${productId}/variants/readiness`);
+  if (response.state !== "ok") return { ...response, data: null };
+  return { ...response, data: parseVariantReadiness(response.data) };
 }
 
 /** تنظیم محورهای Variant محصول (Admin). */

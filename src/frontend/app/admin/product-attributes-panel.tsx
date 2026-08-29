@@ -45,7 +45,7 @@ function badgeClass(tone: "amber" | "violet" | "slate" | "emerald" | "rose"): st
 
 /**
  * پنل ویژگی‌های محصول Workspace — وابسته به schema مؤثر دسته.
- * محورهای تنوع فقط اطلاع‌رسانی؛ ویرایش ماتریس در T013.
+ * محورهای تنوع فقط اطلاع‌رسانی؛ ویرایش ماتریس در تب تنوع‌ها.
  */
 export function ProductAttributesPanel({
   productId,
@@ -263,7 +263,7 @@ export function ProductAttributesPanel({
               data-testid="product-attributes-variant-axes"
             >
               <p className="text-sm font-medium text-foreground">محورهای تنوع</p>
-              <p className="mt-1 text-xs text-muted">محور تنوع — در تب تنوع‌ها مدیریت می‌شود (T013).</p>
+              <p className="mt-1 text-xs text-muted">محور تنوع — در تب تنوع‌ها مدیریت می‌شود.</p>
               <ul className="mt-3 space-y-2">
                 {axisFields.map((field) => (
                   <li key={field.definitionId} className="flex flex-wrap items-center gap-2 text-sm">

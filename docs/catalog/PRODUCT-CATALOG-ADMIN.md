@@ -55,8 +55,8 @@ Locked Admin form pattern via `useAdminFormMode`:
 |-----|----------------|
 | عمومی | Implemented foundation |
 | ترجمه‌ها | Locale-based foundation (LocalizedText + SlugSeam) |
-| ویژگی‌ها | **Implemented** — category-driven Product Attribute Values editor (T012); variant axes informational only → T013 |
-| تنوع‌ها | Shell (Persian **تنوع**, not گونه) |
+| ویژگی‌ها | **Implemented** — category-driven Product Attribute Values editor (T012); variant axes informational → tab تنوع‌ها |
+| تنوع‌ها | **Implemented** — axes + combination preview + matrix apply (T013); Persian **تنوع**, not گونه |
 | رسانه | Shell / existing media seams |
 | SEO | Shell |
 | انتشار | Lifecycle + read-only commercial readiness |
@@ -88,10 +88,11 @@ Public route strategy remains clean / locale-aware; do not append ProductId to v
 
 Prefer **archive** over hard delete when offers/history reference the product.
 
-## Variants handoff
+## Variants
 
-Source: category effective schema → `IsVariantAxis` attributes (shown read-only on ویژگی‌ها) → Product Variants matrix in **T013**.
-UI term: **تنوع**. Full matrix deferred.
+Source: category effective schema → `IsVariantAxis` attributes (shown read-only on ویژگی‌ها) → Product Variants matrix on **تنوع‌ها**.
+
+See [PRODUCT-VARIANTS.md](./PRODUCT-VARIANTS.md). UI term: **تنوع**. No `ProductVariant.Price` / `ProductVariant.Stock`.
 
 ## Authorization
 

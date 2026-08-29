@@ -1,18 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
-import { listAttributeDefinitions, previewProductCategoryChange, type AttributeDefinition } from "./catalog-attribute-api";
+import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
+import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   assignAdminProductCategory,
   attachAdminProductMedia,
-  createAdminProductVariant,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
-  patchAdminProductVariant,
   patchAdminProductMediaAlt,
   removeAdminProductMedia,
   reorderAdminProductMedia,
@@ -43,39 +42,12 @@ const LOCALE_DISPLAY: Record<string, string> = {
   "en-US": "English",
 };
 
-const AXIS_LABELS: Record<string, string> = {
-  color: "رنگ",
-  colour: "رنگ",
-  size: "سایز",
-  storage: "حافظه",
-  memory: "حافظه",
-  ram: "رم",
-  pack: "بسته",
-};
-
 function money(amount: number | undefined, currency: string | undefined): string {
   if (amount == null) {
     return "—";
   }
   const digits = new Intl.NumberFormat("fa-IR").format(amount);
   return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency ?? ""}`.trim();
-}
-
-/** اثرانگشت خام `color=sand|size=m` را برای اپراتور خوانا می‌کند. */
-export function humanizeFingerprint(fingerprint: string): string {
-  if (!fingerprint.trim()) {
-    return "بدون ترکیب";
-  }
-  return fingerprint
-    .split("|")
-    .map((part) => {
-      const [rawKey, ...rest] = part.split("=");
-      const key = (rawKey ?? "").trim().toLowerCase();
-      const value = rest.join("=").trim() || "—";
-      const label = AXIS_LABELS[key] ?? (rawKey?.trim() || "محور");
-      return `${label}: ${value}`;
-    })
-    .join(" · ");
 }
 
 function statusTone(status: string): "success" | "warning" | "neutral" | "danger" {
@@ -161,10 +133,6 @@ export function ProductWorkspaceScreen({
   const [attachAssetId, setAttachAssetId] = useState("");
   const [attachAlt, setAttachAlt] = useState("");
   const [altDrafts, setAltDrafts] = useState<Record<string, string>>({});
-  const [axisDefs, setAxisDefs] = useState<AttributeDefinition[]>([]);
-  const [createAxes, setCreateAxes] = useState<Record<string, { rawValue: string; enumOptionId: string }>>({});
-  const [createCatalogCode, setCreateCatalogCode] = useState("");
-  const [variantStatusDraft, setVariantStatusDraft] = useState<Record<string, string>>({});
   const [translationLocale, setTranslationLocale] = useState<string>("fa-IR");
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
 
@@ -186,11 +154,6 @@ export function ProductWorkspaceScreen({
           alts[item.mediaAssetId] = item.altText ?? "";
         }
         setAltDrafts(alts);
-        const statuses: Record<string, string> = {};
-        for (const variant of result.view.variants) {
-          statuses[variant.variantId] = variant.status;
-        }
-        setVariantStatusDraft(statuses);
       }
     });
   }, [productId, viewScope]);
@@ -198,14 +161,6 @@ export function ProductWorkspaceScreen({
   useEffect(() => {
     reload();
   }, [reload]);
-
-  useEffect(() => {
-    void listAttributeDefinitions().then((result) => {
-      if (result.state === "ok" && result.data) {
-        setAxisDefs(result.data.filter((row) => row.isVariantAxisAllowed && row.isActive));
-      }
-    });
-  }, []);
 
   useEffect(() => {
     if (!view || enteredInitialEdit || viewScope) return;
@@ -488,48 +443,6 @@ export function ProductWorkspaceScreen({
     applyMedia(result.media);
   }
 
-  async function onCreateVariant() {
-    const axes = Object.entries(createAxes)
-      .filter(([, d]) => d.rawValue.trim() || d.enumOptionId.trim())
-      .map(([definitionId, d]) => ({
-        definitionId,
-        rawValue: d.rawValue.trim() || (d.enumOptionId.trim() ? "ignored" : null),
-        enumOptionId: d.enumOptionId.trim() || null,
-      }));
-    if (axes.length === 0) {
-      setError("حداقل یک محور با مقدار برای ایجاد تنوع لازم است");
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    const result = await createAdminProductVariant(current.productId, {
-      catalogCodeSeam: createCatalogCode.trim() || null,
-      axes,
-    });
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    setView(result.view);
-    setCreateAxes({});
-    setCreateCatalogCode("");
-  }
-
-  async function onPatchVariantStatus(variantId: string) {
-    const status = variantStatusDraft[variantId];
-    if (!status) return;
-    setBusy(true);
-    setError(null);
-    const result = await patchAdminProductVariant(current.productId, variantId, { status });
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    setView(result.view);
-  }
-
   const shellActions = isGeneralEdit
     ? [
         { id: "save", label: "ذخیره", kind: "primary" as const, permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const) },
@@ -802,184 +715,14 @@ export function ProductWorkspaceScreen({
         ) : null}
 
         {sectionId === "variants" ? (
-          <div className="space-y-4" data-testid="admin-product-variants">
-            <Card>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold">تنوع‌های محصول</p>
-                  <p className="mt-1 text-sm text-muted">ترکیب محورها · بدون قیمت یا موجودی روی تنوع</p>
-                </div>
-                <button
-                  type="button"
-                  className="rounded-ds border border-border px-3 py-2 text-sm hover:bg-secondary"
-                  onClick={() => setSectionId("attributes")}
-                >
-                  تنظیم محورها در ویژگی‌ها
-                </button>
-              </div>
-            </Card>
-
-            <div className="overflow-x-auto md:overflow-visible">
-              <ul className="space-y-2 md:hidden">
-                {view.variants.map((variant) => (
-                  <li key={variant.variantId} className="rounded-ds border border-border p-3">
-                    <p className="font-medium">{humanizeFingerprint(variant.fingerprint)}</p>
-                    <p className="mt-1 text-sm text-muted" dir="ltr">
-                      {variant.catalogCodeSeam ?? "بدون کد کاتالوگ"}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Badge tone={statusTone(variant.status)}>{formatAdminStatus(variant.status)}</Badge>
-                      <span className="text-sm text-muted">{variant.offerCount} پیشنهاد</span>
-                    </div>
-                    {canMutateCatalog ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <select
-                          className="min-h-10 rounded-ds border border-border bg-surface px-2 text-sm"
-                          value={variantStatusDraft[variant.variantId] ?? variant.status}
-                          onChange={(event) =>
-                            setVariantStatusDraft((prev) => ({ ...prev, [variant.variantId]: event.target.value }))
-                          }
-                        >
-                          <option value="Draft">پیش‌نویس</option>
-                          <option value="Published">منتشرشده</option>
-                          <option value="Archived">بایگانی</option>
-                        </select>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          className="rounded-ds bg-primary px-3 py-2 text-sm text-primary-foreground disabled:opacity-50"
-                          onClick={() => void onPatchVariantStatus(variant.variantId)}
-                        >
-                          ذخیره وضعیت
-                        </button>
-                      </div>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-              <table className="hidden w-full text-right text-base md:table">
-                <thead className="border-b border-border text-sm text-muted">
-                  <tr>
-                    <th className="py-2">ترکیب</th>
-                    <th>کد کاتالوگ</th>
-                    <th>وضعیت</th>
-                    <th>پیشنهاد</th>
-                    {canMutateCatalog ? <th>عملیات</th> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {view.variants.map((variant) => (
-                    <tr key={variant.variantId} className="border-b border-border/70">
-                      <td className="py-3 font-medium">{humanizeFingerprint(variant.fingerprint)}</td>
-                      <td dir="ltr">{variant.catalogCodeSeam ?? "—"}</td>
-                      <td>
-                        <Badge tone={statusTone(variant.status)}>{formatAdminStatus(variant.status)}</Badge>
-                      </td>
-                      <td>{variant.offerCount}</td>
-                      {canMutateCatalog ? (
-                        <td>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <select
-                              className="min-h-10 rounded-ds border border-border bg-surface px-2 text-sm"
-                              value={variantStatusDraft[variant.variantId] ?? variant.status}
-                              onChange={(event) =>
-                                setVariantStatusDraft((prev) => ({ ...prev, [variant.variantId]: event.target.value }))
-                              }
-                            >
-                              <option value="Draft">پیش‌نویس</option>
-                              <option value="Published">منتشرشده</option>
-                              <option value="Archived">بایگانی</option>
-                            </select>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              className="rounded-ds border border-border px-3 py-1.5 text-sm hover:bg-secondary disabled:opacity-50"
-                              onClick={() => void onPatchVariantStatus(variant.variantId)}
-                            >
-                              ذخیره
-                            </button>
-                          </div>
-                        </td>
-                      ) : null}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {view.variants.length === 0 ? <p className="text-sm text-muted">هنوز تنوعی ثبت نشده است.</p> : null}
-            </div>
-
-            {canMutateCatalog ? (
-              <Card data-testid="admin-variant-create">
-                <p className="font-semibold">ایجاد تنوع</p>
-                <p className="mt-1 text-sm text-muted">
-                  محورها را از تعاریف مجاز انتخاب کنید. ماتریس کامل ترکیبی در این Task نیست.
-                </p>
-                {axisDefs.length === 0 ? (
-                  <p className="mt-3 text-sm text-muted">تعریف محور مجازی نیست — ابتدا در تب ویژگی‌ها محور ذخیره کنید.</p>
-                ) : (
-                  <ul className="mt-3 space-y-3">
-                    {axisDefs.map((def) => {
-                      const axisDraft = createAxes[def.definitionId] ?? { rawValue: "", enumOptionId: "" };
-                      return (
-                        <li key={def.definitionId} className="rounded-ds border border-border p-3">
-                          <p className="text-sm font-medium">{AXIS_LABELS[def.code.toLowerCase()] ?? def.code}</p>
-                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                            <label className="text-sm">
-                              مقدار
-                              <input
-                                className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
-                                dir="ltr"
-                                value={axisDraft.rawValue}
-                                onChange={(event) =>
-                                  setCreateAxes((prev) => ({
-                                    ...prev,
-                                    [def.definitionId]: { ...axisDraft, rawValue: event.target.value },
-                                  }))
-                                }
-                              />
-                            </label>
-                            <label className="text-sm">
-                              شناسه گزینه (اختیاری)
-                              <input
-                                className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
-                                dir="ltr"
-                                value={axisDraft.enumOptionId}
-                                onChange={(event) =>
-                                  setCreateAxes((prev) => ({
-                                    ...prev,
-                                    [def.definitionId]: { ...axisDraft, enumOptionId: event.target.value },
-                                  }))
-                                }
-                              />
-                            </label>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                <label className="mt-3 block text-sm">
-                  کد کاتالوگ (اختیاری)
-                  <input
-                    className="mt-1 min-h-10 w-full max-w-md rounded-ds border border-border bg-surface px-3"
-                    dir="ltr"
-                    value={createCatalogCode}
-                    onChange={(event) => setCreateCatalogCode(event.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={busy || axisDefs.length === 0}
-                  className="mt-4 min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                  onClick={() => void onCreateVariant()}
-                >
-                  ایجاد تنوع
-                </button>
-              </Card>
-            ) : null}
-          </div>
+          <Card data-testid="admin-product-variants">
+            <ProductVariantsPanel
+              productId={current.productId}
+              canEdit={canMutateCatalog}
+              mode={formMode.mode === "edit" ? "edit" : "view"}
+            />
+          </Card>
         ) : null}
-
         {sectionId === "media" ? (
           <div className="space-y-4" data-testid="admin-product-media">
             <Card>

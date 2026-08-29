@@ -410,6 +410,38 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// حالت ویرایشگر ماتریس تنوع‌های محصول را بر اساس schema مؤثر برمی‌گرداند.
+    /// </summary>
+    Task<ProductVariantEditorState> GetProductVariantEditorStateAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ترکیب‌های مطلوب را پیش‌نمایش می‌کند بدون نوشتن.
+    /// </summary>
+    Task<ProductVariantPreviewResult> PreviewProductVariantCombinationsAsync(
+        Guid productId,
+        IReadOnlyList<ProductVariantSelectedAxisInput> selectedAxes,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ماتریس تنوع را reconcile می‌کند؛ حذف سخت انجام نمی‌شود (آرشیو ترجیح داده می‌شود).
+    /// </summary>
+    Task<ProductVariantApplyResult> ApplyProductVariantMatrixAsync(
+        Guid productId,
+        ProductVariantApplyInput input,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آمادگی تنوع‌های محصول برای جریان انتشار بعدی.
+    /// </summary>
+    Task<ProductVariantReadiness> GetProductVariantReadinessAsync(
+        Guid productId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// تأثیر تغییر رده را بدون حذف مقادیر گزارش می‌کند.
     /// </summary>
     Task<CategoryChangeImpact> PreviewCategoryChangeAsync(
@@ -709,7 +741,116 @@ public sealed record CategoryChangeImpactReport(
     IReadOnlyList<CategoryChangeOrphanSummary> OrphanSummaries,
     IReadOnlyList<string> NewlyRequiredLabels,
     IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds,
-    string MessageFa);
+    string MessageFa,
+    int ImpactedVariantCount = 0,
+    string? VariantImpactMessageFa = null);
+
+/// <summary>گزینهٔ محور تنوع در ویرایشگر.</summary>
+public sealed record ProductVariantAxisOption(
+    Guid OptionId,
+    string LocalizedLabel,
+    string Code,
+    bool IsActive);
+
+/// <summary>فیلد محور تنوع برای انتخاب مقادیر محصول.</summary>
+public sealed record ProductVariantAxisEditorField(
+    Guid DefinitionId,
+    string Code,
+    string LocalizedName,
+    CatalogAttributeValueKind ValueKind,
+    IReadOnlyList<ProductVariantAxisOption> Options,
+    IReadOnlyList<Guid> SelectedOptionIds);
+
+/// <summary>برچسب خوانا یک مقدار محور.</summary>
+public sealed record ProductVariantAxisLabel(string DefinitionName, string ValueLabel);
+
+/// <summary>ردیف فهرست تنوع‌ها؛ OfferCount اختیاری توسط Host پر می‌شود.</summary>
+public sealed record ProductVariantListItem(
+    Guid VariantId,
+    string Fingerprint,
+    CatalogPublicationStatus Status,
+    int SortOrder,
+    bool IsDefault,
+    string? CatalogCodeSeam,
+    IReadOnlyList<ProductVariantAxisLabel> AxisLabels,
+    int? OfferCount);
+
+/// <summary>حالت کامل ویرایشگر ماتریس تنوع.</summary>
+public sealed record ProductVariantEditorState(
+    Guid ProductId,
+    string? CategoryPath,
+    IReadOnlyList<ProductVariantAxisEditorField> Axes,
+    IReadOnlyList<ProductVariantListItem> Variants,
+    ProductVariantReadiness Readiness,
+    int MaxCombinations,
+    string? MessageFa);
+
+/// <summary>عمل پیش‌نمایش برای یک ترکیب.</summary>
+public enum ProductVariantCombinationAction
+{
+    /// <summary>ترکیب موجود بدون تغییر.</summary>
+    Unchanged = 0,
+
+    /// <summary>ترکیب جدید باید ساخته شود.</summary>
+    New = 1,
+
+    /// <summary>ترکیب دیگر انتخاب نشده و باید غیرفعال شود.</summary>
+    Deactivate = 2,
+}
+
+/// <summary>یک ترکیب در پیش‌نمایش ماتریس.</summary>
+public sealed record ProductVariantCombinationPreview(
+    string DesiredFingerprint,
+    IReadOnlyList<ProductVariantAxisLabel> AxisLabels,
+    Guid? ExistingVariantId,
+    ProductVariantCombinationAction Action,
+    bool? ReferencedByOffers);
+
+/// <summary>نتیجهٔ پیش‌نمایش ماتریس تنوع.</summary>
+public sealed record ProductVariantPreviewResult(
+    IReadOnlyList<ProductVariantCombinationPreview> Combinations,
+    int UnchangedCount,
+    int NewCount,
+    int DeactivateCount,
+    int TotalDesired,
+    bool Capped,
+    string? WarningFa,
+    string? MessageFa);
+
+/// <summary>محور انتخاب‌شده با گزینه‌های محصول.</summary>
+public sealed record ProductVariantSelectedAxisInput(
+    Guid DefinitionId,
+    IReadOnlyList<Guid> OptionIds);
+
+/// <summary>پچ اختیاری روی تنوع موجود هنگام اعمال.</summary>
+public sealed record ProductVariantPatchInput(
+    Guid VariantId,
+    CatalogPublicationStatus? Status,
+    string? CatalogCodeSeam,
+    int? SortOrder,
+    bool? IsDefault);
+
+/// <summary>ورودی اعمال ماتریس تنوع.</summary>
+public sealed record ProductVariantApplyInput(
+    string? Locale,
+    IReadOnlyList<ProductVariantSelectedAxisInput> SelectedAxes,
+    Guid? DefaultVariantId,
+    IReadOnlyList<ProductVariantPatchInput>? VariantPatches);
+
+/// <summary>نتیجهٔ اعمال ماتریس تنوع.</summary>
+public sealed record ProductVariantApplyResult(
+    int Created,
+    int Unchanged,
+    int Deactivated,
+    IReadOnlyList<ProductVariantListItem> Variants);
+
+/// <summary>آمادگی تنوع‌ها برای انتشار بعدی.</summary>
+public sealed record ProductVariantReadiness(
+    bool IsValid,
+    IReadOnlyList<string> MissingAxes,
+    IReadOnlyList<string> InvalidVariants,
+    IReadOnlyList<string> DuplicateCombinations,
+    bool? NoDefaultVariant);
 
 /// <summary>گره درخت Admin Category برای Ant Tree آینده.</summary>
 public sealed record CategoryTreeNodeDto(
