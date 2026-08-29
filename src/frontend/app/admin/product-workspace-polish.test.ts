@@ -17,12 +17,14 @@ test("enter edit does not force general section", () => {
   assert.equal(enterEdit.includes('setSectionId("general")'), false);
 });
 
-test("onSectionChange does not cancel edit for non-general tabs", () => {
+test("onSectionChange guards dirty without cancelling edit mode", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
-  const onSection = screen.match(/onSectionChange=\{\(next\) => \{[\s\S]*?\}\}/)?.[0] ?? "";
-  assert.match(onSection, /formMode\.clearDirty\(\)/);
-  assert.equal(onSection.includes("formMode.onCancel()"), false);
-  assert.match(onSection, /sectionId === "general"/);
+  const requestSection = screen.match(/function requestSectionChange\(next: string\) \{[\s\S]*?\n  \}/)?.[0] ?? "";
+  assert.match(requestSection, /isAnyDirty/);
+  assert.match(requestSection, /setPendingNav/);
+  assert.equal(requestSection.includes("formMode.onCancel()"), false);
+  assert.equal(screen.includes("confirmDiscardIfDirty()"), false);
+  assert.match(screen, /product-workspace-unsaved-dialog/);
 });
 
 test("readOnly passes viewScope only", () => {

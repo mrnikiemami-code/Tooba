@@ -22,6 +22,7 @@ import {
   type VariantAxisDraft,
   type VariantRowDraft,
 } from "./product-variants-panel-model.ts";
+import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
 
 export type ProductVariantsPanelMode = "view" | "edit";
 
@@ -88,6 +89,20 @@ export function ProductVariantsPanel({
   const variants = useMemo(() => state?.variants ?? [], [state?.variants]);
   const estimate = estimateCombinationCount(axisDraft);
   const maxCombinations = state?.maxCombinations ?? 200;
+  const axisDirty = isAxisDraftDirty(axes, axisDraft);
+  const rowDirty = isRowDraftDirty(variants, rowDraft);
+  const showDirty = dirty || axisDirty || rowDirty;
+
+  const discardDrafts = useCallback(() => {
+    if (!state) return;
+    setAxisDraft(axisDraftFromState(state.axes));
+    setRowDraft(rowDraftFromVariants(state.variants));
+    setPreview(null);
+    setDirty(false);
+    setError(null);
+  }, [state]);
+
+  useProductWorkspaceDirtyRegistration("variants", showDirty && editable, discardDrafts);
 
   function toggleOption(definitionId: string, optionId: string) {
     setAxisDraft((prev) => {
@@ -125,13 +140,7 @@ export function ProductVariantsPanel({
   }
 
   function onCancel() {
-    if (!state) return;
-    if (dirty && !window.confirm("تغییرات ذخیره‌نشده نادیده گرفته شوند؟")) return;
-    setAxisDraft(axisDraftFromState(state.axes));
-    setRowDraft(rowDraftFromVariants(state.variants));
-    setPreview(null);
-    setDirty(false);
-    setError(null);
+    discardDrafts();
   }
 
   async function onPreview() {
@@ -200,10 +209,6 @@ export function ProductVariantsPanel({
       </div>
     );
   }
-
-  const axisDirty = isAxisDraftDirty(axes, axisDraft);
-  const rowDirty = isRowDraftDirty(variants, rowDraft);
-  const showDirty = dirty || axisDirty || rowDirty;
 
   return (
     <div className="space-y-4" data-testid="product-variants-panel" data-mode={mode}>

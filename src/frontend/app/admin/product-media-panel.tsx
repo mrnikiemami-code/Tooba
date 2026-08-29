@@ -23,6 +23,7 @@ import {
   type ProductMediaReadiness,
 } from "./product-media-panel-model.ts";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
+import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
 
 export type ProductMediaPanelMode = "view" | "edit";
 
@@ -50,6 +51,12 @@ export function ProductMediaPanel({
   const rows = useMemo(() => sortMediaItems(items), [items]);
   const primary = rows.find((row) => row.primary) ?? rows[0] ?? null;
   const altDirty = isAltDraftDirty(items, altDrafts);
+
+  const discardAltDrafts = useCallback(() => {
+    setAltDrafts(altDraftsFromItems(items));
+  }, [items]);
+
+  useProductWorkspaceDirtyRegistration("media", altDirty && editable, discardAltDrafts);
 
   const applyItems = useCallback((next: ProductMediaItem[]) => {
     setItems(next);

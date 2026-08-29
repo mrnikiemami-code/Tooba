@@ -18,6 +18,7 @@ import {
   validateAttributeDrafts,
   type AttributeDraftValue,
 } from "./product-attributes-panel-model.ts";
+import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
 
 export type ProductAttributesPanelMode = "view" | "edit";
 
@@ -71,6 +72,20 @@ export function ProductAttributesPanel({
 
   const editable = canEdit && mode === "edit";
 
+  const discardDrafts = useCallback(() => {
+    if (!state) return;
+    const next: Record<string, AttributeDraftValue> = {};
+    for (const field of state.fields) {
+      next[field.definitionId] = draftFromField(field);
+    }
+    setDrafts(next);
+    setDirty(false);
+    setFieldErrors({});
+    setError(null);
+  }, [state]);
+
+  useProductWorkspaceDirtyRegistration("attributes", dirty && editable, discardDrafts);
+
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -116,16 +131,7 @@ export function ProductAttributesPanel({
   }
 
   function onCancel() {
-    if (!state) return;
-    if (dirty && !window.confirm("تغییرات ذخیره‌نشده نادیده گرفته شوند؟")) return;
-    const next: Record<string, AttributeDraftValue> = {};
-    for (const field of state.fields) {
-      next[field.definitionId] = draftFromField(field);
-    }
-    setDrafts(next);
-    setDirty(false);
-    setFieldErrors({});
-    setError(null);
+    discardDrafts();
   }
 
   async function onSave() {

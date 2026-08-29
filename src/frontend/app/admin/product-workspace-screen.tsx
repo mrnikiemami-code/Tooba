@@ -1,7 +1,15 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
+import {
+  Button,
+  Card,
+  Dialog,
+  ErrorState,
+  WorkspaceShell,
+  faWorkspaceMessages,
+  useAdminFormMode,
+} from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
 import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
@@ -11,6 +19,11 @@ import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductPublishingPanel } from "./product-publishing-panel";
 import { ProductHistoryPanel } from "./product-history-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
+import {
+  ProductWorkspaceDirtyProvider,
+  useProductWorkspaceDirtyRegistration,
+  useProductWorkspaceDirtyRegistry,
+} from "./product-workspace-dirty-context";
 import {
   assignAdminProductCategory,
   loadProductWorkspace,
@@ -22,6 +35,14 @@ import { ProductCategoryPicker } from "./product-category-picker";
 import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
 import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
+
+const UNSAVED_DIALOG_COPY =
+  "تغییرات ذخیره‌نشده دارید. بدون ذخیره از این بخش خارج می‌شوید؟";
+
+type PendingNav =
+  | { type: "tab"; next: string }
+  | { type: "exit-edit" }
+  | { type: "route"; href: string };
 
 const sections = [
   { id: "general", label: "عمومی" },
@@ -112,7 +133,19 @@ function SummaryCard({ label, value, ltr }: { label: string; value: string; ltr?
  * Workspace محصول Admin. Commercial چند فروشنده را جدا از Product.Price نشان می‌دهد.
  * SpiceDB در این کامپوننت صدا زده نمی‌شود؛ مجوز از Host می‌آید.
  */
-export function ProductWorkspaceScreen({
+export function ProductWorkspaceScreen(props: {
+  productId: string;
+  viewScope?: boolean;
+  initialEdit?: boolean;
+}) {
+  return (
+    <ProductWorkspaceDirtyProvider>
+      <ProductWorkspaceScreenInner {...props} />
+    </ProductWorkspaceDirtyProvider>
+  );
+}
+
+function ProductWorkspaceScreenInner({
   productId,
   viewScope = false,
   initialEdit = false,
@@ -132,10 +165,12 @@ export function ProductWorkspaceScreen({
   const [busy, setBusy] = useState(false);
   const [translationLocale, setTranslationLocale] = useState<string>("fa-IR");
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
+  const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
 
   const canView = Boolean(view?.permissions.canView ?? true);
   const canEdit = Boolean(view?.permissions.canEditCatalog) && !viewScope;
   const formMode = useAdminFormMode({ canView, canEdit });
+  const dirtyRegistry = useProductWorkspaceDirtyRegistry();
 
   const reload = useCallback(() => {
     void loadProductWorkspace(productId, viewScope).then((result) => {
@@ -162,9 +197,90 @@ export function ProductWorkspaceScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- enter edit once after load
   }, [view, initialEdit, viewScope, enteredInitialEdit, canEdit]);
 
-  const dirtySections = useMemo(() => dirty, [dirty]);
+  const discardGeneral = useCallback(() => {
+    if (view) setDraft(draftFromView(view));
+    formMode.clearDirty();
+    setDirty(new Set());
+    setConflict(null);
+    // clearDirty is stable; formMode object identity changes every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clearDirty only
+  }, [view, formMode.clearDirty]);
+
+  useProductWorkspaceDirtyRegistration(
+    "general",
+    Boolean(view) && formMode.mode === "edit" && formMode.isDirty,
+    discardGeneral,
+  );
+
+  const workspaceDirty =
+    dirtyRegistry.isAnyDirty() || (formMode.mode === "edit" && formMode.isDirty);
+
+  useEffect(() => {
+    if (!workspaceDirty) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [workspaceDirty]);
+
+  const dirtySections = useMemo(() => {
+    const next = new Set(dirty);
+    for (const id of dirtyRegistry.dirtySectionIds()) next.add(id);
+    return next;
+    // dirtyRegistry identity is stable; workspaceDirty tracks register/unregister content
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bump via workspaceDirty
+  }, [dirty, workspaceDirty]);
+
   const mediaRows = useMemo(() => (view ? sortedMedia(view.media) : []), [view]);
   const primaryMedia = mediaRows.find((row) => row.primary) ?? mediaRows[0] ?? null;
+
+  function performPendingNav(nav: PendingNav) {
+    if (nav.type === "tab") {
+      setSectionId(nav.next);
+      return;
+    }
+    if (nav.type === "exit-edit") {
+      if (view) setDraft(draftFromView(view));
+      formMode.onCancel();
+      setDirty(new Set());
+      setConflict(null);
+      return;
+    }
+    window.location.href = nav.href;
+  }
+
+  function confirmDiscardPendingNav() {
+    dirtyRegistry.discardAll();
+    if (formMode.mode === "edit" && formMode.isDirty) {
+      discardGeneral();
+    }
+    const nav = pendingNav;
+    setPendingNav(null);
+    if (nav) performPendingNav(nav);
+  }
+
+  function stayOnPendingNav() {
+    setPendingNav(null);
+  }
+
+  function requestSectionChange(next: string) {
+    if (next === sectionId) return;
+    if (dirtyRegistry.isAnyDirty() || (formMode.mode === "edit" && formMode.isDirty)) {
+      setPendingNav({ type: "tab", next });
+      return;
+    }
+    setSectionId(next);
+  }
+
+  function requestLeaveWorkspace(href: string) {
+    if (dirtyRegistry.isAnyDirty() || (formMode.mode === "edit" && formMode.isDirty)) {
+      setPendingNav({ type: "route", href });
+      return;
+    }
+    window.location.href = href;
+  }
 
   if (!view) {
     if (denied) {
@@ -209,8 +325,11 @@ export function ProductWorkspaceScreen({
   }
 
   function handleCancelEdit() {
-    if (!formMode.confirmDiscardIfDirty()) return;
-    setDraft(draftFromView(current));
+    if (dirtyRegistry.isAnyDirty() || formMode.isDirty) {
+      setPendingNav({ type: "exit-edit" });
+      return;
+    }
+    if (view) setDraft(draftFromView(view));
     formMode.onCancel();
     setDirty(new Set());
     setConflict(null);
@@ -432,16 +551,7 @@ export function ProductWorkspaceScreen({
         ]}
         sections={sections}
         activeSectionId={sectionId}
-        onSectionChange={(next) => {
-          if (next === sectionId) return;
-          if (sectionId === "general" && formMode.mode === "edit" && formMode.isDirty) {
-            if (!formMode.confirmDiscardIfDirty()) return;
-            setDraft(draftFromView(current));
-            formMode.clearDirty();
-            setDirty(new Set());
-          }
-          setSectionId(next);
-        }}
+        onSectionChange={requestSectionChange}
         actions={shellActions}
         onAction={(actionId) => void onAction(actionId)}
         readOnly={viewScope}
@@ -704,10 +814,10 @@ export function ProductWorkspaceScreen({
                 canPublish={canPublish}
                 mode={formMode.mode === "edit" ? "edit" : "view"}
                 purchasableHint={view.publication.purchasableHint}
-                onNavigateTab={(tabId) => setSectionId(tabId)}
+                onNavigateTab={(tabId) => requestSectionChange(tabId)}
                 onStatusChanged={(hint) => {
                   if (hint?.status === "__deleted__") {
-                    window.location.href = "/admin/products";
+                    requestLeaveWorkspace("/admin/products");
                     return;
                   }
                   if (hint?.status) {
@@ -737,6 +847,35 @@ export function ProductWorkspaceScreen({
           </Card>
         ) : null}
       </WorkspaceShell>
+
+      <Dialog
+        title={UNSAVED_DIALOG_COPY}
+        open={pendingNav != null}
+        onClose={stayOnPendingNav}
+        showCloseButton={false}
+      >
+        <div data-testid="product-workspace-unsaved-dialog">
+          <p className="text-sm">{UNSAVED_DIALOG_COPY}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              tone="secondary"
+              data-testid="product-workspace-unsaved-stay"
+              onClick={stayOnPendingNav}
+            >
+              بازگشت
+            </Button>
+            <Button
+              type="button"
+              tone="primary"
+              data-testid="product-workspace-unsaved-discard"
+              onClick={confirmDiscardPendingNav}
+            >
+              ادامه و لغو تغییرات
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

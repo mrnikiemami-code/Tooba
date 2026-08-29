@@ -13,6 +13,7 @@ import {
   type ProductSeoDetail,
   type ProductSeoDraft,
 } from "./product-seo-panel-model.ts";
+import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
 
 export type ProductSeoPanelMode = "view" | "edit";
 
@@ -42,6 +43,13 @@ export function ProductSeoPanel({
 
   const editable = canEdit && mode === "edit";
   const dirty = isSeoDraftDirty(detail, draft);
+
+  const cancelEdit = useCallback(() => {
+    if (detail) setDraft(draftFromSeoDetail(detail));
+    setError(null);
+  }, [detail]);
+
+  useProductWorkspaceDirtyRegistration("seo", dirty && editable, cancelEdit);
 
   const previewTitle = useMemo(() => resolveSeoPreviewTitle(detail, draft), [detail, draft]);
   const previewPath = useMemo(() => {
@@ -88,11 +96,6 @@ export function ProductSeoPanel({
       }
       return next;
     });
-  }
-
-  function cancelEdit() {
-    if (detail) setDraft(draftFromSeoDetail(detail));
-    setError(null);
   }
 
   async function save() {

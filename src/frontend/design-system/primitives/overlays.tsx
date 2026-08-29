@@ -39,11 +39,14 @@ export function Dialog({
   open,
   onClose,
   children,
+  showCloseButton = true,
 }: {
   title: string;
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  /** وقتی دکمه‌های صریح در children هست، دکمهٔ پیش‌فرض «بستن» را پنهان کنید. */
+  showCloseButton?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -60,11 +63,13 @@ export function Dialog({
     >
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
       {children}
-      <div className="mt-4 flex justify-end">
-        <Button type="button" tone="secondary" onClick={onClose}>
-          بستن
-        </Button>
-      </div>
+      {showCloseButton ? (
+        <div className="mt-4 flex justify-end">
+          <Button type="button" tone="secondary" onClick={onClose}>
+            بستن
+          </Button>
+        </div>
+      ) : null}
     </dialog>
   );
 }
