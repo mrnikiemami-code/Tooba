@@ -52,6 +52,13 @@ export interface ProductTranslationView {
   seoDescription: string | null;
 }
 
+/** پیوند دستهٔ محصول در Workspace. */
+export interface ProductCategoryAssignmentView {
+  categoryId: string;
+  categoryPath: string;
+  role: "Primary" | "Additional" | string;
+}
+
 export interface ProductWorkspaceView {
   productId: string;
   title: string;
@@ -67,6 +74,8 @@ export interface ProductWorkspaceView {
   categoryPath?: string | null;
   /** آیا دستهٔ اصلی سطح سوم (قابل اختصاص) است؟ */
   isPrimaryCategoryAssignable?: boolean;
+  /** پیوندهای دسته (اصلی + اضافی). */
+  categoryAssignments?: ProductCategoryAssignmentView[];
   slug?: string | null;
   shortDescription?: string | null;
   translations?: ProductTranslationView[];

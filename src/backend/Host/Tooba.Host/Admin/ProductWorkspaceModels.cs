@@ -42,6 +42,11 @@ public sealed record AdminProductCoreUpdateRequest(
     string? SeoDescription,
     DateTimeOffset ExpectedUpdatedAt);
 
+/// <summary>انتساب دستهٔ اضافی (کشف/PLP) بدون تغییر schema.</summary>
+public sealed record AdminProductAdditionalCategoryRequest(
+    Guid CategoryId,
+    DateTimeOffset ExpectedUpdatedAt);
+
 /// <summary>انتساب ردهٔ محصول با تأیید صریح تغییر.</summary>
 public sealed record AdminProductCategoryAssignRequest(
     Guid CategoryId,
@@ -70,7 +75,8 @@ public sealed record AdminProductListItem(
     int SellableUnits,
     int LocationCount,
     DateTimeOffset UpdatedAt,
-    Guid? PrimaryMediaAssetId);
+    Guid? PrimaryMediaAssetId,
+    Guid? PrimaryCategoryId = null);
 
 /// <summary>
 /// مدل نمایش ترکیب‌شده. aggregate دامنه نیست.
@@ -104,7 +110,14 @@ public sealed record ProductWorkspaceView(
     string? ShortDescription = null,
     IReadOnlyList<ProductTranslationView>? Translations = null,
     bool IsPrimaryCategoryAssignable = false,
-    Guid? BrandId = null);
+    Guid? BrandId = null,
+    IReadOnlyList<ProductCategoryAssignmentView>? CategoryAssignments = null);
+
+/// <summary>پیوند دسته در Workspace (اصلی / اضافی).</summary>
+public sealed record ProductCategoryAssignmentView(
+    Guid CategoryId,
+    string CategoryPath,
+    string Role);
 
 /// <summary>مشخصهٔ Catalog.</summary>
 public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);

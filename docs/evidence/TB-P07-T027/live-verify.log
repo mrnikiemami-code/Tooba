@@ -1,0 +1,9 @@
+﻿primary=01a03b49-8571-7000-b108-cd87ee99d02d
+add1_ok roles=Primary,Additional
+add2_ok count=3
+dup=400 errorCode=catalog.category.assignment.duplicate
+rm_primary=400 errorCode=catalog.category.assignment.cannot_remove_primary
+rm_add_ok remaining=Primary only
+migration=20260830010000_AddProductCategoryAssignmentRole
+db_roles=Primary(0)=81 Additional(1)=71 (pre-existing sample + seed)
+host=200 fe_fa=200 fe_en=200 shopeiva=200

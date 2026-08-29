@@ -122,8 +122,12 @@ public sealed class ProductWorkspaceComposer
             var productOfferIds = productOffers.Select(row => row.OfferId).ToHashSet();
             var amounts = amountRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
             var units = unitRows.Where(row => productOfferIds.Contains(row.OfferId)).ToList();
-            var categories = categoryLinks
+            var productLinks = categoryLinks
                 .Where(link => link.ProductId == product.ProductId)
+                .ToList();
+            var primaryLink = productLinks.FirstOrDefault(link => link.Role == CatalogProductCategoryRole.Primary);
+            var categories = productLinks
+                .OrderByDescending(link => link.Role == CatalogProductCategoryRole.Primary)
                 .Select(link => categoryNames.GetValueOrDefault(link.CategoryId))
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Select(name => name!)
@@ -146,7 +150,8 @@ public sealed class ProductWorkspaceComposer
                 units.Sum(row => row.OnHand - row.Reserved),
                 units.Select(row => row.LocationId).Distinct().Count(),
                 product.UpdatedAt,
-                primaryMedia?.MediaAssetId);
+                primaryMedia?.MediaAssetId,
+                primaryLink?.CategoryId);
         }).ToList();
     }
 
@@ -188,7 +193,11 @@ public sealed class ProductWorkspaceComposer
         var defs = await _catalog.AttributeDefinitions.AsNoTracking().ToDictionaryAsync(x => x.DefinitionId, cancellationToken);
         var productAttrs = await _catalog.ProductAttributeValues.AsNoTracking().Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
         var media = await _catalog.MediaReferences.AsNoTracking().Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        var categoryLinks = await _catalog.ProductCategories.AsNoTracking().Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var categoryLinks = await _catalog.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderBy(x => x.Role)
+            .ThenBy(x => x.AssignmentId)
+            .ToListAsync(cancellationToken);
         var categoryNames = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, categoryLinks.Select(x => x.CategoryId).ToList(), cancellationToken);
         var brandName = product.BrandId is Guid brandId
             ? (await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, [brandId], cancellationToken)).GetValueOrDefault(brandId)
@@ -335,7 +344,10 @@ public sealed class ProductWorkspaceComposer
         var warnings = new List<string>(catalogChecks);
         warnings.AddRange(commercialWarnings);
 
-        var primaryCategoryId = categoryLinks.Select(l => l.CategoryId).FirstOrDefault();
+        var primaryCategoryId = categoryLinks
+            .Where(l => l.Role == CatalogProductCategoryRole.Primary)
+            .Select(l => l.CategoryId)
+            .FirstOrDefault();
         Guid? primaryCategory = primaryCategoryId == Guid.Empty ? null : primaryCategoryId;
         var categoryPath = primaryCategory is Guid pcid
             ? await BuildCategoryPathAsync(pcid, cancellationToken)
@@ -390,13 +402,26 @@ public sealed class ProductWorkspaceComposer
             .FirstOrDefault(r => r.FieldKey == "short_description" && r.Locale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase))
             ?.Value;
 
+        var categoryAssignments = new List<ProductCategoryAssignmentView>();
+        foreach (var link in categoryLinks)
+        {
+            var path = await BuildCategoryPathAsync(link.CategoryId, cancellationToken);
+            categoryAssignments.Add(new ProductCategoryAssignmentView(
+                link.CategoryId,
+                path,
+                link.Role == CatalogProductCategoryRole.Primary ? "Primary" : "Additional"));
+        }
+
         return new ProductWorkspaceView(
             product.ProductId,
             title,
             product.Status.ToString(),
             product.Kind.ToString(),
             brandName,
-            categoryLinks.Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? "رده").ToList(),
+            categoryLinks
+                .OrderBy(l => l.Role)
+                .Select(l => categoryNames.GetValueOrDefault(l.CategoryId) ?? "رده")
+                .ToList(),
             attrViews,
             variantViews,
             mediaViews,
@@ -418,7 +443,8 @@ public sealed class ProductWorkspaceComposer
             shortDescription,
             translations,
             isPrimaryCategoryAssignable,
-            product.BrandId);
+            product.BrandId,
+            categoryAssignments);
     }
 
     /// <summary>
@@ -762,7 +788,9 @@ public sealed class ProductWorkspaceComposer
         try
         {
             var hasExistingCategory = await _catalog.ProductCategories.AsNoTracking()
-                .AnyAsync(x => x.ProductId == productId, cancellationToken);
+                .AnyAsync(
+                    x => x.ProductId == productId && x.Role == CatalogProductCategoryRole.Primary,
+                    cancellationToken);
             if (hasExistingCategory)
             {
                 await _catalogDirectory.ReplaceProductPrimaryCategoryAsync(
@@ -780,6 +808,85 @@ public sealed class ProductWorkspaceComposer
         catch (InvalidOperationException ex)
         {
             throw new PlatformHttpException(400, ex.Message, "workspace.product.category.assign.rejected");
+        }
+    }
+
+    /// <summary>
+    /// دستهٔ اضافی را اضافه می‌کند؛ schema را تغییر نمی‌دهد.
+    /// </summary>
+    public async Task<ProductWorkspaceView> AddAdditionalCategoryAsync(
+        Guid productId,
+        AdminProductAdditionalCategoryRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != request.ExpectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        try
+        {
+            await _catalogDirectory.AddProductAdditionalCategoryAsync(
+                productId, request.CategoryId, cancellationToken);
+            product.TouchDescriptiveSeams(product.SlugSeam, product.SeoTitleSeam, product.BrandId, DateTimeOffset.UtcNow);
+            await _catalog.SaveChangesAsync(cancellationToken);
+            return (await GetAsync(productId, permissions, cancellationToken))!;
+        }
+        catch (InvalidOperationException ex)
+        {
+            var code = ex.Message.Contains("دسته اصلی", StringComparison.Ordinal)
+                ? "catalog.category.assignment.duplicate_primary"
+                : ex.Message.Contains("قبلاً", StringComparison.Ordinal)
+                    ? "catalog.category.assignment.duplicate"
+                    : "catalog.category.assignment.invalid";
+            throw new PlatformHttpException(400, ex.Message, code);
+        }
+    }
+
+    /// <summary>
+    /// دستهٔ اضافی را حذف می‌کند.
+    /// </summary>
+    public async Task<ProductWorkspaceView> RemoveAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        DateTimeOffset expectedUpdatedAt,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != expectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        try
+        {
+            await _catalogDirectory.RemoveProductAdditionalCategoryAsync(
+                productId, categoryId, cancellationToken);
+            product.TouchDescriptiveSeams(product.SlugSeam, product.SeoTitleSeam, product.BrandId, DateTimeOffset.UtcNow);
+            await _catalog.SaveChangesAsync(cancellationToken);
+            return (await GetAsync(productId, permissions, cancellationToken))!;
+        }
+        catch (InvalidOperationException ex)
+        {
+            var code = ex.Message.Contains("دسته اصلی", StringComparison.Ordinal)
+                ? "catalog.category.assignment.cannot_remove_primary"
+                : "catalog.category.assignment.missing";
+            throw new PlatformHttpException(400, ex.Message, code);
         }
     }
 

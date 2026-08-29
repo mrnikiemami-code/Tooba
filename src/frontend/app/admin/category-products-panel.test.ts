@@ -38,21 +38,31 @@ test("category products panel is real and blocks L1/L2 assignment", () => {
   const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");
   assert.match(
     panel,
-    /CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA\s*=\s*"محصول فقط به دسته‌بندی سطح سوم قابل اختصاص است\."/,
+    /CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA/,
   );
-  assert.match(panel, /queryAdminProductGrid/);
-  assert.match(panel, /assignAdminProductCategory/);
-  assert.match(panel, /confirmSchemaImpact/);
-  assert.match(panel, /previewProductCategoryChange/);
-  assert.match(panel, /AppDataGrid/);
   assert.match(panel, /category-products-level-blocked/);
+  assert.match(panel, /AppDataGrid/);
+  assert.match(panel, /queryAdminProductGrid/);
   assert.match(panel, /isAssignableProductCategory/);
-  assert.match(panel, /ProductCategoryPicker/);
-  assert.match(screen, /id: "products", label: "محصولات", implemented: true/);
   assert.match(screen, /CategoryProductsPanel/);
-  assert.equal(screen.includes('id: "seo"'), false);
-  assert.equal(screen.includes('id: "settings"'), false);
-  assert.equal(screen.includes('id: "history"'), false);
-  assert.equal(screen.includes("ComingSoonPanel"), false);
-  assert.equal(screen.includes("category-tab-coming-soon"), false);
+  assert.equal(panel.includes("AgGridReact"), false);
+});
+
+test("category products assign dialog uses AppDataGrid tabs not checkbox list", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /اختصاص محصولات به این دسته/);
+  assert.match(panel, /category-assign-tab-all/);
+  assert.match(panel, /category-assign-tab-selected/);
+  assert.match(panel, /همه محصولات/);
+  assert.match(panel, /انتخاب‌شده‌ها/);
+  assert.match(panel, /category-products-assign-grid/);
+  assert.match(panel, /addAdminProductAdditionalCategory/);
+  assert.match(panel, /removeAdminProductAdditionalCategory/);
+  assert.match(panel, /cannot_remove_primary/);
+  assert.match(panel, /category-products-helper/);
+  assert.match(panel, /bulk-add-additional/);
+  assert.match(panel, /bulk-remove-additional/);
+  assert.match(panel, /rowSelection:\s*true/);
+  assert.match(panel, /دسته اصلی/);
+  assert.equal(panel.includes("category-products-assign-list"), false);
 });

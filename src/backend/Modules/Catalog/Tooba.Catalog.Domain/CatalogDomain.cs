@@ -1284,6 +1284,18 @@ public sealed class CatalogLocalizedText
 }
 
 /// <summary>
+/// نقش پیوند محصول↔رده: دسته اصلی (schema) یا اضافی (کشف/PLP).
+/// </summary>
+public enum CatalogProductCategoryRole : byte
+{
+    /// <summary>دسته اصلی — منبع schema و breadcrumb.</summary>
+    Primary = 0,
+
+    /// <summary>دسته اضافی — فقط کشف/ناوبری/PLP.</summary>
+    Additional = 1,
+}
+
+/// <summary>
 /// پیوند محصول به رده. merchandising فروشنده نیست.
 /// </summary>
 public sealed class CatalogProductCategory
@@ -1304,14 +1316,23 @@ public sealed class CatalogProductCategory
     public Guid CategoryId { get; init; }
 
     /// <summary>
+    /// نقش پیوند (اصلی / اضافی).
+    /// </summary>
+    public CatalogProductCategoryRole Role { get; init; }
+
+    /// <summary>
     /// پیوند می‌سازد.
     /// </summary>
-    public static CatalogProductCategory Assign(Guid productId, Guid categoryId) =>
+    public static CatalogProductCategory Assign(
+        Guid productId,
+        Guid categoryId,
+        CatalogProductCategoryRole role = CatalogProductCategoryRole.Primary) =>
         new()
         {
             AssignmentId = UuidV7.New(),
             ProductId = productId,
             CategoryId = categoryId,
+            Role = role,
         };
 }
 

@@ -42,6 +42,30 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",
   },
+  "catalog.category.assignment.duplicate": {
+    fa: "این دسته قبلاً به محصول اضافه شده است.",
+    en: "This category is already assigned to the product.",
+  },
+  "catalog.category.assignment.duplicate_primary": {
+    fa: "این دسته هم‌اکنون دسته اصلی محصول است.",
+    en: "This category is already the product's primary category.",
+  },
+  "catalog.category.assignment.cannot_remove_primary": {
+    fa: "دسته اصلی را نمی‌توان مستقیم حذف کرد؛ ابتدا دسته اصلی دیگری انتخاب کنید.",
+    en: "The primary category cannot be removed directly; choose another primary first.",
+  },
+  "catalog.category.assignment.missing": {
+    fa: "پیوند دسته برای این محصول یافت نشد.",
+    en: "Category assignment was not found for this product.",
+  },
+  "catalog.category.assignment.invalid": {
+    fa: "اختصاص دسته معتبر نیست.",
+    en: "Category assignment is not valid.",
+  },
+  "catalog.category.assignment.stale": {
+    fa: "این مورد را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.",
+    en: "Someone else changed this record. Reload the latest version.",
+  },
   "catalog.category.slug.duplicate": {
     fa: "این نامک برای یک دسته‌بندی دیگر استفاده شده است. یک نامک متفاوت انتخاب کنید.",
     en: "This slug is already used by another category. Choose a different slug.",

@@ -501,8 +501,15 @@ public sealed class StorefrontComposer
             .ToList();
 
         var cards = await BuildProductCardsAsync(cancellationToken);
+        var assignedProductIds = await _catalog.ProductCategories.AsNoTracking()
+            .Where(pc => subtreeIds.Contains(pc.CategoryId))
+            .Select(pc => pc.ProductId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        var assignedSet = assignedProductIds.ToHashSet();
+        // PLP شامل Primary و Additional است؛ کارت فقط CategoryId اصلی را برای هویت نگه می‌دارد.
         var inSubtree = cards
-            .Where(card => card.CategoryId is Guid cid && subtreeIds.Contains(cid))
+            .Where(card => assignedSet.Contains(card.ProductId))
             .ToList();
 
         var productIds = inSubtree
@@ -749,7 +756,9 @@ public sealed class StorefrontComposer
             CatalogLocalizedOwnerKind.Category,
             categoryLinks.Select(x => x.CategoryId).ToList(),
             cancellationToken);
-        var categoryId = categoryLinks.FirstOrDefault()?.CategoryId;
+        var primaryLink = categoryLinks.FirstOrDefault(x => x.Role == CatalogProductCategoryRole.Primary)
+            ?? categoryLinks.FirstOrDefault();
+        var categoryId = primaryLink?.CategoryId;
         var categoryName = categoryId is Guid cid
             ? categoryNames.GetValueOrDefault(cid) ?? "رده"
             : "بدون رده";

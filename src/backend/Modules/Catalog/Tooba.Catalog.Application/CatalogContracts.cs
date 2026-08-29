@@ -546,6 +546,30 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// دستهٔ اضافی کشف/PLP را به محصول اضافه می‌کند؛ schema را تغییر نمی‌دهد.
+    /// </summary>
+    Task AddProductAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// دستهٔ اضافی را حذف می‌کند؛ حذف دستهٔ اصلی مجاز نیست.
+    /// </summary>
+    Task RemoveProductAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// فهرست پیوندهای دستهٔ محصول (اصلی + اضافی) با مسیر انسانی.
+    /// </summary>
+    Task<IReadOnlyList<ProductCategoryAssignmentInfo>> ListProductCategoryAssignmentsAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// الزام‌های schema مؤثر را برای مقادیر فعلی محصول بررسی می‌کند.
     /// </summary>
     Task ValidateProductAttributesAsync(Guid productId, CancellationToken cancellationToken);
@@ -780,6 +804,22 @@ public sealed record CategoryChangeImpact(
     Guid NewCategoryId,
     IReadOnlyList<OrphanProductAttributeValue> OrphanAttributeValues,
     IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds);
+
+/// <summary>نقش پیوند محصول↔رده در لایهٔ Application.</summary>
+public enum ProductCategoryAssignmentRole
+{
+    /// <summary>دسته اصلی.</summary>
+    Primary = 0,
+
+    /// <summary>دسته اضافی.</summary>
+    Additional = 1,
+}
+
+/// <summary>پیوند دستهٔ محصول با مسیر انسانی.</summary>
+public sealed record ProductCategoryAssignmentInfo(
+    Guid CategoryId,
+    string CategoryPath,
+    ProductCategoryAssignmentRole Role);
 
 /// <summary>
 /// مقدار ویژگی محصول که در schema جدید جایی ندارد.

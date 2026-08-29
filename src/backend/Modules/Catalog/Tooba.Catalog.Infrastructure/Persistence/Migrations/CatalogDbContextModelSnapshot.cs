@@ -581,11 +581,25 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("product_id");
 
+                    b.Property<byte>("Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("role");
+
                     b.HasKey("AssignmentId")
                         .HasName("pk_product_categories");
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("ix_product_categories_category_id");
+
+                    b.HasIndex("CategoryId", "Role")
+                        .HasDatabaseName("ix_product_categories_category_id_role");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_product_categories_one_primary_per_product")
+                        .HasFilter("\"role\" = 0");
 
                     b.HasIndex("ProductId", "CategoryId")
                         .IsUnique()

@@ -346,7 +346,17 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("product_categories");
             entity.HasKey(x => x.AssignmentId);
             entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.Property(x => x.Role)
+                .HasConversion<byte>()
+                .HasColumnName("role")
+                .HasDefaultValue(CatalogProductCategoryRole.Primary);
             entity.HasIndex(x => new { x.ProductId, x.CategoryId }).IsUnique();
+            entity.HasIndex(x => new { x.CategoryId, x.Role });
+            // حداکثر یک Primary برای هر محصول
+            entity.HasIndex(x => x.ProductId)
+                .IsUnique()
+                .HasFilter("\"role\" = 0")
+                .HasDatabaseName("ix_product_categories_one_primary_per_product");
             entity.HasOne<CatalogCategory>()
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)

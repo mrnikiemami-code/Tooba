@@ -161,12 +161,12 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
 
         var productIds = variantRows.Select(v => v.ProductId).Distinct().ToArray();
         var categoryLinks = await _db.ProductCategories.AsNoTracking()
-            .Where(pc => productIds.Contains(pc.ProductId))
-            .Select(pc => new { pc.ProductId, pc.CategoryId, pc.AssignmentId })
+            .Where(pc => productIds.Contains(pc.ProductId) && pc.Role == CatalogProductCategoryRole.Primary)
+            .Select(pc => new { pc.ProductId, pc.CategoryId })
             .ToListAsync(cancellationToken);
         var primaryByProduct = categoryLinks
             .GroupBy(x => x.ProductId)
-            .ToDictionary(g => g.Key, g => (Guid?)g.OrderBy(x => x.AssignmentId).First().CategoryId);
+            .ToDictionary(g => g.Key, g => (Guid?)g.First().CategoryId);
 
         var result = new Dictionary<Guid, Guid?>();
         foreach (var id in distinct)
@@ -1461,7 +1461,19 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
 
         await EnsureAssignableProductCategoryAsync(categoryId, cancellationToken);
 
-        _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, categoryId));
+        var links = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        if (links.Any(x => x.Role == CatalogProductCategoryRole.Primary))
+        {
+            throw new InvalidOperationException("محصول هم‌اکنون دسته اصلی دارد؛ برای تغییر از Replace استفاده کنید.");
+        }
+
+        var asAdditional = links.FirstOrDefault(x => x.CategoryId == categoryId);
+        if (asAdditional is not null)
+        {
+            _db.ProductCategories.Remove(asAdditional);
+        }
+
+        _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, categoryId, CatalogProductCategoryRole.Primary));
         QueueProductHistory(
             productId,
             ProductHistoryRules.EventCategoryChanged,
@@ -2237,26 +2249,14 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             }
         }
 
-        var categoryIds = await _db.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .Select(x => x.CategoryId)
-            .ToListAsync(cancellationToken);
-        if (categoryIds.Count > 0)
+        // فقط Primary schema-driving است؛ Additional روی محور Variant اثر ندارد.
+        var primaryCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        if (primaryCategoryId is Guid schemaCategoryId)
         {
+            var schema = await ResolveEffectiveBindingsAsync(schemaCategoryId, cancellationToken);
             foreach (var definitionId in orderedDefinitionIds)
             {
-                var enabled = false;
-                foreach (var categoryId in categoryIds)
-                {
-                    var schema = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
-                    if (schema.Any(x => x.DefinitionId == definitionId && x.IsVariantAxis))
-                    {
-                        enabled = true;
-                        break;
-                    }
-                }
-
-                if (!enabled)
+                if (!schema.Any(x => x.DefinitionId == definitionId && x.IsVariantAxis))
                 {
                     throw new InvalidOperationException("محور تنوع در schema مؤثر رده‌های محصول فعال نیست.");
                 }
@@ -2887,8 +2887,29 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         // Preview enforces Level-3 assignability before replace.
         var impact = await PreviewCategoryChangeAsync(productId, newCategoryId, cancellationToken);
         var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
-        _db.ProductCategories.RemoveRange(existing);
-        _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, newCategoryId));
+
+        // اگر دسته جدید قبلاً Additional بود، ردیف را بردار تا Unique (ProductId, CategoryId) نشکند.
+        var existingAsAdditional = existing.FirstOrDefault(
+            x => x.CategoryId == newCategoryId && x.Role == CatalogProductCategoryRole.Additional);
+        if (existingAsAdditional is not null)
+        {
+            _db.ProductCategories.Remove(existingAsAdditional);
+            existing.Remove(existingAsAdditional);
+        }
+
+        var currentPrimary = existing.FirstOrDefault(x => x.Role == CatalogProductCategoryRole.Primary);
+        if (currentPrimary is not null)
+        {
+            if (currentPrimary.CategoryId == newCategoryId)
+            {
+                return impact;
+            }
+
+            _db.ProductCategories.Remove(currentPrimary);
+        }
+
+        _db.ProductCategories.Add(
+            CatalogProductCategory.Assign(productId, newCategoryId, CatalogProductCategoryRole.Primary));
         QueueProductHistory(
             productId,
             ProductHistoryRules.EventCategoryChanged,
@@ -2901,10 +2922,111 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task AddProductAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken)
+            || !await _db.Categories.AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول یا رده در Catalog این Tenant نیست.");
+        }
+
+        await EnsureAssignableProductCategoryAsync(categoryId, cancellationToken);
+
+        var links = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        if (links.Any(x => x.CategoryId == categoryId && x.Role == CatalogProductCategoryRole.Primary))
+        {
+            throw new InvalidOperationException("این دسته هم‌اکنون دسته اصلی محصول است.");
+        }
+
+        if (links.Any(x => x.CategoryId == categoryId && x.Role == CatalogProductCategoryRole.Additional))
+        {
+            throw new InvalidOperationException("این دسته قبلاً به‌عنوان دسته اضافی اضافه شده است.");
+        }
+
+        _db.ProductCategories.Add(
+            CatalogProductCategory.Assign(productId, categoryId, CatalogProductCategoryRole.Additional));
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventCategoryChanged,
+            ProductHistoryRules.SectionCategory,
+            ProductHistoryRules.SummaryCategoryFa,
+            null,
+            null);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RemoveProductAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var link = await _db.ProductCategories.FirstOrDefaultAsync(
+            x => x.ProductId == productId && x.CategoryId == categoryId,
+            cancellationToken);
+        if (link is null)
+        {
+            throw new InvalidOperationException("پیوند دسته برای این محصول یافت نشد.");
+        }
+
+        if (link.Role == CatalogProductCategoryRole.Primary)
+        {
+            throw new InvalidOperationException(
+                "دسته اصلی را نمی‌توان مستقیم حذف کرد؛ ابتدا دسته اصلی دیگری انتخاب کنید.");
+        }
+
+        _db.ProductCategories.Remove(link);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventCategoryChanged,
+            ProductHistoryRules.SectionCategory,
+            ProductHistoryRules.SummaryCategoryFa,
+            null,
+            null);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ProductCategoryAssignmentInfo>> ListProductCategoryAssignmentsAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var links = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderBy(x => x.Role)
+            .ThenBy(x => x.AssignmentId)
+            .ToListAsync(cancellationToken);
+        if (links.Count == 0)
+        {
+            return [];
+        }
+
+        var result = new List<ProductCategoryAssignmentInfo>(links.Count);
+        foreach (var link in links)
+        {
+            var path = await BuildCategoryPathAsync(link.CategoryId, locale, cancellationToken);
+            result.Add(new ProductCategoryAssignmentInfo(
+                link.CategoryId,
+                path,
+                link.Role == CatalogProductCategoryRole.Primary
+                    ? ProductCategoryAssignmentRole.Primary
+                    : ProductCategoryAssignmentRole.Additional));
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
     public async Task ValidateProductAttributesAsync(Guid productId, CancellationToken cancellationToken)
     {
         var categoryIds = await _db.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == productId)
+            .Where(x => x.ProductId == productId && x.Role == CatalogProductCategoryRole.Primary)
             .Select(x => x.CategoryId)
             .ToListAsync(cancellationToken);
         if (categoryIds.Count == 0)
@@ -3210,30 +3332,23 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         Guid productId,
         CancellationToken cancellationToken)
     {
-        var categoryIds = await _db.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .Select(x => x.CategoryId)
-            .ToListAsync(cancellationToken);
-        if (categoryIds.Count == 0)
+        var primaryCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        if (primaryCategoryId is not Guid categoryId)
         {
             return false;
         }
 
         var parentById = await _db.Categories.AsNoTracking()
             .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
-        foreach (var categoryId in categoryIds)
+        try
         {
-            try
-            {
-                CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
-            }
-            catch (InvalidOperationException)
-            {
-                return false;
-            }
+            CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
+            return true;
         }
-
-        return true;
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
     }
 
     /// <inheritdoc />
@@ -3820,8 +3935,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     private async Task<Guid?> ResolvePrimaryCategoryIdAsync(Guid productId, CancellationToken cancellationToken)
     {
         var categoryId = await _db.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .OrderBy(x => x.AssignmentId)
+            .Where(x => x.ProductId == productId && x.Role == CatalogProductCategoryRole.Primary)
             .Select(x => x.CategoryId)
             .FirstOrDefaultAsync(cancellationToken);
         return categoryId == Guid.Empty ? null : categoryId;
@@ -3992,25 +4106,20 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         Guid definitionId,
         CancellationToken cancellationToken)
     {
-        var categoryIds = await _db.ProductCategories.AsNoTracking()
-            .Where(x => x.ProductId == productId)
-            .Select(x => x.CategoryId)
-            .ToListAsync(cancellationToken);
-        if (categoryIds.Count == 0)
+        // فقط Primary Category منبع schema مؤثر محصول است؛ Additional فقط discovery/PLP است.
+        var primaryCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        if (primaryCategoryId is not Guid categoryId)
         {
             return;
         }
 
         var allowed = new HashSet<Guid>();
-        foreach (var categoryId in categoryIds)
+        foreach (var entry in await ResolveEffectiveBindingsAsync(categoryId, cancellationToken))
         {
-            foreach (var entry in await ResolveEffectiveBindingsAsync(categoryId, cancellationToken))
-            {
-                allowed.Add(entry.DefinitionId);
-            }
+            allowed.Add(entry.DefinitionId);
         }
 
-        // schema-bound فقط وقتی حداقل یک binding در union مؤثر وجود دارد؛ در غیر این صورت BC آزاد.
+        // schema-bound فقط وقتی حداقل یک binding مؤثر وجود دارد؛ در غیر این صورت BC آزاد.
         if (allowed.Count > 0 && !allowed.Contains(definitionId))
         {
             throw new InvalidOperationException("ویژگی در schema مؤثر رده‌های محصول نیست.");

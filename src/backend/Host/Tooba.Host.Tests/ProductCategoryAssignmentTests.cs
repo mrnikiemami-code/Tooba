@@ -126,6 +126,28 @@ public sealed class ProductCategoryAssignmentTests : IAsyncLifetime
         Assert.Equal(otherL3.CategoryId, impact.NewCategoryId);
         Assert.True(await db.ProductCategories.AnyAsync(
             x => x.ProductId == product.ProductId && x.CategoryId == otherL3.CategoryId));
+
+        await dir.AddProductAdditionalCategoryAsync(product.ProductId, l3.CategoryId, CancellationToken.None);
+        Assert.True(await db.ProductCategories.AnyAsync(
+            x => x.ProductId == product.ProductId
+                 && x.CategoryId == l3.CategoryId
+                 && x.Role == CatalogProductCategoryRole.Additional));
+        Assert.True(await db.ProductCategories.AnyAsync(
+            x => x.ProductId == product.ProductId
+                 && x.CategoryId == otherL3.CategoryId
+                 && x.Role == CatalogProductCategoryRole.Primary));
+
+        var dupPrimary = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            dir.AddProductAdditionalCategoryAsync(product.ProductId, otherL3.CategoryId, CancellationToken.None));
+        Assert.Contains("دسته اصلی", dupPrimary.Message, StringComparison.Ordinal);
+
+        await dir.RemoveProductAdditionalCategoryAsync(product.ProductId, l3.CategoryId, CancellationToken.None);
+        Assert.False(await db.ProductCategories.AnyAsync(
+            x => x.ProductId == product.ProductId && x.CategoryId == l3.CategoryId));
+
+        var cannotRemovePrimary = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            dir.RemoveProductAdditionalCategoryAsync(product.ProductId, otherL3.CategoryId, CancellationToken.None));
+        Assert.Contains("دسته اصلی", cannotRemovePrimary.Message, StringComparison.Ordinal);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

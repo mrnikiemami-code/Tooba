@@ -25,6 +25,8 @@ public static class ProductWorkspaceEndpoints
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
         group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
+        group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
+        group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
         group.MapPut("/{productId:guid}/brand", AssignBrandAsync);
         group.MapPost("/{productId:guid}/publish", PublishAsync);
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
@@ -253,6 +255,61 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AssignProductCategoryAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> AddAdditionalCategoryAsync(
+        Guid productId,
+        AdminProductAdditionalCategoryRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.AddAdditionalCategoryAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> RemoveAdditionalCategoryAsync(
+        Guid productId,
+        Guid categoryId,
+        DateTimeOffset? expectedUpdatedAt,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            if (expectedUpdatedAt is null)
+            {
+                return Results.Json(
+                    new { title = "expectedUpdatedAt لازم است.", errorCode = "catalog.category.assignment.stale" },
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            return Results.Json(await composer.RemoveAdditionalCategoryAsync(
+                productId, categoryId, expectedUpdatedAt.Value, ReadPermissions(request), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

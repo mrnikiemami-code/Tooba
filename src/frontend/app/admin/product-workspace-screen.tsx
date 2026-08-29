@@ -26,11 +26,13 @@ import {
   useProductWorkspaceDirtyRegistry,
 } from "./product-workspace-dirty-context";
 import {
+  addAdminProductAdditionalCategory,
   assignAdminProductBrand,
   assignAdminProductCategory,
   listAdminBrandOptions,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
+  removeAdminProductAdditionalCategory,
   updateAdminProductCore,
   type AdminBrandOption,
   type HostReadSource,
@@ -763,6 +765,78 @@ function ProductWorkspaceScreenInner({
                       required
                       invalidSelectionHint
                     />
+                    <div className="rounded-ds border border-border bg-surface/60 p-3" data-testid="product-additional-categories">
+                      <p className="text-sm font-medium">دسته‌های اضافی</p>
+                      <p className="mt-1 text-xs text-muted">
+                        فقط برای نمایش و پیدا شدن محصول؛ روی ویژگی‌ها و تنوع‌ها اثر ندارند.
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(view.categoryAssignments ?? [])
+                          .filter((a) => a.role === "Additional")
+                          .map((a) => (
+                            <span
+                              key={a.categoryId}
+                              className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-800"
+                              data-testid={`product-additional-chip-${a.categoryId}`}
+                            >
+                              {a.categoryPath || a.categoryId}
+                              <button
+                                type="button"
+                                className="text-red-600"
+                                data-testid={`product-additional-remove-${a.categoryId}`}
+                                onClick={() => {
+                                  void (async () => {
+                                    setBusy(true);
+                                    setError(null);
+                                    try {
+                                      const result = await removeAdminProductAdditionalCategory(
+                                        view.productId,
+                                        a.categoryId,
+                                        view.catalogUpdatedAt,
+                                      );
+                                      if (!result.ok) {
+                                        setError(mapAdminErrorMessage(result.errorCode));
+                                        return;
+                                      }
+                                      setView(result.view);
+                                    } finally {
+                                      setBusy(false);
+                                    }
+                                  })();
+                                }}
+                              >
+                                حذف
+                              </button>
+                            </span>
+                          ))}
+                      </div>
+                      <div className="mt-3" data-testid="product-additional-add-picker">
+                        <ProductCategoryPicker
+                          value={null}
+                          onChange={(next) => {
+                            if (!next) return;
+                            void (async () => {
+                              setBusy(true);
+                              setError(null);
+                              try {
+                                const result = await addAdminProductAdditionalCategory(view.productId, {
+                                  categoryId: next,
+                                  expectedUpdatedAt: view.catalogUpdatedAt,
+                                });
+                                if (!result.ok) {
+                                  setError(mapAdminErrorMessage(result.errorCode));
+                                  return;
+                                }
+                                setView(result.view);
+                              } finally {
+                                setBusy(false);
+                              }
+                            })();
+                          }}
+                          required={false}
+                        />
+                      </div>
+                    </div>
                     <label className="block text-sm font-medium">
                       برند
                       <input

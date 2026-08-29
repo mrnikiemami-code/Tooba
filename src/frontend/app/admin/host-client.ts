@@ -29,6 +29,7 @@ export interface AdminProductListRow {
   locationCount: number;
   updatedAt: string;
   primaryMediaAssetId: string | null;
+  primaryCategoryId: string | null;
 }
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -84,6 +85,11 @@ export function mapAdminProductList(payload: unknown): AdminProductListRow[] {
           const text = asString(raw);
           return text.length > 0 ? text : null;
         })(),
+        primaryCategoryId: (() => {
+          const raw = readProp(item, "primaryCategoryId", "PrimaryCategoryId");
+          const text = asString(raw);
+          return text.length > 0 ? text : null;
+        })(),
       };
     })
     .filter((row) => row.id.length > 0);
@@ -127,6 +133,11 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
     primaryCategoryId: primaryCategoryText.length > 0 ? primaryCategoryText : null,
     categoryPath: categoryPathRaw == null || asString(categoryPathRaw).length === 0 ? null : asString(categoryPathRaw),
     isPrimaryCategoryAssignable: Boolean(isAssignableRaw),
+    categoryAssignments: asRecordArray(readProp(item, "categoryAssignments", "CategoryAssignments")).map((row) => ({
+      categoryId: asString(readProp(row, "categoryId", "CategoryId")),
+      categoryPath: asString(readProp(row, "categoryPath", "CategoryPath")),
+      role: asString(readProp(row, "role", "Role"), "Additional"),
+    })),
     slug: slugRaw == null || asString(slugRaw).length === 0 ? null : asString(slugRaw),
     shortDescription:
       shortDescriptionRaw == null || asString(shortDescriptionRaw).length === 0
@@ -522,6 +533,82 @@ export async function assignAdminProductCategory(
     const view = mapProductWorkspaceView(await response.json());
     if (!view) {
       return { ok: false, errorCode: "workspace.product.category-failed" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** افزودن دستهٔ اضافی کشف/PLP بدون تغییر schema. */
+export async function addAdminProductAdditionalCategory(
+  productId: string,
+  input: { categoryId: string; expectedUpdatedAt: string },
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/categories/additional`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        categoryId: input.categoryId,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      const code = body?.errorCode?.trim();
+      if (code) return { ok: false, errorCode: code };
+      if (response.status === 409) return { ok: false, errorCode: "workspace.catalog.stale" };
+      return { ok: false, errorCode: "catalog.category.assignment.invalid" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "catalog.category.assignment.invalid" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** حذف دستهٔ اضافی. */
+export async function removeAdminProductAdditionalCategory(
+  productId: string,
+  categoryId: string,
+  expectedUpdatedAt: string,
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const qs = new URLSearchParams({ expectedUpdatedAt });
+    const response = await fetch(
+      `/v1/admin/products/${productId}/categories/additional/${categoryId}?${qs.toString()}`,
+      { method: "DELETE", headers },
+    );
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      const code = body?.errorCode?.trim();
+      if (code) return { ok: false, errorCode: code };
+      if (response.status === 409) return { ok: false, errorCode: "workspace.catalog.stale" };
+      return { ok: false, errorCode: "catalog.category.assignment.missing" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "catalog.category.assignment.missing" };
     }
     return { ok: true, view };
   } catch {
