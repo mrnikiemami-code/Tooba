@@ -1,0 +1,333 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T013
+Parent-Task:
+TB-P07-T012
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Implemented Product Workspace تنوع‌ها: effective IsVariantAxis axes → product-applicable enum value selection → Cartesian preview (cap 200) → reconcile apply (create/keep/archive) with SortOrder/IsDefault/CatalogCodeSeam, variant readiness, category-change variant impact, Offer-count via gateway (no Catalog→Offer join). No ProductVariant.Price/Stock; AppDataGrid untouched. Validation green; runtimes kept. USER_VISUAL_ACCEPTED remains NO.
+
+Canonical-AppDataGrid:
+
+used:
+no (cards/selectors only)
+
+raw AgGridReact:
+no
+
+new wrapper:
+no
+
+product list regression:
+guards still pass
+
+Variant-Model:
+
+entity/path:
+CatalogVariant + CatalogVariantAttributeValue
+
+axis value entity:
+CatalogVariantAttributeValue (option Guid N canonical)
+
+status:
+Draft/Published/Archived (UI فعال/غیرفعال/بایگانی)
+
+default:
+IsDefault; exactly one among non-archived when set
+
+sku/code:
+optional CatalogCodeSeam (≠ Seller Offer SKU)
+
+uniqueness:
+(ProductId, CombinationFingerprint)
+
+migration:
+20260829050000_AddCatalogVariantSortOrderAndDefault
+
+Axes:
+
+source:
+effective category schema
+
+effective IsVariantAxis:
+yes (binding ∧ IsVariantAxisAllowed)
+
+supported axis types:
+Enumeration / option-backed
+
+unsupported axis handling:
+Persian reject; Architectural Concern documented
+
+localized names/options:
+CatalogLocalizedText
+
+Combination-Generation:
+
+one axis:
+yes
+
+multi-axis:
+yes Cartesian
+
+deterministic:
+axis DisplayOrder then option DisplayOrder
+
+duplicate prevention:
+fingerprint unique index + apply reconcile
+
+safe maximum:
+200
+
+large warning:
+capped + warningFa; apply rejects over cap
+
+Reconciliation:
+
+unchanged:
+kept
+
+new:
+created
+
+removed:
+Archived
+
+referenced variant safety:
+IOfferLookupGateway.CountOffersByCatalogVariantIdsAsync; never hard-delete on apply
+
+hard delete:
+no on matrix apply
+
+archive/deactivate:
+yes
+
+explicit confirmation:
+preview impact counts before apply
+
+Variants-UX:
+
+VIEW:
+readable cards/labels, status, default badge, code, offer count
+
+EDIT:
+axis multi-select, preview, impact, default/status/code, Save/Cancel/dirty
+
+axis selector:
+localized options; no raw IDs as labels
+
+preview:
+readable combination labels + count
+
+impact summary:
+unchanged/new/deactivate counts (MessageFa)
+
+status:
+yes
+
+default:
+yes
+
+sku:
+CatalogCodeSeam optional
+
+Save:
+PUT .../variants/apply
+
+Cancel:
+reload editor state
+
+dirty-state:
+yes
+
+mobile:
+stacked selectors + cards
+
+accessibility:
+labeled controls; status not color-only
+
+Boundary:
+
+Product attribute vs Variant attribute:
+product-level vs axis values on CatalogVariant; documented
+
+Product != Offer:
+yes
+
+ProductVariant.Price:
+no
+
+ProductVariant.Stock:
+no
+
+Seller Offer handoff:
+clean (select Product→Variant→Offer later)
+
+Pricing join:
+no
+
+Inventory join:
+no
+
+Category-Schema-Safety:
+
+category change impact:
+variant impact counts on preview; no auto-delete
+
+axis removal/change:
+reported
+
+existing variant protection:
+archive-only reconcile; orphans not silently deleted
+
+readiness:
+ProductVariantReadiness
+
+Authorization:
+
+SpiceDB:
+AdminPanelAccess + workspace scope
+
+view-only:
+no mutation controls
+
+edit:
+CanEditCatalog
+
+backend authoritative:
+yes
+
+API:
+
+axes/editor:
+GET .../variants/editor
+
+current variants:
+embedded in editor state
+
+preview:
+POST .../variants/preview
+
+apply:
+PUT .../variants/apply
+
+readiness:
+GET .../variants/readiness
+
+impact:
+category-change-preview enriched
+
+gaps:
+free-text axes unsupported by design; full Offer seed in matrix test not required (archive-never-delete)
+
+Validation:
+
+backend restore:
+n/a (isolated -o + Host restart)
+
+backend build:
+pass
+
+backend full tests:
+Passed 331 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass
+
+frontend tests:
+pass (test:product-workspace 22/22)
+
+frontend build:
+pass
+
+passed:
+331 BE + FE suites
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0 new
+
+new warnings:
+no
+
+git diff --check:
+pass (scoped)
+
+Documentation:
+
+PRODUCT-VARIANTS:
+docs/catalog/PRODUCT-VARIANTS.md
+
+PRODUCT-CATALOG-ADMIN:
+updated
+
+recovery/state:
+docs/PROJECT-STATE.md updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+http://127.0.0.1:3001
+
+Product Admin:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+c2819d8e7423a0b93490afc0969ed8ca082a264f
+
+push:
+yes
+
+final HEAD:
+c2819d8e7423a0b93490afc0969ed8ca082a264f
+
+origin/main:
+c2819d8e7423a0b93490afc0969ed8ca082a264f
+
+synchronized:
+yes
+
+tracked tree:
+clean for T013 paths; unrelated dirty files preserved
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+Variant matrix requires Enumeration/option-backed axes only; free-text axes rejected rather than unreliable combinations.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending manual تنوع‌ها review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
