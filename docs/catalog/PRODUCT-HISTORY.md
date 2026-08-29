@@ -1,6 +1,6 @@
 # Product History
 
-> **Task:** TB-P07-T019 · **Phase:** P07 Advanced Catalog  
+> **Task:** TB-P07-T019 · **Phase:** P07 Advanced Catalog
 > **Depends on:** [PRODUCT-CATALOG-ADMIN.md](./PRODUCT-CATALOG-ADMIN.md), [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md)
 
 ## Ownership
