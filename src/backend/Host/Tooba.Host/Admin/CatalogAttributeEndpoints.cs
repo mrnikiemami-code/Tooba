@@ -136,7 +136,7 @@ public static class CatalogAttributeEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapAttributeInvalid(ex);
         }
     }
 
@@ -768,6 +768,37 @@ public static class CatalogAttributeEndpoints
         {
             return Results.Json(new { title = ex.Message, errorCode = "catalog.category_change.invalid" }, statusCode: StatusCodes.Status400BadRequest);
         }
+    }
+
+    private static IResult MapAttributeInvalid(InvalidOperationException ex)
+    {
+        if (ex.Message.Contains("کد", StringComparison.Ordinal)
+            && ex.Message.Contains("تکراری", StringComparison.Ordinal))
+        {
+            return Results.Json(
+                new
+                {
+                    title = "این کد ویژگی قبلاً استفاده شده است.",
+                    errorCode = "catalog.attribute.code.duplicate",
+                },
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        if (ex.Message.Contains("نام", StringComparison.Ordinal)
+            && ex.Message.Contains("تکراری", StringComparison.Ordinal))
+        {
+            return Results.Json(
+                new
+                {
+                    title = "ویژگی‌ای با این نام قبلاً وجود دارد.",
+                    errorCode = "catalog.attribute.name.duplicate",
+                },
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
+        return Results.Json(
+            new { title = ex.Message, errorCode = "catalog.attribute.invalid" },
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>

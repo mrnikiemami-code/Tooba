@@ -2,7 +2,8 @@
 
 /**
  * صفحهٔ Admin Category: درخت + workspace با VIEW/EDIT صریح (T005-R1 / T006).
- * تب‌های عمومی، ترجمه‌ها، ویژگی‌ها و فیلترها واقعی‌اند؛ بقیه progressive placeholder.
+ * تب‌های عمومی، ترجمه‌ها، ویژگی‌ها، فیلترها، مگامنو و محصولات واقعی‌اند.
+ * SEO/تنظیمات/تاریخچه فعلاً از ناوبری تب پنهان‌اند (SEO در ترجمه‌ها موجود است).
  */
 
 import Link from "next/link";
@@ -44,6 +45,7 @@ import {
 import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
 import { CategoryFacetsPanel } from "./category-facets-panel.tsx";
 import { CategoryMegaMenuPanel } from "./category-mega-menu-panel.tsx";
+import { CategoryProductsPanel } from "./category-products-panel.tsx";
 
 const API_LOCALE = "fa-IR";
 
@@ -62,10 +64,7 @@ const TABS = [
   { id: "attributes", label: "ویژگی‌ها", implemented: true },
   { id: "facets", label: "فیلترها", implemented: true },
   { id: "mega-menu", label: "مگامنو", implemented: true },
-  { id: "products", label: "محصولات", implemented: false },
-  { id: "seo", label: "SEO", implemented: false },
-  { id: "settings", label: "تنظیمات", implemented: false },
-  { id: "history", label: "تاریخچه", implemented: false },
+  { id: "products", label: "محصولات", implemented: true },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -303,18 +302,6 @@ function CreateCategoryDialog({
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ComingSoonPanel() {
-  return (
-    <div
-      className="rounded-2xl border border-dashed border-gray-200 bg-slate-50 p-8 text-center text-sm text-slate-500"
-      data-testid="category-tab-coming-soon"
-    >
-      این بخش در تسک بعدی تکمیل می‌شود
-      <div className="mt-2 text-xs text-slate-400">به‌زودی</div>
     </div>
   );
 }
@@ -1675,9 +1662,6 @@ export function CategoryAdminScreen() {
                       data-testid={`category-tab-${tab.id}`}
                     >
                       {tab.label}
-                      {!tab.implemented ? (
-                        <span className="ms-1 text-[10px] opacity-70">به‌زودی</span>
-                      ) : null}
                     </Link>
                   );
                 })}
@@ -1767,12 +1751,17 @@ export function CategoryAdminScreen() {
                     onCancelEdit={handleCancelMegaMenuEdit}
                   />
                 ) : null}
-                {activeTab !== "general" &&
-                activeTab !== "translations" &&
-                activeTab !== "attributes" &&
-                activeTab !== "facets" &&
-                activeTab !== "mega-menu" ? (
-                  <ComingSoonPanel />
+                {activeTab === "products" && categoryId ? (
+                  <CategoryProductsPanel
+                    categoryId={categoryId}
+                    categoryName={
+                      activeTranslation?.name
+                      || selectedNode?.name
+                      || "دسته"
+                    }
+                    treeNodes={flatNodes}
+                    canEdit={formMode.canEdit}
+                  />
                 ) : null}
               </div>
             </div>

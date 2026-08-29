@@ -4,6 +4,7 @@
  */
 
 import { adminHeaders, type AdminResult } from "./admin-api.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
 
 export type CategoryPublicationStatus = "Draft" | "Published" | "Archived";
 
@@ -142,17 +143,14 @@ export function parseCategoryStatus(raw: unknown): CategoryPublicationStatus {
   return "Draft";
 }
 
+/** کد پایدار از ProblemDetails سبک Host — بدون Bad Request / HTTP خام. */
 function errorMessage(payload: unknown, status: number): string {
   const item = recordOf(payload);
   if (item) {
-    const title = text(prop(item, "title", "Title"));
     const code = text(prop(item, "errorCode", "ErrorCode"));
-    if (code === CATEGORY_SLUG_DUPLICATE_ERROR_CODE) {
-      return CATEGORY_SLUG_DUPLICATE_MESSAGE;
-    }
-    if (title) return code ? `${title} (${code})` : title;
     if (code) return code;
   }
+  if (status === 401 || status === 403) return "admin.authorization.denied";
   return `admin.http.${status}`;
 }
 
@@ -170,7 +168,7 @@ export function mapCategoryMutationError(result: {
   ) {
     return CATEGORY_SLUG_DUPLICATE_MESSAGE;
   }
-  return message || `admin.http.${result.status ?? 0}`;
+  return mapAdminErrorMessage(message || `admin.http.${result.status ?? 0}`, "fa");
 }
 
 /**

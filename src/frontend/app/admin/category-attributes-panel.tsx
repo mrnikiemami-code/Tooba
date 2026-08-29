@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { buildCategoryPath, type AppCategoryTreeNode } from "../../design-system";
+import { buildCategoryPath, type AppCategoryTreeNode } from "../../design-system/app-category-tree";
 import {
   addAttributeOption,
   bindCategoryAttribute,
@@ -18,6 +18,8 @@ import {
   type EffectiveSchemaEntry,
 } from "./catalog-attribute-api.ts";
 import { slugifyCategoryName } from "./catalog-category-api.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { resolveAdminChromeLocale } from "./admin-chrome-messages.ts";
 
 const VALUE_KINDS: CatalogAttributeValueKind[] = [
   "Text",
@@ -33,6 +35,14 @@ export const ATTRIBUTE_FLAG_LABELS = {
   filterable: "نمایش در فیلتر محصولات",
   variant: "برای ساخت تنوع محصول",
   comparable: "نمایش در مقایسه محصولات",
+} as const;
+
+/** برچسب کوتاه چیپ رفتار — قابل انتخاب/حذف مستقل. */
+export const ATTRIBUTE_FLAG_CHIP_LABELS = {
+  required: "الزامی",
+  filterable: "فیلتر",
+  variant: "تنوع",
+  comparable: "مقایسه",
 } as const;
 
 /** تبدیل کد داخلی به عنوان قابل‌خواندن (بدون نمایش GUID). */
@@ -263,48 +273,92 @@ function BindFlagsEditor({
     || valueKind === "Instant"
     || valueKind === "Boolean";
 
+  const chips: Array<{
+    key: keyof BindFlags;
+    chip: string;
+    detail: string;
+    checked: boolean;
+    disabled?: boolean;
+    testId: string;
+  }> = [
+    {
+      key: "isRequired",
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.required,
+      detail: ATTRIBUTE_FLAG_LABELS.required,
+      checked: flags.isRequired,
+      testId: "attr-flag-required",
+    },
+    {
+      key: "isFilterable",
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.filterable,
+      detail: ATTRIBUTE_FLAG_LABELS.filterable,
+      checked: flags.isFilterable,
+      testId: "attr-flag-filterable",
+    },
+    {
+      key: "isVariantAxis",
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.variant,
+      detail: ATTRIBUTE_FLAG_LABELS.variant,
+      checked: flags.isVariantAxis,
+      disabled: variantDisabled,
+      testId: "attr-flag-variant",
+    },
+    {
+      key: "isComparable",
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.comparable,
+      detail: ATTRIBUTE_FLAG_LABELS.comparable,
+      checked: flags.isComparable,
+      testId: "attr-flag-comparable",
+    },
+  ];
+
   return (
-    <div className="space-y-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm">
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={flags.isRequired}
-          onChange={(e) => onChange({ ...flags, isRequired: e.target.checked })}
-          data-testid="attr-flag-required"
-        />
-        {ATTRIBUTE_FLAG_LABELS.required}
-      </label>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={flags.isFilterable}
-          onChange={(e) => onChange({ ...flags, isFilterable: e.target.checked })}
-          data-testid="attr-flag-filterable"
-        />
-        {ATTRIBUTE_FLAG_LABELS.filterable}
-      </label>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={flags.isVariantAxis}
-          disabled={variantDisabled}
-          onChange={(e) => onChange({ ...flags, isVariantAxis: e.target.checked })}
-          data-testid="attr-flag-variant"
-        />
-        {ATTRIBUTE_FLAG_LABELS.variant}
-        {variantDisabled ? (
-          <span className="text-xs text-slate-500">(برای این نوع مقدار مناسب نیست)</span>
-        ) : null}
-      </label>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={flags.isComparable}
-          onChange={(e) => onChange({ ...flags, isComparable: e.target.checked })}
-          data-testid="attr-flag-comparable"
-        />
-        {ATTRIBUTE_FLAG_LABELS.comparable}
-      </label>
+    <div
+      className="space-y-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm"
+      role="group"
+      aria-label="رفتار ویژگی"
+      data-testid="attr-behavior-chips"
+    >
+      <div className="flex flex-wrap gap-2" dir="rtl">
+        {chips.map((chip) => {
+          const selected = chip.checked;
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              role="switch"
+              aria-checked={selected}
+              aria-label={chip.detail}
+              title={chip.detail}
+              disabled={chip.disabled}
+              data-testid={chip.testId}
+              onClick={() => {
+                if (chip.disabled) return;
+                onChange({ ...flags, [chip.key]: !selected });
+              }}
+              onKeyDown={(e) => {
+                if (chip.disabled) return;
+                if (e.key === " " || e.key === "Enter") {
+                  e.preventDefault();
+                  onChange({ ...flags, [chip.key]: !selected });
+                }
+              }}
+              className={
+                chip.disabled
+                  ? "inline-flex min-h-9 cursor-not-allowed items-center rounded-full border border-slate-200 bg-slate-100 px-3 text-xs font-medium text-slate-400"
+                  : selected
+                    ? "inline-flex min-h-9 items-center rounded-full border border-[#2563EB] bg-[#2563EB] px-3 text-xs font-semibold text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    : "inline-flex min-h-9 items-center rounded-full border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              }
+            >
+              {chip.chip}
+            </button>
+          );
+        })}
+      </div>
+      {variantDisabled ? (
+        <p className="text-xs text-slate-500">تنوع برای این نوع مقدار مناسب نیست</p>
+      ) : null}
     </div>
   );
 }
@@ -355,6 +409,12 @@ export function CategoryAttributesPanel({
   const [configureFlags, setConfigureFlags] = useState<BindFlags>(defaultBindFlags());
   const [configureMode, setConfigureMode] = useState<"local-update" | "inherited-override">("local-update");
 
+  const locale = resolveAdminChromeLocale();
+  const toUiError = useCallback(
+    (raw: string | null | undefined, fallback?: string) =>
+      mapAdminErrorMessage(raw || fallback || "host-unreachable", locale),
+    [locale],
+  );
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
     for (const n of treeNodes) map.set(n.id, n.name);
@@ -370,13 +430,13 @@ export function CategoryAttributesPanel({
     ]);
     setLoading(false);
     if (schemaResult.state === "denied" || defsResult.state === "denied") {
-      setError("دسترسی مجاز نیست");
+      setError(toUiError("admin.authorization.denied"));
       setSchema([]);
       setDefinitions([]);
       return;
     }
     if (schemaResult.state !== "ok" || !schemaResult.data) {
-      setError(schemaResult.message ?? "بارگذاری schema ناموفق بود");
+      setError(toUiError(schemaResult.message, "بارگذاری schema ناموفق بود"));
       setSchema([]);
     } else {
       setSchema(schemaResult.data);
@@ -386,7 +446,7 @@ export function CategoryAttributesPanel({
     } else {
       setDefinitions([]);
     }
-  }, [categoryId]);
+  }, [categoryId, toUiError]);
 
   useEffect(() => {
     void reload();
@@ -839,8 +899,9 @@ export function CategoryAttributesPanel({
                 className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
                 disabled={combinedBusy || !selectedDefinition}
                 onClick={() => void handleBindExisting().catch((e) => {
-                  setError(e instanceof Error ? e.message : "خطا");
-                  toast.error(e instanceof Error ? e.message : "خطا");
+                  const msg = toUiError(e instanceof Error ? e.message : null);
+                  setError(msg);
+                  toast.error(msg);
                 })}
                 data-testid="attr-add-confirm"
               >
@@ -974,8 +1035,9 @@ export function CategoryAttributesPanel({
                 className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
                 disabled={combinedBusy || !createName.trim()}
                 onClick={() => void handleCreateAndBind().catch((e) => {
-                  setError(e instanceof Error ? e.message : "خطا");
-                  toast.error(e instanceof Error ? e.message : "خطا");
+                  const msg = toUiError(e instanceof Error ? e.message : null);
+                  setError(msg);
+                  toast.error(msg);
                 })}
                 data-testid="attr-create-confirm"
               >
@@ -1031,8 +1093,9 @@ export function CategoryAttributesPanel({
                 className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
                 disabled={combinedBusy}
                 onClick={() => void handleSaveConfigure().catch((e) => {
-                  setError(e instanceof Error ? e.message : "خطا");
-                  toast.error(e instanceof Error ? e.message : "خطا");
+                  const msg = toUiError(e instanceof Error ? e.message : null);
+                  setError(msg);
+                  toast.error(msg);
                 })}
                 data-testid="attr-configure-save"
               >

@@ -504,15 +504,15 @@ export async function assignAdminProductCategory(
         expectedUpdatedAt: input.expectedUpdatedAt,
       }),
     });
-    if (response.status === 409) {
-      return { ok: false, errorCode: "workspace.catalog.stale" };
-    }
     if (response.status === 403) {
       return { ok: false, errorCode: "workspace.permission.denied" };
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
-      return { ok: false, errorCode: body?.errorCode ?? "workspace.product.category-failed" };
+      const code = body?.errorCode?.trim();
+      if (code) return { ok: false, errorCode: code };
+      if (response.status === 409) return { ok: false, errorCode: "workspace.catalog.stale" };
+      return { ok: false, errorCode: "workspace.product.category-failed" };
     }
     const view = mapProductWorkspaceView(await response.json());
     if (!view) {

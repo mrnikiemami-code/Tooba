@@ -722,6 +722,35 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        var normalizedCode = code.Trim().ToLowerInvariant();
+        var codeTaken = await _db.AttributeDefinitions.AsNoTracking()
+            .AnyAsync(x => x.Code == normalizedCode, cancellationToken);
+        if (codeTaken)
+        {
+            throw new InvalidOperationException("کد ویژگی تکراری است.");
+        }
+
+        foreach (var pair in localizedNames)
+        {
+            var name = pair.Value.Trim();
+            if (name.Length == 0)
+            {
+                continue;
+            }
+
+            var locale = pair.Key.Trim();
+            var nameTaken = await _db.LocalizedTexts.AsNoTracking().AnyAsync(
+                t => t.OwnerKind == CatalogLocalizedOwnerKind.AttributeDefinition
+                    && t.FieldKey == "name"
+                    && t.Locale == locale
+                    && t.Value.ToLower() == name.ToLower(),
+                cancellationToken);
+            if (nameTaken)
+            {
+                throw new InvalidOperationException("نام ویژگی برای این locale تکراری است.");
+            }
+        }
+
         var definition = CatalogAttributeDefinition.Create(code, valueKind, isVariantAxis, DateTimeOffset.UtcNow);
         _db.AttributeDefinitions.Add(definition);
         AddLocalizedNames(CatalogLocalizedOwnerKind.AttributeDefinition, definition.DefinitionId, localizedNames);

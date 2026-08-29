@@ -324,14 +324,14 @@ function parseValueKind(raw: unknown): CatalogAttributeValueKind {
   return "Text";
 }
 
+/** کد پایدار از ProblemDetails سبک Host — بدون Bad Request / HTTP خام. */
 function errorMessage(payload: unknown, status: number): string {
   const item = recordOf(payload);
   if (item) {
-    const title = text(prop(item, "title", "Title"));
     const code = text(prop(item, "errorCode", "ErrorCode"));
-    if (title) return code ? `${title} (${code})` : title;
     if (code) return code;
   }
+  if (status === 401 || status === 403) return "admin.authorization.denied";
   return `admin.http.${status}`;
 }
 

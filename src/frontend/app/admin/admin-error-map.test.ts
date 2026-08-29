@@ -1,0 +1,55 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  extractAdminErrorCode,
+  isTechnicalAdminErrorText,
+  listMappedAdminErrorCodes,
+  mapAdminErrorMessage,
+  unknownAdminErrorMessage,
+} from "./admin-error-map.ts";
+
+test("maps known catalog attribute duplicate codes in fa and en", () => {
+  assert.equal(
+    mapAdminErrorMessage("catalog.attribute.name.duplicate", "fa"),
+    "ویژگی‌ای با این نام قبلاً وجود دارد.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("catalog.attribute.code.duplicate", "en"),
+    "This attribute code is already in use.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("catalog.category.attribute.invalid", "fa"),
+    "اطلاعات واردشده معتبر نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("catalog.product.category.level.invalid", "fa"),
+    "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("admin.authorization.denied", "en"),
+    "You are not allowed to perform this action.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("host-unreachable", "fa"),
+    "اتصال به سرویس برقرار نیست. لطفاً دوباره تلاش کنید.",
+  );
+});
+
+test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {
+  assert.equal(mapAdminErrorMessage("Bad Request", "fa"), unknownAdminErrorMessage("fa"));
+  assert.equal(mapAdminErrorMessage("HTTP 400", "en"), unknownAdminErrorMessage("en"));
+  assert.equal(mapAdminErrorMessage("admin.http.500", "fa"), unknownAdminErrorMessage("fa"));
+  assert.equal(mapAdminErrorMessage("Some.Unknown.Exception", "fa"), unknownAdminErrorMessage("fa"));
+  assert.equal(isTechnicalAdminErrorText("Bad Request"), true);
+  assert.equal(isTechnicalAdminErrorText("host-grid-http-409"), true);
+  assert.ok(!mapAdminErrorMessage(null, "fa").includes("Bad Request"));
+  assert.ok(!mapAdminErrorMessage("catalog.attribute.code.duplicate", "fa").includes("catalog."));
+});
+
+test("extracts code from legacy title (code) payloads", () => {
+  assert.equal(
+    extractAdminErrorCode("Conflict (catalog.attribute.code.duplicate)"),
+    "catalog.attribute.code.duplicate",
+  );
+  assert.ok(listMappedAdminErrorCodes().includes("workspace.product.category.level.invalid"));
+});

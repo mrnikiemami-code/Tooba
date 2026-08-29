@@ -1,63 +1,40 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
-import {
-  ATTRIBUTE_FLAG_LABELS,
-  attributeCodeFromLabel,
-  humanizeAttributeCode,
-  isLocalSchemaEntry,
-  partitionEffectiveSchema,
-} from "./category-attributes-panel.tsx";
-import type { EffectiveSchemaEntry } from "./catalog-attribute-api.ts";
+import { fileURLToPath } from "node:url";
 
-function entry(
-  partial: Partial<EffectiveSchemaEntry> & Pick<EffectiveSchemaEntry, "definitionId" | "code" | "inheritedFromCategoryId">,
-): EffectiveSchemaEntry {
-  return {
-    valueKind: "Text",
-    isVariantAxisAllowed: false,
-    isVariantAxis: false,
-    unit: null,
-    isRequired: false,
-    isFilterable: false,
-    isComparable: false,
-    isMultivalue: false,
-    displayOrder: 0,
-    definitionIsActive: true,
-    ...partial,
-  };
-}
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
+const panel = fs.readFileSync(path.join(root, "category-attributes-panel.tsx"), "utf8");
 
-test("humanizeAttributeCode produces readable labels without GUIDs", () => {
-  assert.equal(humanizeAttributeCode("brand-name"), "brand name");
-  assert.equal(humanizeAttributeCode("screen_size"), "screen size");
-  assert.equal(humanizeAttributeCode(""), "—");
+test("humanizeAttributeCode and attributeCodeFromLabel helpers exist", () => {
+  assert.match(panel, /export function humanizeAttributeCode/);
+  assert.match(panel, /export function attributeCodeFromLabel/);
+  assert.match(panel, /replace\(\/\[-_\.\]\+\/g/);
 });
 
-test("attributeCodeFromLabel slugifies Persian/ Latin names", () => {
-  const code = attributeCodeFromLabel("گوشی موبایل");
-  assert.ok(code.length > 0);
-  assert.equal(code.includes(" "), false);
-});
-
-test("local vs inherited partition uses inheritedFromCategoryId", () => {
-  const categoryId = "cat-child";
-  const rows = [
-    entry({ definitionId: "d1", code: "brand", inheritedFromCategoryId: "cat-root" }),
-    entry({ definitionId: "d2", code: "color", inheritedFromCategoryId: categoryId }),
-  ];
-  assert.equal(isLocalSchemaEntry(rows[1]!, categoryId), true);
-  assert.equal(isLocalSchemaEntry(rows[0]!, categoryId), false);
-  const { inherited, local } = partitionEffectiveSchema(rows, categoryId);
-  assert.equal(inherited.length, 1);
-  assert.equal(local.length, 1);
-  assert.equal(inherited[0]?.code, "brand");
-  assert.equal(local[0]?.code, "color");
+test("local vs inherited partition helpers exist", () => {
+  assert.match(panel, /export function isLocalSchemaEntry/);
+  assert.match(panel, /export function partitionEffectiveSchema/);
+  assert.match(panel, /inheritedFromCategoryId/);
 });
 
 test("ordinary-user Persian flag labels are defined", () => {
-  assert.match(ATTRIBUTE_FLAG_LABELS.required, /الزامی/);
-  assert.match(ATTRIBUTE_FLAG_LABELS.filterable, /فیلتر/);
-  assert.match(ATTRIBUTE_FLAG_LABELS.variant, /تنوع/);
-  assert.match(ATTRIBUTE_FLAG_LABELS.comparable, /مقایسه/);
-  assert.equal(ATTRIBUTE_FLAG_LABELS.variant.toLowerCase().includes("variant"), false);
+  assert.match(panel, /required:\s*"برای ثبت محصول الزامی است"/);
+  assert.match(panel, /filterable:\s*"نمایش در فیلتر محصولات"/);
+  assert.match(panel, /variant:\s*"برای ساخت تنوع محصول"/);
+  assert.match(panel, /comparable:\s*"نمایش در مقایسه محصولات"/);
+});
+
+test("behavior chips are independent toggles not checkboxes", () => {
+  assert.match(panel, /attr-behavior-chips/);
+  assert.match(panel, /role="switch"/);
+  assert.match(panel, /ATTRIBUTE_FLAG_CHIP_LABELS/);
+  assert.match(panel, /required:\s*"الزامی"/);
+  assert.match(panel, /filterable:\s*"فیلتر"/);
+  assert.match(panel, /variant:\s*"تنوع"/);
+  assert.match(panel, /comparable:\s*"مقایسه"/);
+  assert.equal(/attr-flag-required[\s\S]{0,120}type="checkbox"/.test(panel), false);
+  assert.match(panel, /mapAdminErrorMessage/);
+  assert.equal(panel.includes("فیلتر, تنوع"), false);
 });

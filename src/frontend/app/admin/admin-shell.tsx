@@ -65,10 +65,6 @@ const navGroupDefs: NavGroupDef[] = [
     labelKey: "groupOps",
     items: [
       { id: "dashboard", labelKey: "dashboard", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
-      { id: "products", labelKey: "products", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
-      { id: "catalog-categories", labelKey: "catalogCategories", href: "/admin/catalog/categories", icon: FolderTree, live: true, viewPermission: "product.view" },
-      { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
-      { id: "category-schema", labelKey: "categorySchema", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
       { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
       { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
@@ -77,6 +73,22 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "content", labelKey: "content", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
+    ],
+  },
+  {
+    id: "catalog-categories",
+    labelKey: "groupCatalogCategories",
+    items: [
+      { id: "catalog-categories", labelKey: "catalogCategories", href: "/admin/catalog/categories", icon: FolderTree, live: true, viewPermission: "product.view" },
+      { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
+      { id: "category-schema", labelKey: "categorySchema", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
+    ],
+  },
+  {
+    id: "products",
+    labelKey: "groupProducts",
+    items: [
+      { id: "products", labelKey: "productList", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
     ],
   },
   {

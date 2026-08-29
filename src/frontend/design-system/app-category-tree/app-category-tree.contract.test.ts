@@ -23,8 +23,10 @@ test("AppCategoryTree wraps antd Tree without exporting Ant types to pages", () 
   const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");
   assert.equal(screen.includes('from "antd"'), false);
   assert.equal(screen.includes("AgGridReact"), false);
-  assert.equal(screen.includes("این بخش در تسک بعدی تکمیل می‌شود"), true);
-  assert.equal(screen.includes("به‌زودی"), true);
+  assert.equal(screen.includes("این بخش در تسک بعدی تکمیل می‌شود"), false);
+  // media progressive placeholder may still include به‌زودی; ComingSoon tab stubs must not
+  assert.equal(screen.includes("category-tab-coming-soon"), false);
+  assert.match(screen, /انتخاب رسانه — به‌زودی/);
 
   const index = fs.readFileSync(path.join(root, "design-system/index.ts"), "utf8");
   assert.match(index, /AppCategoryTree/);
@@ -46,8 +48,8 @@ test("nav includes categories labels", () => {
   assert.match(shell, /catalogCategories/);
 
   const messages = fs.readFileSync(path.join(root, "app/admin/admin-chrome-messages.ts"), "utf8");
-  assert.match(messages, /catalogCategories:\s*"دسته‌بندی‌ها"/);
-  assert.match(messages, /catalogCategories:\s*"Categories"/);
+  assert.match(messages, /catalogCategories:\s*"مدیریت دسته‌بندی‌ها"/);
+  assert.match(messages, /catalogCategories:\s*"Manage categories"/);
 });
 
 test("drag handle is separate from title/chevron contract in markup", () => {
@@ -82,10 +84,10 @@ test("create flow fields stay progressive (no SEO/attrs on create)", () => {
   assert.match(screen, /create-category-name/);
   assert.match(screen, /create-category-slug/);
   // فقط دیالوگ ایجاد باید بدون SEO/attrs بماند؛ تب ترجمه‌ها فیلدهای سبک SEO دارد (T006).
-  const createBlock = screen.slice(
-    screen.indexOf("function CreateCategoryDialog"),
-    screen.indexOf("function ComingSoonPanel"),
-  );
+  const createStart = screen.indexOf("function CreateCategoryDialog");
+  const createEnd = screen.indexOf("function SummaryCard");
+  assert.ok(createStart >= 0 && createEnd > createStart);
+  const createBlock = screen.slice(createStart, createEnd);
   assert.equal(createBlock.includes("seoTitle"), false);
   assert.equal(createBlock.includes("SeoTitle"), false);
   assert.equal(/attribute/i.test(createBlock), false);

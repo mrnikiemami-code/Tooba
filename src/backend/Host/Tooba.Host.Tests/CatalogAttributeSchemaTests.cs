@@ -328,6 +328,46 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
                 CancellationToken.None));
     }
 
+    [SkippableFact]
+    public async Task CreateAttributeDefinition_duplicate_code_and_name_throw_stable_messages()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-attr-dup", "tenant-attr-dup"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        await dir.CreateAttributeDefinitionAsync(
+            "color",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ" },
+            CancellationToken.None);
+
+        var codeDup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            dir.CreateAttributeDefinitionAsync(
+                "Color",
+                CatalogAttributeValueKind.Text,
+                false,
+                new Dictionary<string, string> { ["fa-IR"] = "رنگ دیگر" },
+                CancellationToken.None));
+        Assert.Contains("کد", codeDup.Message);
+        Assert.Contains("تکراری", codeDup.Message);
+
+        var nameDup = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            dir.CreateAttributeDefinitionAsync(
+                "hue",
+                CatalogAttributeValueKind.Text,
+                false,
+                new Dictionary<string, string> { ["fa-IR"] = "رنگ" },
+                CancellationToken.None));
+        Assert.Contains("نام", nameDup.Message);
+        Assert.Contains("تکراری", nameDup.Message);
+    }
+
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
     {
         var modules = new IOutboxModuleRegistration[] { new CatalogOutboxRegistration() };

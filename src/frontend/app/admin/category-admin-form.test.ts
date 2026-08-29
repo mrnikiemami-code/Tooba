@@ -282,14 +282,20 @@ test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
   assert.equal(panel.match(/data-testid=.*definitionId/g)?.length ?? 0, 0);
 });
 
-test("future tabs remain progressive placeholders (except attributes, facets, mega-menu)", () => {
+test("visible category tabs are functional — products real; seo/settings/history hidden", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
-  assert.match(screen, /category-tab-coming-soon/);
-  assert.match(screen, /این بخش در تسک بعدی تکمیل می‌شود/);
-  assert.match(screen, /implemented: false/);
+  assert.match(screen, /id: "products", label: "محصولات", implemented: true/);
+  assert.match(screen, /CategoryProductsPanel/);
   assert.match(screen, /id: "facets", label: "فیلترها", implemented: true/);
   assert.match(screen, /id: "mega-menu", label: "مگامنو", implemented: true/);
-  assert.match(screen, /id: "products"/);
+  assert.equal(screen.includes('id: "seo"'), false);
+  assert.equal(screen.includes('id: "settings"'), false);
+  assert.equal(screen.includes('id: "history"'), false);
+  assert.equal(screen.includes("ComingSoonPanel"), false);
+  assert.equal(screen.includes("category-tab-coming-soon"), false);
+  assert.equal(screen.includes("این بخش در تسک بعدی تکمیل می‌شود"), false);
+  // media progressive placeholder may still say به‌زودی; tab stubs must not
+  assert.equal(/category-tab-[\w-]+[\s\S]{0,80}به‌زودی/.test(screen), false);
 });
 
 test("mobile layout markers present", () => {

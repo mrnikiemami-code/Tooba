@@ -33,6 +33,7 @@ import {
 } from "./host-client";
 import { ProductCategoryPicker } from "./product-category-picker";
 import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
+import { mapAdminErrorMessage } from "./admin-error-map";
 import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 
@@ -384,7 +385,7 @@ function ProductWorkspaceScreenInner({
           setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
           return;
         }
-        setError(catResult.errorCode);
+        setError(mapAdminErrorMessage(catResult.errorCode));
         return;
       }
       setView(catResult.view);
@@ -408,7 +409,7 @@ function ProductWorkspaceScreenInner({
         setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
         return;
       }
-      setError(coreResult.errorCode);
+      setError(mapAdminErrorMessage(coreResult.errorCode));
       return;
     }
     setView(coreResult.view);

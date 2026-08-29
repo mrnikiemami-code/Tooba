@@ -6,11 +6,13 @@ export type AdminChromeLocale = "fa" | "en";
 
 export type AdminNavLabels = {
   groupOps: string;
+  groupCatalogCategories: string;
+  groupProducts: string;
   groupMarket: string;
   groupModeration: string;
   groupSystem: string;
   dashboard: string;
-  products: string;
+  productList: string;
   catalogCategories: string;
   catalogAttributes: string;
   categorySchema: string;
@@ -39,13 +41,15 @@ export type AdminNavLabels = {
 
 const faNav: AdminNavLabels = {
   groupOps: "عملیات",
+  groupCatalogCategories: "کاتالوگ / دسته‌بندی‌ها",
+  groupProducts: "محصولات",
   groupMarket: "بازار",
   groupModeration: "نظارت",
   groupSystem: "سامانه",
   dashboard: "داشبورد",
-  products: "کاتالوگ / محصولات",
-  catalogCategories: "دسته‌بندی‌ها",
-  catalogAttributes: "تعاریف ویژگی",
+  productList: "فهرست محصولات",
+  catalogCategories: "مدیریت دسته‌بندی‌ها",
+  catalogAttributes: "ویژگی‌ها و فیلترها",
   categorySchema: "طرح ویژگی رده",
   orders: "سفارش‌ها و پرداخت",
   fulfillments: "ارسال و تحویل",
@@ -72,13 +76,15 @@ const faNav: AdminNavLabels = {
 
 const enNav: AdminNavLabels = {
   groupOps: "Operations",
+  groupCatalogCategories: "Catalog / Categories",
+  groupProducts: "Products",
   groupMarket: "Marketplace",
   groupModeration: "Moderation",
   groupSystem: "System",
   dashboard: "Dashboard",
-  products: "Catalog / Products",
-  catalogCategories: "Categories",
-  catalogAttributes: "Attribute definitions",
+  productList: "Product list",
+  catalogCategories: "Manage categories",
+  catalogAttributes: "Attributes & filters",
   categorySchema: "Category attribute schema",
   orders: "Orders & payments",
   fulfillments: "Shipping & fulfillment",
