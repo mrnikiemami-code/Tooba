@@ -1,0 +1,10 @@
+{
+  "taskId": "TB-P07-T018",
+  "bridgeTaskUuid": "18833f85-cede-44fd-9061-20c07076e5dc",
+  "resultId": "1cd81be1-4908-44fc-a302-db2601ada264",
+  "status": "PASS",
+  "featureCommit": "9839ed3",
+  "finalHead": "4848c8b541d0832111f29e958b5eb8bad86cd8f5",
+  "channelId": "tooba-main",
+  "workerId": "tooba-worker-01"
+}
