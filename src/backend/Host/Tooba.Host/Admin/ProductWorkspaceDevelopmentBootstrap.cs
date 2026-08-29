@@ -144,15 +144,27 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         };
         var categoryNames = new Dictionary<string, string>
         {
+            ["fa-IR"] = "پوشاک",
+            ["en-US"] = "Apparel",
+        };
+        var midNames = new Dictionary<string, string>
+        {
             ["fa-IR"] = "پوشاک مردانه",
             ["en-US"] = "Men's apparel",
+        };
+        var leafNames = new Dictionary<string, string>
+        {
+            ["fa-IR"] = "پیراهن مردانه",
+            ["en-US"] = "Men's shirts",
         };
         var brandNames = new Dictionary<string, string>
         {
             ["fa-IR"] = "آرمان",
             ["en-US"] = "Arman",
         };
-        var category = await catalog.CreateCategoryAsync(null, categoryNames, cancellation);
+        var root = await catalog.CreateCategoryAsync(null, categoryNames, cancellation);
+        var mid = await catalog.CreateCategoryAsync(root.CategoryId, midNames, cancellation);
+        var category = await catalog.CreateCategoryAsync(mid.CategoryId, leafNames, cancellation);
         var brand = await catalog.CreateBrandAsync("tooba-live", brandNames, cancellation);
         var colorId = await catalog.CreateAttributeDefinitionAsync(
             "color",

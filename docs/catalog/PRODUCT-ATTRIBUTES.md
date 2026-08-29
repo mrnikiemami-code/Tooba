@@ -1,7 +1,7 @@
 # Product Attributes
 
-> **Task:** TB-P07-T012 · **Phase:** P07 Advanced Catalog  
-> **Depends on:** [CATEGORY-ATTRIBUTE-SCHEMA.md](./CATEGORY-ATTRIBUTE-SCHEMA.md), [PRODUCT-CATALOG-ADMIN.md](./PRODUCT-CATALOG-ADMIN.md)
+> **Task:** TB-P07-T012 / TB-P07-T016 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ATTRIBUTE-SCHEMA.md](./CATEGORY-ATTRIBUTE-SCHEMA.md), [PRODUCT-CATALOG-ADMIN.md](./PRODUCT-CATALOG-ADMIN.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md)
 
 ## Ownership
 
@@ -10,6 +10,8 @@ Product Master attribute **values** live in Catalog (`CatalogProductAttributeVal
 - Typed canonical values only — not free-form JSON bags
 - Driven by the product’s primary category → **effective category attribute schema** (T007)
 - Product ≠ Offer ≠ Price ≠ Inventory
+- **No Product-local AttributeDefinition creation** in Product Workspace (TB-P07-T016)
+- Primary category must be **Level-3** — see [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md)
 
 ## Typed value model
 
@@ -117,4 +119,6 @@ Product Workspace → ویژگی‌ها:
 - Summary: completion, missing required count, category path
 - VIEW: readable rows + chips + missing/required badges
 - EDIT: typed controls, Save all / Cancel, dirty state
+- Empty effective schema: «برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است.» + link «مدیریت ویژگی‌های دسته‌بندی» → Category Admin (does **not** create attributes in Product Workspace)
+- Forbidden: «افزودن ویژگی» / Product-local definition create CTA
 - View-only (`canEdit=false` or VIEW mode): no editable controls

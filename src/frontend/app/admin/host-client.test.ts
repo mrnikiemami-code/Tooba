@@ -23,6 +23,7 @@ test("workspace mapper keeps prices on offers not product", () => {
     categoryNames: ["wear"],
     primaryCategoryId: "cat-1",
     categoryPath: "wear › shirts",
+    isPrimaryCategoryAssignable: true,
     slug: "shirt",
     shortDescription: "Cotton shirt",
     translations: [
@@ -71,6 +72,7 @@ test("workspace mapper keeps prices on offers not product", () => {
   assert.equal(view?.variants[0]?.catalogCodeSeam, "SHIRT-M");
   assert.equal(view?.primaryCategoryId, "cat-1");
   assert.equal(view?.categoryPath, "wear › shirts");
+  assert.equal(view?.isPrimaryCategoryAssignable, true);
   assert.equal(view?.slug, "shirt");
   assert.equal(view?.shortDescription, "Cotton shirt");
   assert.equal(view?.translations?.[0]?.locale, "fa-IR");

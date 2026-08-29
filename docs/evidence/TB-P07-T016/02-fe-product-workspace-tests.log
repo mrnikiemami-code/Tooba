@@ -1,0 +1,72 @@
+﻿
+> tooba-web@0.0.1 test:product-workspace
+> node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts app/admin/product-catalog-admin.test.ts app/admin/product-category-level.test.ts app/admin/product-attributes-panel.test.ts app/admin/product-variants-panel.test.ts app/admin/product-media-panel.test.ts
+
+(node:9724) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.568ms)
+✔ workspace mapper keeps prices on offers not product (0.4821ms)
+(node:36072) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ validateAttributeDrafts blocks missing required text/enum (0.5609ms)
+✔ draftToValueInput builds enum and clear payloads without raw IDs in UI contract (0.1546ms)
+✔ isAttributeDraftDirty detects enum and number changes (0.1151ms)
+✔ panel source has VIEW/EDIT typed controls and no Product-local attribute creation (0.4739ms)
+(node:27684) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (0.8002ms)
+✔ create CTA is draft-only with category picker (0.2331ms)
+✔ row actions use view/edit scopes and safe archive label (0.2295ms)
+✔ variant terminology uses تنوع not گونه in product list (0.1747ms)
+✔ product category picker is hierarchical level-3-only with human paths (0.2032ms)
+✔ create flow blocks invalid category via level error mapping (0.1442ms)
+✔ workspace warns on non-L3 category and preserves VIEW/EDIT (0.2262ms)
+✔ workspace tabs and form mode foundation (0.3112ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (0.2343ms)
+✔ workspace page passes view and edit scope (0.2352ms)
+✔ host-client maps core/category helpers and new workspace fields (0.2621ms)
+(node:35748) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-category-level.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ category level is one plus ancestor count (0.5313ms)
+✔ only level 3 is assignable (0.1643ms)
+✔ listCategoryChildren returns sorted siblings (0.4292ms)
+(node:11468) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-media-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sortMediaItems puts primary first then displayOrder (1.0938ms)
+✔ moveMediaAssetId and alt dirty helpers (0.1527ms)
+✔ readiness and count labels are Persian (10.2148ms)
+✔ panel source has VIEW/EDIT, تصویر اصلی, placeholder add, no AgGrid/Price/Stock (0.8302ms)
+✔ workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX (0.2839ms)
+(node:16676) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-variants-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ axis draft dirty detection and selectedAxes payload (0.8806ms)
+✔ combination estimate and readable labels (0.1393ms)
+✔ panel source has VIEW/EDIT, preview, impact, no price/stock/AgGrid/raw IDs in labels (0.4167ms)
+✔ workspace wires ProductVariantsPanel into تنوع‌ها tab (0.2809ms)
+(node:20164) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/workspace-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commercial grouping keeps multiple sellers (0.4459ms)
+✔ inventory stays offer-scoped (0.0909ms)
+✔ publication checks are UI readiness (0.3565ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 118.248

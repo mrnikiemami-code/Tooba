@@ -101,6 +101,7 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
   const primaryCategoryRaw = readProp(item, "primaryCategoryId", "PrimaryCategoryId");
   const primaryCategoryText = asString(primaryCategoryRaw);
   const categoryPathRaw = readProp(item, "categoryPath", "CategoryPath");
+  const isAssignableRaw = readProp(item, "isPrimaryCategoryAssignable", "IsPrimaryCategoryAssignable");
   const slugRaw = readProp(item, "slug", "Slug");
   const shortDescriptionRaw = readProp(item, "shortDescription", "ShortDescription");
   return {
@@ -114,6 +115,7 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
       : [],
     primaryCategoryId: primaryCategoryText.length > 0 ? primaryCategoryText : null,
     categoryPath: categoryPathRaw == null || asString(categoryPathRaw).length === 0 ? null : asString(categoryPathRaw),
+    isPrimaryCategoryAssignable: Boolean(isAssignableRaw),
     slug: slugRaw == null || asString(slugRaw).length === 0 ? null : asString(slugRaw),
     shortDescription:
       shortDescriptionRaw == null || asString(shortDescriptionRaw).length === 0

@@ -251,7 +251,12 @@ internal static class AccessControlDevelopmentSeed
         var existingLeaf = await FindCategoryByPersianNameAsync(catalogDb, leafNameFa, cancellationToken);
         if (existingLeaf is not null)
         {
-            return existingLeaf;
+            var parentById = await catalogDb.Categories.AsNoTracking()
+                .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+            if (CatalogCategoryTreeRules.IsAssignableProductCategory(existingLeaf.CategoryId, parentById))
+            {
+                return existingLeaf;
+            }
         }
 
         var root = await FindCategoryByPersianNameAsync(catalogDb, rootNameFa, cancellationToken)
@@ -260,12 +265,52 @@ internal static class AccessControlDevelopmentSeed
                 new Dictionary<string, string> { ["fa-IR"] = rootNameFa, ["en-US"] = "Access Control Demo" },
                 cancellationToken);
         await catalog.PublishCategoryAsync(root.CategoryId, cancellationToken);
-        var leaf = await catalog.CreateCategoryAsync(
-            root.CategoryId,
-            new Dictionary<string, string> { ["fa-IR"] = leafNameFa, ["en-US"] = leafNameFa == MobileCategoryFa ? "Mobile" : "Books" },
+
+        var midNameFa = leafNameFa == MobileCategoryFa ? "موبایل و تبلت" : "عمومی";
+        var mid = await FindCategoryByPersianNameAsync(catalogDb, midNameFa, cancellationToken)
+            ?? await catalog.CreateCategoryAsync(
+                root.CategoryId,
+                new Dictionary<string, string>
+                {
+                    ["fa-IR"] = midNameFa,
+                    ["en-US"] = leafNameFa == MobileCategoryFa ? "Mobile & tablet" : "General",
+                },
+                cancellationToken);
+        await catalog.PublishCategoryAsync(mid.CategoryId, cancellationToken);
+
+        var leaf = await FindCategoryByPersianNameAsync(catalogDb, leafNameFa, cancellationToken);
+        if (leaf is null)
+        {
+            leaf = await catalog.CreateCategoryAsync(
+                mid.CategoryId,
+                new Dictionary<string, string>
+                {
+                    ["fa-IR"] = leafNameFa,
+                    ["en-US"] = leafNameFa == MobileCategoryFa ? "Mobile" : "Books",
+                },
+                cancellationToken);
+            await catalog.PublishCategoryAsync(leaf.CategoryId, cancellationToken);
+            return leaf;
+        }
+
+        var parents = await catalogDb.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        if (CatalogCategoryTreeRules.IsAssignableProductCategory(leaf.CategoryId, parents))
+        {
+            return leaf;
+        }
+
+        // Legacy L2 leaf: create a true L3 under mid for assignment.
+        var l3 = await catalog.CreateCategoryAsync(
+            mid.CategoryId,
+            new Dictionary<string, string>
+            {
+                ["fa-IR"] = $"{leafNameFa} (سطح ۳)",
+                ["en-US"] = leafNameFa == MobileCategoryFa ? "Mobile L3" : "Books L3",
+            },
             cancellationToken);
-        await catalog.PublishCategoryAsync(leaf.CategoryId, cancellationToken);
-        return leaf;
+        await catalog.PublishCategoryAsync(l3.CategoryId, cancellationToken);
+        return l3;
     }
 
     private static async Task<CategoryReference?> FindCategoryByPersianNameAsync(

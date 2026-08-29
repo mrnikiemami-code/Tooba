@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   getProductAttributeEditorState,
   setProductAttributes,
@@ -229,7 +230,16 @@ export function ProductAttributesPanel({
         <>
           <ul className="space-y-3" data-testid="product-attributes-value-list">
             {valueFields.length === 0 ? (
-              <li className="text-sm text-muted">برای این دسته هنوز ویژگی‌ای تعریف نشده است.</li>
+              <li className="text-sm text-muted" data-testid="product-attributes-empty-schema">
+                <p>برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است.</p>
+                <Link
+                  href="/admin/catalog/categories"
+                  className="mt-2 inline-block text-sm font-medium text-[#2563EB] hover:underline"
+                  data-testid="product-attributes-manage-category-link"
+                >
+                  مدیریت ویژگی‌های دسته‌بندی
+                </Link>
+              </li>
             ) : (
               valueFields.map((field) => (
                 <AttributeFieldRow

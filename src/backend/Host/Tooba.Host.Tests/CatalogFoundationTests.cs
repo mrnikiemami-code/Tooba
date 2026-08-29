@@ -138,7 +138,9 @@ public sealed class CatalogFoundationTests : IAsyncLifetime
 
         var category = await dirA.CreateCategoryAsync(null, namesFaEn, CancellationToken.None);
         var child = await dirA.CreateCategoryAsync(category.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "تابستانی" }, CancellationToken.None);
+        var leaf = await dirA.CreateCategoryAsync(child.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "نخی" }, CancellationToken.None);
         Assert.Equal(category.CategoryId, child.ParentCategoryId);
+        Assert.Equal(child.CategoryId, leaf.ParentCategoryId);
 
         var brand = await dirA.CreateBrandAsync("acme", namesFaEn, CancellationToken.None);
         var colorId = await dirA.CreateAttributeDefinitionAsync(
@@ -157,7 +159,7 @@ public sealed class CatalogFoundationTests : IAsyncLifetime
             CancellationToken.None);
 
         var product = await dirA.CreateProductAsync(CatalogProductKind.PhysicalGood, "shirt-model-x", brand.BrandId, namesFaEn, CancellationToken.None);
-        await dirA.AssignCategoryAsync(product.ProductId, category.CategoryId, CancellationToken.None);
+        await dirA.AssignCategoryAsync(product.ProductId, leaf.CategoryId, CancellationToken.None);
         await dirA.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), CancellationToken.None);
         await dirA.SetProductAttributeAsync(product.ProductId, weightId, "250.5", null, CancellationToken.None);
         await dirA.PublishProductAsync(product.ProductId, CancellationToken.None);

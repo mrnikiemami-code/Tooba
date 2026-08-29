@@ -103,7 +103,8 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
 
         // 1+2+3: effective schema + inheritance + child override
         var parent = await dirA.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "الکترونیک" }, CancellationToken.None);
-        var child = await dirA.CreateCategoryAsync(parent.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
+        var mid = await dirA.CreateCategoryAsync(parent.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل و تبلت" }, CancellationToken.None);
+        var child = await dirA.CreateCategoryAsync(mid.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "گوشی موبایل" }, CancellationToken.None);
 
         var colorId = await dirA.CreateAttributeDefinitionAsync(
             "color", CatalogAttributeValueKind.Enumeration, true,
@@ -224,7 +225,9 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         Assert.NotEqual(v1.VariantId, v2.VariantId);
 
         // 11 category change orphan report — do not silently delete
-        var other = await dirA.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var otherRoot = await dirA.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var otherMid = await dirA.CreateCategoryAsync(otherRoot.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "رمان" }, CancellationToken.None);
+        var other = await dirA.CreateCategoryAsync(otherMid.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "داستان" }, CancellationToken.None);
         var impact = await dirA.PreviewCategoryChangeAsync(product.ProductId, other.CategoryId, CancellationToken.None);
         Assert.Contains(impact.OrphanAttributeValues, o => o.DefinitionId == screenId);
         Assert.Contains(impact.InvalidVariantAxisDefinitionIds, id => id == colorId || id == storageId);

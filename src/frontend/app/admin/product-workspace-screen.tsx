@@ -16,6 +16,7 @@ import {
   type HostReadSource,
 } from "./host-client";
 import { ProductCategoryPicker } from "./product-category-picker";
+import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
 import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 
@@ -222,10 +223,14 @@ export function ProductWorkspaceScreen({
       setError("انتخاب دسته لازم است");
       return;
     }
+    const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
+    if (!categoryChanged && current.isPrimaryCategoryAssignable === false && current.primaryCategoryId) {
+      setError(PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA);
+      return;
+    }
     setBusy(true);
     setError(null);
     let expectedUpdatedAt = current.catalogUpdatedAt;
-    const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
     if (categoryChanged && activeDraft.categoryId) {
       const needsConfirm = Boolean(current.primaryCategoryId);
       if (needsConfirm) {
@@ -306,6 +311,10 @@ export function ProductWorkspaceScreen({
       return;
     }
     if (actionId === "publish") {
+      if (current.isPrimaryCategoryAssignable === false) {
+        setError(PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA);
+        return;
+      }
       setBusy(true);
       const result = await mutateAdminProductLifecycle(current.productId, "publish");
       setBusy(false);
@@ -433,6 +442,19 @@ export function ProductWorkspaceScreen({
       >
         {sectionId === "general" ? (
           <div className="space-y-4" data-testid="product-general-panel">
+            {view.primaryCategoryId && view.isPrimaryCategoryAssignable === false ? (
+              <div
+                className="rounded-ds border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+                data-testid="product-category-level-warning"
+                role="status"
+              >
+                <p className="font-medium">دستهٔ فعلی قابل استفاده نیست</p>
+                <p className="mt-1">{PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA}</p>
+                <p className="mt-1 text-xs text-amber-900/80">
+                  مشاهده مجاز است؛ برای ذخیره یا انتشار، یک دستهٔ سطح سوم انتخاب کنید. جابه‌جایی خودکار انجام نمی‌شود.
+                </p>
+              </div>
+            ) : null}
             {isGeneralEdit ? (
               <Card data-testid="product-general-edit">
                 <p className="text-sm font-medium text-muted">ویرایش مشخصات عمومی</p>
@@ -444,6 +466,7 @@ export function ProductWorkspaceScreen({
                       markGeneralDirty();
                     }}
                     required
+                    invalidSelectionHint
                   />
                   <label className="block text-sm font-medium">
                     عنوان

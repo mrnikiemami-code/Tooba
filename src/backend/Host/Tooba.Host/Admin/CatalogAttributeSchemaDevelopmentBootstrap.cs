@@ -149,7 +149,14 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
 
         if (product.Status != CatalogPublicationStatus.Published)
         {
-            await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
+            var parentById = await catalogDb.Categories.AsNoTracking()
+                .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+            var assignable = categoryIds.Count > 0
+                && categoryIds.All(id => CatalogCategoryTreeRules.IsAssignableProductCategory(id, parentById));
+            if (assignable)
+            {
+                await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
+            }
         }
 
         var variants = await catalogDb.Variants.AsNoTracking()
@@ -239,7 +246,7 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
             .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Category
                 && t.FieldKey == "name"
                 && t.Locale == "en-US"
-                && t.Value == "Mobile")
+                && t.Value == "Mobile phones")
             .Select(t => t.OwnerId)
             .FirstOrDefaultAsync();
         if (existing != Guid.Empty)
@@ -247,9 +254,50 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
             return existing;
         }
 
-        var category = await catalog.CreateCategoryAsync(
+        // Prefer existing L3 leaf if earlier seeds already created one under موبایل.
+        var legacyMobile = await db.LocalizedTexts.AsNoTracking()
+            .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Category
+                && t.FieldKey == "name"
+                && t.Locale == "en-US"
+                && t.Value == "Mobile")
+            .Select(t => t.OwnerId)
+            .FirstOrDefaultAsync();
+        if (legacyMobile != Guid.Empty)
+        {
+            var parentById = await db.Categories.AsNoTracking()
+                .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId);
+            if (CatalogCategoryTreeRules.IsAssignableProductCategory(legacyMobile, parentById))
+            {
+                return legacyMobile;
+            }
+
+            var mid = await catalog.CreateCategoryAsync(
+                legacyMobile,
+                new Dictionary<string, string> { ["fa-IR"] = "موبایل و تبلت", ["en-US"] = "Mobile & tablet" },
+                CancellationToken.None);
+            await catalog.PublishCategoryAsync(mid.CategoryId, CancellationToken.None);
+            var leaf = await catalog.CreateCategoryAsync(
+                mid.CategoryId,
+                new Dictionary<string, string> { ["fa-IR"] = "گوشی موبایل", ["en-US"] = "Mobile phones" },
+                CancellationToken.None);
+            await catalog.PublishCategoryAsync(leaf.CategoryId, CancellationToken.None);
+            _ = MobileCategoryMarker;
+            return leaf.CategoryId;
+        }
+
+        var root = await catalog.CreateCategoryAsync(
             null,
-            new Dictionary<string, string> { ["fa-IR"] = "موبایل", ["en-US"] = "Mobile" },
+            new Dictionary<string, string> { ["fa-IR"] = "کالای دیجیتال", ["en-US"] = "Digital goods" },
+            CancellationToken.None);
+        await catalog.PublishCategoryAsync(root.CategoryId, CancellationToken.None);
+        var midFresh = await catalog.CreateCategoryAsync(
+            root.CategoryId,
+            new Dictionary<string, string> { ["fa-IR"] = "موبایل و تبلت", ["en-US"] = "Mobile & tablet" },
+            CancellationToken.None);
+        await catalog.PublishCategoryAsync(midFresh.CategoryId, CancellationToken.None);
+        var category = await catalog.CreateCategoryAsync(
+            midFresh.CategoryId,
+            new Dictionary<string, string> { ["fa-IR"] = "گوشی موبایل", ["en-US"] = "Mobile phones" },
             CancellationToken.None);
         await catalog.PublishCategoryAsync(category.CategoryId, CancellationToken.None);
         _ = MobileCategoryMarker;

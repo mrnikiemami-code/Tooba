@@ -138,8 +138,15 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
             catalogDir);
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالای فروش", ["en-US"] = "Sale item" };
+        var l1 = await catalogDir.CreateCategoryAsync(
+            null, new Dictionary<string, string> { ["fa-IR"] = "فروش" }, CancellationToken.None);
+        var l2 = await catalogDir.CreateCategoryAsync(
+            l1.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "عمومی" }, CancellationToken.None);
+        var l3 = await catalogDir.CreateCategoryAsync(
+            l2.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "کالای فروش" }, CancellationToken.None);
         var product = await catalogDir.CreateProductAsync(
             CatalogProductKind.PhysicalGood, "sale-item", null, names, CancellationToken.None);
+        await catalogDir.AssignCategoryAsync(product.ProductId, l3.CategoryId, CancellationToken.None);
         await catalogDir.PublishProductAsync(product.ProductId, CancellationToken.None);
         var colorId = await catalogDir.CreateAttributeDefinitionAsync(
             "color-sale",

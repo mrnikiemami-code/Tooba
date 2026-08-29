@@ -48,13 +48,41 @@ test("variant terminology uses تنوع not گونه in product list", () => {
   assert.equal(list.includes('headerName: "گونه"'), false);
 });
 
-test("product category picker loads tree with human path labels", () => {
+test("product category picker is hierarchical level-3-only with human paths", () => {
   const picker = fs.readFileSync(pickerPath, "utf8");
   assert.match(picker, /data-testid="product-category-picker"/);
   assert.match(picker, /loadCategoryTree/);
   assert.match(picker, /buildCategoryPath/);
   assert.match(picker, /جستجوی نام یا مسیر/);
+  assert.match(picker, /data-assignable="true"/);
+  assert.match(picker, /data-assignable="false"/);
+  assert.match(picker, /product-category-tree/);
+  assert.match(picker, /product-category-search-results/);
+  assert.match(picker, /isAssignableProductCategory/);
+  assert.match(picker, / > /);
   assert.equal(picker.includes("option value={opt.id"), false);
+  assert.equal(picker.includes("AgGridReact"), false);
+});
+
+test("create flow blocks invalid category via level error mapping", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  assert.match(list, /ProductCategoryPicker/);
+  assert.match(list, /workspace\.product\.category\.level\.invalid/);
+  assert.match(list, /PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA/);
+  assert.match(list, /ایجاد پیش‌نویس/);
+  assert.equal(list.includes("AgGridReact"), false);
+});
+
+test("workspace warns on non-L3 category and preserves VIEW/EDIT", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(screen, /product-category-level-warning/);
+  assert.match(screen, /PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA/);
+  assert.match(screen, /invalidSelectionHint/);
+  assert.match(screen, /isPrimaryCategoryAssignable/);
+  assert.match(screen, /useAdminFormMode/);
+  assert.match(screen, /product-general-summary/);
+  assert.match(screen, /product-general-edit/);
+  assert.equal(screen.includes("AgGridReact"), false);
 });
 
 test("workspace tabs and form mode foundation", () => {

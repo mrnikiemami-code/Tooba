@@ -1,7 +1,7 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T014 · **Phase:** P07 Advanced Catalog
-> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md)
+> **Task:** TB-P07-T014 / TB-P07-T016 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md)
 
 ## Product Master ownership
 
@@ -73,10 +73,12 @@ Public route strategy remains clean / locale-aware; do not append ProductId to v
 
 ## Category
 
-- Searchable picker with path labels (`کالای دیجیتال > موبایل > …`)
-- No raw CategoryId in UI labels
+- **Level-3 only** for Product assignment — see [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md)
+- Searchable hierarchical picker; L1/L2 expand only; L3 selectable
+- Full human path (`A > B > C`); no raw CategoryId in labels
 - Category change with attribute/variant data requires explicit confirmation after enriched impact preview (`MessageFa`)
-- Attributes tab: [PRODUCT-ATTRIBUTES.md](./PRODUCT-ATTRIBUTES.md) — effective schema → typed values → readiness
+- Legacy non-L3 primary: VIEW + warning; no silent migrate; valid L3 required before save/publish
+- Attributes tab: [PRODUCT-ATTRIBUTES.md](./PRODUCT-ATTRIBUTES.md) — effective schema → typed values → readiness (no Product-local definition create)
 
 ## Media
 

@@ -66,6 +66,7 @@ public sealed record AdminProductListItem(
 
 /// <summary>
 /// مدل نمایش ترکیب‌شده. aggregate دامنه نیست.
+/// IsPrimaryCategoryAssignable: دستهٔ اصلی سطح سوم است (بدون دسته = false).
 /// </summary>
 public sealed record ProductWorkspaceView(
     Guid ProductId,
@@ -93,7 +94,8 @@ public sealed record ProductWorkspaceView(
     string? CategoryPath = null,
     string? Slug = null,
     string? ShortDescription = null,
-    IReadOnlyList<ProductTranslationView>? Translations = null);
+    IReadOnlyList<ProductTranslationView>? Translations = null,
+    bool IsPrimaryCategoryAssignable = false);
 
 /// <summary>مشخصهٔ Catalog.</summary>
 public sealed record ProductAttributeView(string Code, string Value, bool VariantAxis);

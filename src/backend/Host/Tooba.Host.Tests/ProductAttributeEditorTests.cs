@@ -62,10 +62,16 @@ public sealed class ProductAttributeEditorTests : IAsyncLifetime
 
         var parent = await dir.CreateCategoryAsync(
             null, new Dictionary<string, string> { ["fa-IR"] = "الکترونیک" }, CancellationToken.None);
+        var mid = await dir.CreateCategoryAsync(
+            parent.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل و تبلت" }, CancellationToken.None);
         var child = await dir.CreateCategoryAsync(
-            parent.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
-        var other = await dir.CreateCategoryAsync(
+            mid.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "گوشی موبایل" }, CancellationToken.None);
+        var otherRoot = await dir.CreateCategoryAsync(
             null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var otherMid = await dir.CreateCategoryAsync(
+            otherRoot.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "رمان" }, CancellationToken.None);
+        var other = await dir.CreateCategoryAsync(
+            otherMid.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "داستان" }, CancellationToken.None);
 
         var screenId = await dir.CreateAttributeDefinitionAsync(
             "screen_size", CatalogAttributeValueKind.Number, false,
@@ -141,7 +147,8 @@ public sealed class ProductAttributeEditorTests : IAsyncLifetime
         var editor = await dir.GetProductAttributeEditorStateAsync(product.ProductId, "fa-IR", CancellationToken.None);
         Assert.Equal(child.CategoryId, editor.CategoryId);
         Assert.Contains("الکترونیک", editor.CategoryPath);
-        Assert.Contains("موبایل", editor.CategoryPath);
+        Assert.Contains("موبایل و تبلت", editor.CategoryPath);
+        Assert.Contains("گوشی موبایل", editor.CategoryPath);
         Assert.Equal(5, editor.Fields.Count);
         Assert.Equal(screenId, editor.Fields[0].DefinitionId);
         Assert.Equal("اندازه صفحه", editor.Fields[0].LocalizedName);

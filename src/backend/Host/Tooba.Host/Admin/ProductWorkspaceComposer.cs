@@ -315,6 +315,26 @@ public sealed class ProductWorkspaceComposer
         var categoryPath = primaryCategory is Guid pcid
             ? await BuildCategoryPathAsync(pcid, cancellationToken)
             : null;
+        var isPrimaryCategoryAssignable = false;
+        if (primaryCategory is Guid assignableProbe)
+        {
+            var parentById = await _catalog.Categories.AsNoTracking()
+                .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+            try
+            {
+                isPrimaryCategoryAssignable = CatalogCategoryTreeRules.IsAssignableProductCategory(
+                    assignableProbe, parentById);
+            }
+            catch (InvalidOperationException)
+            {
+                isPrimaryCategoryAssignable = false;
+            }
+
+            if (!isPrimaryCategoryAssignable)
+            {
+                warnings.Add(CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa);
+            }
+        }
 
         var localizedRows = await _catalog.LocalizedTexts.AsNoTracking()
             .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product && x.OwnerId == productId)
@@ -365,7 +385,8 @@ public sealed class ProductWorkspaceComposer
             categoryPath,
             product.SlugSeam,
             shortDescription,
-            translations);
+            translations,
+            isPrimaryCategoryAssignable);
     }
 
     private async Task<string> BuildCategoryPathAsync(Guid categoryId, CancellationToken cancellationToken)
@@ -418,6 +439,16 @@ public sealed class ProductWorkspaceComposer
         if (!await _catalog.Categories.AsNoTracking().AnyAsync(x => x.CategoryId == categoryId, cancellationToken))
         {
             throw new PlatformHttpException(400, "ردهٔ انتخاب‌شده معتبر نیست.", "workspace.product.category.invalid");
+        }
+
+        var parentById = await _catalog.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        if (!CatalogCategoryTreeRules.IsAssignableProductCategory(categoryId, parentById))
+        {
+            throw new PlatformHttpException(
+                400,
+                CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
+                "workspace.product.category.level.invalid");
         }
 
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
@@ -532,6 +563,16 @@ public sealed class ProductWorkspaceComposer
         if (!await _catalog.Categories.AsNoTracking().AnyAsync(x => x.CategoryId == request.CategoryId, cancellationToken))
         {
             throw new PlatformHttpException(400, "ردهٔ انتخاب‌شده معتبر نیست.", "workspace.product.category.invalid");
+        }
+
+        var parentById = await _catalog.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        if (!CatalogCategoryTreeRules.IsAssignableProductCategory(request.CategoryId, parentById))
+        {
+            throw new PlatformHttpException(
+                400,
+                CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
+                "workspace.product.category.level.invalid");
         }
 
         var hasAttrValues = await _catalog.ProductAttributeValues.AsNoTracking()

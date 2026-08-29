@@ -60,10 +60,18 @@ public sealed class ProductVariantMatrixTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
         var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
 
+        var l1 = await dir.CreateCategoryAsync(
+            null, new Dictionary<string, string> { ["fa-IR"] = "کالای دیجیتال" }, CancellationToken.None);
+        var l2 = await dir.CreateCategoryAsync(
+            l1.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "موبایل و تبلت" }, CancellationToken.None);
         var category = await dir.CreateCategoryAsync(
-            null, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
-        var other = await dir.CreateCategoryAsync(
+            l2.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "گوشی موبایل" }, CancellationToken.None);
+        var otherL1 = await dir.CreateCategoryAsync(
             null, new Dictionary<string, string> { ["fa-IR"] = "کتاب" }, CancellationToken.None);
+        var otherL2 = await dir.CreateCategoryAsync(
+            otherL1.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "رمان" }, CancellationToken.None);
+        var other = await dir.CreateCategoryAsync(
+            otherL2.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "داستان" }, CancellationToken.None);
 
         var colorId = await dir.CreateAttributeDefinitionAsync(
             "color", CatalogAttributeValueKind.Enumeration, true,
@@ -300,8 +308,12 @@ public sealed class ProductVariantMatrixTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
         var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
 
-        var category = await dir.CreateCategoryAsync(
+        var l1 = await dir.CreateCategoryAsync(
             null, new Dictionary<string, string> { ["fa-IR"] = "ساده" }, CancellationToken.None);
+        var l2 = await dir.CreateCategoryAsync(
+            l1.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "عمومی" }, CancellationToken.None);
+        var category = await dir.CreateCategoryAsync(
+            l2.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "بدون محور" }, CancellationToken.None);
         var product = await dir.CreateProductAsync(
             CatalogProductKind.PhysicalGood, "no-axes", null,
             new Dictionary<string, string> { ["fa-IR"] = "بدون محور" }, CancellationToken.None);

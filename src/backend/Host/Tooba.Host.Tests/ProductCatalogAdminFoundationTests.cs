@@ -49,12 +49,14 @@ public sealed class ProductCatalogAdminFoundationTests
             "کالای دیجیتال > موبایل",
             "iphone-16",
             "خلاصه",
-            [new ProductTranslationView("fa-IR", "آیفون ۱۶", "iphone-16", "خلاصه", null, null, null)]);
+            [new ProductTranslationView("fa-IR", "آیفون ۱۶", "iphone-16", "خلاصه", null, null, null)],
+            IsPrimaryCategoryAssignable: false);
 
         var json = System.Text.Json.JsonSerializer.Serialize(
             view,
             new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
         Assert.Contains("\"categoryPath\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"isPrimaryCategoryAssignable\":false", json, StringComparison.Ordinal);
         Assert.Contains("\"translations\"", json, StringComparison.Ordinal);
         Assert.Contains("\"slug\":\"iphone-16\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);

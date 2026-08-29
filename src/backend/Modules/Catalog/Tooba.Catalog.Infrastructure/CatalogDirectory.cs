@@ -1421,6 +1421,8 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("محصول یا رده در Catalog این Tenant نیست.");
         }
 
+        await EnsureAssignableProductCategoryAsync(categoryId, cancellationToken);
+
         _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, categoryId));
         await _db.SaveChangesAsync(cancellationToken);
     }
@@ -2443,6 +2445,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
         }
 
+        if (!await _db.Categories.AnyAsync(x => x.CategoryId == newCategoryId, cancellationToken))
+        {
+            throw new InvalidOperationException("رده در Catalog این Tenant نیست.");
+        }
+
+        await EnsureAssignableProductCategoryAsync(newCategoryId, cancellationToken);
+
         var schema = await ResolveEffectiveBindingsAsync(newCategoryId, cancellationToken);
         var values = await _db.ProductAttributeValues.AsNoTracking()
             .Where(x => x.ProductId == productId)
@@ -2567,6 +2576,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        // Preview enforces Level-3 assignability before replace.
         var impact = await PreviewCategoryChangeAsync(productId, newCategoryId, cancellationToken);
         var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
         _db.ProductCategories.RemoveRange(existing);
@@ -2619,6 +2629,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await EnsureProductPrimaryCategoryAssignableAsync(productId, cancellationToken);
         await ValidateProductAttributesAsync(productId, cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.Publish(DateTimeOffset.UtcNow);
@@ -3486,6 +3497,32 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         }
 
         return names;
+    }
+
+    private async Task EnsureAssignableProductCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        var parentById = await _db.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
+    }
+
+    private async Task EnsureProductPrimaryCategoryAssignableAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        var categoryIds = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.CategoryId)
+            .ToListAsync(cancellationToken);
+        if (categoryIds.Count == 0)
+        {
+            throw new InvalidOperationException(CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa);
+        }
+
+        var parentById = await _db.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        foreach (var categoryId in categoryIds)
+        {
+            CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
+        }
     }
 
     private static AttributeDefinitionView ToDefinitionView(CatalogAttributeDefinition definition) =>

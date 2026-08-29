@@ -28,6 +28,7 @@ import {
   type AdminProductListRow,
 } from "./host-client";
 import { ProductCategoryPicker } from "./product-category-picker";
+import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
 import { ADMIN_PRODUCT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 
@@ -244,7 +245,13 @@ export function ProductListScreen() {
     });
     setCreating(false);
     if (!result.ok) {
-      setCreateError(result.denied ? "دسترسی مجاز نیست" : result.errorCode);
+      const message =
+        result.errorCode === "workspace.product.category.level.invalid"
+          ? PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA
+          : result.denied
+            ? "دسترسی مجاز نیست"
+            : result.errorCode;
+      setCreateError(message);
       return;
     }
     setCreateOpen(false);

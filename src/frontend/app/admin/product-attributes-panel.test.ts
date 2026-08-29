@@ -139,13 +139,19 @@ test("isAttributeDraftDirty detects enum and number changes", () => {
   );
 });
 
-test("panel source has VIEW/EDIT typed controls and no raw enumOptionId inputs", () => {
+test("panel source has VIEW/EDIT typed controls and no Product-local attribute creation", () => {
   const src = fs.readFileSync(path.join(root, "product-attributes-panel.tsx"), "utf8");
   assert.match(src, /mode:\s*ProductAttributesPanelMode/);
   assert.match(src, /product-attributes-save/);
   assert.match(src, /محور تنوع/);
   assert.match(src, /بله/);
   assert.match(src, /خیر/);
+  assert.match(src, /برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است/);
+  assert.match(src, /مدیریت ویژگی‌های دسته‌بندی/);
+  assert.match(src, /product-attributes-manage-category-link/);
+  assert.match(src, /\/admin\/catalog\/categories/);
+  assert.equal(src.includes("افزودن ویژگی"), false);
+  assert.equal(src.includes("ایجاد ویژگی"), false);
   assert.equal(src.includes("شناسه گزینه"), false);
   assert.equal(src.includes("rawValue (اختیاری)"), false);
   assert.match(src, /localizedLabel/);

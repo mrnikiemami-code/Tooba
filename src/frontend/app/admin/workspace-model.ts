@@ -59,8 +59,10 @@ export interface ProductWorkspaceView {
   categoryNames: string[];
   /** شناسهٔ دستهٔ اصلی؛ برای schema ویژگی‌ها لازم است. */
   primaryCategoryId?: string | null;
-  /** مسیر انسانی دسته (مثلاً کالای دیجیتال › موبایل). */
+  /** مسیر انسانی دسته (مثلاً کالای دیجیتال > موبایل > گوشی). */
   categoryPath?: string | null;
+  /** آیا دستهٔ اصلی سطح سوم (قابل اختصاص) است؟ */
+  isPrimaryCategoryAssignable?: boolean;
   slug?: string | null;
   shortDescription?: string | null;
   translations?: ProductTranslationView[];
@@ -121,7 +123,8 @@ export const demoProductWorkspace: ProductWorkspaceView = {
   brandName: "Tooba Studio",
   categoryNames: ["پوشاک"],
   primaryCategoryId: "66111111-1111-7111-8111-111111111111",
-  categoryPath: "پوشاک",
+  categoryPath: "پوشاک > مردانه > پیراهن",
+  isPrimaryCategoryAssignable: true,
   slug: "linen-admin-shirt",
   shortDescription: "پیراهن لینن سبک اداری",
   translations: [
