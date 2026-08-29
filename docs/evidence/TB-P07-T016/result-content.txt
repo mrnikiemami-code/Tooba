@@ -1,0 +1,161 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T016
+Parent-Task:
+TB-P07-T014
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Aligned Product Admin UX: Level-3-only category assignment (hierarchical searchable picker + BE enforcement), Product attributes remain Category-schema-only with empty-schema Category Admin link, legacy non-L3 warning without silent migrate. AppDataGrid untouched; SEO not implemented (TB-P07-T017). Mistaken TB-P07-T015 envelope preserved untracked. Validation green. USER_VISUAL_ACCEPTED remains NO.
+
+Canonical-AppDataGrid:
+
+used:
+yes (list unchanged)
+
+raw AgGridReact:
+no
+
+new wrapper:
+no
+
+product list regression:
+none
+
+Category-Assignment:
+
+level rule:
+Level 1/2 navigation only; Level 3 assignable
+
+backend reject L1/L2:
+yes (workspace.product.category.level.invalid)
+
+FE picker:
+hierarchical expand L1/L2; select L3; full path; search path-aware
+
+create flow:
+requires Level 3
+
+legacy non-L3:
+warning + block save/publish until valid L3; no silent migrate
+
+Attributes:
+
+schema source:
+effective Category schema only
+
+Product-local definition create:
+removed/absent
+
+empty schema CTA:
+مدیریت ویژگی‌های دسته‌بندی → Category Admin
+
+category-change safety:
+preserved T012/T013
+
+Visual-Contract:
+
+aligned modestly:
+picker + workspace warnings/CTA
+
+SEO touched:
+no
+
+Authorization:
+
+backend authoritative:
+yes
+
+Validation:
+
+backend full tests:
+Passed 334 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass
+
+frontend tests:
+pass (test:product-workspace 32/32)
+
+frontend build:
+pass
+
+git diff --check:
+pass (scoped)
+
+Documentation:
+
+PRODUCT-CATEGORY-ASSIGNMENT:
+docs/catalog/PRODUCT-CATEGORY-ASSIGNMENT.md
+
+PRODUCT-CATALOG-ADMIN:
+updated
+
+PRODUCT-ATTRIBUTES:
+updated
+
+recovery/state:
+docs/PROJECT-STATE.md updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+restarting if down
+
+Product Admin:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes (Host/FE/Bridge; Shopeiva probed)
+
+Git:
+
+branch:
+main
+
+commit:
+1dea3dfb6bfdb564a42e96abd6afdd4d51a0bace
+
+push:
+yes
+
+final HEAD:
+1dea3dfb6bfdb564a42e96abd6afdd4d51a0bace
+
+origin/main:
+1dea3dfb6bfdb564a42e96abd6afdd4d51a0bace
+
+synchronized:
+yes
+
+tracked tree:
+clean for T016; TB-P07-T015.task.md left untracked on purpose
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+TB-P07-T015 remains blocked/collided identity; do not reuse. SEO deferred to TB-P07-T017.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending manual Product Admin review vs locked visual contract image.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
