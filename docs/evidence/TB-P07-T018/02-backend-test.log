@@ -1,0 +1,7 @@
+﻿Test run for D:\Users\User\source\repos\SarvNewVer\docs\evidence\TB-P07-T018\host-test\Tooba.Host.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:   338, Skipped:     0, Total:   338, Duration: 5 m 33 s - Tooba.Host.Tests.dll (net8.0)

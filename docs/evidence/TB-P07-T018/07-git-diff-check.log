@@ -1,0 +1,94 @@
+﻿git : warning: in the working copy of 'docs/PROJECT-STATE.md', LF will be replaced by CRLF the next time Git touches it
+At C:\Users\User\AppData\Local\Temp\ps-script-3754132f-3647-49e9-9db4-8d93ff9cbf3f.ps1:89 char:1
++ git -C "D:\Users\User\source\repos\SarvNewVer" diff --check 2>&1 | Te ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'docs/ai/TOOBA-RECOVERY-CONTEXT.md', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host.Tests/AdminPanelCompositionTests.cs', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host.Tests/CatalogFoundationTests.cs', LF will be replaced by 
+CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host.Tests/SellerOfferSaleWriteTests.cs', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/AccessControl/AccessControlDevelopmentSeed.cs', LF will 
+be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/Admin/ProductWorkspaceComposer.cs', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/Admin/ProductWorkspaceDevelopmentBootstrap.cs', LF will 
+be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/Admin/ProductWorkspaceEndpoints.cs', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/Admin/ProductWorkspaceModels.cs', LF will be replaced by 
+CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Host/Tooba.Host/Storefront/StorefrontDemoCatalogBootstrap.cs', LF will be 
+replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Modules/Catalog/Tooba.Catalog.Application/CatalogContracts.cs', LF will 
+be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogDomain.cs', LF will be 
+replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs', LF 
+will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/frontend/app/admin/host-client.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/frontend/app/admin/product-workspace-screen.tsx', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'src/frontend/app/admin/workspace-model.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/frontend/package.json', LF will be replaced by CRLF the next time Git touches it
+docs/evidence/TB-P07-T002-R11/fe-dev.log:25: trailing whitespace.
++ 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:51: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:57: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:65: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:71: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:77: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:86: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:115: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:121: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:127: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:133: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:139: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:144: trailing whitespace.
++<w> [webpack.cache.PackFileCacheStrategy] Restoring pack failed from 
+docs/evidence/TB-P07-T002-R11/fe-dev.log:145: trailing whitespace.
++D:\Users\User\source\repos\SarvNewVer\src\frontend\.next\cache\webpack\client-development-fallback.pack.gz: Error: 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:55: trailing whitespace.
++ 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:62: trailing whitespace.
++  228 | 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:70: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:76: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:84: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:90: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:96: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:105: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:116: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:122: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:128: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:134: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
+docs/evidence/TB-P07-T002-R12/fe-dev.log:140: trailing whitespace.
++tools\userspace\app\segment-explorer-node.js#SegmentViewNode" in the React Client Manifest. This is probably a bug in 
