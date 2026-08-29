@@ -379,6 +379,29 @@ public interface ICatalogDirectory
     Task SetProductAttributeAsync(Guid productId, Guid definitionId, string rawValue, Guid? enumOptionId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// حالت ویرایشگر ویژگی‌های محصول بر اساس schema مؤثر ردهٔ اصلی.
+    /// </summary>
+    Task<ProductAttributeEditorState> GetProductAttributeEditorStateAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// مقادیر ویژگی محصول را در یک تراکنش می‌گذارد/پاک می‌کند؛ محورهای تنوع رد می‌شوند.
+    /// </summary>
+    Task SetProductAttributesAsync(
+        Guid productId,
+        IReadOnlyList<ProductAttributeValueInput> values,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آمادگی مقادیر الزامی schema مؤثر برای محصول.
+    /// </summary>
+    Task<ProductAttributeReadiness> GetProductAttributeReadinessAsync(
+        Guid productId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// محورهای Variant انتخاب‌شدهٔ محصول را جایگزین می‌کند؛ ماتریس کامل تولید نمی‌شود.
     /// </summary>
     Task SetProductVariantAxesAsync(
@@ -392,6 +415,15 @@ public interface ICatalogDirectory
     Task<CategoryChangeImpact> PreviewCategoryChangeAsync(
         Guid productId,
         Guid newCategoryId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// گزارش انسانی تأثیر تغییر رده با برچسب‌ها و خلاصهٔ فارسی؛ حذف خاموش ندارد.
+    /// </summary>
+    Task<CategoryChangeImpactReport> PreviewCategoryChangeReportAsync(
+        Guid productId,
+        Guid newCategoryId,
+        string locale,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -607,6 +639,77 @@ public sealed record CategoryChangeImpact(
 /// مقدار ویژگی محصول که در schema جدید جایی ندارد.
 /// </summary>
 public sealed record OrphanProductAttributeValue(Guid DefinitionId, string CanonicalValue);
+
+/// <summary>
+/// ورودی تنظیم/پاک‌سازی یک مقدار ویژگی محصول.
+/// برای Enumeration چندمقداری: RawValue = شناسه‌های گزینه با کاما (N یا D)؛ EnumOptionId برای تک‌گزینه.
+/// </summary>
+public sealed record ProductAttributeValueInput(
+    Guid DefinitionId,
+    string? RawValue,
+    Guid? EnumOptionId,
+    bool Clear);
+
+/// <summary>گزینهٔ شمارشی برای ویرایشگر ویژگی.</summary>
+public sealed record ProductAttributeEditorOption(
+    Guid OptionId,
+    string LocalizedLabel,
+    bool IsActive);
+
+/// <summary>
+/// فیلد ویرایشگر ویژگی محصول؛ محورهای تنوع ورودی ویرایش ندارند.
+/// </summary>
+public sealed record ProductAttributeEditorField(
+    Guid DefinitionId,
+    string Code,
+    string LocalizedName,
+    CatalogAttributeValueKind ValueKind,
+    string? Unit,
+    bool IsRequired,
+    bool IsVariantAxis,
+    bool IsFilterable,
+    bool IsComparable,
+    bool IsMultivalue,
+    int DisplayOrder,
+    IReadOnlyList<ProductAttributeEditorOption> Options,
+    string? CurrentCanonicalValue,
+    Guid? CurrentEnumOptionId,
+    string? DisplayValue,
+    bool IsMissingRequired);
+
+/// <summary>حالت کامل ویرایشگر ویژگی محصول.</summary>
+public sealed record ProductAttributeEditorState(
+    Guid ProductId,
+    Guid? CategoryId,
+    string? CategoryPath,
+    IReadOnlyList<ProductAttributeEditorField> Fields,
+    ProductAttributeReadiness Readiness);
+
+/// <summary>آمادگی مقادیر ویژگی برای انتشار بعدی.</summary>
+public sealed record ProductAttributeReadiness(
+    bool IsComplete,
+    IReadOnlyList<string> MissingRequiredCodes,
+    IReadOnlyList<string> InvalidValues);
+
+/// <summary>خلاصهٔ یک مقدار یتیم پس از تغییر رده.</summary>
+public sealed record CategoryChangeOrphanSummary(
+    Guid DefinitionId,
+    string LocalizedName,
+    string DisplayValue);
+
+/// <summary>
+/// گزارش انسانی تأثیر تغییر رده برای تأیید Admin.
+/// </summary>
+public sealed record CategoryChangeImpactReport(
+    Guid ProductId,
+    Guid NewCategoryId,
+    int CompatiblePreservedCount,
+    int OrphanCount,
+    int NewlyRequiredMissingCount,
+    IReadOnlyList<CategoryChangeOrphanSummary> OrphanSummaries,
+    IReadOnlyList<string> NewlyRequiredLabels,
+    IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds,
+    string MessageFa);
 
 /// <summary>گره درخت Admin Category برای Ant Tree آینده.</summary>
 public sealed record CategoryTreeNodeDto(

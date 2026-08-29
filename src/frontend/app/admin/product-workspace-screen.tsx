@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
-import { listAttributeDefinitions, type AttributeDefinition } from "./catalog-attribute-api";
+import { listAttributeDefinitions, previewProductCategoryChange, type AttributeDefinition } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
-import { ProductAttributesPanel } from "./catalog-attribute-ui";
+import { ProductAttributesPanel } from "./product-attributes-panel";
 import {
   assignAdminProductCategory,
   attachAdminProductMedia,
@@ -296,14 +296,20 @@ export function ProductWorkspaceScreen({
     const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
     if (categoryChanged && activeDraft.categoryId) {
       const needsConfirm = Boolean(current.primaryCategoryId);
-      if (
-        needsConfirm &&
-        !window.confirm(
-          "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به schema را تحت تأثیر قرار دهد. ادامه می‌دهید؟",
-        )
-      ) {
-        setBusy(false);
-        return;
+      if (needsConfirm) {
+        const preview = await previewProductCategoryChange(
+          current.productId,
+          activeDraft.categoryId,
+          "fa-IR",
+        );
+        const message =
+          preview.state === "ok" && preview.data?.messageFa
+            ? `${preview.data.messageFa}\n\nتغییر دسته را تأیید می‌کنید؟`
+            : "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به schema را تحت تأثیر قرار دهد. ادامه می‌دهید؟";
+        if (!window.confirm(message)) {
+          setBusy(false);
+          return;
+        }
       }
       const catResult = await assignAdminProductCategory(
         current.productId,
@@ -784,12 +790,13 @@ export function ProductWorkspaceScreen({
                 </p>
               </div>
             ) : (
-              <>
-                <p className="mb-3 text-sm text-muted">
-                  schema ویژگی از دستهٔ انتخاب‌شده می‌آید. ویرایش کامل در تسک بعدی تکمیل می‌شود.
-                </p>
-                <ProductAttributesPanel productId={current.productId} />
-              </>
+              <ProductAttributesPanel
+                productId={current.productId}
+                categoryId={view.primaryCategoryId}
+                categoryPath={view.categoryPath}
+                canEdit={canMutateCatalog}
+                mode={formMode.mode === "edit" ? "edit" : "view"}
+              />
             )}
           </Card>
         ) : null}

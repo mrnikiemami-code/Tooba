@@ -79,11 +79,16 @@ test("workspace tabs and form mode foundation", () => {
   assert.equal(screen.includes('id: "inventory"'), false);
 });
 
-test("attributes tab requires categoryId handoff", () => {
+test("attributes tab requires categoryId and wires schema-driven panel", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.match(screen, /product-attributes-category-required/);
   assert.match(screen, /primaryCategoryId/);
   assert.match(screen, /ProductAttributesPanel/);
+  assert.match(screen, /product-attributes-panel/);
+  assert.match(screen, /previewProductCategoryChange/);
+  assert.match(screen, /canEdit=\{canMutateCatalog\}/);
+  assert.match(screen, /mode=\{formMode\.mode === "edit" \? "edit" : "view"\}/);
+  assert.equal(screen.includes('from "./catalog-attribute-ui"'), false);
 });
 
 test("workspace page passes view and edit scope", () => {

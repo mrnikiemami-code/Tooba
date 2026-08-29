@@ -1,0 +1,46 @@
+﻿
+> tooba-web@0.0.1 test:product-workspace
+> node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts app/admin/product-catalog-admin.test.ts app/admin/product-attributes-panel.test.ts
+
+(node:39456) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.9118ms)
+✔ workspace mapper keeps prices on offers not product (0.8329ms)
+(node:38212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ validateAttributeDrafts blocks missing required text/enum (0.978ms)
+✔ draftToValueInput builds enum and clear payloads without raw IDs in UI contract (0.2776ms)
+✔ isAttributeDraftDirty detects enum and number changes (0.2155ms)
+✔ panel source has VIEW/EDIT typed controls and no raw enumOptionId inputs (1.238ms)
+(node:32824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (0.7513ms)
+✔ create CTA is draft-only with category picker (0.2301ms)
+✔ row actions use view/edit scopes and safe archive label (0.7115ms)
+✔ variant terminology uses تنوع not گونه in product list (0.2015ms)
+✔ product category picker loads tree with human path labels (0.1641ms)
+✔ workspace tabs and form mode foundation (0.3968ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (0.2437ms)
+✔ workspace page passes view and edit scope (0.1362ms)
+✔ host-client maps core/category helpers and new workspace fields (0.2562ms)
+(node:35568) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/workspace-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commercial grouping keeps multiple sellers (0.4582ms)
+✔ inventory stays offer-scoped (0.0994ms)
+✔ publication checks are UI readiness (0.3709ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 109.0724

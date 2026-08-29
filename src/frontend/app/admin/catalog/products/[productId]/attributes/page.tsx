@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ProductAttributesPanel } from "../../../../catalog-attribute-ui.tsx";
+import { ProductAttributesPanel } from "../../../../product-attributes-panel.tsx";
 
 /** صفحهٔ ویژگی‌های محصول Admin. */
 export default function AdminProductAttributesPage({
@@ -19,7 +19,7 @@ export default function AdminProductAttributesPage({
         </p>
       </div>
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <ProductAttributesPanel productId={productId} />
+        <ProductAttributesPanel productId={productId} canEdit mode="edit" />
       </div>
     </div>
   );

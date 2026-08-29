@@ -548,7 +548,18 @@ public sealed class ProductWorkspaceComposer
 
         try
         {
-            await _catalogDirectory.AssignCategoryAsync(productId, request.CategoryId, cancellationToken);
+            var hasExistingCategory = await _catalog.ProductCategories.AsNoTracking()
+                .AnyAsync(x => x.ProductId == productId, cancellationToken);
+            if (hasExistingCategory)
+            {
+                await _catalogDirectory.ReplaceProductPrimaryCategoryAsync(
+                    productId, request.CategoryId, cancellationToken);
+            }
+            else
+            {
+                await _catalogDirectory.AssignCategoryAsync(productId, request.CategoryId, cancellationToken);
+            }
+
             product.TouchDescriptiveSeams(product.SlugSeam, product.SeoTitleSeam, product.BrandId, DateTimeOffset.UtcNow);
             await _catalog.SaveChangesAsync(cancellationToken);
             return (await GetAsync(productId, permissions, cancellationToken))!;

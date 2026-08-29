@@ -55,7 +55,7 @@ Locked Admin form pattern via `useAdminFormMode`:
 |-----|----------------|
 | عمومی | Implemented foundation |
 | ترجمه‌ها | Locale-based foundation (LocalizedText + SlugSeam) |
-| ویژگی‌ها | Shell + category schema handoff |
+| ویژگی‌ها | **Implemented** — category-driven Product Attribute Values editor (T012); variant axes informational only → T013 |
 | تنوع‌ها | Shell (Persian **تنوع**, not گونه) |
 | رسانه | Shell / existing media seams |
 | SEO | Shell |
@@ -75,8 +75,8 @@ Public route strategy remains clean / locale-aware; do not append ProductId to v
 
 - Searchable picker with path labels (`کالای دیجیتال > موبایل > …`)
 - No raw CategoryId in UI labels
-- Category change with attribute/variant data requires explicit `confirmSchemaImpact`
-- Attributes tab consumes `CategoryId` → effective category attribute schema (next task owns full editor)
+- Category change with attribute/variant data requires explicit confirmation after enriched impact preview (`MessageFa`)
+- Attributes tab: [PRODUCT-ATTRIBUTES.md](./PRODUCT-ATTRIBUTES.md) — effective schema → typed values → readiness
 
 ## Lifecycle
 
@@ -90,7 +90,7 @@ Prefer **archive** over hard delete when offers/history reference the product.
 
 ## Variants handoff
 
-Source: category effective schema → `IsVariantAxis` attributes → standardized Product Variants.  
+Source: category effective schema → `IsVariantAxis` attributes (shown read-only on ویژگی‌ها) → Product Variants matrix in **T013**.
 UI term: **تنوع**. Full matrix deferred.
 
 ## Authorization

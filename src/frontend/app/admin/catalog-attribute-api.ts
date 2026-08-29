@@ -110,6 +110,70 @@ export interface SetProductAttributeInput {
   enumOptionId?: string | null;
 }
 
+export interface ProductAttributeEditorOption {
+  optionId: string;
+  localizedLabel: string;
+  isActive: boolean;
+}
+
+export interface ProductAttributeReadiness {
+  isComplete: boolean;
+  missingRequiredCodes: string[];
+  invalidValues: string[];
+}
+
+export interface ProductAttributeEditorField {
+  definitionId: string;
+  code: string;
+  localizedName: string;
+  valueKind: CatalogAttributeValueKind;
+  unit: string | null;
+  isRequired: boolean;
+  isVariantAxis: boolean;
+  isFilterable: boolean;
+  isComparable: boolean;
+  isMultivalue: boolean;
+  displayOrder: number;
+  options: ProductAttributeEditorOption[];
+  currentCanonicalValue: string | null;
+  currentEnumOptionId: string | null;
+  displayValue: string | null;
+  isMissingRequired: boolean;
+}
+
+export interface ProductAttributeEditorState {
+  productId: string;
+  categoryId: string | null;
+  categoryPath: string | null;
+  fields: ProductAttributeEditorField[];
+  readiness: ProductAttributeReadiness;
+}
+
+export interface ProductAttributeValueInput {
+  definitionId: string;
+  rawValue?: string | null;
+  enumOptionId?: string | null;
+  clear?: boolean;
+}
+
+export interface CategoryChangeOrphanSummary {
+  definitionId: string;
+  localizedName: string;
+  displayValue: string;
+}
+
+export interface CategoryChangeImpactReport {
+  productId: string;
+  newCategoryId: string;
+  compatiblePreservedCount: number;
+  orphanCount: number;
+  newlyRequiredMissingCount: number;
+  orphanSummaries: CategoryChangeOrphanSummary[];
+  newlyRequiredLabels: string[];
+  invalidVariantAxisDefinitionIds: string[];
+  messageFa: string;
+}
+
 function recordOf(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -487,6 +551,178 @@ export async function setAdminProductAttribute(
   );
   if (response.state !== "ok") return { ...response, data: null };
   return { ...response, data: { ok: true } };
+}
+
+function parseEditorOption(raw: unknown): ProductAttributeEditorOption | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const optionId = text(prop(item, "optionId", "OptionId"));
+  if (!optionId) return null;
+  return {
+    optionId,
+    localizedLabel: text(prop(item, "localizedLabel", "LocalizedLabel"), optionId),
+    isActive: bool(prop(item, "isActive", "IsActive"), true),
+  };
+}
+
+function parseEditorField(raw: unknown): ProductAttributeEditorField | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const definitionId = text(prop(item, "definitionId", "DefinitionId"));
+  if (!definitionId) return null;
+  const optionsRaw = prop(item, "options", "Options");
+  const options = Array.isArray(optionsRaw)
+    ? optionsRaw.map(parseEditorOption).filter((x): x is ProductAttributeEditorOption => x != null)
+    : [];
+  const enumRaw = prop(item, "currentEnumOptionId", "CurrentEnumOptionId");
+  return {
+    definitionId,
+    code: text(prop(item, "code", "Code")),
+    localizedName: text(prop(item, "localizedName", "LocalizedName")),
+    valueKind: parseValueKind(prop(item, "valueKind", "ValueKind")),
+    unit: text(prop(item, "unit", "Unit")) || null,
+    isRequired: bool(prop(item, "isRequired", "IsRequired")),
+    isVariantAxis: bool(prop(item, "isVariantAxis", "IsVariantAxis")),
+    isFilterable: bool(prop(item, "isFilterable", "IsFilterable")),
+    isComparable: bool(prop(item, "isComparable", "IsComparable")),
+    isMultivalue: bool(prop(item, "isMultivalue", "IsMultivalue")),
+    displayOrder: intOr(prop(item, "displayOrder", "DisplayOrder"), 0),
+    options,
+    currentCanonicalValue: text(prop(item, "currentCanonicalValue", "CurrentCanonicalValue")) || null,
+    currentEnumOptionId: enumRaw == null || enumRaw === "" ? null : text(enumRaw),
+    displayValue: text(prop(item, "displayValue", "DisplayValue")) || null,
+    isMissingRequired: bool(prop(item, "isMissingRequired", "IsMissingRequired")),
+  };
+}
+
+function parseReadiness(raw: unknown): ProductAttributeReadiness {
+  const item = recordOf(raw);
+  if (!item) {
+    return { isComplete: true, missingRequiredCodes: [], invalidValues: [] };
+  }
+  const missing = prop(item, "missingRequiredCodes", "MissingRequiredCodes");
+  const invalid = prop(item, "invalidValues", "InvalidValues");
+  return {
+    isComplete: bool(prop(item, "isComplete", "IsComplete"), true),
+    missingRequiredCodes: Array.isArray(missing) ? missing.map((x) => text(x)).filter(Boolean) : [],
+    invalidValues: Array.isArray(invalid) ? invalid.map((x) => text(x)).filter(Boolean) : [],
+  };
+}
+
+function parseEditorState(raw: unknown): ProductAttributeEditorState | null {
+  const item = recordOf(raw);
+  if (!item) return null;
+  const productId = text(prop(item, "productId", "ProductId"));
+  if (!productId) return null;
+  const fieldsRaw = prop(item, "fields", "Fields");
+  const fields = Array.isArray(fieldsRaw)
+    ? fieldsRaw.map(parseEditorField).filter((x): x is ProductAttributeEditorField => x != null)
+    : [];
+  const categoryRaw = prop(item, "categoryId", "CategoryId");
+  return {
+    productId,
+    categoryId: categoryRaw == null || categoryRaw === "" ? null : text(categoryRaw),
+    categoryPath: text(prop(item, "categoryPath", "CategoryPath")) || null,
+    fields,
+    readiness: parseReadiness(prop(item, "readiness", "Readiness")),
+  };
+}
+
+/** بارگذاری حالت ویرایشگر ویژگی محصول از schema مؤثر. */
+export async function getProductAttributeEditorState(
+  productId: string,
+  locale = "fa-IR",
+): Promise<AdminResult<ProductAttributeEditorState>> {
+  const q = new URLSearchParams({ locale });
+  const response = await adminRead(`/v1/admin/catalog/products/${productId}/attributes?${q}`);
+  if (response.state !== "ok") return { ...response, data: null };
+  const state = parseEditorState(response.data);
+  if (!state) {
+    return { state: "error", data: null, status: response.status, message: "catalog.attribute.editor.parse" };
+  }
+  return { ...response, data: state };
+}
+
+/** ذخیرهٔ دسته‌ای مقادیر ویژگی محصول. */
+export async function setProductAttributes(
+  productId: string,
+  values: ProductAttributeValueInput[],
+  locale = "fa-IR",
+): Promise<AdminResult<ProductAttributeEditorState>> {
+  const response = await adminWrite(`/v1/admin/catalog/products/${productId}/attributes`, "PUT", {
+    locale,
+    values: values.map((v) => ({
+      definitionId: v.definitionId,
+      rawValue: v.rawValue ?? null,
+      enumOptionId: v.enumOptionId ?? null,
+      clear: Boolean(v.clear),
+    })),
+  });
+  if (response.state !== "ok") return { ...response, data: null };
+  const state = parseEditorState(response.data);
+  if (!state) {
+    return { state: "error", data: null, status: response.status, message: "catalog.attribute.editor.parse" };
+  }
+  return { ...response, data: state };
+}
+
+/** آمادگی ویژگی‌های الزامی محصول. */
+export async function getProductAttributeReadiness(
+  productId: string,
+): Promise<AdminResult<ProductAttributeReadiness>> {
+  const response = await adminRead(`/v1/admin/catalog/products/${productId}/attributes/readiness`);
+  if (response.state !== "ok") return { ...response, data: null };
+  return { ...response, data: parseReadiness(response.data) };
+}
+
+/** پیش‌نمایش تأثیر تغییر رده با خلاصهٔ فارسی. */
+export async function previewProductCategoryChange(
+  productId: string,
+  newCategoryId: string,
+  locale = "fa-IR",
+): Promise<AdminResult<CategoryChangeImpactReport>> {
+  const response = await adminWrite(
+    `/v1/admin/catalog/products/${productId}/category-change-preview`,
+    "POST",
+    { newCategoryId, locale },
+  );
+  if (response.state !== "ok") return { ...response, data: null };
+  const item = recordOf(response.data);
+  if (!item) {
+    return { state: "error", data: null, status: response.status, message: "catalog.category_change.parse" };
+  }
+  const orphansRaw = prop(item, "orphanSummaries", "OrphanSummaries");
+  const orphanSummaries = Array.isArray(orphansRaw)
+    ? orphansRaw
+        .map((row) => {
+          const r = recordOf(row);
+          if (!r) return null;
+          return {
+            definitionId: text(prop(r, "definitionId", "DefinitionId")),
+            localizedName: text(prop(r, "localizedName", "LocalizedName")),
+            displayValue: text(prop(r, "displayValue", "DisplayValue")),
+          } satisfies CategoryChangeOrphanSummary;
+        })
+        .filter((x): x is CategoryChangeOrphanSummary => x != null && Boolean(x.definitionId))
+    : [];
+  const labelsRaw = prop(item, "newlyRequiredLabels", "NewlyRequiredLabels");
+  const axesRaw = prop(item, "invalidVariantAxisDefinitionIds", "InvalidVariantAxisDefinitionIds");
+  return {
+    ...response,
+    data: {
+      productId: text(prop(item, "productId", "ProductId")),
+      newCategoryId: text(prop(item, "newCategoryId", "NewCategoryId")),
+      compatiblePreservedCount: intOr(prop(item, "compatiblePreservedCount", "CompatiblePreservedCount"), 0),
+      orphanCount: intOr(prop(item, "orphanCount", "OrphanCount"), 0),
+      newlyRequiredMissingCount: intOr(prop(item, "newlyRequiredMissingCount", "NewlyRequiredMissingCount"), 0),
+      orphanSummaries,
+      newlyRequiredLabels: Array.isArray(labelsRaw) ? labelsRaw.map((x) => text(x)).filter(Boolean) : [],
+      invalidVariantAxisDefinitionIds: Array.isArray(axesRaw)
+        ? axesRaw.map((x) => text(x)).filter(Boolean)
+        : [],
+      messageFa: text(prop(item, "messageFa", "MessageFa")),
+    },
+  };
 }
 
 /** تنظیم محورهای Variant محصول (Admin). */

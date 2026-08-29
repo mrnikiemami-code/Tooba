@@ -1527,6 +1527,158 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<ProductAttributeEditorState> GetProductAttributeEditorStateAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var normalizedLocale = string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale.Trim();
+        var categoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        string? categoryPath = null;
+        IReadOnlyList<CatalogEffectiveSchemaBinding> schema = Array.Empty<CatalogEffectiveSchemaBinding>();
+        if (categoryId is Guid cid)
+        {
+            categoryPath = await BuildCategoryPathAsync(cid, normalizedLocale, cancellationToken);
+            schema = await ResolveEffectiveBindingsAsync(cid, cancellationToken);
+        }
+
+        var values = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var valueByDef = values.ToDictionary(x => x.DefinitionId);
+
+        var definitionIds = schema.Select(x => x.DefinitionId).ToArray();
+        var names = await GetAttributeDefinitionNamesAsync(definitionIds, normalizedLocale, cancellationToken);
+        var enumDefIds = schema
+            .Where(x => x.Definition.ValueKind == CatalogAttributeValueKind.Enumeration)
+            .Select(x => x.DefinitionId)
+            .ToArray();
+        var options = enumDefIds.Length == 0
+            ? new List<CatalogAttributeOption>()
+            : await _db.AttributeOptions.AsNoTracking()
+                .Where(x => enumDefIds.Contains(x.DefinitionId))
+                .OrderBy(x => x.Code)
+                .ToListAsync(cancellationToken);
+        var optionNames = await GetAttributeOptionNamesAsync(
+            options.Select(x => x.OptionId).ToArray(),
+            normalizedLocale,
+            cancellationToken);
+        var optionsByDef = options.GroupBy(x => x.DefinitionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var fields = new List<ProductAttributeEditorField>();
+        foreach (var entry in schema.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Definition.Code, StringComparer.Ordinal))
+        {
+            valueByDef.TryGetValue(entry.DefinitionId, out var stored);
+            var optionViews = Array.Empty<ProductAttributeEditorOption>();
+            if (optionsByDef.TryGetValue(entry.DefinitionId, out var defOptions))
+            {
+                optionViews = defOptions.Select(o => new ProductAttributeEditorOption(
+                    o.OptionId,
+                    optionNames.GetValueOrDefault(o.OptionId) ?? o.Code,
+                    o.IsActive)).ToArray();
+            }
+
+            Guid? currentEnumOptionId = null;
+            string? displayValue = null;
+            if (stored is not null)
+            {
+                (currentEnumOptionId, displayValue) = FormatAttributeDisplay(
+                    entry.Definition.ValueKind,
+                    entry.Definition.IsMultivalue,
+                    stored.CanonicalValue,
+                    entry.Definition.Unit,
+                    optionViews);
+            }
+
+            var isMissingRequired = entry.IsRequired
+                && !entry.IsVariantAxis
+                && entry.Definition.IsActive
+                && stored is null;
+
+            fields.Add(new ProductAttributeEditorField(
+                entry.DefinitionId,
+                entry.Definition.Code,
+                names.GetValueOrDefault(entry.DefinitionId) ?? entry.Definition.Code,
+                entry.Definition.ValueKind,
+                entry.Definition.Unit,
+                entry.IsRequired,
+                entry.IsVariantAxis,
+                entry.IsFilterable,
+                entry.IsComparable,
+                entry.Definition.IsMultivalue,
+                entry.DisplayOrder,
+                optionViews,
+                stored?.CanonicalValue,
+                currentEnumOptionId,
+                displayValue,
+                isMissingRequired));
+        }
+
+        var readiness = BuildReadiness(schema, values);
+        return new ProductAttributeEditorState(productId, categoryId, categoryPath, fields, readiness);
+    }
+
+    /// <inheritdoc />
+    public async Task SetProductAttributesAsync(
+        Guid productId,
+        IReadOnlyList<ProductAttributeValueInput> values,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(values);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            foreach (var input in values)
+            {
+                await ApplyProductAttributeValueAsync(productId, input, cancellationToken);
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<ProductAttributeReadiness> GetProductAttributeReadinessAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var categoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        if (categoryId is not Guid cid)
+        {
+            return new ProductAttributeReadiness(true, Array.Empty<string>(), Array.Empty<string>());
+        }
+
+        var schema = await ResolveEffectiveBindingsAsync(cid, cancellationToken);
+        var values = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        return BuildReadiness(schema, values);
+    }
+
+    /// <inheritdoc />
     public async Task SetProductVariantAxesAsync(
         Guid productId,
         IReadOnlyList<Guid> orderedDefinitionIds,
@@ -1618,6 +1770,84 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             newCategoryId,
             report.OrphanAttributeValues.Select(x => new OrphanProductAttributeValue(x.DefinitionId, x.CanonicalValue)).ToList(),
             report.InvalidVariantAxisDefinitionIds);
+    }
+
+    /// <inheritdoc />
+    public async Task<CategoryChangeImpactReport> PreviewCategoryChangeReportAsync(
+        Guid productId,
+        Guid newCategoryId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var normalizedLocale = string.IsNullOrWhiteSpace(locale) ? "fa-IR" : locale.Trim();
+        var impact = await PreviewCategoryChangeAsync(productId, newCategoryId, cancellationToken);
+        var newSchema = await ResolveEffectiveBindingsAsync(newCategoryId, cancellationToken);
+        var values = await _db.ProductAttributeValues.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var allowed = newSchema.Select(x => x.DefinitionId).ToHashSet();
+        var compatiblePreserved = values.Count(v => allowed.Contains(v.DefinitionId));
+
+        var presentIds = values.Select(v => v.DefinitionId).ToHashSet();
+        var newlyRequired = newSchema
+            .Where(x => x.IsRequired && !x.IsVariantAxis && x.Definition.IsActive && !presentIds.Contains(x.DefinitionId))
+            .ToList();
+
+        var orphanDefIds = impact.OrphanAttributeValues.Select(x => x.DefinitionId).Distinct().ToArray();
+        var labelIds = orphanDefIds.Concat(newlyRequired.Select(x => x.DefinitionId)).Distinct().ToArray();
+        var names = await GetAttributeDefinitionNamesAsync(labelIds, normalizedLocale, cancellationToken);
+
+        var orphanOptionIds = new List<Guid>();
+        foreach (var orphan in impact.OrphanAttributeValues)
+        {
+            foreach (var part in orphan.CanonicalValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (Guid.TryParse(part, out var oid))
+                {
+                    orphanOptionIds.Add(oid);
+                }
+            }
+        }
+
+        var optionNames = await GetAttributeOptionNamesAsync(orphanOptionIds, normalizedLocale, cancellationToken);
+        var definitions = orphanDefIds.Length == 0
+            ? new Dictionary<Guid, CatalogAttributeDefinition>()
+            : await _db.AttributeDefinitions.AsNoTracking()
+                .Where(x => orphanDefIds.Contains(x.DefinitionId))
+                .ToDictionaryAsync(x => x.DefinitionId, cancellationToken);
+
+        var orphanSummaries = impact.OrphanAttributeValues.Select(o =>
+        {
+            definitions.TryGetValue(o.DefinitionId, out var def);
+            var display = FormatOrphanDisplay(def, o.CanonicalValue, optionNames);
+            return new CategoryChangeOrphanSummary(
+                o.DefinitionId,
+                names.GetValueOrDefault(o.DefinitionId) ?? def?.Code ?? o.DefinitionId.ToString("N"),
+                display);
+        }).ToList();
+
+        var newlyRequiredLabels = newlyRequired
+            .Select(x => names.GetValueOrDefault(x.DefinitionId) ?? x.Definition.Code)
+            .ToList();
+
+        var messageFa = string.Join(
+            "\n",
+            [
+                $"{ToPersianDigits(compatiblePreserved)} مقدار حفظ می‌شود",
+                $"{ToPersianDigits(impact.OrphanAttributeValues.Count)} ویژگی دیگر در دسته جدید وجود ندارد",
+                $"{ToPersianDigits(newlyRequired.Count)} ویژگی الزامی جدید باید تکمیل شود",
+            ]);
+
+        return new CategoryChangeImpactReport(
+            productId,
+            newCategoryId,
+            compatiblePreserved,
+            impact.OrphanAttributeValues.Count,
+            newlyRequired.Count,
+            orphanSummaries,
+            newlyRequiredLabels,
+            impact.InvalidVariantAxisDefinitionIds,
+            messageFa);
     }
 
     /// <inheritdoc />
@@ -1784,6 +2014,382 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         _db.Variants.Add(variant);
         await _db.SaveChangesAsync(cancellationToken);
         return new VariantReference(variant.VariantId, variant.ProductId, variant.CombinationFingerprint, variant.Status);
+    }
+
+    private async Task ApplyProductAttributeValueAsync(
+        Guid productId,
+        ProductAttributeValueInput input,
+        CancellationToken cancellationToken)
+    {
+        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
+            x => x.DefinitionId == input.DefinitionId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("تعریف ویژگی در Catalog این Tenant نیست.");
+
+        if (!definition.IsActive)
+        {
+            throw new InvalidOperationException("تعریف ویژگی غیرفعال است.");
+        }
+
+        if (definition.IsVariantAxis)
+        {
+            throw new InvalidOperationException("محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.");
+        }
+
+        await EnsureDefinitionAllowedForProductSchemaAsync(productId, input.DefinitionId, cancellationToken);
+
+        var existing = await _db.ProductAttributeValues.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.DefinitionId == input.DefinitionId,
+            cancellationToken);
+
+        if (input.Clear)
+        {
+            var categoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+            var isRequired = false;
+            if (categoryId is Guid cid)
+            {
+                var schema = await ResolveEffectiveBindingsAsync(cid, cancellationToken);
+                isRequired = schema.Any(x => x.DefinitionId == input.DefinitionId && x.IsRequired && !x.IsVariantAxis);
+            }
+
+            if (isRequired)
+            {
+                throw new InvalidOperationException("پاک‌سازی مقدار الزامی مجاز نیست.");
+            }
+
+            if (existing is not null)
+            {
+                _db.ProductAttributeValues.Remove(existing);
+            }
+
+            return;
+        }
+
+        string canonical;
+        if (definition.ValueKind == CatalogAttributeValueKind.Enumeration && definition.IsMultivalue)
+        {
+            canonical = await CanonicalizeMultivalueEnumerationAsync(
+                definition.DefinitionId,
+                input.RawValue,
+                input.EnumOptionId,
+                cancellationToken);
+        }
+        else
+        {
+            if (definition.ValueKind == CatalogAttributeValueKind.Enumeration)
+            {
+                if (input.EnumOptionId is not Guid optionId)
+                {
+                    throw new InvalidOperationException("گزینهٔ شمارشی باید شناسه داشته باشد.");
+                }
+
+                var option = await _db.AttributeOptions.SingleOrDefaultAsync(
+                    x => x.OptionId == optionId && x.DefinitionId == definition.DefinitionId,
+                    cancellationToken)
+                    ?? throw new InvalidOperationException("گزینه به این تعریف تعلق ندارد.");
+                if (!option.IsActive)
+                {
+                    throw new InvalidOperationException("گزینهٔ شمارشی غیرفعال است.");
+                }
+            }
+
+            var raw = input.RawValue;
+            if (definition.ValueKind == CatalogAttributeValueKind.Enumeration)
+            {
+                raw = string.IsNullOrWhiteSpace(raw) ? "ignored" : raw;
+            }
+
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                throw new InvalidOperationException("مقدار ویژگی خالی است.");
+            }
+
+            canonical = CatalogAttributeCanonicalizer.Canonicalize(definition.ValueKind, raw, input.EnumOptionId);
+            CatalogAttributeCanonicalizer.EnforceValidationBounds(definition, canonical);
+        }
+
+        if (existing is null)
+        {
+            _db.ProductAttributeValues.Add(CatalogProductAttributeValue.Create(productId, input.DefinitionId, canonical));
+        }
+        else
+        {
+            _db.ProductAttributeValues.Remove(existing);
+            _db.ProductAttributeValues.Add(CatalogProductAttributeValue.Create(productId, input.DefinitionId, canonical));
+        }
+    }
+
+    private async Task<string> CanonicalizeMultivalueEnumerationAsync(
+        Guid definitionId,
+        string? rawValue,
+        Guid? enumOptionId,
+        CancellationToken cancellationToken)
+    {
+        var optionIds = new List<Guid>();
+        if (enumOptionId is Guid single)
+        {
+            optionIds.Add(single);
+        }
+
+        if (!string.IsNullOrWhiteSpace(rawValue))
+        {
+            foreach (var part in rawValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!Guid.TryParse(part, out var oid))
+                {
+                    throw new InvalidOperationException("شناسهٔ گزینهٔ شمارشی چندمقداری نامعتبر است.");
+                }
+
+                optionIds.Add(oid);
+            }
+        }
+
+        optionIds = optionIds.Distinct().ToList();
+        if (optionIds.Count == 0)
+        {
+            throw new InvalidOperationException("حداقل یک گزینهٔ شمارشی لازم است.");
+        }
+
+        foreach (var optionId in optionIds)
+        {
+            var option = await _db.AttributeOptions.SingleOrDefaultAsync(
+                x => x.OptionId == optionId && x.DefinitionId == definitionId,
+                cancellationToken)
+                ?? throw new InvalidOperationException("گزینه به این تعریف تعلق ندارد.");
+            if (!option.IsActive)
+            {
+                throw new InvalidOperationException("گزینهٔ شمارشی غیرفعال است.");
+            }
+        }
+
+        return string.Join(",", optionIds.Select(id => id.ToString("N")));
+    }
+
+    private static ProductAttributeReadiness BuildReadiness(
+        IReadOnlyList<CatalogEffectiveSchemaBinding> schema,
+        IReadOnlyList<CatalogProductAttributeValue> values)
+    {
+        var valueByDef = values.ToDictionary(x => x.DefinitionId);
+        var missing = new List<string>();
+        var invalid = new List<string>();
+
+        foreach (var entry in schema)
+        {
+            if (entry.IsVariantAxis || !entry.Definition.IsActive)
+            {
+                continue;
+            }
+
+            valueByDef.TryGetValue(entry.DefinitionId, out var stored);
+            if (entry.IsRequired && stored is null)
+            {
+                missing.Add(entry.Definition.Code);
+                continue;
+            }
+
+            if (stored is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                if (entry.Definition.ValueKind == CatalogAttributeValueKind.Enumeration)
+                {
+                    var parts = entry.Definition.IsMultivalue
+                        ? stored.CanonicalValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        : [stored.CanonicalValue];
+                    foreach (var part in parts)
+                    {
+                        if (!Guid.TryParse(part, out _))
+                        {
+                            invalid.Add(entry.Definition.Code);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    CatalogAttributeCanonicalizer.EnforceValidationBounds(entry.Definition, stored.CanonicalValue);
+                }
+            }
+            catch (Exception)
+            {
+                invalid.Add(entry.Definition.Code);
+            }
+        }
+
+        return new ProductAttributeReadiness(missing.Count == 0 && invalid.Count == 0, missing, invalid);
+    }
+
+    private async Task<Guid?> ResolvePrimaryCategoryIdAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        var categoryId = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderBy(x => x.AssignmentId)
+            .Select(x => x.CategoryId)
+            .FirstOrDefaultAsync(cancellationToken);
+        return categoryId == Guid.Empty ? null : categoryId;
+    }
+
+    private async Task<string> BuildCategoryPathAsync(
+        Guid categoryId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var categories = await _db.Categories.AsNoTracking().ToListAsync(cancellationToken);
+        var byId = categories.ToDictionary(x => x.CategoryId);
+        var chain = new List<Guid>();
+        var current = categoryId;
+        var seen = new HashSet<Guid>();
+        while (byId.TryGetValue(current, out var node) && seen.Add(current))
+        {
+            chain.Add(current);
+            if (node.ParentCategoryId is not Guid parent)
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        chain.Reverse();
+        var names = await GetCategoryNamesAsync(chain, locale, cancellationToken);
+        return string.Join(" > ", chain.Select(id => names.GetValueOrDefault(id) ?? "رده"));
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> GetCategoryNamesAsync(
+        IReadOnlyCollection<Guid> categoryIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (categoryIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var normalizedLocale = locale.Trim();
+        var localePrefix = normalizedLocale.Split('-')[0];
+        var ids = categoryIds.Distinct().ToArray();
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Category
+                && x.FieldKey == "name"
+                && ids.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == normalizedLocale)
+            .ThenByDescending(x => x.Locale.StartsWith(localePrefix))
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        return rows.GroupBy(x => x.OwnerId).ToDictionary(g => g.Key, g => g.First().Value);
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> GetAttributeOptionNamesAsync(
+        IReadOnlyCollection<Guid> optionIds,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        if (optionIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var normalizedLocale = locale.Trim();
+        var localePrefix = normalizedLocale.Split('-')[0];
+        var ids = optionIds.Distinct().ToArray();
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.AttributeOption
+                && x.FieldKey == "name"
+                && ids.Contains(x.OwnerId))
+            .OrderByDescending(x => x.Locale == normalizedLocale)
+            .ThenByDescending(x => x.Locale.StartsWith(localePrefix))
+            .ThenBy(x => x.Locale)
+            .ToListAsync(cancellationToken);
+        var names = rows.GroupBy(x => x.OwnerId).ToDictionary(g => g.Key, g => g.First().Value);
+        var options = await _db.AttributeOptions.AsNoTracking()
+            .Where(x => ids.Contains(x.OptionId))
+            .Select(x => new { x.OptionId, x.Code })
+            .ToListAsync(cancellationToken);
+        foreach (var opt in options)
+        {
+            names.TryAdd(opt.OptionId, opt.Code);
+        }
+
+        return names;
+    }
+
+    private static (Guid? EnumOptionId, string? DisplayValue) FormatAttributeDisplay(
+        CatalogAttributeValueKind kind,
+        bool isMultivalue,
+        string canonical,
+        string? unit,
+        IReadOnlyList<ProductAttributeEditorOption> options)
+    {
+        switch (kind)
+        {
+            case CatalogAttributeValueKind.Boolean:
+                return (null, bool.TryParse(canonical, out var b) && b ? "بله" : "خیر");
+            case CatalogAttributeValueKind.Number:
+                return (null, string.IsNullOrWhiteSpace(unit) ? canonical : $"{canonical} {unit}");
+            case CatalogAttributeValueKind.Enumeration:
+            {
+                var parts = isMultivalue
+                    ? canonical.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    : [canonical];
+                var labels = new List<string>();
+                Guid? singleId = null;
+                foreach (var part in parts)
+                {
+                    if (!Guid.TryParse(part, out var oid))
+                    {
+                        labels.Add(part);
+                        continue;
+                    }
+
+                    singleId ??= oid;
+                    var label = options.FirstOrDefault(o => o.OptionId == oid)?.LocalizedLabel ?? oid.ToString("N");
+                    labels.Add(label);
+                }
+
+                return (isMultivalue ? null : singleId, string.Join("، ", labels));
+            }
+            case CatalogAttributeValueKind.Instant:
+                return (null, canonical);
+            default:
+                return (null, canonical);
+        }
+    }
+
+    private static string FormatOrphanDisplay(
+        CatalogAttributeDefinition? definition,
+        string canonical,
+        IReadOnlyDictionary<Guid, string> optionNames)
+    {
+        if (definition?.ValueKind == CatalogAttributeValueKind.Enumeration)
+        {
+            var parts = canonical.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return string.Join("، ", parts.Select(p =>
+                Guid.TryParse(p, out var oid) ? optionNames.GetValueOrDefault(oid) ?? p : p));
+        }
+
+        if (definition?.ValueKind == CatalogAttributeValueKind.Boolean
+            && bool.TryParse(canonical, out var b))
+        {
+            return b ? "بله" : "خیر";
+        }
+
+        return canonical;
+    }
+
+    private static string ToPersianDigits(int value)
+    {
+        var s = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return string.Create(s.Length, s, static (span, src) =>
+        {
+            for (var i = 0; i < src.Length; i++)
+            {
+                var c = src[i];
+                span[i] = c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c;
+            }
+        });
     }
 
     private async Task EnsureDefinitionAllowedForProductSchemaAsync(

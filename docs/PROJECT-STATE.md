@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T011
+TB-P07-T012
 ```
 
 Current Issued Task:
 
 ```text
-(none — Worker PASS submitted for TB-P07-T011; awaiting Architect review)
+(none — Worker PASS submitted for TB-P07-T012; awaiting Architect review)
 ```
 
 Current Gate:
