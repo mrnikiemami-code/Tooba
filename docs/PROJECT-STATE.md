@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T020
+TB-P07-T020-R1
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T020
+TB-P07-T020-R1
 ```
 
 Current Gate:

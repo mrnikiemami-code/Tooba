@@ -1,4 +1,4 @@
-# Tooba — Recovery Context
+﻿# Tooba — Recovery Context
 
 Canonical repository:
 
@@ -31,11 +31,7 @@ Last Architect Accepted Task:
 TB-P06-T029
 ```
 
-Last Implementation Task:
-
-```text
-TB-P07-T020
-```
+Last Implementation Task:\n\n```text\nTB-P07-T020-R1\n```
 
 Issued but not accepted:
 
