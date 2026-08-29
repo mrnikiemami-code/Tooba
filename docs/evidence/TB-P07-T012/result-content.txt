@@ -1,0 +1,305 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T012
+Parent-Task:
+TB-P07-T011
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Implemented real Product Workspace ویژگی‌ها tab: CategoryId → T007 effective schema → typed CatalogProductAttributeValue editor (VIEW/EDIT), backend validation/save, readiness summary, enriched category-change impact with MessageFa, variant axes informational-only for T013. Product≠Offer / no Price-Stock / no Pricing-Inventory joins / AppDataGrid untouched. Validation green; runtimes kept. USER_VISUAL_ACCEPTED remains NO.
+
+Canonical-AppDataGrid:
+
+touched:
+no
+
+raw AgGridReact:
+no
+
+new wrapper:
+no
+
+product list regression:
+none (guards still pass)
+
+Attribute-Value-Model:
+
+entity/path:
+CatalogProductAttributeValue via CatalogDirectory
+
+typed storage:
+canonical RawValue by ValueKind (not free-form JSON bag)
+
+supported types:
+Text, Number, Boolean, Enumeration, Multivalue Enumeration (comma option Guids), Instant
+
+uniqueness:
+one row per (ProductId, DefinitionId) for single-valued
+
+migration:
+none (existing table)
+
+Effective-Schema:
+
+source:
+GetEffectiveCategorySchema / category bindings (T007)
+
+required:
+IsRequired from effective binding
+
+variant axis:
+IsVariantAxis → informational only; set rejected at product value API
+
+ordering:
+schema display order
+
+localized labels/options:
+CatalogLocalizedText AttributeDefinition/AttributeOption
+
+Product-Attributes-UX:
+
+VIEW:
+readable rows, chips, missing/required badges, readiness
+
+EDIT:
+typed controls per ValueKind; Save all / Cancel; dirty confirm
+
+controls:
+text/number/boolean/select/multi-checkbox/datetime-local
+
+required UX:
+marked + block clear/save when missing required
+
+readiness:
+ProductAttributeReadiness (complete / missing codes / invalid)
+
+Save:
+PUT batch /v1/admin/catalog/products/{id}/attributes
+
+Cancel:
+reload drafts from server state
+
+dirty-state:
+yes
+
+mobile:
+full-width panel in workspace shell
+
+accessibility:
+native labeled controls; no raw ID primary UX
+
+Validation-Rules:
+
+unknown attribute:
+rejected
+
+wrong type:
+rejected
+
+invalid option:
+rejected
+
+multi-value:
+enum multi via comma GuidN; non-enum multi limited MVP
+
+required:
+backend authoritative; clear of required rejected
+
+backend authoritative:
+yes
+
+Category-Change:
+
+impact analysis:
+PreviewCategoryChangeReportAsync + MessageFa
+
+compatible preservation:
+CompatiblePreservedCount
+
+incompatible values:
+OrphanCount (not silently deleted)
+
+explicit confirmation:
+workspace confirm with MessageFa preview
+
+silent loss:
+no
+
+new required fields:
+NewlyRequiredMissingCount surfaced
+
+Variant-Handoff:
+
+effective axes:
+shown as محور تنوع — در تب تنوع‌ها
+
+existing variant safety:
+axes not writable as product values; matrix not touched
+
+T013 readiness:
+yes (informational only)
+
+PLP-Handoff:
+
+filterable values queryable:
+yes via existing ProductAttributeValues
+
+duplicate facet store:
+no
+
+integration tests:
+Host ProductAttributeEditorTests + FE panel/workspace guards
+
+Architecture:
+
+Product != Offer:
+yes
+
+Product.Price:
+no
+
+Product.Stock:
+no
+
+Pricing join:
+no
+
+Inventory join:
+no
+
+Authorization:
+
+SpiceDB:
+AdminPanelAccess + X-Tooba-Workspace-Scope view
+
+view-only:
+scope=view / canEdit=false → no editable controls
+
+edit:
+CanEditCatalog
+
+backend authoritative:
+yes
+
+API:
+
+endpoints/contracts:
+GET/PUT .../products/{id}/attributes; GET .../attributes/readiness; enriched POST .../category-change-preview
+
+backend touched:
+CatalogContracts, CatalogDirectory, CatalogAttributeEndpoints, ProductWorkspaceComposer, ProductAttributeEditorTests
+
+frontend integration:
+product-attributes-panel(+model/tests), catalog-attribute-api, product-workspace-screen, package test scripts
+
+gaps:
+multivalue non-enum limited; seller attribute UI still legacy; full variant matrix = T013
+
+Validation:
+
+backend restore:
+n/a (isolated -o artifacts)
+
+backend build:
+pass
+
+backend full tests:
+Passed 329 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass (0 warnings after cleanup)
+
+frontend tests:
+pass (test:product-workspace 18/18; full npm test + build prior)
+
+frontend build:
+pass
+
+passed:
+329 BE + FE suites
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0 new
+
+new warnings:
+no
+
+git diff --check:
+pass (scoped)
+
+Documentation:
+
+PRODUCT-ATTRIBUTES:
+docs/catalog/PRODUCT-ATTRIBUTES.md
+
+recovery/state:
+docs/PROJECT-STATE.md + PRODUCT-CATALOG-ADMIN.md updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+http://127.0.0.1:3001
+
+Product Admin:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+3ff9367a23170cbc6bd979169b0963858b376566
+
+push:
+yes
+
+final HEAD:
+3ff9367a23170cbc6bd979169b0963858b376566
+
+origin/main:
+3ff9367a23170cbc6bd979169b0963858b376566
+
+synchronized:
+yes
+
+tracked tree:
+clean for T012 paths; unrelated dirty files preserved
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+none blocking; multivalue non-enum remains MVP-limited; orphans preserved after category change by design until explicit cleanup policy.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending manual Product Attributes runtime review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
