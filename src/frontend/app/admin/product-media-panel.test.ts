@@ -75,10 +75,11 @@ test("panel source has VIEW/EDIT, تصویر اصلی, placeholder add, no AgGri
   assert.match(src, /افزودن تصویر نمایشی/);
   assert.match(src, /حذف از محصول/);
   assert.match(src, /aria-label="جابه‌جایی به بالا در گالری"/);
+  assert.match(src, /admin-product-media-thumbs/);
   assert.match(src, /editable/);
   assert.doesNotMatch(src, /AgGridReact/);
   assert.doesNotMatch(src, /\bPrice\b|\bStock\b/);
-  assert.match(src, /کتابخانهٔ Media هنوز/);
+  assert.match(src, /کتابخانهٔ Media/);
 });
 
 test("workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX", () => {

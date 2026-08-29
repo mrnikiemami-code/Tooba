@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Plus,
   Settings,
   Shield,
   ShoppingBag,
@@ -89,6 +90,7 @@ const navGroupDefs: NavGroupDef[] = [
     labelKey: "groupProducts",
     items: [
       { id: "products", labelKey: "productList", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
+      { id: "product-create", labelKey: "productCreate", href: "/admin/products?create=1", icon: Plus, live: true, viewPermission: "product.view" },
     ],
   },
   {
@@ -129,10 +131,11 @@ export function listLiveAdminNavHrefs(): string[] {
 }
 
 function isActivePath(pathname: string, item: NavItemDef): boolean {
-  if (item.exact || item.href === "/admin") {
-    return pathname === item.href;
+  const hrefPath = item.href.split("?")[0] ?? item.href;
+  if (item.exact || hrefPath === "/admin") {
+    return pathname === hrefPath;
   }
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
 }
 
 function crumbFor(pathname: string, labels: AdminNavLabels): string {

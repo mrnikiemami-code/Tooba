@@ -176,6 +176,11 @@ export function WorkspaceShell({
           </ul>
         ) : null}
       </header>
+      {summary ? (
+        <section className="rounded-ds border border-border bg-surface p-3" data-testid="workspace-summary-strip">
+          {summary}
+        </section>
+      ) : null}
       {narrow ? (
         <select className="min-h-11 w-full rounded-ds border border-border bg-surface px-2" value={activeSectionId} onChange={(event) => onSectionChange(event.target.value)} aria-label="section">
           {sections.map((section) => (
@@ -228,8 +233,7 @@ export function WorkspaceShell({
       {!loading && !error && !emptyKind ? (
         <div className={cn("grid gap-4", narrow ? "grid-cols-1" : "xl:grid-cols-[minmax(0,1fr)_20rem]")}>
           <div className="flex flex-col gap-3">
-            {summary ? <section className="rounded-ds border border-border p-3">{summary}</section> : null}
-            <section className="rounded-ds border border-border p-3">{children}</section>
+            <section className="rounded-ds border border-border p-3 md:p-4">{children}</section>
           </div>
           {narrow ? (
             <Button type="button" tone="secondary" onClick={() => setInspectorOpen(true)}>

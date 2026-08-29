@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Archive, Edit2, Eye } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AppDataGrid, Button, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
 import {
@@ -138,21 +138,23 @@ function buildColumnDefs(
       valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
       cellRenderer: StatusCell,
     }),
-    applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 130 }),
-    applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "قیمت (ریال)", width: 150 }),
-    applyProductGridFilterHeader({
-      field: "sellableUnits",
-      headerName: "موجودی",
-      width: 100,
-      cellRenderer: StockCell,
-    }),
+    applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 160 }),
+    applyProductGridFilterHeader({ field: "variantCount", headerName: "تنوع", width: 90 }),
     applyProductGridFilterHeader({
       field: "updatedAt",
       headerName: "به‌روزرسانی",
       width: 120,
       valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
     }),
-    applyProductGridFilterHeader({ field: "variantCount", headerName: "تنوع", width: 90, hide: true }),
+    // Offer-composed commercial fields stay available as hidden columns — not Product.Price/Stock.
+    applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "بازه پیشنهاد", width: 150, hide: true }),
+    applyProductGridFilterHeader({
+      field: "sellableUnits",
+      headerName: "قابل‌فروش ترکیبی",
+      width: 120,
+      hide: true,
+      cellRenderer: StockCell,
+    }),
     applyProductGridFilterHeader({ field: "offerCount", headerName: "پیشنهاد", width: 100, hide: true }),
     applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
     buildPinnedActionsColumnDef<AdminProductListRow>({
@@ -178,8 +180,8 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   { id: "variantCount", header: "تنوع", filterKind: "number" },
   { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
   { id: "categorySummary", header: "دسته", filterKind: "text" },
-  { id: "offerAmountRange", header: "قیمت (ریال)", filterKind: "number" },
-  { id: "sellableUnits", header: "موجودی", filterKind: "number" },
+  { id: "offerAmountRange", header: "بازه پیشنهاد", filterKind: "number" },
+  { id: "sellableUnits", header: "قابل‌فروش ترکیبی", filterKind: "number" },
   { id: "locationCount", header: "محل", filterKind: "number" },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
 ];
@@ -187,6 +189,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
 /** فهرست Admin — adapter مرجع برای AppDataGrid canonical. */
 export function ProductListScreen() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [denied, setDenied] = useState(false);
   const [gridError, setGridError] = useState<string | undefined>();
   const [creating, setCreating] = useState(false);
@@ -198,6 +201,12 @@ export function ProductListScreen() {
   const [createError, setCreateError] = useState<string | undefined>();
   const [reloadToken, setReloadToken] = useState(0);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_PRODUCT_GRID_VIEW_KEY), []);
+
+  useEffect(() => {
+    if (searchParams.get("create") === "1") {
+      setCreateOpen(true);
+    }
+  }, [searchParams]);
 
   const onLifecycle = useCallback(async (productId: string, action: "publish" | "unpublish" | "archive" | "delete") => {
     const result = await mutateAdminProductLifecycle(productId, action);
@@ -378,13 +387,12 @@ export function ProductListScreen() {
           }}
           savedViewStore={savedViewStore}
           exportFilenameBase="admin-products"
-          exportHeaders={["محصول", "وضعیت", "دسته", "قیمت", "موجودی", "به‌روزرسانی"]}
+          exportHeaders={["محصول", "وضعیت", "دسته", "تنوع", "به‌روزرسانی"]}
           getExportRow={(row) => [
             row.title,
             formatAdminStatus(row.status),
             row.categorySummary,
-            row.offerAmountRange,
-            String(row.sellableUnits),
+            String(row.variantCount),
             formatJalaliDate(row.updatedAt, "fa"),
           ]}
         />

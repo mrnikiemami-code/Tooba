@@ -69,3 +69,23 @@ test("WorkspaceShell desktop tabs scroll horizontally", () => {
   assert.match(shell, /flex flex-nowrap gap-2 overflow-x-auto/);
   assert.match(shell, /shrink-0/);
 });
+
+test("summary strip sits above tabs; product summary cards expanded", () => {
+  const shell = fs.readFileSync(shellPath, "utf8");
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(shell, /workspace-summary-strip/);
+  assert.match(screen, /product-summary-cards/);
+  assert.match(screen, /product-general-media-preview/);
+  assert.equal(screen.includes('headerName: "قیمت (ریال)"'), false);
+});
+
+test("product list hides Product-looking price/stock columns by default", () => {
+  const list = fs.readFileSync(listPath, "utf8");
+  const shell = fs.readFileSync(path.join(root, "app/admin/admin-shell.tsx"), "utf8");
+  assert.match(list, /AppDataGrid/);
+  assert.equal(list.includes('headerName: "قیمت (ریال)"'), false);
+  assert.equal(list.includes('headerName: "موجودی"'), false);
+  assert.match(list, /headerName: "تنوع"/);
+  assert.match(list, /searchParams\.get\("create"\)/);
+  assert.match(shell, /products\?create=1/);
+});

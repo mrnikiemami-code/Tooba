@@ -13,6 +13,7 @@ export type AdminNavLabels = {
   groupSystem: string;
   dashboard: string;
   productList: string;
+  productCreate: string;
   catalogCategories: string;
   catalogAttributes: string;
   categorySchema: string;
@@ -48,6 +49,7 @@ const faNav: AdminNavLabels = {
   groupSystem: "سامانه",
   dashboard: "داشبورد",
   productList: "فهرست محصولات",
+  productCreate: "افزودن محصول",
   catalogCategories: "مدیریت دسته‌بندی‌ها",
   catalogAttributes: "ویژگی‌ها و فیلترها",
   categorySchema: "طرح ویژگی رده",
@@ -83,6 +85,7 @@ const enNav: AdminNavLabels = {
   groupSystem: "System",
   dashboard: "Dashboard",
   productList: "Product list",
+  productCreate: "Add product",
   catalogCategories: "Manage categories",
   catalogAttributes: "Attributes & filters",
   categorySchema: "Category attribute schema",

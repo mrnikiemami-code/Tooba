@@ -17,6 +17,7 @@ import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductPublishingPanel } from "./product-publishing-panel";
+import { buildPublishChecklist } from "./product-publishing-panel-model";
 import { ProductHistoryPanel } from "./product-history-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
@@ -512,6 +513,18 @@ function ProductWorkspaceScreenInner({
     return { locale, existing };
   });
   const activeTranslation = resolveTranslation(view, translationLocale);
+  const translationCompleteCount = translationRows.filter(
+    ({ locale, existing }) => Boolean(existing) || locale === "fa-IR",
+  ).length;
+  const publishChecklist = buildPublishChecklist(view.publication.aggregateReadiness ?? null);
+  const publishTotalCount = publishChecklist.length || null;
+  const publishReadyCount = publishTotalCount
+    ? publishChecklist.filter((item) => item.ready).length
+    : null;
+  const seoReady =
+    Boolean(view.publication.aggregateReadiness?.seoReady) ||
+    (!view.readinessWarnings.includes("seo-incomplete") &&
+      Boolean(view.seo.seoTitleSeam || view.slug));
 
   return (
     <div className="w-full" data-form-mode={formMode.mode} data-testid="product-workspace-screen">
@@ -523,22 +536,24 @@ function ProductWorkspaceScreenInner({
             <img
               src={storefrontMediaUrl(primaryMedia.mediaAssetId)}
               alt={primaryMedia.altText ?? view.title}
-              className="size-16 shrink-0 rounded-ds bg-secondary object-contain p-1 md:size-20"
+              className="size-16 shrink-0 rounded-full border border-border bg-secondary object-cover md:size-20"
             />
           ) : (
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-ds bg-secondary text-sm text-muted md:size-20">بدون تصویر</div>
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-full border border-border bg-secondary text-xs text-muted md:size-20">
+              بدون تصویر
+            </div>
           )
         }
         title={view.title}
-        subtitle={`${view.brandName ?? "بدون برند"} · ${view.categoryPath ?? categoryLabel(view)}`}
-        breadcrumbs={["عملیات", "محصولات", view.title]}
+        subtitle={categoryLabel(view)}
+        breadcrumbs={["محصولات", "فهرست محصولات", view.title]}
         statusItems={[
+          { id: "pub", label: formatAdminStatus(view.status), tone: statusTone(view.status) },
           {
             id: "mode",
             label: formMode.mode === "edit" ? "ویرایش" : "مشاهده",
             tone: formMode.mode === "edit" ? "warning" : "neutral",
           },
-          { id: "pub", label: formatAdminStatus(view.status), tone: statusTone(view.status) },
           {
             id: "ready",
             label: view.publication.purchasableHint ? "آمادهٔ فروش" : "غیرقابل‌خرید",
@@ -562,16 +577,89 @@ function ProductWorkspaceScreenInner({
         onRetry={reload}
         dirtySections={dirtySections}
         summary={
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <Summary label="آمادگی فروش" value={view.publication.purchasableHint ? "آماده" : "نیاز به بررسی"} />
-            <Summary label="تنوع‌ها" value={String(view.variants.length)} />
-            <Summary label="رسانه" value={String(view.media.length)} />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" data-testid="product-summary-cards">
+            <Summary
+              label="وضعیت محصول"
+              value={formatAdminStatus(view.status)}
+              hint={view.brandName ? `برند: ${view.brandName}` : "بدون برند"}
+            />
+            <Summary
+              label="آمادگی انتشار"
+              value={
+                publishReadyCount != null && publishTotalCount != null
+                  ? `${publishReadyCount} از ${publishTotalCount}`
+                  : view.readinessWarnings.length === 0
+                    ? "کامل"
+                    : `${view.readinessWarnings.length} مورد ناقص`
+              }
+              hint={view.publication.purchasableHint ? "آمادهٔ فروش ترکیبی" : "نیاز به بررسی"}
+            />
+            <Summary
+              label="ترجمه‌ها"
+              value={`${translationCompleteCount} از ${TRANSLATION_LOCALES.length} زبان`}
+              hint="فارسی و English"
+            />
+            <Summary
+              label="SEO"
+              value={seoReady ? "آماده" : "قابل بهبود"}
+              hint={view.seo.seoTitleSeam || view.slug || "عنوان جستجو ناقص"}
+            />
+            <Summary label="تنوع‌ها" value={`${view.variants.length} مورد`} />
+            <Summary
+              label="رسانه"
+              value={`${view.media.length} مورد`}
+              hint={primaryMedia ? "تصویر اصلی دارد" : "بدون تصویر اصلی"}
+            />
           </div>
         }
         inspector={
-          <div className="space-y-2 text-sm">
-            <p className="font-medium">وضعیت عملیات</p>
-            <p data-testid="workspace-source">{source === "host" ? "آخرین همگام‌سازی با فروشگاه انجام شد" : "اتصال فروشگاه برقرار نیست"}</p>
+          <div className="space-y-4 text-sm" data-testid="product-workspace-inspector">
+            <div>
+              <p className="font-medium">وضعیت عملیات</p>
+              <p className="mt-1 text-muted" data-testid="workspace-source">
+                {source === "host" ? "آخرین همگام‌سازی با فروشگاه انجام شد" : "اتصال فروشگاه برقرار نیست"}
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">ترجمه‌ها و زبان‌ها</p>
+              <ul className="mt-2 space-y-1.5">
+                {TRANSLATION_LOCALES.map((locale) => {
+                  const existing = resolveTranslation(view, locale);
+                  const complete = Boolean(existing) || locale === "fa-IR";
+                  return (
+                    <li key={locale} className="flex items-center justify-between gap-2 rounded-ds bg-secondary/40 px-2 py-1.5">
+                      <span>{LOCALE_DISPLAY[locale] ?? locale}</span>
+                      <span
+                        className={
+                          complete
+                            ? "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800"
+                            : "rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900"
+                        }
+                      >
+                        {complete ? "کامل" : "ناقص"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div>
+              <p className="font-medium">چک‌لیست آمادگی</p>
+              <p className="mt-1 text-muted">
+                {publishReadyCount != null && publishTotalCount != null
+                  ? `${publishReadyCount} از ${publishTotalCount} مورد کامل`
+                  : view.readinessWarnings.length === 0
+                    ? "مورد معلقی دیده نمی‌شود"
+                    : `${view.readinessWarnings.length} مورد نیاز به تکمیل`}
+              </p>
+              <button
+                type="button"
+                className="mt-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                onClick={() => requestSectionChange("publication")}
+              >
+                مشاهده چک‌لیست کامل
+              </button>
+            </div>
           </div>
         }
         activity={view.activity.map((item) => ({
@@ -660,9 +748,9 @@ function ProductWorkspaceScreenInner({
                 </div>
               </Card>
             ) : (
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" data-testid="product-general-summary">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-summary">
                 <Card>
-                  <p className="text-sm font-medium text-muted">خلاصه محصول</p>
+                  <p className="text-sm font-medium text-muted">اطلاعات عمومی</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <SummaryCard label="نام" value={view.title} />
                     <SummaryCard label="مسیر دسته" value={categoryLabel(view)} />
@@ -672,29 +760,74 @@ function ProductWorkspaceScreenInner({
                     <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
                   </div>
                 </Card>
-                <Card>
-                  <p className="text-sm font-medium text-muted">آمادگی انتشار</p>
-                  {view.readinessWarnings.length === 0 ? (
-                    <p className="mt-3 text-base">مورد معلقی برای فروش دیده نمی‌شود.</p>
-                  ) : (
-                    <ul className="mt-3 space-y-2 text-base">
-                      {view.readinessWarnings.map((item) => (
-                        <li key={item} className="rounded-ds bg-warning/15 px-3 py-2">
-                          {item === "seo-incomplete"
-                            ? "عنوان جستجو یا نشانی صفحه ناقص است"
-                            : item === "no-price"
-                              ? "قیمت فروشنده ثبت نشده است"
-                              : item === "no-inventory"
-                                ? "موجودی قابل‌فروش وجود ندارد"
-                                : item}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <p className="mt-4 text-sm text-muted">
-                    {view.variants.length} تنوع · {view.media.length} رسانه
-                  </p>
-                </Card>
+                <div className="space-y-4">
+                  <Card data-testid="product-general-media-preview">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-muted">رسانه محصول</p>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                        onClick={() => requestSectionChange("media")}
+                      >
+                        مدیریت همه رسانه‌ها
+                      </button>
+                    </div>
+                    {primaryMedia ? (
+                      <div className="mt-3">
+                        <div className="relative aspect-square overflow-hidden rounded-ds bg-secondary">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={storefrontMediaUrl(primaryMedia.mediaAssetId)}
+                            alt={primaryMedia.altText ?? view.title}
+                            className="h-full w-full object-contain p-4"
+                          />
+                          <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">
+                            تصویر اصلی
+                          </span>
+                        </div>
+                        {mediaRows.length > 1 ? (
+                          <ul className="mt-3 flex flex-wrap gap-2">
+                            {mediaRows.slice(0, 5).map((item) => (
+                              <li key={item.mediaAssetId}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={storefrontMediaUrl(item.mediaAssetId)}
+                                  alt={item.altText ?? "رسانه"}
+                                  className="size-14 rounded-ds border border-border bg-secondary object-contain p-1"
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted">هنوز تصویری متصل نشده است.</p>
+                    )}
+                  </Card>
+                  <Card>
+                    <p className="text-sm font-medium text-muted">آمادگی انتشار</p>
+                    {view.readinessWarnings.length === 0 ? (
+                      <p className="mt-3 text-base">مورد معلقی برای فروش دیده نمی‌شود.</p>
+                    ) : (
+                      <ul className="mt-3 space-y-2 text-base">
+                        {view.readinessWarnings.map((item) => (
+                          <li key={item} className="rounded-ds bg-warning/15 px-3 py-2">
+                            {item === "seo-incomplete"
+                              ? "عنوان جستجو یا نشانی صفحه ناقص است"
+                              : item === "no-price"
+                                ? "قیمت فروشنده ثبت نشده است"
+                                : item === "no-inventory"
+                                  ? "موجودی قابل‌فروش وجود ندارد"
+                                  : item}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <p className="mt-4 text-sm text-muted">
+                      {view.variants.length} تنوع · {view.media.length} رسانه
+                    </p>
+                  </Card>
+                </div>
               </div>
             )}
           </div>
@@ -881,11 +1014,12 @@ function ProductWorkspaceScreenInner({
   );
 }
 
-function Summary({ label, value }: { label: string; value: string }) {
+function Summary({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-ds border border-border bg-surface p-3">
       <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+      <p className="mt-1 text-lg font-semibold leading-snug">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </div>
   );
 }
