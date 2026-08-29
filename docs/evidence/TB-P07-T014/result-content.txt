@@ -1,0 +1,248 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T014
+Parent-Task:
+TB-P07-T013
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Implemented Product Workspace رسانه: Catalog-owned gallery assignment with primary image, deterministic reorder, alt on assignment, unassign≠delete, media readiness, and Admin VIEW/EDIT panel. Primary UX uses «افزودن تصویر نمایشی» (server-minted opaque asset id + storefront placeholder) — no Guid-as-primary path. No binary storage in Catalog; Media DAM deferred. Validation green; runtimes kept. USER_VISUAL_ACCEPTED remains NO.
+
+Canonical-AppDataGrid:
+
+used:
+no
+
+raw AgGridReact:
+no
+
+new wrapper:
+no
+
+product list regression:
+none
+
+Media-Model:
+
+entity/path:
+CatalogProductMediaReference
+
+primary:
+IsPrimary; exactly one when count>0; fallback on detach
+
+order:
+DisplayOrder deterministic
+
+alt:
+assignment-scoped AltText
+
+variant media:
+deferred (Product-level only)
+
+upload/binary:
+not in Catalog; no second storage subsystem
+
+Selection-Upload:
+
+primary UX:
+افزودن تصویر نمایشی → POST …/media/placeholder
+
+library:
+deferred Architectural Concern
+
+Guid paste:
+not primary UX (advanced disclosure only if present)
+
+Media-UX:
+
+VIEW:
+main تصویر اصلی + thumbs + count + readiness; no mutations
+
+EDIT:
+add placeholder, reorder up/down, set primary, alt, unassign
+
+Save/Cancel:
+safe immediate actions + alt dirty save pattern
+
+mobile:
+stacked cards
+
+accessibility:
+labeled controls; up/down alternative to DnD
+
+Readiness:
+
+HasPrimaryImage:
+yes
+
+MediaCount:
+yes
+
+IsReady:
+count>0 ∧ primary
+
+MessageFa:
+تصویر اصلی تعیین نشده / N رسانه / رسانه کامل است
+
+Boundary:
+
+Product != Offer:
+yes
+
+Product.Price:
+no
+
+Product.Stock:
+no
+
+Pricing join:
+no
+
+Inventory join:
+no
+
+unassign deletes asset:
+no
+
+Authorization:
+
+SpiceDB:
+AdminPanelAccess + workspace scope
+
+view-only:
+formMode VIEW / !canEdit
+
+edit:
+CanEditCatalog
+
+backend authoritative:
+yes
+
+API:
+
+list:
+GET …/media
+
+readiness:
+GET …/media/readiness
+
+add/placeholder:
+POST …/media , POST …/media/placeholder
+
+reorder/primary/alt/detach:
+existing PUT/PATCH/DELETE paths via CatalogDirectory
+
+gaps:
+Media DAM/upload library deferred; variant media deferred
+
+Validation:
+
+backend restore:
+n/a
+
+backend build:
+pass
+
+backend full tests:
+Passed 332 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass
+
+frontend tests:
+pass (test:product-workspace 27/27)
+
+frontend build:
+pass
+
+passed:
+332 BE + FE suites
+
+failed:
+0
+
+skipped:
+0
+
+warnings:
+0 new
+
+new warnings:
+no
+
+git diff --check:
+pass (scoped)
+
+Documentation:
+
+PRODUCT-MEDIA:
+docs/catalog/PRODUCT-MEDIA.md
+
+PRODUCT-CATALOG-ADMIN:
+updated
+
+recovery/state:
+docs/PROJECT-STATE.md updated
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+http://127.0.0.1:3001
+
+Product Admin:
+http://localhost:3000/fa/admin/products
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+42af2eac9a4f9e69fd9d2a41e392ab1ec62ee5ac
+
+push:
+yes
+
+final HEAD:
+42af2eac9a4f9e69fd9d2a41e392ab1ec62ee5ac
+
+origin/main:
+42af2eac9a4f9e69fd9d2a41e392ab1ec62ee5ac
+
+synchronized:
+yes
+
+tracked tree:
+clean for T014 paths; unrelated dirty files preserved
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+No Media DAM module yet — Admin uses server-minted opaque MediaAssetId + storefront SVG placeholder; real upload/select library deferred. Variant-specific media deferred.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending manual رسانه review.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
