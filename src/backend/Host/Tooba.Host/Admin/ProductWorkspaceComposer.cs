@@ -848,6 +848,141 @@ public sealed class ProductWorkspaceComposer
     }
 
     /// <summary>
+    /// فرادادهٔ SEO محصول برای locale فعال.
+    /// </summary>
+    public async Task<ProductSeoDetailView> GetSeoAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanView)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        try
+        {
+            var detail = await _catalogDirectory.GetProductSeoAsync(
+                productId,
+                locale ?? "fa-IR",
+                cancellationToken);
+            return MapSeoDetail(detail);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(404, ex.Message, "workspace.product.missing");
+        }
+    }
+
+    /// <summary>
+    /// به‌روزرسانی SEO محصول (SlugSeam سراسری + عنوان/توضیح محلی).
+    /// </summary>
+    public async Task<ProductSeoDetailView> UpdateSeoAsync(
+        Guid productId,
+        AdminProductSeoUpdateRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        try
+        {
+            var detail = await _catalogDirectory.UpdateProductSeoAsync(
+                productId,
+                new ProductSeoUpdateInput(
+                    request.Locale,
+                    request.Slug,
+                    request.SeoTitle,
+                    request.SeoDescription,
+                    request.ExpectedUpdatedAt),
+                cancellationToken);
+            return MapSeoDetail(detail);
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (string.Equals(ex.Message, "workspace.catalog.stale", StringComparison.Ordinal))
+            {
+                throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+            }
+
+            if (ex.Message.Contains("قبلاً استفاده", StringComparison.Ordinal))
+            {
+                throw new PlatformHttpException(409, ex.Message, "workspace.product.slug.duplicate");
+            }
+
+            if (ex.Message.Contains("نامعتبر", StringComparison.Ordinal))
+            {
+                throw new PlatformHttpException(400, ex.Message, "workspace.product.slug.invalid");
+            }
+
+            if (ex.Message.Contains("Tenant", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("محصول", StringComparison.Ordinal))
+            {
+                throw new PlatformHttpException(404, ex.Message, "workspace.product.missing");
+            }
+
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.seo.rejected");
+        }
+    }
+
+    /// <summary>
+    /// آمادگی SEO محصول برای locale فعال.
+    /// </summary>
+    public async Task<ProductSeoReadinessView> GetSeoReadinessAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanView)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        try
+        {
+            var readiness = await _catalogDirectory.GetProductSeoReadinessAsync(
+                productId,
+                locale ?? "fa-IR",
+                cancellationToken);
+            return new ProductSeoReadinessView(
+                readiness.HasValidSlug,
+                readiness.HasSeoTitleOrFallback,
+                readiness.HasSeoDescription,
+                readiness.HasLocalizedIdentity,
+                readiness.IsReady,
+                readiness.MessageFa);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(404, ex.Message, "workspace.product.missing");
+        }
+    }
+
+    private static ProductSeoDetailView MapSeoDetail(ProductSeoDetail detail) =>
+        new(
+            detail.ProductId,
+            detail.Locale,
+            detail.Slug,
+            detail.SeoTitle,
+            detail.SeoDescription,
+            detail.ProductName,
+            detail.TitleFallback,
+            detail.PublicPath,
+            new ProductSeoReadinessView(
+                detail.Readiness.HasValidSlug,
+                detail.Readiness.HasSeoTitleOrFallback,
+                detail.Readiness.HasSeoDescription,
+                detail.Readiness.HasLocalizedIdentity,
+                detail.Readiness.IsReady,
+                detail.Readiness.MessageFa),
+            detail.UpdatedAt);
+
+    /// <summary>
     /// مرجع رسانهٔ مات اضافه می‌کند.
     /// </summary>
     public async Task<IReadOnlyList<ProductMediaView>> AttachMediaAsync(

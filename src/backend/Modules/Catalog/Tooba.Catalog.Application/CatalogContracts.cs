@@ -429,6 +429,30 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// فرادادهٔ SEO محصول برای یک locale (SlugSeam سراسری + LocalizedText).
+    /// </summary>
+    Task<ProductSeoDetail> GetProductSeoAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// به‌روزرسانی SEO محصول: SlugSeam سراسری + seo_title/seo_description محلی.
+    /// </summary>
+    Task<ProductSeoDetail> UpdateProductSeoAsync(
+        Guid productId,
+        ProductSeoUpdateInput input,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آمادگی SEO محصول برای یک locale (بدون Offer/Price/Stock).
+    /// </summary>
+    Task<ProductSeoReadiness> GetProductSeoReadinessAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// مشخصهٔ غیرمحور روی محصول می‌گذارد (upsert). JSON آزاد نیست.
     /// </summary>
     Task SetProductAttributeAsync(Guid productId, Guid definitionId, string rawValue, Guid? enumOptionId, CancellationToken cancellationToken);
@@ -797,6 +821,36 @@ public sealed record ProductMediaReadiness(
     int MediaCount,
     bool IsReady,
     string? MessageFa);
+
+/// <summary>ورودی به‌روزرسانی SEO محصول (locale + قفل خوش‌بینانه).</summary>
+public sealed record ProductSeoUpdateInput(
+    string Locale,
+    string? Slug,
+    string? SeoTitle,
+    string? SeoDescription,
+    DateTimeOffset ExpectedUpdatedAt);
+
+/// <summary>آمادگی SEO محصول — جدا از Media و بدون وابستگی تجاری.</summary>
+public sealed record ProductSeoReadiness(
+    bool HasValidSlug,
+    bool HasSeoTitleOrFallback,
+    bool HasSeoDescription,
+    bool HasLocalizedIdentity,
+    bool IsReady,
+    string? MessageFa);
+
+/// <summary>جزئیات SEO محصول برای Admin و پیش‌نمایش مسیر عمومی.</summary>
+public sealed record ProductSeoDetail(
+    Guid ProductId,
+    string Locale,
+    string? Slug,
+    string? SeoTitle,
+    string? SeoDescription,
+    string? ProductName,
+    string? TitleFallback,
+    string PublicPath,
+    ProductSeoReadiness Readiness,
+    DateTimeOffset UpdatedAt);
 
 /// <summary>خلاصهٔ یک مقدار یتیم پس از تغییر رده.</summary>
 public sealed record CategoryChangeOrphanSummary(

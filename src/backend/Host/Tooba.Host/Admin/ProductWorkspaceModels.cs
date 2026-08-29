@@ -178,6 +178,36 @@ public sealed record ProductMediaReadinessView(
     bool IsReady,
     string? MessageFa);
 
+/// <summary>بدنهٔ به‌روزرسانی SEO محصول برای یک locale.</summary>
+public sealed record AdminProductSeoUpdateRequest(
+    string Locale,
+    string? Slug,
+    string? SeoTitle,
+    string? SeoDescription,
+    DateTimeOffset ExpectedUpdatedAt);
+
+/// <summary>آمادگی SEO محصول — بدون Offer/Price/Stock.</summary>
+public sealed record ProductSeoReadinessView(
+    bool HasValidSlug,
+    bool HasSeoTitleOrFallback,
+    bool HasSeoDescription,
+    bool HasLocalizedIdentity,
+    bool IsReady,
+    string? MessageFa);
+
+/// <summary>جزئیات SEO محصول برای تب Workspace.</summary>
+public sealed record ProductSeoDetailView(
+    Guid ProductId,
+    string Locale,
+    string? Slug,
+    string? SeoTitle,
+    string? SeoDescription,
+    string? ProductName,
+    string? TitleFallback,
+    string PublicPath,
+    ProductSeoReadinessView Readiness,
+    DateTimeOffset UpdatedAt);
+
 /// <summary>محور یک گونهٔ جدید.</summary>
 public sealed record AdminProductVariantAxisRequest(Guid DefinitionId, string? RawValue, Guid? EnumOptionId);
 

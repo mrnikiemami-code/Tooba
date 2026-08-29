@@ -36,6 +36,10 @@ public static class ProductWorkspaceEndpoints
         group.MapPatch("/{productId:guid}/media/{assetId:guid}", PatchMediaAsync);
         group.MapDelete("/{productId:guid}/media/{assetId:guid}", DetachMediaAsync);
 
+        group.MapGet("/{productId:guid}/seo", GetSeoAsync);
+        group.MapPut("/{productId:guid}/seo", PutSeoAsync);
+        group.MapGet("/{productId:guid}/seo/readiness", GetSeoReadinessAsync);
+
         group.MapPost("/{productId:guid}/variants", CreateVariantAsync);
         group.MapPatch("/{productId:guid}/variants/{variantId:guid}", PatchVariantAsync);
     }
@@ -505,6 +509,87 @@ public static class ProductWorkspaceEndpoints
             return Results.Json(await composer.DetachMediaAsync(
                 productId,
                 assetId,
+                ReadPermissions(request),
+                cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> GetSeoAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.GetSeoAsync(
+                productId,
+                locale,
+                ReadPermissions(request),
+                cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> PutSeoAsync(
+        Guid productId,
+        AdminProductSeoUpdateRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.UpdateSeoAsync(
+                productId,
+                body,
+                ReadPermissions(request),
+                cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> GetSeoReadinessAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.GetSeoReadinessAsync(
+                productId,
+                locale,
                 ReadPermissions(request),
                 cancellationToken));
         }

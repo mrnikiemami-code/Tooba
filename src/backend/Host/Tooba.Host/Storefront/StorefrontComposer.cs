@@ -622,9 +622,17 @@ public sealed class StorefrontComposer
         var reviewSummaries = await _reviews.GetPublishedSummariesAsync([product.ProductId], cancellationToken);
         var reviewSummary = reviewSummaries.GetValueOrDefault(product.ProductId);
         var seoTitle = string.IsNullOrWhiteSpace(product.SeoTitleSeam) ? card.Title : product.SeoTitleSeam;
-        var seoDescription = string.IsNullOrWhiteSpace(shortDescription)
-            ? $"{card.Title} از {card.SellerDisplayName}"
-            : shortDescription;
+        var localizedSeoDescriptions = await LoadFieldAsync(
+            CatalogLocalizedOwnerKind.Product,
+            [product.ProductId],
+            "seo_description",
+            cancellationToken);
+        var localizedSeoDescription = localizedSeoDescriptions.GetValueOrDefault(product.ProductId);
+        var seoDescription = !string.IsNullOrWhiteSpace(localizedSeoDescription)
+            ? localizedSeoDescription
+            : string.IsNullOrWhiteSpace(shortDescription)
+                ? $"{card.Title} از {card.SellerDisplayName}"
+                : shortDescription;
         return new StorefrontProductDetailPage(
             product.ProductId,
             card.Slug,

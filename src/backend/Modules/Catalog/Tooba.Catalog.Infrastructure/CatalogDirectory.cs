@@ -1613,6 +1613,220 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         return BuildMediaReadiness(items);
     }
 
+    /// <inheritdoc />
+    public async Task<ProductSeoDetail> GetProductSeoAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var product = await _db.Products.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        return await BuildProductSeoDetailAsync(product, locale, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ProductSeoDetail> UpdateProductSeoAsync(
+        Guid productId,
+        ProductSeoUpdateInput input,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        var locale = ProductSeoRules.NormalizeLocale(input.Locale);
+        var product = await _db.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        await _db.Entry(product).ReloadAsync(cancellationToken);
+        if (product.UpdatedAt != input.ExpectedUpdatedAt)
+        {
+            throw new InvalidOperationException("workspace.catalog.stale");
+        }
+
+        string slug;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(input.Slug))
+            {
+                var name = await ResolveProductNameForSeoAsync(productId, locale, cancellationToken);
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    throw new InvalidOperationException("نشانی صفحه نامعتبر است.");
+                }
+
+                slug = CatalogCategorySlugNormalizer.SlugifyFromName(name);
+            }
+            else
+            {
+                slug = CatalogCategorySlugNormalizer.NormalizeSlug(input.Slug);
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            throw new InvalidOperationException("نشانی صفحه نامعتبر است.");
+        }
+
+        if (await _db.Products.AsNoTracking()
+                .AnyAsync(x => x.ProductId != productId && x.SlugSeam == slug, cancellationToken))
+        {
+            throw new InvalidOperationException("این نشانی صفحه قبلاً استفاده شده است.");
+        }
+
+        await UpsertProductLocalizedFieldForSeoAsync(productId, "seo_title", locale, input.SeoTitle, cancellationToken);
+        await UpsertProductLocalizedFieldForSeoAsync(
+            productId,
+            "seo_description",
+            locale,
+            input.SeoDescription,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var seoTitleTrimmed = string.IsNullOrWhiteSpace(input.SeoTitle) ? null : input.SeoTitle.Trim();
+        product.TouchDescriptiveSeams(slug, seoTitleTrimmed ?? product.SeoTitleSeam, product.BrandId, now);
+        if (locale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase))
+        {
+            product.SeoTitleSeam = seoTitleTrimmed;
+        }
+
+        product.SlugSeam = slug;
+        product.UpdatedAt = now;
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return await GetProductSeoAsync(productId, locale, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ProductSeoReadiness> GetProductSeoReadinessAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var detail = await GetProductSeoAsync(productId, locale, cancellationToken);
+        return detail.Readiness;
+    }
+
+    private async Task<ProductSeoDetail> BuildProductSeoDetailAsync(
+        CatalogProduct product,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var normalizedLocale = ProductSeoRules.NormalizeLocale(locale);
+        var name = await ResolveProductNameForSeoAsync(product.ProductId, normalizedLocale, cancellationToken);
+        var seoTitle = await ResolveLocalizedFieldForSeoAsync(
+            product.ProductId,
+            "seo_title",
+            normalizedLocale,
+            cancellationToken);
+        if (string.IsNullOrWhiteSpace(seoTitle)
+            && normalizedLocale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(product.SeoTitleSeam))
+        {
+            seoTitle = product.SeoTitleSeam;
+        }
+
+        var seoDescription = await ResolveLocalizedFieldForSeoAsync(
+            product.ProductId,
+            "seo_description",
+            normalizedLocale,
+            cancellationToken);
+        var titleFallback = string.IsNullOrWhiteSpace(seoTitle) ? name : seoTitle;
+        var snapshot = ProductSeoRules.Evaluate(product.SlugSeam, seoTitle, seoDescription, name);
+        var readiness = new ProductSeoReadiness(
+            snapshot.HasValidSlug,
+            snapshot.HasSeoTitleOrFallback,
+            snapshot.HasSeoDescription,
+            snapshot.HasLocalizedIdentity,
+            snapshot.IsReady,
+            snapshot.MessageFa);
+
+        return new ProductSeoDetail(
+            product.ProductId,
+            normalizedLocale,
+            product.SlugSeam,
+            seoTitle,
+            seoDescription,
+            name,
+            titleFallback,
+            ProductSeoRules.BuildPublicPath(normalizedLocale, product.SlugSeam),
+            readiness,
+            product.UpdatedAt);
+    }
+
+    private async Task<string?> ResolveProductNameForSeoAsync(
+        Guid productId,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var exact = await ResolveLocalizedFieldForSeoAsync(productId, "name", locale, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(exact))
+        {
+            return exact;
+        }
+
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && x.OwnerId == productId
+                && x.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        return rows
+            .OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .Select(x => x.Value)
+            .FirstOrDefault();
+    }
+
+    private async Task<string?> ResolveLocalizedFieldForSeoAsync(
+        Guid productId,
+        string fieldKey,
+        string locale,
+        CancellationToken cancellationToken)
+    {
+        var row = await _db.LocalizedTexts.AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                    && x.OwnerId == productId
+                    && x.FieldKey == fieldKey
+                    && x.Locale == locale,
+                cancellationToken);
+        return row?.Value;
+    }
+
+    private async Task UpsertProductLocalizedFieldForSeoAsync(
+        Guid productId,
+        string fieldKey,
+        string locale,
+        string? value,
+        CancellationToken cancellationToken)
+    {
+        var normalized = value?.Trim();
+        var row = await _db.LocalizedTexts.SingleOrDefaultAsync(
+            x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && x.OwnerId == productId
+                && x.FieldKey == fieldKey
+                && x.Locale == locale,
+            cancellationToken);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            if (row is not null)
+            {
+                _db.LocalizedTexts.Remove(row);
+            }
+
+            return;
+        }
+
+        if (row is null)
+        {
+            _db.LocalizedTexts.Add(CatalogLocalizedText.Create(
+                CatalogLocalizedOwnerKind.Product,
+                productId,
+                fieldKey,
+                locale,
+                normalized));
+        }
+        else
+        {
+            row.Value = normalized;
+        }
+    }
+
     private async Task<IReadOnlyList<ProductMediaAssignment>> LoadOrderedMediaAssignmentsAsync(
         Guid productId,
         CancellationToken cancellationToken)

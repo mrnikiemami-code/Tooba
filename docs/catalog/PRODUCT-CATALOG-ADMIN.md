@@ -1,7 +1,7 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T014 / TB-P07-T016 · **Phase:** P07 Advanced Catalog
-> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md)
+> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md)
 
 ## Product Master ownership
 
@@ -58,7 +58,7 @@ Locked Admin form pattern via `useAdminFormMode`:
 | ویژگی‌ها | **Implemented** — category-driven Product Attribute Values editor (T012); variant axes informational → tab تنوع‌ها |
 | تنوع‌ها | **Implemented** — axes + combination preview + matrix apply (T013); Persian **تنوع**, not گونه |
 | رسانه | **Implemented** — gallery + primary + readiness (T014); Media library / binary upload deferred |
-| SEO | Shell |
+| SEO | **Implemented** — localized title/description + global SlugSeam + readiness + SERP preview (T017); see [PRODUCT-SEO.md](./PRODUCT-SEO.md) |
 | انتشار | Lifecycle + read-only commercial readiness |
 | تاریخچه | Shell |
 
@@ -67,9 +67,17 @@ Locked Admin form pattern via `useAdminFormMode`:
 Locale-based fields (no `NameFa` / `NameEn` columns):
 
 - Name, ShortDescription, Description, SeoTitle, SeoDescription → `CatalogLocalizedText` (`OwnerKind=Product`)
-- Human slug → `CatalogProduct.SlugSeam` (primary storefront slug; uniqueness enforced)
+- Human slug → `CatalogProduct.SlugSeam` (**global** primary storefront slug; uniqueness enforced; not a per-locale slug table)
 
-Public route strategy remains clean / locale-aware; do not append ProductId to visible slug.
+Public route: `/{locale}/products/{slug}` — see [PRODUCT-SEO.md](./PRODUCT-SEO.md). Do not append ProductId to the visible slug.
+
+## Media
+
+See [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md). Catalog stores `MediaAssetId` assignments only; unassign does not delete shared assets; Media library deferred.
+
+## SEO
+
+See [PRODUCT-SEO.md](./PRODUCT-SEO.md). Workspace SEO tab VIEW/EDIT with Persian labels (آدرس محصول / عنوان برای موتورهای جستجو / توضیح نتیجه جستجو), readiness `MessageFa`, and SERP-style preview. No Offer/Price/Stock.
 
 ## Category
 
@@ -80,9 +88,6 @@ Public route strategy remains clean / locale-aware; do not append ProductId to v
 - Legacy non-L3 primary: VIEW + warning; no silent migrate; valid L3 required before save/publish
 - Attributes tab: [PRODUCT-ATTRIBUTES.md](./PRODUCT-ATTRIBUTES.md) — effective schema → typed values → readiness (no Product-local definition create)
 
-## Media
-
-See [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md). Catalog stores `MediaAssetId` assignments only; unassign does not delete shared assets; Media library deferred.
 ## Lifecycle
 
 | Status | UI |

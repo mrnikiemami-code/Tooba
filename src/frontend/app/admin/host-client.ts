@@ -2,6 +2,8 @@ import type { ProductWorkspaceView } from "./workspace-model.ts";
 import { adminHeaders } from "./admin-api.ts";
 import type { GridServerQuery, GridServerPage } from "../../design-system/data-grid/types";
 import { fromHostGridPage, toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
+import type { ProductSeoDetail, ProductSeoReadiness } from "./product-seo-panel-model.ts";
+import { mapSeoDetail, mapSeoReadiness } from "./product-seo-panel-model.ts";
 
 /**
  * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
@@ -613,6 +615,116 @@ export async function getAdminProductMediaReadiness(
         messageFa: messageRaw == null ? null : asString(messageRaw),
       },
     };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+export type AdminProductSeoUpdateInput = {
+  locale: string;
+  slug?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  expectedUpdatedAt: string;
+};
+
+/** جزئیات SEO محصول برای یک locale. */
+export async function getAdminProductSeo(
+  productId: string,
+  locale: string,
+  viewScope = false,
+): Promise<{ ok: true; detail: ProductSeoDetail } | { ok: false; message: string }> {
+  try {
+    const headers = adminHeaders();
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const q = new URLSearchParams({ locale });
+    const response = await fetch(`/v1/admin/products/${productId}/seo?${q}`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const detail = mapSeoDetail((await response.json()) as Record<string, unknown>);
+    if (!detail) {
+      return { ok: false, message: "پاسخ SEO نامعتبر است" };
+    }
+    return { ok: true, detail };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** آمادگی SEO محصول. */
+export async function getAdminProductSeoReadiness(
+  productId: string,
+  locale: string,
+  viewScope = false,
+): Promise<{ ok: true; readiness: ProductSeoReadiness } | { ok: false; message: string }> {
+  try {
+    const headers = adminHeaders();
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const q = new URLSearchParams({ locale });
+    const response = await fetch(`/v1/admin/products/${productId}/seo/readiness?${q}`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    return { ok: true, readiness: mapSeoReadiness((await response.json()) as Record<string, unknown>) };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** به‌روزرسانی SEO محصول. */
+export async function updateAdminProductSeo(
+  productId: string,
+  input: AdminProductSeoUpdateInput,
+  viewScope = false,
+): Promise<{ ok: true; detail: ProductSeoDetail } | { ok: false; message: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/seo`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        locale: input.locale,
+        slug: input.slug ?? null,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 409) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      if (body?.errorCode === "workspace.product.slug.duplicate") {
+        return { ok: false, message: body.title ?? "این نشانی صفحه قبلاً استفاده شده است." };
+      }
+      return { ok: false, message: body?.title ?? "تداخل ذخیره — صفحه را تازه کنید" };
+    }
+    if (response.status === 403) {
+      return { ok: false, message: "دسترسی ویرایش ندارید" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const detail = mapSeoDetail((await response.json()) as Record<string, unknown>);
+    if (!detail) {
+      return { ok: false, message: "پاسخ SEO نامعتبر است" };
+    }
+    return { ok: true, detail };
   } catch {
     return { ok: false, message: "اتصال به Host برقرار نیست" };
   }

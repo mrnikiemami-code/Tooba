@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T016
+TB-P07-T017
 ```
 
 Current Issued Task:
 
 ```text
-(none — Worker PASS submitted for TB-P07-T016; awaiting Architect review)
+(none — Worker PASS submitted for TB-P07-T017; awaiting Architect review)
 ```
 
 Current Gate:
@@ -144,6 +144,7 @@ CATEGORY_ATTRIBUTE_INHERITANCE = LIVE
 PRODUCT_TYPED_ATTRIBUTES = LIVE
 PRODUCT_VARIANT_AXES = LIVE
 VARIANT_COMBINATION_FOUNDATION = LIVE
+PRODUCT_SEO = LIVE
 FULL_VARIANT_MATRIX = DEFERRED
 FACETED_SEARCH_INTEGRATION = DEFERRED
 SPICEDB_AUTHORIZATION = LIVE
@@ -208,6 +209,7 @@ CATEGORY_ATTRIBUTE_INHERITANCE = LIVE
 PRODUCT_TYPED_ATTRIBUTES = LIVE
 PRODUCT_VARIANT_AXES = LIVE
 VARIANT_COMBINATION_FOUNDATION = LIVE
+PRODUCT_SEO = LIVE
 SELLABLE_PRODUCT_FLOW_LIVE = YES
 SELLABLE_DEMO = YES
 PRODUCTION_PAYMENT_FOUNDATION_READY = YES
@@ -749,4 +751,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T004 = ACCEPTED (category foundation). TB-P07-T005-R1 = ACCEPTED (VIEW/EDIT + clean slug). TB-P07-T006 = Category Workspace General + Translations editor (`AppCategoryTree` visually locked; `USER_VISUAL_ACCEPTED` = NO). Evidence: `docs/evidence/TB-P07-T006/`. Preview: `http://localhost:3000/fa/admin/catalog/categories`. Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T016 = ACCEPTED (Level-3 category assignment). TB-P07-T017 = Product SEO (localized title/description + global SlugSeam + readiness; `docs/catalog/PRODUCT-SEO.md`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.

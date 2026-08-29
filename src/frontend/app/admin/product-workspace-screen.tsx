@@ -7,6 +7,7 @@ import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
+import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   assignAdminProductCategory,
@@ -657,24 +658,13 @@ export function ProductWorkspaceScreen({
         ) : null}
 
         {sectionId === "seo" ? (
-          <div className="grid gap-4 lg:grid-cols-3" data-testid="product-seo-placeholder">
-            <Card>
-              <p className="text-sm text-muted">آمادگی سئو</p>
-              <p className="mt-2 text-xl font-semibold">{view.seo.slugSeam && view.seo.seoTitleSeam ? "آماده" : "ناقص"}</p>
-            </Card>
-            <Card>
-              <p className="text-sm text-muted">نامک</p>
-              <p className="mt-3 text-lg font-medium" dir="ltr">
-                {view.slug ?? view.seo.slugSeam ?? "—"}
-              </p>
-              <p className="mt-3 text-sm text-muted">عنوان جستجو</p>
-              <p className="text-lg font-medium">{view.seo.seoTitleSeam ?? "—"}</p>
-            </Card>
-            <Card>
-              <p className="text-sm text-muted">یادداشت</p>
-              <p className="mt-3 text-base">ویرایش پیشرفته SEO در تسک بعدی.</p>
-            </Card>
-          </div>
+          <Card data-testid="admin-product-seo">
+            <ProductSeoPanel
+              productId={current.productId}
+              canEdit={canMutateCatalog}
+              mode={formMode.mode === "edit" ? "edit" : "view"}
+            />
+          </Card>
         ) : null}
 
         {sectionId === "publication" ? (
