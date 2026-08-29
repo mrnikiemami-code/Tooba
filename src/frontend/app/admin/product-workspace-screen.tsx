@@ -19,6 +19,7 @@ import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductPublishingPanel } from "./product-publishing-panel";
 import { buildPublishChecklist } from "./product-publishing-panel-model";
 import { ProductHistoryPanel } from "./product-history-panel";
+import { ProductTranslationsPanel, translationReadiness } from "./product-translations-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   ProductWorkspaceDirtyProvider,
@@ -106,15 +107,18 @@ interface GeneralDraft {
   title: string;
   slug: string;
   shortDescription: string;
+  description: string;
   categoryId: string | null;
   slugTouched: boolean;
 }
 
 function draftFromView(view: ProductWorkspaceView): GeneralDraft {
+  const fa = resolveTranslation(view, "fa-IR");
   return {
     title: view.title,
     slug: view.slug ?? view.seo.slugSeam ?? "",
-    shortDescription: view.shortDescription ?? "",
+    shortDescription: view.shortDescription ?? fa?.shortDescription ?? "",
+    description: fa?.description ?? "",
     categoryId: view.primaryCategoryId ?? null,
     slugTouched: true,
   };
@@ -165,7 +169,6 @@ function ProductWorkspaceScreenInner({
   const [dirty, setDirty] = useState<Set<string>>(new Set());
   const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [translationLocale, setTranslationLocale] = useState<string>("fa-IR");
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
   const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
 
@@ -400,6 +403,7 @@ function ProductWorkspaceScreenInner({
         title: activeDraft.title.trim(),
         slug: activeDraft.slug.trim() || null,
         shortDescription: activeDraft.shortDescription.trim() || null,
+        description: activeDraft.description.trim() || null,
         expectedUpdatedAt,
       },
       viewScope,
@@ -512,10 +516,17 @@ function ProductWorkspaceScreenInner({
     const existing = resolveTranslation(view, locale);
     return { locale, existing };
   });
-  const activeTranslation = resolveTranslation(view, translationLocale);
-  const translationCompleteCount = translationRows.filter(
-    ({ locale, existing }) => Boolean(existing) || locale === "fa-IR",
-  ).length;
+  const translationCompleteCount = translationRows.filter(({ locale, existing }) => {
+    const draftLike = {
+      name: existing?.name || (locale === "fa-IR" ? view.title : "") || "",
+      shortDescription:
+        existing?.shortDescription || (locale === "fa-IR" ? view.shortDescription || "" : "") || "",
+      description: existing?.description || "",
+      seoTitle: "",
+      seoDescription: "",
+    };
+    return translationReadiness(draftLike) === "complete";
+  }).length;
   const publishChecklist = buildPublishChecklist(view.publication.aggregateReadiness ?? null);
   const publishTotalCount = publishChecklist.length || null;
   const publishReadyCount = publishTotalCount
@@ -625,18 +636,31 @@ function ProductWorkspaceScreenInner({
               <ul className="mt-2 space-y-1.5">
                 {TRANSLATION_LOCALES.map((locale) => {
                   const existing = resolveTranslation(view, locale);
-                  const complete = Boolean(existing) || locale === "fa-IR";
+                  const state = translationReadiness({
+                    name: existing?.name || (locale === "fa-IR" ? view.title : "") || "",
+                    shortDescription:
+                      existing?.shortDescription ||
+                      (locale === "fa-IR" ? view.shortDescription || "" : "") ||
+                      "",
+                    description: existing?.description || "",
+                    seoTitle: "",
+                    seoDescription: "",
+                  });
+                  const label =
+                    state === "complete" ? "کامل" : state === "partial" ? "ناقص" : "ایجاد نشده";
                   return (
                     <li key={locale} className="flex items-center justify-between gap-2 rounded-ds bg-secondary/40 px-2 py-1.5">
                       <span>{LOCALE_DISPLAY[locale] ?? locale}</span>
                       <span
                         className={
-                          complete
+                          state === "complete"
                             ? "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800"
-                            : "rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900"
+                            : state === "partial"
+                              ? "rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900"
+                              : "rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted"
                         }
                       >
-                        {complete ? "کامل" : "ناقص"}
+                        {label}
                       </span>
                     </li>
                   );
@@ -691,75 +715,120 @@ function ProductWorkspaceScreenInner({
               </div>
             ) : null}
             {isGeneralEdit ? (
-              <Card data-testid="product-general-edit">
-                <p className="text-sm font-medium text-muted">ویرایش مشخصات عمومی</p>
-                <div className="mt-4 grid gap-4">
-                  <ProductCategoryPicker
-                    value={activeDraft.categoryId}
-                    onChange={(next) => {
-                      setDraft({ ...activeDraft, categoryId: next });
-                      markGeneralDirty();
-                    }}
-                    required
-                    invalidSelectionHint
-                  />
-                  <label className="block text-sm font-medium">
-                    عنوان
-                    <input
-                      className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
-                      value={activeDraft.title}
-                      data-testid="product-edit-title"
-                      onChange={(event) => {
-                        const title = event.target.value;
-                        setDraft({
-                          ...activeDraft,
-                          title,
-                          slug: activeDraft.slugTouched ? activeDraft.slug : slugifyCategoryName(title),
-                        });
-                        markGeneralDirty();
-                      }}
-                    />
-                  </label>
-                  <label className="block text-sm font-medium">
-                    نامک (slug)
-                    <input
-                      className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
-                      value={activeDraft.slug}
-                      dir="ltr"
-                      data-testid="product-edit-slug"
-                      onChange={(event) => {
-                        setDraft({ ...activeDraft, slug: event.target.value, slugTouched: true });
-                        markGeneralDirty();
-                      }}
-                    />
-                  </label>
-                  <label className="block text-sm font-medium">
-                    خلاصه کوتاه
-                    <textarea
-                      className="mt-2 min-h-24 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
-                      value={activeDraft.shortDescription}
-                      data-testid="product-edit-short-description"
-                      onChange={(event) => {
-                        setDraft({ ...activeDraft, shortDescription: event.target.value });
-                        markGeneralDirty();
-                      }}
-                    />
-                  </label>
-                </div>
-              </Card>
-            ) : (
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-summary">
+              <div className="space-y-4" data-testid="product-general-edit">
                 <Card>
-                  <p className="text-sm font-medium text-muted">اطلاعات عمومی</p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <SummaryCard label="نام" value={view.title} />
-                    <SummaryCard label="مسیر دسته" value={categoryLabel(view)} />
-                    <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
-                    <SummaryCard label="نامک" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
-                    <SummaryCard label="خلاصه کوتاه" value={view.shortDescription || "—"} />
-                    <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
+                  <p className="text-sm font-medium text-muted">اطلاعات اصلی</p>
+                  <div className="mt-4 grid gap-4">
+                    <ProductCategoryPicker
+                      value={activeDraft.categoryId}
+                      onChange={(next) => {
+                        setDraft({ ...activeDraft, categoryId: next });
+                        markGeneralDirty();
+                      }}
+                      required
+                      invalidSelectionHint
+                    />
+                    <label className="block text-sm font-medium">
+                      عنوان محصول
+                      <input
+                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
+                        value={activeDraft.title}
+                        data-testid="product-edit-title"
+                        onChange={(event) => {
+                          const title = event.target.value;
+                          setDraft({
+                            ...activeDraft,
+                            title,
+                            slug: activeDraft.slugTouched ? activeDraft.slug : slugifyCategoryName(title),
+                          });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
+                    <label className="block text-sm font-medium">
+                      نامک سراسری (slug)
+                      <input
+                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
+                        value={activeDraft.slug}
+                        dir="ltr"
+                        data-testid="product-edit-slug"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, slug: event.target.value, slugTouched: true });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
+                      <SummaryCard label="وضعیت چرخه عمر" value={formatAdminStatus(view.status)} />
+                    </div>
+                    <p className="text-xs text-muted">
+                      برند فعلاً فقط‌خواندنی است. مدل/GTIN/بارکد در دامنهٔ Catalog تعریف نشده و ساخته نمی‌شود.
+                    </p>
                   </div>
                 </Card>
+                <Card>
+                  <p className="text-sm font-medium text-muted">توضیحات</p>
+                  <div className="mt-4 grid gap-4">
+                    <label className="block text-sm font-medium">
+                      خلاصه کوتاه
+                      <textarea
+                        className="mt-2 min-h-24 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
+                        value={activeDraft.shortDescription}
+                        data-testid="product-edit-short-description"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, shortDescription: event.target.value });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
+                    <label className="block text-sm font-medium">
+                      توضیح کامل
+                      <textarea
+                        className="mt-2 min-h-40 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
+                        value={activeDraft.description}
+                        data-testid="product-edit-description"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, description: event.target.value });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
+                  </div>
+                </Card>
+                <Card>
+                  <p className="text-sm font-medium text-muted">وضعیت / مالکیت Product</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
+                    <SummaryCard label="آخرین به‌روزرسانی Catalog" value={view.catalogUpdatedAt} ltr />
+                  </div>
+                </Card>
+              </div>
+            ) : (
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-summary">
+                <div className="space-y-4">
+                  <Card>
+                    <p className="text-sm font-medium text-muted">اطلاعات اصلی</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <SummaryCard label="نام" value={view.title} />
+                      <SummaryCard label="مسیر دسته" value={categoryLabel(view)} />
+                      <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
+                      <SummaryCard label="نامک سراسری" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
+                      <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
+                      <SummaryCard label="آخرین به‌روزرسانی" value={view.catalogUpdatedAt} ltr />
+                    </div>
+                  </Card>
+                  <Card>
+                    <p className="text-sm font-medium text-muted">توضیحات</p>
+                    <div className="mt-3 grid gap-3">
+                      <SummaryCard label="خلاصه کوتاه" value={view.shortDescription || "—"} />
+                      <SummaryCard
+                        label="توضیح کامل"
+                        value={resolveTranslation(view, "fa-IR")?.description || "—"}
+                      />
+                    </div>
+                  </Card>
+                </div>
                 <div className="space-y-4">
                   <Card data-testid="product-general-media-preview">
                     <div className="flex items-center justify-between gap-2">
@@ -834,58 +903,16 @@ function ProductWorkspaceScreenInner({
         ) : null}
 
         {sectionId === "translations" ? (
-          <div className="space-y-4" data-testid="product-translations-panel">
-            <Card>
-              <p className="font-semibold">ترجمه‌ها</p>
-              <p className="mt-1 text-sm text-muted">
-                هویت فارسی (fa-IR) در تب‌های عمومی و SEO ویرایش می‌شود. این تب وضعیت ترجمهٔ هر locale را نشان می‌دهد.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2" data-testid="product-locale-switcher">
-                {translationRows.map(({ locale, existing }) => {
-                  const active = translationLocale === locale;
-                  const complete = Boolean(existing) || locale === "fa-IR";
-                  return (
-                    <button
-                      key={locale}
-                      type="button"
-                      className={
-                        active
-                          ? "inline-flex min-h-10 items-center gap-2 rounded-ds bg-primary px-3 text-sm text-primary-foreground"
-                          : "inline-flex min-h-10 items-center gap-2 rounded-ds border border-border px-3 text-sm hover:bg-secondary"
-                      }
-                      data-testid={`translation-locale-${locale}`}
-                      onClick={() => setTranslationLocale(locale)}
-                    >
-                      {LOCALE_DISPLAY[locale] ?? locale}
-                      <span
-                        className={
-                          complete
-                            ? "rounded-full bg-success/20 px-2 py-0.5 text-[11px] font-medium"
-                            : "rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted"
-                        }
-                      >
-                        {complete ? "کامل" : "ناقص"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-            <Card data-testid="product-translation-view">
-              <p className="text-sm font-medium text-muted">{LOCALE_DISPLAY[translationLocale] ?? translationLocale}</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <SummaryCard label="نام" value={activeTranslation?.name || (translationLocale === "fa-IR" ? view.title : "—")} />
-                <SummaryCard label="نامک" value={activeTranslation?.slug || (translationLocale === "fa-IR" ? view.slug ?? "—" : "—")} ltr />
-                <SummaryCard
-                  label="خلاصه کوتاه"
-                  value={activeTranslation?.shortDescription || (translationLocale === "fa-IR" ? view.shortDescription || "—" : "—")}
-                />
-                <SummaryCard label="توضیح" value={activeTranslation?.description || "—"} />
-                <SummaryCard label="عنوان SEO" value={activeTranslation?.seoTitle || view.seo.seoTitleSeam || "—"} />
-                <SummaryCard label="توضیح SEO" value={activeTranslation?.seoDescription || "—"} />
-              </div>
-            </Card>
-          </div>
+          <ProductTranslationsPanel
+            view={view}
+            canEdit={canMutateCatalog}
+            mode={formMode.mode === "edit" ? "edit" : "view"}
+            viewScope={viewScope}
+            onSaved={(next) => {
+              setView(next);
+              setDraft(draftFromView(next));
+            }}
+          />
         ) : null}
 
         {sectionId === "attributes" ? (

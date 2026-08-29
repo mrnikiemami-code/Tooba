@@ -33,10 +33,17 @@ test("readOnly passes viewScope only", () => {
   assert.equal(screen.includes('readOnly={formMode.mode === "view" || viewScope}'), false);
 });
 
-test("translations tab has no deferred next-task copy", () => {
+test("translations tab has editable panel not deferred stub", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.equal(screen.includes("تسک بعدی"), false);
-  assert.match(screen, /عمومی و SEO/);
+  assert.match(screen, /ProductTranslationsPanel/);
+  assert.equal(screen.includes("این تب وضعیت ترجمهٔ هر locale را نشان می‌دهد"), false);
+});
+
+test("general edit includes full description field", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(screen, /product-edit-description/);
+  assert.match(screen, /description: activeDraft\.description\.trim/);
 });
 
 test("shell edit exit and mode badge", () => {

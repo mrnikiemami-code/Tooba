@@ -378,7 +378,13 @@ public sealed class ProductWorkspaceComposer
                 Field("full_description"),
                 Field("seo_title") ?? (loc.Equals("fa-IR", StringComparison.OrdinalIgnoreCase) ? product.SeoTitleSeam : null),
                 Field("seo_description"));
-        }).Where(t => !string.IsNullOrWhiteSpace(t.Name) || !string.IsNullOrWhiteSpace(t.Slug)).ToList();
+        }).Where(t =>
+            !string.IsNullOrWhiteSpace(t.Name)
+            || !string.IsNullOrWhiteSpace(t.Slug)
+            || !string.IsNullOrWhiteSpace(t.ShortDescription)
+            || !string.IsNullOrWhiteSpace(t.Description)
+            || !string.IsNullOrWhiteSpace(t.SeoTitle)
+            || !string.IsNullOrWhiteSpace(t.SeoDescription)).ToList();
 
         var shortDescription = localizedRows
             .FirstOrDefault(r => r.FieldKey == "short_description" && r.Locale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase))
@@ -615,6 +621,7 @@ public sealed class ProductWorkspaceComposer
         }
 
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
+        var isPrimaryLocale = locale.Equals("fa-IR", StringComparison.OrdinalIgnoreCase);
         var previousSlug = product.SlugSeam;
         var previousTitle = (await _catalog.LocalizedTexts.AsNoTracking()
             .FirstOrDefaultAsync(
@@ -623,18 +630,35 @@ public sealed class ProductWorkspaceComposer
                     && x.FieldKey == "name"
                     && x.Locale == locale,
                 cancellationToken))?.Value;
-        var slug = string.IsNullOrWhiteSpace(request.Slug)
-            ? CatalogCategorySlugNormalizer.SlugifyFromName(title)
-            : CatalogCategorySlugNormalizer.NormalizeSlug(request.Slug);
-        if (string.IsNullOrWhiteSpace(slug))
-        {
-            throw new PlatformHttpException(400, "نشانی صفحه نامعتبر است.", "workspace.product.slug.invalid");
-        }
 
-        if (await _catalog.Products.AsNoTracking()
-                .AnyAsync(x => x.ProductId != productId && x.SlugSeam == slug, cancellationToken))
+        // SlugSeam و SeoTitleSeam سراسری‌اند؛ فقط locale اصلی (fa-IR) آن‌ها را تغییر می‌دهد.
+        string slug;
+        if (isPrimaryLocale)
         {
-            throw new PlatformHttpException(409, "این نشانی صفحه قبلاً استفاده شده است.", "workspace.product.slug.duplicate");
+            slug = string.IsNullOrWhiteSpace(request.Slug)
+                ? CatalogCategorySlugNormalizer.SlugifyFromName(title)
+                : CatalogCategorySlugNormalizer.NormalizeSlug(request.Slug);
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                throw new PlatformHttpException(400, "نشانی صفحه نامعتبر است.", "workspace.product.slug.invalid");
+            }
+
+            if (await _catalog.Products.AsNoTracking()
+                    .AnyAsync(x => x.ProductId != productId && x.SlugSeam == slug, cancellationToken))
+            {
+                throw new PlatformHttpException(409, "این نشانی صفحه قبلاً استفاده شده است.", "workspace.product.slug.duplicate");
+            }
+        }
+        else
+        {
+            slug = product.SlugSeam ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                throw new PlatformHttpException(
+                    400,
+                    "ابتدا نشانی صفحهٔ محصول را در تب عمومی ذخیره کنید.",
+                    "workspace.product.slug.missing");
+            }
         }
 
         await UpsertLocalizedTextAsync(productId, "name", locale, title, cancellationToken);
@@ -643,7 +667,15 @@ public sealed class ProductWorkspaceComposer
         await UpsertLocalizedTextAsync(productId, "seo_title", locale, request.SeoTitle, cancellationToken);
         await UpsertLocalizedTextAsync(productId, "seo_description", locale, request.SeoDescription, cancellationToken);
 
-        product.TouchDescriptiveSeams(slug, request.SeoTitle?.Trim(), product.BrandId, DateTimeOffset.UtcNow);
+        if (isPrimaryLocale)
+        {
+            product.TouchDescriptiveSeams(slug, request.SeoTitle?.Trim(), product.BrandId, DateTimeOffset.UtcNow);
+        }
+        else
+        {
+            // فقط UpdatedAt را برای concurrency جلو می‌بریم؛ seam سراسری دست‌نخورده می‌ماند.
+            product.TouchDescriptiveSeams(product.SlugSeam, product.SeoTitleSeam, product.BrandId, DateTimeOffset.UtcNow);
+        }
         await _catalog.SaveChangesAsync(cancellationToken);
 
         var beforeBits = new List<string>();
@@ -660,14 +692,15 @@ public sealed class ProductWorkspaceComposer
             afterBits.Add($"نشانی: {slug}");
         }
 
-        var isLocalizedOnly = string.Equals(previousTitle, title, StringComparison.Ordinal)
-            && string.Equals(previousSlug, slug, StringComparison.Ordinal);
+        var isLocalizedOnly = !isPrimaryLocale
+            || (string.Equals(previousTitle, title, StringComparison.Ordinal)
+                && string.Equals(previousSlug, slug, StringComparison.Ordinal));
         await _catalogDirectory.AppendProductHistoryAsync(
             productId,
             isLocalizedOnly
                 ? ProductHistoryRules.EventLocalizedChanged
                 : ProductHistoryRules.EventGeneralChanged,
-            ProductHistoryRules.SectionGeneral,
+            isLocalizedOnly ? ProductHistoryRules.SectionTranslations : ProductHistoryRules.SectionGeneral,
             isLocalizedOnly
                 ? ProductHistoryRules.SummaryLocalizedFa
                 : ProductHistoryRules.SummaryGeneralFa,

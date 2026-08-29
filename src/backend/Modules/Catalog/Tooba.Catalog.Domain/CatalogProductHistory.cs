@@ -84,6 +84,8 @@ public static class ProductHistoryRules
 {
     /// <summary>بخش عمومی.</summary>
     public const string SectionGeneral = "general";
+    /// <summary>بخش ترجمه‌ها / محتوای محلی.</summary>
+    public const string SectionTranslations = "translations";
     /// <summary>بخش دسته‌بندی.</summary>
     public const string SectionCategory = "category";
     /// <summary>بخش ویژگی‌ها.</summary>
@@ -157,6 +159,7 @@ public static class ProductHistoryRules
         section switch
         {
             SectionGeneral => "عمومی",
+            SectionTranslations => "ترجمه‌ها",
             SectionCategory => "دسته‌بندی",
             SectionAttributes => "ویژگی‌ها",
             SectionVariants => "تنوع‌ها",
