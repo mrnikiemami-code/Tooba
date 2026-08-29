@@ -24,9 +24,10 @@ test("AppCategoryTree wraps antd Tree without exporting Ant types to pages", () 
   assert.equal(screen.includes('from "antd"'), false);
   assert.equal(screen.includes("AgGridReact"), false);
   assert.equal(screen.includes("این بخش در تسک بعدی تکمیل می‌شود"), false);
-  // media progressive placeholder may still include به‌زودی; ComingSoon tab stubs must not
   assert.equal(screen.includes("category-tab-coming-soon"), false);
-  assert.match(screen, /انتخاب رسانه — به‌زودی/);
+  assert.equal(screen.includes("انتخاب رسانه — به‌زودی"), false);
+  assert.equal(screen.includes("به‌زودی"), false);
+  assert.match(screen, /MediaStatusCard/);
 
   const index = fs.readFileSync(path.join(root, "design-system/index.ts"), "utf8");
   assert.match(index, /AppCategoryTree/);

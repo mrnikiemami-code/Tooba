@@ -1,4 +1,4 @@
-# TB-P07-T022 — Deferred gaps
+# TB-P07-T022 / T022-R1 — Deferred gaps
 
 ## Hidden / deferred Category Workspace tabs
 
@@ -10,9 +10,11 @@
 
 These are **not** shown as به‌زودی stubs. Visible = functional.
 
-## Progressive placeholders retained (out of tab nav)
+## Category media picker (T022-R1)
 
-- Category media pickers still show progressive «انتخاب رسانه — به‌زودی» (media upload not in this task scope).
+- Fake «انتخاب رسانه — به‌زودی» CTA **removed**.
+- UI shows **read-only** connected/not-connected status for تصویر/آیکن only.
+- Functional Media DAM picker deferred until existing Media contract can be reused safely (no new DAM).
 
 ## Mega-menu standalone nav route
 

@@ -89,10 +89,12 @@ test("parent selector is searchable path/name without raw ID labels", () => {
   assert.equal(screen.includes("option value={opt.id"), false);
 });
 
-test("media uses clean به‌زودی placeholder without fake upload", () => {
+test("media is read-only status only — no به‌زودی picker CTA", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
-  assert.match(screen, /MediaPlaceholder/);
-  assert.match(screen, /انتخاب رسانه — به‌زودی/);
+  assert.match(screen, /MediaStatusCard/);
+  assert.equal(screen.includes("MediaPlaceholder"), false);
+  assert.equal(screen.includes("انتخاب رسانه — به‌زودی"), false);
+  assert.equal(screen.includes("به‌زودی"), false);
   assert.equal(screen.includes("type=\"file\""), false);
   assert.equal(screen.includes("FormData"), false);
 });
@@ -294,8 +296,7 @@ test("visible category tabs are functional — products real; seo/settings/histo
   assert.equal(screen.includes("ComingSoonPanel"), false);
   assert.equal(screen.includes("category-tab-coming-soon"), false);
   assert.equal(screen.includes("این بخش در تسک بعدی تکمیل می‌شود"), false);
-  // media progressive placeholder may still say به‌زودی; tab stubs must not
-  assert.equal(/category-tab-[\w-]+[\s\S]{0,80}به‌زودی/.test(screen), false);
+  assert.equal(screen.includes("به‌زودی"), false);
 });
 
 test("mobile layout markers present", () => {

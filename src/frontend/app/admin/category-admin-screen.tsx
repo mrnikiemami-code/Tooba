@@ -323,25 +323,22 @@ function readinessChipClass(readiness: TranslationReadiness): string {
   return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
 }
 
-function MediaPlaceholder({
+/** وضعیت رسانهٔ رده — فقط خواندنی؛ picker تا زیرساخت Media آماده نشود در UI عادی نیست. */
+function MediaStatusCard({
   label,
   connected,
-  editable,
 }: {
   label: string;
   connected: boolean;
-  editable?: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4" data-testid={`category-media-${label}`}>
       <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="mt-3 flex h-28 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-gray-200 bg-slate-50 text-sm text-slate-400">
+      <div
+        className="mt-3 flex h-28 flex-col items-center justify-center gap-1 rounded-xl border border-gray-100 bg-slate-50 text-sm text-slate-600"
+        data-testid={`category-media-status-${label}`}
+      >
         <span>{connected ? `${label} متصل است` : `هنوز ${label}ی تنظیم نشده`}</span>
-        {editable ? (
-          <span className="text-xs text-slate-400" data-testid={`category-media-soon-${label}`}>
-            انتخاب رسانه — به‌زودی
-          </span>
-        ) : null}
       </div>
     </div>
   );
@@ -517,8 +514,8 @@ function GeneralViewSummary({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <MediaPlaceholder label="تصویر" connected={Boolean(workspace.imageMediaAssetId)} />
-        <MediaPlaceholder label="آیکن" connected={Boolean(workspace.iconMediaAssetId)} />
+        <MediaStatusCard label="تصویر" connected={Boolean(workspace.imageMediaAssetId)} />
+        <MediaStatusCard label="آیکن" connected={Boolean(workspace.iconMediaAssetId)} />
       </div>
     </div>
   );
@@ -645,8 +642,8 @@ function GeneralEditForm({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <MediaPlaceholder label="تصویر" connected={imageConnected} editable />
-        <MediaPlaceholder label="آیکن" connected={iconConnected} editable />
+        <MediaStatusCard label="تصویر" connected={imageConnected} />
+        <MediaStatusCard label="آیکن" connected={iconConnected} />
       </div>
 
       <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 bg-white/95 py-4 backdrop-blur">
