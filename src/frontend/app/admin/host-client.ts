@@ -6,6 +6,8 @@ import type { ProductSeoDetail, ProductSeoReadiness } from "./product-seo-panel-
 import { mapSeoDetail, mapSeoReadiness } from "./product-seo-panel-model.ts";
 import type { ProductPublishReadiness } from "./product-publishing-panel-model.ts";
 import { mapPublishReadiness } from "./product-publishing-panel-model.ts";
+import type { ProductHistoryPage } from "./product-history-panel-model.ts";
+import { mapProductHistoryPage } from "./product-history-panel-model.ts";
 
 /**
  * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
@@ -222,11 +224,31 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
       kind: asString(readProp(row, "kind", "Kind")),
       summary: asString(readProp(row, "summary", "Summary")),
       at: asString(readProp(row, "at", "At")),
+      actor: readProp(row, "actor", "Actor") == null ? undefined : asString(readProp(row, "actor", "Actor")),
+      section: readProp(row, "section", "Section") == null ? undefined : asString(readProp(row, "section", "Section")),
+      beforeSummary:
+        readProp(row, "beforeSummary", "BeforeSummary") == null
+          ? undefined
+          : asString(readProp(row, "beforeSummary", "BeforeSummary")),
+      afterSummary:
+        readProp(row, "afterSummary", "AfterSummary") == null
+          ? undefined
+          : asString(readProp(row, "afterSummary", "AfterSummary")),
     })),
     audit: asRecordArray(readProp(item, "audit", "Audit")).map((row) => ({
       kind: asString(readProp(row, "kind", "Kind")),
       summary: asString(readProp(row, "summary", "Summary")),
       at: asString(readProp(row, "at", "At")),
+      actor: readProp(row, "actor", "Actor") == null ? undefined : asString(readProp(row, "actor", "Actor")),
+      section: readProp(row, "section", "Section") == null ? undefined : asString(readProp(row, "section", "Section")),
+      beforeSummary:
+        readProp(row, "beforeSummary", "BeforeSummary") == null
+          ? undefined
+          : asString(readProp(row, "beforeSummary", "BeforeSummary")),
+      afterSummary:
+        readProp(row, "afterSummary", "AfterSummary") == null
+          ? undefined
+          : asString(readProp(row, "afterSummary", "AfterSummary")),
     })),
     permissions: {
       canView: asBoolean(readProp(permissionsRaw, "canView", "CanView"), true),
@@ -715,6 +737,42 @@ export async function getAdminProductPublishReadiness(
       return { ok: false, message: "پاسخ آمادگی انتشار نامعتبر است" };
     }
     return { ok: true, readiness };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** صفحهٔ تاریخچهٔ محصول برای تب تاریخچه Workspace. */
+export async function getAdminProductHistory(
+  productId: string,
+  opts?: { skip?: number; take?: number; section?: string; viewScope?: boolean },
+): Promise<{ ok: true; page: ProductHistoryPage } | { ok: false; message: string }> {
+  try {
+    const headers = adminHeaders();
+    if (opts?.viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const q = new URLSearchParams({
+      skip: String(opts?.skip ?? 0),
+      take: String(opts?.take ?? 50),
+    });
+    const section = opts?.section?.trim();
+    if (section) {
+      q.set("section", section);
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/history?${q}`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const page = mapProductHistoryPage(await response.json());
+    if (!page) {
+      return { ok: false, message: "پاسخ تاریخچه نامعتبر است" };
+    }
+    return { ok: true, page };
   } catch {
     return { ok: false, message: "اتصال به Host برقرار نیست" };
   }

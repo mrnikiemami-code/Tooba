@@ -9,6 +9,7 @@ import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductPublishingPanel } from "./product-publishing-panel";
+import { ProductHistoryPanel } from "./product-history-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   assignAdminProductCategory,
@@ -709,23 +710,9 @@ export function ProductWorkspaceScreen({
         ) : null}
 
         {sectionId === "history" ? (
-          <ol className="space-y-3 border-s-2 border-border ps-4" data-testid="product-history-placeholder">
-            {view.activity.length === 0 && view.audit.length === 0 ? (
-              <li className="text-sm text-muted">تاریخچه هنوز خالی است.</li>
-            ) : null}
-            {view.activity.map((item) => (
-              <li key={`${item.summary}:${item.at}`}>
-                <p className="font-medium">{item.summary}</p>
-                <p className="text-sm text-muted">عملیات · {item.at}</p>
-              </li>
-            ))}
-            {view.audit.map((item) => (
-              <li key={`${item.summary}-audit`}>
-                <p className="font-medium">{item.summary}</p>
-                <p className="text-sm text-muted">حسابرسی · {item.at}</p>
-              </li>
-            ))}
-          </ol>
+          <Card data-testid="admin-product-history">
+            <ProductHistoryPanel productId={view.productId} viewScope={viewScope} />
+          </Card>
         ) : null}
       </WorkspaceShell>
     </div>

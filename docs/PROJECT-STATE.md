@@ -46,13 +46,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T018
+TB-P07-T019
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T018
+TB-P07-T019
 ```
 
 Current Gate:
@@ -753,4 +753,4 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
-Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 = Product publishing lifecycle + aggregate Catalog readiness (`docs/catalog/PRODUCT-PUBLISHING.md`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.
+Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 / T018-R1 = ACCEPTED (publishing lifecycle). TB-P07-T019 = Product History / Audit (`docs/catalog/PRODUCT-HISTORY.md`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.

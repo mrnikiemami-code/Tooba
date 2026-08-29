@@ -108,6 +108,11 @@ public sealed class CatalogDbContext : DbContext
     public DbSet<CatalogProductVariantAxis> ProductVariantAxes => Set<CatalogProductVariantAxis>();
 
     /// <summary>
+    /// تاریخچهٔ append-only محصول.
+    /// </summary>
+    public DbSet<CatalogProductHistoryEntry> ProductHistoryEntries => Set<CatalogProductHistoryEntry>();
+
+    /// <summary>
     /// Outbox همین ماژول برای تصویر Search آینده.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -285,6 +290,25 @@ public sealed class CatalogDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.DefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogProductHistoryEntry>(entity =>
+        {
+            entity.ToTable("product_history_entries");
+            entity.HasKey(x => x.HistoryId);
+            entity.Property(x => x.HistoryId).ValueGeneratedNever();
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Section).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SummaryFa).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.BeforeSummary).HasMaxLength(512);
+            entity.Property(x => x.AfterSummary).HasMaxLength(512);
+            entity.Property(x => x.ActorDisplayName).HasMaxLength(256);
+            entity.HasIndex(x => new { x.ProductId, x.OccurredAt });
+            entity.HasIndex(x => new { x.ProductId, x.Section, x.OccurredAt });
+            entity.HasOne<CatalogProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<CatalogLocalizedText>(entity =>

@@ -31,6 +31,7 @@ public static class CatalogAttributeEndpoints
         categories.MapPut("/bindings/order", ReorderBindingsAsync);
 
         var products = app.MapGroup("/v1/admin/catalog/products/{productId:guid}");
+        products.AddEndpointFilter(CatalogActorHttpBinding.BindAsync);
         products.MapGet("/attributes", GetProductAttributeEditorStateAsync);
         products.MapPut("/attributes", SetProductAttributesAsync);
         products.MapGet("/attributes/readiness", GetProductAttributeReadinessAsync);

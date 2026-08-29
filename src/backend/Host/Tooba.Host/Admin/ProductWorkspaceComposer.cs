@@ -400,8 +400,8 @@ public sealed class ProductWorkspaceComposer
             stockViews,
             new ProductSeoView(product.SlugSeam, product.SeoTitleSeam, ""),
             publication,
-            [new ProductHistoryItem("activity", "محصول از فهرست کاتالوگ باز شد.", product.UpdatedAt)],
-            [new ProductHistoryItem("audit", "آخرین ذخیرهٔ مشخصات کاتالوگ ثبت شد.", product.UpdatedAt)],
+            await BuildHistoryShellListsAsync(productId, cancellationToken),
+            await BuildHistoryShellListsAsync(productId, cancellationToken, auditOnly: true),
             permissions,
             product.UpdatedAt,
             warnings,
@@ -413,6 +413,82 @@ public sealed class ProductWorkspaceComposer
             translations,
             isPrimaryCategoryAssignable);
     }
+
+    /// <summary>
+    /// صفحهٔ تاریخچهٔ محصول برای تب تاریخچه (append-only، Catalog-only).
+    /// </summary>
+    public async Task<ProductHistoryPageView> GetHistoryPageAsync(
+        Guid productId,
+        string? section,
+        int skip,
+        int take,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanView)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        if (!await _catalog.Products.AsNoTracking().AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        }
+
+        try
+        {
+            var page = await _catalogDirectory.ListProductHistoryAsync(
+                productId, section, skip, take, cancellationToken);
+            return new ProductHistoryPageView(
+                page.Items.Select(ToHistoryItemView).ToList(),
+                page.TotalCount,
+                page.Skip,
+                page.Take);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        }
+    }
+
+    private async Task<IReadOnlyList<ProductHistoryItem>> BuildHistoryShellListsAsync(
+        Guid productId,
+        CancellationToken cancellationToken,
+        bool auditOnly = false)
+    {
+        try
+        {
+            var page = await _catalogDirectory.ListProductHistoryAsync(
+                productId, section: null, skip: 0, take: 20, cancellationToken);
+            var rows = auditOnly
+                ? page.Items.Where(x => x.Section is "lifecycle" or "seo" or "category").ToList()
+                : page.Items.ToList();
+            return rows.Select(x => new ProductHistoryItem(
+                auditOnly ? "audit" : "activity",
+                x.SummaryFa,
+                x.OccurredAt,
+                x.ActorDisplayName,
+                x.SectionLabelFa,
+                x.BeforeSummary,
+                x.AfterSummary)).ToList();
+        }
+        catch (InvalidOperationException)
+        {
+            return [];
+        }
+    }
+
+    private static ProductHistoryItemView ToHistoryItemView(ProductHistoryEntryDto row) =>
+        new(
+            row.HistoryId,
+            row.EventType,
+            row.Section,
+            row.SectionLabelFa,
+            row.SummaryFa,
+            row.BeforeSummary,
+            row.AfterSummary,
+            row.ActorDisplayName,
+            row.OccurredAt);
 
     private async Task<string> BuildCategoryPathAsync(Guid categoryId, CancellationToken cancellationToken)
     {
@@ -539,6 +615,14 @@ public sealed class ProductWorkspaceComposer
         }
 
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
+        var previousSlug = product.SlugSeam;
+        var previousTitle = (await _catalog.LocalizedTexts.AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                    && x.OwnerId == productId
+                    && x.FieldKey == "name"
+                    && x.Locale == locale,
+                cancellationToken))?.Value;
         var slug = string.IsNullOrWhiteSpace(request.Slug)
             ? CatalogCategorySlugNormalizer.SlugifyFromName(title)
             : CatalogCategorySlugNormalizer.NormalizeSlug(request.Slug);
@@ -561,6 +645,35 @@ public sealed class ProductWorkspaceComposer
 
         product.TouchDescriptiveSeams(slug, request.SeoTitle?.Trim(), product.BrandId, DateTimeOffset.UtcNow);
         await _catalog.SaveChangesAsync(cancellationToken);
+
+        var beforeBits = new List<string>();
+        var afterBits = new List<string>();
+        if (!string.Equals(previousTitle, title, StringComparison.Ordinal))
+        {
+            beforeBits.Add($"عنوان: {previousTitle ?? "—"}");
+            afterBits.Add($"عنوان: {title}");
+        }
+
+        if (!string.Equals(previousSlug, slug, StringComparison.Ordinal))
+        {
+            beforeBits.Add($"نشانی: {previousSlug ?? "—"}");
+            afterBits.Add($"نشانی: {slug}");
+        }
+
+        var isLocalizedOnly = string.Equals(previousTitle, title, StringComparison.Ordinal)
+            && string.Equals(previousSlug, slug, StringComparison.Ordinal);
+        await _catalogDirectory.AppendProductHistoryAsync(
+            productId,
+            isLocalizedOnly
+                ? ProductHistoryRules.EventLocalizedChanged
+                : ProductHistoryRules.EventGeneralChanged,
+            ProductHistoryRules.SectionGeneral,
+            isLocalizedOnly
+                ? ProductHistoryRules.SummaryLocalizedFa
+                : ProductHistoryRules.SummaryGeneralFa,
+            beforeBits.Count == 0 ? null : string.Join(" · ", beforeBits),
+            afterBits.Count == 0 ? null : string.Join(" · ", afterBits),
+            cancellationToken);
         return (await GetAsync(productId, permissions, cancellationToken))!;
     }
 
@@ -712,6 +825,14 @@ public sealed class ProductWorkspaceComposer
 
         product.UpdatedAt = DateTimeOffset.UtcNow;
         await _catalog.SaveChangesAsync(cancellationToken);
+        await _catalogDirectory.AppendProductHistoryAsync(
+            productId,
+            ProductHistoryRules.EventLocalizedChanged,
+            ProductHistoryRules.SectionGeneral,
+            ProductHistoryRules.SummaryLocalizedFa,
+            null,
+            title.Trim(),
+            cancellationToken);
         return (await GetAsync(productId, permissions, cancellationToken))!;
     }
 

@@ -22,14 +22,16 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
 {
     private readonly CatalogDbContext _db;
     private readonly ICatalogUseCaseGuard _guard;
+    private readonly ICatalogActorContext? _actor;
 
     /// <summary>
     /// دایرکتوری را به DbContext Tenant-aware وصل می‌کند.
     /// </summary>
-    public CatalogDirectory(CatalogDbContext db, ICatalogUseCaseGuard guard)
+    public CatalogDirectory(CatalogDbContext db, ICatalogUseCaseGuard guard, ICatalogActorContext? actor = null)
     {
         _db = db;
         _guard = guard;
+        _actor = actor;
     }
 
     /// <inheritdoc />
@@ -1358,6 +1360,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         product.BrandId = brandId;
         _db.Products.Add(product);
         AddLocalizedNames(CatalogLocalizedOwnerKind.Product, product.ProductId, localizedNames);
+        QueueProductHistory(
+            product.ProductId,
+            ProductHistoryRules.EventCreated,
+            ProductHistoryRules.SectionGeneral,
+            ProductHistoryRules.SummaryCreatedFa,
+            null,
+            product.SlugSeam);
         await _db.SaveChangesAsync(cancellationToken);
         return new ProductReference(product.ProductId, product.Kind, product.Status);
     }
@@ -1424,6 +1433,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await EnsureAssignableProductCategoryAsync(categoryId, cancellationToken);
 
         _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, categoryId));
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventCategoryChanged,
+            ProductHistoryRules.SectionCategory,
+            ProductHistoryRules.SummaryCategoryFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -1471,6 +1487,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         _db.MediaReferences.Add(link);
         EnforcePrimaryUniqueness(existing);
         TouchProductUpdatedAt(productId);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventMediaChanged,
+            ProductHistoryRules.SectionMedia,
+            ProductHistoryRules.SummaryMediaFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -1533,6 +1556,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
 
         EnforcePrimaryUniqueness(media);
         TouchProductUpdatedAt(productId);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventMediaChanged,
+            ProductHistoryRules.SectionMedia,
+            ProductHistoryRules.SummaryMediaFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -1557,6 +1587,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         }
 
         TouchProductUpdatedAt(productId);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventMediaChanged,
+            ProductHistoryRules.SectionMedia,
+            ProductHistoryRules.SummaryMediaPrimaryFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -1596,6 +1633,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         media.Remove(row);
         EnforcePrimaryUniqueness(media);
         TouchProductUpdatedAt(productId);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventMediaChanged,
+            ProductHistoryRules.SectionMedia,
+            ProductHistoryRules.SummaryMediaFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -1688,6 +1732,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
 
         product.SlugSeam = slug;
         product.UpdatedAt = now;
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventSeoChanged,
+            ProductHistoryRules.SectionSeo,
+            ProductHistoryRules.SummarySeoFa,
+            null,
+            slug);
         await _db.SaveChangesAsync(cancellationToken);
 
         return await GetProductSeoAsync(productId, locale, cancellationToken);
@@ -2085,6 +2136,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 await ApplyProductAttributeValueAsync(productId, input, cancellationToken);
             }
 
+            QueueProductHistory(
+                productId,
+                ProductHistoryRules.EventAttributesChanged,
+                ProductHistoryRules.SectionAttributes,
+                ProductHistoryRules.SummaryAttributesFa,
+                null,
+                null);
             await _db.SaveChangesAsync(cancellationToken);
             await tx.CommitAsync(cancellationToken);
         }
@@ -2528,6 +2586,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 EnforceSingleDefault(variants, now);
             }
 
+            QueueProductHistory(
+                productId,
+                ProductHistoryRules.EventVariantsChanged,
+                ProductHistoryRules.SectionVariants,
+                ProductHistoryRules.SummaryVariantsFa,
+                null,
+                null);
             await _db.SaveChangesAsync(cancellationToken);
             await tx.CommitAsync(cancellationToken);
 
@@ -2795,6 +2860,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
         _db.ProductCategories.RemoveRange(existing);
         _db.ProductCategories.Add(CatalogProductCategory.Assign(productId, newCategoryId));
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventCategoryChanged,
+            ProductHistoryRules.SectionCategory,
+            ProductHistoryRules.SummaryCategoryFa,
+            null,
+            null);
         await _db.SaveChangesAsync(cancellationToken);
         return impact;
     }
@@ -2958,6 +3030,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         }
 
         product.Publish(DateTimeOffset.UtcNow);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventPublished,
+            ProductHistoryRules.SectionLifecycle,
+            ProductHistoryRules.SummaryPublishedFa,
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft),
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Published));
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -2967,6 +3046,13 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.Unpublish(DateTimeOffset.UtcNow);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventUnpublished,
+            ProductHistoryRules.SectionLifecycle,
+            ProductHistoryRules.SummaryUnpublishedFa,
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Published),
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft));
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -2975,7 +3061,15 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        var before = ProductPublishRules.LifecycleLabelFa(product.Status);
         product.Archive(DateTimeOffset.UtcNow);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventArchived,
+            ProductHistoryRules.SectionLifecycle,
+            ProductHistoryRules.SummaryArchivedFa,
+            before,
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Archived));
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -2985,8 +3079,103 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.RestoreFromArchive(DateTimeOffset.UtcNow);
+        QueueProductHistory(
+            productId,
+            ProductHistoryRules.EventRestored,
+            ProductHistoryRules.SectionLifecycle,
+            ProductHistoryRules.SummaryRestoredFa,
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Archived),
+            ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft));
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<ProductHistoryPage> ListProductHistoryAsync(
+        Guid productId,
+        string? section,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        skip = Math.Max(0, skip);
+        take = Math.Clamp(take <= 0 ? 50 : take, 1, 100);
+        var query = _db.ProductHistoryEntries.AsNoTracking().Where(x => x.ProductId == productId);
+        if (!string.IsNullOrWhiteSpace(section))
+        {
+            var normalized = section.Trim();
+            query = query.Where(x => x.Section == normalized);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenByDescending(x => x.HistoryId)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return new ProductHistoryPage(rows.Select(ToHistoryDto).ToList(), total, skip, take);
+    }
+
+    /// <inheritdoc />
+    public async Task AppendProductHistoryAsync(
+        Guid productId,
+        string eventType,
+        string section,
+        string summaryFa,
+        string? beforeSummary,
+        string? afterSummary,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        QueueProductHistory(productId, eventType, section, summaryFa, beforeSummary, afterSummary);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private void QueueProductHistory(
+        Guid productId,
+        string eventType,
+        string section,
+        string summaryFa,
+        string? beforeSummary,
+        string? afterSummary)
+    {
+        _db.ProductHistoryEntries.Add(CatalogProductHistoryEntry.Create(
+            productId,
+            eventType,
+            section,
+            summaryFa,
+            DateTimeOffset.UtcNow,
+            _actor?.ActorUserId,
+            _actor?.ActorDisplayName,
+            beforeSummary,
+            afterSummary));
+    }
+
+    private static ProductHistoryEntryDto ToHistoryDto(CatalogProductHistoryEntry row) =>
+        new(
+            row.HistoryId,
+            row.ProductId,
+            row.EventType,
+            row.Section,
+            ProductHistoryRules.SectionLabelFa(row.Section),
+            row.SummaryFa,
+            row.BeforeSummary,
+            row.AfterSummary,
+            row.ActorUserId,
+            string.IsNullOrWhiteSpace(row.ActorDisplayName)
+                ? ProductHistoryRules.ActorSystemFa
+                : row.ActorDisplayName!,
+            row.OccurredAt);
 
     private async Task<bool> IsProductPrimaryCategoryAssignableAsync(
         Guid productId,

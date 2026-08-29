@@ -579,6 +579,28 @@ public interface ICatalogDirectory
     Task RestoreProductAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// فهرست تاریخچهٔ محصول (جدیدترین اول) با صفحه‌بندی قطعی.
+    /// </summary>
+    Task<ProductHistoryPage> ListProductHistoryAsync(
+        Guid productId,
+        string? section,
+        int skip,
+        int take,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ثبت صریح یک رویداد تاریخچه (برای مسیرهای Host که همین SaveChanges را ندارند).
+    /// </summary>
+    Task AppendProductHistoryAsync(
+        Guid productId,
+        string eventType,
+        string section,
+        string summaryFa,
+        string? beforeSummary,
+        string? afterSummary,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// رده را برای ناوبری منتشر می‌کند. رده منتشرنشده در سطوح عمومی دیده نمی‌شود،
     /// اما انتشار رده هیچ قابلیت خریدی نمی‌سازد؛ قیمت و موجودی بیرون از Catalog می‌مانند.
     /// </summary>
@@ -872,6 +894,27 @@ public sealed record ProductPublishReadiness(
     bool SeoReady,
     IReadOnlyList<ProductPublishMissingRequirement> MissingRequirements,
     string MessageFa);
+
+/// <summary>یک ردیف تاریخچهٔ انسانی محصول برای Admin.</summary>
+public sealed record ProductHistoryEntryDto(
+    Guid HistoryId,
+    Guid ProductId,
+    string EventType,
+    string Section,
+    string SectionLabelFa,
+    string SummaryFa,
+    string? BeforeSummary,
+    string? AfterSummary,
+    Guid? ActorUserId,
+    string ActorDisplayName,
+    DateTimeOffset OccurredAt);
+
+/// <summary>صفحهٔ تاریخچهٔ محصول.</summary>
+public sealed record ProductHistoryPage(
+    IReadOnlyList<ProductHistoryEntryDto> Items,
+    int TotalCount,
+    int Skip,
+    int Take);
 
 /// <summary>جزئیات SEO محصول برای Admin و پیش‌نمایش مسیر عمومی.</summary>
 public sealed record ProductSeoDetail(

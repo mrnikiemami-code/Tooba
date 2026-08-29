@@ -94,6 +94,8 @@ public sealed class StoryFoundationTests : IAsyncLifetime
             await directory.GetPublicStoriesAsync(tenantId, "fa", null, now, CancellationToken.None),
             story => story.StoryId == draft.StoryId);
 
+        // AdminSetScheduleAsync ارزیابی وضعیت را با DateTimeOffset.UtcNow انجام می‌دهد؛ بازه را نسبت به ساعت واقعی ببند.
+        var clock = DateTimeOffset.UtcNow;
         var scheduled = await directory.AdminCreateAsync(
             tenantId,
             new CreateStoryCommand("آینده", "fa", null, null, "/images/stories/1.jpg", null, "none", null),
@@ -101,7 +103,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         scheduled = await directory.AdminSetScheduleAsync(
             tenantId,
             scheduled.StoryId,
-            new SetStoryScheduleCommand(now.AddDays(2), now.AddDays(5)),
+            new SetStoryScheduleCommand(clock.AddDays(2), clock.AddDays(5)),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Scheduled, scheduled.Status);
         Assert.DoesNotContain(
@@ -115,7 +117,7 @@ public sealed class StoryFoundationTests : IAsyncLifetime
         expired = await directory.AdminSetScheduleAsync(
             tenantId,
             expired.StoryId,
-            new SetStoryScheduleCommand(now.AddDays(-5), now.AddDays(-1)),
+            new SetStoryScheduleCommand(clock.AddDays(-5), clock.AddDays(-1)),
             CancellationToken.None);
         Assert.Equal(StoryStatus.Expired, expired.Status);
         Assert.DoesNotContain(

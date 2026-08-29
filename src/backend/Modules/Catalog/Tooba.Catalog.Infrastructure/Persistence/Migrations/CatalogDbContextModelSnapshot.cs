@@ -638,6 +638,69 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                     b.ToTable("product_media_references", "catalog");
                 });
 
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductHistoryEntry", b =>
+                {
+                    b.Property<Guid>("HistoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("history_id");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("ActorDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("actor_display_name");
+
+                    b.Property<string>("AfterSummary")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("after_summary");
+
+                    b.Property<string>("BeforeSummary")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("before_summary");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("section");
+
+                    b.Property<string>("SummaryFa")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("summary_fa");
+
+                    b.HasKey("HistoryId")
+                        .HasName("pk_product_history_entries");
+
+                    b.HasIndex("ProductId", "OccurredAt")
+                        .HasDatabaseName("ix_product_history_entries_product_id_occurred_at");
+
+                    b.HasIndex("ProductId", "Section", "OccurredAt")
+                        .HasDatabaseName("ix_product_history_entries_product_id_section_occurred_at");
+
+                    b.ToTable("product_history_entries", "catalog");
+                });
+
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductVariantAxis", b =>
                 {
                     b.Property<Guid>("AxisId")
@@ -948,6 +1011,16 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_product_categories_products_product_id");
+                });
+
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductHistoryEntry", b =>
+                {
+                    b.HasOne("Tooba.Catalog.Domain.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_history_entries_products_product_id");
                 });
 
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductVariantAxis", b =>

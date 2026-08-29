@@ -180,7 +180,33 @@ public sealed record ProductPublishReadinessView(
     string MessageFa);
 
 /// <summary>رویداد Activity یا Audit.</summary>
-public sealed record ProductHistoryItem(string Kind, string Summary, DateTimeOffset At);
+public sealed record ProductHistoryItem(
+    string Kind,
+    string Summary,
+    DateTimeOffset At,
+    string Actor = "سیستم",
+    string? Section = null,
+    string? BeforeSummary = null,
+    string? AfterSummary = null);
+
+/// <summary>صفحهٔ تاریخچهٔ محصول برای تب تاریخچه.</summary>
+public sealed record ProductHistoryPageView(
+    IReadOnlyList<ProductHistoryItemView> Items,
+    int TotalCount,
+    int Skip,
+    int Take);
+
+/// <summary>ردیف تاریخچهٔ انسانی محصول.</summary>
+public sealed record ProductHistoryItemView(
+    Guid HistoryId,
+    string EventType,
+    string Section,
+    string SectionLabelFa,
+    string SummaryFa,
+    string? BeforeSummary,
+    string? AfterSummary,
+    string ActorDisplayName,
+    DateTimeOffset OccurredAt);
 
 /// <summary>بدنهٔ افزودن مرجع رسانه.</summary>
 public sealed record AdminProductMediaAttachRequest(Guid MediaAssetId, string? AltText);

@@ -27,6 +27,7 @@ public sealed class CatalogModule : IToobaModule
 
         services.AddSingleton<IOutboxModuleRegistration, CatalogOutboxRegistration>();
         services.AddScoped<ICatalogUseCaseGuard, OpenCatalogUseCaseGuard>();
+        services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
         services.AddDbContext<CatalogDbContext>((sp, options) =>

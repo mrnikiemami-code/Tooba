@@ -88,8 +88,24 @@ export interface ProductWorkspaceView {
     statusUpdatedAt?: string | null;
     aggregateReadiness?: ProductPublishReadiness | null;
   };
-  activity: { kind: string; summary: string; at: string }[];
-  audit: { kind: string; summary: string; at: string }[];
+  activity: {
+    kind: string;
+    summary: string;
+    at: string;
+    actor?: string;
+    section?: string | null;
+    beforeSummary?: string | null;
+    afterSummary?: string | null;
+  }[];
+  audit: {
+    kind: string;
+    summary: string;
+    at: string;
+    actor?: string;
+    section?: string | null;
+    beforeSummary?: string | null;
+    afterSummary?: string | null;
+  }[];
   permissions: ProductWorkspacePermissions;
   catalogUpdatedAt: string;
   readinessWarnings: string[];

@@ -1,7 +1,7 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 / TB-P07-T018 · **Phase:** P07 Advanced Catalog
-> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md), [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md)
+> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 / TB-P07-T018 / TB-P07-T019 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md), [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md), [PRODUCT-HISTORY.md](./PRODUCT-HISTORY.md)
 
 ## Product Master ownership
 
@@ -60,7 +60,7 @@ Locked Admin form pattern via `useAdminFormMode`:
 | رسانه | **Implemented** — gallery + primary + readiness (T014); Media library / binary upload deferred |
 | SEO | **Implemented** — localized title/description + global SlugSeam + readiness + SERP preview (T017); see [PRODUCT-SEO.md](./PRODUCT-SEO.md) |
 | انتشار | **Implemented** — aggregate Catalog publish readiness + Draft/Published/Archived lifecycle (T018); see [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md) |
-| تاریخچه | Shell |
+| تاریخچه | **Implemented** — append-only Product history timeline (T019); see [PRODUCT-HISTORY.md](./PRODUCT-HISTORY.md) |
 
 ## Translation model
 
