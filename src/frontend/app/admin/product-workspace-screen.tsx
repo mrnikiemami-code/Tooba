@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
+import { Card, ErrorState, WorkspaceShell, faWorkspaceMessages, useAdminFormMode } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
 import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
+import { ProductPublishingPanel } from "./product-publishing-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   assignAdminProductCategory,
@@ -332,27 +333,6 @@ export function ProductWorkspaceScreen({
     }
   }
 
-  async function runLifecycle(action: "unpublish" | "archive" | "delete") {
-    setBusy(true);
-    setError(null);
-    const result = await mutateAdminProductLifecycle(current.productId, action);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    if (action === "delete") {
-      window.location.href = "/admin/products";
-      return;
-    }
-    if (result.view) {
-      setView(result.view);
-      setDraft(draftFromView(result.view));
-    } else {
-      reload();
-    }
-  }
-
   const shellActions = isGeneralEdit
     ? [
         { id: "save", label: "ذخیره", kind: "primary" as const, permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const) },
@@ -669,24 +649,29 @@ export function ProductWorkspaceScreen({
 
         {sectionId === "publication" ? (
           <div className="space-y-4" data-testid="admin-product-publication">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <p className="mb-2 font-semibold">آمادگی محتوا</p>
-                <ul className="space-y-2">
-                  <Check ok={Boolean(view.title)} label="عنوان" />
-                  <Check ok={Boolean(view.primaryCategoryId)} label="دسته" />
-                  <Check ok={view.media.length > 0} label="رسانه" />
-                </ul>
-              </div>
-              <div>
-                <p className="mb-2 font-semibold">وضعیت انتشار</p>
-                <p className="text-lg font-semibold">{formatAdminStatus(view.status)}</p>
-                <p className="mt-2 text-sm text-muted">انتشار فقط پس از آمادگی محتوا و فروش.</p>
-              </div>
-            </div>
-            <Card data-testid="product-commercial-readonly">
-              <p className="font-semibold">خلاصه تجاری (فقط‌خواندنی)</p>
-              <p className="mt-1 text-sm text-muted">قیمت و موجودی متعلق به Offer هستند، نه هویت Product.</p>
+            <Card>
+              <ProductPublishingPanel
+                productId={current.productId}
+                status={view.status}
+                statusUpdatedAt={view.publication.statusUpdatedAt ?? view.catalogUpdatedAt}
+                canPublish={canPublish}
+                mode={formMode.mode === "edit" ? "edit" : "view"}
+                purchasableHint={view.publication.purchasableHint}
+                onNavigateTab={(tabId) => setSectionId(tabId)}
+                onStatusChanged={(hint) => {
+                  if (hint?.status === "__deleted__") {
+                    window.location.href = "/admin/products";
+                    return;
+                  }
+                  if (hint?.status) {
+                    setView((prev) => (prev ? { ...prev, status: hint.status } : prev));
+                  }
+                  reload();
+                }}
+              />
+            </Card>
+            <Card data-testid="product-commercial-readonly-detail">
+              <p className="font-semibold">جزئیات تجاری ترکیبی (فقط‌خواندنی)</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 <SummaryCard label="پیشنهاد فعال" value={String(view.offers.filter((row) => row.status === "Active").length)} />
                 <SummaryCard label="بازهٔ قیمت" value={priceRange} />
@@ -695,35 +680,6 @@ export function ProductWorkspaceScreen({
               <p className="mt-2 text-sm text-muted">
                 موجود {onHand} · رزرو {reserved} · {view.stock.length} محل
               </p>
-            </Card>
-            <Card>
-              <p className="font-semibold">عملیات چرخهٔ عمر</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={!canPublish || busy || view.status !== "Published"}
-                  className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
-                  onClick={() => void runLifecycle("unpublish")}
-                >
-                  لغو انتشار
-                </button>
-                <button
-                  type="button"
-                  disabled={!canPublish || busy || view.status === "Archived"}
-                  className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
-                  onClick={() => void runLifecycle("archive")}
-                >
-                  بایگانی
-                </button>
-                <button
-                  type="button"
-                  disabled={!canMutateCatalog || busy}
-                  className="min-h-11 rounded-ds border border-danger/40 px-4 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
-                  onClick={() => void runLifecycle("delete")}
-                >
-                  بایگانی / حذف امن
-                </button>
-              </div>
             </Card>
           </div>
         ) : null}
@@ -758,14 +714,5 @@ function Summary({ label, value }: { label: string; value: string }) {
       <p className="text-sm text-muted">{label}</p>
       <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
-  );
-}
-
-function Check({ ok, label }: { ok: boolean; label: string }) {
-  return (
-    <li className="flex items-center justify-between rounded-ds border border-border px-3 py-2">
-      <span>{label}</span>
-      <Badge tone={ok ? "success" : "warning"}>{ok ? "آماده" : "ناقص"}</Badge>
-    </li>
   );
 }

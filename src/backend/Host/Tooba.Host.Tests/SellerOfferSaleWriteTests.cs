@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -147,6 +148,10 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
         var product = await catalogDir.CreateProductAsync(
             CatalogProductKind.PhysicalGood, "sale-item", null, names, CancellationToken.None);
         await catalogDir.AssignCategoryAsync(product.ProductId, l3.CategoryId, CancellationToken.None);
+        await catalogDir.AttachMediaReferenceAsync(
+            product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), CancellationToken.None);
+        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+            catalogDir, product.ProductId, "توضیح سئو کالای فروش", CancellationToken.None);
         await catalogDir.PublishProductAsync(product.ProductId, CancellationToken.None);
         var colorId = await catalogDir.CreateAttributeDefinitionAsync(
             "color-sale",

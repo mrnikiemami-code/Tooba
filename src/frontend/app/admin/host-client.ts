@@ -4,6 +4,8 @@ import type { GridServerQuery, GridServerPage } from "../../design-system/data-g
 import { fromHostGridPage, toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
 import type { ProductSeoDetail, ProductSeoReadiness } from "./product-seo-panel-model.ts";
 import { mapSeoDetail, mapSeoReadiness } from "./product-seo-panel-model.ts";
+import type { ProductPublishReadiness } from "./product-publishing-panel-model.ts";
+import { mapPublishReadiness } from "./product-publishing-panel-model.ts";
 
 /**
  * منبع خواندن UI. `error` یعنی Host در دسترس نبود یا پاسخ نامعتبر بود؛ مسیر Admin فیکسچر را جایگزین persistence نمی‌کند.
@@ -211,6 +213,10 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
       checks: Array.isArray(readProp(publicationRaw, "checks", "Checks"))
         ? (readProp(publicationRaw, "checks", "Checks") as unknown[]).map((check) => asString(check))
         : [],
+      statusUpdatedAt: readProp(publicationRaw, "statusUpdatedAt", "StatusUpdatedAt") == null
+        ? null
+        : asString(readProp(publicationRaw, "statusUpdatedAt", "StatusUpdatedAt")),
+      aggregateReadiness: mapPublishReadiness(readProp(publicationRaw, "aggregateReadiness", "AggregateReadiness")),
     },
     activity: asRecordArray(readProp(item, "activity", "Activity")).map((row) => ({
       kind: asString(readProp(row, "kind", "Kind")),
@@ -496,10 +502,10 @@ export async function assignAdminProductCategory(
   }
 }
 
-export type AdminProductLifecycleAction = "publish" | "unpublish" | "archive" | "delete";
+export type AdminProductLifecycleAction = "publish" | "unpublish" | "archive" | "restore" | "delete";
 
 /**
- * انتشار / لغو انتشار / بایگانی / حذف امن محصول. حذف از DELETE؛ بقیه POST.
+ * انتشار / لغو انتشار / بایگانی / بازگردانی / حذف امن محصول. حذف از DELETE؛ بقیه POST.
  */
 export async function mutateAdminProductLifecycle(
   productId: string,
@@ -679,6 +685,36 @@ export async function getAdminProductSeoReadiness(
       return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
     }
     return { ok: true, readiness: mapSeoReadiness((await response.json()) as Record<string, unknown>) };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** آمادگی تجمیعی انتشار محصول (Catalog-only). */
+export async function getAdminProductPublishReadiness(
+  productId: string,
+  locale = "fa-IR",
+  viewScope = false,
+): Promise<{ ok: true; readiness: ProductPublishReadiness } | { ok: false; message: string }> {
+  try {
+    const headers = adminHeaders();
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const q = new URLSearchParams({ locale });
+    const response = await fetch(`/v1/admin/products/${productId}/publish/readiness?${q}`, { headers });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const readiness = mapPublishReadiness(await response.json());
+    if (!readiness) {
+      return { ok: false, message: "پاسخ آمادگی انتشار نامعتبر است" };
+    }
+    return { ok: true, readiness };
   } catch {
     return { ok: false, message: "اتصال به Host برقرار نیست" };
   }

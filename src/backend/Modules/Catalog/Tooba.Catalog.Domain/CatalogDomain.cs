@@ -1686,9 +1686,15 @@ public sealed class CatalogProduct : IHasDomainEvents
 
     /// <summary>
     /// انتشار تحریری. Offer را قابل‌خرید نمی‌کند.
+    /// از پیش‌نویس یا بایگانی (بازیابی صریح به منتشرشده) مجاز است؛ تکرار روی Published بی‌اثر است.
     /// </summary>
     public void Publish(DateTimeOffset now)
     {
+        if (Status == CatalogPublicationStatus.Published)
+        {
+            return;
+        }
+
         Status = CatalogPublicationStatus.Published;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductPublishedDomainEvent(this));
@@ -1704,6 +1710,11 @@ public sealed class CatalogProduct : IHasDomainEvents
             throw new InvalidOperationException("محصول آرشیو شده را با لغو انتشار به پیش‌نویس برنمی‌گردانیم.");
         }
 
+        if (Status == CatalogPublicationStatus.Draft)
+        {
+            return;
+        }
+
         Status = CatalogPublicationStatus.Draft;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
@@ -1714,7 +1725,27 @@ public sealed class CatalogProduct : IHasDomainEvents
     /// </summary>
     public void Archive(DateTimeOffset now)
     {
+        if (Status == CatalogPublicationStatus.Archived)
+        {
+            return;
+        }
+
         Status = CatalogPublicationStatus.Archived;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
+    }
+
+    /// <summary>
+    /// بازیابی صریح از بایگانی به پیش‌نویس؛ حذف سخت نیست و Offer را جهش نمی‌دهد.
+    /// </summary>
+    public void RestoreFromArchive(DateTimeOffset now)
+    {
+        if (Status != CatalogPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException("فقط محصول بایگانی‌شده را می‌توان به پیش‌نویس بازگرداند.");
+        }
+
+        Status = CatalogPublicationStatus.Draft;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
     }

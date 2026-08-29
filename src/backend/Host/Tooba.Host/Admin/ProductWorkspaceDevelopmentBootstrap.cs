@@ -184,6 +184,8 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), "نمای پشت", cancellation);
         await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc"), "جزئیات یقه", cancellation);
         await catalog.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), "جزئیات آستین", cancellation);
+        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+            catalog, product.ProductId, "توضیح سئو پیراهن زنده Workspace", cancellation);
         await catalog.PublishProductAsync(product.ProductId, cancellation);
         var variant = await catalog.CreateVariantAsync(
             product.ProductId,
@@ -308,11 +310,18 @@ internal static class ProductWorkspaceDevelopmentBootstrap
                 live.BrandId,
                 new Dictionary<string, string> { ["fa-IR"] = "کلاه بایگانی R3", ["en-US"] = "R3 Archived Hat" },
                 cancellation);
+            var liveCategoryId = await catalogDb.ProductCategories.AsNoTracking()
+                .Where(x => x.ProductId == live.ProductId)
+                .Select(x => x.CategoryId)
+                .FirstAsync(cancellation);
+            await catalog.AssignCategoryAsync(archived.ProductId, liveCategoryId, cancellation);
             await catalog.AttachMediaReferenceAsync(
                 archived.ProductId,
                 Guid.Parse("22222222-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
                 "پیش‌نمایش کلاه",
                 cancellation);
+            await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+                catalog, archived.ProductId, "توضیح سئو کلاه بایگانی", cancellation);
             await catalog.PublishProductAsync(archived.ProductId, cancellation);
             await catalog.ArchiveProductAsync(archived.ProductId, cancellation);
         }

@@ -551,7 +551,15 @@ public interface ICatalogDirectory
     Task ValidateProductAttributesAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// محصول را در Catalog منتشر می‌کند نه در Offer.
+    /// آمادگی تجمیعی انتشار محصول — فقط Catalog؛ بدون Offer/Price/Stock.
+    /// </summary>
+    Task<ProductPublishReadiness> GetProductPublishReadinessAsync(
+        Guid productId,
+        string? locale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// محصول را در Catalog منتشر می‌کند نه در Offer. آمادگی تجمیعی را اجباری می‌کند.
     /// </summary>
     Task PublishProductAsync(Guid productId, CancellationToken cancellationToken);
 
@@ -564,6 +572,11 @@ public interface ICatalogDirectory
     /// محصول را در Catalog آرشیو می‌کند؛ حذف سخت نیست.
     /// </summary>
     Task ArchiveProductAsync(Guid productId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// بازیابی صریح از بایگانی به پیش‌نویس.
+    /// </summary>
+    Task RestoreProductAsync(Guid productId, CancellationToken cancellationToken);
 
     /// <summary>
     /// رده را برای ناوبری منتشر می‌کند. رده منتشرنشده در سطوح عمومی دیده نمی‌شود،
@@ -838,6 +851,27 @@ public sealed record ProductSeoReadiness(
     bool HasLocalizedIdentity,
     bool IsReady,
     string? MessageFa);
+
+/// <summary>مورد ناقص آمادگی انتشار با هدایت به تب Workspace.</summary>
+public sealed record ProductPublishMissingRequirement(
+    string Code,
+    string MessageFa,
+    string WorkspaceTab);
+
+/// <summary>
+/// آمادگی تجمیعی انتشار Product Master — فقط Catalog.
+/// Offer / Pricing / Inventory عمداً خارج‌اند.
+/// </summary>
+public sealed record ProductPublishReadiness(
+    bool IsReady,
+    bool CategoryReady,
+    bool TranslationReady,
+    bool AttributeReady,
+    bool VariantReady,
+    bool MediaReady,
+    bool SeoReady,
+    IReadOnlyList<ProductPublishMissingRequirement> MissingRequirements,
+    string MessageFa);
 
 /// <summary>جزئیات SEO محصول برای Admin و پیش‌نمایش مسیر عمومی.</summary>
 public sealed record ProductSeoDetail(

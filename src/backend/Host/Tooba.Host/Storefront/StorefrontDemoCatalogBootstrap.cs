@@ -278,6 +278,8 @@ internal static class StorefrontDemoCatalogBootstrap
                         product.ProductId,
                         PlaceholderMedia[productOrdinal % PlaceholderMedia.Length],
                         cancellationToken);
+                    await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+                        catalog, product.ProductId, $"توضیح سئو {spec.Name}", cancellationToken);
                     await catalog.PublishProductAsync(product.ProductId, cancellationToken);
                     var variant = await catalog.CreateVariantAsync(
                         product.ProductId,

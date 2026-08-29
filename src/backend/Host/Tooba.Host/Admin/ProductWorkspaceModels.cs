@@ -153,8 +153,31 @@ public sealed record ProductStockView(
 /// <summary>درز SEO. ترکیب صفحه نیست.</summary>
 public sealed record ProductSeoView(string? SlugSeam, string? SeoTitleSeam, string SemanticNote);
 
-/// <summary>آمادگی انتشار UI. Published با قابل‌خرید یکی نیست.</summary>
-public sealed record ProductPublicationView(string CatalogStatus, bool PurchasableHint, IReadOnlyList<string> Checks);
+/// <summary>آمادگی انتشار UI. Published با قابل‌خرید یکی نیست. Checks فقط Catalog است.</summary>
+public sealed record ProductPublicationView(
+    string CatalogStatus,
+    bool PurchasableHint,
+    IReadOnlyList<string> Checks,
+    ProductPublishReadinessView AggregateReadiness,
+    DateTimeOffset StatusUpdatedAt);
+
+/// <summary>مورد ناقص آمادگی انتشار برای چک‌لیست فارسی.</summary>
+public sealed record ProductPublishMissingRequirementView(
+    string Code,
+    string MessageFa,
+    string WorkspaceTab);
+
+/// <summary>آمادگی تجمیعی انتشار — بدون Offer/Price/Stock.</summary>
+public sealed record ProductPublishReadinessView(
+    bool IsReady,
+    bool CategoryReady,
+    bool TranslationReady,
+    bool AttributeReady,
+    bool VariantReady,
+    bool MediaReady,
+    bool SeoReady,
+    IReadOnlyList<ProductPublishMissingRequirementView> MissingRequirements,
+    string MessageFa);
 
 /// <summary>رویداد Activity یا Audit.</summary>
 public sealed record ProductHistoryItem(string Kind, string Summary, DateTimeOffset At);

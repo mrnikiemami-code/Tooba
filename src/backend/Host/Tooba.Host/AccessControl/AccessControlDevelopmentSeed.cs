@@ -400,6 +400,12 @@ internal static class AccessControlDevelopmentSeed
                 new Dictionary<string, string> { ["fa-IR"] = faName, ["en-US"] = enName },
                 cancellationToken);
             await catalog.AssignCategoryAsync(product.ProductId, categoryId, cancellationToken);
+            await catalog.AttachMediaReferenceAsync(
+                product.ProductId,
+                Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                cancellationToken);
+            await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+                catalog, product.ProductId, $"توضیح سئو {faName}", cancellationToken);
             await catalog.PublishProductAsync(product.ProductId, cancellationToken);
         }
         else

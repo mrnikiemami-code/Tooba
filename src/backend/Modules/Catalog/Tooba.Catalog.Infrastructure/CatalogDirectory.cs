@@ -2840,12 +2840,118 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<ProductPublishReadiness> GetProductPublishReadinessAsync(
+        Guid productId,
+        string? locale,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var normalizedLocale = ProductSeoRules.NormalizeLocale(locale);
+        var categoryReady = await IsProductPrimaryCategoryAssignableAsync(productId, cancellationToken);
+        var name = await ResolveProductNameForSeoAsync(productId, normalizedLocale, cancellationToken);
+        var translationReady = !string.IsNullOrWhiteSpace(name);
+
+        var attributes = await GetProductAttributeReadinessAsync(productId, cancellationToken);
+        var attributeReady = attributes.IsComplete;
+
+        var variants = await GetProductVariantReadinessAsync(productId, cancellationToken);
+        var variantReady = variants.IsValid;
+
+        var media = await GetProductMediaReadinessAsync(productId, cancellationToken);
+        var mediaReady = media.IsReady;
+
+        var seo = await GetProductSeoReadinessAsync(productId, normalizedLocale, cancellationToken);
+        var seoReady = seo.IsReady;
+
+        var missing = new List<ProductPublishMissingRequirement>();
+        if (!categoryReady)
+        {
+            missing.Add(new ProductPublishMissingRequirement(
+                "category",
+                ProductPublishRules.MessageCategoryIncompleteFa,
+                "general"));
+        }
+
+        if (!translationReady)
+        {
+            missing.Add(new ProductPublishMissingRequirement(
+                "identity",
+                ProductPublishRules.MessageIdentityIncompleteFa,
+                "general"));
+        }
+
+        if (!attributeReady)
+        {
+            var attrMessage = attributes.MissingRequiredCodes.Count > 0
+                ? $"{ProductPublishRules.MessageAttributesIncompleteFa} ({string.Join("، ", attributes.MissingRequiredCodes)})"
+                : ProductPublishRules.MessageAttributesIncompleteFa;
+            missing.Add(new ProductPublishMissingRequirement("attributes", attrMessage, "attributes"));
+        }
+
+        if (!variantReady)
+        {
+            missing.Add(new ProductPublishMissingRequirement(
+                "variants",
+                ProductPublishRules.MessageVariantsIncompleteFa,
+                "variants"));
+        }
+
+        if (!mediaReady)
+        {
+            missing.Add(new ProductPublishMissingRequirement(
+                "media",
+                media.MessageFa ?? ProductPublishRules.MessageMediaIncompleteFa,
+                "media"));
+        }
+
+        if (!seoReady)
+        {
+            missing.Add(new ProductPublishMissingRequirement(
+                "seo",
+                seo.MessageFa ?? ProductPublishRules.MessageSeoIncompleteFa,
+                "seo"));
+        }
+
+        var isReady = missing.Count == 0;
+        var messageFa = isReady
+            ? ProductPublishRules.MessageReadyFa
+            : ProductPublishRules.SummarizeMissingFa(missing.Count);
+
+        return new ProductPublishReadiness(
+            isReady,
+            categoryReady,
+            translationReady,
+            attributeReady,
+            variantReady,
+            mediaReady,
+            seoReady,
+            missing,
+            messageFa);
+    }
+
+    /// <inheritdoc />
     public async Task PublishProductAsync(Guid productId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        await EnsureProductPrimaryCategoryAssignableAsync(productId, cancellationToken);
-        await ValidateProductAttributesAsync(productId, cancellationToken);
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        if (product.Status == CatalogPublicationStatus.Published)
+        {
+            return;
+        }
+
+        var readiness = await GetProductPublishReadinessAsync(productId, "fa-IR", cancellationToken);
+        if (!readiness.IsReady)
+        {
+            var detail = readiness.MissingRequirements.Count > 0
+                ? string.Join(" ", readiness.MissingRequirements.Select(m => m.MessageFa))
+                : ProductPublishRules.MessageNotReadyFa;
+            throw new InvalidOperationException($"{readiness.MessageFa} {detail}".Trim());
+        }
+
         product.Publish(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
@@ -2866,6 +2972,45 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
         product.Archive(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RestoreProductAsync(Guid productId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+        product.RestoreFromArchive(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<bool> IsProductPrimaryCategoryAssignableAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        var categoryIds = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.CategoryId)
+            .ToListAsync(cancellationToken);
+        if (categoryIds.Count == 0)
+        {
+            return false;
+        }
+
+        var parentById = await _db.Categories.AsNoTracking()
+            .ToDictionaryAsync(x => x.CategoryId, x => x.ParentCategoryId, cancellationToken);
+        foreach (var categoryId in categoryIds)
+        {
+            try
+            {
+                CatalogCategoryTreeRules.EnsureAssignableProductCategory(categoryId, parentById);
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <inheritdoc />

@@ -162,6 +162,8 @@ public sealed class CatalogFoundationTests : IAsyncLifetime
         await dirA.AssignCategoryAsync(product.ProductId, leaf.CategoryId, CancellationToken.None);
         await dirA.AttachMediaReferenceAsync(product.ProductId, Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), CancellationToken.None);
         await dirA.SetProductAttributeAsync(product.ProductId, weightId, "250.5", null, CancellationToken.None);
+        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+            dirA, product.ProductId, "توضیح سئو پیراهن مدل X", CancellationToken.None);
         await dirA.PublishProductAsync(product.ProductId, CancellationToken.None);
 
         var v1 = await dirA.CreateVariantAsync(

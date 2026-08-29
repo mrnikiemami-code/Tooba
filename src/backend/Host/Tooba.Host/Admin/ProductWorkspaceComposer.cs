@@ -274,41 +274,66 @@ public sealed class ProductWorkspaceComposer
             .ToList();
 
         var title = productNames.GetValueOrDefault(productId) ?? product.SlugSeam ?? "untitled";
-        var warnings = new List<string>();
-        if (string.IsNullOrWhiteSpace(title) || title == "untitled")
-        {
-            warnings.Add("missing-title");
-        }
-
-        if (mediaViews.Count == 0)
-        {
-            warnings.Add("missing-image");
-        }
-
+        var commercialWarnings = new List<string>();
         if (offers.All(o => o.Status != OfferStatus.Active))
         {
-            warnings.Add("no-active-offer");
+            commercialWarnings.Add("no-active-offer");
         }
 
         if (priceViews.Count == 0)
         {
-            warnings.Add("قیمت فروشنده ثبت نشده است");
+            commercialWarnings.Add("قیمت فروشنده ثبت نشده است");
         }
 
         if (stockViews.All(s => s.Available <= 0))
         {
-            warnings.Add("موجودی قابل‌فروش وجود ندارد");
-        }
-
-        if (string.IsNullOrWhiteSpace(product.SeoTitleSeam) || string.IsNullOrWhiteSpace(product.SlugSeam))
-        {
-            warnings.Add("عنوان جستجو یا نشانی صفحه ناقص است");
+            commercialWarnings.Add("موجودی قابل‌فروش وجود ندارد");
         }
 
         var purchasable = offers.Any(o => o.Status == OfferStatus.Active)
             && priceViews.Count > 0
             && stockViews.Any(s => s.Available > 0);
-        var publication = new ProductPublicationView(product.Status.ToString(), purchasable, warnings);
+
+        ProductPublishReadinessView aggregateReadiness;
+        try
+        {
+            var readiness = await _catalogDirectory.GetProductPublishReadinessAsync(
+                productId,
+                "fa-IR",
+                cancellationToken);
+            aggregateReadiness = MapPublishReadiness(readiness);
+        }
+        catch (InvalidOperationException)
+        {
+            aggregateReadiness = new ProductPublishReadinessView(
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                [],
+                ProductPublishRules.MessageNotReadyFa);
+        }
+
+        var catalogChecks = aggregateReadiness.MissingRequirements
+            .Select(m => m.MessageFa)
+            .ToList();
+        if (catalogChecks.Count == 0 && !string.IsNullOrWhiteSpace(aggregateReadiness.MessageFa))
+        {
+            catalogChecks.Add(aggregateReadiness.MessageFa);
+        }
+
+        var publication = new ProductPublicationView(
+            product.Status.ToString(),
+            purchasable,
+            catalogChecks,
+            aggregateReadiness,
+            product.UpdatedAt);
+
+        var warnings = new List<string>(catalogChecks);
+        warnings.AddRange(commercialWarnings);
 
         var primaryCategoryId = categoryLinks.Select(l => l.CategoryId).FirstOrDefault();
         Guid? primaryCategory = primaryCategoryId == Guid.Empty ? null : primaryCategoryId;
@@ -754,6 +779,56 @@ public sealed class ProductWorkspaceComposer
     }
 
     /// <summary>
+    /// بازیابی صریح از بایگانی به پیش‌نویس.
+    /// </summary>
+    public async Task<ProductWorkspaceView> RestoreAsync(
+        Guid productId,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        EnsurePublish(permissions);
+        try
+        {
+            await _catalogDirectory.RestoreProductAsync(productId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.product.restore.rejected");
+        }
+
+        return await RequireWorkspaceAsync(productId, permissions, cancellationToken);
+    }
+
+    /// <summary>
+    /// آمادگی تجمیعی انتشار Catalog-only.
+    /// </summary>
+    public async Task<ProductPublishReadinessView> GetPublishReadinessAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanView)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        await EnsureProductExistsAsync(productId, cancellationToken);
+        try
+        {
+            var readiness = await _catalogDirectory.GetProductPublishReadinessAsync(
+                productId,
+                locale ?? "fa-IR",
+                cancellationToken);
+            return MapPublishReadiness(readiness);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(404, ex.Message, "workspace.product.missing");
+        }
+    }
+
+    /// <summary>
     /// حذف امن؛ در صورت ارجاع Offer آرشیو نرم و تعارض فارسی.
     /// </summary>
     public async Task DeleteOrSoftArchiveAsync(
@@ -981,6 +1056,20 @@ public sealed class ProductWorkspaceComposer
                 detail.Readiness.IsReady,
                 detail.Readiness.MessageFa),
             detail.UpdatedAt);
+
+    private static ProductPublishReadinessView MapPublishReadiness(ProductPublishReadiness readiness) =>
+        new(
+            readiness.IsReady,
+            readiness.CategoryReady,
+            readiness.TranslationReady,
+            readiness.AttributeReady,
+            readiness.VariantReady,
+            readiness.MediaReady,
+            readiness.SeoReady,
+            readiness.MissingRequirements
+                .Select(m => new ProductPublishMissingRequirementView(m.Code, m.MessageFa, m.WorkspaceTab))
+                .ToList(),
+            readiness.MessageFa);
 
     /// <summary>
     /// مرجع رسانهٔ مات اضافه می‌کند.

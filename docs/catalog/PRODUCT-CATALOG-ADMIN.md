@@ -1,7 +1,7 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 · **Phase:** P07 Advanced Catalog
-> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md)
+> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 / TB-P07-T018 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md), [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md)
 
 ## Product Master ownership
 
@@ -59,7 +59,7 @@ Locked Admin form pattern via `useAdminFormMode`:
 | تنوع‌ها | **Implemented** — axes + combination preview + matrix apply (T013); Persian **تنوع**, not گونه |
 | رسانه | **Implemented** — gallery + primary + readiness (T014); Media library / binary upload deferred |
 | SEO | **Implemented** — localized title/description + global SlugSeam + readiness + SERP preview (T017); see [PRODUCT-SEO.md](./PRODUCT-SEO.md) |
-| انتشار | Lifecycle + read-only commercial readiness |
+| انتشار | **Implemented** — aggregate Catalog publish readiness + Draft/Published/Archived lifecycle (T018); see [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md) |
 | تاریخچه | Shell |
 
 ## Translation model
@@ -93,10 +93,10 @@ See [PRODUCT-SEO.md](./PRODUCT-SEO.md). Workspace SEO tab VIEW/EDIT with Persian
 | Status | UI |
 |--------|-----|
 | Draft | پیش‌نویس |
-| Published | منتشر شده |
-| Archived | بایگانی |
+| Published | منتشرشده |
+| Archived | بایگانی‌شده |
 
-Prefer **archive** over hard delete when offers/history reference the product.
+Publish requires aggregate Catalog readiness (category L3, identity, attributes, variants, media, SEO). Offer/Price/Stock are **not** publish gates. Prefer **archive** / explicit **restore** over hard delete when offers/history reference the product. Details: [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md).
 
 ## Variants
 

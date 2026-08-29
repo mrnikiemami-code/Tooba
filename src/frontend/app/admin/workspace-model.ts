@@ -1,3 +1,5 @@
+import type { ProductPublishReadiness } from "./product-publishing-panel-model.ts";
+
 /**
  * مدل نمایش Product Workspace. این فایل DTO ترکیب Host است نه موجودیت EF.
  * Product.Price و Product.Stock اینجا وجود ندارند.
@@ -79,7 +81,13 @@ export interface ProductWorkspaceView {
   taxClassifications: { offerId: string; categoryCode: string; displayName: string }[];
   stock: ProductStockRow[];
   seo: { slugSeam: string | null; seoTitleSeam: string | null; semanticNote: string };
-  publication: { catalogStatus: string; purchasableHint: boolean; checks: string[] };
+  publication: {
+    catalogStatus: string;
+    purchasableHint: boolean;
+    checks: string[];
+    statusUpdatedAt?: string | null;
+    aggregateReadiness?: ProductPublishReadiness | null;
+  };
   activity: { kind: string; summary: string; at: string }[];
   audit: { kind: string; summary: string; at: string }[];
   permissions: ProductWorkspacePermissions;
@@ -234,6 +242,8 @@ export const demoProductWorkspace: ProductWorkspaceView = {
     catalogStatus: "Published",
     purchasableHint: true,
     checks: [],
+    statusUpdatedAt: "2026-08-24T00:00:00Z",
+    aggregateReadiness: null,
   },
   activity: [{ kind: "activity", summary: "محصول از فهرست باز شد", at: "2026-08-24T00:00:00Z" }],
   audit: [{ kind: "audit", summary: "Catalog loaded separately from Offer/Price/Stock", at: "2026-08-24T00:00:00Z" }],

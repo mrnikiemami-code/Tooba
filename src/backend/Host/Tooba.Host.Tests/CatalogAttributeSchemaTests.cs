@@ -192,6 +192,10 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         await Assert.ThrowsAnyAsync<Exception>(() =>
             dirA.SetProductAttributeAsync(product.ProductId, screenId, "ignored", black, CancellationToken.None));
 
+        await dirA.AttachMediaReferenceAsync(
+            product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), CancellationToken.None);
+        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+            dirA, product.ProductId, "توضیح سئو گوشی نمونه", CancellationToken.None);
         await dirA.PublishProductAsync(product.ProductId, CancellationToken.None);
 
         // 8 axis allowed / 9 duplicate axis

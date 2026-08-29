@@ -123,6 +123,10 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
         // چند ترکیب نمونه برای اثبات محورها؛ FULL_VARIANT_MATRIX تولید نمی‌شود.
         await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLK-128", [(colorId, "ignored", black), (storageId, "ignored", storage128)], CancellationToken.None);
         await catalog.CreateVariantAsync(product.ProductId, "PHONE-BLU-256", [(colorId, "ignored", blue), (storageId, "ignored", storage256)], CancellationToken.None);
+        await catalog.AttachMediaReferenceAsync(
+            product.ProductId, Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), CancellationToken.None);
+        await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+            catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", CancellationToken.None);
         await catalog.PublishCategoryAsync(mobile, CancellationToken.None);
         await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
         await EnsurePublishedAndSellableAsync(provider, db, CancellationToken.None);
@@ -155,6 +159,17 @@ internal static class CatalogAttributeSchemaDevelopmentBootstrap
                 && categoryIds.All(id => CatalogCategoryTreeRules.IsAssignableProductCategory(id, parentById));
             if (assignable)
             {
+                if (!await catalogDb.MediaReferences.AsNoTracking()
+                        .AnyAsync(m => m.ProductId == product.ProductId, cancellationToken))
+                {
+                    await catalog.AttachMediaReferenceAsync(
+                        product.ProductId,
+                        Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                        CancellationToken.None);
+                }
+
+                await ProductPublishPrep.EnsureMinimalSeoForPublishAsync(
+                    catalog, product.ProductId, "توضیح سئو گوشی نمونه schema", CancellationToken.None);
                 await catalog.PublishProductAsync(product.ProductId, CancellationToken.None);
             }
         }

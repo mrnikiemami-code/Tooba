@@ -25,6 +25,8 @@ public static class ProductWorkspaceEndpoints
         group.MapPost("/{productId:guid}/publish", PublishAsync);
         group.MapPost("/{productId:guid}/unpublish", UnpublishAsync);
         group.MapPost("/{productId:guid}/archive", ArchiveAsync);
+        group.MapPost("/{productId:guid}/restore", RestoreAsync);
+        group.MapGet("/{productId:guid}/publish/readiness", GetPublishReadinessAsync);
         group.MapDelete("/{productId:guid}", DeleteAsync);
 
         group.MapGet("/{productId:guid}/media", ListMediaAsync);
@@ -282,6 +284,55 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.ArchiveAsync(productId, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> RestoreAsync(
+        Guid productId,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.RestoreAsync(productId, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> GetPublishReadinessAsync(
+        Guid productId,
+        string? locale,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.GetPublishReadinessAsync(
+                productId,
+                locale,
+                ReadPermissions(request),
+                cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
