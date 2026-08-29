@@ -1,0 +1,127 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T017
+Parent-Task:
+TB-P07-T016
+Channel:
+tooba-main
+Status:
+PASS
+
+Summary:
+Implemented Product SEO: Catalog-owned localized seo_title/seo_description + global SlugSeam, public URL /{locale}/products/{slug}, SEO readiness (Persian messages, no Offer/Price/Stock), Admin SEO tab VIEW/EDIT with SERP preview. Storefront prefers LocalizedText seo_description. TB-P07-T015 not reused. Validation green. USER_VISUAL_ACCEPTED remains NO.
+
+SEO-Model:
+
+ownership:
+Catalog
+
+slug:
+global SlugSeam; Unicode/Persian via CatalogCategorySlugNormalizer
+
+title/description:
+LocalizedText per locale
+
+public URL:
+/{fa|en}/products/{slug}
+
+readiness:
+ProductSeoReadiness + MessageFa
+
+Admin-UX:
+
+VIEW/EDIT:
+yes
+
+labels:
+آدرس محصول / عنوان برای موتورهای جستجو / توضیح نتیجه جستجو
+
+SERP preview:
+yes
+
+Save/Cancel:
+yes
+
+API:
+
+GET/PUT:
+/v1/admin/products/{id}/seo
+
+readiness:
+GET .../seo/readiness
+
+Validation:
+
+backend full tests:
+Passed 336 / Failed 0 / Skipped 0
+
+frontend typecheck:
+pass
+
+frontend lint:
+pass
+
+frontend tests:
+pass (37)
+
+frontend build:
+pass
+
+git diff --check:
+pass
+
+Documentation:
+
+PRODUCT-SEO:
+docs/catalog/PRODUCT-SEO.md
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088
+
+Frontend:
+http://localhost:3000
+
+Shopeiva:
+http://127.0.0.1:3001
+
+kept alive:
+yes
+
+Git:
+
+branch:
+main
+
+commit:
+70a80cb0acce28f681ae7292b1985507dd3ece81
+
+push:
+yes
+
+final HEAD:
+70a80cb0acce28f681ae7292b1985507dd3ece81
+
+origin/main:
+70a80cb0acce28f681ae7292b1985507dd3ece81
+
+synchronized:
+yes
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+TB-P07-T015 remains collided/blocked identity. Per-locale product slug table not invented; global SlugSeam documented.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
