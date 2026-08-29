@@ -5,6 +5,10 @@ namespace Tooba.Catalog.Domain;
 /// </summary>
 public static class ProductPublishRules
 {
+    /// <summary>انتشار مستقیم از بایگانی ممنوع است.</summary>
+    public const string MessageRestoreBeforePublishFa =
+        "برای انتشار دوباره، ابتدا محصول را از بایگانی خارج کنید.";
+
     /// <summary>آمادگی کامل برای انتشار.</summary>
     public const string MessageReadyFa = "محصول برای انتشار آماده است.";
 

@@ -162,15 +162,17 @@ export function ProductPublishingPanel({
             عملیات چرخهٔ عمر
           </h3>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={busy || status === "Published" || readiness?.isReady === false}
-              className="min-h-11 rounded-ds bg-emerald-600 px-4 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
-              onClick={() => void runAction("publish")}
-              data-testid="publish-action-publish"
-            >
-              انتشار
-            </button>
+            {status !== "Archived" ? (
+              <button
+                type="button"
+                disabled={busy || status === "Published" || readiness?.isReady === false}
+                className="min-h-11 rounded-ds bg-emerald-600 px-4 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"
+                onClick={() => void runAction("publish")}
+                data-testid="publish-action-publish"
+              >
+                انتشار
+              </button>
+            ) : null}
             <button
               type="button"
               disabled={busy || status !== "Published"}
@@ -189,15 +191,17 @@ export function ProductPublishingPanel({
             >
               بایگانی
             </button>
-            <button
-              type="button"
-              disabled={busy || status !== "Archived"}
-              className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
-              onClick={() => void runAction("restore")}
-              data-testid="publish-action-restore"
-            >
-              بازگردانی به پیش‌نویس
-            </button>
+            {status === "Archived" ? (
+              <button
+                type="button"
+                disabled={busy}
+                className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
+                onClick={() => void runAction("restore")}
+                data-testid="publish-action-restore"
+              >
+                خروج از بایگانی
+              </button>
+            ) : null}
             <button
               type="button"
               disabled={busy}

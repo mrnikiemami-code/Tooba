@@ -1686,13 +1686,18 @@ public sealed class CatalogProduct : IHasDomainEvents
 
     /// <summary>
     /// انتشار تحریری. Offer را قابل‌خرید نمی‌کند.
-    /// از پیش‌نویس یا بایگانی (بازیابی صریح به منتشرشده) مجاز است؛ تکرار روی Published بی‌اثر است.
+    /// فقط از پیش‌نویس؛ تکرار روی Published بی‌اثر است؛ Archived -> Published ممنوع است.
     /// </summary>
     public void Publish(DateTimeOffset now)
     {
         if (Status == CatalogPublicationStatus.Published)
         {
             return;
+        }
+
+        if (Status == CatalogPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException(ProductPublishRules.MessageRestoreBeforePublishFa);
         }
 
         Status = CatalogPublicationStatus.Published;

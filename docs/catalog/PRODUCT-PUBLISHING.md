@@ -1,6 +1,6 @@
 # Product Publishing
 
-> **Task:** TB-P07-T018 · **Phase:** P07 Advanced Catalog
+> **Task:** TB-P07-T018 / TB-P07-T018-R1 · **Phase:** P07 Advanced Catalog
 > **Depends on:** [PRODUCT-CATALOG-ADMIN.md](./PRODUCT-CATALOG-ADMIN.md), component readiness from Attributes / Variants / Media / SEO
 
 ## Ownership
@@ -29,12 +29,12 @@ Transitions:
 
 | Action | From → To | Notes |
 |--------|-----------|--------|
-| Publish | Draft → Published (also Archive → Published when readiness passes) | Backend enforces aggregate readiness; idempotent if already Published |
+| Publish | **Draft → Published only** | Backend enforces aggregate readiness; idempotent if already Published. **Archived → Published is forbidden.** |
 | Unpublish | Published → Draft | Explicit; Archive cannot unpublish |
-| Archive | * → Archived | Soft; no hard delete; preserves translations/attributes/variants/media/SEO |
-| Restore | Archived → Draft | Explicit restore; Offer tables are not mutated |
+| Archive | Draft/Published → Archived | Soft; no hard delete; preserves translations/attributes/variants/media/SEO |
+| Restore | Archived → Draft | **Only** explicit exit from Archive; Offer tables are not mutated |
 
-Hard delete remains the separate safe-delete path (soft-archive when Offer references exist).
+To republish an archived product: **Archived → Restore → Draft → Publish** (two explicit steps). Hard delete remains the separate safe-delete path (soft-archive when Offer references exist).
 
 ## Aggregate readiness
 
@@ -71,7 +71,8 @@ Publish rejection returns human-readable missing requirements; partial publish i
 Product Workspace tab **انتشار**:
 
 - **VIEW:** lifecycle label, readiness checklist, commercial Offer summary (readonly), no mutation controls
-- **EDIT/action:** publish / unpublish / archive / restore / safe-delete with confirmations
+- **EDIT/action:** publish (not while Archived) / unpublish / archive / **خروج از بایگانی** (Restore) / safe-delete with confirmations
+- While **Archived**, Publish is hidden; Restore is the only exit to Draft
 - Missing checklist items navigate to the relevant Workspace tab (`general` / `attributes` / `variants` / `media` / `seo`)
 - Product list AppDataGrid keeps existing status column + Persian chips (no raw `AgGridReact`)
 

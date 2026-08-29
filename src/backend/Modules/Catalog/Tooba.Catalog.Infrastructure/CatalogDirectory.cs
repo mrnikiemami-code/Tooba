@@ -2943,6 +2943,11 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             return;
         }
 
+        if (product.Status == CatalogPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException(ProductPublishRules.MessageRestoreBeforePublishFa);
+        }
+
         var readiness = await GetProductPublishReadinessAsync(productId, "fa-IR", cancellationToken);
         if (!readiness.IsReady)
         {

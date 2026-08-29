@@ -313,12 +313,34 @@ export function ProductWorkspaceScreen({
       return;
     }
     if (actionId === "publish") {
+      if (current.status === "Archived") {
+        setError("برای انتشار دوباره، ابتدا محصول را از بایگانی خارج کنید.");
+        return;
+      }
       if (current.isPrimaryCategoryAssignable === false) {
         setError(PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA);
         return;
       }
       setBusy(true);
       const result = await mutateAdminProductLifecycle(current.productId, "publish");
+      setBusy(false);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      if (result.view) {
+        setView(result.view);
+        setDraft(draftFromView(result.view));
+      } else {
+        reload();
+      }
+      return;
+    }
+    if (actionId === "restore") {
+      if (!window.confirm("محصول از بایگانی به پیش‌نویس بازگردد؟")) return;
+      setBusy(true);
+      setError(null);
+      const result = await mutateAdminProductLifecycle(current.productId, "restore");
       setBusy(false);
       if (!result.ok) {
         setError(result.message);
@@ -342,7 +364,9 @@ export function ProductWorkspaceScreen({
         ...(formMode.canEdit && formMode.mode === "view"
           ? [{ id: "edit", label: "ویرایش", kind: "secondary" as const, permission: "allowed" as const }]
           : []),
-        { id: "publish", label: "انتشار", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) },
+        ...(current.status === "Archived"
+          ? [{ id: "restore", label: "خروج از بایگانی", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) }]
+          : [{ id: "publish", label: "انتشار", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) }]),
       ];
 
   const translationRows = TRANSLATION_LOCALES.map((locale) => {

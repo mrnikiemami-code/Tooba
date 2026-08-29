@@ -1,0 +1,12 @@
+﻿git : warning: in the working copy of 'src/backend/Modules/Catalog/Tooba.Catalog.Domain/CatalogDomain.cs', LF will be 
+replaced by CRLF the next time Git touches it
+At C:\Users\User\AppData\Local\Temp\ps-script-da4b5ddb-48c9-410c-9b4f-7146fe75f00a.ps1:90 char:1
++ git -C "D:\Users\User\source\repos\SarvNewVer" diff --check -- src do ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/backend/Modules/Catalog/Tooba.Catalog.Infrastructure/CatalogDirectory.cs', LF 
+will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/frontend/app/admin/product-workspace-screen.tsx', LF will be replaced by CRLF the 
+next time Git touches it

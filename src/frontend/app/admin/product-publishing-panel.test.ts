@@ -71,9 +71,13 @@ test("publishing panel and host-client wiring contracts", () => {
   assert.match(panel, /publish-view-only-note/);
   assert.match(panel, /window\.confirm/);
   assert.match(panel, /min-h-11/);
-  assert.match(panel, /بازگردانی به پیش‌نویس/);
+  assert.match(panel, /خروج از بایگانی/);
+  assert.match(panel, /status !== "Archived"/);
+  assert.doesNotMatch(panel, /بازگردانی به پیش‌نویس/);
   assert.match(screen, /ProductPublishingPanel/);
   assert.match(screen, /sectionId === "publication"/);
+  assert.match(screen, /خروج از بایگانی/);
+  assert.match(screen, /current\.status === "Archived"/);
   assert.doesNotMatch(screen, /AgGridReact/);
   assert.match(client, /publish\/readiness/);
   assert.match(client, /getAdminProductPublishReadiness/);

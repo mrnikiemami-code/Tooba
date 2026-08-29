@@ -127,6 +127,13 @@ public sealed class ProductPublishTests : IAsyncLifetime
         Assert.Equal(CatalogPublicationStatus.Archived, archived.Status);
         Assert.Equal("publish-ready", archived.SlugSeam);
 
+        var archivedPublish = await Assert.ThrowsAnyAsync<InvalidOperationException>(() =>
+            dir.PublishProductAsync(product.ProductId, CancellationToken.None));
+        Assert.Equal(ProductPublishRules.MessageRestoreBeforePublishFa, archivedPublish.Message);
+        Assert.Equal(
+            CatalogPublicationStatus.Archived,
+            (await db.Products.AsNoTracking().SingleAsync(x => x.ProductId == product.ProductId)).Status);
+
         await Assert.ThrowsAnyAsync<Exception>(() =>
             dir.UnpublishProductAsync(product.ProductId, CancellationToken.None));
 
@@ -134,6 +141,11 @@ public sealed class ProductPublishTests : IAsyncLifetime
         var restored = await db.Products.AsNoTracking().SingleAsync(x => x.ProductId == product.ProductId);
         Assert.Equal(CatalogPublicationStatus.Draft, restored.Status);
         Assert.Equal("publish-ready", restored.SlugSeam);
+
+        await dir.PublishProductAsync(product.ProductId, CancellationToken.None);
+        Assert.Equal(
+            CatalogPublicationStatus.Published,
+            (await db.Products.AsNoTracking().SingleAsync(x => x.ProductId == product.ProductId)).Status);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
