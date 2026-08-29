@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Archive, Edit2, Eye } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { AppDataGrid, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
+import { AppDataGrid, Button, ErrorState, faWorkspaceMessages, formatJalaliDate } from "../../design-system";
 import {
   ADMIN_PRODUCT_EXTERNAL_FILTER_FIELDS,
   applyProductGridFilterHeader,
@@ -139,7 +139,7 @@ function buildColumnDefs(
       cellRenderer: StatusCell,
     }),
     applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 130 }),
-    applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "قیمت (تومان)", width: 150 }),
+    applyProductGridFilterHeader({ field: "offerAmountRange", headerName: "قیمت (ریال)", width: 150 }),
     applyProductGridFilterHeader({
       field: "sellableUnits",
       headerName: "موجودی",
@@ -178,7 +178,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   { id: "variantCount", header: "تنوع", filterKind: "number" },
   { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
   { id: "categorySummary", header: "دسته", filterKind: "text" },
-  { id: "offerAmountRange", header: "قیمت (تومان)", filterKind: "number" },
+  { id: "offerAmountRange", header: "قیمت (ریال)", filterKind: "number" },
   { id: "sellableUnits", header: "موجودی", filterKind: "number" },
   { id: "locationCount", header: "محل", filterKind: "number" },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
@@ -262,6 +262,15 @@ export function ProductListScreen() {
     router.push(`/admin/products/${result.productId}?scope=edit`);
   }
 
+  function closeCreatePanel() {
+    setCreateOpen(false);
+    setCreateTitle("");
+    setCreateSlug("");
+    setCreateSlugTouched(false);
+    setCreateCategoryId(null);
+    setCreateError(undefined);
+  }
+
   if (denied) {
     return (
       <main data-testid="admin-auth-denied">
@@ -277,10 +286,10 @@ export function ProductListScreen() {
           <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محصولات</h1>
           <p className="mt-1 text-[length:var(--type-body)] text-muted">فهرست عملیاتی کاتالوگ فروشگاه</p>
         </div>
-        <button type="button" onClick={() => setCreateOpen((open) => !open)} className="inline-flex min-h-11 items-center gap-2 rounded-ds bg-primary px-4 text-base font-medium text-primary-foreground shadow-sm" data-testid="admin-create-product">
+        <Button type="button" onClick={() => setCreateOpen((open) => !open)} data-testid="admin-create-product">
           <span aria-hidden>+</span>
           محصول جدید
-        </button>
+        </Button>
       </div>
       {createOpen ? (
         <section className="mb-5 max-w-xl rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="admin-create-product-panel">
@@ -326,15 +335,25 @@ export function ProductListScreen() {
             </p>
           </div>
           {createError ? <p className="mt-3 text-sm text-danger">{createError}</p> : null}
-          <button
-            type="button"
-            disabled={creating}
-            onClick={() => void onCreate()}
-            className="mt-4 inline-flex min-h-11 items-center rounded-ds bg-primary px-5 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            data-testid="admin-create-product-submit"
-          >
-            {creating ? "در حال ایجاد…" : "ایجاد پیش‌نویس"}
-          </button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              disabled={creating}
+              onClick={() => void onCreate()}
+              data-testid="admin-create-product-submit"
+            >
+              {creating ? "در حال ایجاد…" : "ایجاد پیش‌نویس"}
+            </Button>
+            <Button
+              type="button"
+              tone="secondary"
+              disabled={creating}
+              onClick={closeCreatePanel}
+              data-testid="admin-create-product-cancel"
+            >
+              انصراف
+            </Button>
+          </div>
         </section>
       ) : null}
       <section className="rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">

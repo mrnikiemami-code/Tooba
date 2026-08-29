@@ -32,15 +32,15 @@ export {
 function badgeClass(tone: "amber" | "violet" | "slate" | "emerald" | "rose"): string {
   switch (tone) {
     case "amber":
-      return "rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900";
+      return "rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning";
     case "violet":
-      return "rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-900";
+      return "rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary";
     case "emerald":
-      return "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-900";
+      return "rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success";
     case "rose":
-      return "rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-800";
+      return "rounded-full bg-danger/15 px-2 py-0.5 text-[11px] font-medium text-danger";
     default:
-      return "rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700";
+      return "rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted";
   }
 }
 
@@ -222,7 +222,7 @@ export function ProductAttributesPanel({
         </div>
       ) : null}
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       {loading ? (
         <p className="text-sm text-muted">در حال بارگذاری…</p>
@@ -234,7 +234,7 @@ export function ProductAttributesPanel({
                 <p>برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است.</p>
                 <Link
                   href="/admin/catalog/categories"
-                  className="mt-2 inline-block text-sm font-medium text-[#2563EB] hover:underline"
+                  className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
                   data-testid="product-attributes-manage-category-link"
                 >
                   مدیریت ویژگی‌های دسته‌بندی
@@ -350,7 +350,7 @@ function AttributeFieldRow({
           <span className="text-xs text-muted">{valueKindLabel(field.valueKind)}</span>
         </div>
         {!field.isRequired && (field.currentCanonicalValue || draft.rawValue || draft.enumOptionId) ? (
-          <button type="button" className="text-xs text-rose-700 hover:underline" onClick={onClear}>
+          <button type="button" className="text-xs text-danger hover:underline" onClick={onClear}>
             پاک کردن
           </button>
         ) : null}
@@ -431,7 +431,7 @@ function AttributeFieldRow({
           />
         )}
       </div>
-      {error ? <p className="mt-1 text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs text-danger">{error}</p> : null}
     </li>
   );
 }

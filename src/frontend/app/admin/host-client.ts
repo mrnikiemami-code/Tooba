@@ -932,7 +932,7 @@ export interface AdminProductVariantAxisInput {
   enumOptionId?: string | null;
 }
 
-/** ایجاد گونه با محورها؛ بدون قیمت/موجودی. */
+/** ایجاد تنوع با محورها؛ بدون قیمت/موجودی. */
 export async function createAdminProductVariant(
   productId: string,
   input: { catalogCodeSeam?: string | null; axes: AdminProductVariantAxisInput[] },
@@ -958,13 +958,13 @@ export async function createAdminProductVariant(
       return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
     }
     const view = mapProductWorkspaceView(await response.json());
-    return view ? { ok: true, view } : { ok: false, message: "پاسخ گونه نامعتبر است" };
+    return view ? { ok: true, view } : { ok: false, message: "پاسخ تنوع نامعتبر است" };
   } catch {
     return { ok: false, message: "اتصال به Host برقرار نیست" };
   }
 }
 
-/** ویرایش وضعیت یا کد Catalog گونه بدون تغییر اثرانگشت. */
+/** ویرایش وضعیت یا کد Catalog تنوع بدون تغییر اثرانگشت. */
 export async function patchAdminProductVariant(
   productId: string,
   variantId: string,
@@ -987,7 +987,7 @@ export async function patchAdminProductVariant(
       return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
     }
     const view = mapProductWorkspaceView(await response.json());
-    return view ? { ok: true, view } : { ok: false, message: "پاسخ گونه نامعتبر است" };
+    return view ? { ok: true, view } : { ok: false, message: "پاسخ تنوع نامعتبر است" };
   } catch {
     return { ok: false, message: "اتصال به Host برقرار نیست" };
   }

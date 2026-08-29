@@ -185,9 +185,15 @@ export function WorkspaceShell({
           ))}
         </select>
       ) : (
-        <div className="flex flex-wrap gap-2" role="tablist">
+        <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1" role="tablist">
           {sections.map((section) => (
-            <Button key={section.id} type="button" tone={section.id === activeSectionId ? "primary" : "ghost"} onClick={() => onSectionChange(section.id)}>
+            <Button
+              key={section.id}
+              type="button"
+              className="shrink-0"
+              tone={section.id === activeSectionId ? "primary" : "ghost"}
+              onClick={() => onSectionChange(section.id)}
+            >
               {section.label}
             </Button>
           ))}

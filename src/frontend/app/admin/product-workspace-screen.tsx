@@ -206,7 +206,6 @@ export function ProductWorkspaceScreen({
     if (!formMode.canEdit) return;
     setDraft(draftFromView(current));
     formMode.onEdit();
-    setSectionId("general");
   }
 
   function handleCancelEdit() {
@@ -356,19 +355,37 @@ export function ProductWorkspaceScreen({
     }
   }
 
+  const lifecycleAction =
+    current.status === "Archived"
+      ? {
+          id: "restore",
+          label: "خروج از بایگانی",
+          kind: "secondary" as const,
+          permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const),
+        }
+      : {
+          id: "publish",
+          label: "انتشار",
+          kind: "secondary" as const,
+          permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const),
+        };
+
   const shellActions = isGeneralEdit
     ? [
         { id: "save", label: "ذخیره", kind: "primary" as const, permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const) },
         { id: "cancel", label: "انصراف", kind: "secondary" as const, permission: "allowed" as const },
       ]
-    : [
-        ...(formMode.canEdit && formMode.mode === "view"
-          ? [{ id: "edit", label: "ویرایش", kind: "secondary" as const, permission: "allowed" as const }]
-          : []),
-        ...(current.status === "Archived"
-          ? [{ id: "restore", label: "خروج از بایگانی", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) }]
-          : [{ id: "publish", label: "انتشار", kind: "secondary" as const, permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const) }]),
-      ];
+    : formMode.mode === "edit"
+      ? [
+          { id: "cancel", label: "پایان ویرایش", kind: "secondary" as const, permission: "allowed" as const },
+          lifecycleAction,
+        ]
+      : [
+          ...(formMode.canEdit
+            ? [{ id: "edit", label: "ویرایش", kind: "secondary" as const, permission: "allowed" as const }]
+            : []),
+          lifecycleAction,
+        ];
 
   const translationRows = TRANSLATION_LOCALES.map((locale) => {
     const existing = resolveTranslation(view, locale);
@@ -393,9 +410,14 @@ export function ProductWorkspaceScreen({
           )
         }
         title={view.title}
-        subtitle={`${view.brandName ?? "بدون برند"} · ${categoryLabel(view)}`}
+        subtitle={`${view.brandName ?? "بدون برند"} · ${view.categoryPath ?? categoryLabel(view)}`}
         breadcrumbs={["عملیات", "محصولات", view.title]}
         statusItems={[
+          {
+            id: "mode",
+            label: formMode.mode === "edit" ? "ویرایش" : "مشاهده",
+            tone: formMode.mode === "edit" ? "warning" : "neutral",
+          },
           { id: "pub", label: formatAdminStatus(view.status), tone: statusTone(view.status) },
           {
             id: "ready",
@@ -411,30 +433,28 @@ export function ProductWorkspaceScreen({
         sections={sections}
         activeSectionId={sectionId}
         onSectionChange={(next) => {
-          if (formMode.mode === "edit" && next !== "general" && !formMode.confirmDiscardIfDirty()) {
-            return;
-          }
-          if (formMode.mode === "edit" && next !== "general") {
+          if (next === sectionId) return;
+          if (sectionId === "general" && formMode.mode === "edit" && formMode.isDirty) {
+            if (!formMode.confirmDiscardIfDirty()) return;
             setDraft(draftFromView(current));
-            formMode.onCancel();
+            formMode.clearDirty();
             setDirty(new Set());
           }
           setSectionId(next);
         }}
         actions={shellActions}
         onAction={(actionId) => void onAction(actionId)}
-        readOnly={formMode.mode === "view" || viewScope}
+        readOnly={viewScope}
         conflict={conflict}
         onReloadConflict={reload}
         error={error}
         onRetry={reload}
         dirtySections={dirtySections}
         summary={
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <Summary label="آمادگی فروش" value={view.publication.purchasableHint ? "آماده" : "نیاز به بررسی"} />
             <Summary label="تنوع‌ها" value={String(view.variants.length)} />
             <Summary label="رسانه" value={String(view.media.length)} />
-            <Summary label="وضعیت" value={formatAdminStatus(view.status)} />
           </div>
         }
         inspector={
@@ -443,8 +463,18 @@ export function ProductWorkspaceScreen({
             <p data-testid="workspace-source">{source === "host" ? "آخرین همگام‌سازی با فروشگاه انجام شد" : "اتصال فروشگاه برقرار نیست"}</p>
           </div>
         }
-        activity={view.activity.map((item) => ({ id: item.summary, at: item.at, actor: "ops", summary: item.summary }))}
-        audit={view.audit.map((item) => ({ id: item.summary, at: item.at, actor: "system", event: item.summary }))}
+        activity={view.activity.map((item) => ({
+          id: item.summary,
+          at: item.at,
+          actor: item.actor?.trim() || "سیستم",
+          summary: item.summary,
+        }))}
+        audit={view.audit.map((item) => ({
+          id: item.summary,
+          at: item.at,
+          actor: item.actor?.trim() || "سیستم",
+          event: item.summary,
+        }))}
       >
         {sectionId === "general" ? (
           <div className="space-y-4" data-testid="product-general-panel">
@@ -517,26 +547,6 @@ export function ProductWorkspaceScreen({
                     />
                   </label>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                    data-testid="product-edit-save"
-                    onClick={() => void handleSaveGeneral()}
-                  >
-                    ذخیره
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="min-h-11 rounded-ds border border-border px-4 text-sm hover:bg-secondary disabled:opacity-50"
-                    data-testid="product-edit-cancel"
-                    onClick={handleCancelEdit}
-                  >
-                    انصراف
-                  </button>
-                </div>
               </Card>
             ) : (
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" data-testid="product-general-summary">
@@ -584,25 +594,37 @@ export function ProductWorkspaceScreen({
             <Card>
               <p className="font-semibold">ترجمه‌ها</p>
               <p className="mt-1 text-sm text-muted">
-                مدل locale-based بدون فیلدهای locale-suffixed. ویرایش کامل ترجمه در تسک بعدی تکمیل می‌شود.
+                هویت فارسی (fa-IR) در تب‌های عمومی و SEO ویرایش می‌شود. این تب وضعیت ترجمهٔ هر locale را نشان می‌دهد.
               </p>
               <div className="mt-4 flex flex-wrap gap-2" data-testid="product-locale-switcher">
-                {translationRows.map(({ locale, existing }) => (
-                  <button
-                    key={locale}
-                    type="button"
-                    className={
-                      translationLocale === locale
-                        ? "min-h-10 rounded-ds bg-primary px-3 text-sm text-primary-foreground"
-                        : "min-h-10 rounded-ds border border-border px-3 text-sm hover:bg-secondary"
-                    }
-                    data-testid={`translation-locale-${locale}`}
-                    onClick={() => setTranslationLocale(locale)}
-                  >
-                    {LOCALE_DISPLAY[locale] ?? locale}
-                    <span className="ms-2 text-xs opacity-80">{existing ? "آماده" : "ایجاد نشده"}</span>
-                  </button>
-                ))}
+                {translationRows.map(({ locale, existing }) => {
+                  const active = translationLocale === locale;
+                  const complete = Boolean(existing) || locale === "fa-IR";
+                  return (
+                    <button
+                      key={locale}
+                      type="button"
+                      className={
+                        active
+                          ? "inline-flex min-h-10 items-center gap-2 rounded-ds bg-primary px-3 text-sm text-primary-foreground"
+                          : "inline-flex min-h-10 items-center gap-2 rounded-ds border border-border px-3 text-sm hover:bg-secondary"
+                      }
+                      data-testid={`translation-locale-${locale}`}
+                      onClick={() => setTranslationLocale(locale)}
+                    >
+                      {LOCALE_DISPLAY[locale] ?? locale}
+                      <span
+                        className={
+                          complete
+                            ? "rounded-full bg-success/20 px-2 py-0.5 text-[11px] font-medium"
+                            : "rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted"
+                        }
+                      >
+                        {complete ? "کامل" : "ناقص"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </Card>
             <Card data-testid="product-translation-view">

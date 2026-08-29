@@ -237,8 +237,8 @@ function SerpPreview({ title, path, description }: { title: string; path: string
   return (
     <div className="rounded-ds border border-border bg-surface p-4" data-testid="product-seo-serp-preview">
       <p className="text-sm text-muted">پیش‌نمایش نتیجه جستجو</p>
-      <p className="mt-3 text-lg font-medium text-blue-800">{title || "—"}</p>
-      <p className="mt-1 text-sm text-emerald-700" dir="ltr">
+      <p className="mt-3 text-lg font-medium text-primary">{title || "—"}</p>
+      <p className="mt-1 text-sm text-muted" dir="ltr">
         {path || "—"}
       </p>
       <p className="mt-2 text-sm text-muted line-clamp-3">{description.trim() || "—"}</p>

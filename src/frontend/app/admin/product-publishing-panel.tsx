@@ -112,7 +112,12 @@ export function ProductPublishingPanel({
             {formatProductLifecycleLabelFa(status)}
           </p>
           {statusUpdatedAt ? (
-            <p className="mt-1 text-sm text-muted">آخرین به‌روزرسانی: {statusUpdatedAt}</p>
+            <p className="mt-1 text-sm text-muted">
+              آخرین به‌روزرسانی:{" "}
+              <time dateTime={statusUpdatedAt}>
+                {new Date(statusUpdatedAt).toLocaleString("fa-IR")}
+              </time>
+            </p>
           ) : null}
           <p className="mt-2 text-sm text-muted">
             انتشار هویت Catalog است و با قابل‌خرید بودن Offer یکی نیست.
@@ -126,7 +131,16 @@ export function ProductPublishingPanel({
           <ul className="space-y-2" data-testid="publish-readiness-checklist">
             {checklist.map((item) => (
               <li key={item.code} className="flex flex-wrap items-center gap-2 text-sm">
-                <span aria-hidden="true">{item.ready ? "✅" : "❌"}</span>
+                <span
+                  className={
+                    item.ready
+                      ? "rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success"
+                      : "rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning"
+                  }
+                  aria-label={item.ready ? "کامل" : "ناقص"}
+                >
+                  {item.ready ? "کامل" : "ناقص"}
+                </span>
                 <span className={item.ready ? "text-foreground" : "text-danger"}>{item.label}</span>
                 {!item.ready ? (
                   <button

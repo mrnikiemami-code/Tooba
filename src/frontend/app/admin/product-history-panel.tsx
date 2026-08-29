@@ -81,6 +81,13 @@ export function ProductHistoryPanel({
 
   return (
     <div className="space-y-4" data-testid="product-history-panel" aria-busy={busy || undefined}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-semibold">تاریخچه محصول</p>
+          <p className="mt-1 text-sm text-muted">فقط‌خواندنی — رویدادهای ثبت‌شده روی Catalog</p>
+        </div>
+        <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted">مشاهده</span>
+      </div>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm">
           <span className="text-muted">فیلتر بخش</span>
@@ -111,15 +118,25 @@ export function ProductHistoryPanel({
       {empty ? <p className="text-sm text-muted">تاریخچه‌ای ثبت نشده است.</p> : null}
 
       {!loading && items.length > 0 ? (
-        <ol className="space-y-3 border-s-2 border-border ps-4">
+        <ol className="space-y-4 border-s-2 border-border ps-4">
           {items.map((entry) => (
-            <li key={entry.historyId} className="space-y-1">
-              <p className="font-medium">{historyPrimaryLabel(entry)}</p>
+            <li key={entry.historyId} className="relative space-y-1">
+              <span
+                className="absolute -start-[1.35rem] top-1.5 size-2.5 rounded-full bg-primary"
+                aria-hidden
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{historyPrimaryLabel(entry)}</p>
+                {entry.sectionLabelFa ? (
+                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted">
+                    {entry.sectionLabelFa}
+                  </span>
+                ) : null}
+              </div>
               <p className="text-sm text-muted">
                 {entry.actorDisplayName}
                 {" · "}
                 {formatHistoryTimestamp(entry.occurredAt)}
-                {entry.sectionLabelFa ? ` · ${entry.sectionLabelFa}` : null}
               </p>
               {historyHasBeforeAfter(entry) ? (
                 <p className="text-sm text-muted">

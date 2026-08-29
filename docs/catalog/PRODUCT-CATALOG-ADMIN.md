@@ -1,6 +1,6 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 / TB-P07-T018 / TB-P07-T019 · **Phase:** P07 Advanced Catalog
+> **Task:** TB-P07-T014 / TB-P07-T016 / TB-P07-T017 / TB-P07-T018 / TB-P07-T019 / TB-P07-T020 · **Phase:** P07 Advanced Catalog
 > **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md), [PRODUCT-CATEGORY-ASSIGNMENT.md](./PRODUCT-CATEGORY-ASSIGNMENT.md), [PRODUCT-SEO.md](./PRODUCT-SEO.md), [PRODUCT-PUBLISHING.md](./PRODUCT-PUBLISHING.md), [PRODUCT-HISTORY.md](./PRODUCT-HISTORY.md)
 
 ## Product Master ownership
@@ -46,8 +46,13 @@ Route: `/admin/products/{productId}` with `scope=view|edit`
 
 Locked Admin form pattern via `useAdminFormMode`:
 
-- VIEW: readable summary, no Save
-- EDIT: explicit ویرایش · Save / Cancel · dirty protection · return to VIEW after save
+- VIEW: readable summary, no Save; `readOnly={viewScope}` only (normal VIEW must not show permission-denied)
+- EDIT: explicit ویرایش · stay on current tab · Save / Cancel on General · «پایان ویرایش» on other tabs · dirty discard of General draft when leaving that tab without exiting edit mode
+- Shell actions preferred over duplicate in-card Save/Cancel on General
+
+### Visual polish (T020)
+
+Aligned to Product Admin collage hierarchy (headers, badges, tabs, cards) — **not** pixel-perfect; `USER_VISUAL_ACCEPTED` remains NO. Evidence: `docs/evidence/TB-P07-T020/`.
 
 ### Tabs
 

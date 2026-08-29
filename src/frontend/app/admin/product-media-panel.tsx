@@ -44,7 +44,6 @@ export function ProductMediaPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showAdvancedAttach, setShowAdvancedAttach] = useState(false);
   const [advancedAssetId, setAdvancedAssetId] = useState("");
 
   const editable = canEdit && mode === "edit";
@@ -125,7 +124,6 @@ export function ProductMediaPanel({
     setBusy(false);
     if (result.ok) {
       setAdvancedAssetId("");
-      setShowAdvancedAttach(false);
     }
     await refreshAfterMutation(toMutationResult(result));
   }
@@ -318,22 +316,18 @@ export function ProductMediaPanel({
             className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
             onClick={() => void onAddPlaceholder()}
           >
-            افزودن تصویر نمایشی
+            افزودن تصویر نمایشی (موقت)
           </button>
           <p className="text-xs text-muted">
-            تا راه‌اندازی کتابخانهٔ Media، یک شناسهٔ مات نمایشی ساخته و به محصول وصل می‌شود. پیش‌نمایش از مسیر امن ویترین است.
+            راه‌حل موقت تا راه‌اندازی کتابخانهٔ Media: یک شناسهٔ مات نمایشی ساخته و به محصول وصل می‌شود. پیش‌نمایش از مسیر امن ویترین است؛ این جایگزین آپلود فایل نیست.
           </p>
-          <button
-            type="button"
-            className="text-xs text-muted underline"
-            onClick={() => setShowAdvancedAttach((v) => !v)}
-          >
-            {showAdvancedAttach ? "بستن مسیر پیشرفته" : "پیوست پیشرفته با شناسهٔ دارایی (موقت)"}
-          </button>
-          {showAdvancedAttach ? (
-            <div className="space-y-2 rounded-ds border border-amber-200 bg-amber-50/60 p-3">
-              <p className="text-xs text-amber-900">
-                هشدار: کتابخانهٔ Media و بارگذاری فایل هنوز آماده نیست. این مسیر فقط برای اتصال دستی شناسهٔ مات است.
+          <details className="rounded-ds border border-border bg-secondary/30 p-3">
+            <summary className="cursor-pointer text-sm font-medium text-muted">
+              اتصال پیشرفته (شناسهٔ دارایی)
+            </summary>
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-muted">
+                فقط برای اتصال دستی شناسهٔ مات موجود. کتابخانهٔ Media و بارگذاری فایل هنوز آماده نیست.
               </p>
               <label className="block text-sm">
                 شناسه دارایی رسانه
@@ -353,7 +347,7 @@ export function ProductMediaPanel({
                 پیوست شناسه
               </button>
             </div>
-          ) : null}
+          </details>
           {altDirty ? (
             <p className="text-xs text-amber-800">متن جایگزین ذخیره‌نشده دارید؛ برای هر ردیف «ذخیره متن جایگزین» را بزنید.</p>
           ) : null}
