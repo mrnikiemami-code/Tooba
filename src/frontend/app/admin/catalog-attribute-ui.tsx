@@ -122,7 +122,7 @@ export function AttributeDefinitionsScreen() {
       setError(result.message ?? "ایجاد ناموفق بود");
       return;
     }
-    setSuccess(`تعریف ایجاد شد: ${result.data.definitionId}`);
+    setSuccess("ویژگی جدید در کتابخانه ایجاد شد.");
     setCode("");
     setFaName("");
     setAxisAllowed(false);

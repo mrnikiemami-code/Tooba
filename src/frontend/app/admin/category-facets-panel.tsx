@@ -9,6 +9,8 @@ import {
   type EffectiveSchemaEntry,
 } from "./catalog-attribute-api.ts";
 import { humanizeAttributeCode } from "./category-attributes-panel.tsx";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { resolveAdminChromeLocale } from "./admin-chrome-messages.ts";
 import {
   displayTypeLabel,
   FACET_DISPLAY_TYPES,
@@ -37,11 +39,11 @@ function badgeClass(tone: "blue" | "slate" | "amber" | "emerald"): string {
   }
 }
 
-function FacetBadges({ row }: { row: EffectiveCategoryFacet }) {
+function FacetBadges({ row, locale }: { row: EffectiveCategoryFacet; locale: "fa" | "en" }) {
   return (
     <div className="flex flex-wrap gap-1">
       <span className={badgeClass("blue")} data-testid="facet-badge-type">
-        {displayTypeLabel(row.displayType)}
+        {displayTypeLabel(row.displayType, locale)}
       </span>
       {!row.isVisible ? (
         <span className={badgeClass("slate")} data-testid="facet-badge-hidden">
@@ -83,10 +85,12 @@ function FacetConfigEditor({
   draft,
   valueKind,
   onChange,
+  locale = "fa",
 }: {
   draft: UpsertCategoryFacetInput;
   valueKind: EffectiveSchemaEntry["valueKind"];
   onChange: (next: UpsertCategoryFacetInput) => void;
+  locale?: "fa" | "en";
 }) {
   const allowedTypes = FACET_DISPLAY_TYPES.filter((type) => {
     if (valueKind === "Boolean") return type === "BooleanToggle";
@@ -99,7 +103,9 @@ function FacetConfigEditor({
   return (
     <div className="space-y-3 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm">
       <label className="block">
-        <span className="mb-1 block text-xs text-slate-600">نوع نمایش</span>
+        <span className="mb-1 block text-xs text-slate-600">
+          {locale === "en" ? "Display type" : "نوع نمایش"}
+        </span>
         <select
           className="w-full rounded-lg border border-gray-200 px-3 py-2"
           value={draft.displayType}
@@ -115,7 +121,7 @@ function FacetConfigEditor({
         >
           {allowedTypes.map((type) => (
             <option key={type} value={type}>
-              {displayTypeLabel(type)}
+              {displayTypeLabel(type, locale)}
             </option>
           ))}
         </select>
@@ -127,7 +133,7 @@ function FacetConfigEditor({
           onChange={(e) => onChange({ ...draft, isVisible: e.target.checked })}
           data-testid="facet-visible"
         />
-        نمایش در صفحه محصولات
+        {locale === "en" ? "Show on product-list page" : "نمایش در صفحه محصولات"}
       </label>
       {isSearchableDisplayType(draft.displayType) ? (
         <label className="flex items-center gap-2">
@@ -137,7 +143,7 @@ function FacetConfigEditor({
             onChange={(e) => onChange({ ...draft, isSearchable: e.target.checked })}
             data-testid="facet-searchable"
           />
-          قابل جستجو
+          {locale === "en" ? "Searchable" : "قابل جستجو"}
         </label>
       ) : null}
       <label className="flex items-center gap-2">
@@ -147,7 +153,7 @@ function FacetConfigEditor({
           onChange={(e) => onChange({ ...draft, isCollapsedByDefault: e.target.checked })}
           data-testid="facet-collapsed"
         />
-        پیش‌فرض بسته
+        {locale === "en" ? "Collapsed by default" : "پیش‌فرض بسته"}
       </label>
       <label className="flex items-center gap-2">
         <input
@@ -156,7 +162,7 @@ function FacetConfigEditor({
           onChange={(e) => onChange({ ...draft, showCounts: e.target.checked })}
           data-testid="facet-show-counts"
         />
-        نمایش تعداد
+        {locale === "en" ? "Show counts" : "نمایش تعداد"}
       </label>
     </div>
   );
@@ -195,6 +201,11 @@ export function CategoryFacetsPanel({
   const [selectedDefId, setSelectedDefId] = useState<string | null>(null);
 
   const isBusy = busy || Boolean(externalBusy);
+  const locale = resolveAdminChromeLocale();
+  const toUiError = useCallback(
+    (raw: string | null | undefined) => mapAdminErrorMessage(raw || "host-unreachable", locale),
+    [locale],
+  );
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -205,16 +216,16 @@ export function CategoryFacetsPanel({
     ]);
     setLoading(false);
     if (facetRes.state !== "ok" || !facetRes.data) {
-      setError(facetRes.message ?? "خطا در بارگذاری فیلترها");
+      setError(toUiError(facetRes.message));
       return;
     }
     if (schemaRes.state !== "ok" || !schemaRes.data) {
-      setError(schemaRes.message ?? "خطا در بارگذاری schema");
+      setError(toUiError(schemaRes.message));
       return;
     }
     setFacets(facetRes.data);
     setSchema(schemaRes.data);
-  }, [categoryId]);
+  }, [categoryId, toUiError]);
 
   useEffect(() => {
     void reload();
@@ -247,10 +258,10 @@ export function CategoryFacetsPanel({
     const result = await upsertCategoryFacet(categoryId, definitionId, input);
     setBusy(false);
     if (result.state !== "ok") {
-      toast.error(result.message ?? "ذخیره ناموفق");
+      toast.error(toUiError(result.message));
       return;
     }
-    toast.success("تنظیمات فیلتر ذخیره شد");
+    toast.success(locale === "en" ? "Filter settings saved" : "تنظیمات فیلتر ذخیره شد");
     setEditTarget(null);
     setEditDraft(null);
     setAddOpen(false);
@@ -265,10 +276,10 @@ export function CategoryFacetsPanel({
     const result = await removeCategoryFacetOverride(categoryId, row.definitionId);
     setBusy(false);
     if (result.state !== "ok") {
-      toast.error(result.message ?? "حذف ناموفق");
+      toast.error(toUiError(result.message));
       return;
     }
-    toast.success("تنظیم محلی حذف شد");
+    toast.success(locale === "en" ? "Local filter override removed" : "تنظیم محلی حذف شد");
     await reload();
   };
 
@@ -290,7 +301,7 @@ export function CategoryFacetsPanel({
     );
     setBusy(false);
     if (result.state !== "ok") {
-      toast.error(result.message ?? "ترتیب ذخیره نشد");
+      toast.error(toUiError(result.message));
       return;
     }
     await reload();
@@ -315,7 +326,7 @@ export function CategoryFacetsPanel({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <FacetBadges row={row} />
+          <FacetBadges row={row} locale={locale} />
           {isEdit && canEdit ? (
             <div className="flex flex-wrap gap-1">
               {row.isInherited ? (
@@ -386,9 +397,13 @@ export function CategoryFacetsPanel({
     <div className="space-y-6" data-testid="category-facets-panel">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">فیلترهای صفحه محصولات</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            مشخص می‌کند کدام ویژگی‌های قابل فیلتر، در صفحهٔ لیست محصولات چگونه نمایش داده شوند.
+          <h2 className="text-lg font-semibold text-slate-900">
+            {locale === "en" ? "Product list filters" : "فیلترهای صفحه محصولات"}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500" data-testid="facets-helper-copy">
+            {locale === "en"
+              ? "Choose which attributes customers can use to filter products on this category page."
+              : "مشخص کنید مشتریان در صفحه این دسته بتوانند محصولات را بر اساس کدام ویژگی‌ها فیلتر کنند."}
           </p>
         </div>
         {canEdit && !isEdit ? (
@@ -453,7 +468,7 @@ export function CategoryFacetsPanel({
 
           {facets.length === 0 ? (
             <p className="rounded-xl border border-dashed border-gray-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-              هنوز فیلتری پیکربندی نشده. ویژگی باید در تب ویژگی‌ها «قابل فیلتر» باشد.
+              هنوز فیلتری پیکربندی نشده. ابتدا در تب ویژگی‌ها گزینه «فیلتر» را برای ویژگی موردنظر فعال کنید.
             </p>
           ) : null}
         </>
@@ -492,6 +507,7 @@ export function CategoryFacetsPanel({
                   draft={addDraft}
                   valueKind={schema.find((s) => s.definitionId === selectedDefId)?.valueKind ?? "Enumeration"}
                   onChange={setAddDraft}
+                  locale={locale}
                 />
               </div>
             ) : null}
@@ -524,6 +540,7 @@ export function CategoryFacetsPanel({
                 draft={editDraft}
                 valueKind={editTarget.valueKind}
                 onChange={setEditDraft}
+                locale={locale}
               />
             </div>
             <div className="mt-4 flex justify-end gap-2">

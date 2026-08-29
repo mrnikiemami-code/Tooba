@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AdminShell } from "./admin-shell";
 
 export const metadata: Metadata = {
@@ -13,7 +13,15 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AdminShell>{children}</AdminShell>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-500">
+            در حال آماده‌سازی پنل مدیریت…
+          </div>
+        }
+      >
+        <AdminShell>{children}</AdminShell>
+      </Suspense>
     </div>
   );
 }

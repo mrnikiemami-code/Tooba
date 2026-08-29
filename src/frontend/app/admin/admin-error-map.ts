@@ -26,6 +26,18 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",
   },
+  "catalog.schema.invalid": {
+    fa: "تنظیم ویژگی برای این دسته معتبر نیست.",
+    en: "This attribute setting is not valid for the category.",
+  },
+  "catalog.facet.invalid": {
+    fa: "تنظیم فیلتر معتبر نیست. ویژگی باید برای این دسته قابل فیلتر باشد.",
+    en: "Filter settings are not valid. The attribute must be filterable for this category.",
+  },
+  "catalog.facet.missing": {
+    fa: "تنظیم فیلتر یافت نشد.",
+    en: "Filter settings were not found.",
+  },
   "catalog.category.invalid": {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",
@@ -177,4 +189,49 @@ export function unknownAdminErrorMessage(locale: AdminErrorLocale = "fa"): strin
 /** فهرست کدهای شناخته‌شده (برای تست). */
 export function listMappedAdminErrorCodes(): string[] {
   return Object.keys(ADMIN_ERROR_MESSAGES);
+}
+
+function recordOf(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function textProp(item: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+/**
+ * مسیر واحد نرمال‌سازی خطای Admin از payload پاسخ Host / fetch.
+ * فقط کد پایدار یا نشانگر HTTP داخلی؛ هرگز title خام مثل Bad Request.
+ */
+export function parseAdminProblemErrorCode(payload: unknown, status: number): string {
+  if (status === 401 || status === 403) return "admin.authorization.denied";
+  const item = recordOf(payload);
+  if (item) {
+    const code = textProp(item, "errorCode", "ErrorCode", "code", "Code");
+    if (code) return code;
+    const extensions = recordOf(item.extensions ?? item.Extensions);
+    if (extensions) {
+      const nested = textProp(extensions, "errorCode", "ErrorCode", "code", "Code");
+      if (nested) return nested;
+    }
+  }
+  if (status <= 0) return "host-unreachable";
+  return `admin.http.${status}`;
+}
+
+/**
+ * نرمال‌سازی کامل برای toast/فرم: کد پایدار → پیام انسان‌خوان locale.
+ */
+export function normalizeAdminClientError(
+  payload: unknown,
+  status: number,
+  locale: AdminErrorLocale = "fa",
+): string {
+  return mapAdminErrorMessage(parseAdminProblemErrorCode(payload, status), locale);
 }

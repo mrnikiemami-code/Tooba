@@ -1,4 +1,4 @@
-import type { ProductWorkspaceView } from "./workspace-model.ts";
+﻿import type { ProductWorkspaceView } from "./workspace-model.ts";
 import { adminHeaders } from "./admin-api.ts";
 import type { GridServerQuery, GridServerPage } from "../../design-system/data-grid/types";
 import { fromHostGridPage, toHostGridQuery } from "../../design-system/app-data-grid/grid-query-mapper.ts";
@@ -625,11 +625,11 @@ export async function mutateAdminProductLifecycle(
     }
     if (response.status === 409) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? "حذف به دلیل ارجاع ممکن نیست؛ محصول آرشیو شد" };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? "حذف به دلیل ارجاع ممکن نیست؛ محصول آرشیو شد" };
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     if (action === "delete" || response.status === 204) {
       return { ok: true };
@@ -661,7 +661,7 @@ async function readMediaMutation(
   }
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-    return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
   }
   return { ok: true, media: mapMediaList(await response.json()) };
 }
@@ -704,7 +704,7 @@ export async function getAdminProductMediaReadiness(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const raw = (await response.json()) as Record<string, unknown>;
     const messageRaw = readProp(raw, "messageFa", "MessageFa");
@@ -748,7 +748,7 @@ export async function getAdminProductSeo(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const detail = mapSeoDetail((await response.json()) as Record<string, unknown>);
     if (!detail) {
@@ -778,7 +778,7 @@ export async function getAdminProductSeoReadiness(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     return { ok: true, readiness: mapSeoReadiness((await response.json()) as Record<string, unknown>) };
   } catch {
@@ -804,7 +804,7 @@ export async function getAdminProductPublishReadiness(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const readiness = mapPublishReadiness(await response.json());
     if (!readiness) {
@@ -840,7 +840,7 @@ export async function getAdminProductHistory(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const page = mapProductHistoryPage(await response.json());
     if (!page) {
@@ -886,7 +886,7 @@ export async function updateAdminProductSeo(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const detail = mapSeoDetail((await response.json()) as Record<string, unknown>);
     if (!detail) {
@@ -1029,7 +1029,7 @@ export async function createAdminProductVariant(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const view = mapProductWorkspaceView(await response.json());
     return view ? { ok: true, view } : { ok: false, message: "پاسخ تنوع نامعتبر است" };
@@ -1058,7 +1058,7 @@ export async function patchAdminProductVariant(
     }
     if (!response.ok) {
       const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
-      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+      return { ok: false, message: body?.errorCode ?? body?.title ?? `خطای Host (${response.status})` };
     }
     const view = mapProductWorkspaceView(await response.json());
     return view ? { ok: true, view } : { ok: false, message: "پاسخ تنوع نامعتبر است" };

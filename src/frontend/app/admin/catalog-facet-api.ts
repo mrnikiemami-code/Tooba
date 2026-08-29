@@ -3,6 +3,7 @@
  */
 
 import { adminHeaders, type AdminResult } from "./admin-api.ts";
+import { parseAdminProblemErrorCode } from "./admin-error-map.ts";
 import type { CatalogAttributeValueKind } from "./catalog-attribute-api.ts";
 
 export type CatalogFacetDisplayType =
@@ -18,6 +19,14 @@ const DISPLAY_TYPE_BY_NUMBER: Record<number, CatalogFacetDisplayType> = {
   2: "Range",
   3: "ColorSwatch",
   4: "BooleanToggle",
+};
+
+const DISPLAY_TYPE_TO_NUMBER: Record<CatalogFacetDisplayType, number> = {
+  CheckboxList: 0,
+  SearchableSelect: 1,
+  Range: 2,
+  ColorSwatch: 3,
+  BooleanToggle: 4,
 };
 
 export interface EffectiveCategoryFacet {
@@ -44,16 +53,19 @@ export interface UpsertCategoryFacetInput {
   showCounts: boolean;
 }
 
-export const FACET_DISPLAY_LABELS: Record<CatalogFacetDisplayType, string> = {
-  CheckboxList: "چندانتخابی",
-  SearchableSelect: "انتخاب با جستجو",
-  Range: "بازه",
-  ColorSwatch: "رنگ",
-  BooleanToggle: "روشن/خاموش",
+export const FACET_DISPLAY_LABELS: Record<CatalogFacetDisplayType, { fa: string; en: string }> = {
+  CheckboxList: { fa: "چندانتخابی", en: "Multi-select" },
+  SearchableSelect: { fa: "جستجوی متنی", en: "Text search" },
+  Range: { fa: "بازه عددی", en: "Numeric range" },
+  ColorSwatch: { fa: "نمونه رنگ", en: "Color swatch" },
+  BooleanToggle: { fa: "بله/خیر", en: "Yes/No" },
 };
 
-export function displayTypeLabel(type: CatalogFacetDisplayType): string {
-  return FACET_DISPLAY_LABELS[type] ?? type;
+export function displayTypeLabel(
+  type: CatalogFacetDisplayType,
+  locale: "fa" | "en" = "fa",
+): string {
+  return FACET_DISPLAY_LABELS[type]?.[locale] ?? type;
 }
 
 export function suggestFacetDisplayType(valueKind: CatalogAttributeValueKind): CatalogFacetDisplayType {
@@ -83,14 +95,7 @@ function prop(item: Record<string, unknown>, ...keys: string[]): unknown {
 }
 
 function errorMessage(payload: unknown, status: number): string {
-  const item = recordOf(payload);
-  if (item) {
-    const title = text(prop(item, "title", "Title"));
-    const code = text(prop(item, "errorCode", "ErrorCode"));
-    if (title) return code ? `${title} (${code})` : title;
-    if (code) return code;
-  }
-  return `admin.http.${status}`;
+  return parseAdminProblemErrorCode(payload, status);
 }
 
 async function adminRead(path: string): Promise<AdminResult<unknown>> {
@@ -180,7 +185,11 @@ export async function upsertCategoryFacet(
   const response = await adminWrite(
     `/v1/admin/catalog/categories/${categoryId}/facets/${definitionId}`,
     "PUT",
-    input,
+    {
+      ...input,
+      // Host بدون JsonStringEnumConverter فقط عدد می‌پذیرد؛ string → Bad Request خام.
+      displayType: DISPLAY_TYPE_TO_NUMBER[input.displayType],
+    },
   );
   return { ...response, data: response.state === "ok" ? null : null };
 }

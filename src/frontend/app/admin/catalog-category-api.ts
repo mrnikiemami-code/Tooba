@@ -4,7 +4,7 @@
  */
 
 import { adminHeaders, type AdminResult } from "./admin-api.ts";
-import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { mapAdminErrorMessage, parseAdminProblemErrorCode } from "./admin-error-map.ts";
 
 export type CategoryPublicationStatus = "Draft" | "Published" | "Archived";
 
@@ -145,13 +145,7 @@ export function parseCategoryStatus(raw: unknown): CategoryPublicationStatus {
 
 /** کد پایدار از ProblemDetails سبک Host — بدون Bad Request / HTTP خام. */
 function errorMessage(payload: unknown, status: number): string {
-  const item = recordOf(payload);
-  if (item) {
-    const code = text(prop(item, "errorCode", "ErrorCode"));
-    if (code) return code;
-  }
-  if (status === 401 || status === 403) return "admin.authorization.denied";
-  return `admin.http.${status}`;
+  return parseAdminProblemErrorCode(payload, status);
 }
 
 /** نگاشت خطای mutation رده به متن کاربرپسند (نامک تکراری و غیره). */

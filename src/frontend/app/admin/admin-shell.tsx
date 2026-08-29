@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
@@ -28,7 +28,6 @@ import {
   Tag,
   Tags,
   FolderTree,
-  ListTree,
   X,
 } from "lucide-react";
 import { prepareAdminDevActor } from "./admin-api";
@@ -42,6 +41,7 @@ import {
   resolveAdminChromeLocale,
   type AdminNavLabels,
 } from "./admin-chrome-messages";
+import { isActiveAdminNavItem } from "./admin-nav-active";
 
 type NavItemDef = {
   id: string;
@@ -82,7 +82,6 @@ const navGroupDefs: NavGroupDef[] = [
     items: [
       { id: "catalog-categories", labelKey: "catalogCategories", href: "/admin/catalog/categories", icon: FolderTree, live: true, viewPermission: "product.view" },
       { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
-      { id: "category-schema", labelKey: "categorySchema", href: "/admin/catalog/category-schema", icon: ListTree, live: true, viewPermission: "catalog.attribute.view" },
     ],
   },
   {
@@ -123,25 +122,23 @@ const navGroupDefs: NavGroupDef[] = [
 ];
 
 /** قابلیت‌های عمداً از nav حذف‌شده — deep-link فقط. */
-export const ADMIN_DEFERRED_NAV_HREFS = [] as const;
+export const ADMIN_DEFERRED_NAV_HREFS = ["/admin/catalog/category-schema"] as const;
 
 /** فهرست hrefهای زنده Admin برای بستهٔ اسکرین‌شات. */
 export function listLiveAdminNavHrefs(): string[] {
   return navGroupDefs.flatMap((g) => g.items.filter((i) => i.live).map((i) => i.href));
 }
 
-function isActivePath(pathname: string, item: NavItemDef): boolean {
-  const hrefPath = item.href.split("?")[0] ?? item.href;
-  if (item.exact || hrefPath === "/admin") {
-    return pathname === hrefPath;
-  }
-  return pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
+export { isActiveAdminNavItem } from "./admin-nav-active";
+
+function isActivePath(pathname: string, search: string, item: NavItemDef, siblings: NavItemDef[]): boolean {
+  return isActiveAdminNavItem(pathname, search, item, siblings);
 }
 
-function crumbFor(pathname: string, labels: AdminNavLabels): string {
+function crumbFor(pathname: string, search: string, labels: AdminNavLabels): string {
   for (const group of navGroupDefs) {
     for (const item of group.items) {
-      if (isActivePath(pathname, item)) {
+      if (isActivePath(pathname, search, item, group.items)) {
         return labels[item.labelKey];
       }
     }
@@ -162,6 +159,8 @@ function itemAllowed(item: NavItemDef, caps: Set<string> | null): boolean {
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const search = searchParams?.toString() ?? "";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -211,7 +210,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const crumb = crumbFor(pathname, labels);
+  const crumb = crumbFor(pathname, search, labels);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden" dir="rtl" data-testid="admin-panel-shell">
@@ -269,7 +268,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <p className="px-3 mb-1 text-[10px] font-bold tracking-wide text-gray-400">{group.label}</p>
                 <nav className="space-y-1" aria-label={group.label} data-testid={group.id === "ops" ? "admin-panel-nav-live-only" : undefined}>
                   {group.items.map((item) => (
-                    <NavLink key={item.id} item={item} pathname={pathname} />
+                    <NavLink key={item.id} item={item} pathname={pathname} search={search} siblings={group.items} />
                   ))}
                 </nav>
               </div>
@@ -303,7 +302,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   <p className="px-3 mb-1 text-[10px] font-bold text-gray-400">{group.label}</p>
                   <nav className="space-y-1">
                     {group.items.map((item) => (
-                      <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
+                      <NavLink
+                        key={item.id}
+                        item={item}
+                        pathname={pathname}
+                        search={search}
+                        siblings={group.items}
+                        onNavigate={() => setMobileOpen(false)}
+                        dense
+                      />
                     ))}
                   </nav>
                 </div>
@@ -328,15 +335,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
 function NavLink({
   item,
   pathname,
+  search,
+  siblings,
   onNavigate,
   dense,
 }: {
   item: NavItemDef & { label: string };
   pathname: string;
+  search: string;
+  siblings: Array<NavItemDef & { label: string }>;
   onNavigate?: () => void;
   dense?: boolean;
 }) {
-  const active = isActivePath(pathname, item);
+  const active = isActivePath(pathname, search, item, siblings);
   return (
     <Link
       href={item.href}
@@ -346,6 +357,7 @@ function NavLink({
       } ${active ? "bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/20" : "text-gray-700 hover:bg-gray-100"}`}
       data-testid={`admin-nav-${item.id}`}
       data-live={item.live ? "true" : "false"}
+      aria-current={active ? "page" : undefined}
     >
       <item.icon className="w-5 h-5 shrink-0" />
       <span className="flex-1 truncate">{item.label}</span>

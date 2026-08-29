@@ -31,18 +31,30 @@ const VALUE_KINDS: CatalogAttributeValueKind[] = [
 
 /** برچسب‌های کاربرپسند برای پرچم‌های schema — بدون اصطلاحات فنی. */
 export const ATTRIBUTE_FLAG_LABELS = {
-  required: "برای ثبت محصول الزامی است",
-  filterable: "نمایش در فیلتر محصولات",
-  variant: "برای ساخت تنوع محصول",
-  comparable: "نمایش در مقایسه محصولات",
+  required: {
+    fa: "برای محصولات این دسته باید مقدار داشته باشد.",
+    en: "Products in this category must have a value.",
+  },
+  filterable: {
+    fa: "مشتری می‌تواند در صفحه دسته بر اساس این ویژگی فیلتر کند.",
+    en: "Customers can filter products by this attribute on the category page.",
+  },
+  variant: {
+    fa: "می‌تواند برای ساخت تنوع‌های محصول مثل رنگ یا سایز استفاده شود.",
+    en: "Can be used to build product variants such as color or size.",
+  },
+  comparable: {
+    fa: "در جدول مقایسه محصولات نمایش داده می‌شود.",
+    en: "Shown in the product comparison table.",
+  },
 } as const;
 
 /** برچسب کوتاه چیپ رفتار — قابل انتخاب/حذف مستقل. */
 export const ATTRIBUTE_FLAG_CHIP_LABELS = {
-  required: "الزامی",
-  filterable: "فیلتر",
-  variant: "تنوع",
-  comparable: "مقایسه",
+  required: { fa: "الزامی", en: "Required" },
+  filterable: { fa: "فیلتر", en: "Filter" },
+  variant: { fa: "تنوع", en: "Variant" },
+  comparable: { fa: "مقایسه", en: "Compare" },
 } as const;
 
 /** تبدیل کد داخلی به عنوان قابل‌خواندن (بدون نمایش GUID). */
@@ -261,11 +273,13 @@ function BindFlagsEditor({
   valueKind,
   variantCapabilityAllowed,
   onChange,
+  locale = "fa",
 }: {
   flags: BindFlags;
   valueKind: CatalogAttributeValueKind;
   variantCapabilityAllowed: boolean;
   onChange: (next: BindFlags) => void;
+  locale?: "fa" | "en";
 }) {
   const variantDisabled =
     !variantCapabilityAllowed
@@ -283,30 +297,30 @@ function BindFlagsEditor({
   }> = [
     {
       key: "isRequired",
-      chip: ATTRIBUTE_FLAG_CHIP_LABELS.required,
-      detail: ATTRIBUTE_FLAG_LABELS.required,
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.required[locale],
+      detail: ATTRIBUTE_FLAG_LABELS.required[locale],
       checked: flags.isRequired,
       testId: "attr-flag-required",
     },
     {
       key: "isFilterable",
-      chip: ATTRIBUTE_FLAG_CHIP_LABELS.filterable,
-      detail: ATTRIBUTE_FLAG_LABELS.filterable,
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.filterable[locale],
+      detail: ATTRIBUTE_FLAG_LABELS.filterable[locale],
       checked: flags.isFilterable,
       testId: "attr-flag-filterable",
     },
     {
       key: "isVariantAxis",
-      chip: ATTRIBUTE_FLAG_CHIP_LABELS.variant,
-      detail: ATTRIBUTE_FLAG_LABELS.variant,
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.variant[locale],
+      detail: ATTRIBUTE_FLAG_LABELS.variant[locale],
       checked: flags.isVariantAxis,
       disabled: variantDisabled,
       testId: "attr-flag-variant",
     },
     {
       key: "isComparable",
-      chip: ATTRIBUTE_FLAG_CHIP_LABELS.comparable,
-      detail: ATTRIBUTE_FLAG_LABELS.comparable,
+      chip: ATTRIBUTE_FLAG_CHIP_LABELS.comparable[locale],
+      detail: ATTRIBUTE_FLAG_LABELS.comparable[locale],
       checked: flags.isComparable,
       testId: "attr-flag-comparable",
     },
@@ -316,10 +330,10 @@ function BindFlagsEditor({
     <div
       className="space-y-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm"
       role="group"
-      aria-label="رفتار ویژگی"
+      aria-label={locale === "en" ? "Attribute behavior" : "رفتار ویژگی"}
       data-testid="attr-behavior-chips"
     >
-      <div className="flex flex-wrap gap-2" dir="rtl">
+      <div className="flex flex-wrap gap-2" dir={locale === "en" ? "ltr" : "rtl"}>
         {chips.map((chip) => {
           const selected = chip.checked;
           return (
@@ -356,8 +370,19 @@ function BindFlagsEditor({
           );
         })}
       </div>
+      <ul className="space-y-1 text-xs text-slate-600" data-testid="attr-behavior-explanations">
+        {chips.map((chip) => (
+          <li key={`help-${chip.key}`}>
+            <span className="font-medium text-slate-800">{chip.chip}:</span> {chip.detail}
+          </li>
+        ))}
+      </ul>
       {variantDisabled ? (
-        <p className="text-xs text-slate-500">تنوع برای این نوع مقدار مناسب نیست</p>
+        <p className="text-xs text-slate-500">
+          {locale === "en"
+            ? "Variant is not suitable for this value type"
+            : "تنوع برای این نوع مقدار مناسب نیست"}
+        </p>
       ) : null}
     </div>
   );
@@ -539,12 +564,19 @@ export function CategoryAttributesPanel({
     const name = createName.trim();
     if (!name) return;
     const code = (createAdvanced && createCode.trim()) || attributeCodeFromLabel(name);
+    const variantAllowed =
+      createFlags.isVariantAxis
+      && (createKind === "Enumeration" || createKind === "Number");
+    const safeFlags: BindFlags = {
+      ...createFlags,
+      isVariantAxis: variantAllowed,
+    };
     await runMutation(async () => {
       const createResult = await createAttributeDefinition({
         code,
         valueKind: createKind,
-        isVariantAxisAllowed: createFlags.isVariantAxis,
-        localizedNames: { "fa-IR": name },
+        isVariantAxisAllowed: variantAllowed,
+        localizedNames: { "fa-IR": name, "en-US": name },
         metadata: {
           isRequired: false,
           isFilterable: false,
@@ -563,6 +595,7 @@ export function CategoryAttributesPanel({
           const optCode = attributeCodeFromLabel(opt.code || opt.name);
           const optResult = await addAttributeOption(definitionId, optCode, {
             "fa-IR": opt.name.trim() || optCode,
+            "en-US": opt.name.trim() || optCode,
           });
           if (optResult.state !== "ok") {
             throw new Error(optResult.message ?? "افزودن گزینه ناموفق بود");
@@ -572,7 +605,7 @@ export function CategoryAttributesPanel({
       const bindResult = await bindCategoryAttribute(categoryId, {
         definitionId,
         displayOrder: local.length,
-        ...toBindInput(createFlags),
+        ...toBindInput(safeFlags),
       });
       if (bindResult.state !== "ok") {
         throw new Error(bindResult.message ?? "پیوند به دسته ناموفق بود");
@@ -698,7 +731,10 @@ export function CategoryAttributesPanel({
       {!isEdit ? (
         <div className="space-y-6" data-testid="category-attributes-view" data-form-mode="view">
           <section data-testid="category-attributes-inherited-section">
-            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های ارث‌برده‌شده</h2>
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های به‌ارث‌رسیده</h2>
+            <p className="mt-1 text-xs text-slate-500" data-testid="category-attributes-inherited-help">
+              این ویژگی‌ها از دسته‌های والد به ارث رسیده‌اند و برای محصولات این دسته نیز قابل استفاده‌اند.
+            </p>
             {inherited.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">ویژگی ارثی ثبت نشده است.</p>
             ) : (
@@ -716,7 +752,7 @@ export function CategoryAttributesPanel({
           </section>
 
           <section data-testid="category-attributes-local-section">
-            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های این دسته</h2>
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های مخصوص این دسته</h2>
             {local.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">هنوز ویژگی اختصاصی برای این دسته تعریف نشده است.</p>
             ) : (
@@ -797,7 +833,7 @@ export function CategoryAttributesPanel({
           ) : null}
 
           <section data-testid="category-attributes-local-edit-section">
-            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های این دسته</h2>
+            <h2 className="text-sm font-semibold text-slate-800">ویژگی‌های مخصوص این دسته</h2>
             {local.length === 0 ? (
               <p className="mt-2 text-sm text-slate-500">با دکمه‌های بالا ویژگی اضافه کنید.</p>
             ) : (
@@ -881,6 +917,7 @@ export function CategoryAttributesPanel({
                   valueKind={selectedDefinition.valueKind}
                   variantCapabilityAllowed={selectedDefinition.isVariantAxisAllowed}
                   onChange={setBindFlags}
+                  locale={locale}
                 />
               </div>
             ) : null}
@@ -963,6 +1000,7 @@ export function CategoryAttributesPanel({
                 valueKind={createKind}
                 variantCapabilityAllowed
                 onChange={setCreateFlags}
+                locale={locale}
               />
               {createKind === "Enumeration" ? (
                 <div className="rounded-xl border border-gray-100 p-3">
@@ -1073,6 +1111,7 @@ export function CategoryAttributesPanel({
                 valueKind={configureTarget.valueKind}
                 variantCapabilityAllowed={configureTarget.isVariantAxisAllowed}
                 onChange={setConfigureFlags}
+                locale={locale}
               />
             </div>
             <div className="mt-5 flex flex-wrap justify-end gap-2">

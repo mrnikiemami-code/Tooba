@@ -5,6 +5,8 @@ import {
   isTechnicalAdminErrorText,
   listMappedAdminErrorCodes,
   mapAdminErrorMessage,
+  normalizeAdminClientError,
+  parseAdminProblemErrorCode,
   unknownAdminErrorMessage,
 } from "./admin-error-map.ts";
 
@@ -52,4 +54,19 @@ test("extracts code from legacy title (code) payloads", () => {
     "catalog.attribute.code.duplicate",
   );
   assert.ok(listMappedAdminErrorCodes().includes("workspace.product.category.level.invalid"));
+  assert.ok(listMappedAdminErrorCodes().includes("catalog.schema.invalid"));
+  assert.ok(listMappedAdminErrorCodes().includes("catalog.facet.invalid"));
+});
+
+test("parseAdminProblemErrorCode prefers stable errorCode never title", () => {
+  assert.equal(
+    parseAdminProblemErrorCode({ title: "Bad Request", errorCode: "catalog.facet.invalid" }, 400),
+    "catalog.facet.invalid",
+  );
+  assert.equal(parseAdminProblemErrorCode({ title: "Bad Request" }, 400), "admin.http.400");
+  assert.equal(
+    normalizeAdminClientError({ title: "Bad Request", errorCode: "catalog.attribute.code.duplicate" }, 409, "fa"),
+    "این کد ویژگی قبلاً استفاده شده است.",
+  );
+  assert.ok(!normalizeAdminClientError({ title: "Bad Request" }, 400, "fa").includes("Bad Request"));
 });

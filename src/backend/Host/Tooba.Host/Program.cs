@@ -133,6 +133,7 @@ builder.Services.AddScoped<Tooba.Host.Promotion.PromotionPanelComposer>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 var authSecurityOptions = new AuthSecurityHostOptions();

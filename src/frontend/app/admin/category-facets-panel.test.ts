@@ -15,6 +15,7 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const panelPath = path.join(root, "app/admin/category-facets-panel.tsx");
 const screenPath = path.join(root, "app/admin/category-admin-screen.tsx");
+const facetApiPath = path.join(root, "app/admin/catalog-facet-api.ts");
 
 function facet(
   partial: Partial<EffectiveCategoryFacet> & Pick<EffectiveCategoryFacet, "definitionId" | "code">,
@@ -35,10 +36,12 @@ function facet(
 }
 
 test("display type labels are ordinary Persian without facet jargon", () => {
-  assert.match(FACET_DISPLAY_LABELS.CheckboxList, /چندانتخابی/);
-  assert.match(FACET_DISPLAY_LABELS.Range, /بازه/);
-  assert.match(FACET_DISPLAY_LABELS.BooleanToggle, /روشن/);
-  assert.equal(displayTypeLabel("SearchableSelect").includes("SearchableSelect"), false);
+  assert.match(FACET_DISPLAY_LABELS.CheckboxList.fa, /چندانتخابی/);
+  assert.match(FACET_DISPLAY_LABELS.Range.fa, /بازه عددی/);
+  assert.match(FACET_DISPLAY_LABELS.BooleanToggle.fa, /بله\/خیر/);
+  assert.match(FACET_DISPLAY_LABELS.SearchableSelect.fa, /جستجوی متنی/);
+  assert.equal(displayTypeLabel("SearchableSelect", "fa").includes("SearchableSelect"), false);
+  assert.equal(displayTypeLabel("Range", "en"), "Numeric range");
 });
 
 test("suggestFacetDisplayType maps value kinds for non-technical users", () => {
@@ -74,9 +77,11 @@ test("Facets tab: VIEW/EDIT, add filter, inherited/local, labels", () => {
   assert.match(screen, /activeTab === "facets"/);
   assert.match(screen, /handleEnterFacetsEdit/);
   assert.match(screen, /editSurface === "facets"/);
-  assert.match(screen, /id: "facets", label: "فیلترها", implemented: true/);
+  assert.match(screen, /id: "facets", label: "فیلترهای صفحه محصولات", implemented: true/);
   assert.match(panel, /category-facets-panel/);
   assert.match(panel, /فیلترهای صفحه محصولات/);
+  assert.match(panel, /facets-helper-copy/);
+  assert.match(panel, /mapAdminErrorMessage/);
   assert.match(panel, /facets-enter-edit/);
   assert.match(panel, /facets-cancel-edit/);
   assert.match(panel, /facet-add-button/);
@@ -97,6 +102,12 @@ test("Facets panel hides searchable checkbox for range/boolean types", () => {
   assert.match(panel, /isSearchableDisplayType\(draft\.displayType\)/);
   assert.match(panel, /valueKind === "Boolean"/);
   assert.match(panel, /valueKind === "Number"/);
+});
+
+test("facet API never prefers raw title Bad Request", () => {
+  const api = fs.readFileSync(facetApiPath, "utf8");
+  assert.match(api, /parseAdminProblemErrorCode/);
+  assert.equal(api.includes('prop(item, "title", "Title")'), false);
 });
 
 test("no raw AgGridReact in facets panel", () => {

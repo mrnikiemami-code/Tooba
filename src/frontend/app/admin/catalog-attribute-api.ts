@@ -7,6 +7,7 @@ import {
   adminHeaders,
   type AdminResult,
 } from "./admin-api.ts";
+import { parseAdminProblemErrorCode } from "./admin-error-map.ts";
 import {
   ACTOR_STORAGE_KEY,
   DEV_ACTOR_HEADER,
@@ -28,6 +29,14 @@ const VALUE_KIND_BY_NUMBER: Record<number, CatalogAttributeValueKind> = {
   2: "Boolean",
   3: "Enumeration",
   4: "Instant",
+};
+
+const VALUE_KIND_TO_NUMBER: Record<CatalogAttributeValueKind, number> = {
+  Text: 0,
+  Number: 1,
+  Boolean: 2,
+  Enumeration: 3,
+  Instant: 4,
 };
 
 export interface AttributeDefinition {
@@ -326,13 +335,7 @@ function parseValueKind(raw: unknown): CatalogAttributeValueKind {
 
 /** کد پایدار از ProblemDetails سبک Host — بدون Bad Request / HTTP خام. */
 function errorMessage(payload: unknown, status: number): string {
-  const item = recordOf(payload);
-  if (item) {
-    const code = text(prop(item, "errorCode", "ErrorCode"));
-    if (code) return code;
-  }
-  if (status === 401 || status === 403) return "admin.authorization.denied";
-  return `admin.http.${status}`;
+  return parseAdminProblemErrorCode(payload, status);
 }
 
 async function adminRead(path: string): Promise<AdminResult<unknown>> {
@@ -506,7 +509,8 @@ export async function createAttributeDefinition(
 ): Promise<AdminResult<{ definitionId: string }>> {
   const body = {
     code: input.code,
-    valueKind: input.valueKind,
+    // Host بدون JsonStringEnumConverter فقط عدد می‌پذیرد؛ string → Bad Request خام.
+    valueKind: VALUE_KIND_TO_NUMBER[input.valueKind],
     isVariantAxisAllowed: input.isVariantAxisAllowed,
     localizedNames: input.localizedNames,
     metadata: input.metadata ?? null,

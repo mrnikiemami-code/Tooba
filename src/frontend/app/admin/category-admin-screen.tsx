@@ -62,7 +62,7 @@ const TABS = [
   { id: "general", label: "عمومی", implemented: true },
   { id: "translations", label: "ترجمه‌ها", implemented: true },
   { id: "attributes", label: "ویژگی‌ها", implemented: true },
-  { id: "facets", label: "فیلترها", implemented: true },
+  { id: "facets", label: "فیلترهای صفحه محصولات", implemented: true },
   { id: "mega-menu", label: "مگامنو", implemented: true },
   { id: "products", label: "محصولات", implemented: true },
 ] as const;

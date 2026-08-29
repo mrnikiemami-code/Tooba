@@ -8,10 +8,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 
 test("behavior chips use short independent labels without comma-separated UI", () => {
   const panel = fs.readFileSync(path.join(root, "app/admin/category-attributes-panel.tsx"), "utf8");
-  assert.match(panel, /required:\s*"الزامی"/);
-  assert.match(panel, /filterable:\s*"فیلتر"/);
-  assert.match(panel, /variant:\s*"تنوع"/);
-  assert.match(panel, /comparable:\s*"مقایسه"/);
+  assert.match(panel, /required:\s*\{\s*fa:\s*"الزامی"/);
+  assert.match(panel, /filterable:\s*\{\s*fa:\s*"فیلتر"/);
+  assert.match(panel, /variant:\s*\{\s*fa:\s*"تنوع"/);
+  assert.match(panel, /comparable:\s*\{\s*fa:\s*"مقایسه"/);
   assert.match(panel, /data-testid="attr-behavior-chips"/);
   assert.match(panel, /role="switch"/);
   assert.match(panel, /ATTRIBUTE_FLAG_CHIP_LABELS/);

@@ -20,21 +20,36 @@ test("local vs inherited partition helpers exist", () => {
 });
 
 test("ordinary-user Persian flag labels are defined", () => {
-  assert.match(panel, /required:\s*"برای ثبت محصول الزامی است"/);
-  assert.match(panel, /filterable:\s*"نمایش در فیلتر محصولات"/);
-  assert.match(panel, /variant:\s*"برای ساخت تنوع محصول"/);
-  assert.match(panel, /comparable:\s*"نمایش در مقایسه محصولات"/);
+  assert.match(panel, /برای محصولات این دسته باید مقدار داشته باشد/);
+  assert.match(panel, /مشتری می‌تواند در صفحه دسته بر اساس این ویژگی فیلتر کند/);
+  assert.match(panel, /می‌تواند برای ساخت تنوع‌های محصول مثل رنگ یا سایز استفاده شود/);
+  assert.match(panel, /در جدول مقایسه محصولات نمایش داده می‌شود/);
+  assert.match(panel, /Products in this category must have a value/);
 });
 
 test("behavior chips are independent toggles not checkboxes", () => {
   assert.match(panel, /attr-behavior-chips/);
+  assert.match(panel, /attr-behavior-explanations/);
   assert.match(panel, /role="switch"/);
   assert.match(panel, /ATTRIBUTE_FLAG_CHIP_LABELS/);
-  assert.match(panel, /required:\s*"الزامی"/);
-  assert.match(panel, /filterable:\s*"فیلتر"/);
-  assert.match(panel, /variant:\s*"تنوع"/);
-  assert.match(panel, /comparable:\s*"مقایسه"/);
+  assert.match(panel, /fa:\s*"الزامی"/);
+  assert.match(panel, /fa:\s*"فیلتر"/);
+  assert.match(panel, /fa:\s*"تنوع"/);
+  assert.match(panel, /fa:\s*"مقایسه"/);
   assert.equal(/attr-flag-required[\s\S]{0,120}type="checkbox"/.test(panel), false);
   assert.match(panel, /mapAdminErrorMessage/);
   assert.equal(panel.includes("فیلتر, تنوع"), false);
+});
+
+test("inherited vs category-specific human sections", () => {
+  assert.match(panel, /ویژگی‌های به‌ارث‌رسیده/);
+  assert.match(panel, /ویژگی‌های مخصوص این دسته/);
+  assert.match(panel, /category-attributes-inherited-help/);
+  assert.match(panel, /از دسته‌های والد به ارث رسیده‌اند/);
+});
+
+test("create+bind strips invalid variant axis before API", () => {
+  assert.match(panel, /const variantAllowed/);
+  assert.match(panel, /createKind === "Enumeration" \|\| createKind === "Number"/);
+  assert.match(panel, /isVariantAxisAllowed: variantAllowed/);
 });

@@ -3,6 +3,7 @@
  */
 
 import { adminHeaders, type AdminResult } from "./admin-api.ts";
+import { parseAdminProblemErrorCode } from "./admin-error-map.ts";
 
 export interface CategoryMegaMenuConfiguration {
   categoryId: string;
@@ -133,7 +134,7 @@ async function adminRead(path: string): Promise<AdminResult<unknown>> {
       return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
     }
     if (!response.ok) {
-      return { state: "error", data: null, status: response.status, message: text(recordOf(payload)?.title) || `admin.http.${response.status}` };
+      return { state: "error", data: null, status: response.status, message: parseAdminProblemErrorCode(payload, response.status) };
     }
     return { state: "ok", data: payload, status: response.status };
   } catch {
@@ -153,7 +154,7 @@ async function adminWrite(path: string, method: string, body?: unknown): Promise
     }
     if (!response.ok) {
       const payload = await response.json().catch(() => null);
-      return { state: "error", data: null, status: response.status, message: text(recordOf(payload)?.title) || `admin.http.${response.status}` };
+      return { state: "error", data: null, status: response.status, message: parseAdminProblemErrorCode(payload, response.status) };
     }
     return { state: "ok", data: null, status: response.status };
   } catch {

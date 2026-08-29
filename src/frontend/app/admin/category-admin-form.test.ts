@@ -275,9 +275,9 @@ test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
   assert.match(panel, /افزودن ویژگی/);
   assert.match(panel, /ایجاد ویژگی جدید/);
   assert.match(panel, /ATTRIBUTE_FLAG_LABELS/);
-  assert.match(panel, /برای ثبت محصول الزامی است/);
-  assert.match(panel, /نمایش در فیلتر محصولات/);
-  assert.match(panel, /برای ساخت تنوع محصول/);
+  assert.match(panel, /برای محصولات این دسته باید مقدار داشته باشد/);
+  assert.match(panel, /مشتری می‌تواند در صفحه دسته بر اساس این ویژگی فیلتر کند/);
+  assert.match(panel, /می‌تواند برای ساخت تنوع‌های محصول مثل رنگ یا سایز استفاده شود/);
   assert.match(panel, /category-attributes-edit/);
   assert.match(panel, /canEdit/);
   assert.equal(panel.includes("definitionId"), true);
@@ -288,7 +288,7 @@ test("visible category tabs are functional — products real; seo/settings/histo
   const screen = fs.readFileSync(screenPath, "utf8");
   assert.match(screen, /id: "products", label: "محصولات", implemented: true/);
   assert.match(screen, /CategoryProductsPanel/);
-  assert.match(screen, /id: "facets", label: "فیلترها", implemented: true/);
+  assert.match(screen, /id: "facets", label: "فیلترهای صفحه محصولات", implemented: true/);
   assert.match(screen, /id: "mega-menu", label: "مگامنو", implemented: true/);
   assert.equal(screen.includes('id: "seo"'), false);
   assert.equal(screen.includes('id: "settings"'), false);
