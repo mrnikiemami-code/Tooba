@@ -28,7 +28,9 @@ public static class ProductWorkspaceEndpoints
         group.MapDelete("/{productId:guid}", DeleteAsync);
 
         group.MapGet("/{productId:guid}/media", ListMediaAsync);
+        group.MapGet("/{productId:guid}/media/readiness", GetMediaReadinessAsync);
         group.MapPost("/{productId:guid}/media", AttachMediaAsync);
+        group.MapPost("/{productId:guid}/media/placeholder", AttachPlaceholderMediaAsync);
         group.MapPut("/{productId:guid}/media/order", ReorderMediaAsync);
         group.MapPut("/{productId:guid}/media/{assetId:guid}/primary", SetPrimaryMediaAsync);
         group.MapPatch("/{productId:guid}/media/{assetId:guid}", PatchMediaAsync);
@@ -328,6 +330,28 @@ public static class ProductWorkspaceEndpoints
         }
     }
 
+    private static async Task<IResult> GetMediaReadinessAsync(
+        Guid productId,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.GetMediaReadinessAsync(productId, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
     private static async Task<IResult> AttachMediaAsync(
         Guid productId,
         AdminProductMediaAttachRequest body,
@@ -344,6 +368,34 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             var media = await composer.AttachMediaAsync(productId, body, ReadPermissions(request), cancellationToken);
+            return Results.Json(media, statusCode: StatusCodes.Status201Created);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> AttachPlaceholderMediaAsync(
+        Guid productId,
+        AdminProductMediaPlaceholderRequest? body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var media = await composer.AttachPlaceholderMediaAsync(
+                productId,
+                body?.AltText,
+                ReadPermissions(request),
+                cancellationToken);
             return Results.Json(media, statusCode: StatusCodes.Status201Created);
         }
         catch (PlatformHttpException ex)

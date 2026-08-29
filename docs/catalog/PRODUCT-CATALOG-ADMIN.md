@@ -1,7 +1,7 @@
 # Product Catalog Admin
 
-> **Task:** TB-P07-T011 · **Phase:** P07 Advanced Catalog  
-> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations
+> **Task:** TB-P07-T014 · **Phase:** P07 Advanced Catalog
+> **Depends on:** [CATEGORY-ARCHITECTURE.md](./CATEGORY-ARCHITECTURE.md), Category Attribute / Facet / PLP foundations, [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md)
 
 ## Product Master ownership
 
@@ -57,7 +57,7 @@ Locked Admin form pattern via `useAdminFormMode`:
 | ترجمه‌ها | Locale-based foundation (LocalizedText + SlugSeam) |
 | ویژگی‌ها | **Implemented** — category-driven Product Attribute Values editor (T012); variant axes informational → tab تنوع‌ها |
 | تنوع‌ها | **Implemented** — axes + combination preview + matrix apply (T013); Persian **تنوع**, not گونه |
-| رسانه | Shell / existing media seams |
+| رسانه | **Implemented** — gallery + primary + readiness (T014); Media library / binary upload deferred |
 | SEO | Shell |
 | انتشار | Lifecycle + read-only commercial readiness |
 | تاریخچه | Shell |
@@ -78,6 +78,9 @@ Public route strategy remains clean / locale-aware; do not append ProductId to v
 - Category change with attribute/variant data requires explicit confirmation after enriched impact preview (`MessageFa`)
 - Attributes tab: [PRODUCT-ATTRIBUTES.md](./PRODUCT-ATTRIBUTES.md) — effective schema → typed values → readiness
 
+## Media
+
+See [PRODUCT-MEDIA.md](./PRODUCT-MEDIA.md). Catalog stores `MediaAssetId` assignments only; unassign does not delete shared assets; Media library deferred.
 ## Lifecycle
 
 | Status | UI |

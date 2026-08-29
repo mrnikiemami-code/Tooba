@@ -374,6 +374,61 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// شناسهٔ مات نمایشی می‌سازد و به محصول وصل می‌کند (بدون باینری؛ کتابخانهٔ Media هنوز نیست).
+    /// </summary>
+    Task<Guid> AttachGeneratedPlaceholderMediaAsync(
+        Guid productId,
+        string? altText,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// حالت ویرایشگر گالری رسانهٔ محصول با ترتیب و آمادگی.
+    /// </summary>
+    Task<ProductMediaEditorState> GetProductMediaEditorStateAsync(
+        Guid productId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ترتیب گالری را بازنویسی می‌کند؛ فهرست باید دقیقاً همهٔ دارایی‌های فعلی باشد.
+    /// </summary>
+    Task ReorderProductMediaAsync(
+        Guid productId,
+        IReadOnlyList<Guid> orderedMediaAssetIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تصویر اصلی را روی یک مرجع موجود تنظیم می‌کند (یکتایی اجباری).
+    /// </summary>
+    Task SetProductPrimaryMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// متن جایگزین زمینه‌ای روی انتساب محصول را به‌روز می‌کند.
+    /// </summary>
+    Task PatchProductMediaAltAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        string? altText,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// انتساب رسانه را از محصول جدا می‌کند؛ دارایی مشترک حذف نمی‌شود.
+    /// </summary>
+    Task DetachProductMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// آمادگی گالری برای انتشار بعدی (تصویر اصلی + تعداد).
+    /// </summary>
+    Task<ProductMediaReadiness> GetProductMediaReadinessAsync(
+        Guid productId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// مشخصهٔ غیرمحور روی محصول می‌گذارد (upsert). JSON آزاد نیست.
     /// </summary>
     Task SetProductAttributeAsync(Guid productId, Guid definitionId, string rawValue, Guid? enumOptionId, CancellationToken cancellationToken);
@@ -722,6 +777,26 @@ public sealed record ProductAttributeReadiness(
     bool IsComplete,
     IReadOnlyList<string> MissingRequiredCodes,
     IReadOnlyList<string> InvalidValues);
+
+/// <summary>انتساب مات رسانه روی محصول؛ باینری ذخیره نمی‌شود.</summary>
+public sealed record ProductMediaAssignment(
+    Guid MediaAssetId,
+    bool IsPrimary,
+    int DisplayOrder,
+    string? AltText);
+
+/// <summary>حالت ویرایشگر گالری رسانهٔ محصول.</summary>
+public sealed record ProductMediaEditorState(
+    Guid ProductId,
+    IReadOnlyList<ProductMediaAssignment> Items,
+    ProductMediaReadiness Readiness);
+
+/// <summary>آمادگی گالری رسانه برای انتشار بعدی (T016).</summary>
+public sealed record ProductMediaReadiness(
+    bool HasPrimaryImage,
+    int MediaCount,
+    bool IsReady,
+    string? MessageFa);
 
 /// <summary>خلاصهٔ یک مقدار یتیم پس از تغییر رده.</summary>
 public sealed record CategoryChangeOrphanSummary(

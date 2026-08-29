@@ -6,16 +6,12 @@ import { formatAdminStatus } from "./admin-api";
 import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { slugifyCategoryName } from "./catalog-category-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
+import { ProductMediaPanel } from "./product-media-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
 import {
   assignAdminProductCategory,
-  attachAdminProductMedia,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
-  patchAdminProductMediaAlt,
-  removeAdminProductMedia,
-  reorderAdminProductMedia,
-  setAdminProductMediaPrimary,
   updateAdminProductCore,
   type HostReadSource,
 } from "./host-client";
@@ -130,9 +126,6 @@ export function ProductWorkspaceScreen({
   const [dirty, setDirty] = useState<Set<string>>(new Set());
   const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [attachAssetId, setAttachAssetId] = useState("");
-  const [attachAlt, setAttachAlt] = useState("");
-  const [altDrafts, setAltDrafts] = useState<Record<string, string>>({});
   const [translationLocale, setTranslationLocale] = useState<string>("fa-IR");
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
 
@@ -148,13 +141,6 @@ export function ProductWorkspaceScreen({
       setConflict(null);
       setError(result.message ?? null);
       setDenied(Boolean(result.denied));
-      if (result.view) {
-        const alts: Record<string, string> = {};
-        for (const item of result.view.media) {
-          alts[item.mediaAssetId] = item.altText ?? "";
-        }
-        setAltDrafts(alts);
-      }
     });
   }, [productId, viewScope]);
 
@@ -210,15 +196,6 @@ export function ProductWorkspaceScreen({
   function markGeneralDirty() {
     formMode.markDirty();
     setDirty(new Set(["general"]));
-  }
-
-  function applyMedia(media: ProductWorkspaceView["media"]) {
-    setView((prev) => (prev ? { ...prev, media } : prev));
-    const alts: Record<string, string> = {};
-    for (const item of media) {
-      alts[item.mediaAssetId] = item.altText ?? "";
-    }
-    setAltDrafts(alts);
   }
 
   function handleEnterEdit() {
@@ -364,83 +341,6 @@ export function ProductWorkspaceScreen({
     } else {
       reload();
     }
-  }
-
-  async function onAttachMedia() {
-    const assetId = attachAssetId.trim();
-    if (!assetId) {
-      setError("شناسهٔ دارایی رسانه لازم است");
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    const result = await attachAdminProductMedia(current.productId, assetId, attachAlt.trim() || null);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    applyMedia(result.media);
-    setAttachAssetId("");
-    setAttachAlt("");
-  }
-
-  async function onReorder(mediaAssetId: string, direction: -1 | 1) {
-    const ordered = sortedMedia(current.media).map((row) => row.mediaAssetId);
-    const index = ordered.indexOf(mediaAssetId);
-    const swapWith = index + direction;
-    if (index < 0 || swapWith < 0 || swapWith >= ordered.length) {
-      return;
-    }
-    const next = [...ordered];
-    const tmp = next[index]!;
-    next[index] = next[swapWith]!;
-    next[swapWith] = tmp;
-    setBusy(true);
-    setError(null);
-    const result = await reorderAdminProductMedia(current.productId, next);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    applyMedia(result.media);
-  }
-
-  async function onSetPrimary(mediaAssetId: string) {
-    setBusy(true);
-    setError(null);
-    const result = await setAdminProductMediaPrimary(current.productId, mediaAssetId);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    applyMedia(result.media);
-  }
-
-  async function onSaveAlt(mediaAssetId: string) {
-    setBusy(true);
-    setError(null);
-    const result = await patchAdminProductMediaAlt(current.productId, mediaAssetId, altDrafts[mediaAssetId]?.trim() || null);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    applyMedia(result.media);
-  }
-
-  async function onRemoveMedia(mediaAssetId: string) {
-    setBusy(true);
-    setError(null);
-    const result = await removeAdminProductMedia(current.productId, mediaAssetId);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
-    }
-    applyMedia(result.media);
   }
 
   const shellActions = isGeneralEdit
@@ -724,122 +624,13 @@ export function ProductWorkspaceScreen({
           </Card>
         ) : null}
         {sectionId === "media" ? (
-          <div className="space-y-4" data-testid="admin-product-media">
-            <Card>
-              <p className="font-semibold">گالری تصویر</p>
-              <p className="mt-1 text-sm text-muted">
-                پیش‌نمایش تصویر از مسیر امن رسانهٔ ویترین. بارگذاری فایل باینری هنوز فعال نیست.
-              </p>
-            </Card>
-            {mediaRows.length === 0 ? (
-              <p className="text-sm text-muted">هنوز تصویری پیوست نشده است.</p>
-            ) : (
-              <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {mediaRows.map((item, index) => (
-                  <li key={item.mediaAssetId} className="rounded-ds border border-border bg-surface p-3">
-                    <div className="relative aspect-square overflow-hidden rounded-ds bg-secondary">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={storefrontMediaUrl(item.mediaAssetId)}
-                        alt={item.altText ?? `رسانه ${index + 1}`}
-                        className="h-full w-full object-contain p-3"
-                      />
-                      {item.primary ? (
-                        <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">اصلی</span>
-                      ) : null}
-                    </div>
-                    {canMutateCatalog ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          disabled={busy || item.primary}
-                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
-                          onClick={() => void onSetPrimary(item.mediaAssetId)}
-                        >
-                          اصلی
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy || index === 0}
-                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
-                          onClick={() => void onReorder(item.mediaAssetId, -1)}
-                        >
-                          بالا
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy || index >= mediaRows.length - 1}
-                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
-                          onClick={() => void onReorder(item.mediaAssetId, 1)}
-                        >
-                          پایین
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          className="rounded-ds border border-border px-2 py-1.5 text-xs hover:bg-secondary disabled:opacity-50"
-                          onClick={() => void onSaveAlt(item.mediaAssetId)}
-                        >
-                          ذخیره متن جایگزین
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          className="rounded-ds border border-danger/40 px-2 py-1.5 text-xs text-danger hover:bg-danger/10 disabled:opacity-50"
-                          onClick={() => void onRemoveMedia(item.mediaAssetId)}
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    ) : null}
-                    <label className="mt-2 block text-sm">
-                      متن جایگزین
-                      <input
-                        className="mt-1 min-h-10 w-full rounded-ds border border-border bg-surface px-3"
-                        value={altDrafts[item.mediaAssetId] ?? ""}
-                        disabled={!canMutateCatalog || busy}
-                        onChange={(event) =>
-                          setAltDrafts((prev) => ({ ...prev, [item.mediaAssetId]: event.target.value }))
-                        }
-                      />
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {canMutateCatalog ? (
-              <Card>
-                <p className="font-semibold">پیوست تصویر با شناسه دارایی</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                  <label className="text-sm">
-                    شناسه دارایی رسانه
-                    <input
-                      className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
-                      dir="ltr"
-                      value={attachAssetId}
-                      onChange={(event) => setAttachAssetId(event.target.value)}
-                    />
-                  </label>
-                  <label className="text-sm">
-                    متن جایگزین (اختیاری)
-                    <input
-                      className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
-                      value={attachAlt}
-                      onChange={(event) => setAttachAlt(event.target.value)}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="mt-6 min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                    onClick={() => void onAttachMedia()}
-                  >
-                    پیوست
-                  </button>
-                </div>
-              </Card>
-            ) : null}
-          </div>
+          <Card data-testid="admin-product-media">
+            <ProductMediaPanel
+              productId={current.productId}
+              canEdit={canMutateCatalog}
+              mode={formMode.mode === "edit" ? "edit" : "view"}
+            />
+          </Card>
         ) : null}
 
         {sectionId === "seo" ? (

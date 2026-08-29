@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -1436,6 +1437,11 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (mediaAssetId == Guid.Empty)
+        {
+            throw new InvalidOperationException("شناسهٔ رسانه لازم است.");
+        }
+
         if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
         {
             throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
@@ -1448,18 +1454,236 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("این رسانه قبلاً به محصول وصل شده است.");
         }
 
-        var maxOrder = await _db.MediaReferences.AsNoTracking()
+        var existing = await _db.MediaReferences
             .Where(x => x.ProductId == productId)
-            .Select(x => (int?)x.DisplayOrder)
-            .MaxAsync(cancellationToken) ?? -1;
-        var isFirst = maxOrder < 0;
-        _db.MediaReferences.Add(CatalogProductMediaReference.Link(
+            .ToListAsync(cancellationToken);
+        var maxOrder = existing.Count == 0 ? -1 : existing.Max(x => x.DisplayOrder);
+        var isFirst = existing.Count == 0;
+        var link = CatalogProductMediaReference.Link(
             productId,
             mediaAssetId,
             displayOrder: maxOrder + 1,
             isPrimary: isFirst,
-            altText: altText));
+            altText: altText);
+        existing.Add(link);
+        _db.MediaReferences.Add(link);
+        EnforcePrimaryUniqueness(existing);
+        TouchProductUpdatedAt(productId);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Guid> AttachGeneratedPlaceholderMediaAsync(
+        Guid productId,
+        string? altText,
+        CancellationToken cancellationToken)
+    {
+        var assetId = UuidV7.New();
+        await AttachMediaReferenceAsync(productId, assetId, altText, cancellationToken);
+        return assetId;
+    }
+
+    /// <inheritdoc />
+    public async Task<ProductMediaEditorState> GetProductMediaEditorStateAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var items = await LoadOrderedMediaAssignmentsAsync(productId, cancellationToken);
+        return new ProductMediaEditorState(productId, items, BuildMediaReadiness(items));
+    }
+
+    /// <inheritdoc />
+    public async Task ReorderProductMediaAsync(
+        Guid productId,
+        IReadOnlyList<Guid> orderedMediaAssetIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(orderedMediaAssetIds);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var media = await _db.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        if (media.Count == 0)
+        {
+            throw new InvalidOperationException("رسانه‌ای برای این محصول نیست.");
+        }
+
+        var existing = media.Select(x => x.MediaAssetId).ToHashSet();
+        if (orderedMediaAssetIds.Count != existing.Count
+            || orderedMediaAssetIds.Any(id => !existing.Contains(id))
+            || orderedMediaAssetIds.Distinct().Count() != orderedMediaAssetIds.Count)
+        {
+            throw new InvalidOperationException("فهرست ترتیب باید دقیقاً همهٔ رسانه‌های فعلی را بدون تکرار پوشش دهد.");
+        }
+
+        for (var i = 0; i < orderedMediaAssetIds.Count; i++)
+        {
+            media.Single(m => m.MediaAssetId == orderedMediaAssetIds[i]).DisplayOrder = i;
+        }
+
+        EnforcePrimaryUniqueness(media);
+        TouchProductUpdatedAt(productId);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task SetProductPrimaryMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var media = await _db.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var target = media.SingleOrDefault(x => x.MediaAssetId == mediaAssetId)
+            ?? throw new InvalidOperationException("رسانه روی این محصول پیدا نشد.");
+        foreach (var row in media)
+        {
+            row.IsPrimary = row.MediaAssetId == target.MediaAssetId;
+        }
+
+        TouchProductUpdatedAt(productId);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PatchProductMediaAltAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        string? altText,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var row = await _db.MediaReferences.SingleOrDefaultAsync(
+            x => x.ProductId == productId && x.MediaAssetId == mediaAssetId,
+            cancellationToken)
+            ?? throw new InvalidOperationException("رسانه روی این محصول پیدا نشد.");
+        row.AltText = string.IsNullOrWhiteSpace(altText) ? null : altText.Trim();
+        TouchProductUpdatedAt(productId);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task DetachProductMediaAsync(
+        Guid productId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var media = await _db.MediaReferences.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var row = media.SingleOrDefault(x => x.MediaAssetId == mediaAssetId)
+            ?? throw new InvalidOperationException("رسانه روی این محصول پیدا نشد.");
+        _db.MediaReferences.Remove(row);
+        media.Remove(row);
+        EnforcePrimaryUniqueness(media);
+        TouchProductUpdatedAt(productId);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ProductMediaReadiness> GetProductMediaReadinessAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        if (!await _db.Products.AnyAsync(x => x.ProductId == productId, cancellationToken))
+        {
+            throw new InvalidOperationException("محصول در Catalog این Tenant نیست.");
+        }
+
+        var items = await LoadOrderedMediaAssignmentsAsync(productId, cancellationToken);
+        return BuildMediaReadiness(items);
+    }
+
+    private async Task<IReadOnlyList<ProductMediaAssignment>> LoadOrderedMediaAssignmentsAsync(
+        Guid productId,
+        CancellationToken cancellationToken)
+    {
+        var media = await _db.MediaReferences.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.ReferenceId)
+            .ToListAsync(cancellationToken);
+        return media
+            .Select(m => new ProductMediaAssignment(m.MediaAssetId, m.IsPrimary, m.DisplayOrder, m.AltText))
+            .ToList();
+    }
+
+    private static ProductMediaReadiness BuildMediaReadiness(IReadOnlyList<ProductMediaAssignment> items)
+    {
+        var count = items.Count;
+        var hasPrimary = items.Any(x => x.IsPrimary);
+        var isReady = count > 0 && hasPrimary;
+        string? messageFa;
+        if (count == 0 || !hasPrimary)
+        {
+            messageFa = "تصویر اصلی تعیین نشده";
+        }
+        else if (isReady)
+        {
+            messageFa = "رسانه کامل است";
+        }
+        else
+        {
+            messageFa = null;
+        }
+
+        return new ProductMediaReadiness(hasPrimary, count, isReady, messageFa);
+    }
+
+    /// <summary>
+    /// دقیقاً یک IsPrimary وقتی count&gt;0؛ در غیر این صورت اولین DisplayOrder.
+    /// </summary>
+    private static void EnforcePrimaryUniqueness(IList<CatalogProductMediaReference> media)
+    {
+        if (media.Count == 0)
+        {
+            return;
+        }
+
+        var ordered = media.OrderBy(x => x.DisplayOrder).ThenBy(x => x.ReferenceId).ToList();
+        var primaries = ordered.Where(x => x.IsPrimary).ToList();
+        CatalogProductMediaReference keep;
+        if (primaries.Count == 1)
+        {
+            keep = primaries[0];
+        }
+        else if (primaries.Count == 0)
+        {
+            keep = ordered[0];
+        }
+        else
+        {
+            keep = primaries[0];
+        }
+
+        foreach (var row in media)
+        {
+            row.IsPrimary = ReferenceEquals(row, keep) || row.ReferenceId == keep.ReferenceId;
+        }
+    }
+
+    private void TouchProductUpdatedAt(Guid productId)
+    {
+        var product = _db.Products.Local.SingleOrDefault(x => x.ProductId == productId)
+            ?? _db.Products.Single(x => x.ProductId == productId);
+        product.UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <inheritdoc />

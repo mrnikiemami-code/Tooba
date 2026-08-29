@@ -560,7 +560,63 @@ async function readMediaMutation(
   return { ok: true, media: mapMediaList(await response.json()) };
 }
 
-/** پیوست مرجع رسانه با Guid دارایی (بارگذاری باینری DEFERRED). */
+/** فهرست گالری رسانهٔ محصول. */
+export async function listAdminProductMedia(
+  productId: string,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media`, {
+      headers: adminHeaders(),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** آمادگی گالری رسانه. */
+export async function getAdminProductMediaReadiness(
+  productId: string,
+): Promise<
+  | {
+      ok: true;
+      readiness: {
+        hasPrimaryImage: boolean;
+        mediaCount: number;
+        isReady: boolean;
+        messageFa: string | null;
+      };
+    }
+  | { ok: false; message: string }
+> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/readiness`, {
+      headers: adminHeaders(),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { ok: false, message: "دسترسی مجاز نیست" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string; title?: string } | null;
+      return { ok: false, message: body?.title ?? body?.errorCode ?? `خطای Host (${response.status})` };
+    }
+    const raw = (await response.json()) as Record<string, unknown>;
+    const messageRaw = readProp(raw, "messageFa", "MessageFa");
+    return {
+      ok: true,
+      readiness: {
+        hasPrimaryImage: asBoolean(readProp(raw, "hasPrimaryImage", "HasPrimaryImage")),
+        mediaCount: asNumber(readProp(raw, "mediaCount", "MediaCount")),
+        isReady: asBoolean(readProp(raw, "isReady", "IsReady")),
+        messageFa: messageRaw == null ? null : asString(messageRaw),
+      },
+    };
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** پیوست مرجع رسانه با Guid دارایی (مسیر پیشرفته؛ بارگذاری باینری DEFERRED). */
 export async function attachAdminProductMedia(
   productId: string,
   mediaAssetId: string,
@@ -571,6 +627,23 @@ export async function attachAdminProductMedia(
       method: "POST",
       headers: adminHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ mediaAssetId, altText: altText ?? null }),
+    });
+    return await readMediaMutation(response);
+  } catch {
+    return { ok: false, message: "اتصال به Host برقرار نیست" };
+  }
+}
+
+/** افزودن تصویر نمایشی بدون Guid سمت کلاینت. */
+export async function attachAdminProductPlaceholderMedia(
+  productId: string,
+  altText?: string | null,
+): Promise<{ ok: true; media: ProductWorkspaceView["media"] } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/v1/admin/products/${productId}/media/placeholder`, {
+      method: "POST",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ altText: altText ?? null }),
     });
     return await readMediaMutation(response);
   } catch {
