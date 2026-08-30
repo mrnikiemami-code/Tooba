@@ -467,6 +467,13 @@ function ProductWorkspaceScreenInner({
       handleCancelEdit();
       return;
     }
+    if (actionId === "discard-general") {
+      if (view) setDraft(draftFromView(view));
+      setDirty(new Set());
+      setConflict(null);
+      formMode.onCancel();
+      return;
+    }
     if (actionId === "save") {
       await handleSaveGeneral();
       return;
@@ -519,20 +526,27 @@ function ProductWorkspaceScreenInner({
       ? {
           id: "restore",
           label: "خروج از بایگانی",
-          kind: "secondary" as const,
+          kind: "overflow" as const,
           permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const),
         }
       : {
           id: "publish",
           label: "انتشار",
-          kind: "secondary" as const,
+          kind: "overflow" as const,
           permission: canPublish && !busy ? ("allowed" as const) : ("denied" as const),
         };
 
   const shellActions = isGeneralEdit
     ? [
-        { id: "save", label: "ذخیره", kind: "primary" as const, permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const) },
-        { id: "cancel", label: "انصراف", kind: "secondary" as const, permission: "allowed" as const },
+        {
+          id: "save",
+          label: "ذخیره",
+          kind: "primary" as const,
+          permission: canMutateCatalog && !busy ? ("allowed" as const) : ("denied" as const),
+        },
+        { id: "cancel", label: "پایان ویرایش", kind: "secondary" as const, permission: "allowed" as const },
+        { id: "discard-general", label: "انصراف", kind: "secondary" as const, permission: "allowed" as const },
+        lifecycleAction,
       ]
     : formMode.mode === "edit"
       ? [
@@ -543,7 +557,7 @@ function ProductWorkspaceScreenInner({
           ...(formMode.canEdit
             ? [{ id: "edit", label: "ویرایش", kind: "secondary" as const, permission: "allowed" as const }]
             : []),
-          lifecycleAction,
+          { ...lifecycleAction, kind: "secondary" as const },
         ];
 
   const translationRows = TRANSLATION_LOCALES.map((locale) => {
@@ -751,9 +765,18 @@ function ProductWorkspaceScreenInner({
                 {source === "host" ? "آخرین همگام‌سازی با فروشگاه انجام شد" : "اتصال فروشگاه برقرار نیست"}
               </p>
             </div>
-            <div>
-              <p className="font-medium">ترجمه‌ها و زبان‌ها</p>
-              <ul className="mt-2 space-y-1.5">
+            <div className="rounded-2xl border border-border bg-surface-elevated p-3 shadow-sm" data-testid="product-inspector-locales">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold">ترجمه‌ها و زبان‌ها</p>
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                  onClick={() => requestSectionChange("translations")}
+                >
+                  مدیریت ترجمه‌ها
+                </button>
+              </div>
+              <ul className="mt-3 space-y-2">
                 {TRANSLATION_LOCALES.map((locale) => {
                   const existing = resolveTranslation(view, locale);
                   const state = translationReadiness({
@@ -768,9 +791,28 @@ function ProductWorkspaceScreenInner({
                   });
                   const label =
                     state === "complete" ? "کامل" : state === "partial" ? "ناقص" : "ایجاد نشده";
+                  const mark = state === "complete" ? "✓" : state === "partial" ? "–" : "×";
                   return (
-                    <li key={locale} className="flex items-center justify-between gap-2 rounded-ds bg-secondary/40 px-2 py-1.5">
-                      <span>{LOCALE_DISPLAY[locale] ?? locale}</span>
+                    <li
+                      key={locale}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-border/70 bg-surface px-3 py-2"
+                      data-testid={`product-locale-chip-${locale}`}
+                    >
+                      <span className="inline-flex items-center gap-2 font-medium">
+                        <span
+                          aria-hidden
+                          className={
+                            state === "complete"
+                              ? "inline-flex size-5 items-center justify-center rounded-full bg-emerald-100 text-xs text-emerald-800"
+                              : state === "partial"
+                                ? "inline-flex size-5 items-center justify-center rounded-full bg-amber-100 text-xs text-amber-900"
+                                : "inline-flex size-5 items-center justify-center rounded-full bg-rose-100 text-xs text-rose-800"
+                          }
+                        >
+                          {mark}
+                        </span>
+                        {LOCALE_DISPLAY[locale] ?? locale}
+                      </span>
                       <span
                         className={
                           state === "complete"
@@ -786,6 +828,9 @@ function ProductWorkspaceScreenInner({
                   );
                 })}
               </ul>
+              <p className="mt-2 text-[11px] text-muted">
+                فقط زبان‌های فعال کاتالوگ نمایش داده می‌شوند (بدون locale ساختگی).
+              </p>
             </div>
             <div>
               <p className="font-medium">چک‌لیست آمادگی</p>
@@ -835,7 +880,8 @@ function ProductWorkspaceScreenInner({
               </div>
             ) : null}
             {isGeneralEdit ? (
-              <div className="space-y-4" data-testid="product-general-edit">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-edit">
+                <div className="space-y-4">
                 <Card>
                   <p className="text-sm font-medium text-muted">هویت غیرزبانی محصول</p>
                   <p className="mt-1 text-xs text-muted">
@@ -987,6 +1033,79 @@ function ProductWorkspaceScreenInner({
                     <SummaryCard label="آخرین به‌روزرسانی Catalog" value={view.catalogUpdatedAt} ltr />
                   </div>
                 </Card>
+                </div>
+                <div className="space-y-4">
+                  <Card data-testid="product-general-media-preview">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-muted">رسانه محصول</p>
+                      <button
+                        type="button"
+                        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                        onClick={() => requestSectionChange("media")}
+                      >
+                        مدیریت همه رسانه‌ها
+                      </button>
+                    </div>
+                    {primaryMedia ? (
+                      <div className="mt-3">
+                        <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-secondary shadow-sm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={storefrontMediaUrl(primaryMedia.mediaAssetId)}
+                            alt={primaryMedia.altText ?? view.title}
+                            className="h-full w-full object-contain p-4"
+                          />
+                          <span className="absolute start-2 top-2 rounded-ds bg-success/90 px-2 py-0.5 text-xs text-white">
+                            تصویر اصلی
+                          </span>
+                        </div>
+                        {mediaRows.length > 1 ? (
+                          <ul className="mt-3 flex flex-wrap gap-2">
+                            {mediaRows.slice(0, 5).map((item) => (
+                              <li key={item.mediaAssetId}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={storefrontMediaUrl(item.mediaAssetId)}
+                                  alt={item.altText ?? "رسانه"}
+                                  className="size-14 rounded-xl border border-border bg-secondary object-contain p-1"
+                                />
+                              </li>
+                            ))}
+                            <li>
+                              <button
+                                type="button"
+                                className="flex size-14 items-center justify-center rounded-xl border border-dashed border-border text-lg text-muted hover:bg-secondary"
+                                onClick={() => requestSectionChange("media")}
+                                aria-label="افزودن رسانه"
+                              >
+                                +
+                              </button>
+                            </li>
+                          </ul>
+                        ) : (
+                          <button
+                            type="button"
+                            className="mt-3 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                            onClick={() => requestSectionChange("media")}
+                          >
+                            افزودن از کتابخانه رسانه
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 rounded-2xl border border-dashed border-border bg-slate-50 p-6 text-center">
+                        <p className="text-sm text-muted">هنوز تصویری متصل نشده است.</p>
+                        <button
+                          type="button"
+                          className="mt-2 text-sm font-semibold text-primary underline-offset-2 hover:underline"
+                          onClick={() => requestSectionChange("media")}
+                        >
+                          باز کردن رسانه
+                        </button>
+                      </div>
+                    )}
+                  </Card>
+                </div>
               </div>
             ) : (
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]" data-testid="product-general-summary">

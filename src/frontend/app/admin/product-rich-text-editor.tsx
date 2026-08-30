@@ -342,13 +342,6 @@ export function ProductRichTextEditor({
             ))}
           </select>
         </label>
-        <span
-          className="inline-flex min-h-8 items-center rounded-lg border border-dashed border-gray-300 px-2 text-[11px] text-slate-400"
-          title="تصویر درون توضیح تا یکپارچگی امن با Media DAM غیرفعال است"
-          data-testid={`${testId}-image-disabled`}
-        >
-          تصویر درون متن: غیرفعال
-        </span>
       </div>
       <EditorContent editor={editor} />
     </div>

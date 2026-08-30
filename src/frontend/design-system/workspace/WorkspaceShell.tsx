@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "../cn";
 import { Button, EmptyState, ErrorState, Skeleton, Spinner } from "../primitives/core";
 import { Dialog, Drawer } from "../primitives/overlays";
@@ -105,6 +105,20 @@ export function WorkspaceShell({
   const secondary = actions.filter((action) => action.kind === "secondary" && action.permission !== "hidden");
   const destructive = actions.find((action) => action.kind === "destructive" && action.permission !== "hidden");
   const overflow = actions.filter((action) => (action.kind === "overflow" || action.kind === "contextual") && action.permission !== "hidden");
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const overflowRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!overflowOpen) return;
+    const onDoc = (event: MouseEvent) => {
+      if (!overflowRef.current?.contains(event.target as Node)) setOverflowOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [overflowOpen]);
+
+  const splitOverflow = primary && overflow.length > 0 ? overflow : [];
+  const loneOverflow = !primary ? overflow : [];
 
   return (
     <div className={cn("flex w-full flex-col gap-5 bg-background", flush ? "p-4 md:p-6" : "rounded-ds border border-border bg-surface p-6 shadow-md md:p-8")}>
@@ -121,14 +135,68 @@ export function WorkspaceShell({
               {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2" data-testid="workspace-action-cluster">
             {primary ? (
-              <Button type="button" disabled={primary.permission === "denied" || primary.busy || readOnly} onClick={() => onAction?.(primary.id)}>
-                {primary.label}
-              </Button>
+              <div className="inline-flex overflow-hidden rounded-xl shadow-sm" data-testid="workspace-primary-split" ref={splitOverflow.length ? overflowRef : undefined}>
+                <Button
+                  type="button"
+                  className={cn("rounded-none", splitOverflow.length > 0 ? "rounded-s-xl" : "rounded-xl")}
+                  disabled={primary.permission === "denied" || primary.busy || readOnly}
+                  onClick={() => onAction?.(primary.id)}
+                  data-testid={`workspace-action-${primary.id}`}
+                >
+                  {primary.label}
+                </Button>
+                {splitOverflow.length > 0 ? (
+                  <div className="relative border-s border-white/20">
+                    <button
+                      type="button"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center bg-primary px-2 text-sm text-primary-foreground hover:brightness-95 disabled:opacity-50"
+                      aria-label={messages.moreActions}
+                      aria-expanded={overflowOpen}
+                      data-testid="workspace-primary-split-toggle"
+                      disabled={readOnly}
+                      onClick={() => setOverflowOpen((open) => !open)}
+                    >
+                      ▾
+                    </button>
+                    {overflowOpen ? (
+                      <ul
+                        className="absolute end-0 z-20 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg"
+                        role="menu"
+                        data-testid="workspace-primary-split-menu"
+                      >
+                        {splitOverflow.map((action) => (
+                          <li key={action.id} role="none">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={action.permission === "denied" || action.busy}
+                              className="flex w-full px-3 py-2 text-start text-sm hover:bg-secondary disabled:opacity-40"
+                              onClick={() => {
+                                setOverflowOpen(false);
+                                onAction?.(action.id);
+                              }}
+                            >
+                              {action.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             ) : null}
             {secondary.map((action) => (
-              <Button key={action.id} type="button" tone="secondary" disabled={action.permission === "denied" || action.busy} onClick={() => onAction?.(action.id)}>
+              <Button
+                key={action.id}
+                type="button"
+                tone="secondary"
+                disabled={action.permission === "denied" || action.busy}
+                onClick={() => onAction?.(action.id)}
+                data-testid={`workspace-action-${action.id}`}
+              >
                 {action.label}
               </Button>
             ))}
@@ -137,20 +205,32 @@ export function WorkspaceShell({
                 {destructive.label}
               </Button>
             ) : null}
-            {overflow.length > 0 ? (
-              <select
-                aria-label={messages.moreActions}
-                className="min-h-11 rounded-ds border border-border bg-surface px-2 text-sm"
-                defaultValue=""
-                onChange={(event) => event.target.value && onAction?.(event.target.value)}
-              >
-                <option value="">{messages.moreActions}</option>
-                {overflow.map((action) => (
-                  <option key={action.id} value={action.id} disabled={action.permission === "denied"}>
-                    {action.label}
-                  </option>
-                ))}
-              </select>
+            {loneOverflow.length > 0 ? (
+              <div className="relative" ref={overflowRef}>
+                <Button type="button" tone="secondary" aria-expanded={overflowOpen} onClick={() => setOverflowOpen((open) => !open)}>
+                  {messages.moreActions}
+                </Button>
+                {overflowOpen ? (
+                  <ul className="absolute end-0 z-20 mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg" role="menu">
+                    {loneOverflow.map((action) => (
+                      <li key={action.id} role="none">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={action.permission === "denied" || action.busy}
+                          className="flex w-full px-3 py-2 text-start text-sm hover:bg-secondary disabled:opacity-40"
+                          onClick={() => {
+                            setOverflowOpen(false);
+                            onAction?.(action.id);
+                          }}
+                        >
+                          {action.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>

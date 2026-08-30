@@ -56,6 +56,8 @@ test("shell edit exit and mode badge", () => {
   assert.equal(screen.includes('data-testid="product-edit-save"'), false);
   assert.equal(screen.includes('actor: "ops"'), false);
   assert.match(screen, /item\.actor\?\.trim\(\) \|\| "سیستم"/);
+  assert.match(screen, /discard-general/);
+  assert.match(screen, /kind: "overflow"/);
 });
 
 test("AppDataGrid preserved; dedicated create route CTA", () => {
@@ -86,9 +88,12 @@ test("summary strip sits above tabs; product summary cards expanded", () => {
   const shell = fs.readFileSync(shellPath, "utf8");
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.match(shell, /workspace-summary-strip/);
+  assert.match(shell, /workspace-primary-split/);
   assert.match(screen, /product-summary-cards/);
   assert.match(screen, /product-readiness-card/);
   assert.match(screen, /product-general-media-preview/);
+  assert.match(screen, /product-inspector-locales/);
+  assert.equal(screen.includes("ar-SA"), false);
   assert.equal(screen.includes('headerName: "قیمت (ریال)"'), false);
 });
 

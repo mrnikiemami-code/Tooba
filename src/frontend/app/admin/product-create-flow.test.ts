@@ -30,9 +30,9 @@ test("create route page and TipTap editor exist; CKEditor GPL avoided", () => {
   const translations = fs.readFileSync(path.join(root, "app/admin/product-translations-panel.tsx"), "utf8");
   assert.match(page, /ProductCreateScreen/);
   assert.match(editor, /@tiptap\/react/);
-  assert.match(editor, /image-disabled/);
+  assert.equal(editor.includes("image-disabled"), false);
+  assert.equal(editor.includes("تصویر درون متن"), false);
   assert.equal(/from\s+["'][^"']*ckeditor/i.test(editor), false);
-  assert.match(editor, /جایگزین CKEditor/);
   assert.match(create, /admin-product-create-screen/);
   assert.match(create, /admin-product-create-steps/);
   assert.match(create, /admin-product-create-panel-attributes/);
