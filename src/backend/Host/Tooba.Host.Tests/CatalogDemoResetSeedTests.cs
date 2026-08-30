@@ -152,6 +152,15 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.True(first.Counts.L3 > 0);
         Assert.InRange(first.Counts.Products, 219, 365);
 
+        var products = await catalogDb.Products.AsNoTracking().ToListAsync();
+        Assert.Equal(first.Counts.Products, products.Count);
+        Assert.All(products, p => Assert.Equal(CatalogPublicationStatus.Draft, p.Status));
+        Assert.Equal(0, products.Count(p => p.Status == CatalogPublicationStatus.Published));
+        Assert.Equal(0, products.Count(p => p.Status == CatalogPublicationStatus.Archived));
+        Assert.All(
+            products,
+            p => Assert.StartsWith(CatalogDemoSeam.ProductSlugPrefix, p.SlugSeam ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+
         var parentMap = await catalogDb.Categories.AsNoTracking()
             .ToDictionaryAsync(c => c.CategoryId, c => c.ParentCategoryId);
         var demoCategoryIds = await catalogDb.CategoryTranslations.AsNoTracking()
@@ -171,12 +180,6 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
                 Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(id, parentMap));
             }
         }
-
-        var products = await catalogDb.Products.AsNoTracking()
-            .Where(p => p.SlugSeam != null && p.SlugSeam.StartsWith(CatalogDemoSeam.ProductSlugPrefix))
-            .ToListAsync();
-        Assert.All(products, p => Assert.Equal(CatalogPublicationStatus.Draft, p.Status));
-        Assert.DoesNotContain(products, p => p.Status == CatalogPublicationStatus.Published);
 
         // Every L3 has 3–5 demo products (by slug suffix pattern demo-prod-{key}-{n}).
         var leafIds = demoCategoryIds
@@ -219,12 +222,15 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.Equal(first.Counts.Tags, second.Counts.Tags);
         Assert.Equal(first.Counts.Products, second.Counts.Products);
         Assert.Equal(15, second.Counts.Roots);
+        Assert.Equal(first.Counts.Products, await catalogDb.Products.CountAsync());
+        Assert.Equal(0, await catalogDb.Products.CountAsync(p => p.Status == CatalogPublicationStatus.Published));
 
         // Seed بدون reset باید بدون تکرار ریشه/محصول بماند.
         var replay = await host.SeedOnlyAsync(CancellationToken.None);
         Assert.Equal(15, replay.Roots);
         Assert.Equal(first.Counts.Products, replay.Products);
         Assert.True(replay.IdempotentReplay);
+        Assert.Equal(first.Counts.Products, await catalogDb.Products.CountAsync());
     }
 
     [SkippableFact]

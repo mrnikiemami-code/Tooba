@@ -17,7 +17,9 @@ public sealed record CatalogDemoResetResult(
     int MegaMenuRemoved);
 
 /// <summary>
-/// حذف فقط موجودیت‌های demo/junk با نشانگر seam — بدون دست زدن به auth/orders/seller.
+/// بازنشانی Catalog demo در محیط غیر Production:
+/// همهٔ Products Catalog را پاک می‌کند (نه فقط پیشوند demo)، سپس foundation/demo seam را.
+/// بدون دست زدن به auth/orders/seller.
 /// </summary>
 public sealed class CatalogDemoResetService
 {
@@ -38,17 +40,14 @@ public sealed class CatalogDemoResetService
     {
         await using var tx = await _catalog.Database.BeginTransactionAsync(cancellationToken);
 
-        var productIds = await _catalog.Products.AsNoTracking()
-            .Where(p => p.SlugSeam != null)
-            .Select(p => new { p.ProductId, p.SlugSeam })
-            .ToListAsync(cancellationToken);
-        var demoProductIds = productIds
-            .Where(p => CatalogDemoSeam.IsDemoOrJunkProductSlug(p.SlugSeam))
+        // T034-R1: همهٔ Products Catalog (شامل residual Published بدون پیشوند demo) پاک می‌شوند.
+        var allProductIds = await _catalog.Products.AsNoTracking()
             .Select(p => p.ProductId)
-            .ToHashSet();
+            .ToListAsync(cancellationToken);
+        var productIdSet = allProductIds.ToHashSet();
 
         var categoryIdsFromProducts = await _catalog.ProductCategories.AsNoTracking()
-            .Where(pc => demoProductIds.Contains(pc.ProductId))
+            .Where(pc => productIdSet.Contains(pc.ProductId))
             .Select(pc => pc.CategoryId)
             .Distinct()
             .ToListAsync(cancellationToken);
@@ -56,7 +55,7 @@ public sealed class CatalogDemoResetService
         var demoCategoryIds = await ResolveDemoCategoryIdsAsync(categoryIdsFromProducts, cancellationToken);
 
         var megaRemoved = await DeleteMegaMenuForCategoriesAsync(demoCategoryIds, cancellationToken);
-        var productsRemoved = await DeleteProductsAsync(demoProductIds, cancellationToken);
+        var productsRemoved = await DeleteProductsAsync(productIdSet, cancellationToken);
         var categoriesRemoved = await DeleteCategoriesAsync(demoCategoryIds, cancellationToken);
 
         var brandsRemoved = await DeleteDemoBrandsAsync(cancellationToken);

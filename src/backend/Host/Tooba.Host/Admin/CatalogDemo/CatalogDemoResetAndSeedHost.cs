@@ -66,11 +66,11 @@ public sealed class CatalogDemoResetAndSeedHost
     /// <summary>plan متنی قبل از جهش.</summary>
     public static IReadOnlyList<string> BuildPlan() =>
     [
-        $"Reset demo/junk Catalog entities by seam markers ({CatalogDemoSeam.CategorySlugPrefix}*, {CatalogDemoSeam.BrandSlugPrefix}*, …).",
+        $"Reset ALL Catalog Products in non-production demo Catalog, then demo/junk categories/brands/tags/attrs/media by seam ({CatalogDemoSeam.CategorySlugPrefix}*, {CatalogDemoSeam.BrandSlugPrefix}*, …).",
         $"Seed exactly {CatalogDemoMatrix.Roots.Count} L1 roots with varied L2/L3.",
         $"Seed >= {CatalogDemoMatrix.Brands.Count} brands and {CatalogDemoMatrix.Tags.Count} tags.",
         "Seed attribute definitions/options, L3 schemas, selected facets, MegaMenu, category media.",
-        "Seed rich Draft publish-ready Products (3–5 per L3; TB-P07-T034).",
+        "Seed rich Draft publish-ready Products (3–5 per L3; TB-P07-T034); residual Published Products must not survive reset.",
     ];
 
     /// <summary>reset+seed کامل با اعتبارسنجی.</summary>
@@ -91,6 +91,7 @@ public sealed class CatalogDemoResetAndSeedHost
         var reset = await _reset.ResetAsync(cancellationToken);
         var counts = await _seed.SeedAsync(cancellationToken);
         ValidateIntegrity(counts);
+        await EnsureProductLifecycleCleanAsync(counts.Products, cancellationToken);
         return new CatalogDemoResetAndSeedResult(reset, counts, plan);
     }
 
@@ -128,6 +129,18 @@ public sealed class CatalogDemoResetAndSeedHost
             d => d.Code.StartsWith(CatalogDemoSeam.AttributeCodePrefix),
             cancellationToken);
         var productsTotal = await _db.Products.CountAsync(cancellationToken);
+        var productsDraft = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Draft,
+            cancellationToken);
+        var productsPublished = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Published,
+            cancellationToken);
+        var productsArchived = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Archived,
+            cancellationToken);
+        var productsDemo = await _db.Products.CountAsync(
+            p => p.SlugSeam != null && p.SlugSeam.StartsWith(CatalogDemoSeam.ProductSlugPrefix),
+            cancellationToken);
 
         return new
         {
@@ -141,6 +154,10 @@ public sealed class CatalogDemoResetAndSeedHost
             attributesDemo = attrsDemo,
             attributesTotal = attrsTotal,
             productsTotal,
+            productsDemo,
+            productsDraft,
+            productsPublished,
+            productsArchived,
             allowResetAndSeed = _options.AllowResetAndSeed,
             environment = _environment.EnvironmentName,
         };
@@ -177,6 +194,43 @@ public sealed class CatalogDemoResetAndSeedHost
         {
             throw new InvalidOperationException(
                 $"Expected 219–365 demo products, found {counts.Products}.");
+        }
+    }
+
+    /// <summary>پس از seed، کل Catalog Product lifecycle را با شمارش دانه هم‌تراز می‌کند.</summary>
+    public async Task EnsureProductLifecycleCleanAsync(int expectedProducts, CancellationToken cancellationToken)
+    {
+        var total = await _db.Products.CountAsync(cancellationToken);
+        var published = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Published,
+            cancellationToken);
+        var archived = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Archived,
+            cancellationToken);
+        var draft = await _db.Products.CountAsync(
+            p => p.Status == CatalogPublicationStatus.Draft,
+            cancellationToken);
+
+        if (total != expectedProducts)
+        {
+            throw new InvalidOperationException(
+                $"Expected Product total={expectedProducts}, found {total}.");
+        }
+
+        if (published != 0)
+        {
+            throw new InvalidOperationException($"Expected Published=0, found {published}.");
+        }
+
+        if (archived != 0)
+        {
+            throw new InvalidOperationException($"Expected Archived=0, found {archived}.");
+        }
+
+        if (draft != expectedProducts)
+        {
+            throw new InvalidOperationException(
+                $"Expected Draft={expectedProducts}, found {draft}.");
         }
     }
 }
