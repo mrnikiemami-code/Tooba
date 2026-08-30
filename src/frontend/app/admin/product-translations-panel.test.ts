@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { translationReadiness } from "./product-translations-panel.tsx";
+import { translationReadiness } from "./product-translations-readiness.ts";
 
 test("translationReadiness distinguishes missing partial complete", () => {
   assert.equal(
@@ -18,6 +18,16 @@ test("translationReadiness distinguishes missing partial complete", () => {
       description: "Full text",
       seoTitle: "SEO",
       seoDescription: "Meta",
+    }),
+    "complete",
+  );
+  assert.equal(
+    translationReadiness({
+      name: "Hat",
+      shortDescription: "Warm",
+      description: "<p>Full <strong>HTML</strong></p>",
+      seoTitle: "",
+      seoDescription: "",
     }),
     "complete",
   );

@@ -9,8 +9,8 @@ export type AdminNavMatchItem = {
 };
 
 /**
- * فقط برگ واقعی ناوبری فعال است؛ queryهای sibling (مثل create=1) اولویت دارند
- * و sibling قبلی با prefix مشترک فعال نمی‌ماند.
+ * فقط برگ واقعی ناوبری فعال است؛ siblingهای عمیق‌تر (مثل /admin/products/new)
+ * و queryهای sibling اولویت دارند و برگ عمومی‌تر فعال نمی‌ماند.
  */
 export function isActiveAdminNavItem(
   pathname: string,

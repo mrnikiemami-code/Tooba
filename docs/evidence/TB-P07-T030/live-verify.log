@@ -1,0 +1,5 @@
+﻿Live FE checks (2026-08-30):
+GET /admin/products -> 200
+GET /admin/products/new -> 200
+Create screen testids: admin-product-create-screen, steps, TipTap toolbar
+List CTA testid: admin-create-product href=/admin/products/new

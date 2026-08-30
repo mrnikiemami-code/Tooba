@@ -627,6 +627,8 @@ function ProductWorkspaceScreenInner({
               label="وضعیت محصول"
               value={formatAdminStatus(view.status)}
               hint={view.brandName ? `برند: ${view.brandName}` : "بدون برند"}
+              tone={statusTone(view.status) === "success" ? "success" : statusTone(view.status) === "warning" ? "warning" : "neutral"}
+              meta={view.catalogUpdatedAt}
             />
             <Summary
               label="آمادگی انتشار"
@@ -638,16 +640,37 @@ function ProductWorkspaceScreenInner({
                     : `${view.readinessWarnings.length} مورد ناقص`
               }
               hint={view.publication.purchasableHint ? "آمادهٔ فروش ترکیبی" : "نیاز به بررسی"}
+              tone={
+                publishReadyCount != null && publishTotalCount != null && publishReadyCount === publishTotalCount
+                  ? "success"
+                  : "info"
+              }
+              progress={
+                publishReadyCount != null && publishTotalCount != null && publishTotalCount > 0
+                  ? publishReadyCount / publishTotalCount
+                  : view.readinessWarnings.length === 0
+                    ? 1
+                    : 0.35
+              }
+              actionLabel="مشاهده چک‌لیست"
+              onAction={() => requestSectionChange("publication")}
             />
             <Summary
               label="ترجمه‌ها"
               value={`${translationCompleteCount} از ${TRANSLATION_LOCALES.length} زبان`}
               hint="فارسی و English"
+              tone={translationCompleteCount === TRANSLATION_LOCALES.length ? "success" : "warning"}
+              progress={translationCompleteCount / TRANSLATION_LOCALES.length}
+              actionLabel="مدیریت ترجمه‌ها"
+              onAction={() => requestSectionChange("translations")}
             />
             <Summary
               label="SEO"
               value={seoReady ? "آماده" : "قابل بهبود"}
               hint={view.seo.seoTitleSeam || view.slug || "عنوان جستجو ناقص"}
+              tone={seoReady ? "success" : "warning"}
+              actionLabel="بهبود SEO"
+              onAction={() => requestSectionChange("seo")}
             />
             <Summary
               label="تنوع‌ها"
@@ -661,11 +684,17 @@ function ProductWorkspaceScreenInner({
                   ? "ویژگی تنوع تعریف نشده یا هنوز ساخته نشده"
                   : "وضعیت در تب تنوع‌ها"
               }
+              tone={view.variants.length === 0 ? "warning" : "neutral"}
+              actionLabel="مدیریت تنوع‌ها"
+              onAction={() => requestSectionChange("variants")}
             />
             <Summary
               label="رسانه"
-              value={`${view.media.length} مورد`}
+              value={`${view.media.length.toLocaleString("fa-IR")} مورد`}
               hint={primaryMedia ? "تصویر اصلی دارد" : "بدون تصویر اصلی"}
+              tone={primaryMedia ? "success" : "warning"}
+              actionLabel="مشاهده همه"
+              onAction={() => requestSectionChange("media")}
             />
           </div>
         }
@@ -1170,12 +1199,66 @@ function ProductWorkspaceScreenInner({
   );
 }
 
-function Summary({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Summary({
+  label,
+  value,
+  hint,
+  meta,
+  tone = "neutral",
+  progress,
+  actionLabel,
+  onAction,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  meta?: string;
+  tone?: "neutral" | "success" | "warning" | "info";
+  progress?: number;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  const valueTone =
+    tone === "success"
+      ? "text-emerald-700"
+      : tone === "warning"
+        ? "text-amber-800"
+        : tone === "info"
+          ? "text-blue-700"
+          : "text-foreground";
+  const barTone =
+    tone === "success"
+      ? "bg-emerald-500"
+      : tone === "warning"
+        ? "bg-amber-500"
+        : tone === "info"
+          ? "bg-blue-600"
+          : "bg-slate-400";
+  const clamped = progress == null ? null : Math.max(0, Math.min(1, progress));
   return (
-    <div className="rounded-ds border border-border bg-surface p-3">
-      <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-lg font-semibold leading-snug">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
+    <div className="rounded-2xl border border-border bg-surface-elevated p-3.5 shadow-sm" data-testid="product-readiness-card">
+      <p className="text-xs font-medium text-muted">{label}</p>
+      <p className={`mt-1.5 text-lg font-semibold leading-snug ${valueTone}`}>{value}</p>
+      {clamped != null ? (
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary" aria-hidden>
+          <div className={`h-full rounded-full ${barTone}`} style={{ width: `${Math.round(clamped * 100)}%` }} />
+        </div>
+      ) : null}
+      {hint ? <p className="mt-1.5 text-xs text-muted">{hint}</p> : null}
+      {meta ? (
+        <p className="mt-1 text-[11px] text-muted" dir="ltr">
+          {meta}
+        </p>
+      ) : null}
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          className="mt-2 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+          onClick={onAction}
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -4,7 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { updateAdminProductCore } from "./host-client";
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
+import { ProductRichTextEditor } from "./product-rich-text-editor";
+import { sanitizeProductRichHtml } from "./product-rich-html";
+import {
+  translationReadiness,
+  type TranslationReadiness,
+} from "./product-translations-readiness";
 import type { ProductTranslationView, ProductWorkspaceView } from "./workspace-model";
+
+export { translationReadiness, type TranslationReadiness };
 
 const LOCALES = ["fa-IR", "en"] as const;
 
@@ -14,9 +22,7 @@ const LOCALE_DISPLAY: Record<string, string> = {
   "en-US": "English",
 };
 
-export type TranslationReadiness = "complete" | "partial" | "missing";
-
-type TranslationDraft = {
+export type TranslationDraft = {
   name: string;
   shortDescription: string;
   description: string;
@@ -53,15 +59,6 @@ function draftFromLocale(view: ProductWorkspaceView, locale: string): Translatio
     seoTitle: existing?.seoTitle || "",
     seoDescription: existing?.seoDescription || "",
   };
-}
-
-export function translationReadiness(draft: TranslationDraft): TranslationReadiness {
-  const name = draft.name.trim();
-  const short = draft.shortDescription.trim();
-  const full = draft.description.trim();
-  if (!name && !short && !full) return "missing";
-  if (name && short && full) return "complete";
-  return "partial";
 }
 
 function readinessLabel(state: TranslationReadiness): string {
@@ -141,7 +138,7 @@ export function ProductTranslationsPanel({
         // slug سراسری است؛ برای non-fa مقدار فعلی حفظ می‌شود (Host هم محافظت می‌کند).
         slug: locale === "fa-IR" ? view.slug ?? view.seo.slugSeam ?? null : view.slug ?? view.seo.slugSeam ?? null,
         shortDescription: draft.shortDescription.trim() || null,
-        description: draft.description.trim() || null,
+        description: sanitizeProductRichHtml(draft.description) || null,
         seoTitle: draft.seoTitle.trim() || null,
         seoDescription: draft.seoDescription.trim() || null,
         expectedUpdatedAt: view.catalogUpdatedAt,
@@ -220,7 +217,18 @@ export function ProductTranslationsPanel({
               hint="slug برای همهٔ زبان‌ها یکسان است"
             />
             <ReadCard label="خلاصه کوتاه" value={draft.shortDescription || "—"} />
-            <ReadCard label="توضیح کامل" value={draft.description || "—"} />
+            <div className="rounded-ds border border-border bg-surface p-3 sm:col-span-2">
+              <p className="text-sm text-muted">توضیح کامل</p>
+              {draft.description ? (
+                <div
+                  className="prose prose-sm mt-2 max-w-none text-base"
+                  data-testid="translation-read-description"
+                  dangerouslySetInnerHTML={{ __html: sanitizeProductRichHtml(draft.description) }}
+                />
+              ) : (
+                <p className="mt-1 text-base font-semibold">—</p>
+              )}
+            </div>
             <ReadCard label="عنوان SEO" value={draft.seoTitle || "—"} />
             <ReadCard label="توضیح SEO" value={draft.seoDescription || "—"} />
           </div>
@@ -244,15 +252,15 @@ export function ProductTranslationsPanel({
                 onChange={(event) => setDraft({ ...draft, shortDescription: event.target.value })}
               />
             </label>
-            <label className="block text-sm font-medium">
-              توضیح کامل
-              <textarea
-                className="mt-2 min-h-36 w-full rounded-ds border border-border bg-surface px-3 py-2 text-base"
+            <div data-testid="translation-edit-description">
+              <p className="mb-2 text-sm font-medium">توضیح کامل</p>
+              <ProductRichTextEditor
                 value={draft.description}
-                data-testid="translation-edit-description"
-                onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+                onChange={(html) => setDraft({ ...draft, description: html })}
+                dir={dir}
+                testId="translation-rich-description"
               />
-            </label>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm font-medium">
                 عنوان SEO

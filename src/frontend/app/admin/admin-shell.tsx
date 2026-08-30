@@ -89,7 +89,7 @@ const navGroupDefs: NavGroupDef[] = [
     labelKey: "groupProducts",
     items: [
       { id: "products", labelKey: "productList", href: "/admin/products", icon: Package, live: true, viewPermission: "product.view" },
-      { id: "product-create", labelKey: "productCreate", href: "/admin/products?create=1", icon: Plus, live: true, viewPermission: "product.view" },
+      { id: "product-create", labelKey: "productCreate", href: "/admin/products/new", icon: Plus, live: true, viewPermission: "product.view" },
     ],
   },
   {

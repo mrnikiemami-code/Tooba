@@ -58,12 +58,14 @@ test("shell edit exit and mode badge", () => {
   assert.match(screen, /item\.actor\?\.trim\(\) \|\| "سیستم"/);
 });
 
-test("AppDataGrid preserved; no AgGridReact in product list", () => {
+test("AppDataGrid preserved; dedicated create route CTA", () => {
   const list = fs.readFileSync(listPath, "utf8");
   assert.match(list, /AppDataGrid/);
   assert.equal(list.includes("AgGridReact"), false);
-  assert.match(list, /admin-create-product-cancel/);
-  assert.match(list, /\bButton\b/);
+  assert.match(list, /href="\/admin\/products\/new"/);
+  assert.match(list, /admin-create-product/);
+  assert.equal(list.includes("admin-create-product-panel"), false);
+  assert.equal(list.includes("admin-create-product-cancel"), false);
 });
 
 test("no گونه in product workspace labels or host variant docs", () => {
@@ -85,17 +87,19 @@ test("summary strip sits above tabs; product summary cards expanded", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.match(shell, /workspace-summary-strip/);
   assert.match(screen, /product-summary-cards/);
+  assert.match(screen, /product-readiness-card/);
   assert.match(screen, /product-general-media-preview/);
   assert.equal(screen.includes('headerName: "قیمت (ریال)"'), false);
 });
 
-test("product list hides Product-looking price/stock columns by default", () => {
+test("product list hides Product-looking price/stock columns; create is dedicated route", () => {
   const list = fs.readFileSync(listPath, "utf8");
   const shell = fs.readFileSync(path.join(root, "app/admin/admin-shell.tsx"), "utf8");
   assert.match(list, /AppDataGrid/);
   assert.equal(list.includes('headerName: "قیمت (ریال)"'), false);
   assert.equal(list.includes('headerName: "موجودی"'), false);
   assert.match(list, /headerName: "تنوع"/);
-  assert.match(list, /searchParams\.get\("create"\)/);
-  assert.match(shell, /products\?create=1/);
+  assert.equal(list.includes('searchParams.get("create")'), false);
+  assert.match(shell, /\/admin\/products\/new/);
+  assert.equal(shell.includes("products?create=1"), false);
 });

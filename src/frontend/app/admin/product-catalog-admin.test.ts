@@ -20,14 +20,13 @@ test("product list keeps AppDataGrid and rejects raw AgGridReact", () => {
   assert.equal(list.includes('from "ag-grid-react"'), false);
 });
 
-test("create CTA is draft-only with category picker", () => {
+test("create CTA navigates to dedicated draft create route", () => {
   const list = fs.readFileSync(listPath, "utf8");
-  assert.match(list, /ایجاد پیش‌نویس/);
+  assert.match(list, /href="\/admin\/products\/new"/);
+  assert.match(list, /admin-create-product/);
+  assert.equal(list.includes("admin-create-product-panel"), false);
   assert.equal(list.includes("ایجاد و انتشار"), false);
-  assert.match(list, /ProductCategoryPicker/);
-  assert.match(list, /categoryId:\s*createCategoryId/);
-  assert.match(list, /پیش‌نویس/);
-  assert.match(list, /admin-create-product-submit/);
+  assert.equal(list.includes("createAdminProduct"), false);
 });
 
 test("row actions use view/edit scopes and safe archive label", () => {
@@ -64,13 +63,15 @@ test("product category picker is hierarchical level-3-only with human paths", ()
   assert.equal(picker.includes("AgGridReact"), false);
 });
 
-test("create flow blocks invalid category via level error mapping", () => {
-  const list = fs.readFileSync(listPath, "utf8");
-  assert.match(list, /ProductCategoryPicker/);
-  assert.match(list, /workspace\.product\.category\.level\.invalid/);
-  assert.match(list, /PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA/);
-  assert.match(list, /ایجاد پیش‌نویس/);
-  assert.equal(list.includes("AgGridReact"), false);
+test("dedicated create screen blocks invalid category via level error mapping", () => {
+  const createPath = path.join(root, "app/admin/product-create-screen.tsx");
+  const create = fs.readFileSync(createPath, "utf8");
+  assert.match(create, /ProductCategoryPicker/);
+  assert.match(create, /workspace\.product\.category\.level\.invalid/);
+  assert.match(create, /PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA/);
+  assert.match(create, /ایجاد پیش‌نویس/);
+  assert.match(create, /ProductRichTextEditor/);
+  assert.equal(create.includes("AgGridReact"), false);
 });
 
 test("workspace warns on non-L3 category and preserves VIEW/EDIT", () => {

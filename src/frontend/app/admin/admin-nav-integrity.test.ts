@@ -10,7 +10,7 @@ const shellSource = fs.readFileSync(path.join(root, "app/admin/admin-shell.tsx")
 
 const productSiblings = [
   { id: "products", href: "/admin/products" },
-  { id: "product-create", href: "/admin/products?create=1" },
+  { id: "product-create", href: "/admin/products/new" },
 ];
 
 const catalogSiblings = [
@@ -49,11 +49,11 @@ test("product list and add-product never double-active", () => {
     false,
   );
   assert.equal(
-    isActiveAdminNavItem("/admin/products", "create=1", productSiblings[0]!, productSiblings),
+    isActiveAdminNavItem("/admin/products/new", "", productSiblings[0]!, productSiblings),
     false,
   );
   assert.equal(
-    isActiveAdminNavItem("/admin/products", "create=1", productSiblings[1]!, productSiblings),
+    isActiveAdminNavItem("/admin/products/new", "", productSiblings[1]!, productSiblings),
     true,
   );
   assert.equal(
@@ -64,6 +64,8 @@ test("product list and add-product never double-active", () => {
     isActiveAdminNavItem("/admin/products/abc", "", productSiblings[1]!, productSiblings),
     false,
   );
+  assert.match(shellSource, /href: "\/admin\/products\/new"/);
+  assert.equal(shellSource.includes("products?create=1"), false);
 });
 
 test("category and attribute library active independently", () => {
