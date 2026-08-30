@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_RESULT
 
@@ -18,7 +18,7 @@ Bridge-UUID:
 32dfcbd9-cc5f-44af-be86-0211f97ddb12
 
 Git-HEAD:
-56567a05793640b6cf2b1febaa024bd06f8e157f
+053544a961c70a3f6f454ff6fdb584f6b784b9d1
 
 USER_VISUAL_ACCEPTED:
 NO
@@ -72,7 +72,7 @@ Evidence:
 docs/evidence/TB-P07-T034/{product-counts,brand-distribution,localization,attributes-variants,media,seo-readiness,idempotency,live-samples,full-validation}.md + live-seed-*.json
 
 Git:
-committed+pushed; HEAD==origin/main=de5dfcbc552b7b24a14f24cbf29ba161ffbea4b8; unrelated dirty preserved
+committed+pushed; HEAD==origin/main=053544a961c70a3f6f454ff6fdb584f6b784b9d1; unrelated dirty preserved
 
 Architectural-Concerns:
 definition.IsVariantAxisAllowed blocks product-level values even when binding is non-axis — matrix bindings adjusted for towers/aio/foundation; leftover 4 non-demo Published products remain outside demo seam
