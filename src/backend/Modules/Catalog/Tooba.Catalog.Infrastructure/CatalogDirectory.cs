@@ -718,6 +718,257 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<TagView> CreateTagAsync(
+        string? code,
+        string? slugSeam,
+        IReadOnlyDictionary<string, string> localizedNames,
+        string? displayLocale,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var faName = localizedNames
+            .FirstOrDefault(x => x.Key.StartsWith("fa", StringComparison.OrdinalIgnoreCase))
+            .Value?.Trim();
+        if (string.IsNullOrWhiteSpace(faName) && localizedNames.Count > 0)
+        {
+            faName = localizedNames.Values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v))?.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(faName))
+        {
+            throw new InvalidOperationException("نام برچسب لازم است.");
+        }
+
+        var resolvedCode = string.IsNullOrWhiteSpace(code)
+            ? await ResolveUniqueTagCodeAsync(SlugifyTagCode(faName), cancellationToken)
+            : code.Trim().ToLowerInvariant();
+        var codeTaken = await _db.Tags.AsNoTracking().AnyAsync(x => x.Code == resolvedCode, cancellationToken);
+        if (codeTaken)
+        {
+            throw new InvalidOperationException("کد برچسب تکراری است.");
+        }
+
+        var tag = CatalogTag.Create(resolvedCode, slugSeam, DateTimeOffset.UtcNow);
+        _db.Tags.Add(tag);
+        AddLocalizedNames(CatalogLocalizedOwnerKind.Tag, tag.TagId, localizedNames);
+        await _db.SaveChangesAsync(cancellationToken);
+        return await MapTagViewAsync(tag, displayLocale ?? "fa-IR", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TagView>> ListTagsAsync(
+        string locale,
+        string? search,
+        CancellationToken cancellationToken)
+    {
+        var tags = await _db.Tags.AsNoTracking().OrderBy(x => x.Code).Take(200).ToListAsync(cancellationToken);
+        var views = new List<TagView>(tags.Count);
+        foreach (var tag in tags)
+        {
+            views.Add(await MapTagViewAsync(tag, locale, cancellationToken));
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var q = search.Trim();
+            views = views
+                .Where(v =>
+                    v.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || v.Code.Contains(q, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return views;
+    }
+
+    /// <inheritdoc />
+    public async Task<TagView?> GetTagAsync(Guid tagId, string? locale, CancellationToken cancellationToken)
+    {
+        var tag = await _db.Tags.AsNoTracking().SingleOrDefaultAsync(x => x.TagId == tagId, cancellationToken);
+        return tag is null ? null : await MapTagViewAsync(tag, locale ?? "fa-IR", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PublishTagAsync(Guid tagId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var tag = await _db.Tags.SingleAsync(x => x.TagId == tagId, cancellationToken);
+        tag.Publish(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task AssignProductTagAsync(Guid productId, Guid tagId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        _ = await _db.Products.AsNoTracking().SingleAsync(x => x.ProductId == productId, cancellationToken);
+        _ = await _db.Tags.AsNoTracking().SingleAsync(x => x.TagId == tagId, cancellationToken);
+        var exists = await _db.ProductTagAssignments.AsNoTracking()
+            .AnyAsync(x => x.ProductId == productId && x.TagId == tagId, cancellationToken);
+        if (exists)
+        {
+            throw new InvalidOperationException("این برچسب قبلاً به محصول اختصاص یافته است.");
+        }
+
+        _db.ProductTagAssignments.Add(CatalogProductTagAssignment.Assign(productId, tagId));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RemoveProductTagAsync(Guid productId, Guid tagId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var row = await _db.ProductTagAssignments
+            .SingleOrDefaultAsync(x => x.ProductId == productId && x.TagId == tagId, cancellationToken);
+        if (row is null)
+        {
+            return;
+        }
+
+        _db.ProductTagAssignments.Remove(row);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TagView>> ListProductTagsAsync(
+        Guid productId,
+        string? locale,
+        CancellationToken cancellationToken)
+    {
+        var tagIds = await _db.ProductTagAssignments.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.TagId)
+            .ToListAsync(cancellationToken);
+        if (tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var tags = await _db.Tags.AsNoTracking().Where(x => tagIds.Contains(x.TagId)).ToListAsync(cancellationToken);
+        var views = new List<TagView>(tags.Count);
+        foreach (var tag in tags.OrderBy(x => x.Code))
+        {
+            views.Add(await MapTagViewAsync(tag, locale ?? "fa-IR", cancellationToken));
+        }
+
+        return views;
+    }
+
+    /// <inheritdoc />
+    public async Task AssignCategoryTagAsync(Guid categoryId, Guid tagId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        _ = await _db.Categories.AsNoTracking().SingleAsync(x => x.CategoryId == categoryId, cancellationToken);
+        _ = await _db.Tags.AsNoTracking().SingleAsync(x => x.TagId == tagId, cancellationToken);
+        var exists = await _db.CategoryTagAssignments.AsNoTracking()
+            .AnyAsync(x => x.CategoryId == categoryId && x.TagId == tagId, cancellationToken);
+        if (exists)
+        {
+            throw new InvalidOperationException("این برچسب قبلاً به دسته اختصاص یافته است.");
+        }
+
+        _db.CategoryTagAssignments.Add(CatalogCategoryTagAssignment.Assign(categoryId, tagId));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RemoveCategoryTagAsync(Guid categoryId, Guid tagId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var row = await _db.CategoryTagAssignments
+            .SingleOrDefaultAsync(x => x.CategoryId == categoryId && x.TagId == tagId, cancellationToken);
+        if (row is null)
+        {
+            return;
+        }
+
+        _db.CategoryTagAssignments.Remove(row);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TagView>> ListCategoryTagsAsync(
+        Guid categoryId,
+        string? locale,
+        CancellationToken cancellationToken)
+    {
+        var tagIds = await _db.CategoryTagAssignments.AsNoTracking()
+            .Where(x => x.CategoryId == categoryId)
+            .Select(x => x.TagId)
+            .ToListAsync(cancellationToken);
+        if (tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var tags = await _db.Tags.AsNoTracking().Where(x => tagIds.Contains(x.TagId)).ToListAsync(cancellationToken);
+        var views = new List<TagView>(tags.Count);
+        foreach (var tag in tags.OrderBy(x => x.Code))
+        {
+            views.Add(await MapTagViewAsync(tag, locale ?? "fa-IR", cancellationToken));
+        }
+
+        return views;
+    }
+
+    private async Task<TagView> MapTagViewAsync(CatalogTag tag, string locale, CancellationToken cancellationToken)
+    {
+        var name = await PreferLocaleNameAsync(tag.TagId, locale, cancellationToken) ?? tag.Code;
+        return new TagView(tag.TagId, tag.Code, tag.SlugSeam, tag.Status, name, tag.CreatedAt, tag.UpdatedAt);
+    }
+
+    private async Task<string?> PreferLocaleNameAsync(Guid tagId, string locale, CancellationToken cancellationToken)
+    {
+        var rows = await _db.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Tag && x.OwnerId == tagId && x.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows.FirstOrDefault(x => string.Equals(x.Locale, locale, StringComparison.OrdinalIgnoreCase))?.Value
+            ?? rows.FirstOrDefault(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase))?.Value
+            ?? rows[0].Value;
+    }
+
+    private static string SlugifyTagCode(string name)
+    {
+        var raw = name.Trim().ToLowerInvariant();
+        var chars = raw.Select(ch => char.IsLetterOrDigit(ch) || ch > 127 ? ch : '-').ToArray();
+        var code = new string(chars);
+        while (code.Contains("--", StringComparison.Ordinal))
+        {
+            code = code.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        code = code.Trim('-');
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return "tag";
+        }
+
+        return code.Length <= 64 ? code : code[..64].TrimEnd('-');
+    }
+
+    private async Task<string> ResolveUniqueTagCodeAsync(string baseCode, CancellationToken cancellationToken)
+    {
+        var candidate = baseCode;
+        var n = 0;
+        while (await _db.Tags.AsNoTracking().AnyAsync(x => x.Code == candidate, cancellationToken))
+        {
+            n++;
+            var suffix = $"-{n}";
+            var trimmed = baseCode.Length + suffix.Length <= 64
+                ? baseCode
+                : baseCode[..Math.Max(1, 64 - suffix.Length)].TrimEnd('-');
+            candidate = trimmed + suffix;
+        }
+
+        return candidate;
+    }
+
+    /// <inheritdoc />
     public async Task<Guid> CreateAttributeDefinitionAsync(
         string code,
         CatalogAttributeValueKind valueKind,

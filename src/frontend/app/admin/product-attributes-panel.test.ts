@@ -158,4 +158,6 @@ test("panel source has VIEW/EDIT typed controls and no Product-local attribute c
   assert.equal(src.includes("شناسه گزینه"), false);
   assert.equal(src.includes("rawValue (اختیاری)"), false);
   assert.match(src, /localizedLabel/);
+  assert.match(src, /toast\.success/);
+  assert.match(src, /تغییرات محصول ذخیره شد/);
 });

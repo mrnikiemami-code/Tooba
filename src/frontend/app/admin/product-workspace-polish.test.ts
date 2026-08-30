@@ -58,6 +58,10 @@ test("shell edit exit and mode badge", () => {
   assert.match(screen, /item\.actor\?\.trim\(\) \|\| "سیستم"/);
   assert.match(screen, /discard-general/);
   assert.match(screen, /kind: "overflow"/);
+  // general save clears dirty but stays in EDIT until پایان ویرایش
+  const saveGeneral = screen.match(/async function handleSaveGeneral\(\) \{[\s\S]*?\n  \}/)?.[0] ?? "";
+  assert.match(saveGeneral, /formMode\.clearDirty\(\)/);
+  assert.equal(saveGeneral.includes("formMode.onSaved()"), false);
 });
 
 test("AppDataGrid preserved; dedicated create route CTA", () => {

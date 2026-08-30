@@ -61,8 +61,11 @@ test("General EDIT fields and save/cancel", () => {
   assert.match(screen, /handleSaveGeneral/);
   assert.match(screen, /formMode\.onEdit/);
   assert.match(screen, /formMode\.onCancel/);
-  assert.match(screen, /formMode\.onSaved/);
+  assert.match(screen, /formMode\.clearDirty/);
   assert.match(screen, /confirmDiscardIfDirty/);
+  assert.match(screen, /پایان ویرایش/);
+  assert.match(screen, /category-header-end-edit/);
+  assert.match(screen, /handleHeaderEdit/);
 });
 
 test("status localization uses Persian labels in workspace", () => {
@@ -112,6 +115,10 @@ test("permission-aware edit action gated by canEdit", () => {
   assert.match(screen, /formMode\.canEdit/);
   assert.match(screen, /useAdminFormMode\(\{ canView, canEdit \}\)/);
   assert.match(screen, /canEdit=\{formMode\.canEdit\}/);
+  // one stable header Edit for all mutable tabs — not gated to general only
+  assert.match(screen, /const headerEditVisible = !isEdit && formMode\.canEdit;/);
+  assert.match(screen, /handleHeaderEdit/);
+  assert.equal(screen.includes("ویرایش ترجمه"), false);
 });
 
 test("Translations tab: locale switcher, statuses, create, VIEW/EDIT", () => {
@@ -173,8 +180,11 @@ test("dirty locale-switch protection", () => {
     screen,
     /if \(formMode\.isDirty && !formMode\.confirmDiscardIfDirty\(\)\) return;/,
   );
-  // tab switch + category navigate also protected
+  // tab switch + category navigate also protected; edit mode persists across tabs
   assert.match(screen, /navigateToCategory/);
+  assert.match(screen, /revertSurfaceDraft\(editSurface\)/);
+  assert.match(screen, /formMode\.clearDirty\(\)/);
+  assert.equal(screen.includes("if (formMode.mode === \"edit\") formMode.onCancel();"), false);
 });
 
 test("human slug preview has no CategoryId suffix", () => {
@@ -287,6 +297,8 @@ test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
   assert.match(panel, /می‌تواند برای ساخت تنوع‌های محصول مثل رنگ یا سایز استفاده شود/);
   assert.match(panel, /category-attributes-edit/);
   assert.match(panel, /canEdit/);
+  assert.equal(panel.includes("onEnterEdit"), false);
+  assert.equal(panel.includes("ویرایش ویژگی‌ها"), false);
   assert.equal(panel.includes("definitionId"), true);
   assert.equal(panel.match(/data-testid=.*definitionId/g)?.length ?? 0, 0);
 });

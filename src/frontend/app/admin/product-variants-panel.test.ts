@@ -81,6 +81,8 @@ test("panel source has VIEW/EDIT, guided steps, preview, impact, no price/stock/
   assert.doesNotMatch(src, /محور|Cartesian|Reconcile/);
   assert.doesNotMatch(src, /schema ویژگی|Schema word/);
   assert.match(src, /formatCombinationLabel/);
+  assert.match(src, /toast\.success/);
+  assert.match(src, /تنوع‌ها به‌روزرسانی شدند/);
 });
 
 test("workspace wires ProductVariantsPanel into تنوع‌ها tab", () => {

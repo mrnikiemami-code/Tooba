@@ -1,0 +1,106 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T032
+
+Parent-Task:
+TB-P07-T031
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Summary:
+Fixed live Catalog Admin UX defects from human review of T031 and added CatalogTag foundation (Product/Category M2M). Global Edit mode, save reliability + success toasts, Media Persian-only dialog, MegaMenu/Brand searchable combobox, Category→Products membership-only with bulk add and live counts, locked wording نمایش در دسته‌های دیگر, optional Brand/بدون برند. Tags taxonomy (not meta-keywords). BE 350 (346+4), FE green. USER_VISUAL_ACCEPTED=NO.
+
+Global-Edit:
+Product one header ویرایش; EDIT sticky ذخیره/انصراف/پایان ویرایش; Category same across mutable tabs; per-tab enter-edit removed
+
+Save-Reliability:
+Product/Category section saves via Host; dirty clear only after success; stay in EDIT until پایان ویرایش
+
+Mutation-Feedback:
+toasts for product/category/media/variants/membership; busy در حال ذخیره...
+
+Media-E2E:
+upload→assign→persist; Persian-only UI; no English implementation leak
+
+MegaMenu:
+current category prebound; searchable placement combobox
+
+Brand:
+integrated searchable combobox + بدون برند nullable; Home brands list unchanged (Published only)
+
+Category-Product-Picker:
+immediate count/row refresh; bulk افزودن موارد انتخاب‌شده (N); membership-only (no change-category)
+
+Category-Wording:
+دسته اصلی / نمایش در دسته‌های دیگر + locked helper
+
+Tags:
+CatalogTag create/assign/remove Product+Category; chips multi-select; no meta keywords
+
+Home-Brand-Rule:
+برندهای محبوب brands only; brandless products not globally hidden
+
+Navigation:
+one active leaf preserved
+
+Localization:
+fa/en RTL/LTR on touched surfaces
+
+Architecture:
+Product!=Offer; no Product price/stock; Primary schema-driving; discovery additional; Media DAM; AppDataGrid; Shopeiva untouched
+
+Validation:
+backend FULL tests: 346 pass / 0 fail / 0 skip
+MigrationRunner: 4 pass
+frontend typecheck/lint/test/build: PASS fail 0
+warnings: pre-existing unused-var only
+git diff --check: clean on source
+
+Live-Verification:
+Host:5088 FE:3000 Shopeiva:3001 alive; tags create/assign live OK
+
+Evidence:
+path: docs/evidence/TB-P07-T032/
+
+Git:
+branch:
+main
+
+commit:
+727bf7a28683f30b7f1d8e35b05b99912f15f45e
+
+push:
+yes
+
+final HEAD:
+727bf7a28683f30b7f1d8e35b05b99912f15f45e
+
+origin/main:
+727bf7a28683f30b7f1d8e35b05b99912f15f45e
+
+synchronized:
+YES
+
+tracked tree:
+T032 scoped
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+none new
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

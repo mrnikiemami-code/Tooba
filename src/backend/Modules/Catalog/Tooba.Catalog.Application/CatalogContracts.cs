@@ -31,6 +31,18 @@ public sealed record CategoryReference(Guid CategoryId, Guid? ParentCategoryId, 
 public sealed record BrandReference(Guid BrandId, string? SlugSeam, CatalogPublicationStatus Status);
 
 /// <summary>
+/// نمای برچسب تاکسونومی برای Admin (نام انسانی؛ نه GUID خام به‌عنوان UX اصلی).
+/// </summary>
+public sealed record TagView(
+    Guid TagId,
+    string Code,
+    string? SlugSeam,
+    CatalogPublicationStatus Status,
+    string Name,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+/// <summary>
 /// ردهٔ Catalog برای انتخابگر scope در Access Control (نام محلی؛ نه JOIN از Order).
 /// </summary>
 /// <param name="CategoryId">شناسهٔ رده.</param>
@@ -182,6 +194,45 @@ public interface ICatalogDirectory
     /// برند تحریری می‌سازد.
     /// </summary>
     Task<BrandReference> CreateBrandAsync(string? slugSeam, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// برچسب تاکسونومی می‌سازد (نام‌های محلی؛ کد پایدار اختیاری با تولید خودکار).
+    /// </summary>
+    Task<TagView> CreateTagAsync(
+        string? code,
+        string? slugSeam,
+        IReadOnlyDictionary<string, string> localizedNames,
+        string? displayLocale,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// فهرست/جستجوی برچسب‌ها بر اساس نام محلی.
+    /// </summary>
+    Task<IReadOnlyList<TagView>> ListTagsAsync(string locale, string? search, CancellationToken cancellationToken);
+
+    /// <summary>یک برچسب را با نام محلی برمی‌گرداند.</summary>
+    Task<TagView?> GetTagAsync(Guid tagId, string? locale, CancellationToken cancellationToken);
+
+    /// <summary>برچسب را منتشر می‌کند (تحریری؛ صفحهٔ عمومی خودکار نیست).</summary>
+    Task PublishTagAsync(Guid tagId, CancellationToken cancellationToken);
+
+    /// <summary>برچسب را به محصول اختصاص می‌دهد؛ تکراری رد می‌شود.</summary>
+    Task AssignProductTagAsync(Guid productId, Guid tagId, CancellationToken cancellationToken);
+
+    /// <summary>پیوند محصول-برچسب را حذف می‌کند.</summary>
+    Task RemoveProductTagAsync(Guid productId, Guid tagId, CancellationToken cancellationToken);
+
+    /// <summary>برچسب‌های اختصاص‌یافته به محصول.</summary>
+    Task<IReadOnlyList<TagView>> ListProductTagsAsync(Guid productId, string? locale, CancellationToken cancellationToken);
+
+    /// <summary>برچسب را به رده اختصاص می‌دهد؛ تکراری رد می‌شود.</summary>
+    Task AssignCategoryTagAsync(Guid categoryId, Guid tagId, CancellationToken cancellationToken);
+
+    /// <summary>پیوند رده-برچسب را حذف می‌کند.</summary>
+    Task RemoveCategoryTagAsync(Guid categoryId, Guid tagId, CancellationToken cancellationToken);
+
+    /// <summary>برچسب‌های اختصاص‌یافته به رده.</summary>
+    Task<IReadOnlyList<TagView>> ListCategoryTagsAsync(Guid categoryId, string? locale, CancellationToken cancellationToken);
 
     /// <summary>
     /// تعریف ویژگی تایپ‌شده می‌سازد.

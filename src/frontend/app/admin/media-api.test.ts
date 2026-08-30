@@ -37,14 +37,23 @@ test("media library dialog has library/upload tabs, search, paging, selection mo
   assert.match(src, /uploadAdminMediaFileWithProgress/);
   assert.match(src, /admin-media-upload-rows/);
   assert.match(src, /admin-media-upload-progress/);
-  assert.match(src, /mediaUploadStateLabel/);
+  assert.match(src, /mediaUploadStateLabel\(row\.state, "fa"\)/);
   assert.match(src, /type=\"file\"/);
+  assert.match(src, /تلاش مجدد/);
+  assert.match(src, /بارگذاری در جریان است/);
   assert.doesNotMatch(src, /شناسه دارایی/);
+  assert.doesNotMatch(src, /lang=["']en["']/);
+  assert.doesNotMatch(src, />\s*Retry\s*</);
+  assert.doesNotMatch(src, /Upload in progress/);
+  assert.doesNotMatch(src, /Application upload state/);
+  assert.doesNotMatch(src, /JPEG\/PNG\/WebP\/GIF/);
 });
 
 test("mediaUploadStateLabel covers queued/uploading/succeeded/failed in fa and en", () => {
   assert.equal(mediaUploadStateLabel("queued", "fa"), "در صف");
+  assert.equal(mediaUploadStateLabel("uploading", "fa"), "در حال بارگذاری");
   assert.equal(mediaUploadStateLabel("uploading", "en"), "Uploading");
   assert.equal(mediaUploadStateLabel("succeeded", "fa"), "موفق");
+  assert.equal(mediaUploadStateLabel("failed", "fa"), "ناموفق");
   assert.equal(mediaUploadStateLabel("failed", "en"), "Failed");
 });

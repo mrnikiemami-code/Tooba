@@ -21,6 +21,7 @@ import {
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages";
+import { toast } from "react-toastify";
 
 export type ProductAttributesPanelMode = "view" | "edit";
 
@@ -138,7 +139,7 @@ export function ProductAttributesPanel({
   }
 
   async function onSave() {
-    if (!state) return;
+    if (!state || busy) return;
     const errors = validateAttributeDrafts(state.fields, drafts);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -173,6 +174,7 @@ export function ProductAttributesPanel({
     setDrafts(next);
     setDirty(false);
     setFieldErrors({});
+    toast.success(locale === "en" ? "Product changes saved." : "تغییرات محصول ذخیره شد.");
   }
 
   if (!categoryId && !state?.categoryId) {

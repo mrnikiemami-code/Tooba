@@ -30,6 +30,7 @@ import {
   type VariantRowDraft,
 } from "./product-variants-panel-model.ts";
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
+import { toast } from "react-toastify";
 
 export type ProductVariantsPanelMode = "view" | "edit";
 
@@ -216,7 +217,7 @@ export function ProductVariantsPanel({
   }
 
   async function onSave() {
-    if (!editable || !state) return;
+    if (!editable || !state || busy) return;
     if (estimate > maxCombinations) {
       setError(
         locale === "en"
@@ -254,6 +255,7 @@ export function ProductVariantsPanel({
     }
     await reload();
     setStep(4);
+    toast.success(locale === "en" ? "Variants updated." : "تنوع‌ها به‌روزرسانی شدند.");
   }
 
   if (loading) {

@@ -300,6 +300,7 @@ app.MapProductWorkspaceEndpoints();
 app.MapCatalogAttributeEndpoints();
 app.MapCatalogFacetEndpoints();
 app.MapCatalogMegaMenuEndpoints();
+app.MapCatalogTagEndpoints();
 app.MapCatalogCategoryEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();

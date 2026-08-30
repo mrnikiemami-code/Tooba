@@ -74,6 +74,20 @@ test("dedicated create screen blocks invalid category via level error mapping", 
   assert.equal(create.includes("AgGridReact"), false);
 });
 
+test("create and workspace Brand use searchable combobox with بدون برند", () => {
+  const createPath = path.join(root, "app/admin/product-create-screen.tsx");
+  const create = fs.readFileSync(createPath, "utf8");
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(create, /AdminSearchableCombobox/);
+  assert.match(create, /admin-product-create-brand/);
+  assert.match(create, /بدون برند/);
+  assert.doesNotMatch(create, /<select[\s\S]*admin-product-create-brand/);
+  assert.match(screen, /AdminSearchableCombobox/);
+  assert.match(screen, /بدون برند/);
+  assert.match(screen, /نمایش در دسته‌های دیگر/);
+  assert.match(screen, /CatalogTagsCard/);
+});
+
 test("workspace warns on non-L3 category and preserves VIEW/EDIT", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.match(screen, /product-category-level-warning/);

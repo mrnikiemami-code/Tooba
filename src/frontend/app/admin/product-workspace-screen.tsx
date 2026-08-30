@@ -40,8 +40,11 @@ import {
 import { ProductCategoryPicker } from "./product-category-picker";
 import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
 import { mapAdminErrorMessage } from "./admin-error-map";
+import { AdminSearchableCombobox } from "./admin-searchable-combobox";
+import { CatalogTagsCard } from "./catalog-tags-card";
 import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
+import { toast } from "react-toastify";
 
 const UNSAVED_DIALOG_COPY =
   "تغییرات ذخیره‌نشده دارید. بدون ذخیره از این بخش خارج می‌شوید؟";
@@ -171,7 +174,6 @@ function ProductWorkspaceScreenInner({
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
   const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
   const [brandOptions, setBrandOptions] = useState<AdminBrandOption[]>([]);
-  const [brandQuery, setBrandQuery] = useState("");
 
   const canView = Boolean(view?.permissions.canView ?? true);
   const canEdit = Boolean(view?.permissions.canEditCatalog) && !viewScope;
@@ -195,14 +197,14 @@ function ProductWorkspaceScreenInner({
 
   useEffect(() => {
     let cancelled = false;
-    void listAdminBrandOptions(brandQuery).then((result) => {
+    void listAdminBrandOptions().then((result) => {
       if (cancelled || !result.ok) return;
       setBrandOptions(result.items);
     });
     return () => {
       cancelled = true;
     };
-  }, [brandQuery]);
+  }, []);
 
   useEffect(() => {
     if (!view || enteredInitialEdit || viewScope) return;
@@ -453,9 +455,10 @@ function ProductWorkspaceScreenInner({
     }
     setView(coreResult.view);
     setDraft(draftFromView(coreResult.view));
-    formMode.onSaved();
+    formMode.clearDirty();
     setDirty(new Set());
     setConflict(null);
+    toast.success("تغییرات محصول ذخیره شد.");
   }
 
   async function onAction(actionId: string) {
@@ -889,6 +892,7 @@ function ProductWorkspaceScreenInner({
                   </p>
                   <div className="mt-4 grid gap-4">
                     <ProductCategoryPicker
+                      label="دسته اصلی"
                       value={activeDraft.categoryId}
                       onChange={(next) => {
                         setDraft({ ...activeDraft, categoryId: next });
@@ -898,9 +902,9 @@ function ProductWorkspaceScreenInner({
                       invalidSelectionHint
                     />
                     <div className="rounded-ds border border-border bg-surface/60 p-3" data-testid="product-additional-categories">
-                      <p className="text-sm font-medium">دسته‌های اضافی</p>
+                      <p className="text-sm font-medium">نمایش در دسته‌های دیگر</p>
                       <p className="mt-1 text-xs text-muted">
-                        فقط برای نمایش و پیدا شدن محصول؛ روی ویژگی‌ها و تنوع‌ها اثر ندارند.
+                        دسته اصلی مشخصات و تنوع‌های محصول را تعیین می‌کند. نمایش در دسته‌های دیگر فقط باعث می‌شود محصول در آن دسته‌ها هم پیدا شود و مشخصات محصول را تغییر نمی‌دهد.
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {(view.categoryAssignments ?? [])
@@ -971,32 +975,25 @@ function ProductWorkspaceScreenInner({
                     </div>
                     <label className="block text-sm font-medium">
                       برند
-                      <input
-                        className="mt-2 min-h-10 w-full rounded-ds border border-border bg-surface px-3 text-sm"
-                        placeholder="جستجوی برند…"
-                        value={brandQuery}
-                        onChange={(event) => setBrandQuery(event.target.value)}
-                        data-testid="product-brand-search"
-                      />
-                      <select
-                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
-                        value={activeDraft.brandId ?? ""}
-                        data-testid="product-edit-brand"
-                        onChange={(event) => {
-                          setDraft({
-                            ...activeDraft,
-                            brandId: event.target.value ? event.target.value : null,
-                          });
-                          markGeneralDirty();
-                        }}
-                      >
-                        <option value="">بدون برند</option>
-                        {brandOptions.map((brand) => (
-                          <option key={brand.brandId} value={brand.brandId}>
-                            {brand.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="mt-2">
+                        <AdminSearchableCombobox
+                          value={activeDraft.brandId}
+                          options={brandOptions.map((brand) => ({
+                            value: brand.brandId,
+                            label: brand.name,
+                          }))}
+                          noneOption={{ value: "", label: "بدون برند" }}
+                          placeholder="جستجو و انتخاب برند…"
+                          testId="product-edit-brand"
+                          onChange={(next) => {
+                            setDraft({
+                              ...activeDraft,
+                              brandId: next,
+                            });
+                            markGeneralDirty();
+                          }}
+                        />
+                      </div>
                     </label>
                     <label className="block text-sm font-medium">
                       نامک سراسری (slug)
@@ -1033,6 +1030,11 @@ function ProductWorkspaceScreenInner({
                     <SummaryCard label="آخرین به‌روزرسانی Catalog" value={view.catalogUpdatedAt} ltr />
                   </div>
                 </Card>
+                <CatalogTagsCard
+                  ownerKind="product"
+                  ownerId={view.productId}
+                  canEdit={canMutateCatalog && isGeneralEdit}
+                />
                 </div>
                 <div className="space-y-4">
                   <Card data-testid="product-general-media-preview">
@@ -1149,6 +1151,7 @@ function ProductWorkspaceScreenInner({
                       />
                     </div>
                   </Card>
+                  <CatalogTagsCard ownerKind="product" ownerId={view.productId} canEdit={false} />
                 </div>
                 <div className="space-y-4">
                   <Card data-testid="product-general-media-preview">

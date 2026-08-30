@@ -84,6 +84,8 @@ test("panel source opens real Media Library — no placeholder/fake attach", () 
   assert.doesNotMatch(src, /attachAdminProductPlaceholderMedia/);
   assert.doesNotMatch(src, /افزودن تصویر نمایشی/);
   assert.match(src, /کتابخانهٔ Media/);
+  assert.match(src, /toast\.success/);
+  assert.match(src, /رسانه به محصول اضافه شد/);
 });
 
 test("workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX", () => {

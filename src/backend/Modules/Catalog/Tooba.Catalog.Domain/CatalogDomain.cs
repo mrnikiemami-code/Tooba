@@ -99,6 +99,11 @@ public enum CatalogLocalizedOwnerKind
     /// برچسب گزینهٔ شمارشی.
     /// </summary>
     AttributeOption = 4,
+
+    /// <summary>
+    /// نام برچسب تاکسونومی Catalog (نه meta keywords).
+    /// </summary>
+    Tag = 5,
 }
 
 /// <summary>
@@ -359,6 +364,104 @@ public sealed class CatalogBrand
         Status = CatalogPublicationStatus.Published;
         UpdatedAt = now;
     }
+}
+
+/// <summary>
+/// برچسب تاکسونومی Catalog برای گروه‌بندی/جستجو/نمایش هدفمند.
+/// meta keywords نیست؛ صفحهٔ عمومی خودکار و SEO keyword strategy ندارد.
+/// </summary>
+public sealed class CatalogTag
+{
+    /// <summary>شناسهٔ پایدار برچسب.</summary>
+    public Guid TagId { get; init; }
+
+    /// <summary>کد پایدار ماشینی (unique)؛ برچسب نمایش در LocalizedText است.</summary>
+    public string Code { get; init; } = "";
+
+    /// <summary>درز slug اختیاری برای مسیریابی آینده؛ robots/index اینجا نیست.</summary>
+    public string? SlugSeam { get; set; }
+
+    /// <summary>وضعیت انتشار تحریری برچسب.</summary>
+    public CatalogPublicationStatus Status { get; set; }
+
+    /// <summary>زمان ایجاد.</summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>زمان به‌روزرسانی.</summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>برچسب تاکسونومی می‌سازد.</summary>
+    public static CatalogTag Create(string code, string? slugSeam, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(code);
+        var normalizedCode = code.Trim().ToLowerInvariant();
+        return new CatalogTag
+        {
+            TagId = UuidV7.New(),
+            Code = normalizedCode,
+            SlugSeam = string.IsNullOrWhiteSpace(slugSeam)
+                ? null
+                : slugSeam.Trim().ToLowerInvariant(),
+            Status = CatalogPublicationStatus.Draft,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+    }
+
+    /// <summary>برچسب را برای استفادهٔ تحریری منتشر می‌کند؛ صفحهٔ عمومی خودکار نمی‌سازد.</summary>
+    public void Publish(DateTimeOffset now)
+    {
+        Status = CatalogPublicationStatus.Published;
+        UpdatedAt = now;
+    }
+}
+
+/// <summary>
+/// پیوند چندبه‌چند محصول ↔ برچسب. ذخیرهٔ comma-separated نیست.
+/// </summary>
+public sealed class CatalogProductTagAssignment
+{
+    /// <summary>شناسهٔ پیوند.</summary>
+    public Guid AssignmentId { get; init; }
+
+    /// <summary>محصول Catalog.</summary>
+    public Guid ProductId { get; init; }
+
+    /// <summary>برچسب Catalog.</summary>
+    public Guid TagId { get; init; }
+
+    /// <summary>پیوند محصول-برچسب می‌سازد.</summary>
+    public static CatalogProductTagAssignment Assign(Guid productId, Guid tagId) =>
+        new()
+        {
+            AssignmentId = UuidV7.New(),
+            ProductId = productId,
+            TagId = tagId,
+        };
+}
+
+/// <summary>
+/// پیوند چندبه‌چند رده ↔ برچسب. ذخیرهٔ comma-separated نیست.
+/// </summary>
+public sealed class CatalogCategoryTagAssignment
+{
+    /// <summary>شناسهٔ پیوند.</summary>
+    public Guid AssignmentId { get; init; }
+
+    /// <summary>ردهٔ Catalog.</summary>
+    public Guid CategoryId { get; init; }
+
+    /// <summary>برچسب Catalog.</summary>
+    public Guid TagId { get; init; }
+
+    /// <summary>پیوند رده-برچسب می‌سازد.</summary>
+    public static CatalogCategoryTagAssignment Assign(Guid categoryId, Guid tagId) =>
+        new()
+        {
+            AssignmentId = UuidV7.New(),
+            CategoryId = categoryId,
+            TagId = tagId,
+        };
 }
 
 /// <summary>

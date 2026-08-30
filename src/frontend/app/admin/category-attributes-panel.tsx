@@ -395,19 +395,16 @@ export function CategoryAttributesPanel({
   categoryId,
   treeNodes,
   isEdit,
-  canEdit,
+  canEdit: _canEdit,
   busy: externalBusy,
-  onEnterEdit,
-  onCancelEdit,
 }: {
   categoryId: string;
   treeNodes: AppCategoryTreeNode[];
   isEdit: boolean;
   canEdit: boolean;
   busy?: boolean;
-  onEnterEdit: () => void;
-  onCancelEdit: () => void;
 }) {
+  void _canEdit;
   const [schema, setSchema] = useState<EffectiveSchemaEntry[]>([]);
   const [definitions, setDefinitions] = useState<AttributeDefinition[]>([]);
   const [loading, setLoading] = useState(true);
@@ -699,27 +696,6 @@ export function CategoryAttributesPanel({
             اختصاصی این دسته.
           </p>
         </div>
-        {!isEdit && canEdit ? (
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-            onClick={onEnterEdit}
-            data-testid="category-attributes-edit"
-          >
-            ویرایش ویژگی‌ها
-          </button>
-        ) : null}
-        {isEdit ? (
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            onClick={onCancelEdit}
-            disabled={combinedBusy}
-            data-testid="category-attributes-cancel"
-          >
-            پایان ویرایش
-          </button>
-        ) : null}
       </div>
 
       {error ? (

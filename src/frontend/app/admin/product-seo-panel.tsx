@@ -14,6 +14,7 @@ import {
   type ProductSeoDraft,
 } from "./product-seo-panel-model.ts";
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
+import { toast } from "react-toastify";
 
 export type ProductSeoPanelMode = "view" | "edit";
 
@@ -99,7 +100,7 @@ export function ProductSeoPanel({
   }
 
   async function save() {
-    if (!detail || !editable) return;
+    if (!detail || !editable || busy) return;
     setBusy(true);
     setError(null);
     const result = await updateAdminProductSeo(productId, {
@@ -116,6 +117,9 @@ export function ProductSeoPanel({
     }
     setDetail(result.detail);
     setDraft(draftFromSeoDetail(result.detail));
+    toast.success(
+      locale.startsWith("en") ? "Product changes saved." : "تغییرات محصول ذخیره شد.",
+    );
   }
 
   if (loading) {

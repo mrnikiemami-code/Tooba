@@ -353,10 +353,10 @@ export function MediaLibraryDialog({
               >
                 <span className="text-sm font-medium text-slate-800">انتخاب فایل تصویر</span>
                 <span className="text-xs text-slate-500">
-                  JPEG، PNG، WebP یا GIF — حداکثر حدود ۵ مگابایت برای هر فایل · JPEG/PNG/WebP/GIF
+                  JPEG، PNG، WebP یا GIF — حداکثر حدود ۵ مگابایت برای هر فایل
                 </span>
-                <span className="text-[11px] text-slate-400" lang="en">
-                  Application upload state shown below (queued / uploading / succeeded / failed)
+                <span className="text-[11px] text-slate-400">
+                  وضعیت بارگذاری در زیر نمایش داده می‌شود (در صف / در حال بارگذاری / موفق / ناموفق)
                 </span>
                 <input
                   type="file"
@@ -373,7 +373,7 @@ export function MediaLibraryDialog({
               </label>
               {uploading ? (
                 <p className="text-xs text-amber-800" data-testid="admin-media-upload-busy" role="status">
-                  بارگذاری در جریان است — از ارسال دوباره خودداری کنید. / Upload in progress — duplicate submit blocked.
+                  بارگذاری در جریان است — از ارسال دوباره خودداری کنید.
                 </p>
               ) : null}
               {uploadRows.length ? (
@@ -394,10 +394,6 @@ export function MediaLibraryDialog({
                             </p>
                             <p className="mt-0.5 text-xs text-slate-600">
                               <span>{mediaUploadStateLabel(row.state, "fa")}</span>
-                              <span className="mx-1 text-slate-300" aria-hidden>
-                                ·
-                              </span>
-                              <span lang="en">{mediaUploadStateLabel(row.state, "en")}</span>
                               {row.state === "uploading" && determinate ? (
                                 <span className="ms-2 font-medium text-blue-700">{row.progressPercent}%</span>
                               ) : null}
@@ -405,11 +401,6 @@ export function MediaLibraryDialog({
                             {row.state === "failed" ? (
                               <p className="mt-1 text-xs text-red-700" role="alert">
                                 <span>{row.messageFa}</span>
-                                {row.messageEn ? (
-                                  <span className="mt-0.5 block text-red-600/80" lang="en">
-                                    {row.messageEn}
-                                  </span>
-                                ) : null}
                               </p>
                             ) : null}
                           </div>
@@ -421,7 +412,7 @@ export function MediaLibraryDialog({
                               onClick={() => void retryUploadRow(row.id)}
                               data-testid="admin-media-upload-retry"
                             >
-                              تلاش مجدد / Retry
+                              تلاش مجدد
                             </button>
                           ) : null}
                         </div>
@@ -432,7 +423,11 @@ export function MediaLibraryDialog({
                             aria-valuemin={0}
                             aria-valuemax={100}
                             aria-valuenow={determinate ? row.progressPercent ?? undefined : undefined}
-                            aria-label={determinate ? `Upload ${row.progressPercent}%` : "Upload in progress"}
+                            aria-label={
+                              determinate
+                                ? `بارگذاری ${row.progressPercent}٪`
+                                : "بارگذاری در جریان"
+                            }
                             data-testid="admin-media-upload-progress"
                             data-progress-mode={determinate ? "determinate" : "indeterminate"}
                           >

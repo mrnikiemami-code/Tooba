@@ -1,0 +1,1259 @@
+﻿=== typecheck ===
+
+> tooba-web@0.0.1 typecheck
+> tsc --noEmit
+
+=== lint ===
+
+> tooba-web@0.0.1 lint
+> next lint
+
+node.exe : `next lint` is deprecated and will be removed in Next.js 16.
+At line:1 char:1
++ & "D:\Program Files\nodejs/node.exe" "D:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (`next lint` is ... in Next.js 16.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+The prop value with an expression type of TSNonNullExpression could not be resolved. Please file an issue ( 
+https://github.com/jsx-eslint/jsx-ast-utils/issues/new ) to get this fixed immediately.
+The prop value with an expression type of TSNonNullExpression could not be resolved. Please file an issue ( 
+https://github.com/jsx-eslint/jsx-ast-utils/issues/new ) to get this fixed immediately.
+The prop value with an expression type of TSNonNullExpression could not be resolved. Please file an issue ( 
+https://github.com/jsx-eslint/jsx-ast-utils/issues/new ) to get this fixed immediately.
+
+./app/admin/admin-tags-panel.tsx
+257:25  Warning: Elements with the ARIA role "option" must have the following attributes defined: aria-selected  jsx-a11y/role-has-required-aria-props
+
+./app/admin/catalog-facet-api.ts
+86:10  Warning: 'text' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/catalog-mega-menu-api.ts
+65:10  Warning: 'text' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/category-attributes-panel.tsx
+398:3  Warning: 'canEdit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+=== test ===
+
+> tooba-web@0.0.1 test
+> npm run test:grid && npm run test:workspace && npm run test:category-tree && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:stories && npm run test:composition && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront
+
+
+> tooba-web@0.0.1 test:grid
+> node --experimental-strip-types --test design-system/data-grid/grid-state.test.ts design-system/app-data-grid/grid-query-mapper.test.ts design-system/app-data-grid/ag-filter-mapper.test.ts design-system/app-data-grid/community-filter-audit.test.ts design-system/app-data-grid/saved-view-state.test.ts design-system/app-data-grid/advanced-filter-expression.test.ts design-system/app-data-grid/jalali-date-ui.test.ts design-system/app-data-grid/saved-view-multiplicity.test.ts design-system/app-data-grid/filter-commit.test.ts design-system/app-data-grid/grid-overlay.test.ts design-system/app-data-grid/clear-all-filters.test.ts design-system/app-data-grid/column-manager.test.ts design-system/app-data-grid/pinned-column.test.ts design-system/app-data-grid/search-commit.test.ts design-system/app-data-grid/saved-view-dirty.test.ts design-system/app-data-grid/locale-text.test.ts design-system/app-data-grid/product-grid-filter-matrix.test.ts design-system/app-data-grid/filter-icon-system.test.ts design-system/app-data-grid/text-filter-operators.test.ts design-system/app-data-grid/use-overflow-tooltip.test.ts design-system/app-data-grid/app-grid-canonical.test.ts
+
+(node:9836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/advanced-filter-expression.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ A AND B left-to-right (1.6864ms)
+✔ A OR B left-to-right (0.1612ms)
+✔ A AND B OR C left-to-right (0.1133ms)
+✔ A OR B AND C left-to-right (0.1192ms)
+✔ normalizeAdvancedFilterExpression pads connectors with AND (0.7832ms)
+✔ validateAdvancedFilterExpression rejects invalid connector (0.1633ms)
+✔ validateAdvancedFilterExpression rejects connector count mismatch (0.1013ms)
+✔ advanced filter serialization round-trip preserves connectors (0.1771ms)
+✔ migrateAdvancedFiltersRecord defaults legacy views to AND connectors (2.2623ms)
+(node:34676) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/ag-filter-mapper.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fromAgFilterModel maps text/number/date/set filters without AG leakage to host (2.0676ms)
+✔ fromAgFilterModel ignores empty filters (0.2153ms)
+(node:36156) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/app-grid-canonical.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ resolveAppGridCapabilities merges overrides with defaults (20.1239ms)
+✔ default capabilities match professional grid baseline (1.9887ms)
+✔ canonical exports include row actions and filter header helpers (0.565ms)
+✔ AppDataGrid exposes gridId and capabilities props (7.1179ms)
+✔ product list uses canonical row actions instead of inline action markup (0.4017ms)
+(node:29364) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/clear-all-filters.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ clearAllFilters resets every filter partition in one load call (1.1407ms)
+✔ toolbar clear-all is visible when filtering is active (0.4065ms)
+(node:32844) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/column-manager.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ selection column label only in column manager not grid header (1.291ms)
+✔ column manager uses drag handle and no arrow reorder controls (0.5707ms)
+✔ page size options include 1000 (39.3325ms)
+(node:32544) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/community-filter-audit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Community AG filters whitelist excludes Enterprise set/multi filters (0.8396ms)
+(node:17896) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/filter-commit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ COLUMN_FILTER_APPLY_PARAMS requires explicit apply (29.2927ms)
+✔ filtersEqual suppresses duplicate commits for same filter (0.5795ms)
+✔ shouldCommitGridQuery returns false when only draft would match applied (0.4256ms)
+✔ shouldCommitGridQuery returns true when filter value changes (0.3794ms)
+✔ gridQueryCommitKey includes page for pagination dedup (0.2007ms)
+✔ theme uses opaque header tokens without structural AG overrides (0.5865ms)
+✔ AppDataGrid registers app column header and apply-only filter params (0.4605ms)
+✔ product list externalizes updatedAt via filter matrix (0.2815ms)
+(node:38452) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/filter-icon-system.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ app column header uses shared lucide filter icon (1.3058ms)
+✔ toolbar advanced filter has no detached magnifier glyph (0.5793ms)
+✔ toolbar has no detached search icon button (0.3969ms)
+✔ active filter trigger exposes data-filter-active state (1.0853ms)
+✔ number header filter panel supports Enter commit without live typing requests (0.3004ms)
+✔ text header filter panel supports full text operator set (0.4134ms)
+(node:7888) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/grid-overlay.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ theme uses official AG Grid legacy variables for header and borders (1.3206ms)
+✔ AppDataGrid uses app-owned header filters and external filter fields (0.5836ms)
+✔ product list externalizes all matrix filter fields (0.3475ms)
+✔ Jalali header filter uses portal popover outside AG root (1.2615ms)
+✔ text header filter preserves Enter-to-apply draft semantics (0.2774ms)
+✔ Advanced filter drawer rebuilt at 520px with portal (0.3277ms)
+✔ globals define explicit overlay layering tokens (0.3689ms)
+(node:21472) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/grid-query-mapper.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ toHostGridQuery maps UI contract without AG Grid leakage (0.9809ms)
+(node:41108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/jalali-date-ui.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ jalaliInputToIso converts Persian date input to ISO (3.0631ms)
+✔ filterChipLabel renders Jalali date without raw ISO tokens (0.7995ms)
+✔ filterChipLabel maps enum values to human labels (0.2075ms)
+(node:33848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/locale-text.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ fa AG Grid locale maps number operators to Persian without English leftovers (0.8267ms)
+✔ fa locale exposes no raw English operator labels (0.3242ms)
+(node:30424) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/pinned-column.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ theme sets explicit chrome background for header and pinned body cells (1.1658ms)
+✔ theme reinforces AG v36 pinned cell containers with opaque surfaces (0.5458ms)
+✔ pinnedGridEdge maps rtl end to left pin (0.185ms)
+✔ theme applies visible row separators (0.3684ms)
+✔ product list keeps actions column pinned to rtl grid end (1.0737ms)
+(node:30096) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/product-grid-filter-matrix.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter matrix marks business columns filterable (0.916ms)
+✔ filter matrix marks non-filterable columns (0.153ms)
+✔ offerAmountRange uses number filter kind (0.0745ms)
+✔ applyProductGridFilterHeader wires app column header for filterable fields (0.9641ms)
+✔ product list uses unified external filter fields (0.6137ms)
+✔ external filter field list includes price column (0.1442ms)
+(node:8488) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-dirty.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ hasActiveTransientFilters detects search and column filters (1.0929ms)
+✔ isSelectedViewDirty when filters diverge from saved view (0.4503ms)
+✔ resolveViewApplyQuery preserves active filters when switching views (0.2139ms)
+✔ resolveViewApplyQuery restores saved filters when none active (0.1356ms)
+✔ AppDataGrid does not deselect saved view on filter/search commit (0.6674ms)
+(node:4568) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-multiplicity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AppDataGrid registers legacy theme to avoid AG error #239 (1.1149ms)
+✔ saved view collection keeps multiple distinct views on create (0.4365ms)
+✔ saved view update changes only targeted view (0.1543ms)
+✔ delete view removes only targeted view and clears default when needed (0.1735ms)
+✔ set default view id persists separately from views array (0.1629ms)
+(node:32060) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/saved-view-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ prepareSavedViewForPersistence stores advancedFilterExpression with connectors (1.7993ms)
+✔ migrateSavedView upgrades legacy advancedFilters to AND expression (2.2339ms)
+✔ toHostGridQuery maps advancedFilter without AG leakage (0.4217ms)
+✔ sanitizeSavedView drops unknown fields from advanced expression (0.4858ms)
+✔ toAgFilterModel round-trips text filters (0.3605ms)
+(node:19196) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/search-commit.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commitSearchQuery returns null when search unchanged (0.9042ms)
+✔ commitSearchQuery returns next query when search changes (0.2815ms)
+✔ commitSearchQuery clears search on empty draft (0.1506ms)
+✔ AppDataGrid search uses draft commit not debounced load (0.5763ms)
+(node:7892) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/text-filter-operators.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ TEXT_OPERATORS includes all backend-supported text operators (1.299ms)
+✔ textFilterNeedsValue excludes blank operators (0.2237ms)
+✔ isFilterActive treats text blank/notBlank as active (0.1937ms)
+✔ toHostGridQuery maps text blank/notBlank without value (0.4368ms)
+✔ ag text filter round-trips all standard operators (0.3774ms)
+✔ fromAgFilterModel maps text blank filters (0.1782ms)
+(node:11944) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/use-overflow-tooltip.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ gridTooltipText returns undefined for empty values (4.2608ms)
+✔ gridTooltipText prefers formatted value (1.0261ms)
+✔ product list uses shared overflow tooltip cells (0.6349ms)
+(node:27108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/data-grid/grid-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter and sort serialization round-trips (0.8836ms)
+✔ saved view round-trips (1.0373ms)
+✔ column order and visibility persist (0.8282ms)
+✔ page state and money/date normalization (0.248ms)
+✔ rtl sticky uses logical inline start (0.1334ms)
+✔ selection and export columns (0.1887ms)
+✔ server query adapter pages and filters (10.4097ms)
+✔ sort cycle and filter activity (0.1901ms)
+ℹ tests 96
+ℹ suites 0
+ℹ pass 96
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 425.0505
+
+> tooba-web@0.0.1 test:workspace
+> node --experimental-strip-types --test design-system/workspace/state.test.ts
+
+(node:36824) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/workspace/state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirty section tracking (0.8007ms)
+✔ unsaved changes block other sections (0.1642ms)
+✔ permission action resolution (0.1271ms)
+✔ conflict and command transitions (0.1377ms)
+✔ section navigation serialization (0.1572ms)
+✔ master-detail return state (0.136ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 145.7676
+
+> tooba-web@0.0.1 test:category-tree
+> node --experimental-strip-types --test design-system/app-category-tree/tree-model.test.ts design-system/app-category-tree/app-category-tree.contract.test.ts design-system/admin-form-mode/use-admin-form-mode.test.ts app/admin/catalog-category-api.test.ts app/admin/category-admin-form.test.ts app/admin/category-attributes-panel.test.ts app/admin/category-products-panel.test.ts app/admin/admin-error-map.test.ts
+
+(node:3648) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps known catalog attribute duplicate codes in fa and en (1.5047ms)
+✔ unknown fallback never exposes Bad Request / HTTP / raw codes (13.6895ms)
+✔ extracts code from legacy title (code) payloads (0.2195ms)
+✔ parseAdminProblemErrorCode prefers stable errorCode never title (0.2824ms)
+(node:27816) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-category-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugifyCategoryName mirrors kebab + unicode keep (1.119ms)
+✔ storefront route never appends category id (0.2735ms)
+✔ duplicate slug error maps to Persian message (0.1607ms)
+✔ mapCategoryTreeNode reads mixed casing (0.2756ms)
+✔ mapCategoryWorkspace requires categoryId (0.1747ms)
+(node:38476) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (1.8384ms)
+✔ General EDIT fields and save/cancel (0.8123ms)
+✔ status localization uses Persian labels in workspace (2.5101ms)
+✔ parent selector is searchable path/name without raw ID labels (0.6138ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (0.8544ms)
+✔ permission-aware edit action gated by canEdit (0.6016ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.7291ms)
+✔ translation completeness: missing / partial / complete (0.2837ms)
+✔ dirty locale-switch protection (0.6131ms)
+✔ human slug preview has no CategoryId suffix (1.1463ms)
+✔ slug auto-suggest respects manual edits (0.549ms)
+✔ duplicate slug maps to Persian UX message (0.4465ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1597ms)
+✔ view-only user cannot enter edit via state machine (0.0956ms)
+✔ tree context preservation after current-locale Name save (1.4389ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.2988ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.3714ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.8944ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.664ms)
+✔ mobile layout markers present (0.4359ms)
+✔ no raw AgGridReact in category admin screen (0.4044ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.6027ms)
+(node:14352) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ humanizeAttributeCode and attributeCodeFromLabel helpers exist (0.7665ms)
+✔ local vs inherited partition helpers exist (0.1407ms)
+✔ ordinary-user Persian flag labels are defined (0.1142ms)
+✔ behavior chips are independent toggles not checkboxes (0.3202ms)
+✔ inherited vs category-specific human sections (0.1501ms)
+✔ create+bind strips invalid variant axis before API (0.1368ms)
+(node:35332) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (1.461ms)
+✔ admin nav groups Categories and Products distinctly (1.3399ms)
+✔ category products panel is real and blocks L1/L2 assignment (0.6857ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.3745ms)
+✔ category products picker refreshes membership count and row state after mutation (0.2979ms)
+✔ category products assign dialog has top bulk add selected action (0.3018ms)
+✔ category products panel is membership-only without change-category (0.3605ms)
+(node:41404) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/admin-form-mode/use-admin-form-mode.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ default mode is view (0.7502ms)
+✔ view-only cannot enter edit (0.153ms)
+✔ editor can enter edit, cancel, and save (0.1597ms)
+✔ reducer capabilities reset edit when canEdit revoked (0.2049ms)
+(node:3976) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-category-tree/app-category-tree.contract.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AppCategoryTree wraps antd Tree without exporting Ant types to pages (2.1149ms)
+✔ category admin routes exist under app/admin/catalog/categories (0.4016ms)
+✔ nav includes categories labels (0.4918ms)
+✔ drag handle is separate from title/chevron contract in markup (0.3833ms)
+✔ mobile layout branch uses data-layout and back control (0.5661ms)
+✔ R1 view/edit mode and clean slug UX markers (0.4884ms)
+✔ create flow fields stay progressive (no SEO/attrs on create) (0.656ms)
+✔ API mappers tolerate camel and Pascal payloads (0.7741ms)
+✔ USER_VISUAL_ACCEPTED remains NO in task contract notes (0.5646ms)
+(node:37632) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-category-tree/tree-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ buildCategoryForest nests children by parentId (2.3391ms)
+✔ search filters and keeps ancestors + autoExpand (0.3703ms)
+✔ clear search restores full forest (0.1491ms)
+✔ highlight splits matched segment (0.8346ms)
+✔ self and descendant moves are invalid (0.22ms)
+✔ isSelfOrDescendant walks parent chain (0.1416ms)
+✔ resolveCategoryDropPlan inside and reorder (0.3727ms)
+✔ deep link ancestors and path (0.2173ms)
+✔ translation readiness statuses (0.243ms)
+ℹ tests 66
+ℹ suites 0
+ℹ pass 66
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 258.185
+
+> tooba-web@0.0.1 test:product-workspace
+> node --experimental-strip-types --test app/admin/workspace-model.test.ts app/admin/host-client.test.ts app/admin/product-catalog-admin.test.ts app/admin/product-category-level.test.ts app/admin/product-attributes-panel.test.ts app/admin/product-variants-panel.test.ts app/admin/product-media-panel.test.ts app/admin/product-seo-panel.test.ts app/admin/product-publishing-panel.test.ts app/admin/product-history-panel.test.ts app/admin/product-workspace-polish.test.ts app/admin/product-workspace-dirty.test.ts app/admin/product-translations-panel.test.ts app/admin/product-create-flow.test.ts
+
+(node:18528) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.9046ms)
+✔ workspace mapper keeps prices on offers not product (0.9522ms)
+(node:28540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ validateAttributeDrafts blocks missing required text/enum (0.8868ms)
+✔ draftToValueInput builds enum and clear payloads without raw IDs in UI contract (0.2604ms)
+✔ isAttributeDraftDirty detects enum and number changes (1.1112ms)
+✔ panel source has VIEW/EDIT typed controls and no Product-local attribute creation (0.6258ms)
+(node:25056) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (1.0692ms)
+✔ create CTA navigates to dedicated draft create route (0.3698ms)
+✔ row actions use view/edit scopes and safe archive label (1.062ms)
+✔ variant terminology uses تنوع not گونه in product list (0.3051ms)
+✔ product category picker is hierarchical level-3-only with human paths (0.3307ms)
+✔ dedicated create screen blocks invalid category via level error mapping (0.3781ms)
+✔ workspace warns on non-L3 category and preserves VIEW/EDIT (0.4614ms)
+✔ workspace tabs and form mode foundation (0.588ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (0.426ms)
+✔ workspace page passes view and edit scope (0.2989ms)
+✔ host-client maps core/category helpers and new workspace fields (0.4703ms)
+(node:24772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-category-level.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ category level is one plus ancestor count (0.6177ms)
+✔ only level 3 is assignable (0.1876ms)
+✔ listCategoryChildren returns sorted siblings (0.6515ms)
+(node:36172) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-create-flow.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sanitizeProductRichHtml strips script and keeps safe marks (10.9386ms)
+✔ richHtmlHasText ignores empty wrappers (1.4581ms)
+✔ create route page and TipTap editor exist; CKEditor GPL avoided (0.5697ms)
+(node:39520) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-history-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapProductHistoryPage maps camelCase and preserves API order (0.9893ms)
+✔ mapProductHistoryPage accepts PascalCase Host payload (0.1805ms)
+✔ Persian summaries and section filter labels (14.6605ms)
+✔ panel and screen wiring contracts (1.0277ms)
+(node:39128) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-media-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sortMediaItems puts primary first then displayOrder (0.9849ms)
+✔ moveMediaAssetId and alt dirty helpers (0.2572ms)
+✔ readiness and count labels are Persian (9.3777ms)
+✔ panel source opens real Media Library — no placeholder/fake attach (0.8978ms)
+✔ workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX (0.3628ms)
+(node:29632) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-publishing-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ lifecycle labels are Persian (0.6836ms)
+✔ checklist maps readiness and missing navigation tabs (0.1892ms)
+✔ mapPublishReadiness accepts PascalCase Host payload (0.2203ms)
+✔ publishing panel and host-client wiring contracts (1.7457ms)
+(node:22516) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-seo-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapSeoDetail and dirty/preview helpers (0.8883ms)
+✔ readiness labels are Persian (0.1033ms)
+✔ panel source has VIEW/EDIT labels Save/Cancel SERP and no AgGrid/Price/Stock (0.9395ms)
+✔ workspace wires ProductSeoPanel into SEO tab (0.4449ms)
+✔ host-client exposes SEO GET/PUT/readiness without Pricing joins (0.3428ms)
+(node:32580) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-translations-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ translationReadiness distinguishes missing partial complete (0.7787ms)
+(node:18256) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-variants-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ axis draft dirty detection and selectedAxes payload (1.0594ms)
+✔ combination estimate and readable labels (0.2033ms)
+✔ panel source has VIEW/EDIT, guided steps, preview, impact, no price/stock/AgGrid/jargon (1.2031ms)
+✔ workspace wires ProductVariantsPanel into تنوع‌ها tab (0.3649ms)
+(node:36520) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-workspace-dirty.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirty registry module exports registration API (1.7965ms)
+✔ dirty context provides provider and registration hook (0.3048ms)
+✔ createProductWorkspaceDirtyRegistry tracks dirty and discard (0.7294ms)
+✔ workspace screen wires Dialog unsaved guard and pendingNav (0.3724ms)
+✔ onSectionChange guards dirty before setSectionId (0.3052ms)
+✔ exit edit is guarded via pendingNav dialog (0.2542ms)
+✔ attributes / variants / seo / media register dirty (0.3803ms)
+✔ panel save paths clear dirty / reload after save (0.3251ms)
+✔ attributes and variants cancel no longer use window.confirm (0.2794ms)
+✔ seo locale switch may keep local window.confirm; tab switch uses Dialog (0.3985ms)
+(node:38980) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-workspace-polish.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ enter edit does not force general section (1.9128ms)
+✔ onSectionChange guards dirty without cancelling edit mode (0.4836ms)
+✔ readOnly passes viewScope only (0.3465ms)
+✔ translations tab has editable panel not deferred stub (0.3375ms)
+✔ general edit has no fixed-language title/description fields (0.3925ms)
+✔ shell edit exit and mode badge (0.4293ms)
+✔ AppDataGrid preserved; dedicated create route CTA (0.2607ms)
+✔ no گونه in product workspace labels or host variant docs (0.5404ms)
+✔ WorkspaceShell desktop tabs scroll horizontally (0.2164ms)
+✔ summary strip sits above tabs; product summary cards expanded (0.4615ms)
+✔ product list hides Product-looking price/stock columns; create is dedicated route (0.3549ms)
+(node:23400) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/workspace-model.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ commercial grouping keeps multiple sellers (0.5001ms)
+✔ inventory stays offer-scoped (0.1027ms)
+✔ publication checks are UI readiness (0.5003ms)
+ℹ tests 70
+ℹ suites 0
+ℹ pass 70
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 700.5698
+
+> tooba-web@0.0.1 test:admin
+> node --experimental-strip-types --test app/admin/admin-api.test.ts app/admin/host-client.test.ts app/admin/operator-settings-api.test.ts app/admin/admin-nav-integrity.test.ts app/admin/admin-error-map.test.ts app/admin/catalog-category-api.test.ts app/admin/catalog-tag-api.test.ts app/admin/category-admin-form.test.ts app/admin/category-attributes-panel.test.ts app/admin/category-products-panel.test.ts app/admin/category-facets-panel.test.ts app/admin/category-mega-menu-panel.test.ts app/admin/product-catalog-admin.test.ts app/admin/product-attributes-panel.test.ts app/admin/product-variants-panel.test.ts app/admin/product-media-panel.test.ts app/admin/media-api.test.ts app/admin/product-seo-panel.test.ts
+
+(node:33220) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps live dashboard, order, seller and customer DTOs (1.1214ms)
+✔ maps review moderation rows without internal actor data (0.343ms)
+✔ review list and moderation expose server denied (20.3185ms)
+✔ maps admin order detail seller snapshots (0.4801ms)
+✔ uses Persian money and status labels (14.2093ms)
+✔ sends development actor header and exposes denied state (0.2562ms)
+(node:8400) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps known catalog attribute duplicate codes in fa and en (0.7791ms)
+✔ unknown fallback never exposes Bad Request / HTTP / raw codes (0.9369ms)
+✔ extracts code from legacy title (code) payloads (0.9887ms)
+✔ parseAdminProblemErrorCode prefers stable errorCode never title (0.2417ms)
+(node:40676) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ admin shell marks settings nav live and clears settings from deferred (0.8942ms)
+✔ technical category-schema is not in live nav group (0.1499ms)
+✔ product list and add-product never double-active (0.2596ms)
+✔ category and attribute library active independently (0.1518ms)
+✔ deep category routes keep category leaf active (0.9139ms)
+(node:35116) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-category-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ slugifyCategoryName mirrors kebab + unicode keep (1.0934ms)
+✔ storefront route never appends category id (0.2421ms)
+✔ duplicate slug error maps to Persian message (0.1414ms)
+✔ mapCategoryTreeNode reads mixed casing (0.2609ms)
+✔ mapCategoryWorkspace requires categoryId (0.2183ms)
+(node:36612) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/catalog-tag-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapCatalogTag reads camel and Pascal casing with human name (0.8352ms)
+✔ mapCatalogTag rejects payload without identity (0.0988ms)
+✔ filterUnassignedTags excludes already assigned ids (0.1554ms)
+✔ helper text is locked Persian taxonomy copy not SEO keywords (0.1601ms)
+✔ admin-tags-panel: searchable multi-select, create fa/en, removable chips, no comma textbox (0.3417ms)
+✔ catalog-tags-card wraps AdminTagsPanel (0.1868ms)
+✔ product and category General screens host tags card (0.5263ms)
+✔ api client exposes CRUD and assign routes without meta keywords (0.2437ms)
+(node:17808) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (1.671ms)
+✔ General EDIT fields and save/cancel (0.7312ms)
+✔ status localization uses Persian labels in workspace (0.518ms)
+✔ parent selector is searchable path/name without raw ID labels (0.5281ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (0.8515ms)
+✔ permission-aware edit action gated by canEdit (0.5995ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.73ms)
+✔ translation completeness: missing / partial / complete (0.2989ms)
+✔ dirty locale-switch protection (0.5939ms)
+✔ human slug preview has no CategoryId suffix (1.0788ms)
+✔ slug auto-suggest respects manual edits (0.4915ms)
+✔ duplicate slug maps to Persian UX message (0.3246ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1065ms)
+✔ view-only user cannot enter edit via state machine (0.0535ms)
+✔ tree context preservation after current-locale Name save (2.1518ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.3088ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.3441ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.7887ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.6167ms)
+✔ mobile layout markers present (0.3506ms)
+✔ no raw AgGridReact in category admin screen (0.359ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.2496ms)
+(node:28300) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ humanizeAttributeCode and attributeCodeFromLabel helpers exist (0.7691ms)
+✔ local vs inherited partition helpers exist (0.1462ms)
+✔ ordinary-user Persian flag labels are defined (0.113ms)
+✔ behavior chips are independent toggles not checkboxes (0.3361ms)
+✔ inherited vs category-specific human sections (0.1554ms)
+✔ create+bind strips invalid variant axis before API (0.1272ms)
+(node:33656) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-facets-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ display type labels are ordinary Persian without facet jargon (0.9553ms)
+✔ suggestFacetDisplayType maps value kinds for non-technical users (0.1935ms)
+✔ searchable control only for checklist/select display types (0.0942ms)
+✔ partitionEffectiveFacets splits inherited vs local rows (0.1821ms)
+✔ Facets tab: VIEW/EDIT, add filter, inherited/local, labels (0.952ms)
+✔ Facets panel hides searchable checkbox for range/boolean types (0.3014ms)
+✔ facet API never prefers raw title Bad Request (0.2189ms)
+✔ no raw AgGridReact in facets panel (0.2422ms)
+(node:28732) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-mega-menu-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ canonical category route has no visible ID suffix (0.8196ms)
+✔ Mega Menu tab: VIEW/EDIT, enable, placement, route preview, labels (1.1236ms)
+✔ storefront header consumes mega menu API with canonical destinations (0.3117ms)
+✔ no raw AgGridReact in mega menu panel (0.2514ms)
+(node:27932) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (1.3229ms)
+✔ admin nav groups Categories and Products distinctly (0.5506ms)
+✔ category products panel is real and blocks L1/L2 assignment (1.3443ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.3426ms)
+✔ category products picker refreshes membership count and row state after mutation (0.2928ms)
+✔ category products assign dialog has top bulk add selected action (0.293ms)
+✔ category products panel is membership-only without change-category (0.3755ms)
+(node:25040) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (0.7668ms)
+✔ workspace mapper keeps prices on offers not product (0.9303ms)
+(node:9992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/media-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapMediaAsset accepts camel and Pascal payloads (1.1218ms)
+✔ media library dialog has library/upload tabs, search, paging, selection modes (0.839ms)
+✔ mediaUploadStateLabel covers queued/uploading/succeeded/failed in fa and en (0.2016ms)
+(node:38804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/operator-settings-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapOperatorProfile maps camel and Pascal profile fields (0.7905ms)
+✔ mapOperatorPreferences normalizes locale variants (0.197ms)
+✔ mapOperatorProfile accepts Host payload without actorUserId (0.1303ms)
+✔ mapOperatorProfile rejects empty displayName (0.0939ms)
+(node:27388) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ validateAttributeDrafts blocks missing required text/enum (0.6428ms)
+✔ draftToValueInput builds enum and clear payloads without raw IDs in UI contract (0.2012ms)
+✔ isAttributeDraftDirty detects enum and number changes (0.6978ms)
+✔ panel source has VIEW/EDIT typed controls and no Product-local attribute creation (0.4634ms)
+(node:21404) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (1.103ms)
+✔ create CTA navigates to dedicated draft create route (0.9289ms)
+✔ row actions use view/edit scopes and safe archive label (0.3502ms)
+✔ variant terminology uses تنوع not گونه in product list (0.2443ms)
+✔ product category picker is hierarchical level-3-only with human paths (0.2804ms)
+✔ dedicated create screen blocks invalid category via level error mapping (0.296ms)
+✔ workspace warns on non-L3 category and preserves VIEW/EDIT (0.4245ms)
+✔ workspace tabs and form mode foundation (0.4245ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (0.3522ms)
+✔ workspace page passes view and edit scope (0.3114ms)
+✔ host-client maps core/category helpers and new workspace fields (0.3475ms)
+(node:17744) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-media-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sortMediaItems puts primary first then displayOrder (1.2682ms)
+✔ moveMediaAssetId and alt dirty helpers (0.2391ms)
+✔ readiness and count labels are Persian (9.9905ms)
+✔ panel source opens real Media Library — no placeholder/fake attach (0.948ms)
+✔ workspace wires ProductMediaPanel into رسانه tab without Guid as primary UX (0.418ms)
+(node:29864) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-seo-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapSeoDetail and dirty/preview helpers (0.5947ms)
+✔ readiness labels are Persian (0.0924ms)
+✔ panel source has VIEW/EDIT labels Save/Cancel SERP and no AgGrid/Price/Stock (0.902ms)
+✔ workspace wires ProductSeoPanel into SEO tab (0.3779ms)
+✔ host-client exposes SEO GET/PUT/readiness without Pricing joins (0.3452ms)
+(node:39612) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-variants-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ axis draft dirty detection and selectedAxes payload (0.8835ms)
+✔ combination estimate and readable labels (0.1354ms)
+✔ panel source has VIEW/EDIT, guided steps, preview, impact, no price/stock/AgGrid/jargon (1.0523ms)
+✔ workspace wires ProductVariantsPanel into تنوع‌ها tab (0.3304ms)
+ℹ tests 113
+ℹ suites 0
+ℹ pass 113
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 278.9059
+
+> tooba-web@0.0.1 test:seller
+> node --experimental-strip-types --test app/vendor-panel/seller-api.test.ts app/vendor-panel/panel-nav-integrity.test.ts
+
+(node:27892) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/vendor-panel/panel-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ vendor shell exports deferred hrefs and filters live-only nav (0.4861ms)
+✔ vendor shell menuItems keep tickets live behind support.view (0.1412ms)
+(node:39524) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/vendor-panel/seller-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ seller offer list mapper keeps amount off Product price field (0.6885ms)
+✔ seller offer detail preserves catalog read-only seam (0.1871ms)
+✔ seller catalog variant mapper keeps catalog pick identity (0.1166ms)
+✔ seller order list and detail keep seller slice only (0.2373ms)
+✔ dashboard mapper and seller header constant (0.0917ms)
+✔ persian operator formatting for status and money (9.4065ms)
+✔ authorized route context keeps actor distinct from seller party (0.1016ms)
+✔ seller reviews mapper keeps live counts and no fake reply surface (0.1946ms)
+✔ mapSellerSettings maps store fields and canManage (0.1447ms)
+✔ mapSellerSettings defaults canManage false and accepts storeName alias (0.1429ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 135.2043
+
+> tooba-web@0.0.1 test:fulfillment
+> node --experimental-strip-types --test app/fulfillment/fulfillment-api.test.ts
+
+(node:34664) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/fulfillment/fulfillment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ normalizeFulfillmentStatus maps numeric Host enum to canonical name (0.4839ms)
+✔ mapFulfillmentSnapshot maps numeric fulfillment status from Host (0.2242ms)
+✔ mapFulfillmentSnapshot maps host PascalCase payload (0.1831ms)
+✔ mapFulfillmentList derives grid rows with tracking references (0.5115ms)
+✔ formatters localize known fulfillment and shipment statuses (10.3585ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 206.5727
+
+> tooba-web@0.0.1 test:returns
+> node --experimental-strip-types --test app/returns/return-api.test.ts
+
+(node:37092) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/returns/return-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapReturnSnapshot maps host PascalCase payload (0.6735ms)
+✔ mapReturnSnapshot defaults destination to OriginalPayment (0.0982ms)
+✔ mapReturnList derives grid rows (0.1252ms)
+✔ formatters localize return statuses and destinations (0.1239ms)
+✔ mapReturnSnapshot reads Host refundDestination numeric enum (0.0873ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 141.6613
+
+> tooba-web@0.0.1 test:settlement
+> node --experimental-strip-types --test app/settlement/settlement-api.test.ts
+
+(node:9984) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/settlement/settlement-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapSettlementBalance maps host PascalCase payload (0.5937ms)
+✔ mapSettlementEntry maps entry row (0.1179ms)
+✔ mapPayoutRequest and formatters localize statuses (9.7963ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 117.9914
+
+> tooba-web@0.0.1 test:content
+> node --experimental-strip-types --test app/content/content-api.test.ts
+
+(node:24656) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/content/content-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapContentArticle maps host PascalCase published payload (0.93ms)
+✔ mapAdminContentArticle includes status (0.5845ms)
+✔ formatContentDate localizes (10.6262ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147.3596
+
+> tooba-web@0.0.1 test:stories
+> node --experimental-strip-types --test app/stories/story-api.test.ts app/stories/management/story-capabilities.test.ts
+
+(node:22784) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/stories/management/story-capabilities.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ seller capabilities forbid review and publish actions (0.4507ms)
+✔ admin capabilities allow review and publish (0.0789ms)
+✔ seller submit/edit gates follow review lifecycle (0.0869ms)
+(node:41104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/stories/story-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapPublicStory maps PascalCase storefront payload (0.6173ms)
+✔ mapAdminStory normalizes numeric status and items (0.2564ms)
+✔ mapAdminStory maps origin/review/seller ownership fields (camel + Pascal) (0.1499ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.1812
+
+> tooba-web@0.0.1 test:composition
+> node --experimental-strip-types --test app/composition/composition-api.test.ts
+
+(node:41636) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/composition/composition-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapHomeComposition maps PascalCase storefront payload (0.6516ms)
+✔ mapAdminHomeComposition includes visibility (0.1678ms)
+✔ mapSectionCatalog maps catalog entries (0.1545ms)
+✔ parseSectionDisplayConfig reads safe keys only (0.4916ms)
+✔ defaultHomeCompositionSections preserves canonical order (0.1146ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 112.2332
+
+> tooba-web@0.0.1 test:i18n
+> node --experimental-strip-types --test lib/i18n/locale.test.ts lib/i18n/routing.test.ts
+
+(node:20044) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/i18n/locale.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ dirForLocale: fa is rtl, en is ltr (0.4322ms)
+✔ langForLocale and openGraph locale tags (0.0853ms)
+✔ parseLocale defaults to fa and accepts en (0.1125ms)
+✔ locale does NOT imply currency or market (0.1998ms)
+✔ cookie reader parses tooba_locale (0.1174ms)
+✔ chrome messages share retry key style (0.0562ms)
+(node:30412) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/i18n/routing.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ localePath prefixes internal routes (0.4663ms)
+✔ parseLocalePrefix extracts locale and internal path (0.518ms)
+✔ stripLocalePrefix removes prefix (0.0737ms)
+✔ invalid locale prefix detected (0.1121ms)
+✔ public vs excluded paths (0.0998ms)
+✔ canonical and hreflang alternates (0.1206ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 116.7946
+
+> tooba-web@0.0.1 test:customer
+> node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts app/customer-panel/customer-preferences-api.test.ts app/customer-panel/panel-nav-integrity.test.ts app/wallet/wallet-api.test.ts lib/auth/csrf.test.ts
+
+(node:27992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-address-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ address list mapping accepts camel and PascalCase envelopes (0.6494ms)
+✔ address mapper ignores rows without AddressId (0.4002ms)
+✔ address empty helper only describes an actual empty collection (0.0692ms)
+✔ create and edit payloads omit empty optional fields and keep isDefault (0.1059ms)
+✔ saved address fills checkout shipping snapshot fields (0.1038ms)
+✔ address mutations call Host paths and surface 401 (14.5122ms)
+✔ checkout saved-address visibility hides 401 guest path (0.0817ms)
+✔ checkout saved list returns null on 401 and mapped rows on 200 (0.3391ms)
+(node:37208) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ customer mapper keeps checkout identity and snapshot amount (0.6106ms)
+✔ customer payment presentation preserves backend pending paid and failed states (0.1422ms)
+✔ customer dashboard exposes capability availability without fake counts (0.1138ms)
+✔ customer dashboard maps live address-book availability without inventing counts (0.0834ms)
+✔ wishlist maps current live offer availability and real ratings only (0.242ms)
+✔ wishlist empty helper only describes an actual empty collection (0.0682ms)
+✔ wishlist toggle sends ProductId and surfaces 401 without optimistic success (15.9949ms)
+✔ customer detail maps seller and shipping snapshots (0.2653ms)
+✔ customer profile maps editable capability from backend (0.1822ms)
+(node:37756) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-preferences-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapCustomerPreferences accepts camel and Pascal locale (0.6022ms)
+✔ customer preferences error mapping covers unauthorized (0.1782ms)
+(node:38532) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/customer-profile-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ profile mapper exposes editable profile fields and identity read-only flags (0.5587ms)
+✔ profile write payload excludes identity fields (0.2325ms)
+✔ profile name splitter handles single token (0.1315ms)
+✔ profile error mapping covers unauthorized (0.1888ms)
+(node:7892) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/customer-panel/panel-nav-integrity.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ customer shell exports deferred hrefs and filters live-only nav (0.743ms)
+✔ customer shell menuItems keep wallet/gift-cards live alongside settings (0.2088ms)
+(node:20524) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/wallet/wallet-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ mapWalletSummary maps camel and Pascal ledger-derived balance (0.5405ms)
+✔ mapWalletLedgerPage accepts paged envelope and labels gift credit (0.207ms)
+✔ ledger labels localize order debit and refund credit (0.1196ms)
+✔ mapGiftCardRedeemResult and issue/list/detail adapters (0.4273ms)
+✔ mapWalletDemoPreview and FA money helpers (9.8407ms)
+(node:29704) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/lib/auth/csrf.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ csrf validation accepts matching header and cookie (12.7497ms)
+✔ csrf validation rejects missing header (0.2365ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 157.0261
+
+> tooba-web@0.0.1 test:storefront
+> node --experimental-strip-types --test app/storefront/storefront-api.test.ts app/storefront/storefront-cart-api.test.ts app/storefront/storefront-checkout-api.test.ts app/storefront/storefront-payment-api.test.ts
+
+(node:36624) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper keeps offer amount off a product price field (1.1594ms)
+✔ detail mapper reads amount from primary offer only (10.6187ms)
+✔ maps only public review contract and backend aggregate (0.2571ms)
+✔ zero reviews do not emit aggregate rating (0.124ms)
+✔ review submission sends exact payload and exposes auth/conflict statuses (14.9039ms)
+✔ detail loader sends selected variant only to the authoritative endpoint (0.2433ms)
+✔ listing mapper keeps backend discovery facets and pagination (0.1969ms)
+✔ unsupported merchandising remains empty and explicit (0.105ms)
+✔ public seller mapper ignores private and internal party fields (0.107ms)
+(node:30584) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-cart-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cart mapper keeps offer identity and ignores product price fields (0.7608ms)
+✔ bootstrapCartSessionFromQuery writes session when both ids present (1.3705ms)
+✔ customer cart message hides Held reservation wording (0.2853ms)
+(node:23496) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-checkout-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ checkout mapper keeps backend totals and pending payment (1.1227ms)
+✔ customer checkout message hides technical tax codes (0.4338ms)
+✔ checkout shipping body includes savedAddressId only when selected (0.1163ms)
+✔ checkout submit sends savedAddressId for actor and omits it on guest inline path (15.9619ms)
+(node:3592) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-payment-api.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payment initiation mapper keeps host redirect and amount (1.0066ms)
+✔ wallet initiation allows empty redirect and skips provider redirect (0.1879ms)
+✔ non-wallet initiation without redirect is rejected by mapper (0.088ms)
+✔ wallet quote mapper keeps host-calculated balances and deferred mixed flag (0.1866ms)
+✔ wallet quote mapper accepts Host wallet-quote field names without cartId (0.1488ms)
+✔ payment mapper does not invent succeeded (0.1046ms)
+✔ customer payment message hides gateway codes (0.2234ms)
+✔ customer payment message maps wallet insufficient (0.0946ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 201.2093
+
+> tooba-web@0.0.1 test:critical-storefront
+> npm run test:home && npm run test:pdp-guard && npm run test:listing-guard && npm run test:category-plp-guard
+
+
+> tooba-web@0.0.1 test:home
+> node --experimental-strip-types --test app/storefront/storefront-home.test.ts app/storefront/home-structure.guard.test.ts
+
+(node:39588) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/home-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home guard keeps Shopeiva section markers (0.5809ms)
+✔ home guard preserves canonical default section order (0.4917ms)
+✔ home guard rejects giant catalog dump on Home rail (0.1593ms)
+✔ home guard keeps composition renderer switch cases (0.1153ms)
+✔ home stories use live Host binding without fake STORY_IMAGES (0.0752ms)
+(node:31752) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/storefront-home.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ home mapper prefers homeCategories rail and does not require dumping all categories (0.8549ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 126.4715
+
+> tooba-web@0.0.1 test:pdp-guard
+> node --experimental-strip-types --test app/storefront/pdp-structure.guard.test.ts
+
+(node:36044) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/pdp-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ pdp guard keeps sticky structurally distinct tabs (0.5181ms)
+✔ pdp guard keeps distinct tab bodies (no generic flatten) (0.108ms)
+✔ pdp guard keeps other sellers and related product seams (0.0725ms)
+✔ pdp guard forbids Product.Price / Product.Stock authority markers (0.0737ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 103.6243
+
+> tooba-web@0.0.1 test:listing-guard
+> node --experimental-strip-types --test app/storefront/listing-structure.guard.test.ts
+
+(node:30764) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/listing-structure.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ listing guard keeps Shopeiva PLP structure markers (0.484ms)
+✔ listing guard keeps truthful sort options only (0.1631ms)
+✔ listing product grid keeps Shopeiva density classes (0.0709ms)
+✔ product card keeps offer-based pricing and real rating gate (0.0685ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.8725
+
+> tooba-web@0.0.1 test:category-plp-guard
+> node --experimental-strip-types --test app/storefront/category-plp.guard.test.ts
+
+(node:40364) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/storefront/category-plp.guard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ category PLP route and public prefix are wired (0.8976ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.8109
+=== build ===
+
+> tooba-web@0.0.1 build
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 11.7s
+   Linting and checking validity of types ...
+
+./app/admin/admin-tags-panel.tsx
+257:25  Warning: Elements with the ARIA role "option" must have the following attributes defined: aria-selected  jsx-a11y/role-has-required-aria-props
+
+./app/admin/catalog-facet-api.ts
+86:10  Warning: 'text' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/catalog-mega-menu-api.ts
+65:10  Warning: 'text' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/admin/category-attributes-panel.tsx
+398:3  Warning: 'canEdit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/82) ...
+   Generating static pages (20/82) 
+   Generating static pages (40/82) 
+   Generating static pages (61/82) 
+ ✓ Generating static pages (82/82)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                            Size  First Load JS
+┌ ƒ /                                                   0 B            0 B
+├ ƒ /_not-found                                         0 B            0 B
+├ ƒ /admin                                              0 B            0 B
+├ ƒ /admin/access-control                               0 B            0 B
+├ ƒ /admin/catalog/attributes                           0 B            0 B
+├ ƒ /admin/catalog/categories                           0 B            0 B
+├ ƒ /admin/catalog/categories/[categoryId]              0 B            0 B
+├ ƒ /admin/catalog/categories/[categoryId]/[tab]        0 B            0 B
+├ ƒ /admin/catalog/category-schema                      0 B            0 B
+├ ƒ /admin/catalog/products/[productId]/attributes      0 B            0 B
+├ ƒ /admin/content                                      0 B            0 B
+├ ƒ /admin/customers                                    0 B            0 B
+├ ƒ /admin/fulfillments                                 0 B            0 B
+├ ƒ /admin/fulfillments/[fulfillmentId]                 0 B            0 B
+├ ƒ /admin/gift-cards                                   0 B            0 B
+├ ƒ /admin/gift-cards/[id]                              0 B            0 B
+├ ƒ /admin/orders                                       0 B            0 B
+├ ƒ /admin/orders/[checkoutId]                          0 B            0 B
+├ ƒ /admin/page-composition                             0 B            0 B
+├ ƒ /admin/payouts                                      0 B            0 B
+├ ƒ /admin/products                                     0 B            0 B
+├ ƒ /admin/products/[productId]                         0 B            0 B
+├ ƒ /admin/products/new                                 0 B            0 B
+├ ƒ /admin/promotions                                   0 B            0 B
+├ ƒ /admin/returns                                      0 B            0 B
+├ ƒ /admin/returns/[returnRequestId]                    0 B            0 B
+├ ƒ /admin/reviews                                      0 B            0 B
+├ ƒ /admin/sellers                                      0 B            0 B
+├ ƒ /admin/sellers/[sellerId]/access-control            0 B            0 B
+├ ƒ /admin/settings                                     0 B            0 B
+├ ƒ /admin/settlement                                   0 B            0 B
+├ ƒ /admin/stories                                      0 B            0 B
+├ ƒ /admin/tickets                                      0 B            0 B
+├ ƒ /admin/tickets/[id]                                 0 B            0 B
+├ ƒ /admin/wallets                                      0 B            0 B
+├ ƒ /api/auth/csrf                                      0 B            0 B
+├ ƒ /api/auth/login                                     0 B            0 B
+├ ƒ /api/auth/logout                                    0 B            0 B
+├ ƒ /api/auth/me                                        0 B            0 B
+├ ƒ /api/auth/refresh                                   0 B            0 B
+├ ƒ /api/customer/[...path]                             0 B            0 B
+├ ƒ /api/customer/support/tickets                       0 B            0 B
+├ ƒ /api/customer/support/tickets/[id]                  0 B            0 B
+├ ƒ /api/customer/support/tickets/[id]/close            0 B            0 B
+├ ƒ /api/customer/support/tickets/[id]/reopen           0 B            0 B
+├ ƒ /api/customer/support/tickets/[id]/replies          0 B            0 B
+├ ƒ /api/seller/[...path]                               0 B            0 B
+├ ƒ /best-seller                                        0 B            0 B
+├ ƒ /blogs                                              0 B            0 B
+├ ƒ /blogs/[slug]                                       0 B            0 B
+├ ƒ /brand/[slug]                                       0 B            0 B
+├ ƒ /brands                                             0 B            0 B
+├ ƒ /cart                                               0 B            0 B
+├ ƒ /category/[slug]                                    0 B            0 B
+├ ƒ /checkout                                           0 B            0 B
+├ ƒ /customer-panel                                     0 B            0 B
+├ ƒ /customer-panel/addresses                           0 B            0 B
+├ ƒ /customer-panel/dev/wallet-checkout                 0 B            0 B
+├ ƒ /customer-panel/gift-cards                          0 B            0 B
+├ ƒ /customer-panel/notifications                       0 B            0 B
+├ ƒ /customer-panel/orders                              0 B            0 B
+├ ƒ /customer-panel/orders/[checkoutId]                 0 B            0 B
+├ ƒ /customer-panel/profile                             0 B            0 B
+├ ƒ /customer-panel/settings                            0 B            0 B
+├ ƒ /customer-panel/tickets                             0 B            0 B
+├ ƒ /customer-panel/tickets/[id]                        0 B            0 B
+├ ƒ /customer-panel/tickets/new                         0 B            0 B
+├ ƒ /customer-panel/wallet                              0 B            0 B
+├ ƒ /customer-panel/wishlist                            0 B            0 B
+├ ƒ /design-system                                      0 B            0 B
+├ ○ /icon.svg                                           0 B            0 B
+├ ƒ /most-viewed                                        0 B            0 B
+├ ƒ /new-products                                       0 B            0 B
+├ ƒ /offers                                             0 B            0 B
+├ ƒ /order/confirmation                                 0 B            0 B
+├ ƒ /payment/result                                     0 B            0 B
+├ ƒ /payment/sandbox                                    0 B            0 B
+├ ƒ /products                                           0 B            0 B
+├ ƒ /products/[slug]                                    0 B            0 B
+├ ƒ /sale                                               0 B            0 B
+├ ƒ /seller-profile/[publicId]                          0 B            0 B
+├ ƒ /sellers                                            0 B            0 B
+├ ƒ /sitemap.xml                                        0 B            0 B
+├ ƒ /trending                                           0 B            0 B
+├ ƒ /vendor-panel                                       0 B            0 B
+├ ƒ /vendor-panel/access-control                        0 B            0 B
+├ ƒ /vendor-panel/analytics                             0 B            0 B
+├ ƒ /vendor-panel/coupons                               0 B            0 B
+├ ƒ /vendor-panel/coupons/[id]/edit                     0 B            0 B
+├ ƒ /vendor-panel/coupons/new                           0 B            0 B
+├ ƒ /vendor-panel/customers                             0 B            0 B
+├ ƒ /vendor-panel/fulfillments                          0 B            0 B
+├ ƒ /vendor-panel/fulfillments/[fulfillmentId]          0 B            0 B
+├ ƒ /vendor-panel/gift-cards                            0 B            0 B
+├ ƒ /vendor-panel/notifications                         0 B            0 B
+├ ƒ /vendor-panel/orders                                0 B            0 B
+├ ƒ /vendor-panel/orders/[sellerOrderId]                0 B            0 B
+├ ƒ /vendor-panel/products                              0 B            0 B
+├ ƒ /vendor-panel/products/[offerId]                    0 B            0 B
+├ ƒ /vendor-panel/products/new                          0 B            0 B
+├ ƒ /vendor-panel/returns                               0 B            0 B
+├ ƒ /vendor-panel/returns/[returnRequestId]             0 B            0 B
+├ ƒ /vendor-panel/reviews                               0 B            0 B
+├ ƒ /vendor-panel/settings                              0 B            0 B
+├ ƒ /vendor-panel/stories                               0 B            0 B
+├ ƒ /vendor-panel/tickets                               0 B            0 B
+├ ƒ /vendor-panel/tickets/[id]                          0 B            0 B
+├ ƒ /vendor-panel/tickets/new                           0 B            0 B
+└ ƒ /vendor-panel/wallet                                0 B            0 B
++ First Load JS shared by all                           0 B
+
+
+ƒ Middleware                                        34.7 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+FE_EXIT=0

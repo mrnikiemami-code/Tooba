@@ -26,6 +26,7 @@ import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
 import type { MediaAssetDto } from "./media-api.ts";
+import { toast } from "react-toastify";
 
 export type ProductMediaPanelMode = "view" | "edit";
 
@@ -129,6 +130,7 @@ export function ProductMediaPanel({
     setBusy(true);
     setError(null);
     let lastOk: { ok: true; media: ProductMediaItem[] } | null = null;
+    let attachedCount = 0;
     for (const asset of assets) {
       if (items.some((row) => row.mediaAssetId === asset.mediaAssetId)) continue;
       const result = toMutationResult(await attachAdminProductMedia(productId, asset.mediaAssetId));
@@ -138,11 +140,15 @@ export function ProductMediaPanel({
         return;
       }
       lastOk = result;
+      attachedCount += 1;
     }
     setBusy(false);
     setLibraryOpen(false);
     if (lastOk) await refreshAfterMutation(lastOk);
     else await reload();
+    if (attachedCount > 0) {
+      toast.success("رسانه به محصول اضافه شد.");
+    }
   }
 
   async function onReorder(mediaAssetId: string, direction: -1 | 1) {

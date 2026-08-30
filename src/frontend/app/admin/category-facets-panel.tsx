@@ -177,16 +177,12 @@ export function CategoryFacetsPanel({
   isEdit,
   canEdit,
   busy: externalBusy,
-  onEnterEdit,
-  onCancelEdit,
 }: {
   categoryId: string;
   treeNodes: AppCategoryTreeNode[];
   isEdit: boolean;
   canEdit: boolean;
   busy?: boolean;
-  onEnterEdit: () => void;
-  onCancelEdit: () => void;
 }) {
   const [facets, setFacets] = useState<EffectiveCategoryFacet[]>([]);
   const [schema, setSchema] = useState<EffectiveSchemaEntry[]>([]);
@@ -406,26 +402,6 @@ export function CategoryFacetsPanel({
               : "مشخص کنید مشتریان در صفحه این دسته بتوانند محصولات را بر اساس کدام ویژگی‌ها فیلتر کنند."}
           </p>
         </div>
-        {canEdit && !isEdit ? (
-          <button
-            type="button"
-            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
-            onClick={onEnterEdit}
-            data-testid="facets-enter-edit"
-          >
-            ویرایش
-          </button>
-        ) : null}
-        {isEdit && canEdit ? (
-          <button
-            type="button"
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-gray-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            onClick={onCancelEdit}
-            data-testid="facets-cancel-edit"
-          >
-            انصراف
-          </button>
-        ) : null}
       </div>
 
       {loading ? <p className="text-sm text-slate-500">در حال بارگذاری…</p> : null}

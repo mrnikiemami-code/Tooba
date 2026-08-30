@@ -60,9 +60,52 @@ test("category products assign dialog uses AppDataGrid tabs not checkbox list", 
   assert.match(panel, /removeAdminProductAdditionalCategory/);
   assert.match(panel, /cannot_remove_primary/);
   assert.match(panel, /category-products-helper/);
-  assert.match(panel, /bulk-add-additional/);
-  assert.match(panel, /bulk-remove-additional/);
-  assert.match(panel, /rowSelection:\s*true/);
   assert.match(panel, /دسته اصلی/);
   assert.equal(panel.includes("category-products-assign-list"), false);
 });
+
+test("category products picker refreshes membership count and row state after mutation", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /bumpMembershipState/);
+  assert.match(panel, /setAssignReloadToken/);
+  assert.match(panel, /setReloadToken/);
+  assert.match(panel, /setSelectedCount/);
+  assert.match(panel, /afterMembershipAdded/);
+  assert.match(panel, /afterMembershipRemoved/);
+  assert.match(panel, /toast\.success\("محصول به دسته اضافه شد\."\)/);
+  assert.match(panel, /toast\.success\("محصول از این دسته حذف شد\."\)/);
+  assert.match(panel, /from "react-toastify"/);
+});
+
+test("category products assign dialog has top bulk add selected action", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /افزودن موارد انتخاب‌شده/);
+  assert.match(panel, /category-assign-bulk-add-selected/);
+  assert.match(panel, /runBulkAddSelected/);
+  assert.match(panel, /selectionCount === 0/);
+  assert.match(panel, /در حال افزودن/);
+  assert.match(panel, /category-assign-add-/);
+  assert.equal(panel.includes("bulk-add-additional"), false);
+  assert.equal(panel.includes("افزودن گروهی"), false);
+});
+
+test("category products panel is membership-only without change-category", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /حذف از این دسته/);
+  assert.match(panel, /PRIMARY_MEMBERSHIP_HELPER_FA/);
+  assert.match(panel, /این دسته، دسته اصلی محصول است/);
+  assert.match(panel, /نمایش در دسته‌های دیگر/);
+  assert.match(panel, /نمایش دیگر/);
+  assert.match(panel, /باز کردن محصول/);
+  assert.match(panel, /remove-membership/);
+  assert.equal(panel.includes("تغییر دسته‌بندی"), false);
+  assert.equal(panel.includes("category-assign-change-primary"), false);
+  assert.equal(panel.includes("category-products-change-dialog"), false);
+  assert.equal(panel.includes("previewProductCategoryChange"), false);
+  assert.equal(panel.includes("ProductCategoryPicker"), false);
+  assert.equal(panel.includes("onChangeCategory"), false);
+  assert.equal(panel.includes('"change-category"'), false);
+  assert.equal(panel.includes(">اضافی<"), false);
+  assert.equal(panel.includes('"اضافی"'), false);
+});
+

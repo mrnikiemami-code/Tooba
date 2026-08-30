@@ -108,6 +108,8 @@ test("panel source has VIEW/EDIT labels Save/Cancel SERP and no AgGrid/Price/Sto
   assert.doesNotMatch(src, /AgGridReact/);
   assert.doesNotMatch(src, /\bPrice\b|\bStock\b/);
   assert.doesNotMatch(src, /\/product\//);
+  assert.match(src, /toast\.success/);
+  assert.match(src, /تغییرات محصول ذخیره شد/);
 });
 
 test("workspace wires ProductSeoPanel into SEO tab", () => {

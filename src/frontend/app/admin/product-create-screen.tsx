@@ -24,6 +24,7 @@ import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
 import { translationReadiness } from "./product-translations-readiness";
 import type { ProductWorkspaceView } from "./workspace-model";
+import { AdminSearchableCombobox } from "./admin-searchable-combobox";
 
 const STEPS = [
   { id: "category", labelFa: "دسته اصلی", labelEn: "Primary Category" },
@@ -367,22 +368,22 @@ export function ProductCreateScreen() {
                 data-testid="admin-product-create-slug"
               />
             </label>
-            <label className="block text-sm font-medium text-slate-700">
+            <div className="block text-sm font-medium text-slate-700">
               برند (اختیاری)
-              <select
-                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
-                value={brandId ?? ""}
-                onChange={(e) => setBrandId(e.target.value || null)}
-                data-testid="admin-product-create-brand"
-              >
-                <option value="">بدون برند</option>
-                {brands.map((b) => (
-                  <option key={b.brandId} value={b.brandId}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <div className="mt-1">
+                <AdminSearchableCombobox
+                  value={brandId}
+                  options={brands.map((b) => ({
+                    value: b.brandId,
+                    label: b.name,
+                  }))}
+                  noneOption={{ value: "", label: "بدون برند" }}
+                  placeholder="جستجو و انتخاب برند…"
+                  testId="admin-product-create-brand"
+                  onChange={(next) => setBrandId(next)}
+                />
+              </div>
+            </div>
             <div className="rounded-xl border border-dashed border-gray-200 bg-slate-50 p-4 text-sm text-slate-600">
               <p>Product ≠ Offer · بدون قیمت و موجودی روی هویت محصول</p>
               <p className="mt-1">

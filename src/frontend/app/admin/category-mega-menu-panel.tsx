@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { AdminSearchableCombobox } from "./admin-searchable-combobox";
 import {
   loadCategoryMegaMenuConfiguration,
   loadMegaMenuPlacementOptions,
@@ -35,15 +36,11 @@ export function CategoryMegaMenuPanel({
   isEdit,
   canEdit,
   busy: externalBusy,
-  onEnterEdit,
-  onCancelEdit,
 }: {
   categoryId: string;
   isEdit: boolean;
   canEdit: boolean;
   busy?: boolean;
-  onEnterEdit: () => void;
-  onCancelEdit: () => void;
 }) {
   const [config, setConfig] = useState<CategoryMegaMenuConfiguration | null>(null);
   const [placements, setPlacements] = useState<MegaMenuPlacementOption[]>([]);
@@ -99,7 +96,6 @@ export function CategoryMegaMenuPanel({
       return;
     }
     toast.success("تنظیمات مگامنو ذخیره شد");
-    onCancelEdit();
     await reload();
   };
 
@@ -126,7 +122,6 @@ export function CategoryMegaMenuPanel({
       return;
     }
     toast.success("اتصال مگامنو حذف شد");
-    onCancelEdit();
     await reload();
   };
 
@@ -139,16 +134,6 @@ export function CategoryMegaMenuPanel({
             مشخص می‌کند این دسته در منوی بالای فروشگاه چگونه و کجا دیده شود. مسیر ویترین از خود دسته‌بندی گرفته می‌شود.
           </p>
         </div>
-        {canEdit && !isEdit ? (
-          <button
-            type="button"
-            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800"
-            onClick={onEnterEdit}
-            data-testid="mega-menu-enter-edit"
-          >
-            ویرایش
-          </button>
-        ) : null}
         {isEdit && canEdit ? (
           <div className="flex flex-wrap gap-2">
             <button
@@ -159,14 +144,6 @@ export function CategoryMegaMenuPanel({
               data-testid="mega-menu-save"
             >
               ذخیره
-            </button>
-            <button
-              type="button"
-              className="inline-flex min-h-10 items-center rounded-xl border border-gray-200 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              onClick={onCancelEdit}
-              data-testid="mega-menu-cancel-edit"
-            >
-              انصراف
             </button>
           </div>
         ) : null}
@@ -238,30 +215,32 @@ export function CategoryMegaMenuPanel({
                 )}
               </div>
 
-              <label className="block text-sm">
+              <div className="block text-sm">
                 <span className="mb-1 block text-xs text-slate-600">این دسته در کدام بخش مگامنو نمایش داده شود؟</span>
-                <select
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
-                  value={draft.parentMegaMenuItemId ?? ""}
-                  onChange={(e) =>
+                <p className="mb-2 text-xs text-slate-500">
+                  دسته جاری از قبل به این فضای کاری متصل است؛ فقط محل نمایش در منو را انتخاب کنید.
+                </p>
+                <AdminSearchableCombobox
+                  value={draft.parentMegaMenuItemId}
+                  options={placements.map((opt) => ({
+                    value: opt.megaMenuItemId,
+                    label: opt.menuPath,
+                  }))}
+                  noneOption={{ value: "", label: "ریشهٔ منو (سطح اول)" }}
+                  placeholder="جستجو بر اساس نام یا مسیر…"
+                  disabled={isBusy}
+                  testId="mega-menu-placement"
+                  onChange={(next) =>
                     setDraft({
                       ...draft,
-                      parentMegaMenuItemId: e.target.value ? e.target.value : null,
+                      parentMegaMenuItemId: next,
                     })
                   }
-                  data-testid="mega-menu-placement"
-                >
-                  <option value="">ریشهٔ منو (سطح اول)</option>
-                  {placements.map((opt) => (
-                    <option key={opt.megaMenuItemId} value={opt.megaMenuItemId}>
-                      {opt.menuPath}
-                    </option>
-                  ))}
-                </select>
+                />
                 {selectedPlacement ? (
                   <span className="mt-1 block text-xs text-slate-500">والد انتخاب‌شده: {selectedPlacement.menuPath}</span>
                 ) : null}
-              </label>
+              </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm">

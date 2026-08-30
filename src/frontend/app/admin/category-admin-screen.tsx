@@ -26,6 +26,7 @@ import {
   type TranslationReadiness,
 } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
+import { CatalogTagsCard } from "./catalog-tags-card.tsx";
 import {
   buildStorefrontCategoryRoute,
   createCategory,
@@ -686,6 +687,8 @@ function GeneralViewSummary({
         editable={canEditMedia}
         onWorkspaceChange={onWorkspaceChange}
       />
+
+      <CatalogTagsCard ownerKind="category" ownerId={workspace.categoryId} canEdit={canEditMedia} />
     </div>
   );
 }
@@ -816,6 +819,8 @@ function GeneralEditForm({
         onWorkspaceChange={onWorkspaceChange}
       />
 
+      <CatalogTagsCard ownerKind="category" ownerId={workspace.categoryId} canEdit={!busy} />
+
       <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 bg-white/95 py-4 backdrop-blur">
         <button
           type="button"
@@ -850,7 +855,6 @@ function TranslationsPanel({
   busy,
   onSelectLocale,
   onCreateTranslation,
-  onEnterEdit,
   onChange,
   onSave,
   onCancel,
@@ -864,7 +868,6 @@ function TranslationsPanel({
   busy: boolean;
   onSelectLocale: (locale: string) => void;
   onCreateTranslation: () => void;
-  onEnterEdit: () => void;
   onChange: (next: TranslationDraft) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -941,23 +944,11 @@ function TranslationsPanel({
 
       {readiness !== "missing" && !isEdit ? (
         <div className="space-y-4" data-testid="category-translation-view" data-form-mode="view">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm text-slate-500">
-              وضعیت:{" "}
-              <span className={readinessChipClass(readiness)}>
-                {translationReadinessLabel(readiness)}
-              </span>
-            </div>
-            {canEdit ? (
-              <button
-                type="button"
-                className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                onClick={onEnterEdit}
-                data-testid="category-translation-edit"
-              >
-                ویرایش ترجمه
-              </button>
-            ) : null}
+          <div className="text-sm text-slate-500">
+            وضعیت:{" "}
+            <span className={readinessChipClass(readiness)}>
+              {translationReadinessLabel(readiness)}
+            </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <SummaryCard label="نام" value={existing?.name || "—"} />
@@ -1485,8 +1476,8 @@ export function CategoryAdminScreen() {
       softRefreshTreeLabel(refreshed.data, API_LOCALE);
     }
 
-    formMode.onSaved();
-    toast.success("دسته‌بندی ذخیره شد");
+    formMode.clearDirty();
+    toast.success("تغییرات دسته‌بندی ذخیره شد.");
   };
 
   const loadTranslationDraftForLocale = useCallback(
@@ -1500,7 +1491,7 @@ export function CategoryAdminScreen() {
   const handleSelectLocale = (locale: string) => {
     if (locale === selectedLocale) return;
     if (formMode.isDirty && !formMode.confirmDiscardIfDirty()) return;
-    if (formMode.mode === "edit") formMode.onCancel();
+    if (formMode.isDirty) formMode.clearDirty();
     setSlugFieldError(null);
     setSelectedLocale(locale);
     if (workspace) loadTranslationDraftForLocale(locale, workspace);
@@ -1597,8 +1588,97 @@ export function CategoryAdminScreen() {
       }
     }
 
-    formMode.onSaved();
+    formMode.clearDirty();
     toast.success("ترجمه ذخیره شد");
+  };
+
+  const revertSurfaceDraft = useCallback(
+    (surface: EditSurface) => {
+      if (!workspace) return;
+      if (surface === "general") {
+        const tr =
+          workspace.translations.find((t) => t.locale === API_LOCALE) ?? workspace.translations[0];
+        setDraft(draftFromWorkspace(workspace, tr?.name ?? "", tr?.slug ?? ""));
+      }
+      if (surface === "translations") {
+        loadTranslationDraftForLocale(selectedLocale, workspace);
+      }
+      setSlugFieldError(null);
+    },
+    [workspace, selectedLocale, loadTranslationDraftForLocale],
+  );
+
+  const prepareSurfaceDraft = useCallback(
+    (surface: EditSurface) => {
+      if (!workspace) return;
+      if (surface === "general") {
+        const tr =
+          workspace.translations.find((t) => t.locale === API_LOCALE) ?? workspace.translations[0];
+        setDraft(draftFromWorkspace(workspace, tr?.name ?? "", tr?.slug ?? ""));
+      }
+      if (surface === "translations") {
+        loadTranslationDraftForLocale(selectedLocale, workspace);
+      }
+      setSlugFieldError(null);
+    },
+    [workspace, selectedLocale, loadTranslationDraftForLocale],
+  );
+
+  const handleHeaderEdit = () => {
+    if (!canEdit) return;
+    if (activeTab === "products") {
+      handleEnterGeneralEdit();
+      if (categoryId) router.push(`${basePath}/${categoryId}`);
+      return;
+    }
+    if (activeTab === "general") handleEnterGeneralEdit();
+    else if (activeTab === "translations") handleEnterTranslationEdit();
+    else if (activeTab === "attributes") handleEnterAttributesEdit();
+    else if (activeTab === "facets") handleEnterFacetsEdit();
+    else if (activeTab === "mega-menu") handleEnterMegaMenuEdit();
+  };
+
+  const handleHeaderSave = () => {
+    if (editSurface === "general" && activeTab === "general") {
+      void handleSaveGeneral();
+      return;
+    }
+    if (editSurface === "translations" && activeTab === "translations") {
+      void handleSaveTranslation();
+    }
+  };
+
+  const handleHeaderDiscard = () => {
+    if (editSurface === "general") {
+      handleCancelGeneralEdit();
+      return;
+    }
+    if (editSurface === "translations") {
+      handleCancelTranslationEdit();
+      return;
+    }
+    if (editSurface === "attributes") {
+      handleCancelAttributesEdit();
+      return;
+    }
+    if (editSurface === "facets") {
+      handleCancelFacetsEdit();
+      return;
+    }
+    if (editSurface === "mega-menu") {
+      handleCancelMegaMenuEdit();
+    }
+  };
+
+  const handleEndEdit = () => {
+    if (!formMode.confirmDiscardIfDirty()) return;
+    revertSurfaceDraft(editSurface);
+    formMode.onCancel();
+  };
+
+  const tabToEditSurface = (tab: TabId): EditSurface | null => {
+    if (tab === "products") return null;
+    return tab;
   };
 
   const selectedNode = categoryId ? flatNodes.find((n) => n.id === categoryId) : undefined;
@@ -1646,8 +1726,11 @@ export function CategoryAdminScreen() {
   const isFacetsEdit = isEdit && editSurface === "facets" && activeTab === "facets";
   const isMegaMenuEdit = isEdit && editSurface === "mega-menu" && activeTab === "mega-menu";
 
-  const headerEditVisible =
-    !isEdit && formMode.canEdit && activeTab === "general";
+  const headerEditVisible = !isEdit && formMode.canEdit;
+  const headerSaveVisible =
+    isEdit
+    && ((editSurface === "general" && activeTab === "general")
+      || (editSurface === "translations" && activeTab === "translations"));
 
   if (!ready) {
     return <div className="p-6 text-sm text-slate-500">در حال آماده‌سازی…</div>;
@@ -1757,27 +1840,62 @@ export function CategoryAdminScreen() {
                       {isEdit ? "ویرایش" : "مشاهده"}
                     </span>
                   </div>
-                  {headerEditVisible ? (
-                    <button
-                      type="button"
-                      className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                      onClick={handleEnterGeneralEdit}
-                      data-testid="category-edit-action"
-                    >
-                      ویرایش
-                    </button>
-                  ) : null}
-                  {!isEdit && formMode.canEdit && activeTab === "general" && storefrontRoute ? (
-                    <a
-                      href={`http://localhost:3000${storefrontRoute}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      data-testid="category-storefront-preview"
-                    >
-                      پیش‌نمایش ویترین
-                    </a>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isEdit ? (
+                      <>
+                        {headerSaveVisible ? (
+                          <button
+                            type="button"
+                            className="inline-flex min-h-11 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-50"
+                            onClick={handleHeaderSave}
+                            disabled={saveBusy}
+                            data-testid="category-header-save"
+                          >
+                            {saveBusy ? "در حال ذخیره…" : "ذخیره"}
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          onClick={handleHeaderDiscard}
+                          disabled={saveBusy}
+                          data-testid="category-header-discard"
+                        >
+                          انصراف
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          onClick={handleEndEdit}
+                          disabled={saveBusy}
+                          data-testid="category-header-end-edit"
+                        >
+                          پایان ویرایش
+                        </button>
+                      </>
+                    ) : null}
+                    {headerEditVisible ? (
+                      <button
+                        type="button"
+                        className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                        onClick={handleHeaderEdit}
+                        data-testid="category-edit-action"
+                      >
+                        ویرایش
+                      </button>
+                    ) : null}
+                    {!isEdit && activeTab === "general" && storefrontRoute ? (
+                      <a
+                        href={`http://localhost:3000${storefrontRoute}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-11 items-center rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-testid="category-storefront-preview"
+                      >
+                        پیش‌نمایش ویترین
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
                 {storefrontRoute && !isEdit ? (
                   <p className="mt-1 text-xs text-slate-500" dir="ltr" data-testid="category-storefront-route">
@@ -1806,19 +1924,22 @@ export function CategoryAdminScreen() {
                           e.preventDefault();
                           return;
                         }
-                        if (formMode.mode === "edit") formMode.onCancel();
+                        if (formMode.isDirty) {
+                          revertSurfaceDraft(editSurface);
+                          formMode.clearDirty();
+                        }
                         setSlugFieldError(null);
-                        setEditSurface(
-                          tab.id === "translations"
-                            ? "translations"
-                            : tab.id === "attributes"
-                              ? "attributes"
-                              : tab.id === "facets"
-                                ? "facets"
-                                : tab.id === "mega-menu"
-                                  ? "mega-menu"
-                                  : "general",
-                        );
+                        const nextSurface = tabToEditSurface(tab.id);
+                        if (formMode.mode === "edit") {
+                          if (nextSurface) {
+                            setEditSurface(nextSurface);
+                            prepareSurfaceDraft(nextSurface);
+                          }
+                        } else if (nextSurface) {
+                          setEditSurface(nextSurface);
+                        } else {
+                          setEditSurface("general");
+                        }
                       }}
                       className={
                         active
@@ -1878,7 +1999,6 @@ export function CategoryAdminScreen() {
                     busy={saveBusy}
                     onSelectLocale={handleSelectLocale}
                     onCreateTranslation={handleCreateTranslation}
-                    onEnterEdit={handleEnterTranslationEdit}
                     onChange={(next) => {
                       setTranslationDraft(next);
                       formMode.markDirty();
@@ -1895,8 +2015,6 @@ export function CategoryAdminScreen() {
                     isEdit={isAttributesEdit}
                     canEdit={formMode.canEdit}
                     busy={saveBusy}
-                    onEnterEdit={handleEnterAttributesEdit}
-                    onCancelEdit={handleCancelAttributesEdit}
                   />
                 ) : null}
                 {activeTab === "facets" && categoryId ? (
@@ -1906,8 +2024,6 @@ export function CategoryAdminScreen() {
                     isEdit={isFacetsEdit}
                     canEdit={formMode.canEdit}
                     busy={saveBusy}
-                    onEnterEdit={handleEnterFacetsEdit}
-                    onCancelEdit={handleCancelFacetsEdit}
                   />
                 ) : null}
                 {activeTab === "mega-menu" && categoryId ? (
@@ -1916,8 +2032,6 @@ export function CategoryAdminScreen() {
                     isEdit={isMegaMenuEdit}
                     canEdit={formMode.canEdit}
                     busy={saveBusy}
-                    onEnterEdit={handleEnterMegaMenuEdit}
-                    onCancelEdit={handleCancelMegaMenuEdit}
                   />
                 ) : null}
                 {activeTab === "products" && categoryId ? (

@@ -171,6 +171,47 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                     b.ToTable("brands", "catalog");
                 });
 
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogTag", b =>
+                {
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tag_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("SlugSeam")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("slug_seam");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("TagId")
+                        .HasName("pk_tags");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tags_code");
+
+                    b.ToTable("tags", "catalog");
+                });
+
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategory", b =>
                 {
                     b.Property<Guid>("CategoryId")
@@ -445,6 +486,33 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                     b.ToTable("category_translations", "catalog");
                 });
 
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategoryTagAssignment", b =>
+                {
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignment_id");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tag_id");
+
+                    b.HasKey("AssignmentId")
+                        .HasName("pk_category_tag_assignments");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("ix_category_tag_assignments_tag_id");
+
+                    b.HasIndex("CategoryId", "TagId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_category_tag_assignments_category_id_tag_id");
+
+                    b.ToTable("category_tag_assignments", "catalog");
+                });
+
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogLocalizedText", b =>
                 {
                     b.Property<Guid>("TextId")
@@ -610,6 +678,33 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_product_categories_product_id_category_id");
 
                     b.ToTable("product_categories", "catalog");
+                });
+
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductTagAssignment", b =>
+                {
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignment_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tag_id");
+
+                    b.HasKey("AssignmentId")
+                        .HasName("pk_product_tag_assignments");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("ix_product_tag_assignments_tag_id");
+
+                    b.HasIndex("ProductId", "TagId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_product_tag_assignments_product_id_tag_id");
+
+                    b.ToTable("product_tag_assignments", "catalog");
                 });
 
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductMediaReference", b =>
@@ -995,6 +1090,23 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_category_translations_categories_category_id");
                 });
 
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogCategoryTagAssignment", b =>
+                {
+                    b.HasOne("Tooba.Catalog.Domain.CatalogCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_category_tag_assignments_categories_category_id");
+
+                    b.HasOne("Tooba.Catalog.Domain.CatalogTag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_category_tag_assignments_tags_tag_id");
+                });
+
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProduct", b =>
                 {
                     b.HasOne("Tooba.Catalog.Domain.CatalogBrand", null)
@@ -1029,6 +1141,23 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_product_categories_products_product_id");
+                });
+
+            modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductTagAssignment", b =>
+                {
+                    b.HasOne("Tooba.Catalog.Domain.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_tag_assignments_products_product_id");
+
+                    b.HasOne("Tooba.Catalog.Domain.CatalogTag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_product_tag_assignments_tags_tag_id");
                 });
 
             modelBuilder.Entity("Tooba.Catalog.Domain.CatalogProductHistoryEntry", b =>

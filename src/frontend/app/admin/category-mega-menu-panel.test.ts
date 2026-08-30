@@ -25,8 +25,12 @@ test("Mega Menu tab: VIEW/EDIT, enable, placement, route preview, labels", () =>
   assert.match(screen, /id: "mega-menu", label: "مگامنو", implemented: true/);
   assert.match(panel, /category-mega-menu-panel/);
   assert.match(panel, /نمایش در مگامنو/);
-  assert.match(panel, /mega-menu-enter-edit/);
+  assert.equal(panel.includes("mega-menu-enter-edit"), false);
+  assert.equal(panel.includes("onEnterEdit"), false);
   assert.match(panel, /mega-menu-placement/);
+  assert.match(panel, /AdminSearchableCombobox/);
+  assert.match(panel, /جستجو بر اساس نام یا مسیر/);
+  assert.doesNotMatch(panel, /<select[\s\S]*mega-menu-placement/);
   assert.match(panel, /عنوان متفاوت در مگامنو/);
   assert.match(panel, /destinationPreview|DestinationPreview|مسیر ویترین/);
   assert.match(panel, /canEdit/);

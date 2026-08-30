@@ -54,6 +54,21 @@ public sealed class CatalogDbContext : DbContext
     public DbSet<CatalogBrand> Brands => Set<CatalogBrand>();
 
     /// <summary>
+    /// برچسب‌های تاکسونومی Catalog.
+    /// </summary>
+    public DbSet<CatalogTag> Tags => Set<CatalogTag>();
+
+    /// <summary>
+    /// پیوند محصول ↔ برچسب.
+    /// </summary>
+    public DbSet<CatalogProductTagAssignment> ProductTagAssignments => Set<CatalogProductTagAssignment>();
+
+    /// <summary>
+    /// پیوند رده ↔ برچسب.
+    /// </summary>
+    public DbSet<CatalogCategoryTagAssignment> CategoryTagAssignments => Set<CatalogCategoryTagAssignment>();
+
+    /// <summary>
     /// تعریف ویژگی تایپ‌شده.
     /// </summary>
     public DbSet<CatalogAttributeDefinition> AttributeDefinitions => Set<CatalogAttributeDefinition>();
@@ -180,6 +195,51 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.SlugSeam).HasMaxLength(128);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.LogoMediaAssetId);
+        });
+
+        modelBuilder.Entity<CatalogTag>(entity =>
+        {
+            entity.ToTable("tags");
+            entity.HasKey(x => x.TagId);
+            entity.Property(x => x.TagId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SlugSeam).HasMaxLength(128);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<CatalogProductTagAssignment>(entity =>
+        {
+            entity.ToTable("product_tag_assignments");
+            entity.HasKey(x => x.AssignmentId);
+            entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.ProductId, x.TagId }).IsUnique();
+            entity.HasIndex(x => x.TagId);
+            entity.HasOne<CatalogProduct>()
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogTag>()
+                .WithMany()
+                .HasForeignKey(x => x.TagId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CatalogCategoryTagAssignment>(entity =>
+        {
+            entity.ToTable("category_tag_assignments");
+            entity.HasKey(x => x.AssignmentId);
+            entity.Property(x => x.AssignmentId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.CategoryId, x.TagId }).IsUnique();
+            entity.HasIndex(x => x.TagId);
+            entity.HasOne<CatalogCategory>()
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<CatalogTag>()
+                .WithMany()
+                .HasForeignKey(x => x.TagId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<CatalogAttributeDefinition>(entity =>

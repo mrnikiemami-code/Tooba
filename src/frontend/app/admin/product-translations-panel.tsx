@@ -11,6 +11,7 @@ import {
   type TranslationReadiness,
 } from "./product-translations-readiness";
 import type { ProductTranslationView, ProductWorkspaceView } from "./workspace-model";
+import { toast } from "react-toastify";
 
 export { translationReadiness, type TranslationReadiness };
 
@@ -154,6 +155,7 @@ export function ProductTranslationsPanel({
     const synced = draftFromLocale(result.view, locale);
     setDraft(synced);
     setBaseline(synced);
+    toast.success("تغییرات محصول ذخیره شد.");
   }
 
   const dir = locale.startsWith("fa") ? "rtl" : "ltr";
@@ -292,7 +294,7 @@ export function ProductTranslationsPanel({
                 data-testid="translation-save"
                 onClick={() => void onSave()}
               >
-                ذخیره ترجمه
+                {busy ? "در حال ذخیره…" : "ذخیره ترجمه"}
               </button>
               <button
                 type="button"

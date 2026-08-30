@@ -82,8 +82,9 @@ test("Facets tab: VIEW/EDIT, add filter, inherited/local, labels", () => {
   assert.match(panel, /فیلترهای صفحه محصولات/);
   assert.match(panel, /facets-helper-copy/);
   assert.match(panel, /mapAdminErrorMessage/);
-  assert.match(panel, /facets-enter-edit/);
-  assert.match(panel, /facets-cancel-edit/);
+  assert.equal(panel.includes("facets-enter-edit"), false);
+  assert.equal(panel.includes("facets-cancel-edit"), false);
+  assert.equal(panel.includes("onEnterEdit"), false);
   assert.match(panel, /facet-add-button/);
   assert.match(panel, /افزودن فیلتر/);
   assert.match(panel, /facet-override-/);
