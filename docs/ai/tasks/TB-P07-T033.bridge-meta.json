@@ -1,7 +1,10 @@
 {
-  "status": "Claimed",
+  "status": "Completed",
   "claimedAtUtc": "2026-08-30T06:15:07.600Z",
   "channelId": "tooba-main",
   "id": "44a48d12-9c51-42b7-b88b-6dbd92f20472",
-  "taskId": "TB-P07-T033"
+  "taskId": "TB-P07-T033",
+  "completedAtUtc": "2026-08-30T07:08:15.784Z",
+  "resultPosted": true,
+  "head": "01252ed006fab1f1e5b6328c6133e5875b91ca32"
 }
