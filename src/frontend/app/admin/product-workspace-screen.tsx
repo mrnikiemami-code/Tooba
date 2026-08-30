@@ -624,13 +624,6 @@ function ProductWorkspaceScreenInner({
         summary={
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6" data-testid="product-summary-cards">
             <Summary
-              label="وضعیت محصول"
-              value={formatAdminStatus(view.status)}
-              hint={view.brandName ? `برند: ${view.brandName}` : "بدون برند"}
-              tone={statusTone(view.status) === "success" ? "success" : statusTone(view.status) === "warning" ? "warning" : "neutral"}
-              meta={view.catalogUpdatedAt}
-            />
-            <Summary
               label="آمادگی انتشار"
               value={
                 publishReadyCount != null && publishTotalCount != null
@@ -665,12 +658,23 @@ function ProductWorkspaceScreenInner({
               onAction={() => requestSectionChange("translations")}
             />
             <Summary
-              label="SEO"
-              value={seoReady ? "آماده" : "قابل بهبود"}
-              hint={view.seo.seoTitleSeam || view.slug || "عنوان جستجو ناقص"}
-              tone={seoReady ? "success" : "warning"}
-              actionLabel="بهبود SEO"
-              onAction={() => requestSectionChange("seo")}
+              label="ویژگی‌ها"
+              value={
+                view.publication.aggregateReadiness
+                  ? view.publication.aggregateReadiness.attributeReady
+                    ? "آماده"
+                    : "ناقص"
+                  : "قابل بررسی"
+              }
+              hint={categoryLabel(view)}
+              tone={
+                view.publication.aggregateReadiness?.attributeReady
+                  ? "success"
+                  : "warning"
+              }
+              progress={view.publication.aggregateReadiness?.attributeReady ? 1 : 0.4}
+              actionLabel="مدیریت ویژگی‌ها"
+              onAction={() => requestSectionChange("attributes")}
             />
             <Summary
               label="تنوع‌ها"
@@ -680,19 +684,60 @@ function ProductWorkspaceScreenInner({
                   : `${view.variants.length.toLocaleString("fa-IR")} تنوع`
               }
               hint={
-                view.variants.length === 0
-                  ? "ویژگی تنوع تعریف نشده یا هنوز ساخته نشده"
-                  : "وضعیت در تب تنوع‌ها"
+                view.publication.aggregateReadiness?.variantReady
+                  ? "آماده برای انتشار"
+                  : view.variants.length === 0
+                    ? "ویژگی تنوع تعریف نشده یا هنوز ساخته نشده"
+                    : "وضعیت در تب تنوع‌ها"
               }
-              tone={view.variants.length === 0 ? "warning" : "neutral"}
+              tone={
+                view.publication.aggregateReadiness?.variantReady
+                  ? "success"
+                  : view.variants.length === 0
+                    ? "warning"
+                    : "neutral"
+              }
+              progress={
+                view.publication.aggregateReadiness?.variantReady
+                  ? 1
+                  : view.variants.length > 0
+                    ? 0.6
+                    : 0.2
+              }
               actionLabel="مدیریت تنوع‌ها"
               onAction={() => requestSectionChange("variants")}
             />
             <Summary
+              label="SEO"
+              value={
+                view.publication.aggregateReadiness?.seoReady || seoReady ? "آماده" : "قابل بهبود"
+              }
+              hint={view.seo.seoTitleSeam || view.slug || "عنوان جستجو ناقص"}
+              tone={view.publication.aggregateReadiness?.seoReady || seoReady ? "success" : "warning"}
+              progress={view.publication.aggregateReadiness?.seoReady || seoReady ? 1 : 0.45}
+              actionLabel="بهبود SEO"
+              onAction={() => requestSectionChange("seo")}
+            />
+            <Summary
               label="رسانه"
               value={`${view.media.length.toLocaleString("fa-IR")} مورد`}
-              hint={primaryMedia ? "تصویر اصلی دارد" : "بدون تصویر اصلی"}
-              tone={primaryMedia ? "success" : "warning"}
+              hint={
+                view.publication.aggregateReadiness?.mediaReady
+                  ? "آماده"
+                  : primaryMedia
+                    ? "تصویر اصلی دارد"
+                    : "بدون تصویر اصلی"
+              }
+              tone={
+                view.publication.aggregateReadiness?.mediaReady || primaryMedia ? "success" : "warning"
+              }
+              progress={
+                view.publication.aggregateReadiness?.mediaReady
+                  ? 1
+                  : view.media.length > 0
+                    ? 0.55
+                    : 0.15
+              }
               actionLabel="مشاهده همه"
               onAction={() => requestSectionChange("media")}
             />

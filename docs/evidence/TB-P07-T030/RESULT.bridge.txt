@@ -1,0 +1,211 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T030
+
+Parent-Task:
+TB-P07-T029-R1
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Summary:
+Removed inline Product list create (?create=1). Added dedicated /admin/products/new guided draft-first wizard. TipTap rich description (GPL-safe vs CKEditor) with DOMPurify sanitize and inline image disabled pending DAM-safe insert. Wired rich editor into Translations tab. Polished Product workspace readiness cards (tone/progress/actions) toward locked reference without Price/Stock. FE typecheck/lint/product-workspace tests/build green; live /admin/products and /admin/products/new return 200. USER_VISUAL_ACCEPTED=NO.
+
+Create-Flow:
+
+list inline create:
+removed
+
+route:
+/admin/products/new
+
+nav:
+/admin/products/new (no ?create=1)
+
+steps:
+category -> structure -> translations -> review
+
+draft-first:
+yes
+
+Rich-Editor:
+
+engine:
+TipTap
+
+CKEditor GPL avoided:
+yes
+
+sanitize:
+isomorphic-dompurify allowlist
+
+fonts/sizes:
+controlled allowlists
+
+inline image:
+disabled (DAM-safe)
+
+create + translations wire:
+yes
+
+Visual-Polish:
+
+readiness cards:
+tone + progress + tab actions
+
+reference compared:
+yes (locked Aug 29 image)
+
+Price/Stock on Product:
+none
+
+Validation:
+
+backend restore:
+n/a (FE-only)
+
+backend build:
+n/a unchanged
+
+backend FULL tests:
+n/a unchanged (T029-R1 baseline)
+
+MigrationRunner:
+n/a
+
+frontend typecheck:
+PASS
+
+frontend lint:
+PASS (pre-existing unused-var warnings only)
+
+frontend tests:
+PASS test:product-workspace (70)
+
+frontend production build:
+PASS (/admin/products/new routed)
+
+passed:
+yes
+
+failed:
+none
+
+skipped:
+BE suites (no Host code changes)
+
+warnings:
+pre-existing catalog-facet/mega-menu unused-var
+
+new warnings:
+none scoped
+
+git diff --check:
+clean on T030 commit tree
+
+Live-Verification:
+
+Product List:
+200; CTA -> /admin/products/new
+
+Product Create:
+200; stepper present
+
+Product VIEW:
+unchanged path retained
+
+Product EDIT:
+readiness cards + TipTap in translations
+
+rich editor save/reload:
+sanitize on save path
+
+fa editor:
+yes
+
+en editor:
+yes (dir=ltr)
+
+Media:
+unchanged DAM
+
+reference comparison:
+composition closer; not pixel-perfect claim
+
+Backend:
+http://127.0.0.1:5088 kept (prior)
+
+Frontend:
+http://127.0.0.1:3000 200
+
+Shopeiva:
+http://127.0.0.1:3001 assumed kept
+
+current HEAD loaded:
+yes (dev + build includes new route)
+
+kept alive:
+yes
+
+Evidence:
+
+path:
+docs/evidence/TB-P07-T030/
+
+visual comparison:
+docs/evidence/TB-P07-T030/readiness.md
+
+create flow:
+docs/evidence/TB-P07-T030/create-flow.md
+
+rich editor:
+docs/evidence/TB-P07-T030/rich-editor.md
+
+readiness:
+docs/evidence/TB-P07-T030/readiness.md
+
+live:
+docs/evidence/TB-P07-T030/live-verify.log
+
+Git:
+
+branch:
+main
+
+commit:
+a2047fd7d45e709321d765bf4ef785a5137c1175
+
+push:
+yes (fea4279..a2047fd)
+
+final HEAD:
+a2047fd7d45e709321d765bf4ef785a5137c1175
+
+origin/main:
+a2047fd7d45e709321d765bf4ef785a5137c1175
+
+synchronized:
+YES
+
+tracked tree:
+T030 scoped commit
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+Inline rich-description images remain disabled until DAM-safe insert; Arabic locale not in create wizard first pass (en+fa translations tab retained).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

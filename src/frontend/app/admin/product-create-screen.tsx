@@ -2,38 +2,65 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, buildCategoryPath, type AppCategoryTreeNode } from "../../design-system";
 import { fetchCategoryTree, slugifyCategoryName, type CategoryTreeNodeDto } from "./catalog-category-api";
-import { createAdminProduct, updateAdminProductCore, loadProductWorkspace } from "./host-client";
+import {
+  assignAdminProductBrand,
+  createAdminProduct,
+  listAdminBrandOptions,
+  loadProductWorkspace,
+  updateAdminProductCore,
+  type AdminBrandOption,
+} from "./host-client";
 import { ProductCategoryPicker } from "./product-category-picker";
 import { PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA } from "./product-category-level";
 import { ProductRichTextEditor } from "./product-rich-text-editor";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { sanitizeProductRichHtml } from "./product-rich-html";
+import { ProductAttributesPanel } from "./product-attributes-panel";
+import { ProductVariantsPanel } from "./product-variants-panel";
+import { ProductMediaPanel } from "./product-media-panel";
+import { ProductSeoPanel } from "./product-seo-panel";
+import { translationReadiness } from "./product-translations-readiness";
+import type { ProductWorkspaceView } from "./workspace-model";
 
 const STEPS = [
-  { id: "category", label: "دسته اصلی" },
-  { id: "structure", label: "اطلاعات پایه" },
-  { id: "translations", label: "ترجمه‌ها" },
-  { id: "review", label: "بررسی و ایجاد" },
+  { id: "category", labelFa: "دسته اصلی", labelEn: "Primary Category" },
+  { id: "structure", labelFa: "اطلاعات پایه", labelEn: "Base structure" },
+  { id: "translations", labelFa: "ترجمه‌ها", labelEn: "Translations" },
+  { id: "attributes", labelFa: "ویژگی‌ها", labelEn: "Attributes" },
+  { id: "variants", labelFa: "تنوع‌ها", labelEn: "Variants" },
+  { id: "media", labelFa: "رسانه", labelEn: "Media" },
+  { id: "seo", labelFa: "SEO", labelEn: "SEO" },
+  { id: "review", labelFa: "بررسی و ایجاد", labelEn: "Review & create" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
 
+type LocaleDraft = {
+  name: string;
+  shortDescription: string;
+  descriptionHtml: string;
+};
+
 /**
- * فضای کاری اختصاصی ایجاد محصول — بدون فرم غول‌پیکر؛ Draft-first پس از تأیید.
+ * ایجاد محصول ۸مرحله‌ای — Draft-first پس از ترجمه‌ها؛ پنل‌های واقعی Attributes/Variants/Media/SEO.
  */
 export function ProductCreateScreen() {
   const router = useRouter();
   const [step, setStep] = useState<StepId>("category");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [treeNodes, setTreeNodes] = useState<AppCategoryTreeNode[]>([]);
-  const [title, setTitle] = useState("");
+  const [brandId, setBrandId] = useState<string | null>(null);
+  const [brands, setBrands] = useState<AdminBrandOption[]>([]);
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [shortDescription, setShortDescription] = useState("");
-  const [descriptionHtml, setDescriptionHtml] = useState("");
+  const [fa, setFa] = useState<LocaleDraft>({ name: "", shortDescription: "", descriptionHtml: "" });
+  const [en, setEn] = useState<LocaleDraft>({ name: "", shortDescription: "", descriptionHtml: "" });
+  const [productId, setProductId] = useState<string | null>(null);
+  const [workspace, setWorkspace] = useState<ProductWorkspaceView | null>(null);
+  const [draftBanner, setDraftBanner] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,41 +81,49 @@ export function ProductCreateScreen() {
         })),
       );
     });
+    void listAdminBrandOptions().then((result) => {
+      if (result.ok) setBrands(result.items);
+    });
   }, []);
 
   const categoryPath = categoryId ? buildCategoryPath(treeNodes, categoryId).join(" > ") : "";
   const stepIndex = STEPS.findIndex((s) => s.id === step);
+  const brandName = brands.find((b) => b.brandId === brandId)?.name ?? null;
+
+  const faReady = translationReadiness({
+    name: fa.name,
+    shortDescription: fa.shortDescription,
+    description: fa.descriptionHtml,
+  });
+  const enReady = translationReadiness({
+    name: en.name,
+    shortDescription: en.shortDescription,
+    description: en.descriptionHtml,
+  });
 
   const canNext = useMemo(() => {
     if (step === "category") return Boolean(categoryId);
     if (step === "structure") return true;
-    if (step === "translations") return title.trim().length > 0;
+    if (step === "translations") return fa.name.trim().length > 0;
     return true;
-  }, [step, categoryId, title]);
+  }, [step, categoryId, fa.name]);
 
-  function goNext() {
-    setError(null);
-    if (step === "category") setStep("structure");
-    else if (step === "structure") setStep("translations");
-    else if (step === "translations") setStep("review");
-  }
+  const refreshWorkspace = useCallback(async (id: string) => {
+    const loaded = await loadProductWorkspace(id, false);
+    if (loaded.view) setWorkspace(loaded.view);
+    return loaded.view;
+  }, []);
 
-  function goBack() {
-    setError(null);
-    if (step === "structure") setStep("category");
-    else if (step === "translations") setStep("structure");
-    else if (step === "review") setStep("translations");
-  }
-
-  async function onCreate() {
-    if (!categoryId || !title.trim()) {
+  async function ensureDraft(): Promise<string | null> {
+    if (productId) return productId;
+    if (!categoryId || !fa.name.trim()) {
       setError("دسته اصلی و نام فارسی لازم است.");
-      return;
+      return null;
     }
     setBusy(true);
     setError(null);
     const created = await createAdminProduct({
-      title: title.trim(),
+      title: fa.name.trim(),
       slug: slug.trim() || null,
       categoryId,
       locale: "fa-IR",
@@ -100,28 +135,123 @@ export function ProductCreateScreen() {
           ? PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA
           : mapAdminErrorMessage(created.errorCode, "fa"),
       );
-      return;
+      return null;
     }
 
-    const workspace = await loadProductWorkspace(created.productId, false);
-    if (workspace.view) {
-      const desc = sanitizeProductRichHtml(descriptionHtml);
-      await updateAdminProductCore(created.productId, {
+    let view = await refreshWorkspace(created.productId);
+    if (view) {
+      const faUpdate = await updateAdminProductCore(created.productId, {
         locale: "fa-IR",
-        title: title.trim(),
+        title: fa.name.trim(),
         slug: slug.trim() || null,
-        shortDescription: shortDescription.trim() || null,
-        description: desc || null,
-        expectedUpdatedAt: workspace.view.catalogUpdatedAt,
+        shortDescription: fa.shortDescription.trim() || null,
+        description: sanitizeProductRichHtml(fa.descriptionHtml) || null,
+        expectedUpdatedAt: view.catalogUpdatedAt,
       });
+      if (faUpdate.ok) {
+        view = faUpdate.view;
+        setWorkspace(faUpdate.view);
+      }
     }
 
+    if (view && en.name.trim()) {
+      const enUpdate = await updateAdminProductCore(created.productId, {
+        locale: "en",
+        title: en.name.trim(),
+        slug: view.slug ?? (slug.trim() || null),
+        shortDescription: en.shortDescription.trim() || null,
+        description: sanitizeProductRichHtml(en.descriptionHtml) || null,
+        expectedUpdatedAt: view.catalogUpdatedAt,
+      });
+      if (enUpdate.ok) {
+        view = enUpdate.view;
+        setWorkspace(enUpdate.view);
+      }
+    }
+
+    if (brandId && view) {
+      const brandResult = await assignAdminProductBrand(
+        created.productId,
+        { brandId, expectedUpdatedAt: view.catalogUpdatedAt },
+        false,
+      );
+      if (brandResult.ok) {
+        setWorkspace(brandResult.view);
+      }
+    }
+
+    setProductId(created.productId);
+    setDraftBanner(true);
     setBusy(false);
-    router.push(`/admin/products/${created.productId}?scope=edit`);
+    return created.productId;
   }
 
+  async function goNext() {
+    setError(null);
+    if (step === "category") {
+      setStep("structure");
+      return;
+    }
+    if (step === "structure") {
+      setStep("translations");
+      return;
+    }
+    if (step === "translations") {
+      const id = await ensureDraft();
+      if (!id) return;
+      setStep("attributes");
+      return;
+    }
+    if (step === "attributes") {
+      setStep("variants");
+      return;
+    }
+    if (step === "variants") {
+      setStep("media");
+      return;
+    }
+    if (step === "media") {
+      setStep("seo");
+      return;
+    }
+    if (step === "seo") {
+      if (productId) await refreshWorkspace(productId);
+      setStep("review");
+    }
+  }
+
+  function goBack() {
+    setError(null);
+    const order = STEPS.map((s) => s.id);
+    const idx = order.indexOf(step);
+    if (idx > 0) setStep(order[idx - 1]!);
+  }
+
+  function goToStep(target: StepId) {
+    const order = STEPS.map((s) => s.id);
+    const targetIdx = order.indexOf(target);
+    const attrsIdx = order.indexOf("attributes");
+    if (targetIdx >= attrsIdx && !productId) {
+      setError("ابتدا ترجمه‌ها را تکمیل کنید تا پیش‌نویس ساخته شود.");
+      return;
+    }
+    setStep(target);
+  }
+
+  async function onComplete() {
+    if (!productId) {
+      const id = await ensureDraft();
+      if (!id) return;
+      router.push(`/admin/products/${id}?scope=edit`);
+      return;
+    }
+    router.push(`/admin/products/${productId}?scope=edit`);
+  }
+
+  const readiness = workspace?.publication.aggregateReadiness ?? null;
+
   return (
-    <main className="mx-auto w-full max-w-4xl" data-testid="admin-product-create-screen">
+    <main className="mx-auto w-full max-w-5xl" data-testid="admin-product-create-screen">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium text-slate-500">
@@ -133,7 +263,7 @@ export function ProductCreateScreen() {
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">ایجاد محصول جدید</h1>
           <p className="mt-1 text-sm text-slate-600">
-            محصول به‌صورت پیش‌نویس ساخته می‌شود. قیمت و موجودی متعلق به پیشنهاد فروشنده است، نه هویت محصول.
+            جریان هدایت‌شده ۸مرحله‌ای · محصول به‌صورت پیش‌نویس ساخته می‌شود · قیمت و موجودی روی پیشنهاد فروشنده است.
           </p>
         </div>
         <Link
@@ -145,8 +275,21 @@ export function ProductCreateScreen() {
         </Link>
       </div>
 
+      {draftBanner && productId ? (
+        <div
+          className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950"
+          data-testid="admin-product-create-draft-banner"
+          role="status"
+        >
+          <p className="font-semibold">پیش‌نویس محصول ایجاد شد؛ می‌توانید اطلاعات را تکمیل کنید.</p>
+          <p className="mt-1 text-emerald-900/80" dir="ltr">
+            Draft id: {productId}
+          </p>
+        </div>
+      ) : null}
+
       <ol
-        className="mb-6 grid gap-2 sm:grid-cols-4"
+        className="mb-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
         data-testid="admin-product-create-steps"
         aria-label="مراحل ایجاد محصول"
       >
@@ -154,20 +297,28 @@ export function ProductCreateScreen() {
           const active = s.id === step;
           const done = index < stepIndex;
           return (
-            <li
-              key={s.id}
-              className={
-                active
-                  ? "rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 text-sm font-semibold text-blue-900"
-                  : done
-                    ? "rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3 text-sm font-medium text-emerald-900"
-                    : "rounded-2xl border border-gray-200 bg-white px-3 py-3 text-sm text-slate-500"
-              }
-              data-testid={`admin-product-create-step-${s.id}`}
-              aria-current={active ? "step" : undefined}
-            >
-              <span className="block text-[11px] opacity-70">مرحله {index + 1}</span>
-              {s.label}
+            <li key={s.id}>
+              <button
+                type="button"
+                className={
+                  active
+                    ? "w-full rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 text-start text-sm font-semibold text-blue-900"
+                    : done
+                      ? "w-full rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3 text-start text-sm font-medium text-emerald-900 hover:brightness-95"
+                      : "w-full rounded-2xl border border-gray-200 bg-white px-3 py-3 text-start text-sm text-slate-500 hover:bg-slate-50"
+                }
+                data-testid={`admin-product-create-step-${s.id}`}
+                aria-current={active ? "step" : undefined}
+                onClick={() => goToStep(s.id)}
+              >
+                <span className="block text-[11px] opacity-70">
+                  مرحله {index + 1} · Step {index + 1}
+                </span>
+                <span className="block">{s.labelFa}</span>
+                <span className="mt-0.5 block text-[11px] font-normal opacity-70" dir="ltr">
+                  {s.labelEn}
+                </span>
+              </button>
             </li>
           );
         })}
@@ -187,7 +338,10 @@ export function ProductCreateScreen() {
               label="دسته اصلی (سطح سوم)"
             />
             {categoryPath ? (
-              <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700" data-testid="admin-product-create-category-path">
+              <p
+                className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700"
+                data-testid="admin-product-create-category-path"
+              >
                 مسیر: {categoryPath}
               </p>
             ) : null}
@@ -198,32 +352,8 @@ export function ProductCreateScreen() {
           <div className="space-y-4" data-testid="admin-product-create-panel-structure">
             <h2 className="text-lg font-semibold text-slate-900">ساختار زبان‌خنثی محصول</h2>
             <p className="text-sm text-slate-600">
-              عنوان و توضیح در مرحله ترجمه‌ها وارد می‌شود. برند را می‌توانید بعد از ایجاد در فضای کاری محصول تنظیم کنید.
+              نامک سراسری است. برند اختیاری است و بعداً هم قابل تغییر است.
             </p>
-            <div className="rounded-xl border border-dashed border-gray-200 bg-slate-50 p-4 text-sm text-slate-600">
-              <p>Product ≠ Offer · بدون قیمت و موجودی روی هویت محصول</p>
-              <p className="mt-1">وضعیت پس از ایجاد: <strong>پیش‌نویس</strong></p>
-            </div>
-          </div>
-        ) : null}
-
-        {step === "translations" ? (
-          <div className="space-y-4" data-testid="admin-product-create-panel-translations">
-            <h2 className="text-lg font-semibold text-slate-900">ترجمه فارسی (اولیه)</h2>
-            <p className="text-sm text-slate-600">پس از ایجاد می‌توانید انگلیسی و عربی را در تب ترجمه‌ها تکمیل کنید.</p>
-            <label className="block text-sm font-medium text-slate-700">
-              نام محصول (فارسی)
-              <input
-                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm"
-                value={title}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setTitle(next);
-                  if (!slugTouched) setSlug(slugifyCategoryName(next));
-                }}
-                data-testid="admin-product-create-title"
-              />
-            </label>
             <label className="block text-sm font-medium text-slate-700">
               نامک (Slug)
               <input
@@ -238,50 +368,229 @@ export function ProductCreateScreen() {
               />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              خلاصه کوتاه
-              <textarea
-                className="mt-1 min-h-20 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                value={shortDescription}
-                onChange={(e) => setShortDescription(e.target.value)}
-                data-testid="admin-product-create-short"
-              />
+              برند (اختیاری)
+              <select
+                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
+                value={brandId ?? ""}
+                onChange={(e) => setBrandId(e.target.value || null)}
+                data-testid="admin-product-create-brand"
+              >
+                <option value="">بدون برند</option>
+                {brands.map((b) => (
+                  <option key={b.brandId} value={b.brandId}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
             </label>
-            <div>
-              <p className="mb-1 text-sm font-medium text-slate-700">توضیح کامل</p>
-              <ProductRichTextEditor
-                value={descriptionHtml}
-                onChange={setDescriptionHtml}
-                testId="admin-product-create-description"
-              />
+            <div className="rounded-xl border border-dashed border-gray-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <p>Product ≠ Offer · بدون قیمت و موجودی روی هویت محصول</p>
+              <p className="mt-1">
+                وضعیت پس از ایجاد: <strong>پیش‌نویس</strong>
+              </p>
             </div>
+          </div>
+        ) : null}
+
+        {step === "translations" ? (
+          <div className="space-y-6" data-testid="admin-product-create-panel-translations">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">ترجمه‌ها</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                فارسی لازم است. انگلیسی را همین‌جا یا بعداً تکمیل کنید. با ادامه، پیش‌نویس ساخته می‌شود.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-slate-50/60 p-4" dir="rtl">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-800">فارسی (fa-IR)</p>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-600">{faReady}</span>
+              </div>
+              <label className="block text-sm font-medium text-slate-700">
+                نام محصول
+                <input
+                  className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
+                  value={fa.name}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setFa((prev) => ({ ...prev, name: next }));
+                    if (!slugTouched) setSlug(slugifyCategoryName(next));
+                  }}
+                  data-testid="admin-product-create-title"
+                />
+              </label>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                خلاصه کوتاه
+                <textarea
+                  className="mt-1 min-h-20 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
+                  value={fa.shortDescription}
+                  onChange={(e) => setFa((prev) => ({ ...prev, shortDescription: e.target.value }))}
+                  data-testid="admin-product-create-short"
+                />
+              </label>
+              <div className="mt-3">
+                <p className="mb-1 text-sm font-medium text-slate-700">توضیح کامل</p>
+                <ProductRichTextEditor
+                  value={fa.descriptionHtml}
+                  onChange={(html) => setFa((prev) => ({ ...prev, descriptionHtml: html }))}
+                  dir="rtl"
+                  testId="admin-product-create-description"
+                />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-gray-100 bg-slate-50/60 p-4" dir="ltr">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-800">English (en)</p>
+                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] text-slate-600">{enReady}</span>
+              </div>
+              <label className="block text-sm font-medium text-slate-700">
+                Product name
+                <input
+                  className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
+                  value={en.name}
+                  onChange={(e) => setEn((prev) => ({ ...prev, name: e.target.value }))}
+                  data-testid="admin-product-create-title-en"
+                />
+              </label>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                Short summary
+                <textarea
+                  className="mt-1 min-h-20 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm"
+                  value={en.shortDescription}
+                  onChange={(e) => setEn((prev) => ({ ...prev, shortDescription: e.target.value }))}
+                  data-testid="admin-product-create-short-en"
+                />
+              </label>
+              <div className="mt-3">
+                <p className="mb-1 text-sm font-medium text-slate-700">Full description</p>
+                <ProductRichTextEditor
+                  value={en.descriptionHtml}
+                  onChange={(html) => setEn((prev) => ({ ...prev, descriptionHtml: html }))}
+                  dir="ltr"
+                  testId="admin-product-create-description-en"
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {step === "attributes" && productId ? (
+          <div className="space-y-3" data-testid="admin-product-create-panel-attributes">
+            <h2 className="text-lg font-semibold text-slate-900">ویژگی‌ها</h2>
+            <p className="text-sm text-slate-600">بر اساس شِمای دسته اصلی. اگر ویژگی‌ای نباشد می‌توانید ادامه دهید.</p>
+            <ProductAttributesPanel
+              productId={productId}
+              categoryId={categoryId}
+              categoryPath={categoryPath || null}
+              canEdit
+              mode="edit"
+            />
+          </div>
+        ) : null}
+
+        {step === "variants" && productId ? (
+          <div className="space-y-3" data-testid="admin-product-create-panel-variants">
+            <h2 className="text-lg font-semibold text-slate-900">تنوع‌ها</h2>
+            <p className="text-sm text-slate-600">بدون قیمت و موجودی. اگر ویژگی تنوع نباشد، حالت خالی قابل ادامه است.</p>
+            <ProductVariantsPanel productId={productId} categoryId={categoryId} canEdit mode="edit" />
+          </div>
+        ) : null}
+
+        {step === "media" && productId ? (
+          <div className="space-y-3" data-testid="admin-product-create-panel-media">
+            <h2 className="text-lg font-semibold text-slate-900">رسانه</h2>
+            <p className="text-sm text-slate-600">کتابخانه و آپلود واقعی Media DAM · تصویر اصلی، ترتیب و AltText.</p>
+            <ProductMediaPanel productId={productId} canEdit mode="edit" />
+          </div>
+        ) : null}
+
+        {step === "seo" && productId ? (
+          <div className="space-y-3" data-testid="admin-product-create-panel-seo">
+            <h2 className="text-lg font-semibold text-slate-900">SEO</h2>
+            <p className="text-sm text-slate-600">عنوان جستجو، توضیح متا و پیش‌نمایش. نامک سراسری است.</p>
+            <ProductSeoPanel productId={productId} canEdit mode="edit" />
           </div>
         ) : null}
 
         {step === "review" ? (
           <div className="space-y-4" data-testid="admin-product-create-panel-review">
-            <h2 className="text-lg font-semibold text-slate-900">بررسی و ایجاد پیش‌نویس</h2>
+            <h2 className="text-lg font-semibold text-slate-900">بررسی و تکمیل پیش‌نویس</h2>
             <dl className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-100 bg-slate-50 p-3">
-                <dt className="text-xs text-slate-500">دسته اصلی</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-800">{categoryPath || categoryId || "—"}</dd>
-              </div>
-              <div className="rounded-xl border border-gray-100 bg-slate-50 p-3">
-                <dt className="text-xs text-slate-500">نام فارسی</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-800">{title || "—"}</dd>
-              </div>
-              <div className="rounded-xl border border-gray-100 bg-slate-50 p-3">
-                <dt className="text-xs text-slate-500">نامک</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-800" dir="ltr">
-                  {slug || "—"}
-                </dd>
-              </div>
-              <div className="rounded-xl border border-gray-100 bg-slate-50 p-3">
-                <dt className="text-xs text-slate-500">وضعیت</dt>
-                <dd className="mt-1 text-sm font-medium text-amber-800">پیش‌نویس</dd>
-              </div>
+              <ReviewCard label="دسته اصلی" value={categoryPath || categoryId || "—"} />
+              <ReviewCard label="برند" value={brandName || workspace?.brandName || "بدون برند"} />
+              <ReviewCard label="ترجمه فارسی" value={faReady} />
+              <ReviewCard label="ترجمه English" value={enReady} />
+              <ReviewCard
+                label="ویژگی‌ها"
+                value={
+                  readiness
+                    ? readiness.attributeReady
+                      ? "آماده"
+                      : "ناقص / قابل بهبود"
+                    : productId
+                      ? "در Workspace تکمیل کنید"
+                      : "—"
+                }
+              />
+              <ReviewCard
+                label="تنوع‌ها"
+                value={
+                  readiness
+                    ? readiness.variantReady
+                      ? "آماده"
+                      : "ناقص / قابل بهبود"
+                    : workspace
+                      ? `${workspace.variants.length} تنوع`
+                      : "—"
+                }
+              />
+              <ReviewCard
+                label="رسانه"
+                value={
+                  readiness
+                    ? readiness.mediaReady
+                      ? "آماده"
+                      : "ناقص / قابل بهبود"
+                    : workspace
+                      ? `${workspace.media.length} مورد`
+                      : "—"
+                }
+              />
+              <ReviewCard
+                label="SEO"
+                value={
+                  readiness
+                    ? readiness.seoReady
+                      ? "آماده"
+                      : "قابل بهبود"
+                    : "—"
+                }
+              />
+              <ReviewCard label="وضعیت انتشار" value="پیش‌نویس (منتشر نمی‌شود)" />
+              <ReviewCard label="نامک" value={slug || workspace?.slug || "—"} ltr />
             </dl>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["category", "دسته"],
+                  ["translations", "ترجمه‌ها"],
+                  ["attributes", "ویژگی‌ها"],
+                  ["variants", "تنوع‌ها"],
+                  ["media", "رسانه"],
+                  ["seo", "SEO"],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={() => goToStep(id)}
+                >
+                  بازگشت به {label}
+                </button>
+              ))}
+            </div>
             <p className="text-sm text-slate-600">
-              پس از ایجاد، ویژگی‌ها، تنوع‌ها، رسانه و SEO را در فضای کاری محصول تکمیل کنید.
+              با تکمیل، فضای کاری محصول در حالت ویرایش باز می‌شود. انتشار جداگانه از تب انتشار انجام می‌شود.
             </p>
           </div>
         ) : null}
@@ -305,24 +614,35 @@ export function ProductCreateScreen() {
               <Button
                 type="button"
                 disabled={!canNext || busy}
-                onClick={goNext}
+                onClick={() => void goNext()}
                 data-testid="admin-product-create-next"
               >
-                ادامه
+                {busy && step === "translations" ? "در حال ایجاد پیش‌نویس…" : "ادامه"}
               </Button>
             ) : (
               <Button
                 type="button"
                 disabled={busy}
-                onClick={() => void onCreate()}
+                onClick={() => void onComplete()}
                 data-testid="admin-product-create-submit"
               >
-                {busy ? "در حال ایجاد…" : "ایجاد پیش‌نویس"}
+                {busy ? "در حال انتقال…" : "تکمیل و باز کردن فضای کاری"}
               </Button>
             )}
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function ReviewCard({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-slate-50 p-3">
+      <dt className="text-xs text-slate-500">{label}</dt>
+      <dd className="mt-1 text-sm font-medium text-slate-800" dir={ltr ? "ltr" : undefined}>
+        {value}
+      </dd>
+    </div>
   );
 }

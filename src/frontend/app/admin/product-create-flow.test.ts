@@ -35,6 +35,15 @@ test("create route page and TipTap editor exist; CKEditor GPL avoided", () => {
   assert.match(editor, /جایگزین CKEditor/);
   assert.match(create, /admin-product-create-screen/);
   assert.match(create, /admin-product-create-steps/);
+  assert.match(create, /admin-product-create-panel-attributes/);
+  assert.match(create, /admin-product-create-panel-variants/);
+  assert.match(create, /admin-product-create-panel-media/);
+  assert.match(create, /admin-product-create-panel-seo/);
+  assert.match(create, /ProductAttributesPanel/);
+  assert.match(create, /ProductVariantsPanel/);
+  assert.match(create, /ProductMediaPanel/);
+  assert.match(create, /ProductSeoPanel/);
+  assert.match(create, /پیش‌نویس محصول ایجاد شد/);
   assert.match(translations, /ProductRichTextEditor/);
   assert.match(translations, /sanitizeProductRichHtml/);
 });
