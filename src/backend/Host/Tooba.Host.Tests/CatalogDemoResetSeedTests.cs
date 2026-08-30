@@ -124,10 +124,16 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
         var mediaFactory = new CatalogDemoMediaFactory(mediaDirectory);
         var reset = new CatalogDemoResetService(catalogDb, mediaDb, store);
+        var productSeed = new CatalogDemoProductSeedService(
+            catalogDirectory,
+            catalogDb,
+            mediaFactory,
+            NullLogger<CatalogDemoProductSeedService>.Instance);
         var seed = new CatalogDemoSeedService(
             catalogDirectory,
             catalogDb,
             mediaFactory,
+            productSeed,
             NullLogger<CatalogDemoSeedService>.Instance);
         var options = Options.Create(new CatalogDemoSeedOptions { AllowResetAndSeed = true });
         var env = new StubHostEnvironment("Development");
@@ -144,6 +150,7 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.True(first.Counts.Brands >= 20);
         Assert.True(first.Counts.Tags >= 30);
         Assert.True(first.Counts.L3 > 0);
+        Assert.InRange(first.Counts.Products, 219, 365);
 
         var parentMap = await catalogDb.Categories.AsNoTracking()
             .ToDictionaryAsync(c => c.CategoryId, c => c.ParentCategoryId);
@@ -164,6 +171,29 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
                 Assert.False(CatalogCategoryTreeRules.IsAssignableProductCategory(id, parentMap));
             }
         }
+
+        var products = await catalogDb.Products.AsNoTracking()
+            .Where(p => p.SlugSeam != null && p.SlugSeam.StartsWith(CatalogDemoSeam.ProductSlugPrefix))
+            .ToListAsync();
+        Assert.All(products, p => Assert.Equal(CatalogPublicationStatus.Draft, p.Status));
+        Assert.DoesNotContain(products, p => p.Status == CatalogPublicationStatus.Published);
+
+        // Every L3 has 3–5 demo products (by slug suffix pattern demo-prod-{key}-{n}).
+        var leafIds = demoCategoryIds
+            .Where(id => CatalogCategoryTreeRules.GetCategoryLevel(id, parentMap) == 3)
+            .ToList();
+        foreach (var leafId in leafIds)
+        {
+            var count = await catalogDb.ProductCategories.AsNoTracking()
+                .CountAsync(pc => pc.CategoryId == leafId && pc.Role == CatalogProductCategoryRole.Primary);
+            Assert.InRange(count, 3, 5);
+        }
+
+        var sample = products[0];
+        var mediaCount = await catalogDb.MediaReferences.AsNoTracking().CountAsync(m => m.ProductId == sample.ProductId);
+        Assert.Equal(5, mediaCount);
+        Assert.Equal(1, await catalogDb.MediaReferences.AsNoTracking()
+            .CountAsync(m => m.ProductId == sample.ProductId && m.IsPrimary));
 
         var rootsWithMedia = await catalogDb.Categories.AsNoTracking()
             .Where(c => c.ParentCategoryId == null)
@@ -187,11 +217,13 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.Equal(first.Counts.Roots, second.Counts.Roots);
         Assert.Equal(first.Counts.Brands, second.Counts.Brands);
         Assert.Equal(first.Counts.Tags, second.Counts.Tags);
+        Assert.Equal(first.Counts.Products, second.Counts.Products);
         Assert.Equal(15, second.Counts.Roots);
 
-        // Seed بدون reset باید بدون تکرار ریشه بماند.
+        // Seed بدون reset باید بدون تکرار ریشه/محصول بماند.
         var replay = await host.SeedOnlyAsync(CancellationToken.None);
         Assert.Equal(15, replay.Roots);
+        Assert.Equal(first.Counts.Products, replay.Products);
         Assert.True(replay.IdempotentReplay);
     }
 
@@ -226,6 +258,12 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             .Build();
         var mediaDirectory = new MediaDirectory(mediaDb, store, config);
         var catalogDirectory = new CatalogDirectory(catalogDb, new OpenCatalogUseCaseGuard());
+        var mediaFactory = new CatalogDemoMediaFactory(mediaDirectory);
+        var productSeed = new CatalogDemoProductSeedService(
+            catalogDirectory,
+            catalogDb,
+            mediaFactory,
+            NullLogger<CatalogDemoProductSeedService>.Instance);
         var host = new CatalogDemoResetAndSeedHost(
             new StubHostEnvironment("Testing"),
             Options.Create(new CatalogDemoSeedOptions { AllowResetAndSeed = true }),
@@ -233,7 +271,8 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             new CatalogDemoSeedService(
                 catalogDirectory,
                 catalogDb,
-                new CatalogDemoMediaFactory(mediaDirectory),
+                mediaFactory,
+                productSeed,
                 NullLogger<CatalogDemoSeedService>.Instance),
             catalogDb,
             NullLogger<CatalogDemoResetAndSeedHost>.Instance);

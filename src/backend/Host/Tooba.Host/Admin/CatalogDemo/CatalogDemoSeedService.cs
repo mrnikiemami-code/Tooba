@@ -30,6 +30,7 @@ public sealed class CatalogDemoSeedService
     private readonly ICatalogDirectory _catalog;
     private readonly CatalogDbContext _db;
     private readonly CatalogDemoMediaFactory _mediaFactory;
+    private readonly CatalogDemoProductSeedService _productSeed;
     private readonly ILogger<CatalogDemoSeedService> _logger;
 
     /// <summary>وابستگی‌های Catalog و Media را تزریق می‌کند.</summary>
@@ -37,11 +38,13 @@ public sealed class CatalogDemoSeedService
         ICatalogDirectory catalog,
         CatalogDbContext db,
         CatalogDemoMediaFactory mediaFactory,
+        CatalogDemoProductSeedService productSeed,
         ILogger<CatalogDemoSeedService> logger)
     {
         _catalog = catalog;
         _db = db;
         _mediaFactory = mediaFactory;
+        _productSeed = productSeed;
         _logger = logger;
     }
 
@@ -175,6 +178,13 @@ public sealed class CatalogDemoSeedService
             "CatalogDemo seed finished. roots={Roots} idempotent={Idempotent}",
             CatalogDemoMatrix.Roots.Count,
             idempotent);
+
+        var productReport = await _productSeed.SeedProductsAsync(cancellationToken);
+        _logger.LogInformation(
+            "CatalogDemo product seed: products={Products} brandless={Brandless} readinessFailures={Failures}",
+            productReport.ProductsCreatedOrEnsured,
+            productReport.BrandlessCount,
+            productReport.ReadinessFailures);
 
         return await BuildCountsAsync(idempotent, cancellationToken);
     }
@@ -582,7 +592,7 @@ public sealed class CatalogDemoSeedService
                 cancellationToken);
         var products = await _db.Products.AsNoTracking()
             .CountAsync(
-                p => p.SlugSeam != null && p.SlugSeam.StartsWith(CatalogDemoSeam.SmokeProductSlugPrefix),
+                p => p.SlugSeam != null && p.SlugSeam.StartsWith(CatalogDemoSeam.ProductSlugPrefix),
                 cancellationToken);
 
         return new CatalogDemoSeedCounts(

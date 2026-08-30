@@ -35,7 +35,37 @@ public sealed class CatalogDemoMediaFactory
     public Task<Guid> EnsureSimpleIconAsync(string key, CancellationToken cancellationToken) =>
         UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{key}-icon.png", 16, 16, cancellationToken);
 
-    private async Task<Guid> UploadPngAsync(string fileName, int width, int height, CancellationToken cancellationToken)
+    /// <summary>
+    /// استخر تصاویر دامنه برای گالری محصول (reuse کنترل‌شده سطح دامنه).
+    /// </summary>
+    public async Task<IReadOnlyList<Guid>> EnsureProductMediaPoolAsync(
+        string domainKey,
+        int poolSize,
+        CancellationToken cancellationToken)
+    {
+        poolSize = Math.Clamp(poolSize, 5, 16);
+        var ids = new List<Guid>(poolSize);
+        for (var i = 0; i < poolSize; i++)
+        {
+            var fileName = $"{CatalogDemoSeam.MediaFilePrefix}prod-{domainKey}-{i + 1}.png";
+            var (r, g, b) = PaletteColor(domainKey, i);
+            ids.Add(await UploadPngAsync(fileName, 48, 48, r, g, b, cancellationToken));
+        }
+
+        return ids;
+    }
+
+    private async Task<Guid> UploadPngAsync(string fileName, int width, int height, CancellationToken cancellationToken) =>
+        await UploadPngAsync(fileName, width, height, 0x2F, 0x6B, 0xA8, cancellationToken);
+
+    private async Task<Guid> UploadPngAsync(
+        string fileName,
+        int width,
+        int height,
+        byte r,
+        byte g,
+        byte b,
+        CancellationToken cancellationToken)
     {
         var existing = await FindExistingAsync(fileName, cancellationToken);
         if (existing is Guid id)
@@ -43,9 +73,18 @@ public sealed class CatalogDemoMediaFactory
             return id;
         }
 
-        await using var stream = new MemoryStream(CreatePngBytes(width, height));
+        await using var stream = new MemoryStream(CreatePngBytes(width, height, r, g, b));
         var uploaded = await _media.UploadAsync(stream, fileName, "image/png", actorUserId: null, cancellationToken);
         return uploaded.MediaAssetId;
+    }
+
+    private static (byte R, byte G, byte B) PaletteColor(string domain, int index)
+    {
+        var seed = Math.Abs(HashCode.Combine(domain, index));
+        return (
+            (byte)(40 + (seed % 180)),
+            (byte)(50 + ((seed / 7) % 160)),
+            (byte)(60 + ((seed / 13) % 150)));
     }
 
     private async Task<Guid> UploadWebpAsync(string fileName, CancellationToken cancellationToken)
@@ -70,7 +109,11 @@ public sealed class CatalogDemoMediaFactory
     }
 
     /// <summary>PNG فشرده‌نشدهٔ کوچک با یک رنگ ثابت.</summary>
-    public static byte[] CreatePngBytes(int width, int height)
+    public static byte[] CreatePngBytes(int width, int height) =>
+        CreatePngBytes(width, height, 0x2F, 0x6B, 0xA8);
+
+    /// <summary>PNG فشرده‌نشدهٔ کوچک با رنگ RGB.</summary>
+    public static byte[] CreatePngBytes(int width, int height, byte r, byte g, byte b)
     {
         width = Math.Clamp(width, 1, 64);
         height = Math.Clamp(height, 1, 64);
@@ -83,9 +126,9 @@ public sealed class CatalogDemoMediaFactory
             for (var x = 0; x < width; x++)
             {
                 var i = row + 1 + (x * 3);
-                raw[i] = 0x2F;
-                raw[i + 1] = 0x6B;
-                raw[i + 2] = 0xA8;
+                raw[i] = r;
+                raw[i + 1] = g;
+                raw[i + 2] = b;
             }
         }
 

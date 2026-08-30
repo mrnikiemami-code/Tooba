@@ -113,6 +113,7 @@ builder.Services.Configure<CatalogDemoSeedOptions>(
     builder.Configuration.GetSection(CatalogDemoSeedOptions.SectionName));
 builder.Services.AddScoped<CatalogDemoMediaFactory>();
 builder.Services.AddScoped<CatalogDemoResetService>();
+builder.Services.AddScoped<CatalogDemoProductSeedService>();
 builder.Services.AddScoped<CatalogDemoSeedService>();
 builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();

@@ -1,0 +1,52 @@
+﻿{
+    "productId":  "01a051ae-0bae-7000-8541-44dc0c39cc8a",
+    "title":  "گوشی ساده مجموعه 4",
+    "status":  "Draft",
+    "kind":  "PhysicalGood",
+    "categoryNames":  [
+                          "گوشی ساده"
+                      ],
+    "attributes":  [
+                       {
+                           "code":  "demo_attr_mobile_battery",
+                           "value":  "4000",
+                           "variantAxis":  false
+                       },
+                       {
+                           "code":  "demo_attr_mobile_color",
+                           "value":  "01a051ad840e70009236e23f14d77572",
+                           "variantAxis":  true
+                       },
+                       {
+                           "code":  "demo_attr_mobile_color",
+                           "value":  "01a051ad83f5700091cb261874877b21",
+                           "variantAxis":  true
+                       },
+                       {
+                           "code":  "demo_attr_mobile_color",
+                           "value":  "01a051ad83eb70008c3042c6030ff2c1",
+                           "variantAxis":  true
+                       }
+                   ],
+    "variants":  [
+                     {
+                         "variantId":  "01a051ae-0dd9-7000-bd49-4f5edad71827",
+                         "fingerprint":  "01a051ad83d370009a0a6722e3d8b670=01a051ad83eb70008c3042c6030ff2c1",
+                         "status":  "Draft",
+                         "catalogCodeSeam":  "DEMO-demo-prod-mobile-tablet--phones--feature-phones-4-1",
+                         "offerCount":  0,
+                         "locationCount":  0
+                     },
+                     {
+                         "variantId":  "01a051ae-0dda-7000-a079-2c7235aa57f8",
+                         "fingerprint":  "01a051ad83d370009a0a6722e3d8b670=01a051ad83f5700091cb261874877b21",
+                         "status":  "Draft",
+                         "catalogCodeSeam":  "DEMO-demo-prod-mobile-tablet--phones--feature-phones-4-3",
+                         "offerCount":  0,
+                         "locationCount":  0
+                     },
+                     {
+                         "variantId":  "01a051ae-0dda-7000-ac5f-ba4c3c8f67bf",
+                         "fingerprint":  "01a051ad83d370009a0a6722e3d8b670=01a051ad840e70009236e23f14d77572",
+                         "status":  "Draft",
+                         "catalogCod

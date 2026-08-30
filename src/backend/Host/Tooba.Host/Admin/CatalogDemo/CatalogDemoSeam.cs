@@ -20,8 +20,11 @@ public static class CatalogDemoSeam
     /// <summary>پیشوند OriginalFileName رسانهٔ دانه.</summary>
     public const string MediaFilePrefix = "demo-media-";
 
-    /// <summary>پیشوند اختیاری محصول smoke (T034 جایگزین می‌کند).</summary>
+    /// <summary>پیشوند اختیاری محصول smoke قدیمی.</summary>
     public const string SmokeProductSlugPrefix = "demo-smoke-";
+
+    /// <summary>پیشوند slug محصولات دانهٔ غنی (TB-P07-T034).</summary>
+    public const string ProductSlugPrefix = "demo-prod-";
 
     /// <summary>slugهای شناخته‌شدهٔ محصول junk از bootstrapهای قدیمی.</summary>
     public static readonly IReadOnlyList<string> LegacyJunkProductSlugs =

@@ -70,7 +70,7 @@ public sealed class CatalogDemoResetAndSeedHost
         $"Seed exactly {CatalogDemoMatrix.Roots.Count} L1 roots with varied L2/L3.",
         $"Seed >= {CatalogDemoMatrix.Brands.Count} brands and {CatalogDemoMatrix.Tags.Count} tags.",
         "Seed attribute definitions/options, L3 schemas, selected facets, MegaMenu, category media.",
-        "No full product population (TB-P07-T034).",
+        "Seed rich Draft publish-ready Products (3–5 per L3; TB-P07-T034).",
     ];
 
     /// <summary>reset+seed کامل با اعتبارسنجی.</summary>
@@ -171,6 +171,12 @@ public sealed class CatalogDemoResetAndSeedHost
         if (counts.L3 < 15)
         {
             throw new InvalidOperationException($"Expected L3 leaves for product assignment; found {counts.L3}.");
+        }
+
+        if (counts.Products < 219 || counts.Products > 365)
+        {
+            throw new InvalidOperationException(
+                $"Expected 219–365 demo products, found {counts.Products}.");
         }
     }
 }

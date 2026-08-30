@@ -1,0 +1,93 @@
+﻿[
+    {
+        "id":  "01a051ae-0bae-7000-8541-44dc0c39cc8a",
+        "title":  "گوشی ساده مجموعه 4",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  3,
+        "tags":  null,
+        "brand":  null,
+        "keys":  "activity,attributes,audit,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051ae-8cf3-7000-88e8-b064f57c6c8f",
+        "title":  "زارا کیف لپ‌تاپ نسخه 3",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  null,
+        "tags":  null,
+        "brand":  "زارا",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051af-9e6d-7000-b1ed-a28f0d2a45a8",
+        "title":  "نایک کفش زنانه مجموعه 4",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  9,
+        "tags":  null,
+        "brand":  "نایک",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051ae-c047-7000-9e67-6975a2296efa",
+        "title":  "پاناسونیک یخچال و فریزر انتخاب 5",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  null,
+        "tags":  null,
+        "brand":  "پاناسونیک",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051b2-4f85-7000-ad6e-91a2cd073464",
+        "title":  "کیچن‌اید آچار مجموعه 4",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  null,
+        "tags":  null,
+        "brand":  "کیچن‌اید",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051b3-13c6-7000-9074-263fdff7d5f6",
+        "title":  "نایک ساعت کلاسیک مجموعه 4",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  null,
+        "tags":  null,
+        "brand":  "نایک",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    },
+    {
+        "id":  "01a051b0-4482-7000-ad61-5b04b6d9252a",
+        "title":  "پاناسونیک قابلمه انتخاب 5",
+        "status":  "Draft",
+        "ready":  null,
+        "seo":  null,
+        "mediaReady":  null,
+        "mediaCount":  5,
+        "variants":  null,
+        "tags":  null,
+        "brand":  "پاناسونیک",
+        "keys":  "activity,attributes,audit,brandId,brandName,catalogUpdatedAt,categoryAssignments,categoryNames,categoryPath,isPrimaryCategoryAssignable,kind,media,offers,permissions,prices,primaryCategoryId,productId,publication,readinessWarnings,seo,shortDescription,slug,status,stock,taxClassifications,title,translations,unsupportedMutations,variants"
+    }
+]
