@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P06-T029
+TB-P07-T035
 ```
 
 Last Architect Accepted Gate:
@@ -46,13 +46,37 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T020-R1
+TB-P07-T036
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T020-R1
+TB-P07-T036-R1
+```
+
+Current Repair Task:
+
+```text
+TB-P07-T036-R1
+```
+
+Implemented Under Review:
+
+```text
+TB-P07-T036
+```
+
+USER_VISUAL_ACCEPTED:
+
+```text
+NO
+```
+
+Worker Next State:
+
+```text
+IDLE — waits for Bridge Task (no invented next task)
 ```
 
 Current Gate:

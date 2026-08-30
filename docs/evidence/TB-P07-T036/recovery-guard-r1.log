@@ -1,0 +1,10 @@
+﻿✔ recovery SoT files exist and contain current repair markers (1.1888ms)
+✔ recovery SoT last-implementation is not stuck on pre-T035 catalog polish only (0.3303ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 50.4452

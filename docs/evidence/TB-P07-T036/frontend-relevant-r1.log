@@ -1,0 +1,92 @@
+﻿(node:28376) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (2.0612ms)
+✔ General EDIT fields and save/cancel (0.7698ms)
+✔ status localization uses Persian labels in workspace (1.0333ms)
+✔ parent selector is searchable path/name without raw ID labels (0.6174ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (1.1301ms)
+✔ permission-aware edit action gated by canEdit (0.3966ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.4597ms)
+✔ translation completeness: missing / partial / complete (0.1678ms)
+✔ dirty locale-switch protection (0.3773ms)
+✔ human slug preview has no CategoryId suffix (0.8909ms)
+✔ slug auto-suggest respects manual edits (0.5528ms)
+✔ duplicate slug maps to Persian UX message (0.501ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1424ms)
+✔ view-only user cannot enter edit via state machine (0.0363ms)
+✔ tree context preservation after current-locale Name save (0.4379ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.1455ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.2366ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.5994ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.8637ms)
+✔ mobile layout markers present (0.3041ms)
+✔ no raw AgGridReact in category admin screen (0.3212ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.2016ms)
+✔ translation meta keywords use removable tag chips not plain textbox (0.3253ms)
+✔ parseMetaKeywords splits commas and drops blanks/duplicates (0.6784ms)
+(node:24052) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-attributes-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ humanizeAttributeCode and attributeCodeFromLabel helpers exist (0.9373ms)
+✔ local vs inherited partition helpers exist (0.1108ms)
+✔ ordinary-user Persian flag labels are defined (0.0745ms)
+✔ behavior chips are independent toggles not checkboxes (1.1723ms)
+✔ inherited vs category-specific human sections (0.1577ms)
+✔ inherited override UX copy and reset-to-parent (0.1457ms)
+✔ create+bind strips invalid variant axis before API (0.1273ms)
+(node:29972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-facets-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ display type labels are ordinary Persian without facet jargon (0.6041ms)
+✔ suggestFacetDisplayType maps value kinds for non-technical users (0.5596ms)
+✔ searchable control only for checklist/select display types (0.2162ms)
+✔ partitionEffectiveFacets splits inherited vs local rows (0.1683ms)
+✔ Facets tab: VIEW/EDIT, add filter, inherited/local, labels (0.9343ms)
+✔ Facets panel hides searchable checkbox for range/boolean types (0.2384ms)
+✔ facet API never prefers raw title Bad Request (0.1736ms)
+✔ no raw AgGridReact in facets panel (0.1845ms)
+(node:26804) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (0.9724ms)
+✔ admin nav groups Categories and Products distinctly (1.0976ms)
+✔ category products panel is real and blocks L1/L2 assignment (0.5624ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.2759ms)
+✔ category products picker refreshes membership count and row state after mutation (0.2793ms)
+✔ category products assign dialog has top bulk add selected action (0.3187ms)
+✔ category products panel is membership-only without change-category (0.4189ms)
+(node:24676) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/primary-category-migration-wizard.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ primary category migration wizard is three-step with preview then confirm (1.0229ms)
+✔ product workspace uses migration wizard instead of inline primary picker save (0.587ms)
+(node:30100) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/product-catalog-admin.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ product list keeps AppDataGrid and rejects raw AgGridReact (0.939ms)
+✔ create CTA navigates to dedicated draft create route (1.0069ms)
+✔ row actions use view/edit scopes and safe archive label (0.3987ms)
+✔ variant terminology uses تنوع not گونه in product list (0.2877ms)
+✔ product category picker is hierarchical level-3-only with human paths (0.2629ms)
+✔ dedicated create screen blocks invalid category via level error mapping (0.2672ms)
+✔ create and workspace Brand use searchable combobox with بدون برند (0.4685ms)
+✔ workspace warns on non-L3 category and preserves VIEW/EDIT (0.3122ms)
+✔ workspace tabs and form mode foundation (0.4477ms)
+✔ attributes tab requires categoryId and wires schema-driven panel (0.6631ms)
+✔ workspace page passes view and edit scope (0.2757ms)
+✔ host-client maps core/category helpers and new workspace fields (0.4404ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 136.7197

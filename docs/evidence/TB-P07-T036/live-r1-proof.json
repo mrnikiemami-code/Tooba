@@ -1,0 +1,575 @@
+{
+  "task": "TB-P07-T036-R1",
+  "host": "http://127.0.0.1:5088",
+  "actor": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "locale": "fa-IR",
+  "startedAt": "2026-08-30T20:17:42.835Z",
+  "apisUsed": [
+    "GET /v1/admin/catalog/categories/tree",
+    "POST /v1/admin/products",
+    "GET /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/attributes",
+    "PUT /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/attributes",
+    "GET /v1/admin/products/01a05452-1ddf-7000-8fac-3522c38b1938",
+    "GET /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/attributes/readiness",
+    "GET /v1/admin/products/01a05452-1ddf-7000-8fac-3522c38b1938/publish/readiness",
+    "GET /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/variants/editor",
+    "POST /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/category-change-preview",
+    "PUT /v1/admin/catalog/products/01a05452-1ddf-7000-8fac-3522c38b1938/primary-category",
+    "DELETE /v1/admin/products/01a05452-1ddf-7000-8fac-3522c38b1938",
+    "GET /v1/admin/products/01a05452-2665-7000-8b48-401c81ae1359",
+    "POST /v1/admin/products/01a05452-2665-7000-8b48-401c81ae1359/categories/additional",
+    "DELETE /v1/admin/products/01a05452-2665-7000-8b48-401c81ae1359/categories/additional/01a05387-daf5-7000-96a7-20cf0550e586",
+    "DELETE /v1/admin/products/01a05452-2665-7000-8b48-401c81ae1359",
+    "GET /v1/admin/catalog/attribute-definitions",
+    "GET /v1/admin/catalog/categories/01a05387-fb05-7000-80ce-b5a26af94763/attribute-schema/effective",
+    "GET /v1/admin/catalog/categories/01a05387-f8e1-7000-98d5-4a233c1fa65b/attribute-schema/effective",
+    "POST /v1/admin/catalog/categories/01a05387-f8e1-7000-98d5-4a233c1fa65b/attribute-schema/bindings",
+    "GET /v1/admin/catalog/categories/01a05387-fa3a-7000-abb6-28ad252d1111/attribute-schema/effective",
+    "POST /v1/admin/catalog/categories/01a05387-fa3a-7000-abb6-28ad252d1111/attribute-schema/bindings",
+    "DELETE /v1/admin/catalog/categories/01a05387-fa3a-7000-abb6-28ad252d1111/attribute-schema/bindings/01a05387-d756-7000-9241-6905854b6594",
+    "DELETE /v1/admin/catalog/categories/01a05387-f8e1-7000-98d5-4a233c1fa65b/attribute-schema/bindings/01a05387-d756-7000-9241-6905854b6594",
+    "GET /v1/admin/catalog/categories/01a05387-daf5-7000-96a7-20cf0550e586/attribute-schema/effective",
+    "GET /v1/storefront/category-plp/demo-cat-digital-gadgets-gadget-accessories-power-banks",
+    "GET /v1/storefront/category-plp/demo-cat-mobile-tablet-phones-smartphones"
+  ],
+  "sections": {
+    "A": {
+      "productId": "01a05452-1ddf-7000-8fac-3522c38b1938",
+      "source": {
+        "l1": "01a05387-f8e1-7000-98d5-4a233c1fa65b",
+        "l2": "01a05387-fa3a-7000-abb6-28ad252d1111",
+        "l3": "01a05387-fb05-7000-80ce-b5a26af94763",
+        "slug": "demo-cat-digital-gadgets-gadget-accessories-power-banks",
+        "name": "پاوربانک"
+      },
+      "target": {
+        "l1": "01a05387-e076-7000-9ec1-5302f0852fa3",
+        "l2": "01a05387-e0a7-7000-8e1b-381a961fb960",
+        "l3": "01a05387-e0c5-7000-87dc-2968d7bf11d7",
+        "slug": "demo-cat-home-appliances-kitchen-appliances-refrigerators",
+        "name": "یخچال و فریزر"
+      },
+      "preview": {
+        "productId": "01a05452-1ddf-7000-8fac-3522c38b1938",
+        "newCategoryId": "01a05387-e0c5-7000-87dc-2968d7bf11d7",
+        "compatiblePreservedCount": 0,
+        "orphanCount": 2,
+        "newlyRequiredMissingCount": 2,
+        "orphanSummaries": [
+          {
+            "definitionId": "01a05387-d43e-7000-a35a-5c27ad7e80d2",
+            "localizedName": "رنگ (mobile)",
+            "displayValue": "مشکی"
+          },
+          {
+            "definitionId": "01a05387-d4f0-7000-b122-76815ac98a0c",
+            "localizedName": "ظرفیت باتری (mobile)",
+            "displayValue": "5000"
+          }
+        ],
+        "newlyRequiredLabels": [
+          "ظرفیت (home)",
+          "رده انرژی (home)"
+        ],
+        "invalidVariantAxisDefinitionIds": [],
+        "messageFa": "۰ مقدار حفظ می‌شود\n۲ ویژگی دیگر در دسته جدید وجود ندارد\n۲ ویژگی الزامی جدید باید تکمیل شود",
+        "impactedVariantCount": 0,
+        "currentCategoryId": "01a05387-fb05-7000-80ce-b5a26af94763",
+        "currentCategoryPath": "کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک",
+        "targetCategoryPath": "لوازم خانگی > لوازم آشپزخانه > یخچال و فریزر",
+        "preservedAttributes": [],
+        "addedAttributes": [
+          "ظرفیت (home)",
+          "رده انرژی (home)"
+        ],
+        "removedAttributes": [
+          "رنگ (mobile): مشکی",
+          "ظرفیت باتری (mobile): 5000"
+        ],
+        "requiredMissing": [
+          "ظرفیت (home)",
+          "رده انرژی (home)"
+        ],
+        "variantCompatible": true,
+        "preservedVariantCount": 0,
+        "affectedVariantCount": 0,
+        "additionalMembershipPromoted": false,
+        "otherDisplayMembershipsRemainCount": 0,
+        "readinessBlockers": [
+          "ویژگی الزامی «ظرفیت (home)» باید تکمیل شود",
+          "ویژگی الزامی «رده انرژی (home)» باید تکمیل شود"
+        ],
+        "targetCategoryId": "01a05387-e0c5-7000-87dc-2968d7bf11d7"
+      },
+      "migrate": {
+        "productId": "01a05452-1ddf-7000-8fac-3522c38b1938",
+        "newCategoryId": "01a05387-e0c5-7000-87dc-2968d7bf11d7",
+        "orphanAttributeValues": [
+          {
+            "definitionId": "01a05387-d43e-7000-a35a-5c27ad7e80d2",
+            "canonicalValue": "01a05387d4557000aab3972d5c091152"
+          },
+          {
+            "definitionId": "01a05387-d4f0-7000-b122-76815ac98a0c",
+            "canonicalValue": "5000"
+          }
+        ],
+        "invalidVariantAxisDefinitionIds": []
+      },
+      "baseline": {
+        "productId": "01a05452-1ddf-7000-8fac-3522c38b1938",
+        "status": "Draft",
+        "primaryCategoryId": "01a05387-fb05-7000-80ce-b5a26af94763",
+        "categoryPath": "کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک",
+        "catalogUpdatedAt": "2026-08-30T20:17:42.879261+00:00",
+        "assignments": [
+          {
+            "categoryId": "01a05387-fb05-7000-80ce-b5a26af94763",
+            "role": "Primary",
+            "categoryPath": "کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک"
+          }
+        ],
+        "attributeFields": [
+          {
+            "definitionId": "01a05387-d4f0-7000-b122-76815ac98a0c",
+            "code": "demo_attr_mobile_battery",
+            "currentCanonicalValue": "5000",
+            "currentEnumOptionId": null,
+            "isRequired": true,
+            "isMissingRequired": false
+          },
+          {
+            "definitionId": "01a05387-d43e-7000-a35a-5c27ad7e80d2",
+            "code": "demo_attr_mobile_color",
+            "currentCanonicalValue": "01a05387d4557000aab3972d5c091152",
+            "currentEnumOptionId": "01a05387-d455-7000-aab3-972d5c091152",
+            "isRequired": false,
+            "isMissingRequired": false
+          },
+          {
+            "definitionId": "01a05387-d504-7000-b590-c01ae663fd89",
+            "code": "demo_attr_mobile_weight",
+            "currentCanonicalValue": null,
+            "currentEnumOptionId": null,
+            "isRequired": false,
+            "isMissingRequired": false
+          }
+        ],
+        "attributeReadiness": {
+          "isComplete": true,
+          "missingRequiredCodes": [],
+          "invalidValues": []
+        },
+        "publishReadiness": {
+          "isReady": false,
+          "attributeReady": true,
+          "missingRequirements": [
+            {
+              "code": "media",
+              "messageFa": "تصویر اصلی تعیین نشده",
+              "workspaceTab": "media"
+            },
+            {
+              "code": "seo",
+              "messageFa": "توضیح نتیجه جستجو تکمیل نشده است",
+              "workspaceTab": "seo"
+            }
+          ]
+        },
+        "variants": {
+          "status": 200,
+          "count": 0,
+          "ids": []
+        }
+      },
+      "afterPreview": {
+        "primaryCategoryId": "01a05387-fb05-7000-80ce-b5a26af94763"
+      },
+      "afterMigrate": {
+        "primaryCategoryId": "01a05387-e0c5-7000-87dc-2968d7bf11d7",
+        "attributeCodes": [
+          "demo_attr_home_capacity",
+          "demo_attr_home_energy",
+          "demo_attr_home_color",
+          "demo_attr_home_control"
+        ],
+        "attributeReadiness": {
+          "isComplete": false,
+          "missingRequiredCodes": [
+            "demo_attr_home_capacity",
+            "demo_attr_home_energy"
+          ],
+          "invalidValues": []
+        }
+      },
+      "deleted": true
+    },
+    "B": {
+      "productId": "01a05452-2665-7000-8b48-401c81ae1359",
+      "primary": "01a05387-fb05-7000-80ce-b5a26af94763",
+      "additional": "01a05387-daf5-7000-96a7-20cf0550e586",
+      "afterAdd": [
+        {
+          "categoryId": "01a05387-fb05-7000-80ce-b5a26af94763",
+          "role": "Primary",
+          "categoryPath": "کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک"
+        },
+        {
+          "categoryId": "01a05387-daf5-7000-96a7-20cf0550e586",
+          "role": "Additional",
+          "categoryPath": "موبایل و تبلت > گوشی موبایل > گوشی هوشمند"
+        }
+      ],
+      "afterRemove": [
+        {
+          "categoryId": "01a05387-fb05-7000-80ce-b5a26af94763",
+          "role": "Primary",
+          "categoryPath": "کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک"
+        }
+      ],
+      "deleted": true
+    },
+    "C": {
+      "chain": {
+        "l1": "01a05387-f8e1-7000-98d5-4a233c1fa65b",
+        "l2": "01a05387-fa3a-7000-abb6-28ad252d1111",
+        "l3": "01a05387-fb05-7000-80ce-b5a26af94763",
+        "slug": "demo-cat-digital-gadgets-gadget-accessories-power-banks",
+        "name": "پاوربانک"
+      },
+      "definitionId": "01a05387-d756-7000-9241-6905854b6594",
+      "code": "demo_attr_books_age",
+      "boundL1Temporarily": true,
+      "samples": {
+        "afterL1": {
+          "definitionId": "01a05387-d756-7000-9241-6905854b6594",
+          "code": "demo_attr_books_age",
+          "valueKind": "Enumeration",
+          "isVariantAxisAllowed": false,
+          "isVariantAxis": false,
+          "isRequired": false,
+          "isFilterable": false,
+          "isComparable": false,
+          "isMultivalue": false,
+          "displayOrder": 97,
+          "inheritedFromCategoryId": "01a05387-f8e1-7000-98d5-4a233c1fa65b",
+          "definitionIsActive": true,
+          "isLocalOverride": false
+        },
+        "afterL2Override": {
+          "definitionId": "01a05387-d756-7000-9241-6905854b6594",
+          "code": "demo_attr_books_age",
+          "valueKind": "Enumeration",
+          "isVariantAxisAllowed": false,
+          "isVariantAxis": false,
+          "isRequired": true,
+          "isFilterable": true,
+          "isComparable": false,
+          "isMultivalue": false,
+          "displayOrder": 98,
+          "inheritedFromCategoryId": "01a05387-fa3a-7000-abb6-28ad252d1111",
+          "definitionIsActive": true,
+          "isLocalOverride": false
+        },
+        "afterUnbindL2": {
+          "definitionId": "01a05387-d756-7000-9241-6905854b6594",
+          "code": "demo_attr_books_age",
+          "valueKind": "Enumeration",
+          "isVariantAxisAllowed": false,
+          "isVariantAxis": false,
+          "isRequired": false,
+          "isFilterable": false,
+          "isComparable": false,
+          "isMultivalue": false,
+          "displayOrder": 97,
+          "inheritedFromCategoryId": "01a05387-f8e1-7000-98d5-4a233c1fa65b",
+          "definitionIsActive": true,
+          "isLocalOverride": false
+        }
+      }
+    },
+    "D": {
+      "power": {
+        "slug": "demo-cat-digital-gadgets-gadget-accessories-power-banks",
+        "facetCodes": [
+          "brand",
+          "demo_attr_mobile_battery",
+          "demo_attr_mobile_color",
+          "demo_attr_mobile_weight"
+        ],
+        "productCount": 0
+      },
+      "phone": {
+        "slug": "demo-cat-mobile-tablet-phones-smartphones",
+        "facetCodes": [
+          "brand",
+          "demo_attr_mobile_color",
+          "demo_attr_mobile_storage",
+          "demo_attr_mobile_ram",
+          "demo_attr_mobile_screen_size",
+          "demo_attr_mobile_five_g"
+        ],
+        "productCount": 0
+      },
+      "phoneOnlyAttrCodes": [
+        "demo_attr_mobile_storage",
+        "demo_attr_mobile_ram",
+        "demo_attr_mobile_screen_size",
+        "demo_attr_mobile_five_g"
+      ],
+      "powerOnlyAttrCodes": [
+        "demo_attr_mobile_battery",
+        "demo_attr_mobile_weight"
+      ],
+      "foreignLeaksOnPower": [],
+      "foreignLeaksOnPhone": [],
+      "note": "PLP facets = viewed category effective facets + global brand; not union of member products' Primary schemas."
+    }
+  },
+  "checks": [
+    {
+      "section": "BOOT",
+      "name": "host-health",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "BOOT",
+      "name": "category-tree",
+      "ok": true,
+      "detail": "nodes=116"
+    },
+    {
+      "section": "A",
+      "name": "snapshot-baseline",
+      "ok": true,
+      "detail": "primary=01a05387-fb05-7000-80ce-b5a26af94763"
+    },
+    {
+      "section": "A",
+      "name": "preview-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "A",
+      "name": "preview-reports-orphans",
+      "ok": true,
+      "detail": "orphanCount=2"
+    },
+    {
+      "section": "A",
+      "name": "preview-reports-newly-required",
+      "ok": true,
+      "detail": "newlyRequired=2"
+    },
+    {
+      "section": "A",
+      "name": "preview-non-mutating",
+      "ok": true,
+      "detail": "product unchanged after preview (cancel path)"
+    },
+    {
+      "section": "A",
+      "name": "migrate-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "A",
+      "name": "primary-changed",
+      "ok": true,
+      "detail": "01a05387-fb05-7000-80ce-b5a26af94763 → 01a05387-e0c5-7000-87dc-2968d7bf11d7"
+    },
+    {
+      "section": "A",
+      "name": "orphans-removed-from-active",
+      "ok": true,
+      "detail": "battery orphan cleared"
+    },
+    {
+      "section": "A",
+      "name": "readiness-blockers-required-missing",
+      "ok": true,
+      "detail": "missing=demo_attr_home_capacity,demo_attr_home_energy"
+    },
+    {
+      "section": "A",
+      "name": "restore-delete-temp",
+      "ok": true,
+      "detail": "01a05452-1ddf-7000-8fac-3522c38b1938"
+    },
+    {
+      "section": "B",
+      "name": "baseline-primary",
+      "ok": true,
+      "detail": "01a05387-fb05-7000-80ce-b5a26af94763"
+    },
+    {
+      "section": "B",
+      "name": "add-additional-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "B",
+      "name": "primary-unchanged-after-add",
+      "ok": true,
+      "detail": "01a05387-fb05-7000-80ce-b5a26af94763"
+    },
+    {
+      "section": "B",
+      "name": "additional-present",
+      "ok": true,
+      "detail": "[{\"categoryId\":\"01a05387-fb05-7000-80ce-b5a26af94763\",\"role\":\"Primary\",\"categoryPath\":\"کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک\"},{\"categoryId\":\"01a05387-daf5-7000-96a7-20cf0550e586\",\"role\":\"Additional\",\"categoryPath\":\"موبایل و تبلت > گوشی موبایل > گوشی هوشمند\"}]"
+    },
+    {
+      "section": "B",
+      "name": "remove-additional-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "B",
+      "name": "primary-unchanged-after-remove",
+      "ok": true,
+      "detail": "01a05387-fb05-7000-80ce-b5a26af94763"
+    },
+    {
+      "section": "B",
+      "name": "additional-gone",
+      "ok": true,
+      "detail": "[{\"categoryId\":\"01a05387-fb05-7000-80ce-b5a26af94763\",\"role\":\"Primary\",\"categoryPath\":\"کالای دیجیتال و گجت‌ها > جانبی گجت > پاوربانک\"}]"
+    },
+    {
+      "section": "B",
+      "name": "restore-delete-temp",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "C",
+      "name": "list-definitions",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "C",
+      "name": "l2-inherits-once",
+      "ok": true,
+      "detail": "count=1"
+    },
+    {
+      "section": "C",
+      "name": "l3-inherits-once",
+      "ok": true,
+      "detail": "count=1"
+    },
+    {
+      "section": "C",
+      "name": "l2-from-l1",
+      "ok": true,
+      "detail": "from=01a05387-f8e1-7000-98d5-4a233c1fa65b"
+    },
+    {
+      "section": "C",
+      "name": "l3-follows-l2-once",
+      "ok": true,
+      "detail": "count=1"
+    },
+    {
+      "section": "C",
+      "name": "l3-follows-l2-flags",
+      "ok": true,
+      "detail": "from=01a05387-fa3a-7000-abb6-28ad252d1111 req=true filt=true"
+    },
+    {
+      "section": "C",
+      "name": "unbind-l2-override",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "C",
+      "name": "fallback-to-l1",
+      "ok": true,
+      "detail": "from=01a05387-f8e1-7000-98d5-4a233c1fa65b"
+    },
+    {
+      "section": "C",
+      "name": "restore-unbind-l1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "D",
+      "name": "plp-power-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "D",
+      "name": "plp-phone-ok",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "D",
+      "name": "brand-facet-on-power",
+      "ok": true,
+      "detail": "brand,demo_attr_mobile_battery,demo_attr_mobile_color,demo_attr_mobile_weight"
+    },
+    {
+      "section": "D",
+      "name": "brand-facet-on-phone",
+      "ok": true,
+      "detail": "brand,demo_attr_mobile_color,demo_attr_mobile_storage,demo_attr_mobile_ram,demo_attr_mobile_screen_size,demo_attr_mobile_five_g"
+    },
+    {
+      "section": "D",
+      "name": "no-foreign-primary-only-on-viewed-category",
+      "ok": true,
+      "detail": "phoneOnlyChecked=demo_attr_mobile_storage,demo_attr_mobile_ram,demo_attr_mobile_screen_size,demo_attr_mobile_five_g"
+    },
+    {
+      "section": "D",
+      "name": "no-power-only-on-phone-plp",
+      "ok": true,
+      "detail": "ok"
+    },
+    {
+      "section": "D",
+      "name": "brand-options-when-products-have-brands",
+      "ok": true,
+      "detail": "skipped: no published PLP products (power=0, phone=0); brand code still present"
+    }
+  ],
+  "bySection": {
+    "BOOT": {
+      "pass": 1,
+      "fail": 0
+    },
+    "A": {
+      "pass": 10,
+      "fail": 0
+    },
+    "B": {
+      "pass": 8,
+      "fail": 0
+    },
+    "C": {
+      "pass": 9,
+      "fail": 0
+    },
+    "D": {
+      "pass": 7,
+      "fail": 0
+    }
+  },
+  "finishedAt": "2026-08-30T20:17:47.334Z",
+  "summary": {
+    "pass": true,
+    "totalChecks": 35,
+    "failed": []
+  }
+}

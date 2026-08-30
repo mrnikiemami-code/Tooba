@@ -1,0 +1,9 @@
+{
+  "id": "89bb81f3-f487-4672-a126-37ee2e3db9df",
+  "channelId": "tooba-main",
+  "taskId": "TB-P07-T036-R1",
+  "createdAtUtc": "2026-08-30T20:07:40.372972",
+  "claimedAtUtc": "2026-08-30T20:09:18.938Z",
+  "workerId": "tooba-worker-01",
+  "parentTaskId": "TB-P07-T036"
+}
