@@ -1,0 +1,86 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T034
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Channel:
+tooba-main
+
+Bridge-UUID:
+32dfcbd9-cc5f-44af-be86-0211f97ddb12
+
+Git-HEAD:
+de5dfcbc552b7b24a14f24cbf29ba161ffbea4b8
+
+USER_VISUAL_ACCEPTED:
+NO
+
+Seed-Counts:
+roots=15; L2=28; L3=73; brands=22; tags=36; attrDefs=41; options=78; bindings=190; facets=117; categoryMedia=247; megaMenu=99; products=283 (range 219–365)
+
+Products:
+3–5 deterministic per L3 via stable hash; slug demo-prod-*; all Draft; Publish never called; Primary=L3 only schema-driving; subset Additional placements
+
+Brand-Distribution:
+domain brand pools; ~10–20% brandless (BrandId=null); no fake No-Brand Brand entity; books/food lean brandless
+
+Localization:
+fa-IR+en name/short/full TipTap-safe HTML for every product
+
+Tags:
+2–5 existing demo-tag-* assignments per product
+
+Attributes:
+required non-variant filled from effective Primary schema; IsVariantAxisAllowed defs never stored on Product
+
+Variants:
+axis subsets where schema supports; default variant + DEMO catalog codes; no Variant Price/Stock
+
+Media:
+exactly 5 DAM images/product (1 primary); domain pool reuse; meaningful AltText; no placeholder GUIDs
+
+SEO-Readiness:
+unique normalized slug; seo title+description fa+en; aggregate readiness IsReady=true
+
+Additional-Categories:
+~18% products get one sibling L3 Additional; Primary remains schema source
+
+Performance:
+batched via ICatalogDirectory; domain media pools; Admin list/query server-paged at 287 rows without client full fetch
+
+Idempotency:
+reset+seed and SeedOnly skip existing normalized slugs; live replay products=283; CatalogDemo tests cover idempotent integrity
+
+Architecture:
+extends CatalogDemoProductSeedService on T033 foundation; Production/opt-in guards unchanged; no Product/Variant Price/Stock; no publish; no T035 work
+
+Validation:
+Host.Tests 351 pass (346+5 CatalogDemo); MigrationRunner 4; FE typecheck/lint/tests/build green; live reset-and-seed 200
+
+Live-Verification:
+Host:5088 FE:3000 Shopeiva:3001; product grid paging OK; sample VIEW details show Draft+Ready+5 media+fa/en SEO across phone/laptop/clothing/appliance/tool/watch/cookware leaves
+
+Evidence:
+docs/evidence/TB-P07-T034/{product-counts,brand-distribution,localization,attributes-variants,media,seo-readiness,idempotency,live-samples,full-validation}.md + live-seed-*.json
+
+Git:
+committed+pushed; HEAD==origin/main=de5dfcbc552b7b24a14f24cbf29ba161ffbea4b8; unrelated dirty preserved
+
+Architectural-Concerns:
+definition.IsVariantAxisAllowed blocks product-level values even when binding is non-axis — matrix bindings adjusted for towers/aio/foundation; leftover 4 non-demo Published products remain outside demo seam
+
+Visual-Concerns:
+none claimed; USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_RESULT
