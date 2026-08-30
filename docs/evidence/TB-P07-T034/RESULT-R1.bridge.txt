@@ -1,4 +1,4 @@
-﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_RESULT
 
@@ -18,7 +18,7 @@ Bridge-UUID:
 7f46ccd5-625c-4382-825d-b86125bbab08
 
 Git-HEAD:
-8d64e289fb3220e8b4506d6be3c688d64f0470e7
+3e431b5f1e280ee7843ac5ab857cdde0194ce2db
 
 USER_VISUAL_ACCEPTED:
 NO
@@ -51,7 +51,7 @@ Live-Verification:
 Host:5088 FE:3000 Shopeiva:3001; status productsPublished=0; grid=283
 
 Git-Reconciliation:
-single tip HEAD==origin/main=8d64e289fb3220e8b4506d6be3c688d64f0470e7; dual-hash ambiguity from T034 RESULT tip-sync resolved for this Result
+single tip HEAD==origin/main=3e431b5f1e280ee7843ac5ab857cdde0194ce2db; dual-hash ambiguity from T034 RESULT tip-sync resolved for this Result
 
 Evidence:
 docs/evidence/TB-P07-T034/{residual-cleanup,final-count-reconciliation,final-idempotency,git-head-reconciliation}.md + live-seed-r1-*.json
