@@ -19,3 +19,10 @@ Updated existing documents (no competing system):
 
 ## Staleness guard
 `docs/ai/recovery-staleness.guard.test.mjs` — repo-local, no Bridge dependency.
+
+
+Final HEAD/origin (TB-P07-T036-R1):
+
+\	ext
+d5598a6ef77a33d4241639d630acdef81b3a3d0d
+\\n

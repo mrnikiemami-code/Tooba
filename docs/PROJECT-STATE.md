@@ -778,3 +778,10 @@ docs/ai/tasks/TB-P05-GOV-MIGRATION-BRIDGE-V2.task.md
 Recorded principle: Seller authorization must bind authenticated actor to Seller Party; requested SellerPartyId is context, never authority.
 
 Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 / T018-R1 = ACCEPTED (publishing lifecycle). TB-P07-T019 = Product History / Audit (`docs/catalog/PRODUCT-HISTORY.md`). TB-P07-T020 = Product Admin visual polish (workspace edit-across-tabs, shell/list/panel tokens; `docs/evidence/TB-P07-T020/`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.
+
+
+Final HEAD/origin (TB-P07-T036-R1):
+
+\	ext
+d5598a6ef77a33d4241639d630acdef81b3a3d0d
+\\n
