@@ -13,7 +13,7 @@ export type VariantRowDraft = {
   isDefault: boolean;
 };
 
-/** پیش‌نویس محورها از حالت سرور. */
+/** پیش‌نویس انتخاب مقادیر ویژگی تنوع از حالت سرور. */
 export function axisDraftFromState(axes: ProductVariantAxisEditorField[]): VariantAxisDraft {
   const next: VariantAxisDraft = {};
   for (const axis of axes) {
@@ -35,7 +35,7 @@ export function rowDraftFromVariants(variants: ProductVariantListItem[]): Record
   return next;
 }
 
-/** آیا انتخاب محورها نسبت به سرور تغییر کرده؟ */
+/** آیا انتخاب مقادیر نسبت به سرور تغییر کرده؟ */
 export function isAxisDraftDirty(
   axes: ProductVariantAxisEditorField[],
   draft: VariantAxisDraft,
@@ -65,7 +65,7 @@ export function isRowDraftDirty(
   return false;
 }
 
-/** payload انتخاب محورها برای preview/apply. */
+/** payload انتخاب ویژگی‌های تنوع برای preview/apply. */
 export function selectedAxesFromDraft(
   axes: ProductVariantAxisEditorField[],
   draft: VariantAxisDraft,
@@ -97,13 +97,13 @@ export function formatVariantStatus(status: string): string {
   }
 }
 
-/** برچسب فارسی عمل پیش‌نمایش. */
+/** برچسب فارسی عمل پیش‌نمایش — بدون اصطلاح reconcile. */
 export function formatPreviewAction(action: ProductVariantCombinationPreview["action"]): string {
   switch (action) {
     case "New":
-      return "جدید";
+      return "ساخته می‌شود";
     case "Deactivate":
-      return "غیرفعال می‌شود";
+      return "بایگانی می‌شود";
     default:
       return "بدون تغییر";
   }

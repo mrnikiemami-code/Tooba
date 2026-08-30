@@ -19,6 +19,8 @@ import {
   type AttributeDraftValue,
 } from "./product-attributes-panel-model.ts";
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
+import { mapAdminErrorMessage } from "./admin-error-map";
+import { resolveAdminChromeLocale } from "./admin-chrome-messages";
 
 export type ProductAttributesPanelMode = "view" | "edit";
 
@@ -46,8 +48,8 @@ function badgeClass(tone: "amber" | "violet" | "slate" | "emerald" | "rose"): st
 }
 
 /**
- * پنل ویژگی‌های محصول Workspace — وابسته به schema مؤثر دسته.
- * محورهای تنوع فقط اطلاع‌رسانی؛ ویرایش ماتریس در تب تنوع‌ها.
+ * پنل ویژگی‌های محصول Workspace — وابسته به دسته اصلی.
+ * ویژگی‌های قابل استفاده برای تنوع فقط اطلاع‌رسانی؛ ویرایش ماتریس در تب تنوع‌ها.
  */
 export function ProductAttributesPanel({
   productId,
@@ -62,6 +64,7 @@ export function ProductAttributesPanel({
   canEdit: boolean;
   mode: ProductAttributesPanelMode;
 }) {
+  const locale = resolveAdminChromeLocale();
   const [state, setState] = useState<ProductAttributeEditorState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +95,7 @@ export function ProductAttributesPanel({
     const result = await getProductAttributeEditorState(productId, "fa-IR");
     setLoading(false);
     if (result.state !== "ok" || !result.data) {
-      setError(result.message ?? "بارگذاری ویژگی‌ها ناموفق بود");
+      setError(mapAdminErrorMessage(result.message, locale));
       setState(null);
       return;
     }
@@ -104,7 +107,7 @@ export function ProductAttributesPanel({
     setDrafts(next);
     setDirty(false);
     setFieldErrors({});
-  }, [productId]);
+  }, [locale, productId]);
 
   useEffect(() => {
     void reload();
@@ -159,7 +162,7 @@ export function ProductAttributesPanel({
     const result = await setProductAttributes(productId, values, "fa-IR");
     setBusy(false);
     if (result.state !== "ok" || !result.data) {
-      setError(result.message ?? "ذخیره ویژگی‌ها ناموفق بود");
+      setError(mapAdminErrorMessage(result.message, locale));
       return;
     }
     setState(result.data);
@@ -184,10 +187,21 @@ export function ProductAttributesPanel({
   return (
     <div className="space-y-4" dir="rtl" data-testid="admin-product-attributes" data-mode={mode}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="max-w-3xl">
           <h2 className="text-base font-semibold text-foreground">ویژگی‌های محصول</h2>
+          <p className="mt-1 text-sm text-slate-600" data-testid="product-attributes-helper">
+            {locale === "en"
+              ? "Attributes are this product’s specifications—like material, weight, or CPU type. They come from the product’s primary category."
+              : "ویژگی‌ها مشخصات این محصول هستند؛ مثل جنس، وزن یا نوع پردازنده. این ویژگی‌ها بر اساس دسته اصلی محصول تعیین می‌شوند."}
+          </p>
           <p className="mt-1 text-xs text-muted" data-testid="product-attributes-category-path">
-            {pathLabel ? `دسته: ${pathLabel}` : "دسته انتخاب شده"}
+            {pathLabel
+              ? locale === "en"
+                ? `From primary category: ${pathLabel}`
+                : `از دسته اصلی محصول: ${pathLabel}`
+              : locale === "en"
+                ? "Primary category"
+                : "دسته اصلی محصول"}
           </p>
         </div>
         {editable ? (
@@ -236,7 +250,7 @@ export function ProductAttributesPanel({
         <>
           <ul className="space-y-3" data-testid="product-attributes-value-list">
             {valueFields.length === 0 ? (
-              <li className="text-sm text-muted" data-testid="product-attributes-empty-schema">
+              <li className="text-sm text-muted" data-testid="product-attributes-empty">
                 <p>برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است.</p>
                 <Link
                   href="/admin/catalog/categories"
@@ -278,13 +292,21 @@ export function ProductAttributesPanel({
               className="rounded-ds border border-dashed border-border p-3"
               data-testid="product-attributes-variant-axes"
             >
-              <p className="text-sm font-medium text-foreground">محورهای تنوع</p>
-              <p className="mt-1 text-xs text-muted">محور تنوع — در تب تنوع‌ها مدیریت می‌شود.</p>
+              <p className="text-sm font-medium text-foreground">
+                {locale === "en" ? "Also usable for variants" : "قابل استفاده برای تنوع"}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                {locale === "en"
+                  ? "Managed in the Variants tab — not edited as plain attributes here."
+                  : "در تب تنوع‌ها مدیریت می‌شود؛ اینجا فقط مشخصات محصول ویرایش می‌شود."}
+              </p>
               <ul className="mt-3 space-y-2">
                 {axisFields.map((field) => (
                   <li key={field.definitionId} className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-medium">{field.localizedName}</span>
-                    <span className={badgeClass("violet")}>محور تنوع</span>
+                    <span className={badgeClass("violet")}>
+                      {locale === "en" ? "Variant-enabled" : "قابل استفاده برای تنوع"}
+                    </span>
                     <span className="text-muted">{valueKindLabel(field.valueKind)}</span>
                   </li>
                 ))}

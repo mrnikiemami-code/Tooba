@@ -143,7 +143,10 @@ test("panel source has VIEW/EDIT typed controls and no Product-local attribute c
   const src = fs.readFileSync(path.join(root, "product-attributes-panel.tsx"), "utf8");
   assert.match(src, /mode:\s*ProductAttributesPanelMode/);
   assert.match(src, /product-attributes-save/);
-  assert.match(src, /محور تنوع/);
+  assert.match(src, /قابل استفاده برای تنوع/);
+  assert.match(src, /product-attributes-helper/);
+  assert.doesNotMatch(src, /محور/);
+  assert.doesNotMatch(src, /schema ویژگی|\bschema\b/);
   assert.match(src, /بله/);
   assert.match(src, /خیر/);
   assert.match(src, /برای این دسته‌بندی هنوز ویژگی‌ای تعریف نشده است/);

@@ -86,6 +86,54 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "تغییر دسته بر ویژگی‌ها یا تنوع‌ها اثر می‌گذارد؛ تأیید صریح لازم است.",
     en: "Changing category affects attributes or variants; explicit confirmation is required.",
   },
+  "catalog.variant.invalid": {
+    fa: "تنظیم تنوع معتبر نیست.",
+    en: "Variant settings are not valid.",
+  },
+  "catalog.variant.preview.invalid": {
+    fa: "پیش‌نمایش تنوع‌ها معتبر نیست.",
+    en: "Variant preview is not valid.",
+  },
+  "catalog.variant.apply.invalid": {
+    fa: "اعمال تنوع‌ها انجام نشد.",
+    en: "Could not apply variant changes.",
+  },
+  "catalog.variant.readiness.invalid": {
+    fa: "وضعیت آمادگی تنوع‌ها معتبر نیست.",
+    en: "Variant readiness is not valid.",
+  },
+  "catalog.variant_axes.invalid": {
+    fa: "ویژگی تنوع انتخاب‌شده معتبر نیست.",
+    en: "The selected variant attribute is not valid.",
+  },
+  "catalog.variant.editor.parse": {
+    fa: "بارگذاری ویرایشگر تنوع‌ها ناموفق بود.",
+    en: "Could not load the variant editor.",
+  },
+  "catalog.variant.preview.parse": {
+    fa: "پیش‌نمایش تنوع‌ها ناموفق بود.",
+    en: "Could not preview variants.",
+  },
+  "catalog.variant.apply.parse": {
+    fa: "ذخیره تنوع‌ها ناموفق بود.",
+    en: "Could not save variants.",
+  },
+  "workspace.variant.axes.missing": {
+    fa: "ویژگی تنوع انتخاب نشده است.",
+    en: "No variant attribute is selected.",
+  },
+  "workspace.variant.create.rejected": {
+    fa: "ساخت تنوع انجام نشد.",
+    en: "Variant creation was rejected.",
+  },
+  "workspace.variant.missing": {
+    fa: "تنوع یافت نشد.",
+    en: "Variant was not found.",
+  },
+  "workspace.variant.status.invalid": {
+    fa: "وضعیت تنوع معتبر نیست.",
+    en: "Variant status is not valid.",
+  },
   "workspace.product.category.assign.rejected": {
     fa: "اختصاص دسته انجام نشد.",
     en: "Category assignment was rejected.",

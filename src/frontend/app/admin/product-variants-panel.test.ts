@@ -63,18 +63,23 @@ test("combination estimate and readable labels", () => {
   );
 });
 
-test("panel source has VIEW/EDIT, preview, impact, no price/stock/AgGrid/raw IDs in labels", () => {
+test("panel source has VIEW/EDIT, guided steps, preview, impact, no price/stock/AgGrid/jargon", () => {
   const src = fs.readFileSync(path.join(root, "product-variants-panel.tsx"), "utf8");
   assert.match(src, /ProductVariantsPanelMode/);
-  assert.match(src, /پیش‌نمایش ترکیب‌ها/);
+  assert.match(src, /پیش‌نمایش تنوع‌ها/);
   assert.match(src, /تنوع پیش‌فرض/);
-  assert.match(src, /ذخیره تنوع‌ها/);
+  assert.match(src, /ساخت تنوع‌ها|به‌روزرسانی تنوع‌ها/);
   assert.match(src, /انصراف/);
-  assert.match(src, /برای این دسته‌بندی ویژگی تنوع تعریف نشده است/);
+  assert.match(src, /برای این دسته هنوز ویژگی قابل استفاده برای تنوع تعریف نشده است/);
   assert.match(src, /بدون قیمت یا موجودی/);
+  assert.match(src, /product-variants-builder/);
+  assert.match(src, /product-variants-step-\$\{n\}/);
+  assert.match(src, /مقادیر قابل انتخاب/);
+  assert.match(src, /product-variants-impact/);
   assert.doesNotMatch(src, /AgGridReact/);
   assert.doesNotMatch(src, /\bPrice\b|\bStock\b/);
-  assert.match(src, /بدون قیمت یا موجودی/);
+  assert.doesNotMatch(src, /محور|Cartesian|Reconcile/);
+  assert.doesNotMatch(src, /schema ویژگی|Schema word/);
   assert.match(src, /formatCombinationLabel/);
 });
 

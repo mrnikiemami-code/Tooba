@@ -380,7 +380,7 @@ function ProductWorkspaceScreenInner({
         const message =
           preview.state === "ok" && preview.data?.messageFa
             ? `${preview.data.messageFa}\n\nتغییر دسته را تأیید می‌کنید؟`
-            : "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به schema را تحت تأثیر قرار دهد. ادامه می‌دهید؟";
+            : "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به دسته را تحت تأثیر قرار دهد. ادامه می‌دهید؟";
         if (!window.confirm(message)) {
           setBusy(false);
           return;
@@ -649,7 +649,19 @@ function ProductWorkspaceScreenInner({
               value={seoReady ? "آماده" : "قابل بهبود"}
               hint={view.seo.seoTitleSeam || view.slug || "عنوان جستجو ناقص"}
             />
-            <Summary label="تنوع‌ها" value={`${view.variants.length} مورد`} />
+            <Summary
+              label="تنوع‌ها"
+              value={
+                view.variants.length === 0
+                  ? "بدون تنوع"
+                  : `${view.variants.length.toLocaleString("fa-IR")} تنوع`
+              }
+              hint={
+                view.variants.length === 0
+                  ? "ویژگی تنوع تعریف نشده یا هنوز ساخته نشده"
+                  : "وضعیت در تب تنوع‌ها"
+              }
+            />
             <Summary
               label="رسانه"
               value={`${view.media.length} مورد`}
@@ -1037,7 +1049,7 @@ function ProductWorkspaceScreenInner({
               <div data-testid="product-attributes-category-required">
                 <p className="font-semibold">دسته لازم است</p>
                 <p className="mt-2 text-sm text-muted">
-                  برای بارگذاری schema ویژگی‌های وابسته به دسته، ابتدا در تب عمومی یک دسته انتخاب و ذخیره کنید.
+                  برای بارگذاری ویژگی‌های وابسته به دسته اصلی، ابتدا در تب عمومی یک دسته انتخاب و ذخیره کنید.
                 </p>
               </div>
             ) : (
@@ -1056,6 +1068,7 @@ function ProductWorkspaceScreenInner({
           <Card data-testid="admin-product-variants">
             <ProductVariantsPanel
               productId={current.productId}
+              categoryId={view.primaryCategoryId}
               canEdit={canMutateCatalog}
               mode={formMode.mode === "edit" ? "edit" : "view"}
             />
