@@ -1,14 +1,17 @@
-# TB-P07-T035 — Product list at scale
+# final-product-list.md — TB-P07-T035
 
-## Live route
-http://127.0.0.1:3000/fa/admin/products — grid totalCount=283
+`USER_VISUAL_ACCEPTED=NO`  
+Screenshots: `screenshots/01-products-grid.png`, `01c-products-grid-paging.png`
 
-## Observed
-- AppDataGrid server paging
-- Columns: operations, media, product, status, category, brand
-- Search/filters/exports + Add Product
-- Draft + بدون برند rows; no Price/Stock
-- Screenshot: screenshots/t035-product-list.png
+## Checks
 
-## Conclusion
-Product list at 283 scale PASS.
+- Route `/fa/admin/products` loads with AppDataGrid (canonical).
+- Columns: عملیات، رسانه، محصول، وضعیت، دسته، برند، تنوع، به‌روزرسانی — **no Price/Stock**.
+- RTL; Draft («پیش‌نویس»); brandless rows show «بدون برند».
+- Paging: ۱ تا ۲۰ از ۲۸۳ (page size selectable).
+- Create CTA → `/admin/products/new`.
+- Media column: after v2 seed, 320×320 patterned primary thumbs (not blank 48px).
+
+## Notes
+
+Prior audit FAIL on gray media cells was **pre-reseed**. Re-verify thumbs post Host restart + reset-and-seed.

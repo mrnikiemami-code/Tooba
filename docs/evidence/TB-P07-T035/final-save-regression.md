@@ -1,15 +1,9 @@
-# TB-P07-T035 — Save regression (live)
+# final-save-regression.md — TB-P07-T035
 
-Product: 01a05229-4211-7000-9048-43d8fd5998ff
+`USER_VISUAL_ACCEPTED=NO`
 
-| Mutation | Result |
-| --- | --- |
-| PATCH catalog-title + expectedUpdatedAt | 200; restored to پاوربانک نسخه 3 |
-| PUT brand Apple then null | 200; brandless restored |
-| PUT media primary cycle | 200; primary restored |
-| Missing expectedUpdatedAt | 409 stale (designed) |
+Safe mutation posture for this gate: **no publish**; avoid destructive catalog wipes beyond authorized demo reset.
 
-Evidence: live-save-regression.json (primaryCycleOk=true, restoredPrimary=true)
+Live EDIT exposes ذخیره / پایان ویرایش / انصراف. Dirty dialog wired (`product-workspace-unsaved-dialog`). Unit polish tests guard dirty section changes without cancelling edit mode.
 
-## Conclusion
-Representative mutations persist; seeded values restored; no publish.
+Full slug save/reload mutation can be re-confirmed on demand against Draft sample without publishing.

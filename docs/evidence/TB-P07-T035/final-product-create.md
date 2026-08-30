@@ -1,11 +1,10 @@
-# TB-P07-T035 — Product create
+# final-product-create.md — TB-P07-T035
 
-## Routes smoke
-- /fa/admin/products/new → HTTP 200
-- /fa/admin/products/create → HTTP 200
+`USER_VISUAL_ACCEPTED=NO`  
+Screenshot: `screenshots/08-product-create.png`
 
-## Policy
-Did NOT publish demo products.
+## Checks
 
-## Conclusion
-Create entry reachable against real foundation; PASS for gate entry.
+- `/fa/admin/products/new` 8-stage wizard reachable.
+- Not published; no Seller/Customer scope started.
+- TipTap rich HTML + `sanitizeProductRichHtml` on create translations.

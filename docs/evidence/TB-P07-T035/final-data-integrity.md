@@ -1,25 +1,30 @@
-# TB-P07-T035 — Final data integrity
+# final-data-integrity.md — TB-P07-T035
 
-## Authoritative live status
-- rootsDemo: 15
-- categoriesDemo/total: 116/116
-- brandsDemo/total: 22/22
-- tagsDemo/total: 36/38
-- productsTotal/Demo: 283/283
-- Draft/Published/Archived: 283/0/0
-- Admin grid totalCount: 283
-- environment: Development; allowResetAndSeed: true
+`USER_VISUAL_ACCEPTED=NO`
 
-## Sample integrity (50 products page 1)
-- media count == 5 and exactly one primary: PASS
-- aggregate readiness Ready: 50/50
-- brandless subset present: yes
+## Live status (`GET /v1/admin/catalog/demo/status`)
 
-## Workspace domain samples
-See live-workspace-samples.json (11 products).
+After polish media reseed (`POST /v1/admin/catalog/demo/reset-and-seed`, ~163s):
 
-## Residual Published
-Published=0; Archived=0; all Draft. T034-R1 cleanup remains effective.
+| Metric | Value |
+|---|---|
+| rootsDemo | 15 |
+| categoriesDemo / Total | 116 / 116 (L1=15, L2=28, L3=73) |
+| brandsDemo / Total | 22 / 22 |
+| tagsDemo / Total | 36 / 38 (2 non-demo residual tags tolerated; demo seam = 36) |
+| attributesDemo | 41 |
+| productsTotal / Demo / Draft | 283 / 283 / 283 |
+| productsPublished | 0 |
+| productsArchived | 0 |
+| allowResetAndSeed | true |
+| environment | Development |
 
-## Conclusion
-Data integrity PASS for accepted demo contract.
+## Grid
+
+`POST /v1/admin/products/query` → `totalCount=283`. UI paging shows «از ۲۸۳».
+
+## Architecture locks (spot)
+
+- Product response exposes empty `prices`/`stock` envelopes; no Product.Price/Stock columns in Admin grid.
+- Brandless products use null brand → UI «بدون برند» (no fake No-Brand entity).
+- Media: exactly 5 per sampled product, one Primary (API + UI «۵ مورد / آماده»).

@@ -1,15 +1,10 @@
-# TB-P07-T035 — Category Admin
+# final-category-admin.md — TB-P07-T035
 
-## Live route
-http://127.0.0.1:3000/fa/admin/catalog/categories (HTTP 200)
+`USER_VISUAL_ACCEPTED=NO`  
+Screenshots: `screenshots/06-categories-tree.png`, `07-category-workspace.png`
 
-## Observed
-- Realistic L1 roots tree with Published badges
-- Search + New Category CTA + expand/add/more actions
-- Screenshot: screenshots/t035-category-admin.png
+## Checks
 
-## Notes
-/fa/admin/categories returns 404; canonical path is /fa/admin/catalog/categories.
-
-## Conclusion
-Category Admin with real foundation data is commercially usable; no stub copy on tree surface.
+- Correct route: `/fa/admin/catalog/categories` (not `/fa/admin/categories`).
+- Tree + workspace tabs: ترجمه‌ها / ویژگی‌ها / فیلترها / مگامنو / محصولات reachable.
+- Demo names realistic (`demo-cat-*` seam); 15/28/73 structure intact after reseed.

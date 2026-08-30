@@ -1,14 +1,8 @@
-# TB-P07-T035 — Brand + Tags + Home
+# final-brand-tags.md — TB-P07-T035
 
-## Admin
-- Grid/workspace show brands and بدون برند
-- Tag chips localized; no raw GUIDs in normal UX
-- Brand set/unset API works
+`USER_VISUAL_ACCEPTED=NO`
 
-## Home
-- Shopeiva :3001 HTTP 200
-- Draft demo titles do not leak into home HTML
-- Products remain Draft (Published-only storefront contract)
-
-## Conclusion
-Brand optionality + tags + Home draft isolation PASS.
+- Brands: 22 demo; brandless products use null → «بدون برند» (no fake brand entity).
+- Product tags: 2–5 per product (sampled: جمع‌وجور / بادوام / دوستدار محیط زیست).
+- tagsDemo=36; tagsTotal=38 (2 non-demo residuals).
+- Shopeiva Popular Brands: real brand names only; no blank / بدون برند / Draft title leak (`screenshots/09-shopeiva-home*.png`).

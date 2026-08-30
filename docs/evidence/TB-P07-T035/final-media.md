@@ -1,8 +1,17 @@
-# TB-P07-T035 — Media
+# final-media.md — TB-P07-T035
 
-- Sampled products: exactly 5 media + one primary
-- Admin uses /v1/storefront/media/{assetId}; images load in VIEW
-- Primary set/restore API works
+`USER_VISUAL_ACCEPTED=NO`
 
-## Conclusion
-Seeded media E2E PASS.
+## Seed media polish
+
+`CatalogDemoMediaFactory` now emits patterned RGB PNGs up to 320×320 (`*-v2.png`), with fixed IDAT chunk writer (no 4KB payload cap). Reset removes `demo-media-*` then reseeds.
+
+## Live proof
+
+- Sample primary asset length ~24KB, decode **320×320**.
+- Admin VIEW/EDIT `<img naturalWidth/Height=320>`.
+- Exactly 5 media / product, one Primary.
+
+## Policy
+
+Catalog does not store binaries; Media DAM owns bytes. Demo images are generated placeholders (not stock photography). Commercial density improved vs prior solid 48×48 gray tiles.

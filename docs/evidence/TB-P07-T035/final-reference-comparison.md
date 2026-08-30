@@ -1,13 +1,25 @@
-# TB-P07-T035 — Locked Product reference comparison
+# final-reference-comparison.md — TB-P07-T035
 
-## Reference
-`D:\Users\User\source\repos\SarvNewVerRequirment\reference\Image\ChatGPT Image Aug 29, 2026, 06_33_46 PM.png`
+`USER_VISUAL_ACCEPTED=NO`  
+Locked reference: `D:\Users\User\source\repos\SarvNewVerRequirment\reference\Image\ChatGPT Image Aug 29, 2026, 06_33_46 PM.png`
 
-## Live
-Populated Draft Product VIEW/EDIT on :3000 with readiness cards, tabs, gallery, brand/tags, sticky edit actions.
+## Closed incomplete-UX mismatches (were material)
 
-## Note
-Reference mock illustrative counts (extra locale / media) differ from locked Catalog contracts (fa+en, 5 media). Live composition matches accepted Admin Product Workspace commercial standard.
+| Issue | Status |
+|---|---|
+| Raw HTML in description | Fixed |
+| `no-active-offer` code leak | Fixed |
+| Raw ISO timestamps in feed | Fixed |
+| «اجازه نیست» on intentional VIEW | Fixed |
+| Blank/tiny gray media tiles | Fixed → 320 patterned |
 
-## Required statement
-remaining material visual mismatch: none
+## Non-material / policy distance
+
+| Topic | Assessment |
+|---|---|
+| Photographic beanie gallery vs generated demo PNG | Demo DAM placeholders by architecture; not a stub/error |
+| Locale title/description on Translations tab | Intentional Product model |
+| Admin chrome vs reference marketing chrome | Shell evolution; not Product workspace defect |
+| Commercial warning badges on Draft without Offer | Truthful Product≠Offer |
+
+**remaining material visual mismatch: none** (incomplete/stub/error class cleared; photographic demo policy noted above).

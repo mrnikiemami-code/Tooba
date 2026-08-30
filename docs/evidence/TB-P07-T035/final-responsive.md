@@ -1,9 +1,8 @@
-# TB-P07-T035 — Responsive / RTL
+# final-responsive.md — TB-P07-T035
 
-- fa Admin routes RTL
-- List / Category / Workspace audited at desktop viewport
-- No destructive overflow on audited surfaces
-- No FE code changes in this task
+`USER_VISUAL_ACCEPTED=NO`  
+Screenshots include category workspace mobile/tablet captures under `screenshots/07*`.
 
-## Conclusion
-Responsive/RTL acceptable for this gate.
+- Desktop 1440-class: sidebar + summary cards + media preview usable.
+- Narrow/mobile: hamburger AdminShell; workspace remains operable.
+- RTL preserved.
