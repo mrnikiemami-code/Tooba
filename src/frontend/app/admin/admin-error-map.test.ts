@@ -35,6 +35,16 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
     mapAdminErrorMessage("host-unreachable", "fa"),
     "اتصال به سرویس برقرار نیست. لطفاً دوباره تلاش کنید.",
   );
+  assert.equal(
+    mapAdminErrorMessage("media.type.unsupported", "fa"),
+    "نوع فایل رسانه پشتیبانی نمی‌شود. فقط تصویر JPEG، PNG، WebP یا GIF مجاز است.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("media.too_large", "en"),
+    "The file exceeds the allowed size limit.",
+  );
+  assert.ok(listMappedAdminErrorCodes().includes("media.missing"));
+  assert.ok(listMappedAdminErrorCodes().includes("media.storage.unavailable"));
 });
 
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {

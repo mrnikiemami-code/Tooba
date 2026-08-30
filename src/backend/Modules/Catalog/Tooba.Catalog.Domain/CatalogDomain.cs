@@ -143,6 +143,11 @@ public sealed class CatalogCategory
     public Guid? IconMediaAssetId { get; set; }
 
     /// <summary>
+    /// مرجع مات بنر رده در Media؛ مالکیت باینری اینجا نیست.
+    /// </summary>
+    public Guid? BannerMediaAssetId { get; set; }
+
+    /// <summary>
     /// زمان ایجاد.
     /// </summary>
     public DateTimeOffset CreatedAt { get; init; }
@@ -215,8 +220,10 @@ public sealed class CatalogCategory
         bool? isVisible,
         Guid? imageMediaAssetId,
         Guid? iconMediaAssetId,
+        Guid? bannerMediaAssetId,
         bool clearImage,
         bool clearIcon,
+        bool clearBanner,
         DateTimeOffset now)
     {
         if (status is { } s)
@@ -250,6 +257,15 @@ public sealed class CatalogCategory
         else if (iconMediaAssetId is { } icon)
         {
             IconMediaAssetId = icon;
+        }
+
+        if (clearBanner)
+        {
+            BannerMediaAssetId = null;
+        }
+        else if (bannerMediaAssetId is { } banner)
+        {
+            BannerMediaAssetId = banner;
         }
 
         UpdatedAt = now;

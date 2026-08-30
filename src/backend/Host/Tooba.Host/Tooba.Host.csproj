@@ -45,6 +45,7 @@
     <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Application\Tooba.OperatorProfile.Application.csproj" />
     <ProjectReference Include="..\..\Modules\OperatorProfile\Tooba.OperatorProfile.Infrastructure\Tooba.OperatorProfile.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Content\Tooba.Content.Infrastructure\Tooba.Content.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Media\Tooba.Media.Infrastructure\Tooba.Media.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\PageComposition\Tooba.PageComposition.Infrastructure\Tooba.PageComposition.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Story\Tooba.Story.Infrastructure\Tooba.Story.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Payment\Tooba.Payment.Infrastructure\Tooba.Payment.Infrastructure.csproj" />

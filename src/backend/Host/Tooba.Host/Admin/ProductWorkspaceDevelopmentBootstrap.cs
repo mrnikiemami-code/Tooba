@@ -36,6 +36,7 @@ using Tooba.UserPreference.Infrastructure.Persistence;
 using Tooba.OperatorProfile.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Media.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using global::Tooba.Story.Infrastructure;
@@ -104,6 +105,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<UserPreferenceDbContext>());
         await MigrateAsync(provider.GetRequiredService<OperatorProfileDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
+        await MigrateAsync(provider.GetRequiredService<MediaDbContext>());
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
         await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());

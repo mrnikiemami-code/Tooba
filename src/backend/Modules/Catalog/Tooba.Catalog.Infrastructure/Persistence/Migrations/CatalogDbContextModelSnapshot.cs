@@ -185,6 +185,10 @@ namespace Tooba.Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("icon_media_asset_id");
 
+                    b.Property<Guid?>("BannerMediaAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("banner_media_asset_id");
+
                     b.Property<Guid?>("ImageMediaAssetId")
                         .HasColumnType("uuid")
                         .HasColumnName("image_media_asset_id");

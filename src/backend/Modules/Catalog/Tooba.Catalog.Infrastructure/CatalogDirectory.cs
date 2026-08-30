@@ -309,7 +309,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 CatalogCategorySlugNormalizer.SlugifyFromName(p.Value)))
             .ToList();
         return await CreateCategoryAsync(
-            new CategoryCreateRequest(parentCategoryId, sortOrder, true, null, null, translations),
+            new CategoryCreateRequest(parentCategoryId, sortOrder, true, null, null, null, translations),
             cancellationToken);
     }
 
@@ -338,6 +338,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             request.IsVisible);
         category.ImageMediaAssetId = request.ImageMediaAssetId;
         category.IconMediaAssetId = request.IconMediaAssetId;
+        category.BannerMediaAssetId = request.BannerMediaAssetId;
         _db.Categories.Add(category);
 
         var nameDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -379,8 +380,10 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             request.IsVisible,
             request.ImageMediaAssetId,
             request.IconMediaAssetId,
+            request.BannerMediaAssetId,
             request.ClearImage,
             request.ClearIcon,
+            request.ClearBanner,
             DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
     }
@@ -621,6 +624,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             category.IsVisible,
             category.ImageMediaAssetId,
             category.IconMediaAssetId,
+            category.BannerMediaAssetId,
             category.CreatedAt,
             category.UpdatedAt,
             translations.Select(ToTranslationDto).ToList());

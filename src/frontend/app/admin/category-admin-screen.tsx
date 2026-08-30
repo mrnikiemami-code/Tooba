@@ -46,6 +46,9 @@ import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
 import { CategoryFacetsPanel } from "./category-facets-panel.tsx";
 import { CategoryMegaMenuPanel } from "./category-mega-menu-panel.tsx";
 import { CategoryProductsPanel } from "./category-products-panel.tsx";
+import { MediaLibraryDialog } from "./media-library-dialog.tsx";
+import { mediaPreviewUrl, type MediaAssetDto } from "./media-api.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
 
 const API_LOCALE = "fa-IR";
 
@@ -323,24 +326,185 @@ function readinessChipClass(readiness: TranslationReadiness): string {
   return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
 }
 
-/** وضعیت رسانهٔ رده — فقط خواندنی؛ picker تا زیرساخت Media آماده نشود در UI عادی نیست. */
-function MediaStatusCard({
+/** اسلات رسانهٔ دسته — انتخاب/آپلود/حذف ارجاع بدون نمایش Guid خام. */
+function CategoryMediaField({
   label,
-  connected,
+  role,
+  mediaAssetId,
+  editable,
+  busy,
+  onSelect,
+  onClear,
 }: {
   label: string;
-  connected: boolean;
+  role: "image" | "icon" | "banner";
+  mediaAssetId: string | null;
+  editable: boolean;
+  busy: boolean;
+  onSelect: () => void;
+  onClear: () => void;
 }) {
+  const preview = mediaPreviewUrl(mediaAssetId);
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4" data-testid={`category-media-${label}`}>
+    <div
+      className="rounded-2xl border border-gray-200 bg-white p-4"
+      data-testid={`category-media-${role}`}
+    >
       <div className="text-xs font-medium text-slate-500">{label}</div>
       <div
-        className="mt-3 flex h-28 flex-col items-center justify-center gap-1 rounded-xl border border-gray-100 bg-slate-50 text-sm text-slate-600"
-        data-testid={`category-media-status-${label}`}
+        className="mt-3 flex min-h-28 flex-col items-center justify-center gap-2 rounded-xl border border-gray-100 bg-slate-50 p-3 text-sm text-slate-600"
+        data-testid={`category-media-status-${role}`}
       >
-        <span>{connected ? `${label} متصل است` : `هنوز ${label}ی تنظیم نشده`}</span>
+        {preview ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={preview}
+              alt={label}
+              className="max-h-24 w-full object-contain"
+              data-testid={`category-media-preview-${role}`}
+            />
+            <span>{label} متصل است</span>
+          </>
+        ) : (
+          <span>{`هنوز ${label}ی تنظیم نشده`}</span>
+        )}
       </div>
+      {editable ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            className="min-h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+            onClick={onSelect}
+            data-testid={`category-media-select-${role}`}
+          >
+            {mediaAssetId ? "تغییر" : "انتخاب / آپلود"}
+          </button>
+          {mediaAssetId ? (
+            <button
+              type="button"
+              disabled={busy}
+              className="min-h-10 rounded-xl border border-red-200 px-3 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+              onClick={onClear}
+              data-testid={`category-media-clear-${role}`}
+            >
+              حذف ارجاع
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+type CategoryMediaRole = "image" | "icon" | "banner";
+
+function CategoryMediaSection({
+  workspace,
+  editable,
+  onWorkspaceChange,
+}: {
+  workspace: CategoryWorkspaceSummary;
+  editable: boolean;
+  onWorkspaceChange: (next: CategoryWorkspaceSummary) => void;
+}) {
+  const [pickerRole, setPickerRole] = useState<CategoryMediaRole | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function assign(role: CategoryMediaRole, asset: MediaAssetDto) {
+    setBusy(true);
+    const patch =
+      role === "image"
+        ? { imageMediaAssetId: asset.mediaAssetId }
+        : role === "icon"
+          ? { iconMediaAssetId: asset.mediaAssetId }
+          : { bannerMediaAssetId: asset.mediaAssetId };
+    const result = await updateCategoryCore(workspace.categoryId, {
+      ...patch,
+      expectedUpdatedAt: workspace.updatedAt,
+    });
+    setBusy(false);
+    if (result.state !== "ok" || !result.data) {
+      toast.error(mapCategoryMutationError(result));
+      return;
+    }
+    onWorkspaceChange(result.data);
+    setPickerRole(null);
+    toast.success("رسانهٔ دسته به‌روز شد");
+  }
+
+  async function clear(role: CategoryMediaRole) {
+    setBusy(true);
+    const patch =
+      role === "image"
+        ? { clearImage: true }
+        : role === "icon"
+          ? { clearIcon: true }
+          : { clearBanner: true };
+    const result = await updateCategoryCore(workspace.categoryId, {
+      ...patch,
+      expectedUpdatedAt: workspace.updatedAt,
+    });
+    setBusy(false);
+    if (result.state !== "ok" || !result.data) {
+      toast.error(mapAdminErrorMessage(result.message ?? "host-unreachable", "fa"));
+      return;
+    }
+    onWorkspaceChange(result.data);
+    toast.success("ارجاع رسانه برداشته شد");
+  }
+
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-3" data-testid="category-media-section">
+        <CategoryMediaField
+          label="تصویر"
+          role="image"
+          mediaAssetId={workspace.imageMediaAssetId}
+          editable={editable}
+          busy={busy}
+          onSelect={() => setPickerRole("image")}
+          onClear={() => void clear("image")}
+        />
+        <CategoryMediaField
+          label="آیکن"
+          role="icon"
+          mediaAssetId={workspace.iconMediaAssetId}
+          editable={editable}
+          busy={busy}
+          onSelect={() => setPickerRole("icon")}
+          onClear={() => void clear("icon")}
+        />
+        <CategoryMediaField
+          label="بنر"
+          role="banner"
+          mediaAssetId={workspace.bannerMediaAssetId}
+          editable={editable}
+          busy={busy}
+          onSelect={() => setPickerRole("banner")}
+          onClear={() => void clear("banner")}
+        />
+      </div>
+      <MediaLibraryDialog
+        open={pickerRole != null}
+        title={
+          pickerRole === "icon"
+            ? "انتخاب آیکن دسته"
+            : pickerRole === "banner"
+              ? "انتخاب بنر دسته"
+              : "انتخاب تصویر دسته"
+        }
+        selectionMode="single"
+        onClose={() => {
+          if (!busy) setPickerRole(null);
+        }}
+        onConfirm={async (assets) => {
+          if (!pickerRole || !assets[0]) return;
+          await assign(pickerRole, assets[0]);
+        }}
+      />
+    </>
   );
 }
 
@@ -461,6 +625,8 @@ function GeneralViewSummary({
   activeLocaleName,
   activeLocaleSlug,
   translationStatuses,
+  canEditMedia,
+  onWorkspaceChange,
 }: {
   workspace: CategoryWorkspaceSummary;
   parentName: string;
@@ -470,6 +636,8 @@ function GeneralViewSummary({
   activeLocaleName: string;
   activeLocaleSlug: string;
   translationStatuses: LocaleTranslationStatus[];
+  canEditMedia: boolean;
+  onWorkspaceChange: (next: CategoryWorkspaceSummary) => void;
 }) {
   const completeCount = translationStatuses.filter((c) => c.readiness === "complete").length;
 
@@ -513,10 +681,11 @@ function GeneralViewSummary({
         </ul>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MediaStatusCard label="تصویر" connected={Boolean(workspace.imageMediaAssetId)} />
-        <MediaStatusCard label="آیکن" connected={Boolean(workspace.iconMediaAssetId)} />
-      </div>
+      <CategoryMediaSection
+        workspace={workspace}
+        editable={canEditMedia}
+        onWorkspaceChange={onWorkspaceChange}
+      />
     </div>
   );
 }
@@ -529,8 +698,8 @@ function GeneralEditForm({
   onChange,
   onSave,
   onCancel,
-  imageConnected,
-  iconConnected,
+  workspace,
+  onWorkspaceChange,
 }: {
   draft: GeneralDraft;
   fieldError: string | null;
@@ -539,8 +708,8 @@ function GeneralEditForm({
   onChange: (next: GeneralDraft) => void;
   onSave: () => void;
   onCancel: () => void;
-  imageConnected: boolean;
-  iconConnected: boolean;
+  workspace: CategoryWorkspaceSummary;
+  onWorkspaceChange: (next: CategoryWorkspaceSummary) => void;
 }) {
   const preview = draft.slug.trim()
     ? buildStorefrontCategoryRoute("fa", draft.slug.trim())
@@ -641,10 +810,11 @@ function GeneralEditForm({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MediaStatusCard label="تصویر" connected={imageConnected} />
-        <MediaStatusCard label="آیکن" connected={iconConnected} />
-      </div>
+      <CategoryMediaSection
+        workspace={workspace}
+        editable
+        onWorkspaceChange={onWorkspaceChange}
+      />
 
       <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 bg-white/95 py-4 backdrop-blur">
         <button
@@ -1672,8 +1842,8 @@ export function CategoryAdminScreen() {
                       fieldError={slugFieldError}
                       parentOptions={parentOptions}
                       busy={saveBusy}
-                      imageConnected={Boolean(workspace.imageMediaAssetId)}
-                      iconConnected={Boolean(workspace.iconMediaAssetId)}
+                      workspace={workspace}
+                      onWorkspaceChange={setWorkspace}
                       onChange={(next) => {
                         setDraft(next);
                         formMode.markDirty();
@@ -1692,6 +1862,8 @@ export function CategoryAdminScreen() {
                       activeLocaleName={activeTranslation?.name || selectedNode?.name || ""}
                       activeLocaleSlug={activeTranslation?.slug || selectedNode?.slug || ""}
                       translationStatuses={translationStatuses}
+                      canEditMedia={formMode.canEdit}
+                      onWorkspaceChange={setWorkspace}
                     />
                   )
                 ) : null}

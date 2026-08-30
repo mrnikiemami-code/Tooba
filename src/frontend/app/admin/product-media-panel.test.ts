@@ -68,17 +68,21 @@ test("readiness and count labels are Persian", () => {
   );
 });
 
-test("panel source has VIEW/EDIT, تصویر اصلی, placeholder add, no AgGrid/Price/Stock", () => {
+test("panel source opens real Media Library — no placeholder/fake attach", () => {
   const src = fs.readFileSync(path.join(root, "product-media-panel.tsx"), "utf8");
   assert.match(src, /ProductMediaPanelMode/);
   assert.match(src, /تصویر اصلی/);
-  assert.match(src, /افزودن تصویر نمایشی/);
+  assert.match(src, /افزودن رسانه/);
+  assert.match(src, /MediaLibraryDialog/);
+  assert.match(src, /admin-product-media-open-library/);
   assert.match(src, /حذف از محصول/);
   assert.match(src, /aria-label="جابه‌جایی به بالا در گالری"/);
   assert.match(src, /admin-product-media-thumbs/);
   assert.match(src, /editable/);
   assert.doesNotMatch(src, /AgGridReact/);
   assert.doesNotMatch(src, /\bPrice\b|\bStock\b/);
+  assert.doesNotMatch(src, /attachAdminProductPlaceholderMedia/);
+  assert.doesNotMatch(src, /افزودن تصویر نمایشی/);
   assert.match(src, /کتابخانهٔ Media/);
 });
 

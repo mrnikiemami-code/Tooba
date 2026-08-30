@@ -89,14 +89,21 @@ test("parent selector is searchable path/name without raw ID labels", () => {
   assert.equal(screen.includes("option value={opt.id"), false);
 });
 
-test("media is read-only status only — no به‌زودی picker CTA", () => {
+test("category media supports real library select/upload/unassign for image/icon/banner", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
-  assert.match(screen, /MediaStatusCard/);
+  const dialog = fs.readFileSync(path.join(path.dirname(screenPath), "media-library-dialog.tsx"), "utf8");
+  assert.match(screen, /CategoryMediaSection/);
+  assert.match(screen, /MediaLibraryDialog/);
+  assert.match(screen, /category-media-select-\$\{role\}/);
+  assert.match(screen, /role:\s*"image"\s*\|\s*"icon"\s*\|\s*"banner"/);
+  assert.match(screen, /حذف ارجاع/);
+  assert.match(screen, /clearBanner/);
+  assert.equal(screen.includes("MediaStatusCard"), false);
   assert.equal(screen.includes("MediaPlaceholder"), false);
   assert.equal(screen.includes("انتخاب رسانه — به‌زودی"), false);
   assert.equal(screen.includes("به‌زودی"), false);
-  assert.equal(screen.includes("type=\"file\""), false);
-  assert.equal(screen.includes("FormData"), false);
+  assert.match(dialog, /type=\"file\"/);
+  assert.match(dialog, /uploadAdminMediaFiles/);
 });
 
 test("permission-aware edit action gated by canEdit", () => {

@@ -190,6 +190,26 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "شناسه فروشنده مشخص نیست.",
     en: "Seller identity is missing.",
   },
+  "media.type.unsupported": {
+    fa: "نوع فایل رسانه پشتیبانی نمی‌شود. فقط تصویر JPEG، PNG، WebP یا GIF مجاز است.",
+    en: "This media file type is not supported. Only JPEG, PNG, WebP, or GIF images are allowed.",
+  },
+  "media.too_large": {
+    fa: "حجم فایل از سقف مجاز بیشتر است.",
+    en: "The file exceeds the allowed size limit.",
+  },
+  "media.upload.failed": {
+    fa: "بارگذاری رسانه ناموفق بود. لطفاً دوباره تلاش کنید.",
+    en: "Media upload failed. Please try again.",
+  },
+  "media.missing": {
+    fa: "رسانه یافت نشد.",
+    en: "Media was not found.",
+  },
+  "media.storage.unavailable": {
+    fa: "ذخیره‌سازی رسانه در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.",
+    en: "Media storage is unavailable. Please try again later.",
+  },
 };
 
 const TECHNICAL_UI_PATTERNS = [

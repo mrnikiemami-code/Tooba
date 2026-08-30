@@ -20,6 +20,7 @@ using Tooba.CustomerProfile.Infrastructure;
 using Tooba.UserPreference.Infrastructure;
 using Tooba.OperatorProfile.Infrastructure;
 using Tooba.Content.Infrastructure;
+using Tooba.Media.Infrastructure;
 using Tooba.PageComposition.Infrastructure;
 using global::Tooba.Story.Infrastructure;
 using Tooba.Fulfillment.Infrastructure;
@@ -63,6 +64,7 @@ internal static class ToobaModuleComposition
         new UserPreferenceModule(),
         new OperatorProfileModule(),
         new ContentModule(),
+        new MediaModule(),
         new PageCompositionModule(),
         new StoryModule(),
         new PaymentModule(),

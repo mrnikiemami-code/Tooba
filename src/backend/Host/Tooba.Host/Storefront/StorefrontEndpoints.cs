@@ -168,19 +168,17 @@ public static class StorefrontEndpoints
     }
 
     /// <summary>
-    /// تصویر نمایشی توسعه برای مرجع مات Media. URL دارایی حقیقت کسب‌وکار Product نیست.
+    /// تصویر نمایشی توسعه برای مرجع مات Media؛ در صورت وجود دارایی واقعی بایت‌ها سرو می‌شوند.
     /// </summary>
-    private static IResult GetPresentationMediaAsync(Guid assetId)
+    private static async Task<IResult> GetPresentationMediaAsync(
+        Guid assetId,
+        Tooba.Media.Application.IMediaDirectory directory,
+        Tooba.Media.Application.IMediaObjectStore store,
+        CancellationToken cancellationToken)
     {
-        var hue = Math.Abs(assetId.GetHashCode()) % 40 + 200;
-        var svg =
-            $"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 640\" role=\"img\" aria-label=\"نمایش موقت رسانه\">" +
-            $"<defs><linearGradient id=\"g\" x1=\"0\" x2=\"1\"><stop offset=\"0\" stop-color=\"hsl({hue},70%,46%)\"/>" +
-            $"<stop offset=\"1\" stop-color=\"hsl({hue + 20},62%,38%)\"/></linearGradient></defs>" +
-            $"<rect width=\"640\" height=\"640\" rx=\"28\" fill=\"url(#g)\"/>" +
-            $"<text x=\"320\" y=\"330\" text-anchor=\"middle\" fill=\"white\" font-size=\"36\" font-family=\"Tahoma\">Tooba</text>" +
-            $"</svg>";
-        return Results.Text(svg, "image/svg+xml; charset=utf-8");
+        var served = await Tooba.Host.Media.MediaEndpoints.TryServeStoredMediaAsync(
+            assetId, directory, store, cancellationToken);
+        return served ?? Tooba.Host.Media.MediaEndpoints.PlaceholderSvg(assetId);
     }
 
     private static Task<IResult> CreateGuestCartAsync(StorefrontCartComposer composer, CancellationToken cancellationToken)

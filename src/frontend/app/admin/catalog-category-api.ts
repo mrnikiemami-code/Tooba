@@ -41,6 +41,7 @@ export interface CategoryWorkspaceSummary {
   isVisible: boolean;
   imageMediaAssetId: string | null;
   iconMediaAssetId: string | null;
+  bannerMediaAssetId: string | null;
   createdAt: string;
   updatedAt: string;
   translations: CategoryTranslationDto[];
@@ -71,8 +72,10 @@ export interface UpdateCategoryCoreInput {
   isVisible?: boolean | null;
   imageMediaAssetId?: string | null;
   iconMediaAssetId?: string | null;
+  bannerMediaAssetId?: string | null;
   clearImage?: boolean;
   clearIcon?: boolean;
+  clearBanner?: boolean;
   expectedUpdatedAt?: string | null;
 }
 
@@ -299,6 +302,7 @@ export function mapCategoryWorkspace(payload: unknown): CategoryWorkspaceSummary
     isVisible: bool(prop(item, "isVisible", "IsVisible"), true),
     imageMediaAssetId: guidOrNull(prop(item, "imageMediaAssetId", "ImageMediaAssetId")),
     iconMediaAssetId: guidOrNull(prop(item, "iconMediaAssetId", "IconMediaAssetId")),
+    bannerMediaAssetId: guidOrNull(prop(item, "bannerMediaAssetId", "BannerMediaAssetId")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
     translations,
@@ -344,6 +348,7 @@ export async function createCategory(
     isVisible: input.isVisible ?? true,
     imageMediaAssetId: null,
     iconMediaAssetId: null,
+    bannerMediaAssetId: null,
     translations: [
       {
         locale: input.locale,
@@ -435,8 +440,10 @@ export async function updateCategoryCore(
     isVisible: input.isVisible ?? null,
     imageMediaAssetId: input.imageMediaAssetId ?? null,
     iconMediaAssetId: input.iconMediaAssetId ?? null,
+    bannerMediaAssetId: input.bannerMediaAssetId ?? null,
     clearImage: input.clearImage ?? false,
     clearIcon: input.clearIcon ?? false,
+    clearBanner: input.clearBanner ?? false,
     expectedUpdatedAt: input.expectedUpdatedAt ?? null,
   });
   if (response.state !== "ok") {

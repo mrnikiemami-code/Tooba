@@ -62,6 +62,7 @@ public sealed class CatalogCategoryFoundationTests : IAsyncLifetime
         Assert.Contains("IsVisible", names);
         Assert.Contains("ImageMediaAssetId", names);
         Assert.Contains("IconMediaAssetId", names);
+        Assert.Contains("BannerMediaAssetId", names);
     }
 
     [Fact]

@@ -1132,6 +1132,7 @@ public sealed record CategoryWorkspaceSummaryDto(
     bool IsVisible,
     Guid? ImageMediaAssetId,
     Guid? IconMediaAssetId,
+    Guid? BannerMediaAssetId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     IReadOnlyList<CategoryTranslationDto> Translations);
@@ -1151,6 +1152,7 @@ public sealed record CategoryCreateRequest(
     bool IsVisible,
     Guid? ImageMediaAssetId,
     Guid? IconMediaAssetId,
+    Guid? BannerMediaAssetId,
     IReadOnlyList<CategoryTranslationUpsertRequest> Translations);
 
 /// <summary>به‌روزرسانی هستهٔ غیرمحلی.</summary>
@@ -1160,8 +1162,10 @@ public sealed record CategoryCoreUpdateRequest(
     bool? IsVisible,
     Guid? ImageMediaAssetId,
     Guid? IconMediaAssetId,
+    Guid? BannerMediaAssetId = null,
     bool ClearImage = false,
     bool ClearIcon = false,
+    bool ClearBanner = false,
     DateTimeOffset? ExpectedUpdatedAt = null);
 
 /// <summary>درج/به‌روزرسانی ترجمهٔ یک locale.</summary>

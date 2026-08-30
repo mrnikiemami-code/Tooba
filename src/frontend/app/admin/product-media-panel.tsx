@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   attachAdminProductMedia,
-  attachAdminProductPlaceholderMedia,
   getAdminProductMediaReadiness,
   listAdminProductMedia,
   patchAdminProductMediaAlt,
@@ -24,6 +23,9 @@ import {
 } from "./product-media-panel-model.ts";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 import { useProductWorkspaceDirtyRegistration } from "./product-workspace-dirty-context";
+import { MediaLibraryDialog } from "./media-library-dialog.tsx";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import type { MediaAssetDto } from "./media-api.ts";
 
 export type ProductMediaPanelMode = "view" | "edit";
 
@@ -45,7 +47,7 @@ export function ProductMediaPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [advancedAssetId, setAdvancedAssetId] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const editable = canEdit && mode === "edit";
@@ -122,30 +124,25 @@ export function ProductMediaPanel({
     return { ok: true, media: normalizeMediaItems(result.media) };
   }
 
-  async function onAddPlaceholder() {
+  async function onLibraryConfirm(assets: MediaAssetDto[]) {
     if (!editable || busy) return;
     setBusy(true);
     setError(null);
-    const result = await attachAdminProductPlaceholderMedia(productId);
-    setBusy(false);
-    await refreshAfterMutation(toMutationResult(result));
-  }
-
-  async function onAdvancedAttach() {
-    if (!editable || busy) return;
-    const assetId = advancedAssetId.trim();
-    if (!assetId) {
-      setError("شناسهٔ دارایی برای مسیر پیشرفته لازم است");
-      return;
+    let lastOk: { ok: true; media: ProductMediaItem[] } | null = null;
+    for (const asset of assets) {
+      if (items.some((row) => row.mediaAssetId === asset.mediaAssetId)) continue;
+      const result = toMutationResult(await attachAdminProductMedia(productId, asset.mediaAssetId));
+      if (!result.ok) {
+        setBusy(false);
+        setError(mapAdminErrorMessage(result.message, "fa"));
+        return;
+      }
+      lastOk = result;
     }
-    setBusy(true);
-    setError(null);
-    const result = await attachAdminProductMedia(productId, assetId);
     setBusy(false);
-    if (result.ok) {
-      setAdvancedAssetId("");
-    }
-    await refreshAfterMutation(toMutationResult(result));
+    setLibraryOpen(false);
+    if (lastOk) await refreshAfterMutation(lastOk);
+    else await reload();
   }
 
   async function onReorder(mediaAssetId: string, direction: -1 | 1) {
@@ -237,7 +234,7 @@ export function ProductMediaPanel({
         >
           <p className="font-medium">هنوز رسانه‌ای به این محصول وصل نشده است</p>
           <p className="max-w-md text-sm text-muted">
-            پس از افزودن تصویر نمایشی، گالری با تصویر اصلی و بندانگشتی‌ها نمایش داده می‌شود.
+            پس از افزودن رسانه از کتابخانه، گالری با تصویر اصلی و بندانگشتی‌ها نمایش داده می‌شود.
           </p>
         </div>
       ) : (
@@ -362,45 +359,30 @@ export function ProductMediaPanel({
             type="button"
             disabled={busy}
             className="min-h-11 rounded-ds bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            onClick={() => void onAddPlaceholder()}
+            onClick={() => setLibraryOpen(true)}
+            data-testid="admin-product-media-open-library"
           >
-            افزودن تصویر نمایشی
+            افزودن رسانه
           </button>
           <p className="text-xs text-muted">
-            یک تصویر نمایشی از مسیر امن ویترین به محصول وصل می‌شود. بارگذاری فایل در کتابخانهٔ Media جداگانه است و اینجا ادعای آپلود کامل نمی‌شود.
+            از کتابخانهٔ Media انتخاب کنید یا فایل واقعی بارگذاری کنید. «حذف از محصول» فقط ارجاع را برمی‌دارد و دارایی را از کتابخانه پاک نمی‌کند.
           </p>
-          <details className="rounded-ds border border-border bg-secondary/30 p-3">
-            <summary className="cursor-pointer text-sm font-medium text-muted">
-              اتصال پیشرفته (شناسهٔ دارایی)
-            </summary>
-            <div className="mt-3 space-y-2">
-              <p className="text-xs text-muted">
-                فقط برای اتصال دستی شناسهٔ مات موجود. کتابخانهٔ Media و بارگذاری فایل هنوز آماده نیست.
-              </p>
-              <label className="block text-sm">
-                شناسه دارایی رسانه
-                <input
-                  className="mt-1 min-h-11 w-full rounded-ds border border-border bg-surface px-3"
-                  dir="ltr"
-                  value={advancedAssetId}
-                  onChange={(event) => setAdvancedAssetId(event.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                disabled={busy}
-                className="min-h-10 rounded-ds border border-border px-3 text-sm hover:bg-secondary disabled:opacity-50"
-                onClick={() => void onAdvancedAttach()}
-              >
-                پیوست شناسه
-              </button>
-            </div>
-          </details>
           {altDirty ? (
             <p className="text-xs text-amber-800">متن جایگزین ذخیره‌نشده دارید؛ «ذخیره متن جایگزین» را بزنید.</p>
           ) : null}
         </div>
       ) : null}
+
+      <MediaLibraryDialog
+        open={libraryOpen}
+        title="افزودن رسانه به محصول"
+        selectionMode="multi"
+        alreadyAssignedIds={items.map((row) => row.mediaAssetId)}
+        onClose={() => {
+          if (!busy) setLibraryOpen(false);
+        }}
+        onConfirm={onLibraryConfirm}
+      />
     </div>
   );
 }

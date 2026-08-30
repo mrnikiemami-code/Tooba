@@ -1,5 +1,6 @@
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure;
+using Tooba.Media.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure;
 using global::Tooba.Story.Infrastructure.Persistence;
@@ -50,6 +51,7 @@ internal static class MarketplaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());
         await MigrateAsync(provider.GetRequiredService<AccessControlDbContext>());
         await MigrateAsync(provider.GetRequiredService<ContentDbContext>());
+        await MigrateAsync(provider.GetRequiredService<MediaDbContext>());
         await MigrateAsync(provider.GetRequiredService<PageCompositionDbContext>());
         await MigrateAsync(provider.GetRequiredService<StoryDbContext>());
         await ContentDevelopmentSeed.ApplyAsync(provider, CancellationToken.None);

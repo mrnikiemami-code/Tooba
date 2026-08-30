@@ -114,6 +114,7 @@ public static class CatalogCategoryEndpoints
                         body.IsVisible,
                         body.ImageMediaAssetId,
                         body.IconMediaAssetId,
+                        body.BannerMediaAssetId,
                         body.Translations
                             .Select(t => new CategoryTranslationUpsertRequest(
                                 t.Locale,
@@ -170,8 +171,10 @@ public static class CatalogCategoryEndpoints
                     body.IsVisible,
                     body.ImageMediaAssetId,
                     body.IconMediaAssetId,
+                    body.BannerMediaAssetId,
                     body.ClearImage,
                     body.ClearIcon,
+                    body.ClearBanner,
                     body.ExpectedUpdatedAt),
                 cancellationToken);
             return Results.Json(await catalog.GetCategoryWorkspaceAsync(id, null, cancellationToken));
@@ -396,6 +399,7 @@ public sealed record CreateCategoryHttpRequest(
     bool IsVisible,
     Guid? ImageMediaAssetId,
     Guid? IconMediaAssetId,
+    Guid? BannerMediaAssetId,
     List<CategoryTranslationInputHttpRequest>? Translations,
     Dictionary<string, string>? LocalizedNames);
 
@@ -406,8 +410,10 @@ public sealed record UpdateCategoryCoreHttpRequest(
     bool? IsVisible,
     Guid? ImageMediaAssetId,
     Guid? IconMediaAssetId,
+    Guid? BannerMediaAssetId = null,
     bool ClearImage = false,
     bool ClearIcon = false,
+    bool ClearBanner = false,
     DateTimeOffset? ExpectedUpdatedAt = null);
 
 /// <summary>ترجمه در بدنهٔ ایجاد.</summary>

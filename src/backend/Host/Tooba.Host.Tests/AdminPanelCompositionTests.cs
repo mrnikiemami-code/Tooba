@@ -66,6 +66,15 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("ICurrentTenant", source, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Every_admin_media_dam_handler_invokes_server_authorization()
+    {
+        var source = File.ReadAllText(Path.Combine(
+            FindRepoRoot(), "src", "backend", "Host", "Tooba.Host", "Media", "MediaEndpoints.cs"));
+        // upload + list + get metadata
+        Assert.Equal(3, Count(source, "AdminPanelAccess.RequireAuthorizedAsync"));
+    }
+
     private static int Count(string source, string value)
     {
         var count = 0;

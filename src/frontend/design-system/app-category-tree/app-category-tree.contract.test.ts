@@ -27,7 +27,8 @@ test("AppCategoryTree wraps antd Tree without exporting Ant types to pages", () 
   assert.equal(screen.includes("category-tab-coming-soon"), false);
   assert.equal(screen.includes("انتخاب رسانه — به‌زودی"), false);
   assert.equal(screen.includes("به‌زودی"), false);
-  assert.match(screen, /MediaStatusCard/);
+  assert.match(screen, /CategoryMediaSection/);
+  assert.equal(screen.includes("MediaStatusCard"), false);
 
   const index = fs.readFileSync(path.join(root, "design-system/index.ts"), "utf8");
   assert.match(index, /AppCategoryTree/);
