@@ -1,0 +1,68 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T034-R1
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Channel:
+tooba-main
+
+Bridge-UUID:
+7f46ccd5-625c-4382-825d-b86125bbab08
+
+Git-HEAD:
+8d64e289fb3220e8b4506d6be3c688d64f0470e7
+
+USER_VISUAL_ACCEPTED:
+NO
+
+Summary:
+Acceptance repair for T034: residual Published T021 Products removed by expanding non-production Catalog demo reset to clear ALL Catalog Products before foundation+product reseeding. Counts now reconcile.
+
+Residual-Cleanup:
+ResetAsync deletes every Catalog Product (+ dependents). Live first run productsRemoved=287 (283+4 T021); junk search 0 hits.
+
+Lifecycle-Counts:
+Draft=283; Published=0; Archived=0; total=283
+
+Count-Reconciliation:
+seed=283; DB total=283; Admin grid totalCount=283; productsDemo=283
+
+Idempotency:
+second reset-and-seed productsRemoved=283 seed=283 grid=283 Published=0
+
+Product-Integrity:
+T034 assertions preserved (3–5/L3, fa/en, tags, attrs, variants, 5 media, SEO Ready, Draft Publish-Ready, no Price/Stock)
+
+Architecture:
+non-production + AllowResetAndSeed fail-closed unchanged; categories/brands/tags/attrs still seam-scoped
+
+Validation:
+CatalogDemo tests 5/5; MigrationRunner 4/4; FE typecheck/lint/tests/build green
+
+Live-Verification:
+Host:5088 FE:3000 Shopeiva:3001; status productsPublished=0; grid=283
+
+Git-Reconciliation:
+single tip HEAD==origin/main=8d64e289fb3220e8b4506d6be3c688d64f0470e7; dual-hash ambiguity from T034 RESULT tip-sync resolved for this Result
+
+Evidence:
+docs/evidence/TB-P07-T034/{residual-cleanup,final-count-reconciliation,final-idempotency,git-head-reconciliation}.md + live-seed-r1-*.json
+
+Architectural-Concerns:
+full Product wipe on demo reset is intentional for clean commercial UX review DB only
+
+Visual-Concerns:
+none; USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_RESULT
