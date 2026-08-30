@@ -6,6 +6,7 @@ namespace Tooba.Host.Admin.CatalogDemo;
 
 /// <summary>
 /// تولید بایت‌های محلی PNG/WebP/SVG و آپلود از طریق Media DAM با نام <c>demo-media-*</c>.
+/// تصاویر محصول برای polish تجاری بزرگ‌تر و طرح‌دارند (نه مربع تک‌رنگ ۴۸px).
 /// </summary>
 public sealed class CatalogDemoMediaFactory
 {
@@ -19,21 +20,29 @@ public sealed class CatalogDemoMediaFactory
         string categoryKey,
         CancellationToken cancellationToken)
     {
-        var image = await UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{categoryKey}-image.png", 48, 48, cancellationToken);
-        var icon = await UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{categoryKey}-icon.png", 24, 24, cancellationToken);
+        var image = await UploadPngAsync(
+            $"{CatalogDemoSeam.MediaFilePrefix}{categoryKey}-image-v2.png",
+            128,
+            128,
+            cancellationToken);
+        var icon = await UploadPngAsync(
+            $"{CatalogDemoSeam.MediaFilePrefix}{categoryKey}-icon-v2.png",
+            64,
+            64,
+            cancellationToken);
         var banner = await UploadWebpAsync($"{CatalogDemoSeam.MediaFilePrefix}{categoryKey}-banner.webp", cancellationToken);
         // SVG برای شواهد سیاست تولید محلی نگه‌داری می‌شود؛ DAM فعلی MIME SVG را نمی‌پذیرد.
         _ = CreateSvgBytes(categoryKey);
         return (image, icon, banner);
     }
 
-    /// <summary>یک تصویر کوچک برای L2/L3 در صورت نیاز.</summary>
+    /// <summary>یک تصویر برای L2/L3 در صورت نیاز.</summary>
     public Task<Guid> EnsureSimpleImageAsync(string key, CancellationToken cancellationToken) =>
-        UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{key}-image.png", 32, 32, cancellationToken);
+        UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{key}-image-v2.png", 96, 96, cancellationToken);
 
-    /// <summary>یک آیکن کوچک.</summary>
+    /// <summary>یک آیکن.</summary>
     public Task<Guid> EnsureSimpleIconAsync(string key, CancellationToken cancellationToken) =>
-        UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{key}-icon.png", 16, 16, cancellationToken);
+        UploadPngAsync($"{CatalogDemoSeam.MediaFilePrefix}{key}-icon-v2.png", 48, 48, cancellationToken);
 
     /// <summary>
     /// استخر تصاویر دامنه برای گالری محصول (reuse کنترل‌شده سطح دامنه).
@@ -47,16 +56,16 @@ public sealed class CatalogDemoMediaFactory
         var ids = new List<Guid>(poolSize);
         for (var i = 0; i < poolSize; i++)
         {
-            var fileName = $"{CatalogDemoSeam.MediaFilePrefix}prod-{domainKey}-{i + 1}.png";
+            var fileName = $"{CatalogDemoSeam.MediaFilePrefix}prod-{domainKey}-{i + 1}-v2.png";
             var (r, g, b) = PaletteColor(domainKey, i);
-            ids.Add(await UploadPngAsync(fileName, 48, 48, r, g, b, cancellationToken));
+            ids.Add(await UploadPngAsync(fileName, 320, 320, r, g, b, index: i, cancellationToken));
         }
 
         return ids;
     }
 
     private async Task<Guid> UploadPngAsync(string fileName, int width, int height, CancellationToken cancellationToken) =>
-        await UploadPngAsync(fileName, width, height, 0x2F, 0x6B, 0xA8, cancellationToken);
+        await UploadPngAsync(fileName, width, height, 0x2F, 0x6B, 0xA8, index: 0, cancellationToken);
 
     private async Task<Guid> UploadPngAsync(
         string fileName,
@@ -65,6 +74,7 @@ public sealed class CatalogDemoMediaFactory
         byte r,
         byte g,
         byte b,
+        int index,
         CancellationToken cancellationToken)
     {
         var existing = await FindExistingAsync(fileName, cancellationToken);
@@ -73,7 +83,7 @@ public sealed class CatalogDemoMediaFactory
             return id;
         }
 
-        await using var stream = new MemoryStream(CreatePngBytes(width, height, r, g, b));
+        await using var stream = new MemoryStream(CreatePngBytes(width, height, r, g, b, index));
         var uploaded = await _media.UploadAsync(stream, fileName, "image/png", actorUserId: null, cancellationToken);
         return uploaded.MediaAssetId;
     }
@@ -108,51 +118,94 @@ public sealed class CatalogDemoMediaFactory
         return match?.MediaAssetId;
     }
 
-    /// <summary>PNG فشرده‌نشدهٔ کوچک با یک رنگ ثابت.</summary>
+    /// <summary>PNG طرح‌دار فشرده‌شده با رنگ پایه.</summary>
     public static byte[] CreatePngBytes(int width, int height) =>
-        CreatePngBytes(width, height, 0x2F, 0x6B, 0xA8);
+        CreatePngBytes(width, height, 0x2F, 0x6B, 0xA8, index: 0);
 
-    /// <summary>PNG فشرده‌نشدهٔ کوچک با رنگ RGB.</summary>
-    public static byte[] CreatePngBytes(int width, int height, byte r, byte g, byte b)
+    /// <summary>PNG طرح‌دار با رنگ RGB و تنوع اندیس (گرادیان/قاب/دایره).</summary>
+    public static byte[] CreatePngBytes(int width, int height, byte r, byte g, byte b) =>
+        CreatePngBytes(width, height, r, g, b, index: 0);
+
+    /// <summary>PNG طرح‌دار با رنگ RGB و تنوع اندیس (گرادیان/قاب/دایره).</summary>
+    public static byte[] CreatePngBytes(int width, int height, byte r, byte g, byte b, int index)
     {
-        width = Math.Clamp(width, 1, 64);
-        height = Math.Clamp(height, 1, 64);
+        width = Math.Clamp(width, 1, 512);
+        height = Math.Clamp(height, 1, 512);
         var rawStride = 1 + (width * 3);
         var raw = new byte[rawStride * height];
+        var cx = (width - 1) / 2.0;
+        var cy = (height - 1) / 2.0;
+        var radius = Math.Min(width, height) * (0.28 + ((index % 3) * 0.04));
+        var border = Math.Max(2, Math.Min(width, height) / 32);
+
         for (var y = 0; y < height; y++)
         {
             var row = y * rawStride;
             raw[row] = 0; // filter None
+            var gy = y / (double)Math.Max(1, height - 1);
             for (var x = 0; x < width; x++)
             {
+                var gx = x / (double)Math.Max(1, width - 1);
+                var inBorder = x < border || y < border || x >= width - border || y >= height - border;
+                var dx = x - cx;
+                var dy = y - cy;
+                var inDisc = (dx * dx) + (dy * dy) <= radius * radius;
+                var checker = ((x / 16) + (y / 16) + index) % 2 == 0;
+
+                byte pr;
+                byte pg;
+                byte pb;
+                if (inBorder)
+                {
+                    pr = (byte)Math.Clamp(r / 2, 0, 255);
+                    pg = (byte)Math.Clamp(g / 2, 0, 255);
+                    pb = (byte)Math.Clamp(b / 2, 0, 255);
+                }
+                else if (inDisc)
+                {
+                    pr = (byte)Math.Clamp(r + 55, 0, 255);
+                    pg = (byte)Math.Clamp(g + 45, 0, 255);
+                    pb = (byte)Math.Clamp(b + 35, 0, 255);
+                }
+                else
+                {
+                    var mix = 0.55 + (0.35 * gx) + (0.10 * (1.0 - gy));
+                    if (checker)
+                    {
+                        mix *= 0.92;
+                    }
+
+                    pr = (byte)Math.Clamp((int)(r * mix), 0, 255);
+                    pg = (byte)Math.Clamp((int)(g * mix), 0, 255);
+                    pb = (byte)Math.Clamp((int)(b * mix), 0, 255);
+                }
+
                 var i = row + 1 + (x * 3);
-                raw[i] = r;
-                raw[i + 1] = g;
-                raw[i + 2] = b;
+                raw[i] = pr;
+                raw[i + 1] = pg;
+                raw[i + 2] = pb;
             }
         }
 
         using var ms = new MemoryStream();
         WritePngSignature(ms);
-        WriteChunk(ms, "IHDR", buf =>
-        {
-            BinaryPrimitives.WriteInt32BigEndian(buf.AsSpan(0, 4), width);
-            BinaryPrimitives.WriteInt32BigEndian(buf.AsSpan(4, 4), height);
-            buf[8] = 8; // bit depth
-            buf[9] = 2; // RGB
-            buf[10] = 0;
-            buf[11] = 0;
-            buf[12] = 0;
-            return 13;
-        });
-        var compressed = ZlibCompress(raw);
-        WriteChunk(ms, "IDAT", buf =>
-        {
-            compressed.AsSpan().CopyTo(buf);
-            return compressed.Length;
-        });
-        WriteChunk(ms, "IEND", _ => 0);
+        WriteChunk(ms, "IHDR", BuildIhdr(width, height));
+        WriteChunk(ms, "IDAT", ZlibCompress(raw));
+        WriteChunk(ms, "IEND", ReadOnlySpan<byte>.Empty);
         return ms.ToArray();
+    }
+
+    private static byte[] BuildIhdr(int width, int height)
+    {
+        var buf = new byte[13];
+        BinaryPrimitives.WriteInt32BigEndian(buf.AsSpan(0, 4), width);
+        BinaryPrimitives.WriteInt32BigEndian(buf.AsSpan(4, 4), height);
+        buf[8] = 8; // bit depth
+        buf[9] = 2; // RGB
+        buf[10] = 0;
+        buf[11] = 0;
+        buf[12] = 0;
+        return buf;
     }
 
     /// <summary>WebP سادهٔ VP8L تک‌پیکسل (lossy-ish minimal RIFF).</summary>
@@ -181,22 +234,19 @@ public sealed class CatalogDemoMediaFactory
     private static void WritePngSignature(Stream stream) =>
         stream.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
 
-    private static void WriteChunk(Stream stream, string type, Func<byte[], int> writePayload)
+    private static void WriteChunk(Stream stream, string type, ReadOnlySpan<byte> payload)
     {
-        // byte[] (not Span) keeps Func compatible with C# ref-struct rules on newer SDKs.
-        var payload = new byte[4096];
-        var length = writePayload(payload);
         Span<byte> lenBytes = stackalloc byte[4];
-        BinaryPrimitives.WriteInt32BigEndian(lenBytes, length);
+        BinaryPrimitives.WriteInt32BigEndian(lenBytes, payload.Length);
         stream.Write(lenBytes);
         var typeBytes = Encoding.ASCII.GetBytes(type);
         stream.Write(typeBytes);
-        if (length > 0)
+        if (!payload.IsEmpty)
         {
-            stream.Write(payload.AsSpan(0, length));
+            stream.Write(payload);
         }
 
-        var crc = Crc32(typeBytes, payload.AsSpan(0, length));
+        var crc = Crc32(typeBytes, payload);
         Span<byte> crcBytes = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32BigEndian(crcBytes, crc);
         stream.Write(crcBytes);

@@ -1,0 +1,98 @@
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/products/01a05227-e85b-7000-bfa2-2203a2c51d0a/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/products/01a05227-e85b-7000-bfa2-2203a2c51d0a/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/products/01a05227-e85b-7000-bfa2-2203a2c51d0a/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Failed to proxy http://127.0.0.1:5088/v1/admin/catalog/tags?locale=fa-IR Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+Error: connect ECONNREFUSED 127.0.0.1:5088
+    at <unknown> (Error: connect ECONNREFUSED 127.0.0.1:5088) {
+  errno: -4078,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 5088
+}
+(node:25184) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 exit listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)

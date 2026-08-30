@@ -41,7 +41,7 @@ export {
 export { drawerUsesLogicalStart, iconButtonRequiresLabel, moneyViewSchema } from "./invariants";
 export { DataGrid, createMemorySavedViewStore, enGridMessages, faGridMessages } from "./data-grid";
 export type { DataGridProps } from "./data-grid";
-export { AppDataGrid, toHostGridQuery, fromHostGridPage, formatJalaliDate } from "./app-data-grid";
+export { AppDataGrid, toHostGridQuery, fromHostGridPage, formatJalaliDate, formatJalaliDateTime } from "./app-data-grid";
 export type { AppDataGridProps } from "./app-data-grid";
 export {
   AppCategoryTree,

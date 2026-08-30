@@ -27,14 +27,14 @@ import type { ProductWorkspaceView } from "./workspace-model";
 import { AdminSearchableCombobox } from "./admin-searchable-combobox";
 
 const STEPS = [
-  { id: "category", labelFa: "دسته اصلی", labelEn: "Primary Category" },
-  { id: "structure", labelFa: "اطلاعات پایه", labelEn: "Base structure" },
-  { id: "translations", labelFa: "ترجمه‌ها", labelEn: "Translations" },
-  { id: "attributes", labelFa: "ویژگی‌ها", labelEn: "Attributes" },
-  { id: "variants", labelFa: "تنوع‌ها", labelEn: "Variants" },
-  { id: "media", labelFa: "رسانه", labelEn: "Media" },
-  { id: "seo", labelFa: "SEO", labelEn: "SEO" },
-  { id: "review", labelFa: "بررسی و ایجاد", labelEn: "Review & create" },
+  { id: "category", labelFa: "دسته اصلی" },
+  { id: "structure", labelFa: "اطلاعات پایه" },
+  { id: "translations", labelFa: "ترجمه‌ها" },
+  { id: "attributes", labelFa: "ویژگی‌ها" },
+  { id: "variants", labelFa: "تنوع‌ها" },
+  { id: "media", labelFa: "رسانه" },
+  { id: "seo", labelFa: "SEO" },
+  { id: "review", labelFa: "بررسی و ایجاد" },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -312,13 +312,8 @@ export function ProductCreateScreen() {
                 aria-current={active ? "step" : undefined}
                 onClick={() => goToStep(s.id)}
               >
-                <span className="block text-[11px] opacity-70">
-                  مرحله {index + 1} · Step {index + 1}
-                </span>
+                <span className="block text-[11px] opacity-70">مرحله {index + 1}</span>
                 <span className="block">{s.labelFa}</span>
-                <span className="mt-0.5 block text-[11px] font-normal opacity-70" dir="ltr">
-                  {s.labelEn}
-                </span>
               </button>
             </li>
           );

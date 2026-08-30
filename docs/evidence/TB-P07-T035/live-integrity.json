@@ -1,0 +1,68 @@
+﻿{
+    "status":  {
+                   "rootsDemo":  15,
+                   "categoriesDemo":  116,
+                   "categoriesTotal":  116,
+                   "brandsDemo":  22,
+                   "brandsTotal":  22,
+                   "tagsDemo":  36,
+                   "tagsTotal":  38,
+                   "attributesDemo":  41,
+                   "attributesTotal":  51,
+                   "productsTotal":  283,
+                   "productsDemo":  283,
+                   "productsDraft":  283,
+                   "productsPublished":  0,
+                   "productsArchived":  0,
+                   "allowResetAndSeed":  true,
+                   "environment":  "Development"
+               },
+    "gridTotal":  283,
+    "gridSample":  [
+                       {
+                           "productId":  "01a05229-4211-7000-9048-43d8fd5998ff",
+                           "title":  "پاوربانک نسخه 3",
+                           "status":  "Draft",
+                           "variantCount":  0,
+                           "offerCount":  0,
+                           "categorySummary":  "پاوربانک",
+                           "offerAmountRange":  "بدون مبلغ",
+                           "sellableUnits":  0,
+                           "locationCount":  0,
+                           "updatedAt":  "2026-08-30T10:13:51.185548+00:00",
+                           "primaryMediaAssetId":  "01a05226-dbdf-7000-841a-3da45f8c90cc",
+                           "primaryCategoryId":  "01a05226-dafe-7000-a109-a360c0721594",
+                           "brandName":  "بدون برند"
+                       },
+                       {
+                           "productId":  "01a05229-4008-7000-a4e5-f81b9bf32f34",
+                           "title":  "اپل پاوربانک مدل 2",
+                           "status":  "Draft",
+                           "variantCount":  0,
+                           "offerCount":  0,
+                           "categorySummary":  "پاوربانک",
+                           "offerAmountRange":  "بدون مبلغ",
+                           "sellableUnits":  0,
+                           "locationCount":  0,
+                           "updatedAt":  "2026-08-30T10:13:50.691075+00:00",
+                           "primaryMediaAssetId":  "01a05226-dbd6-7000-925c-d7f2b4408d9d",
+                           "primaryCategoryId":  "01a05226-dafe-7000-a109-a360c0721594",
+                           "brandName":  "اپل"
+                       },
+                       {
+                           "productId":  "01a05229-3df7-7000-a68a-86b48cab6a94",
+                           "title":  "سامسونگ پاوربانک سری 1",
+                           "status":  "Draft",
+                           "variantCount":  0,
+                           "offerCount":  0,
+                           "categorySummary":  "پاوربانک",
+                           "offerAmountRange":  "بدون مبلغ",
+                           "sellableUnits":  0,
+                           "locationCount":  0,
+                           "updatedAt":  "2026-08-30T10:13:50.17069+00:00",
+                           "primaryMediaAssetId":  "01a05226-dbd0-7000-a253-2002b7802a74",
+                           "primaryCategoryId":  "01a05226-dafe-7000-a109-a360c0721594",
+                           "brandName":  "سامسونگ"
+                       }
+                   ]
+}

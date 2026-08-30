@@ -1,0 +1,19 @@
+﻿{
+    "productId":  "01a05229-4211-7000-9048-43d8fd5998ff",
+    "locale":  "fa-IR",
+    "slug":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3",
+    "seoTitle":  "پاوربانک نسخه 3 | پاوربانک",
+    "seoDescription":  "خرید پاوربانک نسخه 3 در دسته پاوربانک. مشخصات کامل، گالری تصویر و آمادگی انتشار.",
+    "productName":  "???????? ???? 3",
+    "titleFallback":  "پاوربانک نسخه 3 | پاوربانک",
+    "publicPath":  "/fa/products/demo-prod-digital-gadgets-gadget-accessories-power-banks-3",
+    "readiness":  {
+                      "hasValidSlug":  true,
+                      "hasSeoTitleOrFallback":  true,
+                      "hasSeoDescription":  true,
+                      "hasLocalizedIdentity":  true,
+                      "isReady":  true,
+                      "messageFa":  "اطلاعات سئو کامل است"
+                  },
+    "updatedAt":  "2026-08-30T16:30:25.984796+00:00"
+}

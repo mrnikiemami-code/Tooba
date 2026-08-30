@@ -1,0 +1,101 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T035
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Channel:
+tooba-main
+
+Bridge-UUID:
+14a78853-c9ab-400b-8d32-4be19363c82e
+
+Git-HEAD:
+PENDING_TIP_SYNC
+
+USER_VISUAL_ACCEPTED:
+NO
+
+Summary:
+Final Catalog demo integrity + commercial Admin visual polish gate on live 283 Draft Publish-Ready products. Data counts reconcile; Product/Category Admin audited; create stepper Persian-only polish applied; no demo publish; remaining material visual mismatch: none.
+
+Data-Integrity:
+roots=15; L2/L3 foundation via demo status categoriesDemo=116; brands=22; tagsDemo=36; productsTotal=Demo=Draft=283; Published=0; Archived=0; sample 50/50 media=5+one primary + Ready; brandless subset present.
+
+Category-Admin:
+Live /fa/admin/catalog/categories tree with realistic published roots, search, CTA; screenshots under screenshots/; legacy /fa/admin/categories 404 noted (canonical catalog path used).
+
+Product-List:
+/fa/admin/products AppDataGrid server paging at 283; Draft + بدون برند; no Price/Stock; commercial toolbar/filters.
+
+Product-Create:
+8-stage create routes HTTP 200; removed English Step/labelEn helper from fa stepper (product-create-screen.tsx); no publish.
+
+Product-Workspace:
+Multi-domain samples + live VIEW/EDIT (brandless power bank, Adidas shoes, more); readiness 6/6; fa+en; tags; 5 media loading via storefront media URLs.
+
+Save-Regression:
+Live PATCH catalog-title (concurrency token), brand set/unset, media primary cycle; values restored; 409 without expectedUpdatedAt.
+
+Global-Edit:
+VIEW vs EDIT scopes; sticky Save/Cancel/End Edit present in EDIT; Publish disabled for unauthorized/no-offer warnings expected.
+
+Media:
+5/product + primary; gallery renders; primary mutation OK.
+
+MegaMenu:
+Category Admin surface reachable; MegaMenu placement not newly broken; no code change to MegaMenu.
+
+Brand-Home:
+Admin بدون برند works; Shopeiva home 200; hasNoBrand=false; Draft demo titles not leaking; products remain Draft.
+
+Tags-SEO:
+Localized chips; SEO Ready on samples; tags not required for readiness.
+
+Attributes-Filters-Variants:
+Human labels Ready; variant counts shown (e.g. 9 on shoes); no Price/Stock on variants.
+
+Reference-Comparison:
+Compared live Product VIEW/EDIT to locked reference image; remaining material visual mismatch: none.
+
+Responsive-A11y:
+fa RTL Admin audited desktop; create/list/workspace usable; no FE layout regressions beyond create-label polish.
+
+Incomplete-UX-Audit:
+No Coming soon/به‌زودی/TODO/Bad Request on audited surfaces; create bilingual Step labels repaired.
+
+Performance:
+Server paging; no full 283 client dump observed.
+
+Architecture:
+Product≠Offer; no Product Price/Stock; Brand nullable; AppDataGrid canonical; Draft-only demo preserved.
+
+Validation:
+Host.Tests 351/0/0; MigrationRunner 4/0/0; FE typecheck/lint/tests/build green; create-flow unit 3/0.
+
+Runtime:
+Host :5088; FE :3000; Shopeiva :3001 kept alive for gate.
+
+Evidence:
+docs/evidence/TB-P07-T035/final-*.md + browser-audit-report.md + screenshots/* + live-*.json + validation logs
+
+Git:
+scoped commit of T035 task/evidence + create stepper polish; unrelated dirty files preserved; HEAD==origin/main after push/tip-sync.
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+remaining material visual mismatch: none; USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_RESULT

@@ -8,6 +8,7 @@ import {
   ErrorState,
   WorkspaceShell,
   faWorkspaceMessages,
+  formatJalaliDateTime,
   useAdminFormMode,
 } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
@@ -1027,7 +1028,7 @@ function ProductWorkspaceScreenInner({
                   <p className="text-sm font-medium text-muted">وضعیت / مالکیت Product</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
-                    <SummaryCard label="آخرین به‌روزرسانی Catalog" value={view.catalogUpdatedAt} ltr />
+                    <SummaryCard label="آخرین به‌روزرسانی Catalog" value={formatJalaliDateTime(view.catalogUpdatedAt)} />
                   </div>
                 </Card>
                 <CatalogTagsCard
@@ -1119,7 +1120,7 @@ function ProductWorkspaceScreenInner({
                       <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
                       <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
                       <SummaryCard label="نامک سراسری" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
-                      <SummaryCard label="آخرین به‌روزرسانی" value={view.catalogUpdatedAt} ltr />
+                      <SummaryCard label="آخرین به‌روزرسانی" value={formatJalaliDateTime(view.catalogUpdatedAt)} />
                       <SummaryCard
                         label="کد کاتالوگ"
                         value={

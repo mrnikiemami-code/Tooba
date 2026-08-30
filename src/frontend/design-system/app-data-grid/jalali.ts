@@ -14,6 +14,17 @@ export function formatJalaliDate(iso: string | null | undefined, locale: "fa" | 
   return d.format("YYYY-MM-DD");
 }
 
+/** نمایش تاریخ+ساعت جلالی برای خلاصهٔ workspace و وضعیت. */
+export function formatJalaliDateTime(iso: string | null | undefined, locale: "fa" | "en" = "fa"): string {
+  if (!iso) return "—";
+  const d = dayjs(iso);
+  if (!d.isValid()) return iso.slice(0, 16);
+  if (locale === "fa") {
+    return d.calendar("jalali").locale("fa").format("YYYY/MM/DD HH:mm");
+  }
+  return d.format("YYYY-MM-DD HH:mm");
+}
+
 /** اجزای جلالی از ISO — برای تقویم و chip. */
 export function isoToJalaliDisplay(iso: string): { year: number; month: number; day: number } | null {
   const d = dayjs(iso);

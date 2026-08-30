@@ -1,0 +1,259 @@
+﻿{
+    "productId":  "01a05229-4211-7000-9048-43d8fd5998ff",
+    "title":  "پاوربانک نسخه 3",
+    "status":  "Draft",
+    "kind":  "PhysicalGood",
+    "categoryNames":  [
+                          "پاوربانک"
+                      ],
+    "attributes":  [
+                       {
+                           "code":  "demo_attr_mobile_battery",
+                           "value":  "3750",
+                           "variantAxis":  false
+                       },
+                       {
+                           "code":  "demo_attr_mobile_weight",
+                           "value":  "1.5",
+                           "variantAxis":  false
+                       }
+                   ],
+    "variants":  [
+
+                 ],
+    "media":  [
+                  {
+                      "mediaAssetId":  "01a05226-dbdf-7000-841a-3da45f8c90cc",
+                      "primary":  true,
+                      "displayOrder":  0,
+                      "altText":  "پاوربانک نسخه 3 — تصویر 1"
+                  },
+                  {
+                      "mediaAssetId":  "01a05226-dbe9-7000-a28e-5c417e3d3556",
+                      "primary":  false,
+                      "displayOrder":  1,
+                      "altText":  "پاوربانک نسخه 3 — تصویر 2"
+                  },
+                  {
+                      "mediaAssetId":  "01a05226-dc04-7000-ac45-fc13c4dabe59",
+                      "primary":  false,
+                      "displayOrder":  2,
+                      "altText":  "پاوربانک نسخه 3 — تصویر 3"
+                  },
+                  {
+                      "mediaAssetId":  "01a05226-dc09-7000-95e1-54a6367a8d2a",
+                      "primary":  false,
+                      "displayOrder":  3,
+                      "altText":  "پاوربانک نسخه 3 — تصویر 4"
+                  },
+                  {
+                      "mediaAssetId":  "01a05226-dc0f-7000-85a0-6a8b7fc097b9",
+                      "primary":  false,
+                      "displayOrder":  4,
+                      "altText":  "پاوربانک نسخه 3 — تصویر 5"
+                  }
+              ],
+    "offers":  [
+
+               ],
+    "prices":  [
+
+               ],
+    "taxClassifications":  [
+
+                           ],
+    "stock":  [
+
+              ],
+    "seo":  {
+                "slugSeam":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3",
+                "seoTitleSeam":  "Power banks Edition 3 | Power banks",
+                "semanticNote":  ""
+            },
+    "publication":  {
+                        "catalogStatus":  "Draft",
+                        "purchasableHint":  false,
+                        "checks":  [
+                                       "محصول برای انتشار آماده است."
+                                   ],
+                        "aggregateReadiness":  {
+                                                   "isReady":  true,
+                                                   "categoryReady":  true,
+                                                   "translationReady":  true,
+                                                   "attributeReady":  true,
+                                                   "variantReady":  true,
+                                                   "mediaReady":  true,
+                                                   "seoReady":  true,
+                                                   "missingRequirements":  [
+
+                                                                           ],
+                                                   "messageFa":  "محصول برای انتشار آماده است."
+                                               },
+                        "statusUpdatedAt":  "2026-08-30T10:13:51.185548+00:00"
+                    },
+    "activity":  [
+                     {
+                         "kind":  "activity",
+                         "summary":  "اطلاعات سئو ویرایش شد",
+                         "at":  "2026-08-30T10:13:51.185552+00:00",
+                         "actor":  "سیستم",
+                         "section":  "سئو",
+                         "afterSummary":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "اطلاعات سئو ویرایش شد",
+                         "at":  "2026-08-30T10:13:51.152153+00:00",
+                         "actor":  "سیستم",
+                         "section":  "سئو",
+                         "afterSummary":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:51.126525+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "تصویر اصلی تغییر کرد",
+                         "at":  "2026-08-30T10:13:51.100933+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:51.074726+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:51.04864+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:51.021439+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:50.99449+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "رسانهٔ محصول به‌روزرسانی شد",
+                         "at":  "2026-08-30T10:13:50.967218+00:00",
+                         "actor":  "سیستم",
+                         "section":  "رسانه"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "ویژگی‌های محصول ویرایش شد",
+                         "at":  "2026-08-30T10:13:50.923751+00:00",
+                         "actor":  "سیستم",
+                         "section":  "ویژگی‌ها"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "دسته‌بندی محصول تغییر کرد",
+                         "at":  "2026-08-30T10:13:50.76565+00:00",
+                         "actor":  "سیستم",
+                         "section":  "دسته‌بندی"
+                     },
+                     {
+                         "kind":  "activity",
+                         "summary":  "محصول ایجاد شد",
+                         "at":  "2026-08-30T10:13:50.73718+00:00",
+                         "actor":  "سیستم",
+                         "section":  "عمومی",
+                         "afterSummary":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3"
+                     }
+                 ],
+    "audit":  [
+                  {
+                      "kind":  "audit",
+                      "summary":  "اطلاعات سئو ویرایش شد",
+                      "at":  "2026-08-30T10:13:51.185552+00:00",
+                      "actor":  "سیستم",
+                      "section":  "سئو",
+                      "afterSummary":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3"
+                  },
+                  {
+                      "kind":  "audit",
+                      "summary":  "اطلاعات سئو ویرایش شد",
+                      "at":  "2026-08-30T10:13:51.152153+00:00",
+                      "actor":  "سیستم",
+                      "section":  "سئو",
+                      "afterSummary":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3"
+                  },
+                  {
+                      "kind":  "audit",
+                      "summary":  "دسته‌بندی محصول تغییر کرد",
+                      "at":  "2026-08-30T10:13:50.76565+00:00",
+                      "actor":  "سیستم",
+                      "section":  "دسته‌بندی"
+                  }
+              ],
+    "permissions":  {
+                        "canView":  true,
+                        "canEditCatalog":  true,
+                        "canEditCommercial":  true,
+                        "canEditInventory":  true,
+                        "canPublish":  true
+                    },
+    "catalogUpdatedAt":  "2026-08-30T10:13:51.185548+00:00",
+    "readinessWarnings":  [
+                              "محصول برای انتشار آماده است.",
+                              "no-active-offer",
+                              "قیمت فروشنده ثبت نشده است",
+                              "موجودی قابل‌فروش وجود ندارد"
+                          ],
+    "unsupportedMutations":  [
+                                 "media-binary-upload",
+                                 "product-video-upload",
+                                 "promotion-write",
+                                 "full-content-studio"
+                             ],
+    "primaryCategoryId":  "01a05226-dafe-7000-a109-a360c0721594",
+    "categoryPath":  "کالای دیجیتال و گجت‌ها \u003e جانبی گجت \u003e پاوربانک",
+    "slug":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3",
+    "shortDescription":  "مناسب پاوربانک؛ گزینهٔ 3 برای خرید آگاهانه.",
+    "translations":  [
+                         {
+                             "locale":  "en",
+                             "name":  "Power banks Edition 3",
+                             "shortDescription":  "Built for Power banks; option 3 with practical everyday features.",
+                             "description":  "\u003cp\u003ePower banks Edition 3 is curated for \u003cstrong\u003ePower banks\u003c/strong\u003e.\u003c/p\u003e\u003cul\u003e\u003cli\u003eRealistic comparable specs\u003c/li\u003e\u003cli\u003eEveryday and professional use cases\u003c/li\u003e\u003cli\u003eNo Catalog Price/Stock fields\u003c/li\u003e\u003c/ul\u003e\u003cp\u003eThis demo draft is publish-ready for commercial UX review.\u003c/p\u003e",
+                             "seoTitle":  "Power banks Edition 3 | Power banks",
+                             "seoDescription":  "Shop Power banks Edition 3 in Power banks. Full specs, gallery, and publish readiness."
+                         },
+                         {
+                             "locale":  "fa-IR",
+                             "name":  "پاوربانک نسخه 3",
+                             "slug":  "demo-prod-digital-gadgets-gadget-accessories-power-banks-3",
+                             "shortDescription":  "مناسب پاوربانک؛ گزینهٔ 3 برای خرید آگاهانه.",
+                             "description":  "\u003cp\u003eپاوربانک نسخه 3 برای دستهٔ \u003cstrong\u003eپاوربانک\u003c/strong\u003e طراحی شده است.\u003c/p\u003e\u003cul\u003e\u003cli\u003eمشخصات واقعی و قابل مقایسه\u003c/li\u003e\u003cli\u003eمناسب استفادهٔ روزمره و حرفه‌ای\u003c/li\u003e\u003cli\u003eبدون دادهٔ قیمت یا موجودی در Catalog\u003c/li\u003e\u003c/ul\u003e\u003cp\u003eاین نسخهٔ دانهٔ نمایشی برای بررسی UX تجاری آماده است.\u003c/p\u003e",
+                             "seoTitle":  "پاوربانک نسخه 3 | پاوربانک",
+                             "seoDescription":  "خرید پاوربانک نسخه 3 در دسته پاوربانک. مشخصات کامل، گالری تصویر و آمادگی انتشار."
+                         }
+                     ],
+    "isPrimaryCategoryAssignable":  true,
+    "categoryAssignments":  [
+                                {
+                                    "categoryId":  "01a05226-dafe-7000-a109-a360c0721594",
+                                    "categoryPath":  "کالای دیجیتال و گجت‌ها \u003e جانبی گجت \u003e پاوربانک",
+                                    "role":  "Primary"
+                                }
+                            ]
+}

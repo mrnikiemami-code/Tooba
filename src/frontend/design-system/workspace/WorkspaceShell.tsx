@@ -132,7 +132,6 @@ export function WorkspaceShell({
             <div className="min-w-0">
               <h2 className="text-3xl font-semibold tracking-tight">{title}</h2>
               {subtitle ? <p className="mt-1 text-base text-muted">{subtitle}</p> : null}
-              {readOnly ? <p className="text-sm text-warning">{messages.permissionDenied}</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2" data-testid="workspace-action-cluster">

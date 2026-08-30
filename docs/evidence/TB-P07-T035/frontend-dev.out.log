@@ -1,0 +1,156 @@
+
+> tooba-web@0.0.1 dev
+> next dev -p 3000 -H 127.0.0.1
+
+   ▲ Next.js 15.5.23
+   - Local:        http://127.0.0.1:3000
+   - Network:      http://127.0.0.1:3000
+
+ ✓ Starting...
+ ✓ Ready in 4.1s
+ ✓ Compiled /middleware in 174ms (117 modules)
+ ○ Compiling /admin/products ...
+ ✓ Compiled /admin/products in 2.1s (1967 modules)
+ GET /admin/products 200 in 3937ms
+ GET /admin/products 200 in 104ms
+ GET /admin/products 200 in 62ms
+ ○ Compiling /admin/products/[productId] ...
+ ✓ Compiled /admin/products/[productId] in 1216ms (2156 modules)
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff 200 in 2201ms
+ GET /admin/products 200 in 180ms
+ GET /admin/products 200 in 52ms
+ GET /admin/products 200 in 44ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff 200 in 130ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff 200 in 250ms
+ GET /admin/products 200 in 123ms
+ GET /admin/products 200 in 110ms
+ GET /admin/products 200 in 262ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 21.2s (2171 modules)
+ GET /api/admin/access-control/me/capabilities 404 in 50ms
+ GET /admin/products 200 in 76ms
+ GET /admin/products 200 in 55ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=view 200 in 62ms
+ GET /admin/categories 404 in 27ms
+ ○ Compiling /admin/catalog/categories ...
+ ✓ Compiled /admin/catalog/categories in 1316ms (2182 modules)
+ GET /admin/catalog/categories 200 in 1819ms
+ GET /admin/category 404 in 54ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=view 200 in 77ms
+ ○ Compiling /admin/products/new ...
+ ✓ Compiled /admin/products/new in 579ms (2190 modules)
+ GET /admin/products/new 200 in 1389ms
+ GET /admin/products/create 200 in 70ms
+ GET /admin/catalog/categories 200 in 73ms
+ GET /admin/products 200 in 59ms
+ GET /admin/products 200 in 63ms
+ GET /admin/products 200 in 41ms
+ GET /admin/products 200 in 77ms
+ GET /admin/products 200 in 75ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=edit 200 in 66ms
+ GET /media/01a05226-dbdf-7000-841a-3da45f8c90cc 404 in 43ms
+ GET /api/media/01a05226-dbdf-7000-841a-3da45f8c90cc 404 in 27ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=edit 200 in 44ms
+ GET /admin/products 200 in 46ms
+ GET /admin/catalog/categories 200 in 58ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 52ms
+ GET /admin/products 200 in 60ms
+ GET /admin/products 200 in 84ms
+ GET /admin/products 200 in 47ms
+ ○ Compiling /icon.svg ...
+ ✓ Compiled /icon.svg in 659ms (1446 modules)
+ GET /icon.svg?8a72c9c83c26def1 200 in 816ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=view 200 in 509ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 17ms
+ GET /admin/products/01a05229-4008-7000-a4e5-f81b9bf32f34?scope=view 200 in 46ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 15ms
+ GET /admin/products/01a05229-3df7-7000-a68a-86b48cab6a94?scope=view 200 in 45ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 14ms
+ ✓ Compiled in 1618ms (2214 modules)
+ GET /admin/products 200 in 344ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 355ms
+ GET /admin/products/01a05229-3df7-7000-a68a-86b48cab6a94?scope=view 200 in 358ms
+ GET /admin/products 200 in 183ms
+ GET /admin/products 200 in 33ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=edit 200 in 357ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 29ms
+ ✓ Compiled /_not-found in 293ms (1447 modules)
+ GET /admin/categories 404 in 759ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 20ms
+ ✓ Compiled in 401ms (2215 modules)
+ GET /admin/products 200 in 226ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 220ms
+ ○ Compiling /admin/products/new ...
+ ✓ Compiled /admin/products/new in 1568ms (2221 modules)
+ ✓ Compiled in 0ms (1453 modules)
+ ✓ Compiled in 0ms (1453 modules)
+ ✓ Compiled in 0ms (1453 modules)
+ GET /admin/categories 404 in 1520ms
+ GET /admin/products 200 in 2642ms
+ GET /admin/products/new 200 in 2764ms
+ ✓ Compiled in 0ms (1453 modules)
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 1346ms
+ GET /admin/categories 404 in 692ms
+ GET /admin/products 200 in 716ms
+ GET /admin/products 200 in 61ms
+ GET /admin/products 200 in 71ms
+ GET /admin/products 200 in 45ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 26ms
+ ✓ Compiled in 511ms (2221 modules)
+ GET /admin/products 200 in 185ms
+ GET /admin/products/new 200 in 179ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 181ms
+ GET /admin/products 200 in 239ms
+ GET /admin/products 200 in 47ms
+ GET /admin/products 200 in 241ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 21ms
+ ✓ Compiled in 410ms (2221 modules)
+ GET /admin/products 200 in 260ms
+ GET /admin/products 200 in 231ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 227ms
+ ✓ Compiled in 1299ms (2221 modules)
+ GET /admin/products/new 200 in 691ms
+ GET /admin/products 200 in 1074ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 106ms
+ GET /admin/products/new 200 in 105ms
+ GET /admin/products 200 in 94ms
+ GET /admin/products 200 in 156ms
+ GET /admin/products 200 in 39ms
+ GET /admin/products 200 in 35ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 21ms
+ ✓ Compiled in 640ms (2221 modules)
+ GET /admin/products 200 in 114ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 110ms
+ GET /admin/products 200 in 123ms
+ GET /admin/products 200 in 57ms
+ ✓ Compiled in 895ms (2197 modules)
+ GET /admin/products 200 in 181ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 189ms
+ GET /admin/products 200 in 138ms
+ GET /admin/products 200 in 34ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 550ms (2536 modules)
+ GET /admin/products 200 in 308ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 302ms
+ GET /admin/products 200 in 66ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 84ms
+ GET /admin/products 200 in 116ms
+ GET /admin/products 200 in 42ms
+ GET /admin/products 200 in 36ms
+ GET /admin/products 200 in 38ms
+ ✓ Compiled in 249ms (927 modules)
+ GET /admin/products 200 in 78ms
+ GET /admin/products/01a05227-e85b-7000-bfa2-2203a2c51d0a?scope=view 200 in 73ms
+ GET /admin/products 200 in 118ms
+ GET /admin/products 200 in 50ms
+ GET /admin/products 200 in 394ms
+ ✓ Compiled /icon.svg in 173ms (1640 modules)
+ GET /icon.svg?8a72c9c83c26def1 200 in 284ms
+ GET /admin/catalog/categories 200 in 351ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 26ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=view 200 in 63ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 14ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=edit 200 in 51ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 14ms
+ GET /admin/products/01a05229-4211-7000-9048-43d8fd5998ff?scope=view 200 in 45ms
+ GET /icon.svg?8a72c9c83c26def1 200 in 17ms
