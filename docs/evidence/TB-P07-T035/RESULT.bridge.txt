@@ -18,7 +18,7 @@ Bridge-UUID:
 14a78853-c9ab-400b-8d32-4be19363c82e
 
 Git-HEAD:
-2c437097fc7fe50663a09edd1f34ef5c4381e147
+0cbf47685a06e215289cc0e3e45c0a0b9b751986
 
 USER_VISUAL_ACCEPTED:
 NO
@@ -87,7 +87,7 @@ Evidence:
 docs/evidence/TB-P07-T035/final-*.md + browser-audit-report.md + screenshots/* + live-*.json + validation logs
 
 Git:
-scoped commit of T035 task/evidence + create stepper polish; unrelated dirty files preserved; HEAD==origin/main after push/tip-sync.
+scoped commit of T035 task/evidence + create stepper polish; unrelated dirty files preserved; HEAD==origin/main=0cbf47685a06e215289cc0e3e45c0a0b9b751986
 
 Architectural-Concerns:
 none
