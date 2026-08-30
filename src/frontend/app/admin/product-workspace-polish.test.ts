@@ -112,3 +112,19 @@ test("product list hides Product-looking price/stock columns; create is dedicate
   assert.match(shell, /\/admin\/products\/new/);
   assert.equal(shell.includes("products?create=1"), false);
 });
+
+test("VIEW description renders sanitized HTML; readiness codes are humanized", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  assert.match(screen, /product-general-description-preview/);
+  assert.match(screen, /sanitizeProductRichHtml/);
+  assert.match(screen, /dangerouslySetInnerHTML/);
+  assert.match(screen, /formatReadinessWarningFa/);
+  assert.match(screen, /no-active-offer/);
+  assert.match(screen, /formatHistoryTimestamp\(item\.at\)/);
+  assert.equal(screen.includes('value={resolveTranslation(view, "fa-IR")?.description || "—"}'), false);
+});
+
+test("WorkspaceShell does not show permission-denied under intentional readOnly title", () => {
+  const shell = fs.readFileSync(shellPath, "utf8");
+  assert.equal(shell.includes("{readOnly ? <p className=\"text-sm text-warning\">{messages.permissionDenied}</p> : null}"), false);
+});

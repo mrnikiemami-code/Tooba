@@ -298,7 +298,7 @@ public sealed class ProductWorkspaceComposer
         var commercialWarnings = new List<string>();
         if (offers.All(o => o.Status != OfferStatus.Active))
         {
-            commercialWarnings.Add("no-active-offer");
+            commercialWarnings.Add("پیشنهاد فروشندهٔ فعالی ثبت نشده است");
         }
 
         if (priceViews.Count == 0)

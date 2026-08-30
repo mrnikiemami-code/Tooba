@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -12,6 +12,8 @@ import {
   useAdminFormMode,
 } from "../../design-system";
 import { formatAdminStatus } from "./admin-api";
+import { formatHistoryTimestamp } from "./product-history-panel-model";
+import { sanitizeProductRichHtml } from "./product-rich-html";
 import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
@@ -127,6 +129,20 @@ function draftFromView(view: ProductWorkspaceView): GeneralDraft {
   };
 }
 
+function formatReadinessWarningFa(item: string): string {
+  switch (item) {
+    case "seo-incomplete":
+      return "عنوان جستجو یا نشانی صفحه ناقص است";
+    case "no-price":
+      return "قیمت فروشنده ثبت نشده است";
+    case "no-inventory":
+      return "موجودی قابل‌فروش وجود ندارد";
+    case "no-active-offer":
+      return "پیشنهاد فروشندهٔ فعالی ثبت نشده است";
+    default:
+      return item;
+  }
+}
 function SummaryCard({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
   return (
     <div className="rounded-ds border border-border bg-surface p-3">
@@ -857,13 +873,13 @@ function ProductWorkspaceScreenInner({
         }
         activity={view.activity.map((item) => ({
           id: item.summary,
-          at: item.at,
+          at: formatHistoryTimestamp(item.at),
           actor: item.actor?.trim() || "سیستم",
           summary: item.summary,
         }))}
         audit={view.audit.map((item) => ({
           id: item.summary,
-          at: item.at,
+          at: formatHistoryTimestamp(item.at),
           actor: item.actor?.trim() || "سیستم",
           event: item.summary,
         }))}
@@ -1146,10 +1162,22 @@ function ProductWorkspaceScreenInner({
                     <div className="mt-3 grid gap-3">
                       <SummaryCard label="نام (fa-IR)" value={view.title || "—"} />
                       <SummaryCard label="خلاصه کوتاه (fa-IR)" value={view.shortDescription || "—"} />
-                      <SummaryCard
-                        label="توضیح کامل (fa-IR)"
-                        value={resolveTranslation(view, "fa-IR")?.description || "—"}
-                      />
+                      <div className="rounded-ds border border-border bg-surface p-3">
+                        <p className="text-sm text-muted">توضیح کامل (fa-IR)</p>
+                        {resolveTranslation(view, "fa-IR")?.description ? (
+                          <div
+                            className="prose prose-sm mt-1 max-w-none text-base font-semibold leading-relaxed"
+                            data-testid="product-general-description-preview"
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeProductRichHtml(
+                                resolveTranslation(view, "fa-IR")?.description ?? "",
+                              ),
+                            }}
+                          />
+                        ) : (
+                          <p className="mt-1 text-base font-semibold">—</p>
+                        )}
+                      </div>
                     </div>
                   </Card>
                   <CatalogTagsCard ownerKind="product" ownerId={view.productId} canEdit={false} />
@@ -1206,13 +1234,7 @@ function ProductWorkspaceScreenInner({
                       <ul className="mt-3 space-y-2 text-base">
                         {view.readinessWarnings.map((item) => (
                           <li key={item} className="rounded-ds bg-warning/15 px-3 py-2">
-                            {item === "seo-incomplete"
-                              ? "عنوان جستجو یا نشانی صفحه ناقص است"
-                              : item === "no-price"
-                                ? "قیمت فروشنده ثبت نشده است"
-                                : item === "no-inventory"
-                                  ? "موجودی قابل‌فروش وجود ندارد"
-                                  : item}
+                            {formatReadinessWarningFa(item)}
                           </li>
                         ))}
                       </ul>
