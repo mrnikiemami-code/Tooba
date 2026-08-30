@@ -135,6 +135,7 @@ function buildColumnDefs(
       cellRenderer: StatusCell,
     }),
     applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 160 }),
+    applyProductGridFilterHeader({ field: "brandName", headerName: "برند", width: 140, sortable: false }),
     applyProductGridFilterHeader({ field: "variantCount", headerName: "تنوع", width: 90 }),
     applyProductGridFilterHeader({
       field: "updatedAt",
@@ -262,11 +263,12 @@ export function ProductListScreen() {
           }}
           savedViewStore={savedViewStore}
           exportFilenameBase="admin-products"
-          exportHeaders={["محصول", "وضعیت", "دسته", "تنوع", "به‌روزرسانی"]}
+          exportHeaders={["محصول", "وضعیت", "دسته", "برند", "تنوع", "به‌روزرسانی"]}
           getExportRow={(row) => [
             row.title,
             formatAdminStatus(row.status),
             row.categorySummary,
+            row.brandName,
             String(row.variantCount),
             formatJalaliDate(row.updatedAt, "fa"),
           ]}

@@ -1,0 +1,664 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T031
+
+Parent-Task:
+TB-P07-T030-R2
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Summary:
+Final Catalog Admin human-acceptance gate verified live (Category + Product list/create/workspace + errors + visual + architecture). Scoped repair: Product list now exposes Host-composed Brand (`brandName`) in AppDataGrid. Full BE 349 (345+4) green after repair; FE typecheck/lint/build green; FE tests 459 pass / 0 fail baseline + Brand mapper recheck. Reference compared; remaining material visual mismatch: none. USER_VISUAL_ACCEPTED=NO.
+
+Category-Admin:
+
+Tree:
+live OK (locale fa-IR)
+
+image:
+Media Library assign (accepted baseline; no به‌زودی)
+
+icon:
+same
+
+banner:
+same
+
+translations:
+locale-based fa/en
+
+add existing Attribute:
+UI live + attribute-definitions API (11)
+
+create new Attribute:
+UI live (ایجاد ویژگی جدید)
+
+inherited Attributes:
+readable in attributes panel
+
+behavior chips:
+Required/Filter/Variant/Comparable independent
+
+Filters:
+local facets found (n=2) on live category
+
+Filters persistence:
+accepted Filters panel retained
+
+Products picker:
+AppDataGrid All/Selected
+
+All Products:
+yes
+
+Selected:
+yes
+
+server search/paging:
+yes
+
+bulk add/remove:
+yes
+
+Primary badge:
+yes
+
+Additional badge:
+yes
+
+Primary safe removal:
+guarded (schema-impact confirm)
+
+MegaMenu:
+HTTP 200 on sampled L3
+
+technical Schema UX:
+deferred nav only
+
+raw GUID:
+not primary Admin UX
+
+incomplete visible UX:
+none on scoped Category leaves
+
+Product-List:
+
+inline create:
+no
+
+dedicated create route:
+/admin/products/new
+
+AppDataGrid:
+canonical only
+
+image:
+media thumb column
+
+Brand:
+yes (repaired)
+
+Primary Category:
+categorySummary
+
+variants:
+variantCount
+
+media readiness:
+empty vs primary thumb
+
+Price:
+absent
+
+Stock:
+absent
+
+nav active:
+single leaf
+
+visual polish:
+yes
+
+Product-Create:
+
+stage 1:
+Primary Category
+
+stage 2:
+Base structure
+
+stage 3:
+Translations (Draft-first)
+
+stage 4:
+Attributes
+
+stage 5:
+Variants
+
+stage 6:
+Media
+
+stage 7:
+SEO
+
+stage 8:
+Review
+
+Draft-first:
+yes
+
+duplicate protection:
+create-once then edit stages
+
+readiness review:
+yes
+
+mobile:
+sequential usable
+
+visible incomplete stage:
+none invented
+
+Product-Workspace:
+
+header:
+title+lifecycle+path+thumb+brand
+
+actions:
+Save split + پایان ویرایش + انصراف
+
+identity:
+language-neutral General
+
+General:
+categories+brand+structure
+
+Translations:
+fa/en TipTap/core
+
+Attributes:
+schema-driven panel
+
+Variants:
+human تنوع UX
+
+Media:
+real DAM
+
+SEO:
+panel+readiness
+
+Publishing:
+readiness+actions
+
+History:
+functional
+
+readiness cards:
+real derived state
+
+side composition:
+xl media side column
+
+raw ISO:
+humanized dates
+
+giant whitespace:
+no material
+
+visible unfinished:
+none material
+
+Rich-Editor:
+
+TipTap:
+yes
+
+headings:
+yes
+
+bold:
+yes
+
+italic:
+yes
+
+underline:
+yes
+
+lists:
+yes
+
+link:
+yes
+
+table:
+yes
+
+quote:
+yes
+
+font family:
+controlled
+
+font size:
+controlled
+
+sanitization:
+DOMPurify path
+
+fa RTL:
+yes
+
+en LTR:
+yes
+
+fake image action:
+none
+
+plain textarea fallback:
+no for full description
+
+Categories:
+
+Primary:
+yes
+
+Additional:
+yes
+
+Primary schema-driving:
+yes
+
+Additional schema impact:
+confirmed
+
+removal:
+Additional removable; Primary guarded
+
+Primary change:
+confirm schema impact
+
+PLP:
+discovery via additional
+
+canonical URL:
+slug seams locale-aware
+
+Errors:
+
+duplicate attribute:
+mapped
+
+filter error:
+mapped
+
+duplicate category assignment:
+mapped
+
+unsafe Primary removal:
+mapped/guarded
+
+invalid media:
+mapped
+
+Product/Variant validation:
+mapped
+
+raw Bad Request:
+normalized via errorCode
+
+raw HTTP:
+not primary UX
+
+raw code:
+not primary UX
+
+raw JSON:
+not primary UX
+
+fa:
+yes
+
+en:
+yes
+
+Navigation:
+
+Category:
+live
+
+Attribute library:
+live
+
+MegaMenu:
+via Category
+
+Product List:
+live
+
+Add Product:
+/products/new
+
+double-active sibling:
+fixed (integrity tests)
+
+technical Schema nav:
+deferred only
+
+fa/en:
+yes
+
+Reference-Comparison:
+
+reference opened:
+yes
+
+live side-by-side:
+yes
+
+header:
+aligned
+
+save/actions:
+aligned (split)
+
+readiness cards:
+aligned commercially
+
+tabs:
+aligned
+
+main/side composition:
+aligned at xl
+
+media:
+aligned
+
+locale status:
+fa/en only (no fake Arabic)
+
+spacing:
+commercially acceptable
+
+typography:
+commercially acceptable
+
+overall commercial feel:
+ready for human review
+
+remaining material visual mismatch:
+none
+
+pixel-perfect claimed:
+no
+
+Responsive-A11y:
+
+desktop:
+OK
+
+tablet:
+stacks cards/grid
+
+mobile:
+create sequential; workspace stacks
+
+RTL:
+fa
+
+LTR:
+en
+
+overflow:
+grid scroll OK
+
+dialog fit:
+OK
+
+editor fit:
+OK
+
+focus:
+Button DS
+
+keyboard:
+grid/actions
+
+aria:
+DS components
+
+color-only status:
+badges+text labels
+
+Architecture:
+
+Product != Offer:
+yes
+
+Product.Price:
+absent
+
+Product.Stock:
+absent
+
+Product.Inventory:
+absent
+
+Variant.Price:
+absent
+
+Variant.Stock:
+absent
+
+Pricing joins:
+Host compose only
+
+Inventory joins:
+Host compose only
+
+cross-module SQL join:
+none in FE
+
+Product local AttributeDefinition:
+central library
+
+Brand:
+list+workspace assign
+
+Media ownership:
+Catalog references + Media DAM
+
+Catalog binary storage:
+no
+
+AppDataGrid:
+canonical
+
+Category Tree:
+live
+
+Shopeiva:
+:3001 alive
+
+Incomplete-UX-Audit:
+
+به‌زودی:
+not on scoped live Catalog leaves
+
+Coming soon:
+none scoped
+
+placeholder:
+none material
+
+dead CTA:
+none
+
+fake disabled action:
+none (TipTap image fake removed earlier)
+
+raw GUID:
+not primary
+
+raw HTTP:
+not primary
+
+raw code:
+not primary
+
+giant blank card:
+none material
+
+prototype-looking section:
+none material
+
+visible unfinished feature:
+none material
+
+Validation:
+
+backend restore:
+PASS
+
+backend build:
+PASS 0w0e
+
+backend FULL tests:
+345 pass (after Brand)
+
+backend passed:
+345
+
+backend failed:
+0
+
+backend skipped:
+0
+
+MigrationRunner:
+4 pass
+
+frontend typecheck:
+PASS
+
+frontend lint:
+PASS (pre-existing unused-var warnings only)
+
+frontend tests:
+459 pass baseline; Brand mapper recheck PASS
+
+frontend production build:
+PASS
+
+frontend passed:
+459
+
+frontend failed:
+0
+
+frontend skipped:
+0
+
+warnings:
+pre-existing catalog unused-var only
+
+new warnings:
+none
+
+git diff --check:
+clean on T031 scoped files
+
+Runtime:
+
+Backend:
+http://127.0.0.1:5088 200
+
+Frontend:
+http://127.0.0.1:3000 200
+
+Shopeiva:
+http://127.0.0.1:3001 200
+
+current HEAD loaded:
+yes (post Brand rebuild/restart)
+
+kept alive:
+yes
+
+Evidence:
+
+path:
+docs/evidence/TB-P07-T031/
+
+Category:
+docs/evidence/TB-P07-T031/final-category-admin.md
+
+Product List:
+docs/evidence/TB-P07-T031/final-product-list.md
+
+Product Create:
+docs/evidence/TB-P07-T031/final-product-create.md
+
+Product Workspace:
+docs/evidence/TB-P07-T031/final-product-workspace.md
+
+errors:
+docs/evidence/TB-P07-T031/final-errors.md
+
+responsive:
+docs/evidence/TB-P07-T031/final-responsive.md
+
+reference:
+docs/evidence/TB-P07-T031/final-reference-comparison.md
+
+validation:
+docs/evidence/TB-P07-T031/final-validation.md
+
+Git:
+
+branch:
+main
+
+commit:
+2af0d3e976a15021b079c05270b6276dbfc75a01
+
+push:
+yes
+
+final HEAD:
+2af0d3e976a15021b079c05270b6276dbfc75a01
+
+origin/main:
+2af0d3e976a15021b079c05270b6276dbfc75a01
+
+synchronized:
+YES
+
+tracked tree:
+T031 scoped clean
+
+unrelated user changes:
+preserved
+
+Architectural-Concerns:
+none new
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO
+
+remaining material visual mismatch:
+none
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

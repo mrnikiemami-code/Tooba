@@ -16,6 +16,7 @@ public sealed class ProductWorkspaceCompositionTests
         Assert.DoesNotContain("Price", listNames);
         Assert.DoesNotContain("Stock", listNames);
         Assert.Contains("OfferCount", listNames);
+        Assert.Contains("BrandName", listNames);
 
         var workspaceNames = typeof(ProductWorkspaceView).GetProperties().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
         Assert.DoesNotContain("Price", workspaceNames);
@@ -46,5 +47,6 @@ public sealed class ProductWorkspaceCompositionTests
         Assert.Contains("\"offerAmountRange\"", json, StringComparison.Ordinal);
         Assert.Contains("\"sellableUnits\":12", json, StringComparison.Ordinal);
         Assert.Contains("\"primaryMediaAssetId\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"brandName\"", json, StringComparison.Ordinal);
     }
 }

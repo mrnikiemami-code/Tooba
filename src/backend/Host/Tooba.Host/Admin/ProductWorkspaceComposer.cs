@@ -110,6 +110,14 @@ public sealed class ProductWorkspaceComposer
             CatalogLocalizedOwnerKind.Category,
             categoryLinks.Select(x => x.CategoryId).Distinct().ToList(),
             cancellationToken);
+        var brandIds = products
+            .Where(p => p.BrandId is Guid)
+            .Select(p => p.BrandId!.Value)
+            .Distinct()
+            .ToList();
+        var brandNames = brandIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brandIds, cancellationToken);
         var mediaRows = productIds.Count == 0
             ? []
             : await _catalog.MediaReferences.AsNoTracking()
@@ -139,6 +147,9 @@ public sealed class ProductWorkspaceComposer
                 .ThenBy(m => m.DisplayOrder)
                 .ToList();
             var primaryMedia = productMedia.FirstOrDefault(m => m.IsPrimary) ?? productMedia.FirstOrDefault();
+            var brandLabel = product.BrandId is Guid bid
+                ? (brandNames.GetValueOrDefault(bid) ?? "برند")
+                : "بدون برند";
             return new AdminProductListItem(
                 product.ProductId,
                 names.GetValueOrDefault(product.ProductId) ?? product.SlugSeam ?? product.ProductId.ToString("N")[..8],
@@ -151,7 +162,8 @@ public sealed class ProductWorkspaceComposer
                 units.Select(row => row.LocationId).Distinct().Count(),
                 product.UpdatedAt,
                 primaryMedia?.MediaAssetId,
-                primaryLink?.CategoryId);
+                primaryLink?.CategoryId,
+                brandLabel);
         }).ToList();
     }
 

@@ -24,6 +24,7 @@ export interface AdminProductListRow {
   variantCount: number;
   offerCount: number;
   categorySummary: string;
+  brandName: string;
   offerAmountRange: string;
   sellableUnits: number;
   locationCount: number;
@@ -76,6 +77,7 @@ export function mapAdminProductList(payload: unknown): AdminProductListRow[] {
         variantCount: asNumber(readProp(item, "variantCount", "VariantCount")),
         offerCount: asNumber(readProp(item, "offerCount", "OfferCount")),
         categorySummary: asString(readProp(item, "categorySummary", "CategorySummary"), "بدون دسته"),
+        brandName: asString(readProp(item, "brandName", "BrandName"), "بدون برند"),
         offerAmountRange: asString(readProp(item, "offerAmountRange", "OfferAmountRange"), "بدون مبلغ"),
         sellableUnits: asNumber(readProp(item, "sellableUnits", "SellableUnits")),
         locationCount: asNumber(readProp(item, "locationCount", "LocationCount")),

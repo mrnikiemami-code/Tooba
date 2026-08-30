@@ -1,0 +1,28 @@
+﻿[
+    {
+        "facetConfigurationId":  "01a04f95-62fd-7000-a86f-046edefd7bf9",
+        "categoryId":  "01a030d1-3fc4-7000-a617-966cf6571799",
+        "definitionId":  "01a04f95-15de-7000-ad6d-db2d7fd86889",
+        "code":  "t026x68119",
+        "valueKind":  "Text",
+        "displayType":  "SearchableSelect",
+        "sortOrder":  0,
+        "isVisible":  true,
+        "isSearchable":  true,
+        "isCollapsedByDefault":  false,
+        "showCounts":  true
+    },
+    {
+        "facetConfigurationId":  "01a04fa3-a8f7-7000-b041-4ceb6dff84d8",
+        "categoryId":  "01a030d1-3fc4-7000-a617-966cf6571799",
+        "definitionId":  "01a04fa3-a851-7000-b9fc-7ad029db3d7d",
+        "code":  "t026live89895",
+        "valueKind":  "Text",
+        "displayType":  "SearchableSelect",
+        "sortOrder":  0,
+        "isVisible":  true,
+        "isSearchable":  true,
+        "isCollapsedByDefault":  false,
+        "showCounts":  true
+    }
+]

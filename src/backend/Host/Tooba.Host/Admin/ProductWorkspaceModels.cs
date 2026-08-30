@@ -76,7 +76,8 @@ public sealed record AdminProductListItem(
     int LocationCount,
     DateTimeOffset UpdatedAt,
     Guid? PrimaryMediaAssetId,
-    Guid? PrimaryCategoryId = null);
+    Guid? PrimaryCategoryId = null,
+    string? BrandName = null);
 
 /// <summary>
 /// مدل نمایش ترکیب‌شده. aggregate دامنه نیست.

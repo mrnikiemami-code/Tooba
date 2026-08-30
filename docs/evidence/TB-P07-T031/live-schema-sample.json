@@ -1,0 +1,59 @@
+﻿[
+    {
+        "definitionId":  "01a030d1-4026-7000-81ba-267a1f816d6c",
+        "code":  "color",
+        "valueKind":  "Enumeration",
+        "isVariantAxisAllowed":  true,
+        "isVariantAxis":  true,
+        "isRequired":  false,
+        "isFilterable":  true,
+        "isComparable":  false,
+        "isMultivalue":  false,
+        "displayOrder":  10,
+        "inheritedFromCategoryId":  "01a043f3-30c5-7000-9c2d-2e96d8da1439",
+        "definitionIsActive":  true
+    },
+    {
+        "definitionId":  "01a0455c-5363-7000-9e37-f8311ba67083",
+        "code":  "storage",
+        "valueKind":  "Enumeration",
+        "isVariantAxisAllowed":  true,
+        "isVariantAxis":  true,
+        "isRequired":  false,
+        "isFilterable":  true,
+        "isComparable":  false,
+        "isMultivalue":  false,
+        "displayOrder":  20,
+        "inheritedFromCategoryId":  "01a043f3-30c5-7000-9c2d-2e96d8da1439",
+        "definitionIsActive":  true
+    },
+    {
+        "definitionId":  "01a0455c-5374-7000-b410-d9c18a0e5d3d",
+        "code":  "ram",
+        "valueKind":  "Enumeration",
+        "isVariantAxisAllowed":  false,
+        "isVariantAxis":  false,
+        "isRequired":  false,
+        "isFilterable":  true,
+        "isComparable":  true,
+        "isMultivalue":  false,
+        "displayOrder":  30,
+        "inheritedFromCategoryId":  "01a043f3-30c5-7000-9c2d-2e96d8da1439",
+        "definitionIsActive":  true
+    },
+    {
+        "definitionId":  "01a0455c-537a-7000-9219-5fe3d3467f2e",
+        "code":  "screen_size",
+        "valueKind":  "Number",
+        "isVariantAxisAllowed":  false,
+        "isVariantAxis":  false,
+        "unit":  "inch",
+        "isRequired":  true,
+        "isFilterable":  true,
+        "isComparable":  true,
+        "isMultivalue":  false,
+        "displayOrder":  40,
+        "inheritedFromCategoryId":  "01a043f3-30c5-7000-9c2d-2e96d8da1439",
+        "definitionIsActive":  true
+    }
+]

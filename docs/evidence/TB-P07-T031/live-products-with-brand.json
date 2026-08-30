@@ -1,0 +1,46 @@
+﻿[
+    {
+        "productId":  "01a03826-acdc-7000-9789-e43c19f18dee",
+        "title":  "دستکش موتورسواری زمستانی",
+        "status":  "Archived",
+        "variantCount":  1,
+        "offerCount":  1,
+        "categorySummary":  "سرویس غذاخوری چینی ۲۸ پارچه",
+        "offerAmountRange":  "1375000 IRR",
+        "sellableUnits":  8,
+        "locationCount":  1,
+        "updatedAt":  "2026-08-30T03:12:22.558524+00:00",
+        "primaryMediaAssetId":  "d0d0d0d0-0001-4000-8000-000000000001",
+        "primaryCategoryId":  "01a03b49-8571-7000-b108-cd87ee99d02d",
+        "brandName":  "آرمان"
+    },
+    {
+        "productId":  "01a04589-47e9-7000-b0c4-1e5f27d7e213",
+        "title":  "کلاه بایگانی R3",
+        "status":  "Archived",
+        "variantCount":  0,
+        "offerCount":  0,
+        "categorySummary":  "لپ‌تاپ لنوو IdeaPad Slim 3",
+        "offerAmountRange":  "بدون مبلغ",
+        "sellableUnits":  0,
+        "locationCount":  0,
+        "updatedAt":  "2026-08-29T15:51:50.2262+00:00",
+        "primaryMediaAssetId":  "22222222-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
+        "primaryCategoryId":  "01a03b49-839f-7000-b45b-1e473e21b2bb",
+        "brandName":  "آرمان"
+    },
+    {
+        "productId":  "01a04589-4753-7000-8a13-00c080e7d3a2",
+        "title":  "شال پیش‌نویس R3",
+        "status":  "Draft",
+        "variantCount":  0,
+        "offerCount":  0,
+        "categorySummary":  "بدون دسته",
+        "offerAmountRange":  "بدون مبلغ",
+        "sellableUnits":  0,
+        "locationCount":  0,
+        "updatedAt":  "2026-08-27T23:23:39.731142+00:00",
+        "primaryMediaAssetId":  "11111111-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
+        "brandName":  "آرمان"
+    }
+]

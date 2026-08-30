@@ -1,0 +1,1 @@
+﻿{"categoryId":"01a03b49-8571-7000-b108-cd87ee99d02d","isBound":false,"sortOrder":0,"isVisible":false,"isFeatured":false,"displayTitle":"سرویس غذاخوری چینی ۲۸ پارچه","destinationPreview":"/fa/category/سرویس-غذاخوری-چینی-۲۸-پارچه-01a03b49","presentationLevel":0,"categoryPublished":true,"categoryVisible":true}
