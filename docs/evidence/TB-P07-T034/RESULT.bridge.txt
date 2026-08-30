@@ -18,7 +18,7 @@ Bridge-UUID:
 32dfcbd9-cc5f-44af-be86-0211f97ddb12
 
 Git-HEAD:
-053544a961c70a3f6f454ff6fdb584f6b784b9d1
+a18c5f10e015f445d2b44115f9d654f955da142e
 
 USER_VISUAL_ACCEPTED:
 NO
@@ -72,7 +72,7 @@ Evidence:
 docs/evidence/TB-P07-T034/{product-counts,brand-distribution,localization,attributes-variants,media,seo-readiness,idempotency,live-samples,full-validation}.md + live-seed-*.json
 
 Git:
-committed+pushed; HEAD==origin/main=053544a961c70a3f6f454ff6fdb584f6b784b9d1; unrelated dirty preserved
+committed+pushed; HEAD==origin/main=a18c5f10e015f445d2b44115f9d654f955da142e; unrelated dirty preserved
 
 Architectural-Concerns:
 definition.IsVariantAxisAllowed blocks product-level values even when binding is non-axis — matrix bindings adjusted for towers/aio/foundation; leftover 4 non-demo Published products remain outside demo seam
