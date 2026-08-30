@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   mediaPreviewUrl,
   mediaUploadItemMessage,
+  mediaUploadStateLabel,
   queryAdminMediaLibrary,
-  uploadAdminMediaFiles,
+  uploadAdminMediaFileWithProgress,
   type MediaAssetDto,
+  type MediaUploadRow,
 } from "./media-api.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
 
@@ -53,7 +55,9 @@ export function MediaLibraryDialog({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Map<string, MediaAssetDto>>(new Map());
   const [busy, setBusy] = useState(false);
-  const [uploadNotes, setUploadNotes] = useState<string[]>([]);
+  const [uploadRows, setUploadRows] = useState<MediaUploadRow[]>([]);
+  const uploading = uploadRows.some((row) => row.state === "queued" || row.state === "uploading");
+  const dialogBusy = busy || uploading;
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -83,7 +87,7 @@ export function MediaLibraryDialog({
     setSearchApplied("");
     setPage(1);
     setSelected(new Map());
-    setUploadNotes([]);
+    setUploadRows([]);
     setError(null);
   }, [open]);
 
@@ -95,11 +99,11 @@ export function MediaLibraryDialog({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose();
+      if (e.key === "Escape" && !dialogBusy) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, busy, onClose]);
+  }, [open, dialogBusy, onClose]);
 
   if (!open) return null;
 
@@ -118,29 +122,97 @@ export function MediaLibraryDialog({
     });
   }
 
-  async function handleUpload(fileList: FileList | null) {
-    if (!fileList?.length || busy) return;
-    const files = Array.from(fileList);
-    setBusy(true);
-    setError(null);
-    setUploadNotes([]);
-    const result = await uploadAdminMediaFiles(files);
-    setBusy(false);
-    if (result.state !== "ok" || !result.data) {
-      setError(mapAdminErrorMessage(result.message ?? "media.upload.failed", "fa"));
-      return;
-    }
-    const notes: string[] = [];
-    const uploaded: MediaAssetDto[] = [];
-    for (const item of result.data.items) {
-      if (item.ok) {
-        uploaded.push(item.asset);
-        notes.push(`«${item.asset.originalFileName}» با موفقیت بارگذاری شد.`);
-      } else {
-        notes.push(`«${item.fileName || "فایل"}»: ${mediaUploadItemMessage(item)}`);
+  function patchUploadRow(id: string, patch: Partial<MediaUploadRow>, seed?: MediaUploadRow) {
+    setUploadRows((prev) => {
+      const idx = prev.findIndex((row) => row.id === id);
+      if (idx < 0) {
+        if (!seed) return prev;
+        return [...prev, { ...seed, ...patch }];
       }
+      return prev.map((row) => (row.id === id ? { ...row, ...patch } : row));
+    });
+  }
+
+  async function runUploadRow(row: MediaUploadRow) {
+    patchUploadRow(row.id, { state: "uploading", progressPercent: null, errorCode: undefined, messageFa: undefined, messageEn: undefined }, row);
+    const result = await uploadAdminMediaFileWithProgress(row.file, (progressPercent) => {
+      patchUploadRow(row.id, { progressPercent, state: "uploading" }, row);
+    });
+    if (result.state !== "ok" || !result.data) {
+      const code = result.message ?? "media.upload.failed";
+      patchUploadRow(
+        row.id,
+        {
+          state: "failed",
+          progressPercent: null,
+          errorCode: code,
+          messageFa: mapAdminErrorMessage(code, "fa"),
+          messageEn: mapAdminErrorMessage(code, "en"),
+        },
+        row,
+      );
+      return null;
     }
-    setUploadNotes(notes);
+    const item = result.data.items[0];
+    if (!item) {
+      patchUploadRow(
+        row.id,
+        {
+          state: "failed",
+          progressPercent: null,
+          errorCode: "media.upload.failed",
+          messageFa: mapAdminErrorMessage("media.upload.failed", "fa"),
+          messageEn: mapAdminErrorMessage("media.upload.failed", "en"),
+        },
+        row,
+      );
+      return null;
+    }
+    if (!item.ok) {
+      patchUploadRow(
+        row.id,
+        {
+          state: "failed",
+          progressPercent: null,
+          errorCode: item.errorCode,
+          messageFa: mediaUploadItemMessage(item, "fa"),
+          messageEn: mediaUploadItemMessage(item, "en"),
+        },
+        row,
+      );
+      return null;
+    }
+    patchUploadRow(
+      row.id,
+      {
+        state: "succeeded",
+        progressPercent: 100,
+        asset: item.asset,
+        messageFa: mediaUploadStateLabel("succeeded", "fa"),
+        messageEn: mediaUploadStateLabel("succeeded", "en"),
+      },
+      row,
+    );
+    return item.asset;
+  }
+
+  async function handleUpload(fileList: FileList | null) {
+    if (!fileList?.length || uploading || busy) return;
+    setError(null);
+    const files = Array.from(fileList);
+    const rows: MediaUploadRow[] = files.map((file, index) => ({
+      id: `${Date.now()}-${index}-${file.name}`,
+      fileName: file.name,
+      state: "queued",
+      progressPercent: null,
+      file,
+    }));
+    setUploadRows(rows);
+    const uploaded: MediaAssetDto[] = [];
+    for (const row of rows) {
+      const asset = await runUploadRow(row);
+      if (asset) uploaded.push(asset);
+    }
     if (uploaded.length) {
       setSelected((prev) => {
         const next = selectionMode === "single" ? new Map<string, MediaAssetDto>() : new Map(prev);
@@ -154,16 +226,36 @@ export function MediaLibraryDialog({
         }
         return next;
       });
-      setTab("library");
       setPage(1);
       setSearchApplied("");
-      void reload();
+      await reload();
+    }
+  }
+
+  async function retryUploadRow(rowId: string) {
+    if (uploading || busy) return;
+    const row = uploadRows.find((r) => r.id === rowId);
+    if (!row || row.state !== "failed") return;
+    setError(null);
+    const asset = await runUploadRow(row);
+    if (asset) {
+      setSelected((prev) => {
+        const next = selectionMode === "single" ? new Map<string, MediaAssetDto>() : new Map(prev);
+        if (selectionMode === "single") {
+          next.clear();
+          next.set(asset.mediaAssetId, asset);
+        } else {
+          next.set(asset.mediaAssetId, asset);
+        }
+        return next;
+      });
+      await reload();
     }
   }
 
   async function handleConfirm() {
     const assets = Array.from(selected.values());
-    if (!assets.length || busy) return;
+    if (!assets.length || dialogBusy) return;
     setBusy(true);
     setError(null);
     try {
@@ -185,8 +277,9 @@ export function MediaLibraryDialog({
       aria-modal="true"
       aria-labelledby="media-library-title"
       data-testid="admin-media-library-dialog"
+      data-uploading={uploading ? "true" : "false"}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose();
+        if (e.target === e.currentTarget && !dialogBusy) onClose();
       }}
     >
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
@@ -203,7 +296,7 @@ export function MediaLibraryDialog({
             type="button"
             className="min-h-10 rounded-xl px-3 text-sm text-slate-600 hover:bg-slate-50"
             onClick={onClose}
-            disabled={busy}
+            disabled={dialogBusy}
             aria-label="بستن کتابخانه رسانه"
             data-testid="admin-media-library-close"
           >
@@ -251,15 +344,26 @@ export function MediaLibraryDialog({
 
           {tab === "upload" ? (
             <div className="space-y-3" data-testid="admin-media-upload-panel">
-              <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-slate-50 px-4 text-center hover:border-blue-400 hover:bg-blue-50/40">
+              <label
+                className={
+                  uploading
+                    ? "flex min-h-40 cursor-not-allowed flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-slate-100 px-4 text-center opacity-70"
+                    : "flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-slate-50 px-4 text-center hover:border-blue-400 hover:bg-blue-50/40"
+                }
+              >
                 <span className="text-sm font-medium text-slate-800">انتخاب فایل تصویر</span>
-                <span className="text-xs text-slate-500">JPEG، PNG، WebP یا GIF — حداکثر حدود ۵ مگابایت برای هر فایل</span>
+                <span className="text-xs text-slate-500">
+                  JPEG، PNG، WebP یا GIF — حداکثر حدود ۵ مگابایت برای هر فایل · JPEG/PNG/WebP/GIF
+                </span>
+                <span className="text-[11px] text-slate-400" lang="en">
+                  Application upload state shown below (queued / uploading / succeeded / failed)
+                </span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
                   multiple
                   className="sr-only"
-                  disabled={busy}
+                  disabled={dialogBusy}
                   data-testid="admin-media-upload-input"
                   onChange={(e) => {
                     void handleUpload(e.target.files);
@@ -267,11 +371,89 @@ export function MediaLibraryDialog({
                   }}
                 />
               </label>
-              {uploadNotes.length ? (
-                <ul className="space-y-1 text-sm text-slate-700" data-testid="admin-media-upload-notes">
-                  {uploadNotes.map((note, i) => (
-                    <li key={`${i}-${note}`}>{note}</li>
-                  ))}
+              {uploading ? (
+                <p className="text-xs text-amber-800" data-testid="admin-media-upload-busy" role="status">
+                  بارگذاری در جریان است — از ارسال دوباره خودداری کنید. / Upload in progress — duplicate submit blocked.
+                </p>
+              ) : null}
+              {uploadRows.length ? (
+                <ul className="space-y-2" data-testid="admin-media-upload-rows">
+                  {uploadRows.map((row) => {
+                    const determinate = row.progressPercent != null;
+                    return (
+                      <li
+                        key={row.id}
+                        className="rounded-xl border border-gray-200 bg-white p-3"
+                        data-testid={`admin-media-upload-row-${row.state}`}
+                        data-upload-state={row.state}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-800" title={row.fileName}>
+                              {row.fileName}
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-600">
+                              <span>{mediaUploadStateLabel(row.state, "fa")}</span>
+                              <span className="mx-1 text-slate-300" aria-hidden>
+                                ·
+                              </span>
+                              <span lang="en">{mediaUploadStateLabel(row.state, "en")}</span>
+                              {row.state === "uploading" && determinate ? (
+                                <span className="ms-2 font-medium text-blue-700">{row.progressPercent}%</span>
+                              ) : null}
+                            </p>
+                            {row.state === "failed" ? (
+                              <p className="mt-1 text-xs text-red-700" role="alert">
+                                <span>{row.messageFa}</span>
+                                {row.messageEn ? (
+                                  <span className="mt-0.5 block text-red-600/80" lang="en">
+                                    {row.messageEn}
+                                  </span>
+                                ) : null}
+                              </p>
+                            ) : null}
+                          </div>
+                          {row.state === "failed" ? (
+                            <button
+                              type="button"
+                              className="min-h-9 rounded-lg border border-gray-200 px-3 text-xs font-medium hover:bg-slate-50 disabled:opacity-50"
+                              disabled={dialogBusy}
+                              onClick={() => void retryUploadRow(row.id)}
+                              data-testid="admin-media-upload-retry"
+                            >
+                              تلاش مجدد / Retry
+                            </button>
+                          ) : null}
+                        </div>
+                        {row.state === "uploading" ? (
+                          <div
+                            className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"
+                            role="progressbar"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={determinate ? row.progressPercent ?? undefined : undefined}
+                            aria-label={determinate ? `Upload ${row.progressPercent}%` : "Upload in progress"}
+                            data-testid="admin-media-upload-progress"
+                            data-progress-mode={determinate ? "determinate" : "indeterminate"}
+                          >
+                            {determinate ? (
+                              <div
+                                className="h-full rounded-full bg-blue-600 transition-[width]"
+                                style={{ width: `${row.progressPercent}%` }}
+                              />
+                            ) : (
+                              <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500/80" />
+                            )}
+                          </div>
+                        ) : null}
+                        {row.state === "succeeded" ? (
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
+                            <div className="h-full w-full rounded-full bg-emerald-500" />
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : null}
             </div>
@@ -331,7 +513,7 @@ export function MediaLibraryDialog({
                       <li key={asset.mediaAssetId}>
                         <button
                           type="button"
-                          disabled={isAssigned || busy}
+                          disabled={isAssigned || dialogBusy}
                           aria-pressed={isSelected}
                           title={
                             isAssigned
@@ -376,7 +558,7 @@ export function MediaLibraryDialog({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    disabled={busy || page <= 1}
+                    disabled={dialogBusy || page <= 1}
                     className="min-h-9 rounded-lg border border-gray-200 px-3 disabled:opacity-40"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     data-testid="admin-media-page-prev"
@@ -385,7 +567,7 @@ export function MediaLibraryDialog({
                   </button>
                   <button
                     type="button"
-                    disabled={busy || page >= totalPages}
+                    disabled={dialogBusy || page >= totalPages}
                     className="min-h-9 rounded-lg border border-gray-200 px-3 disabled:opacity-40"
                     onClick={() => setPage((p) => p + 1)}
                     data-testid="admin-media-page-next"
@@ -411,18 +593,18 @@ export function MediaLibraryDialog({
               type="button"
               className="min-h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               onClick={onClose}
-              disabled={busy}
+              disabled={dialogBusy}
             >
               انصراف
             </button>
             <button
               type="button"
               className="min-h-11 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-50"
-              disabled={busy || selectedCount === 0}
+              disabled={dialogBusy || selectedCount === 0}
               onClick={() => void handleConfirm()}
               data-testid="admin-media-confirm"
             >
-              {busy ? "در حال اعمال…" : "تأیید انتخاب"}
+              {dialogBusy ? "در حال اعمال…" : "تأیید انتخاب"}
             </button>
           </div>
         </div>

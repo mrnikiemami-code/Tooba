@@ -1,16 +1,9 @@
-﻿FE /admin status=200
-dev-context actor=01a036c2-970e-7000-8eb7-94bf5cc2d8db
-productId=
-categoryId=01a03b49-8330-7000-8ef2-7e984825e8a0
-upload: {"items":[{"ok":true,"asset":{"mediaAssetId":"01a0508b-c77b-7000-9180-21fc5d3a7152","originalFileName":"t029-upload.png","contentType":"image/png","byteSize":70,"createdAt":"2026-08-30T02:42:12.9872413+00:00","displayUrl":"/v1/storefront/media/01a0508b-c77b-7000-9180-21fc5d3a7152"}}]}
-assetId=01a0508b-c77b-7000-9180-21fc5d3a7152
-reject-text: {"items":[{"ok":false,"fileName":"t029-bad.txt","title":"نوع فایل رسانه پشتیبانی نمی‌شود.","errorCode":"media.type.unsupported"}]}
-library totalCount=1 pageItems=1
-serve contentType=image/png bytes=70 status=200
-category-assign status=200
-category image=01a0508b-c77b-7000-9180-21fc5d3a7152 banner=01a0508b-c77b-7000-9180-21fc5d3a7152
-category-clear-banner status=200
-productId=01a03826-acdc-7000-9789-e43c19f18dee
-product-attach status=201
-product-unassign status=200
-asset-after-unassign=01a0508b-c77b-7000-9180-21fc5d3a7152
+﻿FE /admin=
+Host live=200
+Shopeiva=200
+upload={"items":[{"ok":true,"asset":{"mediaAssetId":"01a050a7-63b9-7000-aed8-7d877ce50b50","originalFileName":"t029-r1.png","contentType":"image/png","byteSize":70,"createdAt":"2026-08-30T03:12:22.4574876+00:00","displayUrl":"/v1/storefront/media/01a050a7-63b9-7000-aed8-7d877ce50b50"}}]}
+reject={"items":[{"ok":false,"fileName":"t029-r1-bad.txt","title":"نوع فایل رسانه پشتیبانی نمی‌شود.","errorCode":"media.type.unsupported"}]}
+product-attach=201 unassign=200 asset-remains=01a050a7-63b9-7000-aed8-7d877ce50b50
+category-assign=200 clear-banner=200
+upload-ux-markers=admin-media-upload-rows|progress|retry present in dialog source
+FE /admin after restart=200

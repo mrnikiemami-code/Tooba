@@ -162,6 +162,119 @@ export async function getAdminMediaAsset(mediaAssetId: string): Promise<AdminRes
   }
 }
 
+export type MediaUploadRowState = "queued" | "uploading" | "succeeded" | "failed";
+
+export interface MediaUploadRow {
+  id: string;
+  fileName: string;
+  state: MediaUploadRowState;
+  /** 0–100 وقتی XHR progress در دسترس است؛ در غیر این صورت null (نامعین). */
+  progressPercent: number | null;
+  errorCode?: string;
+  messageFa?: string;
+  messageEn?: string;
+  asset?: MediaAssetDto;
+  file: File;
+}
+
+/** برچسب وضعیت آپلود fa/en برای UX سطح اپلیکیشن. */
+export function mediaUploadStateLabel(
+  state: MediaUploadRowState,
+  locale: "fa" | "en" = "fa",
+): string {
+  const map: Record<MediaUploadRowState, { fa: string; en: string }> = {
+    queued: { fa: "در صف", en: "Queued" },
+    uploading: { fa: "در حال بارگذاری", en: "Uploading" },
+    succeeded: { fa: "موفق", en: "Succeeded" },
+    failed: { fa: "ناموفق", en: "Failed" },
+  };
+  return map[state][locale];
+}
+
+function parseUploadPayload(payload: unknown): MediaUploadItem[] {
+  const root = recordOf(payload);
+  const rawItems = root ? prop(root, "items", "Items") : null;
+  const items: MediaUploadItem[] = [];
+  if (!Array.isArray(rawItems)) return items;
+  for (const row of rawItems) {
+    const rec = recordOf(row);
+    if (!rec) continue;
+    const ok = Boolean(prop(rec, "ok", "Ok"));
+    if (ok) {
+      const asset = mapMediaAsset(prop(rec, "asset", "Asset"));
+      if (asset) items.push({ ok: true, asset });
+    } else {
+      const errorCode = text(prop(rec, "errorCode", "ErrorCode")) || "media.upload.failed";
+      items.push({
+        ok: false,
+        fileName: text(prop(rec, "fileName", "FileName")),
+        title: text(prop(rec, "title", "Title")),
+        errorCode,
+      });
+    }
+  }
+  return items;
+}
+
+/**
+ * آپلود یک فایل با XHR تا progress بایت‌محور در دسترس باشد.
+ * اگر lengthComputable نباشد progressPercent=null (نامعین) می‌ماند.
+ */
+export function uploadAdminMediaFileWithProgress(
+  file: File,
+  onProgress?: (progressPercent: number | null) => void,
+): Promise<AdminResult<{ items: MediaUploadItem[] }>> {
+  return new Promise((resolve) => {
+    const form = new FormData();
+    form.append("files", file, file.name);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/v1/admin/media/upload");
+    const headers = adminHeaders();
+    for (const [key, value] of Object.entries(headers)) {
+      if (key.toLowerCase() === "content-type") continue;
+      xhr.setRequestHeader(key, value);
+    }
+    xhr.upload.onprogress = (event) => {
+      if (!onProgress) return;
+      if (event.lengthComputable && event.total > 0) {
+        onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+      } else {
+        onProgress(null);
+      }
+    };
+    xhr.onload = () => {
+      let payload: unknown = null;
+      try {
+        payload = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+      } catch {
+        payload = null;
+      }
+      if (xhr.status === 401 || xhr.status === 403) {
+        resolve({ state: "denied", data: null, status: xhr.status, message: "admin.authorization.denied" });
+        return;
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        resolve({
+          state: "error",
+          data: null,
+          status: xhr.status,
+          message: errorMessage(payload, xhr.status),
+        });
+        return;
+      }
+      resolve({ state: "ok", data: { items: parseUploadPayload(payload) }, status: xhr.status });
+    };
+    xhr.onerror = () => {
+      resolve({ state: "error", data: null, status: 0, message: "host-unreachable" });
+    };
+    xhr.onabort = () => {
+      resolve({ state: "error", data: null, status: 0, message: "media.upload.failed" });
+    };
+    onProgress?.(null);
+    xhr.send(form);
+  });
+}
+
 /**
  * آپلود multipart واقعی — فیلد فرم `files`.
  * Content-Type را عمداً ست نمی‌کنیم تا boundary مرورگر حفظ شود.
@@ -194,35 +307,13 @@ export async function uploadAdminMediaFiles(
     if (!response.ok) {
       return { state: "error", data: null, status: response.status, message: errorMessage(payload, response.status) };
     }
-    const root = recordOf(payload);
-    const rawItems = root ? prop(root, "items", "Items") : null;
-    const items: MediaUploadItem[] = [];
-    if (Array.isArray(rawItems)) {
-      for (const row of rawItems) {
-        const rec = recordOf(row);
-        if (!rec) continue;
-        const ok = Boolean(prop(rec, "ok", "Ok"));
-        if (ok) {
-          const asset = mapMediaAsset(prop(rec, "asset", "Asset"));
-          if (asset) items.push({ ok: true, asset });
-        } else {
-          const errorCode = text(prop(rec, "errorCode", "ErrorCode")) || "media.upload.failed";
-          items.push({
-            ok: false,
-            fileName: text(prop(rec, "fileName", "FileName")),
-            title: text(prop(rec, "title", "Title")),
-            errorCode,
-          });
-        }
-      }
-    }
-    return { state: "ok", data: { items }, status: response.status };
+    return { state: "ok", data: { items: parseUploadPayload(payload) }, status: response.status };
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
 }
 
 /** پیام فارسی برای یک کد خطای آپلود تکی. */
-export function mediaUploadItemMessage(item: MediaUploadItemFail): string {
-  return mapAdminErrorMessage(item.errorCode, "fa");
+export function mediaUploadItemMessage(item: MediaUploadItemFail, locale: "fa" | "en" = "fa"): string {
+  return mapAdminErrorMessage(item.errorCode, locale);
 }

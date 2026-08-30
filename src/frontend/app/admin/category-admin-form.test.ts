@@ -103,7 +103,7 @@ test("category media supports real library select/upload/unassign for image/icon
   assert.equal(screen.includes("انتخاب رسانه — به‌زودی"), false);
   assert.equal(screen.includes("به‌زودی"), false);
   assert.match(dialog, /type=\"file\"/);
-  assert.match(dialog, /uploadAdminMediaFiles/);
+  assert.match(dialog, /uploadAdminMediaFileWithProgress/);
 });
 
 test("permission-aware edit action gated by canEdit", () => {

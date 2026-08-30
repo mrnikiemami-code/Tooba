@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { mapMediaAsset, mediaPreviewUrl } from "./media-api.ts";
+import { mapMediaAsset, mediaPreviewUrl, mediaUploadStateLabel } from "./media-api.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -34,7 +34,17 @@ test("media library dialog has library/upload tabs, search, paging, selection mo
   assert.match(src, /admin-media-search/);
   assert.match(src, /admin-media-page-next/);
   assert.match(src, /selectionMode/);
-  assert.match(src, /uploadAdminMediaFiles/);
+  assert.match(src, /uploadAdminMediaFileWithProgress/);
+  assert.match(src, /admin-media-upload-rows/);
+  assert.match(src, /admin-media-upload-progress/);
+  assert.match(src, /mediaUploadStateLabel/);
   assert.match(src, /type=\"file\"/);
   assert.doesNotMatch(src, /شناسه دارایی/);
+});
+
+test("mediaUploadStateLabel covers queued/uploading/succeeded/failed in fa and en", () => {
+  assert.equal(mediaUploadStateLabel("queued", "fa"), "در صف");
+  assert.equal(mediaUploadStateLabel("uploading", "en"), "Uploading");
+  assert.equal(mediaUploadStateLabel("succeeded", "fa"), "موفق");
+  assert.equal(mediaUploadStateLabel("failed", "en"), "Failed");
 });
