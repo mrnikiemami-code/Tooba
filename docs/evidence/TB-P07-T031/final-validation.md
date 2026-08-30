@@ -33,3 +33,7 @@
 ## Tree hygiene
 - Unrelated dirty/untracked user files preserved
 - Commit scoped to T031 repair + evidence + task meta only
+
+## Git tip
+- final HEAD/origin/main: 14772b13b29dd805b1c2b521677d94fae1af5f79
+
