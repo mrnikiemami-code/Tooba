@@ -35,7 +35,8 @@ public sealed record StorefrontProductCard(
     bool InStock,
     string? PromotionLabel,
     decimal? AverageRating = null,
-    long ReviewCount = 0);
+    long ReviewCount = 0,
+    Guid? BrandId = null);
 
 /// <summary>
 /// ردهٔ منتشرشده برای ناوبری فروشگاه. رابطهٔ والد از Catalog می‌آید و مسیر landing همان فیلتر پایدار رده است.

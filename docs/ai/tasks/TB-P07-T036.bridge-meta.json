@@ -1,0 +1,9 @@
+{
+    "id":  "d2da107a-1dd1-4562-8e2c-750f6a4a66cd",
+    "workerId":  "tooba-worker-01",
+    "parentTaskId":  "TB-P07-T035",
+    "channelId":  "tooba-main",
+    "claimedAtUtc":  "2026-08-30T18:49:42.7090462",
+    "taskId":  "TB-P07-T036",
+    "status":  "Claimed"
+}

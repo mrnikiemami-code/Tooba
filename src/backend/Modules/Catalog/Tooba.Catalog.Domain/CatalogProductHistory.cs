@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Tooba.BuildingBlocks;
 
 namespace Tooba.Catalog.Domain;
@@ -130,6 +131,37 @@ public static class ProductHistoryRules
     public const string SummaryGeneralFa = "اطلاعات اصلی محصول ویرایش شد";
     /// <summary>خلاصهٔ تغییر دسته.</summary>
     public const string SummaryCategoryFa = "دسته‌بندی محصول تغییر کرد";
+    /// <summary>خلاصهٔ مهاجرت دستهٔ اصلی.</summary>
+    public const string SummaryCategoryMigrationFa = "دسته اصلی محصول مهاجرت داده شد";
+    /// <summary>خلاصهٔ Unpublish به‌خاطر مهاجرت ناسازگار.</summary>
+    public const string SummaryUnpublishedByMigrationFa = "محصول به‌خاطر ناسازگاری مهاجرت دسته اصلی از انتشار خارج شد";
+
+    /// <summary>
+    /// خلاصهٔ انسانی مهاجرت دستهٔ اصلی بدون GUID/JSON خام.
+    /// </summary>
+    public static string FormatCategoryMigrationAfterSummaryFa(
+        string newCategoryPath,
+        int preservedAttributeCount,
+        int newRequiredCount,
+        int removedAttributeCount,
+        int affectedVariantCount,
+        bool unpublishedForSafety)
+    {
+        var parts = new List<string>
+        {
+            newCategoryPath.Trim(),
+            $"حفظ ویژگی: {preservedAttributeCount}",
+            $"جدید الزامی: {newRequiredCount}",
+            $"حذف‌شده: {removedAttributeCount}",
+            $"تنوع تحت تأثیر: {affectedVariantCount}",
+        };
+        if (unpublishedForSafety)
+        {
+            parts.Add("خروج از انتشار برای ایمنی");
+        }
+
+        return string.Join(" · ", parts);
+    }
     /// <summary>خلاصهٔ محتوای محلی.</summary>
     public const string SummaryLocalizedFa = "محتوای محلی محصول ویرایش شد";
     /// <summary>خلاصهٔ ویژگی‌ها.</summary>

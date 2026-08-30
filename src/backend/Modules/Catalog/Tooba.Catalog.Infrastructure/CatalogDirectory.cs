@@ -330,6 +330,15 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("ردهٔ والد در Catalog این Tenant وجود ندارد.");
         }
 
+        if (request.ParentCategoryId is Guid parentForDepth)
+        {
+            var parentRows = await _db.Categories.AsNoTracking()
+                .Select(x => new { x.CategoryId, x.ParentCategoryId })
+                .ToListAsync(cancellationToken);
+            var parentMap = parentRows.ToDictionary(x => x.CategoryId, x => x.ParentCategoryId);
+            CatalogCategoryTreeRules.EnsureCanAddChildUnder(parentForDepth, parentMap);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var category = CatalogCategory.Create(
             request.ParentCategoryId,
@@ -1110,7 +1119,8 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 x => x.CategoryId == categoryId && x.DefinitionId == definitionId,
                 cancellationToken))
         {
-            throw new InvalidOperationException("این تعریف از قبل به رده پیوند شده است.");
+            throw new InvalidOperationException(
+                "این ویژگی از قبل به این دسته پیوند شده است و نمی‌توان دوباره آن را افزود.");
         }
 
         _db.CategoryAttributeBindings.Add(
@@ -1214,7 +1224,9 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             x.Definition.IsMultivalue,
             x.DisplayOrder,
             x.InheritedFromCategoryId,
-            x.Definition.IsActive)).ToList();
+            x.Definition.IsActive,
+            x.OverriddenFromCategoryId is Guid,
+            x.OverriddenFromCategoryId)).ToList();
     }
 
     /// <inheritdoc />
@@ -2269,10 +2281,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("تعریف ویژگی غیرفعال است.");
         }
 
-        if (definition.IsVariantAxis)
-        {
-            throw new InvalidOperationException("محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.");
-        }
+        await EnsureNotEffectiveVariantAxisOnProductAsync(productId, definitionId, cancellationToken);
 
         await EnsureDefinitionAllowedForProductSchemaAsync(productId, definitionId, cancellationToken);
 
@@ -3044,7 +3053,8 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             .Where(x => x.ProductId == productId)
             .ToListAsync(cancellationToken);
         var allowed = newSchema.Select(x => x.DefinitionId).ToHashSet();
-        var compatiblePreserved = values.Count(v => allowed.Contains(v.DefinitionId));
+        var compatibleValues = values.Where(v => allowed.Contains(v.DefinitionId)).ToList();
+        var compatiblePreserved = compatibleValues.Count;
 
         var presentIds = values.Select(v => v.DefinitionId).ToHashSet();
         var newlyRequired = newSchema
@@ -3052,7 +3062,12 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             .ToList();
 
         var orphanDefIds = impact.OrphanAttributeValues.Select(x => x.DefinitionId).Distinct().ToArray();
-        var labelIds = orphanDefIds.Concat(newlyRequired.Select(x => x.DefinitionId)).Distinct().ToArray();
+        var preservedDefIds = compatibleValues.Select(v => v.DefinitionId).Distinct().ToArray();
+        var labelIds = orphanDefIds
+            .Concat(newlyRequired.Select(x => x.DefinitionId))
+            .Concat(preservedDefIds)
+            .Distinct()
+            .ToArray();
         var names = await GetAttributeDefinitionNamesAsync(labelIds, normalizedLocale, cancellationToken);
 
         var orphanOptionIds = new List<Guid>();
@@ -3087,8 +3102,16 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var newlyRequiredLabels = newlyRequired
             .Select(x => names.GetValueOrDefault(x.DefinitionId) ?? x.Definition.Code)
             .ToList();
+        var preservedAttributes = preservedDefIds
+            .Select(id => names.GetValueOrDefault(id) ?? id.ToString("N"))
+            .ToList();
+        var removedAttributes = orphanSummaries
+            .Select(o => string.IsNullOrWhiteSpace(o.DisplayValue)
+                ? o.LocalizedName
+                : $"{o.LocalizedName}: {o.DisplayValue}")
+            .ToList();
 
-        var impactedVariants = await _db.Variants.AsNoTracking()
+        var activeVariantCount = await _db.Variants.AsNoTracking()
             .CountAsync(
                 x => x.ProductId == productId && x.Status != CatalogPublicationStatus.Archived,
                 cancellationToken);
@@ -3100,10 +3123,54 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var axesChanged = impact.InvalidVariantAxisDefinitionIds.Count > 0
             || currentAxes.Any(id => !newAxisIds.Contains(id))
             || (currentAxes.Count > 0 && !currentAxes.ToHashSet().SetEquals(newAxisIds));
-        var variantImpactCount = axesChanged ? impactedVariants : 0;
+        var variantCompatible = !axesChanged;
+        var variantImpactCount = axesChanged ? activeVariantCount : 0;
+        var preservedVariantCount = variantCompatible ? activeVariantCount : 0;
+        var affectedVariantCount = variantCompatible ? 0 : activeVariantCount;
         var variantImpactFa = variantImpactCount > 0
             ? $"{ToPersianDigits(variantImpactCount)} تنوع تحت تأثیر تغییر محورها قرار می‌گیرد و حذف خودکار نمی‌شود"
             : null;
+
+        var currentCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        string? currentCategoryPath = null;
+        if (currentCategoryId is Guid currentId)
+        {
+            currentCategoryPath = await BuildCategoryPathAsync(currentId, normalizedLocale, cancellationToken);
+        }
+
+        var targetCategoryPath = await BuildCategoryPathAsync(newCategoryId, normalizedLocale, cancellationToken);
+
+        var memberships = await _db.ProductCategories.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .ToListAsync(cancellationToken);
+        var additionalMembershipPromoted = memberships.Any(
+            x => x.CategoryId == newCategoryId && x.Role == CatalogProductCategoryRole.Additional);
+        var otherDisplayRemainCount = memberships.Count(
+            x => x.Role == CatalogProductCategoryRole.Additional && x.CategoryId != newCategoryId);
+
+        var readinessBlockers = new List<string>();
+        foreach (var label in newlyRequiredLabels)
+        {
+            readinessBlockers.Add($"ویژگی الزامی «{label}» باید تکمیل شود");
+        }
+
+        if (!variantCompatible && affectedVariantCount > 0)
+        {
+            readinessBlockers.Add(
+                $"{ToPersianDigits(affectedVariantCount)} تنوع نیاز به بازبینی دارند و آمادگی انتشار برقرار نیست");
+        }
+
+        var productStatus = await _db.Products.AsNoTracking()
+            .Where(x => x.ProductId == productId)
+            .Select(x => x.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+        var structuralIncompatibility = impact.OrphanAttributeValues.Count > 0
+            || newlyRequired.Count > 0
+            || !variantCompatible;
+        if (productStatus == CatalogPublicationStatus.Published && structuralIncompatibility)
+        {
+            readinessBlockers.Add("محصول پس از مهاجرت به‌خاطر ناسازگاری ساختاری از انتشار خارج می‌شود");
+        }
 
         var messageParts = new List<string>
         {
@@ -3114,6 +3181,11 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         if (variantImpactFa is not null)
         {
             messageParts.Add(variantImpactFa);
+        }
+
+        if (additionalMembershipPromoted)
+        {
+            messageParts.Add("دسته هدف از «نمایش در این دسته» به دسته اصلی ارتقا می‌یابد");
         }
 
         var messageFa = string.Join("\n", messageParts);
@@ -3129,7 +3201,20 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             impact.InvalidVariantAxisDefinitionIds,
             messageFa,
             variantImpactCount,
-            variantImpactFa);
+            variantImpactFa,
+            currentCategoryId,
+            currentCategoryPath,
+            targetCategoryPath,
+            preservedAttributes,
+            newlyRequiredLabels,
+            removedAttributes,
+            newlyRequiredLabels,
+            variantCompatible,
+            preservedVariantCount,
+            affectedVariantCount,
+            additionalMembershipPromoted,
+            otherDisplayRemainCount,
+            readinessBlockers);
     }
 
     /// <inheritdoc />
@@ -3141,39 +3226,123 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         // Preview enforces Level-3 assignability before replace.
         var impact = await PreviewCategoryChangeAsync(productId, newCategoryId, cancellationToken);
-        var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
+        var preview = await PreviewCategoryChangeReportAsync(productId, newCategoryId, "fa-IR", cancellationToken);
 
-        // اگر دسته جدید قبلاً Additional بود، ردیف را بردار تا Unique (ProductId, CategoryId) نشکند.
-        var existingAsAdditional = existing.FirstOrDefault(
-            x => x.CategoryId == newCategoryId && x.Role == CatalogProductCategoryRole.Additional);
-        if (existingAsAdditional is not null)
+        await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        try
         {
-            _db.ProductCategories.Remove(existingAsAdditional);
-            existing.Remove(existingAsAdditional);
-        }
+            var existing = await _db.ProductCategories.Where(x => x.ProductId == productId).ToListAsync(cancellationToken);
 
-        var currentPrimary = existing.FirstOrDefault(x => x.Role == CatalogProductCategoryRole.Primary);
-        if (currentPrimary is not null)
-        {
-            if (currentPrimary.CategoryId == newCategoryId)
+            // اگر دسته جدید قبلاً Additional بود، ردیف را بردار تا Unique (ProductId, CategoryId) نشکند (ارتقا اتمی).
+            var existingAsAdditional = existing.FirstOrDefault(
+                x => x.CategoryId == newCategoryId && x.Role == CatalogProductCategoryRole.Additional);
+            if (existingAsAdditional is not null)
             {
-                return impact;
+                _db.ProductCategories.Remove(existingAsAdditional);
+                existing.Remove(existingAsAdditional);
             }
 
-            _db.ProductCategories.Remove(currentPrimary);
-        }
+            var currentPrimary = existing.FirstOrDefault(x => x.Role == CatalogProductCategoryRole.Primary);
+            if (currentPrimary is not null)
+            {
+                if (currentPrimary.CategoryId == newCategoryId)
+                {
+                    await tx.CommitAsync(cancellationToken);
+                    return impact;
+                }
 
-        _db.ProductCategories.Add(
-            CatalogProductCategory.Assign(productId, newCategoryId, CatalogProductCategoryRole.Primary));
-        QueueProductHistory(
-            productId,
-            ProductHistoryRules.EventCategoryChanged,
-            ProductHistoryRules.SectionCategory,
-            ProductHistoryRules.SummaryCategoryFa,
-            null,
-            null);
-        await _db.SaveChangesAsync(cancellationToken);
-        return impact;
+                _db.ProductCategories.Remove(currentPrimary);
+            }
+
+            _db.ProductCategories.Add(
+                CatalogProductCategory.Assign(productId, newCategoryId, CatalogProductCategoryRole.Primary));
+
+            // حذف orphanها فقط با تطبیق AttributeDefinition ID — بدون ساخت مقدار جعلی برای الزامی‌های جدید.
+            var orphanDefIds = impact.OrphanAttributeValues.Select(x => x.DefinitionId).ToHashSet();
+            if (orphanDefIds.Count > 0)
+            {
+                var orphanRows = await _db.ProductAttributeValues
+                    .Where(x => x.ProductId == productId && orphanDefIds.Contains(x.DefinitionId))
+                    .ToListAsync(cancellationToken);
+                _db.ProductAttributeValues.RemoveRange(orphanRows);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var newSchema = await ResolveEffectiveBindingsAsync(newCategoryId, cancellationToken);
+            var newAxisIds = newSchema.Where(x => x.IsVariantAxis).Select(x => x.DefinitionId).ToHashSet();
+            var currentAxes = await _db.ProductVariantAxes
+                .Where(x => x.ProductId == productId)
+                .ToListAsync(cancellationToken);
+            var axesChanged = !preview.VariantCompatible;
+            var invalidAxes = currentAxes.Where(a => !newAxisIds.Contains(a.DefinitionId)).ToList();
+            if (invalidAxes.Count > 0)
+            {
+                _db.ProductVariantAxes.RemoveRange(invalidAxes);
+            }
+
+            if (axesChanged)
+            {
+                var variants = await _db.Variants
+                    .Where(x => x.ProductId == productId && x.Status != CatalogPublicationStatus.Archived)
+                    .ToListAsync(cancellationToken);
+                ClearDefaultFlags(variants, now);
+                foreach (var variant in variants)
+                {
+                    // ترکیب‌های تجاری را حذف نمی‌کنیم؛ فقط Draft + نیاز به بازبینی.
+                    if (variant.Status != CatalogPublicationStatus.Draft)
+                    {
+                        variant.SetStatus(CatalogPublicationStatus.Draft, now);
+                    }
+                    else
+                    {
+                        variant.UpdatedAt = now;
+                    }
+                }
+            }
+
+            var structuralIncompatibility = impact.OrphanAttributeValues.Count > 0
+                || preview.NewlyRequiredMissingCount > 0
+                || axesChanged;
+            var unpublishedForSafety = false;
+            var product = await _db.Products.SingleAsync(x => x.ProductId == productId, cancellationToken);
+            if (product.Status == CatalogPublicationStatus.Published && structuralIncompatibility)
+            {
+                product.Unpublish(now);
+                unpublishedForSafety = true;
+                QueueProductHistory(
+                    productId,
+                    ProductHistoryRules.EventUnpublished,
+                    ProductHistoryRules.SectionLifecycle,
+                    ProductHistoryRules.SummaryUnpublishedByMigrationFa,
+                    ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Published),
+                    ProductPublishRules.LifecycleLabelFa(CatalogPublicationStatus.Draft));
+            }
+
+            var beforePath = preview.CurrentCategoryPath ?? "بدون دسته اصلی";
+            var afterSummary = ProductHistoryRules.FormatCategoryMigrationAfterSummaryFa(
+                preview.TargetCategoryPath ?? "دسته جدید",
+                preview.CompatiblePreservedCount,
+                preview.NewlyRequiredMissingCount,
+                preview.OrphanCount,
+                preview.AffectedVariantCount,
+                unpublishedForSafety);
+            QueueProductHistory(
+                productId,
+                ProductHistoryRules.EventCategoryChanged,
+                ProductHistoryRules.SectionCategory,
+                ProductHistoryRules.SummaryCategoryMigrationFa,
+                beforePath,
+                afterSummary);
+
+            await _db.SaveChangesAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+            return impact;
+        }
+        catch
+        {
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     /// <inheritdoc />
@@ -3704,10 +3873,7 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             throw new InvalidOperationException("تعریف ویژگی غیرفعال است.");
         }
 
-        if (definition.IsVariantAxis)
-        {
-            throw new InvalidOperationException("محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.");
-        }
+        await EnsureNotEffectiveVariantAxisOnProductAsync(productId, input.DefinitionId, cancellationToken);
 
         await EnsureDefinitionAllowedForProductSchemaAsync(productId, input.DefinitionId, cancellationToken);
 
@@ -4354,6 +4520,28 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
                 span[i] = c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c;
             }
         });
+    }
+
+    /// <summary>
+    /// فقط وقتی در schema مؤثر دسته اصلی، این تعریف واقعاً محور تنوع است، ذخیره روی Product ممنوع است.
+    /// IsVariantAxis روی تعریف یعنی «مجاز به محور بودن»، نه الزام محور بودن در همهٔ دسته‌ها.
+    /// </summary>
+    private async Task EnsureNotEffectiveVariantAxisOnProductAsync(
+        Guid productId,
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        var primaryCategoryId = await ResolvePrimaryCategoryIdAsync(productId, cancellationToken);
+        if (primaryCategoryId is not Guid categoryId)
+        {
+            return;
+        }
+
+        var schema = await ResolveEffectiveBindingsAsync(categoryId, cancellationToken);
+        if (schema.Any(x => x.DefinitionId == definitionId && x.IsVariantAxis))
+        {
+            throw new InvalidOperationException("محور Variant روی خود Product ذخیره نمی‌شود؛ به گونه تعلق دارد.");
+        }
     }
 
     private async Task EnsureDefinitionAllowedForProductSchemaAsync(

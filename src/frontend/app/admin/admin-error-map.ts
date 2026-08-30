@@ -30,6 +30,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "تنظیم ویژگی برای این دسته معتبر نیست.",
     en: "This attribute setting is not valid for the category.",
   },
+  "catalog.schema.duplicate-inherited": {
+    fa: "این ویژگی از قبل از دسته والد به ارث رسیده است. در صورت نیاز تنظیمات استفاده آن را برای این دسته تغییر دهید.",
+    en: "This attribute is already inherited from a parent category. Customize its usage for this category if needed.",
+  },
   "catalog.facet.invalid": {
     fa: "تنظیم فیلتر معتبر نیست. ویژگی باید برای این دسته قابل فیلتر باشد.",
     en: "Filter settings are not valid. The attribute must be filterable for this category.",
@@ -41,6 +45,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "catalog.category.invalid": {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",
+  },
+  "catalog.category.depth.exceeded": {
+    fa: "عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.",
+    en: "Categories deeper than level 3 are not allowed.",
   },
   "catalog.category.assignment.duplicate": {
     fa: "این دسته قبلاً به محصول اضافه شده است.",

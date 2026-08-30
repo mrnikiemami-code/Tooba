@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * تب محصولات Category Workspace — فهرست و اختصاص از همان رابطهٔ canonical Product↔Category.
- * این صفحه فقط عضویت در دستهٔ جاری را مدیریت می‌کند (نه تغییر دسته اصلی).
+ * تب محصولات Category Workspace — فقط «نمایش در این دسته» (display membership).
+ * هرگز Primary Category را از این سطح ایجاد/تغییر نمی‌دهد.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -24,7 +24,6 @@ import { mapAdminErrorMessage } from "./admin-error-map";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages";
 import {
   addAdminProductAdditionalCategory,
-  assignAdminProductCategory,
   loadProductWorkspace,
   queryAdminProductGrid,
   removeAdminProductAdditionalCategory,
@@ -35,6 +34,8 @@ import {
   isAssignableProductCategory,
 } from "./product-category-level";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
+import { getProductAttributeEditorState } from "./catalog-attribute-api";
+import { loadEffectiveCategoryFacets } from "./catalog-facet-api";
 
 export const CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA =
   "محصول فقط به دسته‌بندی سطح سوم قابل اختصاص است.";
@@ -42,6 +43,11 @@ export const CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA =
 const PRIMARY_MEMBERSHIP_HELPER_FA =
   "این دسته، دسته اصلی محصول است. برای تغییر دسته اصلی، محصول را باز کنید.";
 
+const DISPLAY_MEMBERSHIP_BADGE_FA = "نمایش در این دسته";
+const ADD_FOR_DISPLAY_CTA_FA = "افزودن برای نمایش";
+const ADD_PRODUCT_FOR_DISPLAY_CTA_FA = "افزودن محصول برای نمایش در این دسته";
+const BULK_ADD_FOR_DISPLAY_CTA_FA = (n: number) => `افزودن موارد انتخاب‌شده برای نمایش (${n})`;
+const DIALOG_TITLE_FA = "افزودن محصول برای نمایش در این دسته";
 function categorySummaryIncludes(summary: string, categoryName: string): boolean {
   const needle = categoryName.trim();
   if (!needle) return false;
@@ -135,22 +141,16 @@ export function CategoryProductsPanel({
     });
   }, []);
 
-  /** عضویت در دستهٔ جاری: بدون primary → set primary؛ با primary دیگر → additional. */
+  /**
+   * فقط عضویت نمایشی (Additional). هرگز Primary را از این سطح تنظیم نمی‌کند.
+   * اختیاری: راهنمای سازگاری فیلترهای دستهٔ هدف (غیرمسدودکننده).
+   */
   const assignProductToCategory = useCallback(async (productId: string): Promise<"added" | "already"> => {
     const ws = await loadProductWorkspace(productId, false);
     if (ws.source !== "host" || !ws.view) {
       throw new Error(ws.message ?? "workspace.product.missing");
     }
     const primary = ws.view.primaryCategoryId;
-    if (!primary) {
-      const result = await assignAdminProductCategory(productId, {
-        categoryId,
-        confirmSchemaImpact: false,
-        expectedUpdatedAt: ws.view.catalogUpdatedAt,
-      });
-      if (!result.ok) throw new Error(result.errorCode);
-      return "added";
-    }
     if (primary === categoryId) {
       return "already";
     }
@@ -165,9 +165,36 @@ export function CategoryProductsPanel({
       expectedUpdatedAt: ws.view.catalogUpdatedAt,
     });
     if (!result.ok) throw new Error(result.errorCode);
+
+    // O — optional non-blocking facet compatibility hint
+    try {
+      const [facets, editor] = await Promise.all([
+        loadEffectiveCategoryFacets(categoryId, "fa-IR"),
+        getProductAttributeEditorState(productId, "fa-IR"),
+      ]);
+      const facetItems = facets.state === "ok" && facets.data ? facets.data : [];
+      const fields = editor.state === "ok" && editor.data ? editor.data.fields : [];
+      if (facetItems.length > 0) {
+        const productDefIds = new Set(
+          fields
+            .filter((f) => Boolean(f.currentCanonicalValue || f.currentEnumOptionId || f.displayValue))
+            .map((f) => f.definitionId),
+        );
+        const missing = facetItems.filter(
+          (f) => f.isVisible && f.definitionId && !productDefIds.has(f.definitionId),
+        ).length;
+        if (missing > 0) {
+          toast.info(
+            `این محصول در این دسته نمایش داده می‌شود، اما برای ${missing} فیلتر این دسته مقدار متناظر ندارد.`,
+          );
+        }
+      }
+    } catch {
+      // hint is optional
+    }
+
     return "added";
   }, [categoryId]);
-
   const removeProductFromCategory = useCallback(async (productId: string) => {
     const ws = await loadProductWorkspace(productId, false);
     if (ws.source !== "host" || !ws.view) {
@@ -250,9 +277,15 @@ export function CategoryProductsPanel({
         label: "حذف از این دسته",
         icon: Trash2,
         variant: "destructive",
-        visible: (row) => row.primaryCategoryId !== categoryId,
-        confirm: () => "این محصول از عضویت این دسته حذف شود؟",
+        confirm: (row) =>
+          row.primaryCategoryId === categoryId
+            ? false
+            : "این محصول از عضویت این دسته حذف شود؟",
         onClick: async (row) => {
+          if (row.primaryCategoryId === categoryId) {
+            toast.info(PRIMARY_MEMBERSHIP_HELPER_FA);
+            return;
+          }
           await removeProductFromCategory(row.id);
           afterMembershipRemoved();
         },
@@ -297,10 +330,10 @@ export function CategoryProductsPanel({
                   ? "inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800"
                   : "inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
               }
-              title={isPrimary ? undefined : "نمایش در دسته‌های دیگر"}
+              title={isPrimary ? undefined : DISPLAY_MEMBERSHIP_BADGE_FA}
               data-testid={`category-product-role-${row.id}`}
             >
-              {isPrimary ? "دسته اصلی" : "نمایش دیگر"}
+              {isPrimary ? "دسته اصلی" : DISPLAY_MEMBERSHIP_BADGE_FA}
             </span>
           );
         },
@@ -462,13 +495,27 @@ export function CategoryProductsPanel({
                     دسته اصلی
                   </span>
                   <p className="text-[11px] leading-snug text-slate-600">{PRIMARY_MEMBERSHIP_HELPER_FA}</p>
-                  <a
-                    href={`/admin/products/${row.id}?scope=view`}
-                    className="text-[11px] font-medium text-[#2563EB] hover:underline"
-                    data-testid={`category-assign-open-product-${row.id}`}
-                  >
-                    باز کردن محصول
-                  </a>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`/admin/products/${row.id}?scope=view`}
+                      className="text-[11px] font-medium text-[#2563EB] hover:underline"
+                      data-testid={`category-assign-open-product-${row.id}`}
+                    >
+                      باز کردن محصول
+                    </a>
+                    <button
+                      type="button"
+                      className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-700 disabled:opacity-50"
+                      data-testid={`category-assign-remove-${row.id}`}
+                      disabled={assignBusy}
+                      title={PRIMARY_MEMBERSHIP_HELPER_FA}
+                      onClick={() => {
+                        toast.info(PRIMARY_MEMBERSHIP_HELPER_FA);
+                      }}
+                    >
+                      حذف از این دسته
+                    </button>
+                  </div>
                 </div>
               );
             }
@@ -476,9 +523,9 @@ export function CategoryProductsPanel({
               <div className="flex flex-wrap items-center gap-1">
                 <span
                   className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
-                  title="نمایش در دسته‌های دیگر"
+                  title={DISPLAY_MEMBERSHIP_BADGE_FA}
                 >
-                  نمایش دیگر
+                  {DISPLAY_MEMBERSHIP_BADGE_FA}
                 </span>
                 <button
                   type="button"
@@ -530,7 +577,7 @@ export function CategoryProductsPanel({
                 })();
               }}
             >
-              افزودن
+              {ADD_FOR_DISPLAY_CTA_FA}
             </button>
           );
         },
@@ -572,8 +619,8 @@ export function CategoryProductsPanel({
         <div className="max-w-3xl space-y-1">
           <p className="text-sm text-slate-600" data-testid="category-products-helper">
             {locale === "en"
-              ? "Products have one primary category and may appear in other categories for discovery. The primary category drives attributes and variants; display-in-other-categories does not change product specs."
-              : "دسته اصلی مشخصات و تنوع‌های محصول را تعیین می‌کند. نمایش در دسته‌های دیگر فقط باعث می‌شود محصول در آن دسته‌ها هم پیدا شود و مشخصات محصول را تغییر نمی‌دهد."}
+              ? "This surface only manages display-in-category membership. Primary category (attributes/variants) can only be changed in Product Workspace."
+              : "این صفحه فقط «نمایش در این دسته» را مدیریت می‌کند و هرگز دسته اصلی را تغییر نمی‌دهد. تغییر دسته اصلی فقط از فضای کاری محصول انجام می‌شود."}
           </p>
         </div>
         {canEdit ? (
@@ -589,7 +636,7 @@ export function CategoryProductsPanel({
             }}
             data-testid="category-products-assign-open"
           >
-            اختصاص محصولات
+            {ADD_PRODUCT_FOR_DISPLAY_CTA_FA}
           </button>
         ) : null}
       </div>
@@ -631,10 +678,10 @@ export function CategoryProductsPanel({
           <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="border-b border-gray-100 px-5 py-4">
               <h3 id="category-products-assign-title" className="text-base font-semibold text-slate-900">
-                اختصاص محصولات به این دسته
+                {DIALOG_TITLE_FA}
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                فقط عضویت در این دسته — جستجو و صفحه‌بندی سمت سرور.
+                فقط نمایش در این دسته — بدون انتخاب نقش و بدون تغییر دسته اصلی.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2" role="tablist">
                 <button
@@ -681,7 +728,7 @@ export function CategoryProductsPanel({
                   >
                     {assignBusy
                       ? "در حال افزودن…"
-                      : `افزودن موارد انتخاب‌شده (${selectionCount})`}
+                      : BULK_ADD_FOR_DISPLAY_CTA_FA(selectionCount)}
                   </button>
                 ) : null}
               </div>

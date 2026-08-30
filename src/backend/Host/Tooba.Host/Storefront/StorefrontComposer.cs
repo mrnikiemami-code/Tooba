@@ -23,6 +23,12 @@ namespace Tooba.Host.Storefront;
 /// </summary>
 public sealed class StorefrontComposer
 {
+    /// <summary>
+    /// کد facet سراسری برند در PLP (نه AttributeDefinition).
+    /// Query param: <c>f_brand=&lt;BrandId&gt;</c> با قالب GUID استاندارد (D).
+    /// </summary>
+    internal const string GlobalBrandFacetCode = "brand";
+
     private readonly CatalogDbContext _catalog;
     private readonly OfferDbContext _offers;
     private readonly PricingDbContext _prices;
@@ -523,13 +529,16 @@ public sealed class StorefrontComposer
                 .ToListAsync(cancellationToken);
 
         var filteredProducts = ApplyTypedFilters(inSubtree, attributeValues, filters, facetDefs);
-        var plpFacets = await BuildPlpFacetsAsync(
+        var attributePlpFacets = await BuildPlpFacetsAsync(
             facetDefs,
             filteredProducts,
             attributeValues,
             catalogLocale,
             cancellationToken);
-        var applied = BuildAppliedChips(filters, facetDefs, plpFacets);
+        var brandFacet = await BuildGlobalBrandFacetAsync(filteredProducts, cancellationToken);
+        var plpFacets = new List<StorefrontPlpFacet> { brandFacet };
+        plpFacets.AddRange(attributePlpFacets);
+        var applied = BuildAppliedChips(filters, facetDefs, plpFacets, brandFacet);
 
         var normalizedSort = sort?.Trim().ToLowerInvariant() switch
         {
@@ -904,7 +913,8 @@ public sealed class StorefrontComposer
             primary.Currency,
             primary.AvailableUnits,
             primary.AvailableUnits > 0,
-            promotionLabel);
+            promotionLabel,
+            BrandId: product.BrandId);
         var specifications = await BuildSpecificationsAsync(product.ProductId, chosenVariantId.Value, cancellationToken);
         var variantViews = await BuildVariantsAsync(variants, candidates, cancellationToken);
         var shortDescription = shortDescriptions.GetValueOrDefault(product.ProductId)
@@ -1148,7 +1158,13 @@ public sealed class StorefrontComposer
         }).ToList();
     }
 
-    private static IReadOnlyList<StorefrontProductCard> ApplyTypedFilters(
+    /// <summary>
+    /// فیلتر تایپ‌شده PLP: بین facetها AND؛ داخل multi-select یک facet OR.
+    /// Brand سراسری با کد <see cref="GlobalBrandFacetCode"/> از Product.BrandId فیلتر می‌شود؛
+    /// محصولات بدون برند فقط وقتی هیچ فیلتر برندی انتخاب نشده در نتیجه می‌مانند.
+    /// Facetهای ناشناخته (خارج از effective category + brand) نادیده گرفته می‌شوند — بدون union از Primary Category محصولات.
+    /// </summary>
+    internal static IReadOnlyList<StorefrontProductCard> ApplyTypedFilters(
         IReadOnlyList<StorefrontProductCard> products,
         IReadOnlyList<CatalogProductAttributeValue> attributeValues,
         IReadOnlyList<StorefrontPlpFilterInput> filters,
@@ -1174,6 +1190,16 @@ public sealed class StorefrontComposer
             // Cross-attribute AND
             foreach (var filter in filters)
             {
+                if (string.Equals(filter.Code, GlobalBrandFacetCode, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!MatchesBrandFilter(product, filter))
+                    {
+                        return false;
+                    }
+
+                    continue;
+                }
+
                 if (!byCode.TryGetValue(filter.Code, out var facet))
                 {
                     continue;
@@ -1371,13 +1397,28 @@ public sealed class StorefrontComposer
     private static IReadOnlyList<StorefrontAppliedFilterChip> BuildAppliedChips(
         IReadOnlyList<StorefrontPlpFilterInput> filters,
         IReadOnlyList<EffectiveCategoryFacet> facetDefs,
-        IReadOnlyList<StorefrontPlpFacet> plpFacets)
+        IReadOnlyList<StorefrontPlpFacet> plpFacets,
+        StorefrontPlpFacet? brandFacet = null)
     {
         var byCode = facetDefs.ToDictionary(f => f.Code, StringComparer.OrdinalIgnoreCase);
         var optionsByCode = plpFacets.ToDictionary(f => f.Code, f => f.Options, StringComparer.OrdinalIgnoreCase);
         var chips = new List<StorefrontAppliedFilterChip>();
         foreach (var filter in filters)
         {
+            if (string.Equals(filter.Code, GlobalBrandFacetCode, StringComparison.OrdinalIgnoreCase))
+            {
+                var brandLabel = brandFacet?.LocalizedName ?? "برند";
+                var opts = optionsByCode.GetValueOrDefault(GlobalBrandFacetCode) ?? [];
+                foreach (var value in filter.Values)
+                {
+                    var display = opts.FirstOrDefault(o =>
+                        string.Equals(o.Value, value, StringComparison.OrdinalIgnoreCase))?.Label ?? value;
+                    chips.Add(new StorefrontAppliedFilterChip(GlobalBrandFacetCode, brandLabel, value, display));
+                }
+
+                continue;
+            }
+
             if (!byCode.TryGetValue(filter.Code, out var facet))
             {
                 continue;
@@ -1402,4 +1443,83 @@ public sealed class StorefrontComposer
 
         return chips;
     }
+    /// <summary>
+    /// گزینه‌های برند فقط از برندهای واقعی میان محصولات قابل‌کشف؛ بدون موجودیت جعلی «بدون برند».
+    /// </summary>
+    internal static StorefrontPlpFacet BuildGlobalBrandFacet(
+        IReadOnlyList<StorefrontProductCard> products,
+        IReadOnlyDictionary<Guid, string> brandNames)
+    {
+        ArgumentNullException.ThrowIfNull(products);
+        ArgumentNullException.ThrowIfNull(brandNames);
+        var options = products
+            .Where(p => p.BrandId is Guid)
+            .GroupBy(p => p.BrandId!.Value)
+            .OrderBy(g => brandNames.GetValueOrDefault(g.Key) ?? g.Key.ToString("D"), StringComparer.Ordinal)
+            .Select(g => new StorefrontPlpFacetOption(
+                g.Key.ToString("D"),
+                brandNames.GetValueOrDefault(g.Key) ?? g.Key.ToString("D"),
+                g.Select(x => x.ProductId).Distinct().Count()))
+            .ToList();
+        return new StorefrontPlpFacet(
+            Guid.Empty,
+            GlobalBrandFacetCode,
+            "برند",
+            "Brand",
+            "CheckboxList",
+            IsSearchable: true,
+            IsCollapsedByDefault: false,
+            ShowCounts: true,
+            RangeMin: null,
+            RangeMax: null,
+            options);
+    }
+
+    private async Task<StorefrontPlpFacet> BuildGlobalBrandFacetAsync(
+        IReadOnlyList<StorefrontProductCard> products,
+        CancellationToken cancellationToken)
+    {
+        var brandIds = products
+            .Where(p => p.BrandId is Guid)
+            .Select(p => p.BrandId!.Value)
+            .Distinct()
+            .ToList();
+        var names = brandIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await LoadNamesAsync(CatalogLocalizedOwnerKind.Brand, brandIds, cancellationToken);
+        return BuildGlobalBrandFacet(products, names);
+    }
+
+    /// <summary>
+    /// کدهای facet قابل‌نمایش PLP = facetهای مؤثر ردهٔ دیده‌شده + برند سراسری؛ نه اتحاد Primary Category محصولات.
+    /// </summary>
+    internal static IReadOnlyList<string> ResolveVisiblePlpFacetCodes(
+        IReadOnlyList<EffectiveCategoryFacet> categoryFacets)
+    {
+        ArgumentNullException.ThrowIfNull(categoryFacets);
+        return categoryFacets
+            .Where(f => f.IsVisible)
+            .Select(f => f.Code)
+            .Concat([GlobalBrandFacetCode])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    internal static bool MatchesBrandFilter(StorefrontProductCard product, StorefrontPlpFilterInput filter)
+    {
+        var wanted = filter.Values
+            .Select(v => v.Trim())
+            .Where(v => v.Length > 0)
+            .Select(v => Guid.TryParse(v, out var id) ? id : Guid.Empty)
+            .Where(id => id != Guid.Empty)
+            .ToHashSet();
+        if (wanted.Count == 0)
+        {
+            return true;
+        }
+
+        // brandless products do not match any selected Brand
+        return product.BrandId is Guid brandId && wanted.Contains(brandId);
+    }
+
 }

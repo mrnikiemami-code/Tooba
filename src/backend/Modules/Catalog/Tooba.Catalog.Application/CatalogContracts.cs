@@ -589,7 +589,7 @@ public interface ICatalogDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// ردهٔ اصلی محصول را عوض می‌کند پس از گزارش تأثیر؛ orphanها را حذف خاموش نمی‌کند.
+    /// مهاجرت تراکنشی دستهٔ اصلی: حفظ مقادیر سازگار، حذف orphanها، بازبینی تنوع‌های ناسازگار، و Unpublish در صورت ناسازگاری ساختاری روی محصول Published.
     /// </summary>
     Task<CategoryChangeImpact> ReplaceProductPrimaryCategoryAsync(
         Guid productId,
@@ -748,7 +748,11 @@ public sealed record EffectiveSchemaEntry(
     bool IsMultivalue,
     int DisplayOrder,
     Guid InheritedFromCategoryId,
-    bool DefinitionIsActive);
+    bool DefinitionIsActive,
+    /// <summary>پیوند محلی که رفتار ارثی والد را برای همین رده override می‌کند.</summary>
+    bool IsLocalOverride = false,
+    /// <summary>نزدیک‌ترین والد منبع قبل از override محلی (در صورت وجود).</summary>
+    Guid? OverriddenFromCategoryId = null);
 
 /// <summary>
 /// ورودی پیکربندی facet رده.
@@ -1027,7 +1031,8 @@ public sealed record CategoryChangeOrphanSummary(
     string DisplayValue);
 
 /// <summary>
-/// گزارش انسانی تأثیر تغییر رده برای تأیید Admin.
+/// گزارش انسانی تأثیر تغییر رده برای تأیید Admin (T036-P).
+/// فیلدهای اختیاری انتهایی برای سازگاری با مصرف‌کنندگان قبلی پیش‌فرض دارند.
 /// </summary>
 public sealed record CategoryChangeImpactReport(
     Guid ProductId,
@@ -1040,7 +1045,24 @@ public sealed record CategoryChangeImpactReport(
     IReadOnlyList<Guid> InvalidVariantAxisDefinitionIds,
     string MessageFa,
     int ImpactedVariantCount = 0,
-    string? VariantImpactMessageFa = null);
+    string? VariantImpactMessageFa = null,
+    Guid? CurrentCategoryId = null,
+    string? CurrentCategoryPath = null,
+    string? TargetCategoryPath = null,
+    IReadOnlyList<string>? PreservedAttributes = null,
+    IReadOnlyList<string>? AddedAttributes = null,
+    IReadOnlyList<string>? RemovedAttributes = null,
+    IReadOnlyList<string>? RequiredMissing = null,
+    bool VariantCompatible = true,
+    int PreservedVariantCount = 0,
+    int AffectedVariantCount = 0,
+    bool AdditionalMembershipPromoted = false,
+    int OtherDisplayMembershipsRemainCount = 0,
+    IReadOnlyList<string>? ReadinessBlockers = null)
+{
+    /// <summary>شناسهٔ دستهٔ هدف؛ همان NewCategoryId.</summary>
+    public Guid TargetCategoryId => NewCategoryId;
+}
 
 /// <summary>گزینهٔ محور تنوع در ویرایشگر.</summary>
 public sealed record ProductVariantAxisOption(

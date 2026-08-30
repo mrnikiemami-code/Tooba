@@ -2089,7 +2089,9 @@ public sealed record CatalogEffectiveSchemaBinding(
     bool IsVariantAxis,
     bool IsComparable,
     Guid InheritedFromCategoryId,
-    CatalogAttributeDefinition Definition);
+    CatalogAttributeDefinition Definition,
+    /// <summary>اگر فرزند override محلی دارد، نزدیک‌ترین والدِ منبع قبل از override.</summary>
+    Guid? OverriddenFromCategoryId = null);
 
 /// <summary>
 /// گزارش تأثیر تغییر رده بدون حذف خاموش مقادیر.
@@ -2126,12 +2128,22 @@ public static class CatalogCategorySchemaResolver
         // از ریشه به فرزند: فرزند override می‌کند.
         var merged = new Dictionary<Guid, CatalogCategoryAttributeBinding>();
         var inheritedFrom = new Dictionary<Guid, Guid>();
+        var overriddenFrom = new Dictionary<Guid, Guid?>();
         foreach (var ancestorId in ancestry)
         {
             foreach (var binding in allBindings.Where(b => b.CategoryId == ancestorId)
                          .OrderBy(b => b.DisplayOrder)
                          .ThenBy(b => b.BindingId))
             {
+                if (merged.ContainsKey(binding.DefinitionId))
+                {
+                    overriddenFrom[binding.DefinitionId] = inheritedFrom[binding.DefinitionId];
+                }
+                else if (!overriddenFrom.ContainsKey(binding.DefinitionId))
+                {
+                    overriddenFrom[binding.DefinitionId] = null;
+                }
+
                 merged[binding.DefinitionId] = binding;
                 inheritedFrom[binding.DefinitionId] = ancestorId;
             }
@@ -2146,6 +2158,10 @@ public static class CatalogCategorySchemaResolver
                 }
 
                 var isVariantAxis = binding.IsVariantAxis && definition.IsVariantAxisAllowed;
+                var sourceCategoryId = inheritedFrom[binding.DefinitionId];
+                var priorAncestor = overriddenFrom.GetValueOrDefault(binding.DefinitionId);
+                // override محلی فقط وقتی منبع نهایی خودِ رده است و قبلاً از والد آمده.
+                var localOverrideFrom = sourceCategoryId == categoryId ? priorAncestor : null;
                 return new CatalogEffectiveSchemaBinding(
                     binding.DefinitionId,
                     binding.DisplayOrder,
@@ -2153,8 +2169,9 @@ public static class CatalogCategorySchemaResolver
                     binding.IsFilterable,
                     isVariantAxis,
                     binding.IsComparable,
-                    inheritedFrom[binding.DefinitionId],
-                    definition);
+                    sourceCategoryId,
+                    definition,
+                    localOverrideFrom);
             })
             .OrderBy(x => x.DisplayOrder)
             .ThenBy(x => x.Definition.Code, StringComparer.Ordinal)

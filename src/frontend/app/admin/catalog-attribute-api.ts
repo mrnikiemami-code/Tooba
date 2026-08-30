@@ -73,6 +73,10 @@ export interface EffectiveSchemaEntry {
   displayOrder: number;
   inheritedFromCategoryId: string;
   definitionIsActive: boolean;
+  /** پیوند محلی که رفتار ارثی والد را برای همین دسته override می‌کند. */
+  isLocalOverride: boolean;
+  /** نزدیک‌ترین والد منبع قبل از override محلی. */
+  overriddenFromCategoryId: string | null;
 }
 
 /** فرادادهٔ PATCH مطابق UpdateAttributeDefinitionRequest. */
@@ -174,15 +178,30 @@ export interface CategoryChangeOrphanSummary {
 export interface CategoryChangeImpactReport {
   productId: string;
   newCategoryId: string;
+  /** Alias of newCategoryId (T036-P). */
+  targetCategoryId: string;
+  currentCategoryId: string | null;
+  currentCategoryPath: string | null;
+  targetCategoryPath: string | null;
   compatiblePreservedCount: number;
   orphanCount: number;
   newlyRequiredMissingCount: number;
   orphanSummaries: CategoryChangeOrphanSummary[];
   newlyRequiredLabels: string[];
+  preservedAttributes: string[];
+  addedAttributes: string[];
+  removedAttributes: string[];
+  requiredMissing: string[];
   invalidVariantAxisDefinitionIds: string[];
-  messageFa: string;
+  variantCompatible: boolean;
+  preservedVariantCount: number;
+  affectedVariantCount: number;
   impactedVariantCount: number;
   variantImpactMessageFa: string | null;
+  additionalMembershipPromoted: boolean;
+  otherDisplayMembershipsRemainCount: number;
+  readinessBlockers: string[];
+  messageFa: string;
 }
 
 export interface ProductVariantAxisOption {
@@ -471,6 +490,13 @@ export function mapEffectiveSchemaEntry(payload: unknown): EffectiveSchemaEntry 
     displayOrder: intOr(prop(item, "displayOrder", "DisplayOrder"), 0),
     inheritedFromCategoryId: text(prop(item, "inheritedFromCategoryId", "InheritedFromCategoryId")),
     definitionIsActive: bool(prop(item, "definitionIsActive", "DefinitionIsActive"), true),
+    isLocalOverride: bool(prop(item, "isLocalOverride", "IsLocalOverride"), false),
+    overriddenFromCategoryId: (() => {
+      const raw = prop(item, "overriddenFromCategoryId", "OverriddenFromCategoryId");
+      if (raw == null || raw === "") return null;
+      const value = text(raw);
+      return value || null;
+    })(),
   };
 }
 
@@ -811,22 +837,61 @@ export async function previewProductCategoryChange(
     : [];
   const labelsRaw = prop(item, "newlyRequiredLabels", "NewlyRequiredLabels");
   const axesRaw = prop(item, "invalidVariantAxisDefinitionIds", "InvalidVariantAxisDefinitionIds");
+  const preservedRaw = prop(item, "preservedAttributes", "PreservedAttributes");
+  const addedRaw = prop(item, "addedAttributes", "AddedAttributes");
+  const removedRaw = prop(item, "removedAttributes", "RemovedAttributes");
+  const requiredRaw = prop(item, "requiredMissing", "RequiredMissing");
+  const blockersRaw = prop(item, "readinessBlockers", "ReadinessBlockers");
+  const newlyRequiredLabels = Array.isArray(labelsRaw) ? labelsRaw.map((x) => text(x)).filter(Boolean) : [];
+  const parsedNewCategoryId = text(prop(item, "newCategoryId", "NewCategoryId")) || newCategoryId;
+  const targetCategoryId =
+    text(prop(item, "targetCategoryId", "TargetCategoryId")) || parsedNewCategoryId;
   return {
     ...response,
     data: {
       productId: text(prop(item, "productId", "ProductId")),
-      newCategoryId: text(prop(item, "newCategoryId", "NewCategoryId")),
+      newCategoryId: parsedNewCategoryId,
+      targetCategoryId,
+      currentCategoryId: text(prop(item, "currentCategoryId", "CurrentCategoryId")) || null,
+      currentCategoryPath: text(prop(item, "currentCategoryPath", "CurrentCategoryPath")) || null,
+      targetCategoryPath: text(prop(item, "targetCategoryPath", "TargetCategoryPath")) || null,
       compatiblePreservedCount: intOr(prop(item, "compatiblePreservedCount", "CompatiblePreservedCount"), 0),
       orphanCount: intOr(prop(item, "orphanCount", "OrphanCount"), 0),
       newlyRequiredMissingCount: intOr(prop(item, "newlyRequiredMissingCount", "NewlyRequiredMissingCount"), 0),
       orphanSummaries,
-      newlyRequiredLabels: Array.isArray(labelsRaw) ? labelsRaw.map((x) => text(x)).filter(Boolean) : [],
+      newlyRequiredLabels,
+      preservedAttributes: Array.isArray(preservedRaw)
+        ? preservedRaw.map((x) => text(x)).filter(Boolean)
+        : [],
+      addedAttributes: Array.isArray(addedRaw)
+        ? addedRaw.map((x) => text(x)).filter(Boolean)
+        : newlyRequiredLabels,
+      removedAttributes: Array.isArray(removedRaw)
+        ? removedRaw.map((x) => text(x)).filter(Boolean)
+        : orphanSummaries.map((o) => o.localizedName),
+      requiredMissing: Array.isArray(requiredRaw)
+        ? requiredRaw.map((x) => text(x)).filter(Boolean)
+        : newlyRequiredLabels,
       invalidVariantAxisDefinitionIds: Array.isArray(axesRaw)
         ? axesRaw.map((x) => text(x)).filter(Boolean)
         : [],
+      variantCompatible: bool(prop(item, "variantCompatible", "VariantCompatible"), true),
+      preservedVariantCount: intOr(prop(item, "preservedVariantCount", "PreservedVariantCount"), 0),
+      affectedVariantCount: intOr(prop(item, "affectedVariantCount", "AffectedVariantCount"), 0),
       messageFa: text(prop(item, "messageFa", "MessageFa")),
       impactedVariantCount: intOr(prop(item, "impactedVariantCount", "ImpactedVariantCount"), 0),
       variantImpactMessageFa: text(prop(item, "variantImpactMessageFa", "VariantImpactMessageFa")) || null,
+      additionalMembershipPromoted: bool(
+        prop(item, "additionalMembershipPromoted", "AdditionalMembershipPromoted"),
+        false,
+      ),
+      otherDisplayMembershipsRemainCount: intOr(
+        prop(item, "otherDisplayMembershipsRemainCount", "OtherDisplayMembershipsRemainCount"),
+        0,
+      ),
+      readinessBlockers: Array.isArray(blockersRaw)
+        ? blockersRaw.map((x) => text(x)).filter(Boolean)
+        : [],
     },
   };
 }

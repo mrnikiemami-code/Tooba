@@ -266,7 +266,9 @@ test("Attributes tab: per-category assignment flags and customize inherited", ()
   const panel = fs.readFileSync(path.join(root, "app/admin/category-attributes-panel.tsx"), "utf8");
   assert.match(panel, /updateCategoryAttributeBinding/);
   assert.match(panel, /attr-customize-inherited-/);
-  assert.match(panel, /تنظیم برای این دسته/);
+  assert.match(panel, /تنظیم اختصاصی برای این دسته/);
+  assert.match(panel, /به ارث رسیده از/);
+  assert.match(panel, /بازگشت به تنظیمات والد/);
   assert.match(panel, /category-attributes-configure-dialog/);
   assert.match(panel, /isVariantAxis/);
   assert.equal(panel.includes("updateAttributeDefinition"), false);
@@ -339,6 +341,26 @@ test("API client exposes updateCore, upsertTranslation with full fields, move", 
   assert.match(api, /shortDescription/);
   assert.match(api, /seoTitle/);
   assert.match(api, /metaKeywords/);
+  assert.match(api, /parseMetaKeywords/);
+  assert.match(api, /serializeMetaKeywords/);
   assert.match(api, /CATEGORY_SLUG_DUPLICATE_ERROR_CODE/);
   assert.match(api, /buildStorefrontCategoryRoute/);
+});
+
+test("translation meta keywords use removable tag chips not plain textbox", () => {
+  const screen = fs.readFileSync(screenPath, "utf8");
+  assert.match(screen, /MetaKeywordsTagInput/);
+  assert.match(screen, /MetaKeywordsViewChips/);
+  assert.match(screen, /translation-edit-meta-keyword-chips/);
+  assert.match(screen, /translation-edit-meta-keyword-remove-/);
+  assert.match(screen, /parseMetaKeywords/);
+  assert.match(screen, /serializeMetaKeywords/);
+  assert.equal(/data-testid="translation-edit-meta-keywords"\s*\/>/.test(screen), false);
+});
+
+test("parseMetaKeywords splits commas and drops blanks/duplicates", async () => {
+  const { parseMetaKeywords, serializeMetaKeywords } = await import("./catalog-category-api.ts");
+  assert.deepEqual(parseMetaKeywords("موبایل، گوشی, موبایل\nسامسونگ"), ["موبایل", "گوشی", "سامسونگ"]);
+  assert.equal(serializeMetaKeywords(["موبایل", "گوشی"]), "موبایل, گوشی");
+  assert.deepEqual(parseMetaKeywords(""), []);
 });

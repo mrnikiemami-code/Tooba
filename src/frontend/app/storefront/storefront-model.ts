@@ -21,6 +21,8 @@ export interface StorefrontProductCard {
   averageRating: number | null;
   /** تعداد مقتدر نظرهای منتشرشده. */
   reviewCount: number;
+  /** برند اختیاری؛ فیلتر سراسری PLP با f_brand. */
+  brandId?: string | null;
 }
 
 /**

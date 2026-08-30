@@ -24,6 +24,7 @@ Typed filter query params:
 | Prefix | Meaning | Example |
 |--------|---------|---------|
 | `f_` | enum / multi-select | `f_color=blue,red` |
+| `f_brand` | global Brand facet (`Product.BrandId`) | `f_brand=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa` |
 | `r_` | numeric range | `r_ram=8:16` |
 | `b_` | boolean | `b_waterproof=true` |
 
@@ -32,7 +33,9 @@ Semantics:
 - Product set = masters assigned to category **or taxonomy descendants** (`ParentCategoryId`)
 - Cross-attribute filters: **AND**
 - Same multi-select attribute values: **OR**
-- Facets from effective visible category facet config (T008)
+- Facets from effective visible category facet config (T008) **plus** global Brand facet (`code=brand`)
+- Brand options come only from brands among discoverable products; no fake «بدون برند» entity; brandless products remain when no Brand filter is selected and are excluded when a Brand is selected
+- Facets are **never** unioned from included products' Primary Category facet configs
 - Commercial card fields from Offer / Pricing / Inventory contracts — **no** `Product.Price`, **no** cross-module SQL JOIN
 
 Response highlights: breadcrumb, subcategories, facets + counts, applied filter chips, paged product cards, canonical path, supported sorts.

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using Tooba.Catalog.Application;
+using Tooba.Catalog.Domain;
 using Tooba.Host.Storefront;
 using Xunit;
 
@@ -334,5 +336,122 @@ public sealed class StorefrontCompositionTests
         Assert.DoesNotContain("\"productPrice\"", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("\"price\":", json, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("\"subtotalExclusiveOfTax\":3580000", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Plp_visible_facet_codes_are_viewed_category_plus_global_brand_only()
+    {
+        var colorDef = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+        var categoryFacets = new[]
+        {
+            new EffectiveCategoryFacet(
+                colorDef,
+                "color",
+                "رنگ",
+                CatalogAttributeValueKind.Enumeration,
+                CatalogFacetDisplayType.CheckboxList,
+                1,
+                true,
+                true,
+                false,
+                true,
+                Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                false),
+            new EffectiveCategoryFacet(
+                Guid.Parse("dddddddd-dddd-4ddd-8ddd-dddddddddddd"),
+                "hidden_axis",
+                "پنهان",
+                CatalogAttributeValueKind.Enumeration,
+                CatalogFacetDisplayType.CheckboxList,
+                2,
+                false,
+                true,
+                false,
+                true,
+                Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                false),
+        };
+
+        var codes = StorefrontComposer.ResolveVisiblePlpFacetCodes(categoryFacets);
+        Assert.Contains("color", codes);
+        Assert.Contains(StorefrontComposer.GlobalBrandFacetCode, codes);
+        Assert.DoesNotContain("hidden_axis", codes);
+        Assert.DoesNotContain("storage", codes); // not unioned from another product Primary Category
+        Assert.Equal(StorefrontComposer.GlobalBrandFacetCode, "brand");
+    }
+
+    [Fact]
+    public void Plp_typed_filter_excludes_products_missing_selected_facet_value()
+    {
+        var defId = Guid.Parse("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+        var withValue = Guid.Parse("11111111-1111-7111-8111-111111111111");
+        var missing = Guid.Parse("22222222-2222-7222-8222-222222222222");
+        StorefrontProductCard Card(Guid id) => new(
+            id, id.ToString("N"), "کالا", "رده", null, null,
+            Guid.NewGuid(), Guid.NewGuid(), "فروشنده", 100m, null, "IRR", 1, true, null);
+
+        var facetDefs = new[]
+        {
+            new EffectiveCategoryFacet(
+                defId, "color", "رنگ", CatalogAttributeValueKind.Enumeration,
+                CatalogFacetDisplayType.CheckboxList, 1, true, true, false, true,
+                Guid.NewGuid(), false),
+        };
+        var values = new[]
+        {
+            CatalogProductAttributeValue.Create(withValue, defId, "blue"),
+        };
+        var filters = new[]
+        {
+            new StorefrontPlpFilterInput("color", "enum", ["blue"], null, null),
+        };
+
+        var filtered = StorefrontComposer.ApplyTypedFilters(
+            [Card(withValue), Card(missing)],
+            values,
+            filters,
+            facetDefs);
+
+        Assert.Single(filtered);
+        Assert.Equal(withValue, filtered[0].ProductId);
+    }
+
+    [Fact]
+    public void Plp_brand_facet_options_exclude_brandless_and_selected_brand_filters_brandless_out()
+    {
+        var brandA = Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+        var brandB = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+        StorefrontProductCard Card(Guid id, Guid? brandId) => new(
+            id, id.ToString("N"), "کالا", "رده", null, null,
+            Guid.NewGuid(), Guid.NewGuid(), "فروشنده", 100m, null, "IRR", 1, true, null,
+            BrandId: brandId);
+
+        var branded = Card(Guid.Parse("11111111-1111-7111-8111-111111111111"), brandA);
+        var other = Card(Guid.Parse("22222222-2222-7222-8222-222222222222"), brandB);
+        var brandless = Card(Guid.Parse("33333333-3333-7333-8333-333333333333"), null);
+
+        var facet = StorefrontComposer.BuildGlobalBrandFacet(
+            [branded, other, brandless],
+            new Dictionary<Guid, string> { [brandA] = "آرمان", [brandB] = "نوین" });
+
+        Assert.Equal(StorefrontComposer.GlobalBrandFacetCode, facet.Code);
+        Assert.Equal(2, facet.Options.Count);
+        Assert.DoesNotContain(facet.Options, o => o.Label.Contains("بدون", StringComparison.Ordinal));
+        Assert.Contains(facet.Options, o => o.Value == brandA.ToString("D"));
+
+        var noBrandFilter = StorefrontComposer.ApplyTypedFilters(
+            [branded, other, brandless],
+            [],
+            [],
+            []);
+        Assert.Equal(3, noBrandFilter.Count);
+
+        var filtered = StorefrontComposer.ApplyTypedFilters(
+            [branded, other, brandless],
+            [],
+            [new StorefrontPlpFilterInput(StorefrontComposer.GlobalBrandFacetCode, "enum", [brandA.ToString("D")], null, null)],
+            []);
+        Assert.Single(filtered);
+        Assert.Equal(branded.ProductId, filtered[0].ProductId);
     }
 }

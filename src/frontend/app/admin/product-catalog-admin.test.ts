@@ -92,7 +92,8 @@ test("workspace warns on non-L3 category and preserves VIEW/EDIT", () => {
   const screen = fs.readFileSync(workspacePath, "utf8");
   assert.match(screen, /product-category-level-warning/);
   assert.match(screen, /PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA/);
-  assert.match(screen, /invalidSelectionHint/);
+  assert.match(screen, /PrimaryCategoryMigrationWizard/);
+  assert.match(screen, /product-change-primary-category/);
   assert.match(screen, /isPrimaryCategoryAssignable/);
   assert.match(screen, /useAdminFormMode/);
   assert.match(screen, /product-general-summary/);
@@ -129,7 +130,8 @@ test("attributes tab requires categoryId and wires schema-driven panel", () => {
   assert.match(screen, /ProductAttributesPanel/);
   assert.match(screen, /ProductVariantsPanel/);
   assert.match(screen, /product-attributes-panel/);
-  assert.match(screen, /previewProductCategoryChange/);
+  assert.match(screen, /PrimaryCategoryMigrationWizard/);
+  assert.equal(screen.includes("previewProductCategoryChange"), false);
   assert.match(screen, /canEdit=\{canMutateCatalog\}/);
   assert.match(screen, /mode=\{formMode\.mode === "edit" \? "edit" : "view"\}/);
   assert.equal(screen.includes('from "./catalog-attribute-ui"'), false);

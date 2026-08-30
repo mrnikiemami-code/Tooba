@@ -82,15 +82,32 @@ export function isLocalSchemaEntry(entry: EffectiveSchemaEntry, categoryId: stri
 export function partitionEffectiveSchema(
   entries: EffectiveSchemaEntry[],
   categoryId: string,
-): { inherited: EffectiveSchemaEntry[]; local: EffectiveSchemaEntry[] } {
+): {
+  inherited: EffectiveSchemaEntry[];
+  local: EffectiveSchemaEntry[];
+  localOverrides: EffectiveSchemaEntry[];
+  localOnly: EffectiveSchemaEntry[];
+} {
   const inherited: EffectiveSchemaEntry[] = [];
   const local: EffectiveSchemaEntry[] = [];
+  const localOverrides: EffectiveSchemaEntry[] = [];
+  const localOnly: EffectiveSchemaEntry[] = [];
   for (const row of entries) {
-    if (isLocalSchemaEntry(row, categoryId)) local.push(row);
-    else inherited.push(row);
+    if (isLocalSchemaEntry(row, categoryId)) {
+      local.push(row);
+      if (row.isLocalOverride) localOverrides.push(row);
+      else localOnly.push(row);
+    } else {
+      inherited.push(row);
+    }
   }
-  return { inherited, local };
+  return { inherited, local, localOverrides, localOnly };
 }
+
+/** پیام جلوگیری از افزودن دوبارهٔ ویژگی ارثی. */
+export const DUPLICATE_INHERITED_ATTRIBUTE_MESSAGE =
+  "این ویژگی از قبل از دسته والد به ارث رسیده است. در صورت نیاز تنظیمات استفاده آن را برای این دسته تغییر دهید.";
+
 
 function badgeClass(tone: "blue" | "slate" | "amber" | "violet" | "emerald"): string {
   switch (tone) {
@@ -110,6 +127,11 @@ function badgeClass(tone: "blue" | "slate" | "amber" | "violet" | "emerald"): st
 function AttributeBadges({ row }: { row: EffectiveSchemaEntry }) {
   return (
     <div className="flex flex-wrap gap-1">
+      {row.isLocalOverride ? (
+        <span className={badgeClass("amber")} data-testid="attr-badge-local-override">
+          تنظیم اختصاصی
+        </span>
+      ) : null}
       {row.isRequired ? (
         <span className={badgeClass("amber")} data-testid="attr-badge-required">
           الزامی
@@ -161,7 +183,7 @@ function AttributeRowView({
         </div>
         {showSource && sourceLabel ? (
           <div className="mt-1 text-xs text-slate-500" data-testid="attr-source-category">
-            از «{sourceLabel}»
+            به ارث رسیده از {sourceLabel}
           </div>
         ) : null}
       </div>
@@ -189,6 +211,7 @@ function AttributeRowEdit({
   onRemove: () => void;
   onConfigure: () => void;
 }) {
+  const isOverride = row.isLocalOverride;
   return (
     <li
       className="flex flex-col gap-2 rounded-2xl border border-gray-100 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -235,9 +258,9 @@ function AttributeRowEdit({
             className="inline-flex min-h-9 items-center justify-center rounded-lg border border-red-200 px-3 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-40"
             disabled={busy}
             onClick={onRemove}
-            data-testid={`attr-remove-${row.code}`}
+            data-testid={isOverride ? `attr-reset-override-${row.code}` : `attr-remove-${row.code}`}
           >
-            حذف از این دسته
+            {isOverride ? "بازگشت به تنظیمات والد" : "حذف از این دسته"}
           </button>
         </div>
       </div>
@@ -416,6 +439,7 @@ export function CategoryAttributesPanel({
   const [addSearch, setAddSearch] = useState("");
   const [selectedDefId, setSelectedDefId] = useState<string | null>(null);
   const [bindFlags, setBindFlags] = useState<BindFlags>(defaultBindFlags());
+  const [addDuplicateMessage, setAddDuplicateMessage] = useState<string | null>(null);
 
   const [createName, setCreateName] = useState("");
   const [createKind, setCreateKind] = useState<CatalogAttributeValueKind>("Text");
@@ -540,6 +564,11 @@ export function CategoryAttributesPanel({
 
   const handleBindExisting = async () => {
     if (!selectedDefinition) return;
+    if (effectiveIds.has(selectedDefinition.definitionId)) {
+      setAddDuplicateMessage(DUPLICATE_INHERITED_ATTRIBUTE_MESSAGE);
+      toast.error(DUPLICATE_INHERITED_ATTRIBUTE_MESSAGE);
+      return;
+    }
     await runMutation(async () => {
       const result = await bindCategoryAttribute(categoryId, {
         definitionId: selectedDefinition.definitionId,
@@ -547,13 +576,18 @@ export function CategoryAttributesPanel({
         ...toBindInput(bindFlags),
       });
       if (result.state !== "ok") {
-        throw new Error(result.message ?? "افزودن ویژگی ناموفق بود");
+        const msg = result.message ?? "افزودن ویژگی ناموفق بود";
+        if (/ارث|inherited|پیوند شده|duplicate/i.test(msg)) {
+          setAddDuplicateMessage(DUPLICATE_INHERITED_ATTRIBUTE_MESSAGE);
+        }
+        throw new Error(msg);
       }
       toast.success("ویژگی به این دسته اضافه شد");
       setAddOpen(false);
       setAddSearch("");
       setSelectedDefId(null);
       setBindFlags(defaultBindFlags());
+      setAddDuplicateMessage(null);
     });
   };
 
@@ -664,16 +698,20 @@ export function CategoryAttributesPanel({
     });
   };
 
-  const handleRemoveLocal = async (definitionId: string) => {
-    if (!window.confirm("این ویژگی فقط از این دسته حذف می‌شود؛ تعریف سراسری باقی می‌ماند.")) {
+  const handleRemoveLocal = async (row: EffectiveSchemaEntry) => {
+    const isOverride = row.isLocalOverride;
+    const confirmMsg = isOverride
+      ? "تنظیم اختصاصی این دسته حذف شود و رفتار از والد بازگردد؟ تعریف سراسری ویژگی حذف نمی‌شود."
+      : "این ویژگی فقط از این دسته حذف می‌شود؛ تعریف سراسری باقی می‌ماند.";
+    if (!window.confirm(confirmMsg)) {
       return;
     }
     await runMutation(async () => {
-      const result = await unbindCategoryAttribute(categoryId, definitionId);
+      const result = await unbindCategoryAttribute(categoryId, row.definitionId);
       if (result.state !== "ok") {
-        throw new Error(result.message ?? "حذف از دسته ناموفق بود");
+        throw new Error(result.message ?? (isOverride ? "بازگشت به والد ناموفق بود" : "حذف از دسته ناموفق بود"));
       }
-      toast.success("ویژگی از این دسته حذف شد");
+      toast.success(isOverride ? "به تنظیمات والد بازگشت" : "ویژگی از این دسته حذف شد");
     });
   };
 
@@ -752,6 +790,7 @@ export function CategoryAttributesPanel({
                 setBindFlags(defaultBindFlags());
                 setSelectedDefId(null);
                 setAddSearch("");
+                setAddDuplicateMessage(null);
               }}
               data-testid="category-attributes-add-existing"
             >
@@ -787,7 +826,7 @@ export function CategoryAttributesPanel({
                         نوع: {valueKindLabel(row.valueKind)}
                       </div>
                       <div className="mt-1 text-xs text-slate-500" data-testid="attr-source-category">
-                        از «{resolveSourceName(row.inheritedFromCategoryId)}»
+                        به ارث رسیده از {resolveSourceName(row.inheritedFromCategoryId)}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -799,7 +838,7 @@ export function CategoryAttributesPanel({
                         onClick={() => openConfigureInherited(row)}
                         data-testid={`attr-customize-inherited-${row.code}`}
                       >
-                        تنظیم برای این دسته
+                        تنظیم اختصاصی برای این دسته
                       </button>
                     </div>
                   </li>
@@ -823,7 +862,7 @@ export function CategoryAttributesPanel({
                     busy={combinedBusy}
                     onMoveUp={() => void handleReorderLocal(index, index - 1)}
                     onMoveDown={() => void handleReorderLocal(index, index + 1)}
-                    onRemove={() => void handleRemoveLocal(row.definitionId)}
+                    onRemove={() => void handleRemoveLocal(row)}
                     onConfigure={() => openConfigureLocal(row)}
                   />
                 ))}
@@ -845,16 +884,32 @@ export function CategoryAttributesPanel({
             <h3 id="add-attr-title" className="text-lg font-semibold text-slate-900">
               افزودن ویژگی موجود
             </h3>
+            <p className="mt-2 text-xs text-slate-500" data-testid="attr-add-inherited-hint">
+              ویژگی‌هایی که از والد به ارث رسیده‌اند در این فهرست نیستند؛ برای تغییر رفتار آن‌ها از
+              «تنظیم اختصاصی برای این دسته» استفاده کنید.
+            </p>
             <label className="mt-4 block text-sm font-medium text-slate-700">
               جستجو
               <input
                 className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={addSearch}
-                onChange={(e) => setAddSearch(e.target.value)}
+                onChange={(e) => {
+                  setAddSearch(e.target.value);
+                  setAddDuplicateMessage(null);
+                }}
                 placeholder="نام یا نوع ویژگی"
                 data-testid="attr-add-search"
               />
             </label>
+            {addDuplicateMessage ? (
+              <p
+                className="mt-3 text-sm text-amber-800"
+                role="alert"
+                data-testid="attr-add-duplicate-inherited"
+              >
+                {addDuplicateMessage}
+              </p>
+            ) : null}
             <ul className="mt-3 max-h-48 space-y-1 overflow-y-auto" data-testid="attr-add-candidates">
               {addCandidates.length === 0 ? (
                 <li className="text-sm text-slate-500">ویژگی قابل افزودن یافت نشد.</li>
@@ -873,6 +928,7 @@ export function CategoryAttributesPanel({
                         onClick={() => {
                           setSelectedDefId(d.definitionId);
                           setBindFlags(defaultBindFlags());
+                          setAddDuplicateMessage(null);
                         }}
                         data-testid={`attr-add-option-${d.code}`}
                       >
@@ -1073,7 +1129,7 @@ export function CategoryAttributesPanel({
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
             <h3 id="configure-attr-title" className="text-lg font-semibold text-slate-900">
               {configureMode === "inherited-override"
-                ? "تنظیم برای این دسته"
+                ? "تنظیم اختصاصی برای این دسته"
                 : "تنظیم رفتار ویژگی"}
             </h3>
             <p className="mt-2 text-sm text-slate-600">

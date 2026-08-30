@@ -1,0 +1,13 @@
+﻿D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\CatalogDomain.cs(2093,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\CatalogContracts.cs(752,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\CatalogContracts.cs(754,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+
+Build succeeded.
+
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\CatalogDomain.cs(2093,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Domain\Tooba.Catalog.Domain.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\CatalogContracts.cs(752,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\CatalogContracts.cs(754,5): warning CS1587: XML comment is not placed on a valid language element [D:\Users\User\source\repos\SarvNewVer\src\backend\Modules\Catalog\Tooba.Catalog.Application\Tooba.Catalog.Application.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:20.44

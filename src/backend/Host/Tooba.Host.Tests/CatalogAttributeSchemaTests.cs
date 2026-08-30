@@ -155,8 +155,24 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         Assert.True(effective[0].IsRequired); // child override required
         Assert.False(effective[0].IsFilterable);
         Assert.Equal(child.CategoryId, effective[0].InheritedFromCategoryId);
-        Assert.Contains(effective, e => e.DefinitionId == colorId && e.InheritedFromCategoryId == parent.CategoryId);
-        Assert.Contains(effective, e => e.DefinitionId == storageId);
+        Assert.True(effective[0].IsLocalOverride);
+        Assert.Equal(parent.CategoryId, effective[0].OverriddenFromCategoryId);
+        Assert.Contains(effective, e => e.DefinitionId == colorId && e.InheritedFromCategoryId == parent.CategoryId && !e.IsLocalOverride);
+        Assert.Contains(effective, e => e.DefinitionId == storageId && !e.IsLocalOverride);
+
+        await dirA.UnbindCategoryAttributeAsync(child.CategoryId, screenId, CancellationToken.None);
+        var afterReset = await dirA.GetEffectiveCategorySchemaAsync(child.CategoryId, CancellationToken.None);
+        var screenAfterReset = Assert.Single(afterReset, e => e.DefinitionId == screenId);
+        Assert.Equal(parent.CategoryId, screenAfterReset.InheritedFromCategoryId);
+        Assert.False(screenAfterReset.IsLocalOverride);
+        Assert.Null(screenAfterReset.OverriddenFromCategoryId);
+        // re-bind child override for remainder of test
+        await dirA.BindCategoryAttributeAsync(
+            child.CategoryId,
+            screenId,
+            1,
+            new CategoryAttributeAssignmentFlags(true, false, false, false),
+            CancellationToken.None);
 
         // 15 default variant BC: no selected axes → any IsVariantAxis definition works
         var productBc = await dirA.CreateProductAsync(
@@ -366,6 +382,58 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
                 CancellationToken.None));
         Assert.Contains("نام", nameDup.Message);
         Assert.Contains("تکراری", nameDup.Message);
+    }
+
+    [SkippableFact]
+    public async Task AxisAllowed_definition_can_store_product_value_when_binding_is_not_axis()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-attr-axis-product", "tenant-attr-axis-product"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var root = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "گجت" }, CancellationToken.None);
+        var mid = await dir.CreateCategoryAsync(root.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "جانبی" }, CancellationToken.None);
+        var leaf = await dir.CreateCategoryAsync(mid.CategoryId, new Dictionary<string, string> { ["fa-IR"] = "پاوربانک" }, CancellationToken.None);
+
+        var colorId = await dir.CreateAttributeDefinitionAsync(
+            "color_allowed_axis",
+            CatalogAttributeValueKind.Enumeration,
+            isVariantAxis: true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ مجاز محور" },
+            CancellationToken.None);
+        var black = await dir.AddAttributeOptionAsync(
+            colorId,
+            "black",
+            new Dictionary<string, string> { ["fa-IR"] = "مشکی" },
+            CancellationToken.None);
+
+        // تعریف مجاز محور است، ولی در schema این دسته به‌عنوان ویژگی عادی (نه محور) بسته شده.
+        await dir.BindCategoryAttributeAsync(
+            leaf.CategoryId,
+            colorId,
+            1,
+            new CategoryAttributeAssignmentFlags(IsRequired: false, IsFilterable: true, IsVariantAxis: false, IsComparable: false),
+            CancellationToken.None);
+
+        var product = await dir.CreateProductAsync(
+            CatalogProductKind.PhysicalGood,
+            "powerbank-color",
+            null,
+            new Dictionary<string, string> { ["fa-IR"] = "پاوربانک رنگ" },
+            CancellationToken.None);
+        await dir.AssignCategoryAsync(product.ProductId, leaf.CategoryId, CancellationToken.None);
+
+        await dir.SetProductAttributeAsync(product.ProductId, colorId, "ignored", black, CancellationToken.None);
+
+        var editor = await dir.GetProductAttributeEditorStateAsync(product.ProductId, "fa-IR", CancellationToken.None);
+        var field = Assert.Single(editor.Fields);
+        Assert.False(field.IsVariantAxis);
+        Assert.Equal(black, field.CurrentEnumOptionId);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

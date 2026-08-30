@@ -122,6 +122,10 @@ function mapCard(value: unknown): StorefrontProductCard | null {
         : asString(promoRaw),
     averageRating: averageRatingRaw == null ? null : asNumber(averageRatingRaw),
     reviewCount: Math.max(0, asNumber(readProp(item, "reviewCount", "ReviewCount"))),
+    brandId: (() => {
+      const raw = readProp(item, "brandId", "BrandId");
+      return raw == null || raw === "" ? null : asString(raw);
+    })(),
   };
 }
 

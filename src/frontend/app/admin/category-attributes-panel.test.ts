@@ -48,6 +48,22 @@ test("inherited vs category-specific human sections", () => {
   assert.match(panel, /از دسته‌های والد به ارث رسیده‌اند/);
 });
 
+test("inherited override UX copy and reset-to-parent", () => {
+  assert.match(panel, /به ارث رسیده از \{/);
+  assert.match(panel, /تنظیم اختصاصی برای این دسته/);
+  assert.match(panel, /تنظیم اختصاصی/);
+  assert.match(panel, /بازگشت به تنظیمات والد/);
+  assert.match(panel, /attr-badge-local-override/);
+  assert.match(panel, /attr-reset-override-/);
+  assert.match(panel, /isLocalOverride/);
+  assert.match(panel, /DUPLICATE_INHERITED_ATTRIBUTE_MESSAGE/);
+  assert.match(
+    panel,
+    /این ویژگی از قبل از دسته والد به ارث رسیده است\. در صورت نیاز تنظیمات استفاده آن را برای این دسته تغییر دهید\./,
+  );
+  assert.match(panel, /attr-add-duplicate-inherited/);
+});
+
 test("create+bind strips invalid variant axis before API", () => {
   assert.match(panel, /const variantAllowed/);
   assert.match(panel, /createKind === "Enumeration" \|\| createKind === "Number"/);

@@ -14,7 +14,6 @@ import {
 import { formatAdminStatus } from "./admin-api";
 import { formatHistoryTimestamp } from "./product-history-panel-model";
 import { sanitizeProductRichHtml } from "./product-rich-html";
-import { previewProductCategoryChange } from "./catalog-attribute-api";
 import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
@@ -23,6 +22,7 @@ import { buildPublishChecklist } from "./product-publishing-panel-model";
 import { ProductHistoryPanel } from "./product-history-panel";
 import { ProductTranslationsPanel, translationReadiness } from "./product-translations-panel";
 import { ProductVariantsPanel } from "./product-variants-panel";
+import { PrimaryCategoryMigrationWizard } from "./primary-category-migration-wizard";
 import {
   ProductWorkspaceDirtyProvider,
   useProductWorkspaceDirtyRegistration,
@@ -31,7 +31,6 @@ import {
 import {
   addAdminProductAdditionalCategory,
   assignAdminProductBrand,
-  assignAdminProductCategory,
   listAdminBrandOptions,
   loadProductWorkspace,
   mutateAdminProductLifecycle,
@@ -191,6 +190,7 @@ function ProductWorkspaceScreenInner({
   const [enteredInitialEdit, setEnteredInitialEdit] = useState(false);
   const [pendingNav, setPendingNav] = useState<PendingNav | null>(null);
   const [brandOptions, setBrandOptions] = useState<AdminBrandOption[]>([]);
+  const [primaryMigrationOpen, setPrimaryMigrationOpen] = useState(false);
 
   const canView = Boolean(view?.permissions.canView ?? true);
   const canEdit = Boolean(view?.permissions.canEditCatalog) && !viewScope;
@@ -372,60 +372,21 @@ function ProductWorkspaceScreenInner({
   }
 
   async function handleSaveGeneral() {
-    if (!activeDraft.categoryId) {
-      setError("انتخاب دسته لازم است");
+    if (!current.primaryCategoryId) {
+      setError("انتخاب دسته اصلی لازم است — از «تغییر دسته اصلی» استفاده کنید.");
       return;
     }
     if (!activeDraft.slug.trim()) {
       setError("نامک سراسری لازم است");
       return;
     }
-    const categoryChanged = activeDraft.categoryId !== (current.primaryCategoryId ?? null);
-    if (!categoryChanged && current.isPrimaryCategoryAssignable === false && current.primaryCategoryId) {
+    if (current.isPrimaryCategoryAssignable === false) {
       setError(PRODUCT_CATEGORY_LEVEL_REQUIRED_MESSAGE_FA);
       return;
     }
     setBusy(true);
     setError(null);
     let expectedUpdatedAt = current.catalogUpdatedAt;
-    if (categoryChanged && activeDraft.categoryId) {
-      const needsConfirm = Boolean(current.primaryCategoryId);
-      if (needsConfirm) {
-        const preview = await previewProductCategoryChange(
-          current.productId,
-          activeDraft.categoryId,
-          "fa-IR",
-        );
-        const message =
-          preview.state === "ok" && preview.data?.messageFa
-            ? `${preview.data.messageFa}\n\nتغییر دسته را تأیید می‌کنید؟`
-            : "تغییر دسته ممکن است ویژگی‌ها و تنوع‌های وابسته به دسته را تحت تأثیر قرار دهد. ادامه می‌دهید؟";
-        if (!window.confirm(message)) {
-          setBusy(false);
-          return;
-        }
-      }
-      const catResult = await assignAdminProductCategory(
-        current.productId,
-        {
-          categoryId: activeDraft.categoryId,
-          confirmSchemaImpact: needsConfirm,
-          expectedUpdatedAt,
-        },
-        viewScope,
-      );
-      if (!catResult.ok) {
-        setBusy(false);
-        if (catResult.errorCode === "workspace.catalog.stale") {
-          setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
-          return;
-        }
-        setError(mapAdminErrorMessage(catResult.errorCode));
-        return;
-      }
-      setView(catResult.view);
-      expectedUpdatedAt = catResult.view.catalogUpdatedAt;
-    }
 
     const brandChanged = (activeDraft.brandId ?? null) !== (current.brandId ?? null);
     if (brandChanged) {
@@ -908,16 +869,27 @@ function ProductWorkspaceScreenInner({
                     نام و توضیحات محصول در تب ترجمه‌ها به‌صورت locale-based ویرایش می‌شوند — نه به‌عنوان فیلد ثابت انگلیسی/فارسی در عمومی.
                   </p>
                   <div className="mt-4 grid gap-4">
-                    <ProductCategoryPicker
-                      label="دسته اصلی"
-                      value={activeDraft.categoryId}
-                      onChange={(next) => {
-                        setDraft({ ...activeDraft, categoryId: next });
-                        markGeneralDirty();
-                      }}
-                      required
-                      invalidSelectionHint
-                    />
+                    <div
+                      className="rounded-ds border border-border bg-surface/60 p-3"
+                      data-testid="product-primary-category-block"
+                    >
+                      <p className="text-sm font-medium">دسته اصلی</p>
+                      <p className="mt-1 text-sm text-slate-800" data-testid="product-primary-category-path">
+                        {categoryLabel(view)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted">
+                        تغییر دسته اصلی مهاجرت ساختاری است و فقط از ویزارد سه‌مرحله‌ای انجام می‌شود.
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white disabled:opacity-50"
+                        data-testid="product-change-primary-category"
+                        disabled={busy}
+                        onClick={() => setPrimaryMigrationOpen(true)}
+                      >
+                        تغییر دسته اصلی
+                      </button>
+                    </div>
                     <div className="rounded-ds border border-border bg-surface/60 p-3" data-testid="product-additional-categories">
                       <p className="text-sm font-medium">نمایش در دسته‌های دیگر</p>
                       <p className="mt-1 text-xs text-muted">
@@ -1385,6 +1357,20 @@ function ProductWorkspaceScreenInner({
           </div>
         </div>
       </Dialog>
+
+      <PrimaryCategoryMigrationWizard
+        view={view}
+        viewScope={viewScope}
+        open={primaryMigrationOpen}
+        onClose={() => setPrimaryMigrationOpen(false)}
+        onMigrated={(next) => {
+          setView(next);
+          setDraft(draftFromView(next));
+          setDirty(new Set());
+          formMode.clearDirty();
+          toast.success("دسته اصلی با موفقیت تغییر کرد.");
+        }}
+      />
     </div>
   );
 }

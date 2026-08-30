@@ -82,6 +82,7 @@ export function mapWishlistCard(value: unknown): StorefrontProductCard | null {
     promotionLabel: nullableText(prop(row, "promotionLabel", "PromotionLabel")),
     averageRating: reviewCount > 0 ? averageRating : null,
     reviewCount,
+    brandId: nullableText(prop(row, "brandId", "BrandId")),
   };
 }
 
