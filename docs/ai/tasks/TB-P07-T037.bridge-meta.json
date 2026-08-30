@@ -1,0 +1,9 @@
+{
+    "id":  "2ddf5d25-334f-45f8-a9f1-45a72a523142",
+    "workerId":  "tooba-worker-01",
+    "recoveredFrom":  "sqlite",
+    "channelId":  "tooba-main",
+    "claimedAtUtc":  "2026-08-30T22:18:36.2754254",
+    "taskId":  "TB-P07-T037",
+    "status":  "Claimed"
+}

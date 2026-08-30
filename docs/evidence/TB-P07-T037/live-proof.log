@@ -1,0 +1,21 @@
+[PASS] setup/tree-loaded — nodes=116 l3=73
+[PASS] audit/endpoint — status=200
+[PASS] audit/primary-l1l2-zero
+[PASS] audit/display-l1l2-zero
+[PASS] audit/dup-zero
+[PASS] audit/multi-primary-zero
+[PASS] audit/missing-primary-zero
+[PASS] cleanup/endpoint — status=200
+[PASS] cleanup/after-clean
+[PASS] api/sample-product — 01a0538a-22f7-7000-b0c4-d3970c92e972
+[PASS] api/reject-l1-display — status=400 code=catalog.category.assignment.level.invalid
+[PASS] api/reject-l2-display — status=400 code=catalog.category.assignment.level.invalid
+[PASS] api/reject-l1-primary-migration — status=400 code=catalog.category.assignment.level.invalid
+[PASS] api/reject-l2-primary-assign — status=400 code=catalog.category.assignment.level.invalid
+[PASS] plp/l2-subtree-products — slug=demo-cat-mobile-tablet-phones status=200 subs=3 primaryInSubtree=2
+[PASS] plp/l1-subtree-products — slug=demo-cat-mobile-tablet status=200 subs=2 primaryInSubtree=2
+[PASS] data/status-ok
+[PASS] data/published-zero — published=0
+[PASS] data/archived-zero — archived=0
+
+OVERALL PASS (19/19) → D:\Users\User\source\repos\SarvNewVer\docs\evidence\TB-P07-T037\live-proof.json

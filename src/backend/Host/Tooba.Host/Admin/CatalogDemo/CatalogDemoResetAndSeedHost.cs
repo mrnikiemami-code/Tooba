@@ -11,7 +11,8 @@ namespace Tooba.Host.Admin.CatalogDemo;
 public sealed record CatalogDemoResetAndSeedResult(
     CatalogDemoResetResult Reset,
     CatalogDemoSeedCounts Counts,
-    IReadOnlyList<string> Plan);
+    IReadOnlyList<string> Plan,
+    CatalogAssignmentIntegrityAudit AssignmentIntegrity);
 
 /// <summary>
 /// ارکستراسیون ایمنی → plan → reset → seed → integrity.
@@ -22,6 +23,7 @@ public sealed class CatalogDemoResetAndSeedHost
     private readonly CatalogDemoSeedOptions _options;
     private readonly CatalogDemoResetService _reset;
     private readonly CatalogDemoSeedService _seed;
+    private readonly CatalogDemoAssignmentIntegrityService _assignmentIntegrity;
     private readonly CatalogDbContext _db;
     private readonly ILogger<CatalogDemoResetAndSeedHost> _logger;
 
@@ -31,6 +33,7 @@ public sealed class CatalogDemoResetAndSeedHost
         IOptions<CatalogDemoSeedOptions> options,
         CatalogDemoResetService reset,
         CatalogDemoSeedService seed,
+        CatalogDemoAssignmentIntegrityService assignmentIntegrity,
         CatalogDbContext db,
         ILogger<CatalogDemoResetAndSeedHost> logger)
     {
@@ -38,6 +41,7 @@ public sealed class CatalogDemoResetAndSeedHost
         _options = options.Value;
         _reset = reset;
         _seed = seed;
+        _assignmentIntegrity = assignmentIntegrity;
         _db = db;
         _logger = logger;
     }
@@ -71,6 +75,7 @@ public sealed class CatalogDemoResetAndSeedHost
         $"Seed >= {CatalogDemoMatrix.Brands.Count} brands and {CatalogDemoMatrix.Tags.Count} tags.",
         "Seed attribute definitions/options, L3 schemas, selected facets, MegaMenu, category media.",
         "Seed rich Draft publish-ready Products (3–5 per L3; TB-P07-T034); residual Published Products must not survive reset.",
+        "Enforce L3-only Primary/display membership; zero L1/L2 product assignments (TB-P07-T037).",
     ];
 
     /// <summary>reset+seed کامل با اعتبارسنجی.</summary>
@@ -92,7 +97,9 @@ public sealed class CatalogDemoResetAndSeedHost
         var counts = await _seed.SeedAsync(cancellationToken);
         ValidateIntegrity(counts);
         await EnsureProductLifecycleCleanAsync(counts.Products, cancellationToken);
-        return new CatalogDemoResetAndSeedResult(reset, counts, plan);
+        await _assignmentIntegrity.EnsureCleanOrThrowAsync(cancellationToken);
+        var assignmentIntegrity = await _assignmentIntegrity.AuditAsync(cancellationToken);
+        return new CatalogDemoResetAndSeedResult(reset, counts, plan, assignmentIntegrity);
     }
 
     /// <summary>فقط seed (بدون reset) — همچنان تحت نگهبان ایمنی.</summary>
@@ -101,7 +108,19 @@ public sealed class CatalogDemoResetAndSeedHost
         EnsureSafetyOrThrow();
         var counts = await _seed.SeedAsync(cancellationToken);
         ValidateIntegrity(counts);
+        await _assignmentIntegrity.EnsureCleanOrThrowAsync(cancellationToken);
         return counts;
+    }
+
+    /// <summary>ممیزی انتساب سطح دسته برای Admin evidence.</summary>
+    public Task<CatalogAssignmentIntegrityAudit> AuditAssignmentsAsync(CancellationToken cancellationToken) =>
+        _assignmentIntegrity.AuditAsync(cancellationToken);
+
+    /// <summary>پاکسازی انتساب نامعتبر در غیر Production (بدون reset کامل).</summary>
+    public Task<CatalogAssignmentIntegrityCleanupResult> CleanupAssignmentsAsync(CancellationToken cancellationToken)
+    {
+        EnsureSafetyOrThrow();
+        return _assignmentIntegrity.CleanupAsync(cancellationToken);
     }
 
     /// <summary>شمارش وضعیت demo در برابر کل.</summary>

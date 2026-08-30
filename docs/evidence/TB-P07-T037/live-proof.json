@@ -1,0 +1,216 @@
+{
+  "task": "TB-P07-T037",
+  "host": "http://127.0.0.1:5088",
+  "startedAt": "2026-08-30T22:40:38.972Z",
+  "sections": {
+    "auditBefore": {
+      "totalProducts": 284,
+      "primaryAtL1OrL2": 0,
+      "displayAtL1OrL2": 0,
+      "duplicatePrimaryAndAdditional": 0,
+      "multiplePrimary": 0,
+      "missingPrimary": 0,
+      "orphanAssignments": 0,
+      "primaryAtL1OrL2ProductIds": [],
+      "displayAtL1OrL2ProductIds": [],
+      "duplicateProductIds": [],
+      "multiplePrimaryProductIds": [],
+      "missingPrimaryProductIds": [],
+      "orphanAssignmentProductIds": []
+    },
+    "cleanup": {
+      "before": {
+        "totalProducts": 284,
+        "primaryAtL1OrL2": 0,
+        "displayAtL1OrL2": 0,
+        "duplicatePrimaryAndAdditional": 0,
+        "multiplePrimary": 0,
+        "missingPrimary": 0,
+        "orphanAssignments": 0,
+        "primaryAtL1OrL2ProductIds": [],
+        "displayAtL1OrL2ProductIds": [],
+        "duplicateProductIds": [],
+        "multiplePrimaryProductIds": [],
+        "missingPrimaryProductIds": [],
+        "orphanAssignmentProductIds": []
+      },
+      "after": {
+        "totalProducts": 284,
+        "primaryAtL1OrL2": 0,
+        "displayAtL1OrL2": 0,
+        "duplicatePrimaryAndAdditional": 0,
+        "multiplePrimary": 0,
+        "missingPrimary": 0,
+        "orphanAssignments": 0,
+        "primaryAtL1OrL2ProductIds": [],
+        "displayAtL1OrL2ProductIds": [],
+        "duplicateProductIds": [],
+        "multiplePrimaryProductIds": [],
+        "missingPrimaryProductIds": [],
+        "orphanAssignmentProductIds": []
+      },
+      "invalidDisplayRemoved": 0,
+      "duplicateAdditionalRemoved": 0,
+      "primariesRepairedToL3": 0,
+      "productsDeleted": 0,
+      "deletedProductIds": []
+    },
+    "l2Plp": {
+      "categoryId": "01a05387-dac1-7000-bb3e-901ac1a7a462",
+      "slug": "demo-cat-mobile-tablet-phones",
+      "status": 200,
+      "subcategories": 3,
+      "productsInSubtreePrimary": 2,
+      "subtreeSize": 4
+    },
+    "l1Plp": {
+      "categoryId": "01a05387-da62-7000-b4b4-e7947e9b7fc4",
+      "slug": "demo-cat-mobile-tablet",
+      "status": 200,
+      "subcategories": 2,
+      "productsInSubtreePrimary": 2,
+      "subtreeSize": 8
+    },
+    "status": {
+      "rootsDemo": 15,
+      "categoriesDemo": 116,
+      "categoriesTotal": 116,
+      "brandsDemo": 22,
+      "brandsTotal": 22,
+      "tagsDemo": 36,
+      "tagsTotal": 38,
+      "attributesDemo": 41,
+      "attributesTotal": 51,
+      "productsTotal": 284,
+      "productsDemo": 283,
+      "productsDraft": 284,
+      "productsPublished": 0,
+      "productsArchived": 0,
+      "allowResetAndSeed": true,
+      "environment": "Development"
+    }
+  },
+  "endedAt": "2026-08-30T22:40:39.220Z",
+  "checks": [
+    {
+      "section": "setup",
+      "name": "tree-loaded",
+      "ok": true,
+      "detail": "nodes=116 l3=73"
+    },
+    {
+      "section": "audit",
+      "name": "endpoint",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "audit",
+      "name": "primary-l1l2-zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "audit",
+      "name": "display-l1l2-zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "audit",
+      "name": "dup-zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "audit",
+      "name": "multi-primary-zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "audit",
+      "name": "missing-primary-zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "cleanup",
+      "name": "endpoint",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "section": "cleanup",
+      "name": "after-clean",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "api",
+      "name": "sample-product",
+      "ok": true,
+      "detail": "01a0538a-22f7-7000-b0c4-d3970c92e972"
+    },
+    {
+      "section": "api",
+      "name": "reject-l1-display",
+      "ok": true,
+      "detail": "status=400 code=catalog.category.assignment.level.invalid"
+    },
+    {
+      "section": "api",
+      "name": "reject-l2-display",
+      "ok": true,
+      "detail": "status=400 code=catalog.category.assignment.level.invalid"
+    },
+    {
+      "section": "api",
+      "name": "reject-l1-primary-migration",
+      "ok": true,
+      "detail": "status=400 code=catalog.category.assignment.level.invalid"
+    },
+    {
+      "section": "api",
+      "name": "reject-l2-primary-assign",
+      "ok": true,
+      "detail": "status=400 code=catalog.category.assignment.level.invalid"
+    },
+    {
+      "section": "plp",
+      "name": "l2-subtree-products",
+      "ok": true,
+      "detail": "slug=demo-cat-mobile-tablet-phones status=200 subs=3 primaryInSubtree=2"
+    },
+    {
+      "section": "plp",
+      "name": "l1-subtree-products",
+      "ok": true,
+      "detail": "slug=demo-cat-mobile-tablet status=200 subs=2 primaryInSubtree=2"
+    },
+    {
+      "section": "data",
+      "name": "status-ok",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "section": "data",
+      "name": "published-zero",
+      "ok": true,
+      "detail": "published=0"
+    },
+    {
+      "section": "data",
+      "name": "archived-zero",
+      "ok": true,
+      "detail": "archived=0"
+    }
+  ],
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "overall": "PASS"
+  }
+}

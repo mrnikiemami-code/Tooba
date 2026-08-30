@@ -594,7 +594,7 @@ public sealed class ProductWorkspaceComposer
             throw new PlatformHttpException(
                 400,
                 CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
-                "workspace.product.category.level.invalid");
+                CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode);
         }
 
         var locale = string.IsNullOrWhiteSpace(request.Locale) ? "fa-IR" : request.Locale.Trim();
@@ -782,7 +782,7 @@ public sealed class ProductWorkspaceComposer
             throw new PlatformHttpException(
                 400,
                 CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
-                "workspace.product.category.level.invalid");
+                CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode);
         }
 
         var hasAttrValues = await _catalog.ProductAttributeValues.AsNoTracking()
@@ -819,7 +819,10 @@ public sealed class ProductWorkspaceComposer
         }
         catch (InvalidOperationException ex)
         {
-            throw new PlatformHttpException(400, ex.Message, "workspace.product.category.assign.rejected");
+            var code = IsAssignmentLevelInvalid(ex)
+                ? CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode
+                : "workspace.product.category.assign.rejected";
+            throw new PlatformHttpException(400, ex.Message, code);
         }
     }
 
@@ -854,11 +857,13 @@ public sealed class ProductWorkspaceComposer
         }
         catch (InvalidOperationException ex)
         {
-            var code = ex.Message.Contains("دسته اصلی", StringComparison.Ordinal)
-                ? "catalog.category.assignment.duplicate_primary"
-                : ex.Message.Contains("قبلاً", StringComparison.Ordinal)
-                    ? "catalog.category.assignment.duplicate"
-                    : "catalog.category.assignment.invalid";
+            var code = IsAssignmentLevelInvalid(ex)
+                ? CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode
+                : ex.Message.Contains("دسته اصلی", StringComparison.Ordinal)
+                    ? "catalog.category.assignment.duplicate_primary"
+                    : ex.Message.Contains("قبلاً", StringComparison.Ordinal)
+                        ? "catalog.category.assignment.duplicate"
+                        : "catalog.category.assignment.invalid";
             throw new PlatformHttpException(400, ex.Message, code);
         }
     }
@@ -1697,6 +1702,12 @@ public sealed class ProductWorkspaceComposer
         CancellationToken cancellationToken) =>
         await GetAsync(productId, permissions, cancellationToken)
         ?? throw new PlatformHttpException(404, "محصول پیدا نشد.", "workspace.product.missing");
+
+    private static bool IsAssignmentLevelInvalid(InvalidOperationException ex) =>
+        string.Equals(
+            ex.Message,
+            CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
+            StringComparison.Ordinal);
 
     private static void EnsureCatalogEdit(ProductWorkspacePermissions permissions)
     {

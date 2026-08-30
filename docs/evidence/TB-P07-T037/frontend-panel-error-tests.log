@@ -1,0 +1,27 @@
+(node:17064) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/admin-error-map.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ maps known catalog attribute duplicate codes in fa and en (1.0726ms)
+✔ unknown fallback never exposes Bad Request / HTTP / raw codes (0.9749ms)
+✔ extracts code from legacy title (code) payloads (0.1315ms)
+✔ parseAdminProblemErrorCode prefers stable errorCode never title (0.1651ms)
+(node:15456) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (1.0091ms)
+✔ admin nav groups Categories and Products distinctly (1.0896ms)
+✔ category products panel is real and blocks L1/L2 assignment (0.8638ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.4512ms)
+✔ category products picker refreshes membership count and row state after mutation (0.4083ms)
+✔ category products assign dialog has top bulk add selected action (0.4015ms)
+✔ category products panel is membership-only without change-category (0.5705ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.8245

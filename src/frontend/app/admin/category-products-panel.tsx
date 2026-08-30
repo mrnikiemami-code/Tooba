@@ -38,10 +38,10 @@ import { getProductAttributeEditorState } from "./catalog-attribute-api";
 import { loadEffectiveCategoryFacets } from "./catalog-facet-api";
 
 export const CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA =
-  "محصول فقط به دسته‌بندی سطح سوم قابل اختصاص است.";
+  "محصول فقط به دسته‌های سطح ۳ متصل می‌شود. محصولات این دسته از زیر‌دسته‌های سطح ۳ نمایش داده می‌شوند.";
 
 const PRIMARY_MEMBERSHIP_HELPER_FA =
-  "این دسته، دسته اصلی محصول است. برای تغییر دسته اصلی، محصول را باز کنید.";
+  "برای تغییر دسته اصلی، محصول را باز کنید.";
 
 const DISPLAY_MEMBERSHIP_BADGE_FA = "نمایش در این دسته";
 const ADD_FOR_DISPLAY_CTA_FA = "افزودن برای نمایش";
@@ -277,15 +277,10 @@ export function CategoryProductsPanel({
         label: "حذف از این دسته",
         icon: Trash2,
         variant: "destructive",
-        confirm: (row) =>
-          row.primaryCategoryId === categoryId
-            ? false
-            : "این محصول از عضویت این دسته حذف شود؟",
+        // Primary rows: no trash/remove control (even disabled). Open product instead.
+        visible: (row) => row.primaryCategoryId !== categoryId,
+        confirm: () => "این محصول از عضویت این دسته حذف شود؟",
         onClick: async (row) => {
-          if (row.primaryCategoryId === categoryId) {
-            toast.info(PRIMARY_MEMBERSHIP_HELPER_FA);
-            return;
-          }
           await removeProductFromCategory(row.id);
           afterMembershipRemoved();
         },
@@ -494,28 +489,16 @@ export function CategoryProductsPanel({
                   <span className="w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-800">
                     دسته اصلی
                   </span>
-                  <p className="text-[11px] leading-snug text-slate-600">{PRIMARY_MEMBERSHIP_HELPER_FA}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <a
-                      href={`/admin/products/${row.id}?scope=view`}
-                      className="text-[11px] font-medium text-[#2563EB] hover:underline"
-                      data-testid={`category-assign-open-product-${row.id}`}
-                    >
-                      باز کردن محصول
-                    </a>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-red-200 px-2 py-1 text-xs text-red-700 disabled:opacity-50"
-                      data-testid={`category-assign-remove-${row.id}`}
-                      disabled={assignBusy}
-                      title={PRIMARY_MEMBERSHIP_HELPER_FA}
-                      onClick={() => {
-                        toast.info(PRIMARY_MEMBERSHIP_HELPER_FA);
-                      }}
-                    >
-                      حذف از این دسته
-                    </button>
-                  </div>
+                  <p className="text-[11px] leading-snug text-slate-600" title={PRIMARY_MEMBERSHIP_HELPER_FA}>
+                    {PRIMARY_MEMBERSHIP_HELPER_FA}
+                  </p>
+                  <a
+                    href={`/admin/products/${row.id}?scope=view`}
+                    className="w-fit text-[11px] font-medium text-[#2563EB] hover:underline"
+                    data-testid={`category-assign-open-product-${row.id}`}
+                  >
+                    باز کردن محصول
+                  </a>
                 </div>
               );
             }
@@ -607,7 +590,7 @@ export function CategoryProductsPanel({
       >
         <p className="font-semibold">{CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA}</p>
         <p className="mt-2 text-amber-800/90">
-          این دسته سطح {level ?? "—"} است و فقط برای ناوبری استفاده می‌شود. اختصاص محصول فقط در دسته‌های سطح سوم ممکن است.
+          این دسته سطح {level ?? "—"} است و فقط برای ناوبری استفاده می‌شود؛ محصول به‌صورت مستقیم به آن وصل نمی‌شود.
         </p>
       </div>
     );

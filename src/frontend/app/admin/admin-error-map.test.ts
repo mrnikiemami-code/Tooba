@@ -28,6 +28,14 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
     "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.",
   );
   assert.equal(
+    mapAdminErrorMessage("catalog.category.assignment.level.invalid", "fa"),
+    "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("catalog.category.assignment.level.invalid", "en"),
+    "A product must be assigned to a level-3 category.",
+  );
+  assert.equal(
     mapAdminErrorMessage("admin.authorization.denied", "en"),
     "You are not allowed to perform this action.",
   );

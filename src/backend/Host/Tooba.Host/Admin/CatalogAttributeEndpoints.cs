@@ -739,7 +739,7 @@ public static class CatalogAttributeEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category_change.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryChangeInvalid(ex);
         }
     }
 
@@ -766,8 +766,21 @@ public static class CatalogAttributeEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.category_change.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapCategoryChangeInvalid(ex);
         }
+    }
+
+    private static IResult MapCategoryChangeInvalid(InvalidOperationException ex)
+    {
+        var errorCode = string.Equals(
+            ex.Message,
+            CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa,
+            StringComparison.Ordinal)
+            ? CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode
+            : "catalog.category_change.invalid";
+        return Results.Json(
+            new { title = ex.Message, errorCode },
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     private static IResult MapAttributeInvalid(InvalidOperationException ex)

@@ -70,6 +70,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "اختصاص دسته معتبر نیست.",
     en: "Category assignment is not valid.",
   },
+  "catalog.category.assignment.level.invalid": {
+    fa: "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.",
+    en: "A product must be assigned to a level-3 category.",
+  },
   "catalog.category.assignment.stale": {
     fa: "این مورد را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.",
     en: "Someone else changed this record. Reload the latest version.",

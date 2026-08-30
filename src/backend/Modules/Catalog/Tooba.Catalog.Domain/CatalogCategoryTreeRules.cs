@@ -9,9 +9,20 @@ public static class CatalogCategoryTreeRules
     /// <summary>سطح قابل اختصاص محصول به رده (سطح سوم).</summary>
     public const int ProductAssignableLevel = 3;
 
+    /// <summary>حداکثر عمق درخت رده (ریشه = ۱)؛ ایجاد زیرسطح برای سطح ۳ ممنوع است.</summary>
+    public const int MaxCategoryDepth = 3;
+
     /// <summary>پیام خطای اختصاص ردهٔ غیرفعال برای محصول.</summary>
     public const string ProductAssignableLevelRequiredMessageFa =
         "محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود.";
+
+    /// <summary>کد ماشین پایدار برای رد اختصاص به سطح ۱/۲.</summary>
+    public const string AssignmentLevelInvalidErrorCode =
+        "catalog.category.assignment.level.invalid";
+
+    /// <summary>پیام خطای عمق بیش از حد درخت رده.</summary>
+    public const string MaxCategoryDepthExceededMessageFa =
+        "عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.";
 
     /// <summary>
     /// آیا <paramref name="nodeId"/> زیر درخت <paramref name="ancestorId"/> است؟
@@ -88,6 +99,55 @@ public static class CatalogCategoryTreeRules
         }
     }
 
+    /// <summary>
+    /// آیا می‌توان زیر ردهٔ والد، فرزند جدید ساخت؟ فقط وقتی سطح والد کمتر از MaxCategoryDepth باشد.
+    /// </summary>
+    public static bool CanAddChildUnder(
+        Guid? parentCategoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (parentCategoryId is null || parentCategoryId == Guid.Empty)
+        {
+            return true;
+        }
+
+        return GetCategoryLevel(parentCategoryId.Value, parentById) < MaxCategoryDepth;
+    }
+
+    /// <summary>ایجاد فرزند زیر سطح ۳ را رد می‌کند.</summary>
+    public static void EnsureCanAddChildUnder(
+        Guid? parentCategoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        if (!CanAddChildUnder(parentCategoryId, parentById))
+        {
+            throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+        }
+    }
+
+    /// <summary>ارتفاع زیردرخت (خود = ۱).</summary>
+    public static int GetSubtreeHeight(
+        Guid categoryId,
+        IReadOnlyDictionary<Guid, Guid?> parentById)
+    {
+        var children = parentById
+            .Where(kv => kv.Value == categoryId)
+            .Select(kv => kv.Key)
+            .ToList();
+        if (children.Count == 0)
+        {
+            return 1;
+        }
+
+        var maxChild = 0;
+        foreach (var child in children)
+        {
+            maxChild = Math.Max(maxChild, GetSubtreeHeight(child, parentById));
+        }
+
+        return 1 + maxChild;
+    }
+
     /// <summary>جابه‌جایی را بدون ایجاد حلقه اعتبارسنجی می‌کند.</summary>
     public static void ValidateMove(
         Guid categoryId,
@@ -95,6 +155,22 @@ public static class CatalogCategoryTreeRules
         IReadOnlyDictionary<Guid, Guid?> parentById)
     {
         ValidateNoCycle(categoryId, newParentId, parentById);
+        if (newParentId is null || newParentId == Guid.Empty)
+        {
+            // ریشه: سطح زیردرخت نباید از Max بیشتر شود
+            if (GetSubtreeHeight(categoryId, parentById) > MaxCategoryDepth)
+            {
+                throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+            }
+
+            return;
+        }
+
+        var parentLevel = GetCategoryLevel(newParentId.Value, parentById);
+        if (parentLevel + GetSubtreeHeight(categoryId, parentById) > MaxCategoryDepth)
+        {
+            throw new InvalidOperationException(MaxCategoryDepthExceededMessageFa);
+        }
     }
 
     /// <summary>خود-والد و والد بودن descendant را رد می‌کند.</summary>

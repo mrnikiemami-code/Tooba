@@ -41,17 +41,23 @@ Shared helper: `CatalogCategoryTreeRules` (`GetCategoryLevel`, `IsAssignableProd
 Enforced in:
 
 - `CatalogDirectory.AssignCategoryAsync`
+- `CatalogDirectory.AddProductAdditionalCategoryAsync`
 - `CatalogDirectory.ReplaceProductPrimaryCategoryAsync` (via preview)
 - `CatalogDirectory.PreviewCategoryChangeAsync` (target must be L3)
-- `CatalogDirectory.PublishProductAsync` (existing primary must be L3)
+- `CatalogDirectory.PublishProductAsync` (all linked categories must be L3)
 - `ProductWorkspaceComposer.CreateSimpleProductAsync`
 - `ProductWorkspaceComposer.AssignProductCategoryAsync`
+- `ProductWorkspaceComposer.AddAdditionalCategoryAsync`
+- Catalog attribute primary-category migrate endpoint
+- Demo seed + `CatalogDemoAssignmentIntegrityService` (TB-P07-T037)
 
-Persian error (stable code on workspace HTTP):
+Persian error (stable machine code on HTTP):
 
 | Message | Error code |
 |---------|------------|
-| محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود. | `workspace.product.category.level.invalid` |
+| محصول باید به یک دسته‌بندی سطح سوم اختصاص داده شود. | `catalog.category.assignment.level.invalid` |
+
+Aliases still mapped in Admin FE: `workspace.product.category.level.invalid`, `catalog.product.category.level.invalid`.
 
 Frontend-only checks are **not** sufficient.
 

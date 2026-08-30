@@ -218,6 +218,12 @@ public sealed class CatalogDemoResetService
         return products.Count;
     }
 
+    /// <summary>
+    /// حذف انتخابی محصولات Catalog و وابسته‌های Catalog-owned (برای پاکسازی انتساب نامعتبر غیر Production).
+    /// </summary>
+    public Task<int> DeleteProductsByIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken) =>
+        DeleteProductsAsync(productIds.ToHashSet(), cancellationToken);
+
     private async Task<int> DeleteCategoriesAsync(HashSet<Guid> categoryIds, CancellationToken cancellationToken)
     {
         if (categoryIds.Count == 0)

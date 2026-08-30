@@ -96,14 +96,16 @@ test("category products panel is membership-only without change-category", () =>
   const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
   assert.match(panel, /حذف از این دسته/);
   assert.match(panel, /PRIMARY_MEMBERSHIP_HELPER_FA/);
-  assert.match(panel, /این دسته، دسته اصلی محصول است/);
+  assert.match(panel, /برای تغییر دسته اصلی، محصول را باز کنید/);
   assert.match(panel, /نمایش در این دسته/);
   assert.match(panel, /DISPLAY_MEMBERSHIP_BADGE_FA/);
   assert.match(panel, /باز کردن محصول/);
   assert.match(panel, /remove-membership/);
-  // delete control is offered on every row (primary informs; secondary removes)
-  assert.equal(panel.includes("visible: (row) => row.primaryCategoryId !== categoryId"), false);
-  assert.match(panel, /toast\.info\(PRIMARY_MEMBERSHIP_HELPER_FA\)/);
+  // Primary rows must not render trash/remove — even a disabled fake control is forbidden.
+  assert.match(panel, /visible:\s*\(row\)\s*=>\s*row\.primaryCategoryId\s*!==\s*categoryId/);
+  assert.equal(panel.includes("toast.info(PRIMARY_MEMBERSHIP_HELPER_FA)"), false);
+  assert.match(panel, /CATEGORY_PRODUCTS_LEVEL_BLOCKED_MESSAGE_FA/);
+  assert.match(panel, /محصول فقط به دسته‌های سطح ۳ متصل می‌شود/);
   assert.equal(panel.includes("تغییر دسته‌بندی"), false);
   assert.equal(panel.includes("category-assign-change-primary"), false);
   assert.equal(panel.includes("category-products-change-dialog"), false);

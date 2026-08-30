@@ -137,11 +137,16 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             NullLogger<CatalogDemoSeedService>.Instance);
         var options = Options.Create(new CatalogDemoSeedOptions { AllowResetAndSeed = true });
         var env = new StubHostEnvironment("Development");
+        var assignmentIntegrity = new CatalogDemoAssignmentIntegrityService(
+            catalogDb,
+            reset,
+            NullLogger<CatalogDemoAssignmentIntegrityService>.Instance);
         var host = new CatalogDemoResetAndSeedHost(
             env,
             options,
             reset,
             seed,
+            assignmentIntegrity,
             catalogDb,
             NullLogger<CatalogDemoResetAndSeedHost>.Instance);
 
@@ -151,6 +156,12 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.True(first.Counts.Tags >= 30);
         Assert.True(first.Counts.L3 > 0);
         Assert.InRange(first.Counts.Products, 219, 365);
+        Assert.Equal(0, first.AssignmentIntegrity.PrimaryAtL1OrL2);
+        Assert.Equal(0, first.AssignmentIntegrity.DisplayAtL1OrL2);
+        Assert.Equal(0, first.AssignmentIntegrity.DuplicatePrimaryAndAdditional);
+        Assert.Equal(0, first.AssignmentIntegrity.MultiplePrimary);
+        Assert.Equal(0, first.AssignmentIntegrity.MissingPrimary);
+        Assert.Equal(0, first.AssignmentIntegrity.OrphanAssignments);
 
         var products = await catalogDb.Products.AsNoTracking().ToListAsync();
         Assert.Equal(first.Counts.Products, products.Count);
@@ -190,6 +201,18 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             var count = await catalogDb.ProductCategories.AsNoTracking()
                 .CountAsync(pc => pc.CategoryId == leafId && pc.Role == CatalogProductCategoryRole.Primary);
             Assert.InRange(count, 3, 5);
+        }
+
+        var allLinks = await catalogDb.ProductCategories.AsNoTracking().ToListAsync();
+        Assert.All(allLinks, link =>
+            Assert.True(CatalogCategoryTreeRules.IsAssignableProductCategory(link.CategoryId, parentMap)));
+        foreach (var group in allLinks.GroupBy(x => x.ProductId))
+        {
+            Assert.Equal(1, group.Count(x => x.Role == CatalogProductCategoryRole.Primary));
+            var primaryId = group.Single(x => x.Role == CatalogProductCategoryRole.Primary).CategoryId;
+            Assert.DoesNotContain(
+                group,
+                x => x.Role == CatalogProductCategoryRole.Additional && x.CategoryId == primaryId);
         }
 
         var sample = products[0];
@@ -270,16 +293,22 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             catalogDb,
             mediaFactory,
             NullLogger<CatalogDemoProductSeedService>.Instance);
+        var reset = new CatalogDemoResetService(catalogDb, mediaDb, store);
+        var assignmentIntegrity = new CatalogDemoAssignmentIntegrityService(
+            catalogDb,
+            reset,
+            NullLogger<CatalogDemoAssignmentIntegrityService>.Instance);
         var host = new CatalogDemoResetAndSeedHost(
             new StubHostEnvironment("Testing"),
             Options.Create(new CatalogDemoSeedOptions { AllowResetAndSeed = true }),
-            new CatalogDemoResetService(catalogDb, mediaDb, store),
+            reset,
             new CatalogDemoSeedService(
                 catalogDirectory,
                 catalogDb,
                 mediaFactory,
                 productSeed,
                 NullLogger<CatalogDemoSeedService>.Instance),
+            assignmentIntegrity,
             catalogDb,
             NullLogger<CatalogDemoResetAndSeedHost>.Instance);
 
@@ -293,6 +322,7 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             Options.Create(new CatalogDemoSeedOptions { AllowResetAndSeed = allow }),
             reset: null!,
             seed: null!,
+            assignmentIntegrity: null!,
             db: null!,
             NullLogger<CatalogDemoResetAndSeedHost>.Instance);
 
