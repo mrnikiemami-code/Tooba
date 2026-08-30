@@ -1,0 +1,63 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T033
+
+Parent-Task:
+TB-P07-T032
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Summary:
+Safe non-production Catalog demo reset+seed foundation delivered. Production/opt-in guards fail closed. Live reset-and-seed yields exactly 15 L1 roots, varied L2/L3 (28/73), ≥20 brands (22), 36 tags, domain attribute schemas/facets, category DAM media, MegaMenu placements, 0 products (T034). Idempotent re-run does not duplicate counts. BE CatalogDemo tests 5/5; Host.Tests 351 pass / 0 fail. USER_VISUAL_ACCEPTED=NO.
+
+Reset-Safety:
+Production blocked; AllowResetAndSeed required; Development/Testing only; seam-scoped demo/junk deletes only
+
+Seed-Foundation:
+15 roots; varied L2/L3; L3 assignable; fa/en + SEO; 22 brands; 36 tags; 41 attrs/78 options; 190 bindings; 117 facets; MegaMenu 99; products 0
+
+Media:
+DAM-generated demo-media-* PNG/WebP; every L1 image+icon+banner; 247 assignments
+
+Idempotency:
+Second reset-and-seed 200 with same foundation counts (no duplication)
+
+Validation:
+CatalogDemoResetSeedTests 5 pass; Host.Tests 351 pass / 0 fail / 0 skip; Host build green
+
+Live-Verification:
+Host:5088 FE:3000 Shopeiva:3001; POST /v1/admin/catalog/demo/reset-and-seed OK; GET status rootsDemo=15
+
+Evidence:
+path: docs/evidence/TB-P07-T033/
+
+Git:
+branch:
+main
+
+commit:
+eaae4b7c18bfc41296a27f86c7764631384d7492
+
+push:
+yes
+
+Architectural-Concerns:
+none material; Attribute definitions domain-scoped (`demo_attr_{domain}_{suffix}`) to avoid locale name collisions with legacy data
+
+Visual-Concerns:
+none for this foundation task; human visual gate is T035
+
+Blockers:
+none
+
+USER_VISUAL_ACCEPTED:
+NO
+
+END_TOOBA_WORKER_RESULT

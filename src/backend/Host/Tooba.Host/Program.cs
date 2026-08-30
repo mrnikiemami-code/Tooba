@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Host.Admin;
+using Tooba.Host.Admin.CatalogDemo;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
 using Tooba.Host.Fulfillment;
@@ -108,6 +109,12 @@ builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
+builder.Services.Configure<CatalogDemoSeedOptions>(
+    builder.Configuration.GetSection(CatalogDemoSeedOptions.SectionName));
+builder.Services.AddScoped<CatalogDemoMediaFactory>();
+builder.Services.AddScoped<CatalogDemoResetService>();
+builder.Services.AddScoped<CatalogDemoSeedService>();
+builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
 builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
@@ -243,25 +250,35 @@ if (app.Environment.IsDevelopment())
     }
     else
     {
-        await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
-        // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
-        // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
-        await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
-        try
+        var catalogDemoOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<CatalogDemoSeedOptions>>().Value;
+        // TB-P07-T033: bootstrapهای قدیمی Catalog به‌طور پیش‌فرض خاموش‌اند تا reset+seed تمیز بماند.
+        if (catalogDemoOptions.RunLegacyBootstraps)
         {
-            await CatalogAttributeSchemaDevelopmentBootstrap.ApplyAsync(app.Services);
+            await ProductWorkspaceDevelopmentBootstrap.ApplyAsync(app.Services);
+            // دانهٔ نمایشی فروشگاه پس از bootstrap اصلی اجرا می‌شود و با slug نگهبان idempotent است؛
+            // معنای bootstrap تولیدی عوض نمی‌شود چون فقط در Development صدا زده می‌شود.
+            await StorefrontDemoCatalogBootstrap.ApplyAsync(app.Services);
+            try
+            {
+                await CatalogAttributeSchemaDevelopmentBootstrap.ApplyAsync(app.Services);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentBootstrap failed; Host continues without attribute schema demo.");
+            }
+            try
+            {
+                await AccessControlDevelopmentSeed.ApplyAsync(app.Services);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogError(ex, "AccessControlDevelopmentSeed failed; Host continues without ACC demo snapshot.");
+            }
         }
-        catch (Exception ex)
+        else
         {
-            app.Logger.LogError(ex, "CatalogAttributeSchemaDevelopmentBootstrap failed; Host continues without attribute schema demo.");
-        }
-        try
-        {
-            await AccessControlDevelopmentSeed.ApplyAsync(app.Services);
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "AccessControlDevelopmentSeed failed; Host continues without ACC demo snapshot.");
+            app.Logger.LogInformation(
+                "Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
         }
 
         try
@@ -302,6 +319,7 @@ app.MapCatalogFacetEndpoints();
 app.MapCatalogMegaMenuEndpoints();
 app.MapCatalogTagEndpoints();
 app.MapCatalogCategoryEndpoints();
+app.MapCatalogDemoDevEndpoints();
 app.MapAdminPanelEndpoints();
 app.MapStorefrontEndpoints();
 app.MapPaymentWebhookEndpoints();

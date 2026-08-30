@@ -1,0 +1,14 @@
+﻿{
+    "rootsDemo":  15,
+    "categoriesDemo":  116,
+    "categoriesTotal":  116,
+    "brandsDemo":  22,
+    "brandsTotal":  22,
+    "tagsDemo":  36,
+    "tagsTotal":  38,
+    "attributesDemo":  41,
+    "attributesTotal":  51,
+    "productsTotal":  4,
+    "allowResetAndSeed":  true,
+    "environment":  "Development"
+}
