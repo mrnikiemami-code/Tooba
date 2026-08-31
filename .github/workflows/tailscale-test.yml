@@ -1,0 +1,24 @@
+name: Tailscale Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Show Tailscale status
+        shell: powershell
+        run: |
+          tailscale version
+          tailscale status
+          tailscale ip -4
