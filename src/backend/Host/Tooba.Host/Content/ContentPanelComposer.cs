@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
+using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Host.Grid;
 
 namespace Tooba.Host.Content;
@@ -8,9 +9,14 @@ namespace Tooba.Host.Content;
 public sealed class ContentPanelComposer
 {
     private readonly IContentDirectory _content;
+    private readonly AdminContentGridQueryEngine _grid;
 
-    /// <summary>دایرکتوری Content را تزریق می‌کند.</summary>
-    public ContentPanelComposer(IContentDirectory content) => _content = content;
+    /// <summary>دایرکتوری Content و DbContext را تزریق می‌کند.</summary>
+    public ContentPanelComposer(IContentDirectory content, ContentDbContext db)
+    {
+        _content = content;
+        _grid = new AdminContentGridQueryEngine(db);
+    }
 
     /// <summary>صفحهٔ مقالات Published.</summary>
     public Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
@@ -34,13 +40,13 @@ public sealed class ContentPanelComposer
         CancellationToken cancellationToken) =>
         _content.ListAllAsync(page, pageSize, cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید مقالات Admin.</summary>
-    public async Task<GridPageResponse<AdminArticleSnapshot>> QueryGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید مقالات Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminArticleSnapshot>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var page = await ListAllAsync(1, GridQueryPolicyBase.DefaultMaxPageSize, cancellationToken);
-        return AdminListGridPolicies.Content.Execute(page.Items, request);
+        var q = AdminListGridPolicies.Content.Normalize(request);
+        return _grid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>جزئیات admin.</summary>

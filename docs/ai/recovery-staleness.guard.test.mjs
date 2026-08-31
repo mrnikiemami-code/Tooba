@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P07-T041).
+ * Recovery SoT staleness guard (TB-P07-T041-R1).
  * Deterministic, repo-local — does NOT call Bridge API.
  *
  * Authoritative files:
@@ -26,7 +26,7 @@ const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
 /** Active Bridge task under implementation (update when Architect issues next). */
-const CURRENT_TASK_ID = "TB-P07-T041";
+const CURRENT_TASK_ID = "TB-P07-T041-R1";
 
 /** Markers that must appear for the active wave. */
 const REQUIRED_MARKERS = [
@@ -35,6 +35,8 @@ const REQUIRED_MARKERS = [
   "TB-P07-T036",
   "TB-P07-T036-R1",
   "TB-P07-T037",
+  "TB-P07-T039",
+  "TB-P07-T041",
   CURRENT_TASK_ID,
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
@@ -45,6 +47,8 @@ const STALE_CURRENT_POINTERS = [
   "TB-P06-T029",
   "TB-P07-T020-R1",
   "TB-P07-T036-R1",
+  "TB-P07-T040",
+  "TB-P07-T041",
 ];
 
 function read(p) {
@@ -65,19 +69,29 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT current issued/repair points at TB-P07-T041 not stale pointers", () => {
+test("recovery SoT current issued/repair points at TB-P07-T041-R1 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
-  assert.match(recovery, /TB-P07-T041/);
-  assert.match(state, /TB-P07-T041/);
+  assert.match(recovery, /TB-P07-T041-R1/);
+  assert.match(state, /TB-P07-T041-R1/);
   assert.match(recovery, /TB-P07-T039/);
   assert.match(state, /TB-P07-T039/);
 
   assert.match(
     state,
-    /Current Issued Task:\s*```text\s*TB-P07-T041\s*```/,
-    "PROJECT-STATE Current Issued Task must be TB-P07-T041",
+    /Current Issued Task:\s*```text\s*TB-P07-T041-R1\s*```/,
+    "PROJECT-STATE Current Issued Task must be TB-P07-T041-R1",
+  );
+  assert.match(
+    state,
+    /Current Repair Task:\s*```text\s*TB-P07-T041-R1\s*```/,
+    "PROJECT-STATE Current Repair Task must be TB-P07-T041-R1",
+  );
+  assert.match(
+    recovery,
+    /Current Repair Task:\s*```text\s*TB-P07-T041-R1\s*```/,
+    "recovery Current Repair Task must be TB-P07-T041-R1",
   );
 
   for (const stale of STALE_CURRENT_POINTERS) {
@@ -100,8 +114,6 @@ test("recovery SoT current issued/repair points at TB-P07-T041 not stale pointer
 });
 
 test("guard fails conceptually when recovery omits current task id", () => {
-  // Repo-local smoke: REQUIRED_MARKERS includes CURRENT_TASK_ID so a stale checkout
-  // that only mentions T020/T029 cannot PASS this suite.
   assert.ok(REQUIRED_MARKERS.includes(CURRENT_TASK_ID));
   assert.ok(STALE_CURRENT_POINTERS.includes("TB-P06-T029"));
   assert.ok(STALE_CURRENT_POINTERS.includes("TB-P07-T020-R1"));

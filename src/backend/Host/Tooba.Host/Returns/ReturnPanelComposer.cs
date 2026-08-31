@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
 using Tooba.Returns.Application;
+using Tooba.Returns.Infrastructure.Persistence;
 
 namespace Tooba.Host.Returns;
 
@@ -44,11 +45,16 @@ public sealed record RejectReturnRequest(string? Reason);
 public sealed class ReturnPanelComposer
 {
     private readonly IReturnDirectory _returns;
+    private readonly AdminReturnGridQueryEngine _grid;
 
     /// <summary>
     /// سازندهٔ ترکیب مرجوعی.
     /// </summary>
-    public ReturnPanelComposer(IReturnDirectory returns) => _returns = returns;
+    public ReturnPanelComposer(IReturnDirectory returns, ReturnsDbContext db)
+    {
+        _returns = returns;
+        _grid = new AdminReturnGridQueryEngine(db);
+    }
 
     /// <summary>
     /// درخواست را می‌خواند.
@@ -83,13 +89,13 @@ public sealed class ReturnPanelComposer
     public Task<IReadOnlyList<ReturnSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _returns.ListAllAsync(cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin.</summary>
-    public async Task<GridPageResponse<ReturnSnapshot>> QueryGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin (DB-native).</summary>
+    public Task<GridPageResponse<ReturnSnapshot>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListAllAsync(cancellationToken);
-        return AdminListGridPolicies.Returns.Execute(rows, request);
+        var q = AdminListGridPolicies.Returns.Normalize(request);
+        return _grid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>

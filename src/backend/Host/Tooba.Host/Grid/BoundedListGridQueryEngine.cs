@@ -3,10 +3,13 @@ using Tooba.BuildingBlocks.Grid;
 
 namespace Tooba.Host.Grid;
 
-/// <summary>اجرای paging/filter/sort/search روی فهرست in-memory با قرارداد GridQuery.</summary>
-public static class InMemoryGridQueryEngine
+/// <summary>
+/// موتور paging/filter/sort برای مجموعه‌های واقعاً bounded در حافظه و تست‌ها.
+/// برای فهرست‌های Admin غیرسادهٔ production استفاده نشود — آن‌ها باید DB-native (AdminEfGridQuery / *GridQueryEngine) باشند.
+/// </summary>
+public static class BoundedListGridQueryEngine
 {
-    /// <summary>صفحه‌بندی فهرست flat را اعمال می‌کند.</summary>
+    /// <summary>صفحه‌بندی فهرست flat bounded را اعمال می‌کند.</summary>
     public static GridPageResponse<T> Execute<T>(
         IReadOnlyList<T> source,
         GridQueryRequest request,

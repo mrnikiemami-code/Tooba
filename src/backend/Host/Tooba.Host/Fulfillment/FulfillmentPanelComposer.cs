@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Host.Grid;
 
 namespace Tooba.Host.Fulfillment;
@@ -27,11 +28,16 @@ public sealed record FulfillmentAssignTrackingRequest(string TrackingReference);
 public sealed class FulfillmentPanelComposer
 {
     private readonly IFulfillmentDirectory _fulfillment;
+    private readonly AdminFulfillmentGridQueryEngine _grid;
 
     /// <summary>
     /// سازندهٔ ترکیب fulfillment.
     /// </summary>
-    public FulfillmentPanelComposer(IFulfillmentDirectory fulfillment) => _fulfillment = fulfillment;
+    public FulfillmentPanelComposer(IFulfillmentDirectory fulfillment, FulfillmentDbContext db)
+    {
+        _fulfillment = fulfillment;
+        _grid = new AdminFulfillmentGridQueryEngine(db);
+    }
 
     /// <summary>
     /// fulfillment را می‌خواند.
@@ -60,13 +66,13 @@ public sealed class FulfillmentPanelComposer
     public Task<IReadOnlyList<FulfillmentSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _fulfillment.ListAllAsync(cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید fulfillment Admin.</summary>
-    public async Task<GridPageResponse<FulfillmentSnapshot>> QueryGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید fulfillment Admin (DB-native).</summary>
+    public Task<GridPageResponse<FulfillmentSnapshot>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListAllAsync(cancellationToken);
-        return AdminListGridPolicies.Fulfillments.Execute(rows, request);
+        var q = AdminListGridPolicies.Fulfillments.Normalize(request);
+        return _grid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>

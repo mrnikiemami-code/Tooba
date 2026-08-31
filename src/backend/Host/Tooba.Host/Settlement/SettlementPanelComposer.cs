@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Grid;
 using Tooba.Settlement.Application;
+using Tooba.Settlement.Infrastructure.Persistence;
 
 namespace Tooba.Host.Settlement;
 
@@ -15,9 +16,14 @@ public sealed record RequestPayoutBody(decimal Amount, string IdempotencyKey);
 public sealed class SettlementPanelComposer
 {
     private readonly ISettlementDirectory _settlement;
+    private readonly AdminPayoutGridQueryEngine _payoutGrid;
 
     /// <summary>سازندهٔ ترکیب تسویه.</summary>
-    public SettlementPanelComposer(ISettlementDirectory settlement) => _settlement = settlement;
+    public SettlementPanelComposer(ISettlementDirectory settlement, SettlementDbContext db)
+    {
+        _settlement = settlement;
+        _payoutGrid = new AdminPayoutGridQueryEngine(db);
+    }
 
     /// <summary>مانده فروشنده را برمی‌گرداند.</summary>
     public Task<SettlementBalanceSnapshot?> GetBalanceAsync(Guid sellerPartyId, CancellationToken cancellationToken) =>
@@ -65,13 +71,13 @@ public sealed class SettlementPanelComposer
     public Task<IReadOnlyList<PayoutRequestSnapshot>> ListPayoutQueueAsync(CancellationToken cancellationToken) =>
         _settlement.ListPayoutQueueAsync(cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید payout Admin.</summary>
-    public async Task<GridPageResponse<PayoutRequestSnapshot>> QueryPayoutGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید payout Admin (DB-native).</summary>
+    public Task<GridPageResponse<PayoutRequestSnapshot>> QueryPayoutGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListPayoutQueueAsync(cancellationToken);
-        return AdminListGridPolicies.Payouts.Execute(rows, request);
+        var q = AdminListGridPolicies.Payouts.Normalize(request);
+        return _payoutGrid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>payout را پردازش می‌کند (admin/dev).</summary>

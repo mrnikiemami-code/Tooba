@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P07-T037
+TB-P07-T039
 ```
 
 Prior accepted catalog wave:
@@ -53,13 +53,14 @@ TB-P07-T041
 Current Repair Task:
 
 ```text
-(none)
+TB-P07-T041-R1
 ```
 
 Implemented Under Review:
 
 ```text
-TB-P07-T041
+TB-P07-T041 (under repair by TB-P07-T041-R1)
+TB-P07-T040 = NOT_ACCEPTED
 ```
 
 USER_VISUAL_ACCEPTED:

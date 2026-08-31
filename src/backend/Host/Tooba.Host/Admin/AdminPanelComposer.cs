@@ -23,6 +23,9 @@ public sealed class AdminPanelComposer
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
     private readonly IPaymentAdminDirectory _payments;
+    private readonly AdminOrdersGridQueryEngine _ordersGrid;
+    private readonly AdminSellersGridQueryEngine _sellersGrid;
+    private readonly AdminCustomersGridQueryEngine _customersGrid;
 
     /// <summary>
     /// ترکیب‌گر Host را با contextهای مستقل ماژول‌ها می‌سازد.
@@ -39,6 +42,9 @@ public sealed class AdminPanelComposer
         _orders = orders;
         _parties = parties;
         _payments = payments;
+        _ordersGrid = new AdminOrdersGridQueryEngine(orders);
+        _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
+        _customersGrid = new AdminCustomersGridQueryEngine(orders);
     }
 
     /// <summary>
@@ -83,13 +89,13 @@ public sealed class AdminPanelComposer
         return groups.Select(MapOrderListItem).ToList();
     }
 
-    /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin.</summary>
-    public async Task<GridPageResponse<AdminOrderListItem>> QueryOrdersGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminOrderListItem>> QueryOrdersGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListOrdersAsync(cancellationToken);
-        return AdminListGridPolicies.Orders.Execute(rows, request);
+        var q = AdminListGridPolicies.Orders.Normalize(request);
+        return _ordersGrid.QueryAsync(q, cancellationToken);
     }
 
     /// <summary>
@@ -232,22 +238,22 @@ public sealed class AdminPanelComposer
             .ToList();
     }
 
-    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin.</summary>
-    public async Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListSellersAsync(cancellationToken);
-        return AdminListGridPolicies.Sellers.Execute(rows, request);
+        var q = AdminListGridPolicies.Sellers.Normalize(request);
+        return _sellersGrid.QueryAsync(q, cancellationToken);
     }
 
-    /// <summary>صفحه‌بندی server-side گرید مشتریان Admin.</summary>
-    public async Task<GridPageResponse<AdminCustomerListItem>> QueryCustomersGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید مشتریان Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminCustomerListItem>> QueryCustomersGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await ListCustomersAsync(cancellationToken);
-        return AdminListGridPolicies.Customers.Execute(rows, request);
+        var q = AdminListGridPolicies.Customers.Normalize(request);
+        return _customersGrid.QueryAsync(q, cancellationToken);
     }
 
     private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>

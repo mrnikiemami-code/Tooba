@@ -65,19 +65,19 @@ TB-P07-T041
 Current Issued Task:
 
 ```text
-TB-P07-T041
+TB-P07-T041-R1
 ```
 
 Current Repair Task:
 
 ```text
-(none)
+TB-P07-T041-R1
 ```
 
 Implemented Under Review:
 
 ```text
-TB-P07-T041
+TB-P07-T041 (under repair by TB-P07-T041-R1); TB-P07-T040 = NOT_ACCEPTED; last accepted baseline TB-P07-T039
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -793,16 +793,17 @@ Recorded principle: Seller authorization must bind authenticated actor to Seller
 Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 / T018-R1 = ACCEPTED (publishing lifecycle). TB-P07-T019 = Product History / Audit (`docs/catalog/PRODUCT-HISTORY.md`). TB-P07-T020 = Product Admin visual polish (workspace edit-across-tabs, shell/list/panel tokens; `docs/evidence/TB-P07-T020/`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.
 
 
-## Current focus (TB-P07-T041)
+## Current focus (TB-P07-T041-R1)
 
 ```text
-Admin Grid Standardization Repair — remove LegacyAppDataGrid; direct AppDataGrid + server GridQuery for non-trivial lists
+Admin Grid Server Query Repair — DB-native filter/sort/Skip/Take for NON_TRIVIAL lists (parent TB-P07-T041)
+Last accepted baseline: TB-P07-T039; TB-P07-T040 = NOT_ACCEPTED; TB-P07-T041 under repair
 USER_VISUAL_ACCEPTED=NO
 Worker next = IDLE / waits for Bridge Task (no invented next task)
 ```
 
-Final HEAD/origin (TB-P07-T041):
+Final HEAD/origin (TB-P07-T041-R1):
 
 ```text
-0616ee47
+(pending)
 ```

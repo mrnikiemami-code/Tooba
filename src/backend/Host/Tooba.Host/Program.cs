@@ -109,6 +109,15 @@ builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminReturnGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminFulfillmentGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminStoryGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminReviewGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminOrdersGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminCustomersGridQueryEngine>();
+builder.Services.AddScoped<Tooba.Host.Grid.AdminSellersGridQueryEngine>();
 builder.Services.Configure<CatalogDemoSeedOptions>(
     builder.Configuration.GetSection(CatalogDemoSeedOptions.SectionName));
 builder.Services.AddScoped<CatalogDemoMediaFactory>();

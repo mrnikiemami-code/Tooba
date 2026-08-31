@@ -2,13 +2,14 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Grid;
+using Xunit;
 
 namespace Tooba.Host.Tests;
 
 public sealed class AdminListGridQueryEngineTests
 {
     [Fact]
-    public void Orders_policy_pages_and_filters_in_memory()
+    public void Bounded_policy_pages_and_filters_in_memory_for_tests_only()
     {
         var rows = new List<AdminOrderListItem>
         {
@@ -42,6 +43,6 @@ public sealed class AdminListGridQueryEngineTests
             [new GridFilterRequest("unknown", "contains", "x", null, null)],
             null);
 
-        Assert.Throws<PlatformHttpException>(() => AdminListGridPolicies.Orders.Execute([], request));
+        Assert.Throws<PlatformHttpException>(() => AdminListGridPolicies.Orders.Normalize(request));
     }
 }

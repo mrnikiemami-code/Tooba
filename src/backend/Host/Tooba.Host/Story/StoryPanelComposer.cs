@@ -4,6 +4,7 @@ using Tooba.Host.Admin;
 using global::Tooba.Story.Application;
 using global::Tooba.Story.Domain;
 using Tooba.Host.Grid;
+using Tooba.Story.Infrastructure.Persistence;
 
 namespace Tooba.Host.Story;
 
@@ -11,9 +12,14 @@ namespace Tooba.Host.Story;
 public sealed class StoryPanelComposer
 {
     private readonly IStoryDirectory _stories;
+    private readonly AdminStoryGridQueryEngine _grid;
 
-    /// <summary>دایرکتوری Story را تزریق می‌کند.</summary>
-    public StoryPanelComposer(IStoryDirectory stories) => _stories = stories;
+    /// <summary>دایرکتوری Story و DbContext را تزریق می‌کند.</summary>
+    public StoryPanelComposer(IStoryDirectory stories, StoryDbContext db)
+    {
+        _stories = stories;
+        _grid = new AdminStoryGridQueryEngine(db);
+    }
 
     /// <summary>استوری‌های عمومی.</summary>
     public Task<IReadOnlyList<PublicStoryCard>> GetPublicStoriesAsync(
@@ -30,15 +36,15 @@ public sealed class StoryPanelComposer
         CancellationToken cancellationToken) =>
         _stories.AdminListAsync(tenantId, reviewStatus, cancellationToken);
 
-    /// <summary>صفحه‌بندی server-side گرید استوری Admin.</summary>
-    public async Task<GridPageResponse<AdminStorySnapshot>> QueryAdminGridAsync(
+    /// <summary>صفحه‌بندی server-side گرید استوری Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminStorySnapshot>> QueryAdminGridAsync(
         Guid tenantId,
         StoryReviewStatus? reviewStatus,
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
-        var rows = await AdminListAsync(tenantId, reviewStatus, cancellationToken);
-        return AdminListGridPolicies.Stories.Execute(rows, request);
+        var q = AdminListGridPolicies.Stories.Normalize(request);
+        return _grid.QueryAsync(tenantId, reviewStatus, q, cancellationToken);
     }
 
     /// <summary>فهرست در انتظار بازبینی.</summary>

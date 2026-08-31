@@ -5,7 +5,8 @@ using Tooba.BuildingBlocks.Grid;
 namespace Tooba.Host.Grid;
 
 /// <summary>
-/// اعتبارسنجی GridQuery برای فهرست‌های Admin flat و اجرای in-memory paging/filter/sort.
+/// اعتبارسنجی/Normalize و whitelist فیلد برای فهرست‌های Admin.
+/// Execute فقط برای مجموعه‌های bounded / تست — production غیرساده از *GridQueryEngine استفاده می‌کند.
 /// </summary>
 public sealed class AdminListGridQueryPolicy<T>
 {
@@ -40,11 +41,14 @@ public sealed class AdminListGridQueryPolicy<T>
         }
     }
 
-    /// <summary>فهرست را با درخواست normalize‌شده صفحه‌بندی می‌کند.</summary>
+    /// <summary>
+    /// فهرست bounded را صفحه‌بندی می‌کند (فقط تست / مجموعهٔ واقعاً کوچک).
+    /// مسیرهای production غیرساده نباید این را صدا بزنند.
+    /// </summary>
     public GridPageResponse<T> Execute(IReadOnlyList<T> source, GridQueryRequest request)
     {
         var normalized = NormalizeInternal(request);
-        return InMemoryGridQueryEngine.Execute(source, normalized, _fields, _tieBreakerField);
+        return BoundedListGridQueryEngine.Execute(source, normalized, _fields, _tieBreakerField);
     }
 
     private GridQueryRequest NormalizeInternal(GridQueryRequest request)
