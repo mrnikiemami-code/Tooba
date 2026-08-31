@@ -267,6 +267,21 @@ public interface ICatalogDirectory
     Task<AttributeDefinitionView?> GetAttributeDefinitionAsync(Guid definitionId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// پیش‌نمایش غیرمخرب اثر غیرفعال‌کردن capability محور تنوع.
+    /// </summary>
+    Task<VariantAxisCapabilityDisableImpactView> PreviewVariantAxisCapabilityDisableImpactAsync(
+        Guid definitionId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// قابلیت محور تنوع تعریف را به‌روز می‌کند؛ bindingهای رده را خودکار تغییر نمی‌دهد.
+    /// </summary>
+    Task SetAttributeDefinitionVariantAxisCapabilityAsync(
+        Guid definitionId,
+        bool isVariantAxisAllowed,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// گزینهٔ شمارشی اضافه می‌کند.
     /// </summary>
     Task<Guid> AddAttributeOptionAsync(Guid definitionId, string code, IReadOnlyDictionary<string, string> localizedNames, CancellationToken cancellationToken);
@@ -731,6 +746,24 @@ public sealed record AttributeDefinitionView(
     int? ValidationMaxLength,
     bool IsActive,
     DateTimeOffset CreatedAt);
+
+/// <summary>
+/// خلاصهٔ ردهٔ تحت تأثیر غیرفعال‌سازی capability محور تنوع.
+/// </summary>
+public sealed record VariantAxisAffectedCategorySummary(
+    Guid CategoryId,
+    string Name,
+    int VariantBindingCount);
+
+/// <summary>
+/// پیش‌نمایش غیرمخرب اثر غیرفعال‌کردن capability محور تنوع.
+/// </summary>
+public sealed record VariantAxisCapabilityDisableImpactView(
+    int CategoryBindingCount,
+    IReadOnlyList<VariantAxisAffectedCategorySummary> AffectedCategories,
+    int ProductCount,
+    int VariantCombinationCount,
+    bool CanDisable);
 
 /// <summary>
 /// ردیف schema مؤثر رده پس از ارث والدین.

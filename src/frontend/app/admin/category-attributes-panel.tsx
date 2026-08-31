@@ -20,6 +20,11 @@ import {
 import { slugifyCategoryName } from "./catalog-category-api.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages.ts";
+import {
+  valueKindBlocksVariantAxis,
+  VARIANT_AXIS_DISABLED_BY_CAPABILITY,
+  VARIANT_AXIS_DISABLED_BY_KIND,
+} from "./variant-axis-messages.ts";
 
 const VALUE_KINDS: CatalogAttributeValueKind[] = [
   "Text",
@@ -304,11 +309,9 @@ function BindFlagsEditor({
   onChange: (next: BindFlags) => void;
   locale?: "fa" | "en";
 }) {
+  const variantDisabledByKind = valueKindBlocksVariantAxis(valueKind);
   const variantDisabled =
-    !variantCapabilityAllowed
-    || valueKind === "Text"
-    || valueKind === "Instant"
-    || valueKind === "Boolean";
+    variantDisabledByKind || !variantCapabilityAllowed;
 
   const chips: Array<{
     key: keyof BindFlags;
@@ -401,10 +404,15 @@ function BindFlagsEditor({
         ))}
       </ul>
       {variantDisabled ? (
-        <p className="text-xs text-slate-500">
-          {locale === "en"
-            ? "Variant is not suitable for this value type"
-            : "تنوع برای این نوع مقدار مناسب نیست"}
+        <p className="text-xs text-slate-500" data-testid="attr-variant-disabled-reason">
+          {variantDisabledByKind
+            ? VARIANT_AXIS_DISABLED_BY_KIND[locale].title
+            : VARIANT_AXIS_DISABLED_BY_CAPABILITY[locale].title}
+          <span className="mt-1 block text-slate-400">
+            {variantDisabledByKind
+              ? VARIANT_AXIS_DISABLED_BY_KIND[locale].detail
+              : VARIANT_AXIS_DISABLED_BY_CAPABILITY[locale].detail}
+          </span>
         </p>
       ) : null}
     </div>
@@ -597,7 +605,7 @@ export function CategoryAttributesPanel({
     const code = (createAdvanced && createCode.trim()) || attributeCodeFromLabel(name);
     const variantAllowed =
       createFlags.isVariantAxis
-      && (createKind === "Enumeration" || createKind === "Number");
+      && !valueKindBlocksVariantAxis(createKind);
     const safeFlags: BindFlags = {
       ...createFlags,
       isVariantAxis: variantAllowed,

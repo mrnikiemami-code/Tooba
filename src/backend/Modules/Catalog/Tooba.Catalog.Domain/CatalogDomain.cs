@@ -488,7 +488,7 @@ public sealed class CatalogAttributeDefinition
     /// اگر true باشد تعریف مجاز است به‌عنوان محور ترکیب Variant انتخاب شود (نه مشخصات سادهٔ محصول).
     /// ستون DB همان <c>IsVariantAxis</c> است؛ معنای معنایی IsVariantAxisAllowed.
     /// </summary>
-    public bool IsVariantAxis { get; init; }
+    public bool IsVariantAxis { get; set; }
 
     /// <summary>
     /// نام مستعار معنایی برای <see cref="IsVariantAxis"/>؛ در EF نادیده گرفته می‌شود.
@@ -608,6 +608,19 @@ public sealed class CatalogAttributeDefinition
             ? throw new InvalidOperationException("حداکثر طول نمی‌تواند منفی باشد.")
             : validationMaxLength;
         IsActive = isActive;
+    }
+
+    /// <summary>
+    /// قابلیت محور تنوع را به‌روز می‌کند؛ bindingهای رده را خودکار تغییر نمی‌دهد.
+    /// </summary>
+    public void SetVariantAxisAllowed(bool enabled)
+    {
+        if (enabled)
+        {
+            CatalogCategoryAttributeAssignmentRules.ValidateVariantAxisCapabilityEnable(ValueKind);
+        }
+
+        IsVariantAxis = enabled;
     }
 }
 
@@ -740,6 +753,23 @@ public sealed class CatalogCategoryAttributeBinding
 public static class CatalogCategoryAttributeAssignmentRules
 {
     /// <summary>
+    /// آیا نوع مقدار ذاتاً از محور تنوع پشتیبانی می‌کند.
+    /// </summary>
+    public static bool ValueKindSupportsVariantAxis(CatalogAttributeValueKind valueKind) =>
+        valueKind is CatalogAttributeValueKind.Enumeration or CatalogAttributeValueKind.Number;
+
+    /// <summary>
+    /// فعال‌سازی capability محور تنوع را در برابر ValueKind بررسی می‌کند.
+    /// </summary>
+    public static void ValidateVariantAxisCapabilityEnable(CatalogAttributeValueKind valueKind)
+    {
+        if (!ValueKindSupportsVariantAxis(valueKind))
+        {
+            throw new InvalidOperationException("catalog.attribute.variant_axis.value_kind.invalid");
+        }
+    }
+
+    /// <summary>
     /// فعال‌سازی محور تنوع را در برابر capability/type تعریف بررسی می‌کند.
     /// </summary>
     public static void ValidateVariantAxis(CatalogAttributeDefinition definition, bool isVariantAxisEnabled)
@@ -751,14 +781,12 @@ public static class CatalogCategoryAttributeAssignmentRules
 
         if (!definition.IsVariantAxisAllowed)
         {
-            throw new InvalidOperationException("این نوع ویژگی مجاز به‌عنوان محور تنوع نیست.");
+            throw new InvalidOperationException("catalog.attribute.variant_axis.capability_disabled");
         }
 
-        if (definition.ValueKind is CatalogAttributeValueKind.Text
-            or CatalogAttributeValueKind.Boolean
-            or CatalogAttributeValueKind.Instant)
+        if (!ValueKindSupportsVariantAxis(definition.ValueKind))
         {
-            throw new InvalidOperationException("این نوع مقدار برای ساخت تنوع محصول مناسب نیست.");
+            throw new InvalidOperationException("catalog.attribute.variant_axis.value_kind.invalid");
         }
     }
 }

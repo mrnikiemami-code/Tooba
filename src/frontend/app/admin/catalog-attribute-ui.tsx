@@ -8,8 +8,10 @@ import {
   createAttributeDefinition,
   listAttributeDefinitions,
   loadEffectiveCategorySchema,
+  previewVariantAxisCapabilityDisable,
   setSellerProductAttribute,
   setSellerProductVariantAxes,
+  setVariantAxisCapability,
   unbindCategoryAttribute,
   updateAttributeDefinition,
   valueKindLabel,
@@ -17,7 +19,17 @@ import {
   type CatalogAttributeValueKind,
   type EffectiveSchemaEntry,
   type UpdateAttributeDefinitionInput,
+  type VariantAxisCapabilityDisableImpact,
 } from "./catalog-attribute-api.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import {
+  valueKindBlocksVariantAxis,
+  VARIANT_AXIS_CAPABILITY_HELPER,
+  VARIANT_AXIS_CAPABILITY_LABEL,
+  VARIANT_AXIS_DISABLE_IN_USE_TITLE,
+  VARIANT_AXIS_DISABLE_ZERO_USAGE_CONFIRM,
+  VARIANT_AXIS_DISABLED_BY_KIND,
+} from "./variant-axis-messages.ts";
 
 const VALUE_KINDS: CatalogAttributeValueKind[] = [
   "Text",
@@ -78,7 +90,12 @@ export function AttributeDefinitionsScreen() {
   const [faName, setFaName] = useState("");
 
   const [editId, setEditId] = useState<string | null>(null);
+  const [editRow, setEditRow] = useState<AttributeDefinition | null>(null);
+  const [editAxisAllowed, setEditAxisAllowed] = useState(false);
   const [meta, setMeta] = useState<UpdateAttributeDefinitionInput>(defaultMetadata());
+  const [impactOpen, setImpactOpen] = useState(false);
+  const [impactData, setImpactData] = useState<VariantAxisCapabilityDisableImpact | null>(null);
+  const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
   const [optionDefId, setOptionDefId] = useState<string | null>(null);
   const [optionCode, setOptionCode] = useState("");
@@ -132,6 +149,8 @@ export function AttributeDefinitionsScreen() {
 
   function openEdit(row: AttributeDefinition) {
     setEditId(row.definitionId);
+    setEditRow(row);
+    setEditAxisAllowed(row.isVariantAxisAllowed);
     setMeta({
       unit: row.unit,
       isRequired: row.isRequired,
@@ -146,6 +165,54 @@ export function AttributeDefinitionsScreen() {
     });
     setSuccess(null);
     setError(null);
+    setImpactOpen(false);
+    setImpactData(null);
+    setConfirmDisableOpen(false);
+  }
+
+  async function onAxisAllowedChange(next: boolean) {
+    if (!editId || !editRow) return;
+    if (valueKindBlocksVariantAxis(editRow.valueKind) && next) return;
+
+    if (editRow.isVariantAxisAllowed && !next) {
+      setBusy(true);
+      setError(null);
+      const preview = await previewVariantAxisCapabilityDisable(editId);
+      setBusy(false);
+      if (preview.state !== "ok" || !preview.data) {
+        setError(mapAdminErrorMessage(preview.message, "fa"));
+        return;
+      }
+      setImpactData(preview.data);
+      if (!preview.data.canDisable) {
+        setImpactOpen(true);
+        return;
+      }
+      setConfirmDisableOpen(true);
+      return;
+    }
+
+    await applyAxisCapability(next);
+  }
+
+  async function applyAxisCapability(next: boolean) {
+    if (!editId) return;
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const result = await setVariantAxisCapability(editId, next);
+    setBusy(false);
+    if (result.state !== "ok" || !result.data) {
+      setError(mapAdminErrorMessage(result.message, "fa"));
+      return;
+    }
+    setEditAxisAllowed(result.data.isVariantAxisAllowed);
+    setEditRow(result.data);
+    setImpactOpen(false);
+    setConfirmDisableOpen(false);
+    setImpactData(null);
+    setSuccess(next ? "قابلیت محور تنوع فعال شد." : "قابلیت محور تنوع غیرفعال شد.");
+    await reload();
   }
 
   async function onSaveMeta() {
@@ -221,14 +288,18 @@ export function AttributeDefinitionsScreen() {
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2 pt-6 text-sm font-medium text-gray-700">
-            <input
-              type="checkbox"
-              checked={axisAllowed}
-              onChange={(e) => setAxisAllowed(e.target.checked)}
-              className="size-4 rounded border-gray-300"
-            />
-            مجاز به‌عنوان محور Variant
+          <label className={`flex flex-col gap-1 pt-2 text-sm font-medium text-gray-700 ${valueKindBlocksVariantAxis(valueKind) ? "opacity-60" : ""}`}>
+            <span className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={axisAllowed}
+                disabled={valueKindBlocksVariantAxis(valueKind)}
+                onChange={(e) => setAxisAllowed(e.target.checked)}
+                className="size-4 rounded border-gray-300"
+              />
+              {VARIANT_AXIS_CAPABILITY_LABEL.fa}
+            </span>
+            <span className="text-xs font-normal text-gray-500">{VARIANT_AXIS_CAPABILITY_HELPER.fa}</span>
           </label>
         </div>
         <button type="button" className={`${btnPrimary} mt-4`} disabled={busy || !code.trim()} onClick={() => void onCreate()}>
@@ -296,12 +367,36 @@ export function AttributeDefinitionsScreen() {
         )}
       </section>
 
-      {editId ? (
+      {editId && editRow ? (
         <section className={cardClass}>
-          <h2 className="text-base font-semibold text-gray-900">ویرایش فراداده</h2>
+          <h2 className="text-base font-semibold text-gray-900">ویرایش تعریف</h2>
           <p className="mt-1 text-xs text-gray-500" dir="ltr">
-            {editId}
+            {editId} · {editRow.code}
           </p>
+          <div
+            className={`mt-4 rounded-lg border border-gray-100 bg-slate-50 p-4 ${
+              valueKindBlocksVariantAxis(editRow.valueKind) ? "opacity-60" : ""
+            }`}
+          >
+            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+              <span className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editAxisAllowed}
+                  disabled={busy || valueKindBlocksVariantAxis(editRow.valueKind)}
+                  data-testid="attr-def-variant-capability"
+                  onChange={(e) => void onAxisAllowedChange(e.target.checked)}
+                  className="size-4 rounded border-gray-300"
+                />
+                {VARIANT_AXIS_CAPABILITY_LABEL.fa}
+              </span>
+              <span className="text-xs font-normal text-gray-500">{VARIANT_AXIS_CAPABILITY_HELPER.fa}</span>
+            </label>
+            {valueKindBlocksVariantAxis(editRow.valueKind) ? (
+              <p className="mt-2 text-xs text-gray-500">{VARIANT_AXIS_DISABLED_BY_KIND.fa.detail}</p>
+            ) : null}
+          </div>
+          <h3 className="mt-6 text-sm font-semibold text-gray-800">فراداده</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-sm font-medium text-gray-700">
               واحد
@@ -393,7 +488,54 @@ export function AttributeDefinitionsScreen() {
             <button type="button" className={btnPrimary} disabled={busy} onClick={() => void onSaveMeta()}>
               ذخیره فراداده
             </button>
-            <button type="button" className={btnSecondary} onClick={() => setEditId(null)}>
+            <button type="button" className={btnSecondary} onClick={() => { setEditId(null); setEditRow(null); }}>
+              انصراف
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {impactOpen && impactData ? (
+        <section className={`${cardClass} border-amber-200 bg-amber-50`} data-testid="variant-capability-impact-dialog">
+          <h2 className="text-base font-semibold text-amber-900">{VARIANT_AXIS_DISABLE_IN_USE_TITLE.fa}</h2>
+          <p className="mt-2 text-sm text-amber-800">
+            {impactData.categoryBindingCount} دسته با binding تنوع فعال · {impactData.productCount} محصول ·{" "}
+            {impactData.variantCombinationCount} محور محصول
+          </p>
+          {impactData.affectedCategories.length > 0 ? (
+            <ul className="mt-3 max-h-40 space-y-1 overflow-y-auto text-sm text-amber-900">
+              {impactData.affectedCategories.map((row) => (
+                <li key={row.categoryId}>
+                  {row.name} ({row.variantBindingCount})
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="mt-3 text-xs text-amber-700">
+            تا زمانی که استفادهٔ فعال باقی است، امکان حذف capability وجود ندارد. ابتدا binding تنوع را از دسته‌های
+            تحت تأثیر بردارید.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" className={btnSecondary} onClick={() => { setImpactOpen(false); setEditAxisAllowed(true); }}>
+              انصراف
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {confirmDisableOpen ? (
+        <section className={cardClass} data-testid="variant-capability-disable-confirm">
+          <h2 className="text-base font-semibold text-gray-900">تأیید غیرفعال‌سازی</h2>
+          <p className="mt-2 text-sm text-gray-600">{VARIANT_AXIS_DISABLE_ZERO_USAGE_CONFIRM.fa}</p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" className={btnPrimary} disabled={busy} onClick={() => void applyAxisCapability(false)}>
+              غیرفعال‌سازی
+            </button>
+            <button
+              type="button"
+              className={btnSecondary}
+              onClick={() => { setConfirmDisableOpen(false); setEditAxisAllowed(true); }}
+            >
               انصراف
             </button>
           </div>

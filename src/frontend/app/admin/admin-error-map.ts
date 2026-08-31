@@ -22,6 +22,18 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",
   },
+  "catalog.attribute.variant_axis.value_kind.invalid": {
+    fa: "این نوع ویژگی برای ساخت تنوع مناسب نیست.",
+    en: "This attribute type cannot be used for variants.",
+  },
+  "catalog.attribute.variant_axis.capability_disabled": {
+    fa: "امکان استفاده از این ویژگی برای تنوع در تعریف اصلی آن فعال نشده است.",
+    en: "Variant axis capability is not enabled on this attribute definition.",
+  },
+  "catalog.attribute.variant_axis.in_use": {
+    fa: "این ویژگی در تنوع‌های فعال استفاده می‌شود.",
+    en: "This attribute is used in active variants.",
+  },
   "catalog.category.attribute.invalid": {
     fa: "اطلاعات واردشده معتبر نیست.",
     en: "The submitted information is not valid.",

@@ -436,6 +436,105 @@ public sealed class CatalogAttributeSchemaTests : IAsyncLifetime
         Assert.Equal(black, field.CurrentEnumOptionId);
     }
 
+    [SkippableFact]
+    public async Task Variant_axis_capability_enable_false_to_true_does_not_mutate_bindings()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-vcap-on", "tenant-vcap-on"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var category = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
+        var storageId = await dir.CreateAttributeDefinitionAsync(
+            "storage_cap",
+            CatalogAttributeValueKind.Enumeration,
+            false,
+            new Dictionary<string, string> { ["fa-IR"] = "حافظه" },
+            CancellationToken.None);
+
+        await dir.BindCategoryAttributeAsync(
+            category.CategoryId,
+            storageId,
+            1,
+            new CategoryAttributeAssignmentFlags(false, true, false, false),
+            CancellationToken.None);
+
+        await dir.SetAttributeDefinitionVariantAxisCapabilityAsync(storageId, true, CancellationToken.None);
+
+        var schema = await dir.GetEffectiveCategorySchemaAsync(category.CategoryId, CancellationToken.None);
+        var row = Assert.Single(schema, e => e.DefinitionId == storageId);
+        Assert.True(row.IsVariantAxisAllowed);
+        Assert.False(row.IsVariantAxis);
+    }
+
+    [SkippableFact]
+    public async Task Variant_axis_capability_disable_blocked_when_binding_uses_variant()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-vcap-off", "tenant-vcap-off"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var category = await dir.CreateCategoryAsync(null, new Dictionary<string, string> { ["fa-IR"] = "موبایل" }, CancellationToken.None);
+        var colorId = await dir.CreateAttributeDefinitionAsync(
+            "color_cap",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "رنگ" },
+            CancellationToken.None);
+
+        await dir.BindCategoryAttributeAsync(
+            category.CategoryId,
+            colorId,
+            1,
+            new CategoryAttributeAssignmentFlags(false, true, true, false),
+            CancellationToken.None);
+
+        var impact = await dir.PreviewVariantAxisCapabilityDisableImpactAsync(colorId, CancellationToken.None);
+        Assert.False(impact.CanDisable);
+        Assert.Equal(1, impact.CategoryBindingCount);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            dir.SetAttributeDefinitionVariantAxisCapabilityAsync(colorId, false, CancellationToken.None));
+        Assert.Equal("catalog.attribute.variant_axis.in_use", ex.Message);
+    }
+
+    [SkippableFact]
+    public async Task Variant_axis_capability_disable_allowed_with_zero_usage()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-vcap-zero", "tenant-vcap-zero"));
+        await using var db = CreateCatalogDb(cs, commerce);
+        await db.Database.EnsureCreatedAsync();
+        var dir = new CatalogDirectory(db, new OpenCatalogUseCaseGuard());
+
+        var defId = await dir.CreateAttributeDefinitionAsync(
+            "storage_zero",
+            CatalogAttributeValueKind.Enumeration,
+            true,
+            new Dictionary<string, string> { ["fa-IR"] = "حافظه" },
+            CancellationToken.None);
+
+        var impact = await dir.PreviewVariantAxisCapabilityDisableImpactAsync(defId, CancellationToken.None);
+        Assert.True(impact.CanDisable);
+
+        await dir.SetAttributeDefinitionVariantAxisCapabilityAsync(defId, false, CancellationToken.None);
+        var view = await dir.GetAttributeDefinitionAsync(defId, CancellationToken.None);
+        Assert.NotNull(view);
+        Assert.False(view!.IsVariantAxisAllowed);
+    }
+
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)
     {
         var modules = new IOutboxModuleRegistration[] { new CatalogOutboxRegistration() };

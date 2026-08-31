@@ -66,6 +66,7 @@ test("inherited override UX copy and reset-to-parent", () => {
 
 test("create+bind strips invalid variant axis before API", () => {
   assert.match(panel, /const variantAllowed/);
-  assert.match(panel, /createKind === "Enumeration" \|\| createKind === "Number"/);
+  assert.match(panel, /valueKindBlocksVariantAxis/);
   assert.match(panel, /isVariantAxisAllowed: variantAllowed/);
+  assert.match(panel, /VARIANT_AXIS_DISABLED_BY_CAPABILITY/);
 });

@@ -1015,6 +1015,11 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
             }
         }
 
+        if (isVariantAxis)
+        {
+            CatalogCategoryAttributeAssignmentRules.ValidateVariantAxisCapabilityEnable(valueKind);
+        }
+
         var definition = CatalogAttributeDefinition.Create(code, valueKind, isVariantAxis, DateTimeOffset.UtcNow);
         _db.AttributeDefinitions.Add(definition);
         AddLocalizedNames(CatalogLocalizedOwnerKind.AttributeDefinition, definition.DefinitionId, localizedNames);
@@ -1071,6 +1076,84 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         var row = await _db.AttributeDefinitions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.DefinitionId == definitionId, cancellationToken);
         return row is null ? null : ToDefinitionView(row);
+    }
+
+    /// <inheritdoc />
+    public async Task<VariantAxisCapabilityDisableImpactView> PreviewVariantAxisCapabilityDisableImpactAsync(
+        Guid definitionId,
+        CancellationToken cancellationToken)
+    {
+        _ = await _db.AttributeDefinitions.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.DefinitionId == definitionId, cancellationToken)
+            ?? throw new InvalidOperationException("catalog.attribute.missing");
+
+        var variantBindings = await _db.CategoryAttributeBindings.AsNoTracking()
+            .Where(b => b.DefinitionId == definitionId && b.IsVariantAxis)
+            .ToListAsync(cancellationToken);
+
+        var categoryIds = variantBindings.Select(b => b.CategoryId).Distinct().ToArray();
+        var names = await GetCategoryNamesAsync(categoryIds, cancellationToken);
+
+        var affected = variantBindings
+            .GroupBy(b => b.CategoryId)
+            .Select(g => new VariantAxisAffectedCategorySummary(
+                g.Key,
+                names.GetValueOrDefault(g.Key) ?? g.Key.ToString(),
+                g.Count()))
+            .ToList();
+
+        var productCount = categoryIds.Length == 0
+            ? 0
+            : await _db.ProductCategories.AsNoTracking()
+                .Where(x => x.Role == CatalogProductCategoryRole.Primary && categoryIds.Contains(x.CategoryId))
+                .Select(x => x.ProductId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+
+        var variantCombinationCount = await _db.ProductVariantAxes.AsNoTracking()
+            .CountAsync(x => x.DefinitionId == definitionId, cancellationToken);
+
+        return new VariantAxisCapabilityDisableImpactView(
+            variantBindings.Count,
+            affected,
+            productCount,
+            variantCombinationCount,
+            variantBindings.Count == 0);
+    }
+
+    /// <inheritdoc />
+    public async Task SetAttributeDefinitionVariantAxisCapabilityAsync(
+        Guid definitionId,
+        bool isVariantAxisAllowed,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var definition = await _db.AttributeDefinitions.SingleOrDefaultAsync(
+                x => x.DefinitionId == definitionId,
+                cancellationToken)
+            ?? throw new InvalidOperationException("catalog.attribute.missing");
+
+        if (definition.IsVariantAxis == isVariantAxisAllowed)
+        {
+            return;
+        }
+
+        if (isVariantAxisAllowed)
+        {
+            definition.SetVariantAxisAllowed(true);
+        }
+        else
+        {
+            var impact = await PreviewVariantAxisCapabilityDisableImpactAsync(definitionId, cancellationToken);
+            if (!impact.CanDisable)
+            {
+                throw new InvalidOperationException("catalog.attribute.variant_axis.in_use");
+            }
+
+            definition.SetVariantAxisAllowed(false);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />

@@ -567,6 +567,79 @@ export async function updateAttributeDefinition(
     : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
 }
 
+export interface VariantAxisAffectedCategorySummary {
+  categoryId: string;
+  name: string;
+  variantBindingCount: number;
+}
+
+export interface VariantAxisCapabilityDisableImpact {
+  categoryBindingCount: number;
+  affectedCategories: VariantAxisAffectedCategorySummary[];
+  productCount: number;
+  variantCombinationCount: number;
+  canDisable: boolean;
+}
+
+function mapVariantAxisImpact(payload: unknown): VariantAxisCapabilityDisableImpact | null {
+  const item = recordOf(payload);
+  if (!item) return null;
+  const affectedRaw = prop(item, "affectedCategories", "AffectedCategories");
+  const affected = Array.isArray(affectedRaw)
+    ? affectedRaw.flatMap((row) => {
+        const r = recordOf(row);
+        if (!r) return [];
+        const categoryId = text(prop(r, "categoryId", "CategoryId"));
+        if (!categoryId) return [];
+        return [
+          {
+            categoryId,
+            name: text(prop(r, "name", "Name")) || categoryId,
+            variantBindingCount: num(prop(r, "variantBindingCount", "VariantBindingCount")) ?? 0,
+          },
+        ];
+      })
+    : [];
+  return {
+    categoryBindingCount: num(prop(item, "categoryBindingCount", "CategoryBindingCount")) ?? 0,
+    affectedCategories: affected,
+    productCount: num(prop(item, "productCount", "ProductCount")) ?? 0,
+    variantCombinationCount: num(prop(item, "variantCombinationCount", "VariantCombinationCount")) ?? 0,
+    canDisable: bool(prop(item, "canDisable", "CanDisable"), true),
+  };
+}
+
+/** پیش‌نمایش اثر غیرفعال‌سازی capability محور تنوع. */
+export async function previewVariantAxisCapabilityDisable(
+  definitionId: string,
+): Promise<AdminResult<VariantAxisCapabilityDisableImpact>> {
+  const response = await adminRead(
+    `/v1/admin/catalog/attribute-definitions/${definitionId}/variant-axis-capability/disable-preview`,
+  );
+  if (response.state !== "ok") return { ...response, data: null };
+  const data = mapVariantAxisImpact(response.data);
+  return data
+    ? { ...response, data }
+    : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+}
+
+/** به‌روزرسانی قابلیت محور تنوع تعریف. */
+export async function setVariantAxisCapability(
+  definitionId: string,
+  isVariantAxisAllowed: boolean,
+): Promise<AdminResult<AttributeDefinition>> {
+  const response = await adminWrite(
+    `/v1/admin/catalog/attribute-definitions/${definitionId}/variant-axis-capability`,
+    "PUT",
+    { isVariantAxisAllowed },
+  );
+  if (response.state !== "ok") return { ...response, data: null };
+  const data = mapAttributeDefinition(response.data);
+  return data
+    ? { ...response, data }
+    : { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+}
+
 /** افزودن گزینهٔ شمارشی. */
 export async function addAttributeOption(
   definitionId: string,

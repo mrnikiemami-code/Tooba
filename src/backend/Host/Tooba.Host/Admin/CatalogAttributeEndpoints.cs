@@ -21,6 +21,8 @@ public static class CatalogAttributeEndpoints
         defs.MapGet("/{definitionId:guid}", GetDefinitionAsync);
         defs.MapPost("/", CreateDefinitionAsync);
         defs.MapPatch("/{definitionId:guid}", UpdateDefinitionAsync);
+        defs.MapGet("/{definitionId:guid}/variant-axis-capability/disable-preview", PreviewVariantAxisCapabilityDisableAsync);
+        defs.MapPut("/{definitionId:guid}/variant-axis-capability", SetVariantAxisCapabilityAsync);
         defs.MapPost("/{definitionId:guid}/options", AddOptionAsync);
 
         var categories = app.MapGroup("/v1/admin/catalog/categories/{categoryId:guid}/attribute-schema");
@@ -176,7 +178,66 @@ public static class CatalogAttributeEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Json(new { title = ex.Message, errorCode = "catalog.attribute.invalid" }, statusCode: StatusCodes.Status400BadRequest);
+            return MapAttributeInvalid(ex);
+        }
+    }
+
+    private static async Task<IResult> PreviewVariantAxisCapabilityDisableAsync(
+        Guid definitionId,
+        ICatalogDirectory catalog,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await catalog.PreviewVariantAxisCapabilityDisableImpactAsync(
+                definitionId,
+                cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return MapAttributeInvalid(ex);
+        }
+    }
+
+    private static async Task<IResult> SetVariantAxisCapabilityAsync(
+        Guid definitionId,
+        SetVariantAxisCapabilityRequest body,
+        ICatalogDirectory catalog,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            await catalog.SetAttributeDefinitionVariantAxisCapabilityAsync(
+                definitionId,
+                body.IsVariantAxisAllowed,
+                cancellationToken);
+            return Results.Json(await catalog.GetAttributeDefinitionAsync(definitionId, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return MapAttributeInvalid(ex);
         }
     }
 
@@ -809,6 +870,46 @@ public static class CatalogAttributeEndpoints
                 statusCode: StatusCodes.Status409Conflict);
         }
 
+        if (ex.Message == "catalog.attribute.missing")
+        {
+            return Results.Json(
+                new { title = "تعریف ویژگی پیدا نشد.", errorCode = "catalog.attribute.missing" },
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        if (ex.Message == "catalog.attribute.variant_axis.value_kind.invalid")
+        {
+            return Results.Json(
+                new
+                {
+                    title = "این نوع ویژگی برای ساخت تنوع مناسب نیست.",
+                    errorCode = "catalog.attribute.variant_axis.value_kind.invalid",
+                },
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        if (ex.Message == "catalog.attribute.variant_axis.capability_disabled")
+        {
+            return Results.Json(
+                new
+                {
+                    title = "امکان استفاده از این ویژگی برای تنوع در تعریف اصلی آن فعال نشده است.",
+                    errorCode = "catalog.attribute.variant_axis.capability_disabled",
+                },
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        if (ex.Message == "catalog.attribute.variant_axis.in_use")
+        {
+            return Results.Json(
+                new
+                {
+                    title = "این ویژگی در تنوع‌های فعال استفاده می‌شود.",
+                    errorCode = "catalog.attribute.variant_axis.in_use",
+                },
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
         return Results.Json(
             new { title = ex.Message, errorCode = "catalog.attribute.invalid" },
             statusCode: StatusCodes.Status400BadRequest);
@@ -838,6 +939,9 @@ public sealed record UpdateAttributeDefinitionRequest(
     decimal? ValidationMax,
     int? ValidationMaxLength,
     bool IsActive);
+
+/// <summary>بدنهٔ به‌روزرسانی قابلیت محور تنوع.</summary>
+public sealed record SetVariantAxisCapabilityRequest(bool IsVariantAxisAllowed);
 
 /// <summary>بدنهٔ افزودن گزینه.</summary>
 public sealed record AddAttributeOptionRequest(string Code, Dictionary<string, string>? LocalizedNames);
