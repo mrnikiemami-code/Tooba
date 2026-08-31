@@ -33,6 +33,12 @@ export interface LocaleTranslationStatus {
   readiness: TranslationReadiness;
 }
 
+/** حداکثر عمق درخت دسته (ریشه = ۱)؛ افزودن زیرمجموعه زیر سطح ۳ ممنوع است. */
+export const MAX_CATEGORY_DEPTH = 3;
+
+export const MAX_CATEGORY_DEPTH_MESSAGE_FA =
+  "عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.";
+
 const LOCALE_LABELS: Record<string, string> = {
   "fa-IR": "فارسی",
   "en-US": "English",
@@ -129,6 +135,36 @@ export function buildParentMap(flat: readonly AppCategoryTreeNode[]): Map<string
   return new Map(flat.map((n) => [n.id, n.parentId]));
 }
 
+/** سطح رده = ۱ + تعداد اجداد؛ ریشه بدون والد = ۱. */
+export function getCategoryTreeLevel(
+  flat: readonly AppCategoryTreeNode[],
+  categoryId: string,
+): number | null {
+  const parentMap = buildParentMap(flat);
+  if (!parentMap.has(categoryId)) return null;
+  let ancestors = 0;
+  let current: string | null = categoryId;
+  const seen = new Set<string>();
+  while (current && parentMap.has(current) && !seen.has(current)) {
+    seen.add(current);
+    const parentId: string | null = parentMap.get(current) ?? null;
+    if (!parentId) break;
+    ancestors += 1;
+    current = parentId;
+  }
+  return 1 + ancestors;
+}
+
+/** آیا می‌توان زیر این رده فرزند ساخت؟ (سطح والد < Max) */
+export function canAddCategoryChild(
+  flat: readonly AppCategoryTreeNode[],
+  parentId: string | null | undefined,
+): boolean {
+  if (!parentId) return true;
+  const level = getCategoryTreeLevel(flat, parentId);
+  return level != null && level < MAX_CATEGORY_DEPTH;
+}
+
 /** آیا candidate نسل drag است (یا خودش). */
 export function isSelfOrDescendant(
   parentMap: Map<string, string | null>,
@@ -179,6 +215,16 @@ export function buildCategoryPath(
 /** تعداد فرزندان مستقیم. */
 export function countDirectChildren(flat: readonly AppCategoryTreeNode[], parentId: string): number {
   return flat.filter((n) => n.parentId === parentId).length;
+}
+
+/** شناسهٔ همهٔ گره‌هایی که فرزند دارند — برای expand-all. */
+export function collectExpandableParentIds(flat: readonly AppCategoryTreeNode[]): string[] {
+  const parents = new Set<string>();
+  for (const node of flat) {
+    if (node.parentId) parents.add(node.parentId);
+    if (node.hasChildren) parents.add(node.id);
+  }
+  return [...parents];
 }
 
 /** خواهر/برادرهای یک والد به ترتیب. */
@@ -241,7 +287,7 @@ export function filterCategoryForest(
   };
 }
 
-/** آیا drop معتبر است (خود/نسل ممنوع). */
+/** آیا drop معتبر است (خود/نسل ممنوع؛ داخل سطح ۳ ممنوع). */
 export function isValidCategoryDrop(
   flat: readonly AppCategoryTreeNode[],
   request: CategoryDropRequest,
@@ -254,6 +300,9 @@ export function isValidCategoryDrop(
   }
   // before/after روی نسل: والد جدید = والد drop؛ اگر drop نسل drag باشد باطل است
   if (request.position !== "inside" && isSelfOrDescendant(parentMap, request.dragId, request.dropId)) {
+    return false;
+  }
+  if (request.position === "inside" && !canAddCategoryChild(flat, request.dropId)) {
     return false;
   }
   return true;

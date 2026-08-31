@@ -47,6 +47,9 @@ test("category products panel wires column header filters like product list", ()
   assert.match(panel, /advancedFilterColumns=\{CATEGORY_PRODUCTS_ADVANCED_FILTERS\}/);
   assert.match(panel, /statusFilterOptions=\{\[\.\.\.CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS\]\}/);
   assert.match(panel, /assignmentRole/);
+  assert.match(panel, /additionalCategoryNames:\s*\{\s*field:\s*"additionalCategoryNames",\s*kind:\s*"text"/);
+  assert.match(panel, /primaryCategoryName:\s*\{\s*field:\s*"primaryCategoryName",\s*kind:\s*"none"/);
+  assert.match(panel, /media:\s*\{\s*field:\s*"media",\s*kind:\s*"none"/);
   assert.match(panel, /applyAppGridFilterHeader/);
   assert.match(panel, /advancedFilter:\s*true/);
 });

@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link";
+import { PanelLeftOpen } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
@@ -1232,6 +1233,7 @@ export function CategoryAdminScreen() {
   const [createBusy, setCreateBusy] = useState(false);
   const [mobileWorkspace, setMobileWorkspace] = useState(false);
   const [isNarrow, setIsNarrow] = useState(false);
+  const [treePaneCollapsed, setTreePaneCollapsed] = useState(false);
 
   const [draft, setDraft] = useState<GeneralDraft | null>(null);
   const [translationDraft, setTranslationDraft] = useState<TranslationDraft | null>(null);
@@ -1830,7 +1832,10 @@ export function CategoryAdminScreen() {
     [workspace],
   );
 
-  const showTreePane = !isNarrow || !mobileWorkspace || !categoryId;
+  const showTreePane = isNarrow
+    ? !mobileWorkspace || !categoryId
+    : !treePaneCollapsed;
+  const showTreeExpandRail = !isNarrow && treePaneCollapsed;
   const showWorkspacePane = !isNarrow || (mobileWorkspace && Boolean(categoryId));
   const isEdit = formMode.mode === "edit";
   const isGeneralEdit = isEdit && editSurface === "general" && activeTab === "general";
@@ -1856,6 +1861,22 @@ export function CategoryAdminScreen() {
       data-layout={isNarrow ? "mobile" : "desktop"}
       data-form-mode={categoryId ? formMode.mode : undefined}
     >
+      {showTreeExpandRail ? (
+        <div className="flex shrink-0 items-start pt-2" data-testid="category-tree-expand-rail">
+          <button
+            type="button"
+            className="inline-flex min-h-11 flex-col items-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-3 text-[11px] font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+            onClick={() => setTreePaneCollapsed(false)}
+            aria-label="نمایش درخت دسته‌بندی‌ها"
+            title="نمایش درخت دسته‌بندی‌ها"
+            data-testid="category-tree-expand-pane"
+          >
+            <PanelLeftOpen size={18} aria-hidden />
+            <span className="[writing-mode:vertical-rl] rotate-180">دسته‌بندی‌ها</span>
+          </button>
+        </div>
+      ) : null}
+
       {showTreePane ? (
         <aside className="w-full shrink-0 lg:w-[360px] xl:w-[400px]" data-testid="category-tree-pane">
           <AppCategoryTree
@@ -1876,6 +1897,8 @@ export function CategoryAdminScreen() {
             onCreateChild={openCreateChild}
             direction="rtl"
             virtualHeight={isNarrow ? 360 : 520}
+            onCollapsePane={!isNarrow ? () => setTreePaneCollapsed(true) : undefined}
+            collapsePaneLabel="بستن درخت دسته‌بندی‌ها"
           />
         </aside>
       ) : null}

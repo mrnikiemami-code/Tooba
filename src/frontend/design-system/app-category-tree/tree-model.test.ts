@@ -5,9 +5,11 @@ import {
   buildCategoryPath,
   buildParentMap,
   buildTranslationStatuses,
+  canAddCategoryChild,
   collectAncestorIds,
   countDirectChildren,
   filterCategoryForest,
+  getCategoryTreeLevel,
   isSelfOrDescendant,
   isValidCategoryDrop,
   listSiblingIds,
@@ -65,6 +67,19 @@ function sampleFlat(): AppCategoryTreeNode[] {
     },
   ];
 }
+
+test("canAddCategoryChild blocks level-3 parents", () => {
+  const flat = sampleFlat();
+  assert.equal(canAddCategoryChild(flat, null), true);
+  assert.equal(canAddCategoryChild(flat, "root-a"), true);
+  assert.equal(canAddCategoryChild(flat, "child-a1"), true);
+  assert.equal(canAddCategoryChild(flat, "grand-a11"), false);
+  assert.equal(getCategoryTreeLevel(flat, "grand-a11"), 3);
+  assert.equal(
+    isValidCategoryDrop(flat, { dragId: "root-b", dropId: "grand-a11", position: "inside" }),
+    false,
+  );
+});
 
 test("buildCategoryForest nests children by parentId", () => {
   const forest = buildCategoryForest(sampleFlat());

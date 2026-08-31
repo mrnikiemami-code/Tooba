@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
+import { cn } from "../cn";
 
 /** تعریف یک عملیات سطر — صفحه callback/مسیر را تأمین می‌کند، نه design system. */
 export type AppGridRowAction<T> = {
@@ -22,10 +23,12 @@ export type AppGridRowAction<T> = {
 type AppGridRowActionsCellProps<T> = {
   row: T;
   actions: AppGridRowAction<T>[];
+  /** دکمه‌های کوچک‌تر برای ستون عملیات باریک. */
+  compact?: boolean;
 };
 
 /** سلول عملیات سطر — آیکون‌های یکنواخت با برچسب دسترس‌پذیر. */
-export function AppGridRowActionsCell<T>({ row, actions }: AppGridRowActionsCellProps<T>) {
+export function AppGridRowActionsCell<T>({ row, actions, compact = false }: AppGridRowActionsCellProps<T>) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | undefined>();
 
@@ -49,16 +52,19 @@ export function AppGridRowActionsCell<T>({ row, actions }: AppGridRowActionsCell
     }
   }
 
+  const iconSize = compact ? "size-8" : "size-10";
+  const iconClass = compact ? "size-3.5" : "size-4";
+
   return (
     <div className="app-grid-cell-content">
-      <div className="relative flex items-center justify-center gap-2 px-1">
+      <div className={cn("relative flex items-center justify-center px-0.5", compact ? "gap-1" : "gap-2")}>
         {visibleActions.map((action) => {
           const Icon = action.icon;
           const disabled = busyId !== null || (action.disabled?.(row) ?? false);
           const className =
             action.variant === "destructive"
-              ? "inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-danger/30 bg-surface text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
-              : "inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50";
+              ? `inline-flex ${iconSize} shrink-0 items-center justify-center rounded-full border border-danger/30 bg-surface text-danger transition-colors hover:bg-danger/10 disabled:opacity-50`
+              : `inline-flex ${iconSize} shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50`;
           const testId = action.testId?.(row) ?? `app-grid-action-${action.id}`;
           if (action.href) {
             return (
@@ -70,7 +76,7 @@ export function AppGridRowActionsCell<T>({ row, actions }: AppGridRowActionsCell
                 title={action.label}
                 data-testid={testId}
               >
-                <Icon className="size-4" aria-hidden />
+                <Icon className={iconClass} aria-hidden />
               </Link>
             );
           }
@@ -85,7 +91,7 @@ export function AppGridRowActionsCell<T>({ row, actions }: AppGridRowActionsCell
               title={action.label}
               data-testid={testId}
             >
-              <Icon className="size-4" aria-hidden />
+              <Icon className={iconClass} aria-hidden />
             </button>
           );
         })}

@@ -25,11 +25,11 @@ test("product list uses separate primary and additional category columns", () =>
   assert.equal(panel.includes('headerName: "دسته"'), false);
 });
 
-test("category products panel shows leaf primary and chips not path blob", () => {
+test("category products panel shows leaf primary and comma list for additional categories", () => {
   const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
   assert.match(panel, /headerName:\s*"دسته اصلی"/);
   assert.match(panel, /headerName:\s*"نمایش در دسته‌های دیگر"/);
-  assert.match(panel, /AdditionalCategoryChipsCell/);
+  assert.match(panel, /AdditionalCategoryListCell/);
   assert.match(panel, /rowAssignedToCategory/);
 });
 

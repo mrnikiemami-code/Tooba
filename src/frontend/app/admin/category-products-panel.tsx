@@ -36,7 +36,7 @@ import {
   removeAdminProductAdditionalCategory,
   type AdminProductListRow,
 } from "./host-client";
-import { AdditionalCategoryChipsCell } from "./additional-category-chips-cell";
+import { AdditionalCategoryListCell } from "./additional-category-list-cell";
 import {
   getCategoryLevel,
   isAssignableProductCategory,
@@ -81,7 +81,7 @@ export const CATEGORY_PRODUCTS_GRID_FILTER_MATRIX: Record<string, AppGridFilterS
   // عضویت دسته با equals اجباری است؛ فیلتر متنی این ستون با همان فیلد تداخل دارد.
   categorySummary: { field: "categorySummary", kind: "none" },
   primaryCategoryName: { field: "primaryCategoryName", kind: "none" },
-  additionalCategoryNames: { field: "additionalCategoryNames", kind: "none" },
+  additionalCategoryNames: { field: "additionalCategoryNames", kind: "text" },
   updatedAt: { field: "updatedAt", kind: "jalali-date" },
   actions: { field: "actions", kind: "none" },
 };
@@ -97,6 +97,11 @@ const CATEGORY_PRODUCTS_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
     header: "وضعیت",
     filterKind: "status",
     enumOptions: [...CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS],
+  },
+  {
+    id: "additionalCategoryNames",
+    header: "نمایش در دسته‌های دیگر",
+    filterKind: "text",
   },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
 ];
@@ -384,22 +389,27 @@ export function CategoryProductsPanel({
       applyCategoryProductsFilterHeader({
         colId: "media",
         headerName: "رسانه",
-        width: 88,
-        minWidth: 80,
+        headerTooltip: "رسانه",
+        width: 72,
+        minWidth: 68,
+        maxWidth: 88,
         sortable: false,
         cellRenderer: MediaCell,
       }),
       applyCategoryProductsFilterHeader({
         field: "title",
         headerName: "نام محصول",
-        minWidth: 200,
-        flex: 1.4,
+        headerTooltip: "نام محصول",
+        minWidth: 160,
+        flex: 1.2,
         cellRenderer: ProductCell,
       }),
       applyCategoryProductsFilterHeader({
         colId: "assignmentRole",
         headerName: "نقش",
-        width: 128,
+        headerTooltip: "نقش در این دسته",
+        width: 112,
+        minWidth: 100,
         sortable: false,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
           const row = params.data;
@@ -423,14 +433,18 @@ export function CategoryProductsPanel({
       applyCategoryProductsFilterHeader({
         field: "status",
         headerName: "وضعیت",
-        width: 120,
+        headerTooltip: "وضعیت",
+        width: 108,
+        minWidth: 96,
         valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
         cellRenderer: StatusCell,
       }),
       applyCategoryProductsFilterHeader({
         field: "primaryCategoryName",
         headerName: "دسته اصلی",
-        width: 150,
+        headerTooltip: "دسته اصلی",
+        width: 132,
+        minWidth: 120,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
           const name = params.data?.primaryCategoryName?.trim();
           if (!name) return <span className="text-muted">—</span>;
@@ -441,25 +455,33 @@ export function CategoryProductsPanel({
         colId: "additionalCategoryNames",
         field: "additionalCategoryNames",
         headerName: "نمایش در دسته‌های دیگر",
-        minWidth: 200,
-        flex: 1,
+        headerTooltip: "نمایش در دسته‌های دیگر",
+        minWidth: 220,
+        flex: 1.3,
         sortable: false,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
-          params.data ? <AdditionalCategoryChipsCell names={params.data.additionalCategoryNames} /> : null,
+          params.data ? (
+            <AdditionalCategoryListCell params={params} names={params.data.additionalCategoryNames} />
+          ) : null,
       }),
       applyCategoryProductsFilterHeader({
         field: "updatedAt",
         headerName: "به‌روزرسانی",
-        width: 120,
+        headerTooltip: "به‌روزرسانی",
+        width: 128,
+        minWidth: 128,
         valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
       }),
       buildPinnedActionsColumnDef<AdminProductListRow>({
         direction: "rtl",
+        actionSlots: canEdit && assignable ? 2 : 1,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
-          params.data ? <AppGridRowActionsCell row={params.data} actions={rowActions} /> : null,
+          params.data ? (
+            <AppGridRowActionsCell row={params.data} actions={rowActions} compact />
+          ) : null,
       }),
     ],
-    [categoryId, rowActions],
+    [assignable, canEdit, categoryId, rowActions],
   );
 
   const queryAdapter = useCallback(
@@ -593,10 +615,13 @@ export function CategoryProductsPanel({
         colId: "additionalCategoryNames",
         field: "additionalCategoryNames",
         headerName: "نمایش در دسته‌های دیگر",
+        headerTooltip: "نمایش در دسته‌های دیگر",
         flex: 1.2,
-        minWidth: 180,
+        minWidth: 200,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
-          params.data ? <AdditionalCategoryChipsCell names={params.data.additionalCategoryNames} /> : null,
+          params.data ? (
+            <AdditionalCategoryListCell params={params} names={params.data.additionalCategoryNames} />
+          ) : null,
       },
       {
         colId: "status",

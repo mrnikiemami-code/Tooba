@@ -139,6 +139,7 @@ internal sealed class AdminProductGridQueryEngine
             "sellableUnits" => await ResolveSellableUnitsProductIdsAsync(filter, cancellationToken),
             "locationCount" => await ResolveLocationCountProductIdsAsync(filter, cancellationToken),
             "categorySummary" or "primaryCategoryName" => await ResolveCategorySummaryProductIdsAsync(filter, cancellationToken),
+            "additionalCategoryNames" => await ResolveAdditionalCategoryNamesProductIdsAsync(filter, cancellationToken),
             "offerAmountRange" => await ResolveOfferAmountRangeProductIdsAsync(filter, cancellationToken),
             _ => new HashSet<Guid>(),
         };
@@ -430,6 +431,58 @@ internal sealed class AdminProductGridQueryEngine
 
         return (await _catalog.ProductCategories.AsNoTracking()
             .Where(link => categoryIds.Contains(link.CategoryId))
+            .Select(link => link.ProductId)
+            .Distinct()
+            .ToListAsync(cancellationToken)).ToHashSet();
+    }
+
+    private async Task<HashSet<Guid>> ResolveAdditionalCategoryNamesProductIdsAsync(
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        if (filter.Operator is "blank")
+        {
+            var withAdditional = await _catalog.ProductCategories.AsNoTracking()
+                .Where(x => x.Role == CatalogProductCategoryRole.Additional)
+                .Select(x => x.ProductId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            var all = await _catalog.Products.AsNoTracking().Select(p => p.ProductId).ToListAsync(cancellationToken);
+            return all.Except(withAdditional).ToHashSet();
+        }
+
+        if (filter.Operator is "notBlank")
+        {
+            return (await _catalog.ProductCategories.AsNoTracking()
+                .Where(x => x.Role == CatalogProductCategoryRole.Additional)
+                .Select(x => x.ProductId)
+                .Distinct()
+                .ToListAsync(cancellationToken)).ToHashSet();
+        }
+
+        var q = _catalog.LocalizedTexts.AsNoTracking()
+            .Where(t => t.OwnerKind == CatalogLocalizedOwnerKind.Category && t.FieldKey == "name");
+        q = filter.Operator switch
+        {
+            "contains" => q.Where(t => EF.Functions.ILike(t.Value, $"%{filter.Value}%")),
+            "notContains" => q.Where(t => !EF.Functions.ILike(t.Value, $"%{filter.Value}%")),
+            "equals" => q.Where(t => t.Value.ToLower() == (filter.Value ?? string.Empty).ToLower()),
+            "notEqual" => q.Where(t => t.Value.ToLower() != (filter.Value ?? string.Empty).ToLower()),
+            "startsWith" => q.Where(t => EF.Functions.ILike(t.Value, $"{filter.Value}%")),
+            "endsWith" => q.Where(t => EF.Functions.ILike(t.Value, $"%{filter.Value}")),
+            _ => q,
+        };
+
+        var categoryIds = await q.Select(t => t.OwnerId).Distinct().ToListAsync(cancellationToken);
+        if (categoryIds.Count == 0)
+        {
+            return [];
+        }
+
+        return (await _catalog.ProductCategories.AsNoTracking()
+            .Where(link =>
+                link.Role == CatalogProductCategoryRole.Additional
+                && categoryIds.Contains(link.CategoryId))
             .Select(link => link.ProductId)
             .Distinct()
             .ToListAsync(cancellationToken)).ToHashSet();

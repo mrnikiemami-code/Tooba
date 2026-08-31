@@ -63,6 +63,8 @@ test("drag handle is separate from title/chevron contract in markup", () => {
   assert.match(component, /category-tree-title-/);
   assert.match(component, /category-tree-drag-handle/);
   assert.match(component, /افزودن زیرمجموعه/);
+  assert.match(component, /canAddCategoryChild/);
+  assert.match(component, /canCreateChild/);
 });
 
 test("mobile layout branch uses data-layout and back control", () => {

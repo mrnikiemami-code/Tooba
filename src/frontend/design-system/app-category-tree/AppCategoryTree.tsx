@@ -8,9 +8,12 @@
 import { ConfigProvider, Tree } from "antd";
 import {
   ChevronLeft,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Folder,
   GripVertical,
   MoreVertical,
+  PanelLeftClose,
   Plus,
   Search,
   X,
@@ -31,6 +34,7 @@ import { cn } from "../cn";
 import {
   canAddCategoryChild,
   categoryStatusLabel,
+  collectExpandableParentIds,
   filterCategoryForest,
   isValidCategoryDrop,
   splitHighlight,
@@ -73,6 +77,9 @@ export interface AppCategoryTreeProps {
   emptyCtaLabel?: string;
   noSearchResultsLabel?: string;
   uiLocale?: "fa" | "en";
+  /** بستن پنل درخت (مثلاً برای آزاد کردن فضای workspace). */
+  onCollapsePane?: () => void;
+  collapsePaneLabel?: string;
 }
 
 type InternalTreeData = {
@@ -246,6 +253,8 @@ export function AppCategoryTree({
   emptyCtaLabel = "اولین دسته‌بندی را ایجاد کنید",
   noSearchResultsLabel = "نتیجه‌ای برای این جستجو پیدا نشد",
   uiLocale = "fa",
+  onCollapsePane,
+  collapsePaneLabel = "بستن درخت",
 }: AppCategoryTreeProps) {
   const [menu, setMenu] = useState<{ id: string; top: number; left: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -383,6 +392,11 @@ export function AppCategoryTree({
   const showNoSearch =
     !loading && !error && nodes.length > 0 && query.trim() && searchResult.filteredForest.length === 0;
 
+  const expandableParentIds = useMemo(() => collectExpandableParentIds(nodes), [nodes]);
+  const canExpandAll = expandableParentIds.length > 0;
+  const allExpanded =
+    canExpandAll && expandableParentIds.every((id) => expandedKeys.includes(id));
+
   const treeStyle: CSSProperties = virtualHeight > 0 ? { height: virtualHeight } : {};
 
   return (
@@ -396,17 +410,31 @@ export function AppCategoryTree({
       <div className="app-category-tree__toolbar">
         <div className="app-category-tree__title-row">
           <h2 className="app-category-tree__title">{title}</h2>
-          {onCreateRoot ? (
-            <button
-              type="button"
-              className="app-category-tree__create"
-              onClick={onCreateRoot}
-              data-testid="category-tree-create-root"
-            >
-              <Plus size={16} aria-hidden />
-              {createLabel}
-            </button>
-          ) : null}
+          <div className="app-category-tree__title-actions">
+            {onCollapsePane ? (
+              <button
+                type="button"
+                className="app-category-tree__pane-toggle"
+                onClick={onCollapsePane}
+                aria-label={collapsePaneLabel}
+                title={collapsePaneLabel}
+                data-testid="category-tree-collapse-pane"
+              >
+                <PanelLeftClose size={16} aria-hidden />
+              </button>
+            ) : null}
+            {onCreateRoot ? (
+              <button
+                type="button"
+                className="app-category-tree__create"
+                onClick={onCreateRoot}
+                data-testid="category-tree-create-root"
+              >
+                <Plus size={16} aria-hidden />
+                {createLabel}
+              </button>
+            ) : null}
+          </div>
         </div>
         <div className="app-category-tree__search">
           <Search className="app-category-tree__search-icon" size={16} aria-hidden />
@@ -432,6 +460,30 @@ export function AppCategoryTree({
             </button>
           ) : null}
         </div>
+        {!loading && !error && nodes.length > 0 ? (
+          <div className="app-category-tree__expand-row">
+            <button
+              type="button"
+              className="app-category-tree__expand-btn"
+              disabled={!canExpandAll || allExpanded}
+              onClick={() => onExpandedKeysChange(expandableParentIds)}
+              data-testid="category-tree-expand-all"
+            >
+              <ChevronsUpDown size={14} aria-hidden />
+              باز کردن همه
+            </button>
+            <button
+              type="button"
+              className="app-category-tree__expand-btn"
+              disabled={expandedKeys.length === 0}
+              onClick={() => onExpandedKeysChange([])}
+              data-testid="category-tree-collapse-all"
+            >
+              <ChevronsDownUp size={14} aria-hidden />
+              بستن همه
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="app-category-tree__body">

@@ -28,7 +28,11 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
         "offerAmountRange",
     ];
 
-    private static readonly HashSet<string> FilterableFields = SortableFields;
+    private static readonly HashSet<string> FilterableFields =
+    [
+        ..SortableFields,
+        "additionalCategoryNames",
+    ];
 
     /// <summary>نقطهٔ ورود static برای endpointهای موجود.</summary>
     public static GridQueryRequest Normalize(GridQueryRequest request)
@@ -127,7 +131,7 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
     {
         var allowed = field switch
         {
-            "title" or "categorySummary" or "primaryCategoryName" => GridQueryOperators.Text,
+            "title" or "categorySummary" or "primaryCategoryName" or "additionalCategoryNames" => GridQueryOperators.Text,
             "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => GridQueryOperators.Number,
             "status" => GridQueryOperators.Enum,
             "updatedAt" => GridQueryOperators.Date,
