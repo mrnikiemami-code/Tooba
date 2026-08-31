@@ -1,4 +1,4 @@
-# Tooba — Project State
+﻿# Tooba — Project State
 
 Project:
 
@@ -801,5 +801,5 @@ Worker next = IDLE / waits for Bridge Task (no invented next task)
 Final HEAD/origin (TB-P07-T038):
 
 ```text
-PENDING_COMMIT
+834c6bc2b55a220ca2d9df5d0b7af9245faa69b7
 ```
