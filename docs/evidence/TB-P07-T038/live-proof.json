@@ -1,0 +1,49 @@
+{
+  "task": "TB-P07-T038",
+  "host": "http://127.0.0.1:5088",
+  "finishedAt": "2026-08-31T02:16:34.372Z",
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "product-grid-query",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "grid-leaf-only-fields",
+      "ok": true,
+      "detail": "{\"n\":50,\"hasPrimary\":true,\"hasAdditional\":true,\"hasMoreThanThree\":false,\"pathLeak\":false}"
+    },
+    {
+      "name": "grid-has-primary-sample",
+      "ok": true,
+      "detail": "at least one primary leaf on page"
+    },
+    {
+      "name": "grid-has-additional-sample",
+      "ok": true,
+      "detail": "additional arrays present when memberships exist"
+    }
+  ],
+  "sample": {
+    "productId": "01a0544f-c0e8-7000-959b-43b9c4f519ee",
+    "title": "tmp",
+    "status": "Archived",
+    "variantCount": 0,
+    "offerCount": 0,
+    "categorySummary": "گوشی هوشمند",
+    "offerAmountRange": "بدون مبلغ",
+    "sellableUnits": 0,
+    "locationCount": 0,
+    "updatedAt": "2026-08-31T01:24:20.074044+00:00",
+    "primaryCategoryId": "01a05387-daf5-7000-96a7-20cf0550e586",
+    "brandName": "بدون برند",
+    "primaryCategoryName": "گوشی هوشمند",
+    "additionalCategoryNames": [],
+    "additionalCategoryCount": 0
+  }
+}

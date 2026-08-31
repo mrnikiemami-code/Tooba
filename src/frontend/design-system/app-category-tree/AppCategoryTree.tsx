@@ -29,6 +29,7 @@ import {
 } from "react";
 import { cn } from "../cn";
 import {
+  canAddCategoryChild,
   categoryStatusLabel,
   filterCategoryForest,
   isValidCategoryDrop,
@@ -96,6 +97,7 @@ function CategoryNodeRow({
   searchQuery,
   allowDrag,
   uiLocale,
+  canCreateChild,
   onToggleExpand,
   onSelect,
   onCreateChild,
@@ -107,6 +109,7 @@ function CategoryNodeRow({
   searchQuery: string;
   allowDrag: boolean;
   uiLocale: "fa" | "en";
+  canCreateChild: boolean;
   onToggleExpand: (id: string) => void;
   onSelect: (id: string) => void;
   onCreateChild?: (parentId: string) => void;
@@ -170,7 +173,7 @@ function CategoryNodeRow({
       </button>
 
       <div className="app-category-tree-node__actions">
-        {onCreateChild ? (
+        {onCreateChild && canCreateChild ? (
           <button
             type="button"
             className="app-category-tree-node__icon-btn"
@@ -273,6 +276,19 @@ export function AppCategoryTree({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  // گرهٔ انتخاب‌شده را در دید نگه می‌داریم (deep-link / refresh / back-forward).
+  useEffect(() => {
+    const selectedId = selectedKeys[0];
+    if (!selectedId || !wrapRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const selected = wrapRef.current?.querySelector(".ant-tree-treenode-selected");
+      if (selected && typeof selected.scrollIntoView === "function") {
+        selected.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedKeys, expandedKeys, nodes, query]);
+
   const expandedSet = useMemo(() => new Set(expandedKeys), [expandedKeys]);
 
   const toggleExpand = useCallback(
@@ -305,6 +321,7 @@ export function AppCategoryTree({
             searchQuery={query}
             allowDrag={allowDrag && Boolean(onDropRequest)}
             uiLocale={uiLocale}
+            canCreateChild={canAddCategoryChild(nodes, node.id)}
             onToggleExpand={toggleExpand}
             onSelect={onSelect}
             onCreateChild={onCreateChild}
@@ -316,6 +333,7 @@ export function AppCategoryTree({
     [
       allowDrag,
       expandedSet,
+      nodes,
       onCreateChild,
       onDropRequest,
       onSelect,
@@ -513,10 +531,11 @@ export function AppCategoryTree({
           data-testid="category-tree-actions-menu"
           onClick={(e) => e.stopPropagation()}
         >
-          {onCreateChild ? (
+          {onCreateChild && canAddCategoryChild(nodes, menu.id) ? (
             <button
               type="button"
               role="menuitem"
+              data-testid="category-tree-menu-add-child"
               onClick={() => {
                 onCreateChild(menu.id);
                 setMenu(null);

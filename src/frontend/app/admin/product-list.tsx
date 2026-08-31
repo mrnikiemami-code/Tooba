@@ -27,6 +27,7 @@ import {
 } from "./host-client";
 import { ADMIN_PRODUCT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
+import { AdditionalCategoryChipsCell } from "./additional-category-chips-cell";
 
 function productStatusClass(status: string): string {
   if (status === "Published") return "inline-flex rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success";
@@ -80,8 +81,7 @@ function MediaCell(params: ICellRendererParams<AdminProductListRow>) {
 function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
   const row = params.data;
   if (!row) return null;
-  const subtitle =
-    row.categorySummary && row.categorySummary !== "بدون دسته" ? row.categorySummary : "";
+  const subtitle = row.primaryCategoryName?.trim() || "";
   return (
     <AppGridLinkSubtitleCell
       params={params}
@@ -90,6 +90,22 @@ function ProductCell(params: ICellRendererParams<AdminProductListRow>) {
       subtitle={subtitle}
     />
   );
+}
+
+function PrimaryCategoryCell(params: ICellRendererParams<AdminProductListRow>) {
+  const row = params.data;
+  if (!row) return null;
+  const name = row.primaryCategoryName?.trim();
+  if (!name) {
+    return <span className="text-muted">—</span>;
+  }
+  return <AppGridTruncatedCell params={params} text={name} />;
+}
+
+function AdditionalCategoriesCell(params: ICellRendererParams<AdminProductListRow>) {
+  const row = params.data;
+  if (!row) return null;
+  return <AdditionalCategoryChipsCell names={row.additionalCategoryNames} />;
 }
 
 function StatusCell(params: ICellRendererParams<AdminProductListRow>) {
@@ -134,7 +150,21 @@ function buildColumnDefs(
       valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
       cellRenderer: StatusCell,
     }),
-    applyProductGridFilterHeader({ field: "categorySummary", headerName: "دسته", width: 160 }),
+    applyProductGridFilterHeader({
+      field: "primaryCategoryName",
+      headerName: "دسته اصلی",
+      width: 150,
+      cellRenderer: PrimaryCategoryCell,
+    }),
+    applyProductGridFilterHeader({
+      colId: "additionalCategoryNames",
+      field: "additionalCategoryNames",
+      headerName: "نمایش در دسته‌های دیگر",
+      minWidth: 200,
+      flex: 1,
+      sortable: false,
+      cellRenderer: AdditionalCategoriesCell,
+    }),
     applyProductGridFilterHeader({ field: "brandName", headerName: "برند", width: 140, sortable: false }),
     applyProductGridFilterHeader({ field: "variantCount", headerName: "تنوع", width: 90 }),
     applyProductGridFilterHeader({
@@ -176,7 +206,7 @@ const PRODUCT_GRID_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   },
   { id: "variantCount", header: "تنوع", filterKind: "number" },
   { id: "offerCount", header: "پیشنهاد", filterKind: "number" },
-  { id: "categorySummary", header: "دسته", filterKind: "text" },
+  { id: "primaryCategoryName", header: "دسته اصلی", filterKind: "text" },
   { id: "offerAmountRange", header: "بازه پیشنهاد", filterKind: "number" },
   { id: "sellableUnits", header: "قابل‌فروش ترکیبی", filterKind: "number" },
   { id: "locationCount", header: "محل", filterKind: "number" },
@@ -263,11 +293,12 @@ export function ProductListScreen() {
           }}
           savedViewStore={savedViewStore}
           exportFilenameBase="admin-products"
-          exportHeaders={["محصول", "وضعیت", "دسته", "برند", "تنوع", "به‌روزرسانی"]}
+          exportHeaders={["محصول", "وضعیت", "دسته اصلی", "نمایش در دسته‌های دیگر", "برند", "تنوع", "به‌روزرسانی"]}
           getExportRow={(row) => [
             row.title,
             formatAdminStatus(row.status),
-            row.categorySummary,
+            row.primaryCategoryName ?? "",
+            row.additionalCategoryNames.join("، "),
             row.brandName,
             String(row.variantCount),
             formatJalaliDate(row.updatedAt, "fa"),

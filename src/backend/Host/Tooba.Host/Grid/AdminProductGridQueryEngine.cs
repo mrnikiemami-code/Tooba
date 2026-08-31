@@ -79,7 +79,7 @@ internal sealed class AdminProductGridQueryEngine
         var pageIds = primarySort.Field switch
         {
             "title" => await OrderAndPageTitleAsync(products, query, primarySort, cancellationToken),
-            "categorySummary" => await OrderAndPageCategorySummaryAsync(products, query, primarySort, cancellationToken),
+            "categorySummary" or "primaryCategoryName" => await OrderAndPageCategorySummaryAsync(products, query, primarySort, cancellationToken),
             "variantCount" => await OrderAndPageVariantCountAsync(products, query, primarySort, cancellationToken),
             "offerCount" => await OrderAndPageByMetricAsync(products, query, primarySort, await BuildOfferCountMetricsAsync(cancellationToken), cancellationToken),
             "sellableUnits" => await OrderAndPageByMetricAsync(products, query, primarySort, await BuildSellableUnitsMetricsAsync(cancellationToken), cancellationToken),
@@ -138,7 +138,7 @@ internal sealed class AdminProductGridQueryEngine
             "offerCount" => await ResolveOfferCountProductIdsAsync(filter, cancellationToken),
             "sellableUnits" => await ResolveSellableUnitsProductIdsAsync(filter, cancellationToken),
             "locationCount" => await ResolveLocationCountProductIdsAsync(filter, cancellationToken),
-            "categorySummary" => await ResolveCategorySummaryProductIdsAsync(filter, cancellationToken),
+            "categorySummary" or "primaryCategoryName" => await ResolveCategorySummaryProductIdsAsync(filter, cancellationToken),
             "offerAmountRange" => await ResolveOfferAmountRangeProductIdsAsync(filter, cancellationToken),
             _ => new HashSet<Guid>(),
         };

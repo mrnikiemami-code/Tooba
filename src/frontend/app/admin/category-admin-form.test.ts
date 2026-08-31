@@ -249,7 +249,8 @@ test("tree context preservation after current-locale Name save", () => {
   assert.match(screen, /softRefreshTreeLabel/);
   assert.match(screen, /setFlatNodes\(\(prev\) =>/);
   assert.match(screen, /expandedKeys=\{expandedKeys\}/);
-  assert.match(screen, /selectedKeys=\{categoryId \? \[categoryId\] : \[\]\}/);
+  assert.match(screen, /flatNodes\.some\(\(n\) => n\.id === categoryId\)/);
+  assert.match(screen, /selectedKeys=\{/);
   const tree = fs.readFileSync(treePath, "utf8");
   assert.match(tree, /category-tree-drag-handle/);
 });

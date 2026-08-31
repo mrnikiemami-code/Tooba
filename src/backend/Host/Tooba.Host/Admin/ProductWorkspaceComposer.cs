@@ -106,9 +106,11 @@ public sealed class ProductWorkspaceComposer
             : await _catalog.ProductCategories.AsNoTracking()
                 .Where(x => productIds.Contains(x.ProductId))
                 .ToListAsync(cancellationToken);
-        var categoryPathById = await BuildCategoryPathMapAsync(
-            categoryLinks.Select(x => x.CategoryId).Distinct().ToList(),
-            cancellationToken);
+        // شبکهٔ Admin فقط نام برگ را نیاز دارد — مسیر کامل اجداد اینجا ساخته نمی‌شود (TB-P07-T038).
+        var leafCategoryIds = categoryLinks.Select(x => x.CategoryId).Distinct().ToList();
+        var categoryLeafNames = leafCategoryIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, leafCategoryIds, cancellationToken);
         var brandIds = products
             .Where(p => p.BrandId is Guid)
             .Select(p => p.BrandId!.Value)
@@ -133,13 +135,25 @@ public sealed class ProductWorkspaceComposer
                 .Where(link => link.ProductId == product.ProductId)
                 .ToList();
             var primaryLink = productLinks.FirstOrDefault(link => link.Role == CatalogProductCategoryRole.Primary);
-            var categories = productLinks
-                .OrderByDescending(link => link.Role == CatalogProductCategoryRole.Primary)
-                .Select(link => categoryPathById.GetValueOrDefault(link.CategoryId))
-                .Where(path => !string.IsNullOrWhiteSpace(path))
-                .Select(path => path!)
-                .Distinct()
+            var primaryName = primaryLink is null
+                ? null
+                : categoryLeafNames.GetValueOrDefault(primaryLink.CategoryId);
+            var additionalNames = productLinks
+                .Where(link => link.Role == CatalogProductCategoryRole.Additional)
+                .OrderBy(link => link.CategoryId)
+                .Select(link => categoryLeafNames.GetValueOrDefault(link.CategoryId))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name!)
+                .Distinct(StringComparer.Ordinal)
                 .ToList();
+            // سازگاری فیلتر/مصرف‌کننده‌های قدیمی: فقط نام برگ‌ها، نه مسیر L1>L2>L3.
+            var summaryParts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(primaryName))
+            {
+                summaryParts.Add(primaryName!);
+            }
+
+            summaryParts.AddRange(additionalNames);
             var productMedia = mediaRows
                 .Where(m => m.ProductId == product.ProductId)
                 .OrderByDescending(m => m.IsPrimary)
@@ -155,14 +169,17 @@ public sealed class ProductWorkspaceComposer
                 product.Status.ToString(),
                 variantIds.Count,
                 productOffers.Count,
-                categories.Count == 0 ? "بدون دسته" : string.Join("، ", categories),
+                summaryParts.Count == 0 ? "بدون دسته" : string.Join("، ", summaryParts),
                 FormatOfferAmountRange(amounts.Select(row => (row.Amount, row.Currency)).ToList()),
                 units.Sum(row => row.OnHand - row.Reserved),
                 units.Select(row => row.LocationId).Distinct().Count(),
                 product.UpdatedAt,
                 primaryMedia?.MediaAssetId,
                 primaryLink?.CategoryId,
-                brandLabel);
+                brandLabel,
+                primaryName,
+                additionalNames,
+                additionalNames.Count);
         }).ToList();
     }
 

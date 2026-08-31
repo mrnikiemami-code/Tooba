@@ -1,0 +1,11 @@
+﻿✔ recovery SoT files exist and contain current task markers (1.2992ms)
+✔ recovery SoT current issued/repair points at TB-P07-T038 not stale pointers (0.5157ms)
+✔ guard fails conceptually when recovery omits current task id (0.079ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4.9668

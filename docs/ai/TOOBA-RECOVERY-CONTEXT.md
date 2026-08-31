@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P07-T036-R1
+TB-P07-T037
 ```
 
 Prior accepted catalog wave:
@@ -37,25 +37,26 @@ Prior accepted catalog wave:
 TB-P07-T035
 TB-P07-T036
 TB-P07-T036-R1
+TB-P07-T037
 ```
 
 
 Last Implementation Task:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 Current Repair Task:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 Implemented Under Review:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -395,16 +396,16 @@ by Bridge on channel `tooba-main`.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
 
 
-## Current focus (TB-P07-T037)
+## Current focus (TB-P07-T038)
 
 ```text
-Catalog/Admin UI + category assignment integrity (L3-only Primary/display; Category→Products UX; demo cleanup; Recovery SoT sync)
+Catalog Admin grid + Category Tree UX: leaf-only Primary, Additional chips +N, no path overfetch, route-synced tree selection
 USER_VISUAL_ACCEPTED=NO
 Worker next = IDLE / waits for Bridge Task (no invented next task)
 ```
 
-Final HEAD/origin (TB-P07-T037):
+Final HEAD/origin (TB-P07-T038):
 
 ```text
-b993f92bf366a2c06a50e72233a5277dfdea06ce
+PENDING_COMMIT
 ```

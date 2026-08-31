@@ -23,7 +23,13 @@ export interface AdminProductListRow {
   status: string;
   variantCount: number;
   offerCount: number;
+  /** سازگاری قدیمی — نام برگ‌ها، نه مسیر کامل. */
   categorySummary: string;
+  /** نام برگ دستهٔ اصلی. */
+  primaryCategoryName: string | null;
+  /** نام‌های برگ دسته‌های نمایشی (ترتیب پایدار). */
+  additionalCategoryNames: string[];
+  additionalCategoryCount: number;
   brandName: string;
   offerAmountRange: string;
   sellableUnits: number;
@@ -77,6 +83,19 @@ export function mapAdminProductList(payload: unknown): AdminProductListRow[] {
         variantCount: asNumber(readProp(item, "variantCount", "VariantCount")),
         offerCount: asNumber(readProp(item, "offerCount", "OfferCount")),
         categorySummary: asString(readProp(item, "categorySummary", "CategorySummary"), "بدون دسته"),
+        primaryCategoryName: (() => {
+          const raw = readProp(item, "primaryCategoryName", "PrimaryCategoryName");
+          const text = asString(raw).trim();
+          return text.length > 0 ? text : null;
+        })(),
+        additionalCategoryNames: (() => {
+          const raw = readProp(item, "additionalCategoryNames", "AdditionalCategoryNames");
+          if (!Array.isArray(raw)) return [];
+          return raw
+            .map((entry) => asString(entry).trim())
+            .filter((entry) => entry.length > 0);
+        })(),
+        additionalCategoryCount: asNumber(readProp(item, "additionalCategoryCount", "AdditionalCategoryCount")),
         brandName: asString(readProp(item, "brandName", "BrandName"), "بدون برند"),
         offerAmountRange: asString(readProp(item, "offerAmountRange", "OfferAmountRange"), "بدون مبلغ"),
         sellableUnits: asNumber(readProp(item, "sellableUnits", "SellableUnits")),

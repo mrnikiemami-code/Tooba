@@ -13,6 +13,8 @@ export const ADMIN_PRODUCT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec>
   title: { field: "title", kind: "text" },
   status: { field: "status", kind: "status" },
   categorySummary: { field: "categorySummary", kind: "text" },
+  primaryCategoryName: { field: "primaryCategoryName", kind: "text" },
+  additionalCategoryNames: { field: "additionalCategoryNames", kind: "none" },
   offerAmountRange: { field: "offerAmountRange", kind: "number", valueLabel: "مقدار (ریال)" },
   sellableUnits: { field: "sellableUnits", kind: "number" },
   updatedAt: { field: "updatedAt", kind: "jalali-date" },

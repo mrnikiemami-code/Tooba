@@ -15,8 +15,10 @@ import {
   buildCategoryPath,
   buildParentMap,
   buildTranslationStatuses,
+  canAddCategoryChild,
   collectAncestorIds,
   countDirectChildren,
+  MAX_CATEGORY_DEPTH_MESSAGE_FA,
   resolveCategoryDropPlan,
   translationReadinessLabel,
   useAdminFormMode,
@@ -34,7 +36,9 @@ import {
   fetchCategoryWorkspace,
   mapCategoryMutationError,
   moveCategory,
+  parseMetaKeywords,
   reorderCategories,
+  serializeMetaKeywords,
   slugifyCategoryName,
   updateCategoryCore,
   upsertCategoryTranslation,
@@ -325,6 +329,107 @@ function readinessChipClass(readiness: TranslationReadiness): string {
   if (readiness === "complete") return "rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700";
   if (readiness === "partial") return "rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800";
   return "rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600";
+}
+
+/** نمایش فقط‌خواندنی کلمات کلیدی به‌صورت تگ. */
+function MetaKeywordsViewChips({ value }: { value: string | null | undefined }) {
+  const tags = parseMetaKeywords(value);
+  if (tags.length === 0) {
+    return <span className="text-sm text-slate-500">—</span>;
+  }
+  return (
+    <ul className="flex flex-wrap gap-2" data-testid="translation-view-meta-keywords">
+      {tags.map((tag) => (
+        <li
+          key={tag}
+          className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800"
+          data-testid={`translation-view-meta-keyword-${tag}`}
+        >
+          {tag}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * ورودی کلمات کلیدی SEO — تگ‌های قابل حذف؛ Enter / ویرگول اضافه می‌کند.
+ * ذخیره همچنان رشتهٔ metaKeywords سمت Host است.
+ */
+function MetaKeywordsTagInput({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  disabled?: boolean;
+}) {
+  const [draft, setDraft] = useState("");
+  const tags = useMemo(() => parseMetaKeywords(value), [value]);
+
+  function commitDraft(raw: string) {
+    const nextTags = parseMetaKeywords([...tags, ...parseMetaKeywords(raw)].join(","));
+    if (nextTags.length === tags.length && raw.trim() === "") return;
+    onChange(serializeMetaKeywords(nextTags));
+    setDraft("");
+  }
+
+  function removeTag(tag: string) {
+    onChange(serializeMetaKeywords(tags.filter((t) => t !== tag)));
+  }
+
+  return (
+    <div
+      className="mt-1 rounded-xl border border-gray-200 bg-white px-2 py-2 focus-within:ring-2 focus-within:ring-blue-500"
+      data-testid="translation-edit-meta-keywords"
+    >
+      <ul className="flex flex-wrap gap-2" data-testid="translation-edit-meta-keyword-chips">
+        {tags.map((tag) => (
+          <li
+            key={tag}
+            className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800"
+            data-testid={`translation-edit-meta-keyword-${tag}`}
+          >
+            <span>{tag}</span>
+            <button
+              type="button"
+              disabled={disabled}
+              className="rounded-full px-1 text-red-600 hover:bg-red-50 disabled:opacity-50"
+              aria-label={`حذف ${tag}`}
+              data-testid={`translation-edit-meta-keyword-remove-${tag}`}
+              onClick={() => removeTag(tag)}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+      <input
+        className="mt-1 min-h-9 w-full border-0 bg-transparent px-1 text-sm focus:outline-none"
+        value={draft}
+        disabled={disabled}
+        placeholder={tags.length === 0 ? "کلمه را بنویسید و Enter بزنید" : "افزودن کلمه…"}
+        data-testid="translation-edit-meta-keywords-input"
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === "," || e.key === "،") {
+            e.preventDefault();
+            commitDraft(draft);
+            return;
+          }
+          if (e.key === "Backspace" && draft === "" && tags.length > 0) {
+            e.preventDefault();
+            removeTag(tags[tags.length - 1]!);
+          }
+        }}
+        onBlur={() => {
+          if (draft.trim()) commitDraft(draft);
+        }}
+      />
+      <p className="mt-1 px-1 text-[11px] text-slate-500">با Enter یا ویرگول اضافه کنید؛ روی × برای حذف.</p>
+    </div>
+  );
 }
 
 /** اسلات رسانهٔ دسته — انتخاب/آپلود/حذف ارجاع بدون نمایش Guid خام. */
@@ -957,7 +1062,12 @@ function TranslationsPanel({
             <SummaryCard label="توضیح" value={existing?.description || "—"} />
             <SummaryCard label="عنوان SEO" value={existing?.seoTitle || "—"} />
             <SummaryCard label="توضیح SEO" value={existing?.seoDescription || "—"} />
-            <SummaryCard label="کلمات کلیدی" value={existing?.metaKeywords || "—"} />
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:col-span-2">
+              <div className="text-xs font-medium text-slate-500">کلمات کلیدی</div>
+              <div className="mt-2">
+                <MetaKeywordsViewChips value={existing?.metaKeywords} />
+              </div>
+            </div>
             {preview ? <SummaryCard label="آدرس عمومی" value={preview} ltr /> : null}
           </div>
         </div>
@@ -1048,13 +1158,12 @@ function TranslationsPanel({
               />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-slate-700 sm:col-span-2">
               کلمات کلیدی
-              <input
-                className="mt-1 min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <MetaKeywordsTagInput
                 value={activeDraft.metaKeywords}
-                onChange={(e) => onChange({ ...activeDraft, metaKeywords: e.target.value })}
-                data-testid="translation-edit-meta-keywords"
+                onChange={(metaKeywords) => onChange({ ...activeDraft, metaKeywords })}
+                disabled={busy}
               />
             </label>
 
@@ -1304,6 +1413,10 @@ export function CategoryAdminScreen() {
   };
 
   const openCreateChild = (parentId: string) => {
+    if (!canAddCategoryChild(flatNodes, parentId)) {
+      toast.error(MAX_CATEGORY_DEPTH_MESSAGE_FA);
+      return;
+    }
     setCreateParentId(parentId);
     setCreateOpen(true);
   };
@@ -1564,7 +1677,7 @@ export function CategoryAdminScreen() {
       description: translationDraft.description.trim() || null,
       seoTitle: translationDraft.seoTitle.trim() || null,
       seoDescription: translationDraft.seoDescription.trim() || null,
-      metaKeywords: translationDraft.metaKeywords.trim() || null,
+      metaKeywords: serializeMetaKeywords(parseMetaKeywords(translationDraft.metaKeywords)) || null,
     });
 
     if (result.state !== "ok" || !result.data) {
@@ -1748,7 +1861,9 @@ export function CategoryAdminScreen() {
           <AppCategoryTree
             nodes={flatNodes}
             expandedKeys={expandedKeys}
-            selectedKeys={categoryId ? [categoryId] : []}
+            selectedKeys={
+              categoryId && flatNodes.some((n) => n.id === categoryId) ? [categoryId] : []
+            }
             onExpandedKeysChange={setExpandedKeys}
             onSelect={(id) => navigateToCategory(id, activeTab === "general" ? "general" : activeTab)}
             onDropRequest={handleDrop}

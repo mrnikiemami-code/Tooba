@@ -21,6 +21,7 @@ import {
   AppGridBadgeCell,
   AppGridLinkSubtitleCell,
   AppGridMediaCell,
+  AppGridTruncatedCell,
 } from "../../design-system/app-data-grid/app-grid-cells";
 import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/app-grid-pinned-actions";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
@@ -35,6 +36,7 @@ import {
   removeAdminProductAdditionalCategory,
   type AdminProductListRow,
 } from "./host-client";
+import { AdditionalCategoryChipsCell } from "./additional-category-chips-cell";
 import {
   getCategoryLevel,
   isAssignableProductCategory,
@@ -78,6 +80,8 @@ export const CATEGORY_PRODUCTS_GRID_FILTER_MATRIX: Record<string, AppGridFilterS
   status: { field: "status", kind: "status" },
   // عضویت دسته با equals اجباری است؛ فیلتر متنی این ستون با همان فیلد تداخل دارد.
   categorySummary: { field: "categorySummary", kind: "none" },
+  primaryCategoryName: { field: "primaryCategoryName", kind: "none" },
+  additionalCategoryNames: { field: "additionalCategoryNames", kind: "none" },
   updatedAt: { field: "updatedAt", kind: "jalali-date" },
   actions: { field: "actions", kind: "none" },
 };
@@ -118,6 +122,12 @@ function matchesAssignmentRole(
   const isPrimary = row.primaryCategoryId === categoryId;
   const role = isPrimary ? "primary" : "display";
   return selected.includes(role);
+}
+
+function rowAssignedToCategory(row: AdminProductListRow, categoryId: string, categoryName: string): boolean {
+  if (row.primaryCategoryId === categoryId) return true;
+  if (row.additionalCategoryNames.some((n) => n.trim() === categoryName.trim())) return true;
+  return categorySummaryIncludes(row.categorySummary, categoryName);
 }
 
 function categorySummaryIncludes(summary: string, categoryName: string): boolean {
@@ -418,10 +428,24 @@ export function CategoryProductsPanel({
         cellRenderer: StatusCell,
       }),
       applyCategoryProductsFilterHeader({
-        field: "categorySummary",
-        headerName: "دسته‌ها",
-        minWidth: 160,
+        field: "primaryCategoryName",
+        headerName: "دسته اصلی",
+        width: 150,
+        cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
+          const name = params.data?.primaryCategoryName?.trim();
+          if (!name) return <span className="text-muted">—</span>;
+          return <AppGridTruncatedCell params={params} text={name} />;
+        },
+      }),
+      applyCategoryProductsFilterHeader({
+        colId: "additionalCategoryNames",
+        field: "additionalCategoryNames",
+        headerName: "نمایش در دسته‌های دیگر",
+        minWidth: 200,
         flex: 1,
+        sortable: false,
+        cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
+          params.data ? <AdditionalCategoryChipsCell names={params.data.additionalCategoryNames} /> : null,
       }),
       applyCategoryProductsFilterHeader({
         field: "updatedAt",
@@ -555,11 +579,24 @@ export function CategoryProductsPanel({
         cellRenderer: ProductCell,
       },
       {
-        colId: "categorySummary",
-        field: "categorySummary",
-        headerName: "دسته‌های فعلی",
+        colId: "primaryCategoryName",
+        field: "primaryCategoryName",
+        headerName: "دسته اصلی",
+        width: 140,
+        cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
+          const name = params.data?.primaryCategoryName?.trim();
+          if (!name) return <span className="text-muted">—</span>;
+          return <AppGridTruncatedCell params={params} text={name} />;
+        },
+      },
+      {
+        colId: "additionalCategoryNames",
+        field: "additionalCategoryNames",
+        headerName: "نمایش در دسته‌های دیگر",
         flex: 1.2,
-        minWidth: 160,
+        minWidth: 180,
+        cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
+          params.data ? <AdditionalCategoryChipsCell names={params.data.additionalCategoryNames} /> : null,
       },
       {
         colId: "status",
@@ -574,7 +611,7 @@ export function CategoryProductsPanel({
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
           const row = params.data;
           if (!row || !canEdit) return null;
-          const isAssignedHere = categorySummaryIncludes(row.categorySummary, categoryName);
+          const isAssignedHere = rowAssignedToCategory(row, categoryId, categoryName);
           const isPrimaryHere = row.primaryCategoryId === categoryId;
           if (isAssignedHere) {
             if (isPrimaryHere) {

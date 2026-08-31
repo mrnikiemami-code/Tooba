@@ -1,0 +1,87 @@
+﻿(node:31964) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-admin-form.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ General VIEW default markers and readable cards (1.1602ms)
+✔ General EDIT fields and save/cancel (0.5731ms)
+✔ status localization uses Persian labels in workspace (0.3707ms)
+✔ parent selector is searchable path/name without raw ID labels (0.3705ms)
+✔ category media supports real library select/upload/unassign for image/icon/banner (0.6507ms)
+✔ permission-aware edit action gated by canEdit (0.4047ms)
+✔ Translations tab: locale switcher, statuses, create, VIEW/EDIT (0.4805ms)
+✔ translation completeness: missing / partial / complete (0.1897ms)
+✔ dirty locale-switch protection (0.3621ms)
+✔ human slug preview has no CategoryId suffix (0.816ms)
+✔ slug auto-suggest respects manual edits (0.4239ms)
+✔ duplicate slug maps to Persian UX message (1.1429ms)
+✔ form mode state machine: view default, edit, cancel, save (0.1668ms)
+✔ view-only user cannot enter edit via state machine (0.0416ms)
+✔ tree context preservation after current-locale Name save (0.4948ms)
+✔ AppCategoryTree file untouched by T006 workspace work (0.1383ms)
+✔ Attributes tab: per-category assignment flags and customize inherited (0.2495ms)
+✔ Attributes tab: VIEW/EDIT, inherited/local, add/create, labels (0.5595ms)
+✔ visible category tabs are functional — products real; seo/settings/history hidden (0.3997ms)
+✔ mobile layout markers present (0.2291ms)
+✔ no raw AgGridReact in category admin screen (0.2318ms)
+✔ API client exposes updateCore, upsertTranslation with full fields, move (0.1552ms)
+✔ translation meta keywords use removable tag chips not plain textbox (0.2515ms)
+✔ parseMetaKeywords splits commas and drops blanks/duplicates (0.6315ms)
+(node:20948) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/category-products-panel.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ behavior chips use short independent labels without comma-separated UI (1.0741ms)
+✔ admin nav groups Categories and Products distinctly (0.9437ms)
+✔ categorySummaryIncludes matches full taxonomy path leaf (0.2305ms)
+✔ category products panel wires column header filters like product list (0.255ms)
+✔ category products panel is real and blocks L1/L2 assignment (0.4345ms)
+✔ category products assign dialog uses AppDataGrid tabs not checkbox list (0.2642ms)
+✔ category products picker refreshes membership count and row state after mutation (0.2793ms)
+✔ category products assign dialog has top bulk add selected action (0.2753ms)
+✔ category products panel is membership-only without change-category (0.4215ms)
+(node:25252) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/host-client.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ list mapper keeps offer counts off the Product price field (1.0646ms)
+✔ list mapper maps leaf primary and additional category arrays (0.1658ms)
+✔ workspace mapper keeps prices on offers not product (0.7517ms)
+(node:33464) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/app/admin/t038-category-grid-ux.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ additional chips helper keeps +N remainder from payload only (1.0734ms)
+✔ product list uses separate primary and additional category columns (0.2831ms)
+✔ category products panel shows leaf primary and chips not path blob (0.2461ms)
+✔ category tree selection follows route and scrolls selected node (0.8614ms)
+(node:41800) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-category-tree/app-category-tree.contract.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ AppCategoryTree wraps antd Tree without exporting Ant types to pages (1.4231ms)
+✔ category admin routes exist under app/admin/catalog/categories (0.3086ms)
+✔ nav includes categories labels (0.4734ms)
+✔ drag handle is separate from title/chevron contract in markup (0.283ms)
+✔ mobile layout branch uses data-layout and back control (0.3917ms)
+✔ R1 view/edit mode and clean slug UX markers (0.3409ms)
+✔ create flow fields stay progressive (no SEO/attrs on create) (0.8277ms)
+✔ API mappers tolerate camel and Pascal payloads (0.551ms)
+✔ USER_VISUAL_ACCEPTED remains NO in task contract notes (0.4256ms)
+(node:31656) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/Users/User/source/repos/SarvNewVer/src/frontend/design-system/app-data-grid/product-grid-filter-matrix.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\Users\User\source\repos\SarvNewVer\src\frontend\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ filter matrix marks business columns filterable (0.451ms)
+✔ filter matrix marks non-filterable columns (0.0958ms)
+✔ offerAmountRange uses number filter kind (0.0493ms)
+✔ applyProductGridFilterHeader wires app column header for filterable fields (0.0935ms)
+✔ product list uses unified external filter fields (0.7944ms)
+✔ external filter field list includes price column (0.0876ms)
+ℹ tests 55
+ℹ suites 0
+ℹ pass 55
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 136.9709

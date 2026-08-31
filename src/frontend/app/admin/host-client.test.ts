@@ -10,8 +10,29 @@ test("list mapper keeps offer counts off the Product price field", () => {
   assert.equal(rows[0]?.offerCount, 2);
   assert.equal(rows[0]?.sellableUnits, 0);
   assert.equal(rows[0]?.categorySummary, "بدون دسته");
+  assert.equal(rows[0]?.primaryCategoryName, null);
+  assert.deepEqual(rows[0]?.additionalCategoryNames, []);
+  assert.equal(rows[0]?.additionalCategoryCount, 0);
   assert.equal(rows[0]?.brandName, "بدون برند");
   assert.equal("price" in (rows[0] ?? {}), false);
+});
+
+test("list mapper maps leaf primary and additional category arrays", () => {
+  const rows = mapAdminProductList([
+    {
+      productId: "p2",
+      title: "Phone",
+      status: "Draft",
+      primaryCategoryName: "گوشی هوشمند",
+      additionalCategoryNames: ["گوشی اقتصادی", "موبایل دانشجویی", "پیشنهاد ویژه", "پرچمدار"],
+      additionalCategoryCount: 4,
+      categorySummary: "گوشی هوشمند، گوشی اقتصادی",
+    },
+  ]);
+  assert.equal(rows[0]?.primaryCategoryName, "گوشی هوشمند");
+  assert.equal(rows[0]?.additionalCategoryNames.length, 4);
+  assert.equal(rows[0]?.additionalCategoryCount, 4);
+  assert.equal(rows[0]?.categorySummary.includes(" > "), false);
 });
 
 test("workspace mapper keeps prices on offers not product", () => {

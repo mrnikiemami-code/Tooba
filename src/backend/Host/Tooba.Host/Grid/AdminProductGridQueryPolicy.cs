@@ -21,6 +21,7 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
         "variantCount",
         "offerCount",
         "categorySummary",
+        "primaryCategoryName",
         "sellableUnits",
         "locationCount",
         "updatedAt",
@@ -126,7 +127,7 @@ public sealed class AdminProductGridQueryPolicy : IGridQueryPolicy
     {
         var allowed = field switch
         {
-            "title" or "categorySummary" => GridQueryOperators.Text,
+            "title" or "categorySummary" or "primaryCategoryName" => GridQueryOperators.Text,
             "offerAmountRange" or "variantCount" or "offerCount" or "sellableUnits" or "locationCount" => GridQueryOperators.Number,
             "status" => GridQueryOperators.Enum,
             "updatedAt" => GridQueryOperators.Date,

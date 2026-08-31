@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P07-T036-R1
+TB-P07-T037
 ```
 
 Prior accepted catalog wave:
@@ -43,6 +43,7 @@ Prior accepted catalog wave:
 TB-P07-T035
 TB-P07-T036
 TB-P07-T036-R1
+TB-P07-T037
 ```
 
 
@@ -55,25 +56,25 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 Current Repair Task:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 Implemented Under Review:
 
 ```text
-TB-P07-T037
+TB-P07-T038
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -789,16 +790,16 @@ Recorded principle: Seller authorization must bind authenticated actor to Seller
 Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 / T018-R1 = ACCEPTED (publishing lifecycle). TB-P07-T019 = Product History / Audit (`docs/catalog/PRODUCT-HISTORY.md`). TB-P07-T020 = Product Admin visual polish (workspace edit-across-tabs, shell/list/panel tokens; `docs/evidence/TB-P07-T020/`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.
 
 
-## Current focus (TB-P07-T037)
+## Current focus (TB-P07-T038)
 
 ```text
-Catalog/Admin UI + category assignment integrity (L3-only Primary/display; Category→Products UX; demo cleanup; Recovery SoT sync)
+Catalog Admin grid + Category Tree UX: leaf-only Primary, Additional chips +N, no path overfetch, route-synced tree selection
 USER_VISUAL_ACCEPTED=NO
 Worker next = IDLE / waits for Bridge Task (no invented next task)
 ```
 
-Final HEAD/origin (TB-P07-T037):
+Final HEAD/origin (TB-P07-T038):
 
 ```text
-b993f92bf366a2c06a50e72233a5277dfdea06ce
+PENDING_COMMIT
 ```
