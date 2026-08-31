@@ -1,0 +1,64 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T041
+
+Parent-Task:
+TB-P07-T040
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+09ea5adb-d1a0-4ef6-889f-cc820cf8cccf
+
+Summary:
+Admin grid repair: removed LegacyAppDataGrid render wrapper; all migrated admin lists use direct AppDataGrid with pure legacy bridge helpers. Non-trivial lists wired to module-owned POST .../query server GridQuery (orders, sellers, customers, fulfillments, returns, reviews, payouts, content, stories). Bounded lists remain client-side with documented classification (settlement, promotions, attribute defs, category schema, gift cards). Products canonical grid unchanged. USER_VISUAL_ACCEPTED=NO.
+
+Wrapper-Removal:
+Deleted LegacyAppDataGrid.tsx; kept buildLegacyGridBridge + createClientGridQueryAdapter + useLegacyAdminGridDirectProps + postAdminGridQuery.
+
+Server-Query:
+InMemoryGridQueryEngine + AdminListGridPolicies; 9 new POST /query endpoints.
+
+Client-Bounded:
+Settlement, Promotions, Attribute Definitions, Category Schema, Gift Cards — SMALL_BOUNDED_CLIENT_SAFE.
+
+Direct-AppDataGrid:
+admin-screens, catalog-attribute-ui, wallet-ui, StoryManagementScreen — AppDataGrid only.
+
+Classification:
+docs/evidence/TB-P07-T041/dataset-classification.md
+
+Focused-Validation:
+FE admin-grid-migration 6/6; legacy-grid-bridge 2/2; recovery staleness guard 3/3; BE AdminListGridQueryEngineTests added; Host full build blocked by live :5088 DLL lock during validation.
+
+Recovery-SoT:
+TB-P07-T041 current; TB-P07-T039 last accepted baseline; USER_VISUAL_ACCEPTED=NO.
+
+Evidence:
+docs/evidence/TB-P07-T041/
+
+Git:
+HEAD=0616ee478fc5676cbd93740fd817e3b70a2f2ef2
+origin/main=0616ee478fc5676cbd93740fd817e3b70a2f2ef2
+HEAD==origin/main
+
+Architectural-Concerns:
+In-memory server paging for flat lists — acceptable repair step; DB-native paging can follow per module without UI fork.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO — human should confirm unified grid behavior across repaired admin lists.
+
+Blockers:
+None.
+
+END_TOOBA_RESULT
