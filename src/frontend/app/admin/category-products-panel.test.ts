@@ -33,6 +33,18 @@ test("admin nav groups Categories and Products distinctly", () => {
   assert.equal(messages.includes("Catalog / Products"), false);
 });
 
+test("category products panel wires column header filters like product list", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /applyCategoryProductsFilterHeader/);
+  assert.match(panel, /CATEGORY_PRODUCTS_EXTERNAL_FILTER_FIELDS/);
+  assert.match(panel, /externalFilterFields=\{CATEGORY_PRODUCTS_EXTERNAL_FILTER_FIELDS\}/);
+  assert.match(panel, /advancedFilterColumns=\{CATEGORY_PRODUCTS_ADVANCED_FILTERS\}/);
+  assert.match(panel, /statusFilterOptions=\{\[\.\.\.CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS\]\}/);
+  assert.match(panel, /assignmentRole/);
+  assert.match(panel, /applyAppGridFilterHeader/);
+  assert.match(panel, /advancedFilter:\s*true/);
+});
+
 test("category products panel is real and blocks L1/L2 assignment", () => {
   const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
   const screen = fs.readFileSync(path.join(root, "app/admin/category-admin-screen.tsx"), "utf8");

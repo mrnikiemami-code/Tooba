@@ -3,11 +3,15 @@ import type { ColDef } from "ag-grid-community";
 /** انواع فیلتر هدر app-owned — AG Grid popup استفاده نمی‌شود. */
 export type AppGridFilterKind = "text" | "jalali-date" | "number" | "status" | "none";
 
+export type AppGridStatusFilterOption = { value: string; label: string };
+
 export type AppGridFilterSpec = {
   field: string;
   kind: AppGridFilterKind;
   /** برچسب مقدار در پنل عددی (مثلاً تومان) */
   valueLabel?: string;
+  /** گزینه‌های وضعیت مخصوص این ستون (در غیر این صورت از context سراسری گرید) */
+  statusFilterOptions?: readonly AppGridStatusFilterOption[];
 };
 
 /** اعمال هدر فیلتر app-owned روی ColDef — بدون وابستگی به دامنهٔ خاص. */
@@ -24,6 +28,9 @@ export function applyAppGridFilterHeader<T>(colDef: ColDef<T>, spec?: AppGridFil
     headerComponentParams: {
       externalFilter: resolved.kind,
       filterValueLabel: resolved.valueLabel,
+      statusFilterOptions: resolved.statusFilterOptions
+        ? [...resolved.statusFilterOptions]
+        : undefined,
     },
   };
 }

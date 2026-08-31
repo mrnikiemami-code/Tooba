@@ -10,6 +10,12 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { Eye, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { formatJalaliDate, AppDataGrid } from "../../design-system/app-data-grid";
+import type { AppGridFilterColumnDef } from "../../design-system/app-data-grid/filter-column-def";
+import {
+  applyAppGridFilterHeader,
+  appGridExternalFilterFields,
+  type AppGridFilterSpec,
+} from "../../design-system/app-data-grid/app-grid-filter-header";
 import type { AppCategoryTreeNode } from "../../design-system/app-category-tree";
 import {
   AppGridBadgeCell,
@@ -18,7 +24,7 @@ import {
 } from "../../design-system/app-data-grid/app-grid-cells";
 import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/app-grid-pinned-actions";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
-import type { GridServerQuery } from "../../design-system/data-grid";
+import type { GridFilterValue, GridServerQuery } from "../../design-system/data-grid";
 import { formatAdminStatus } from "./admin-api";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { resolveAdminChromeLocale } from "./admin-chrome-messages";
@@ -48,6 +54,72 @@ const ADD_FOR_DISPLAY_CTA_FA = "افزودن برای نمایش";
 const ADD_PRODUCT_FOR_DISPLAY_CTA_FA = "افزودن محصول برای نمایش در این دسته";
 const BULK_ADD_FOR_DISPLAY_CTA_FA = (n: number) => `افزودن موارد انتخاب‌شده برای نمایش (${n})`;
 const DIALOG_TITLE_FA = "افزودن محصول برای نمایش در این دسته";
+
+const CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS = [
+  { value: "Published", label: "منتشر شده" },
+  { value: "Draft", label: "پیش‌نویس" },
+  { value: "Archived", label: "بایگانی" },
+] as const;
+
+const CATEGORY_PRODUCT_ROLE_FILTER_OPTIONS = [
+  { value: "primary", label: "دسته اصلی" },
+  { value: "display", label: "نمایش در این دسته" },
+] as const;
+
+/** ماتریس فیلتر ستون‌های تب محصولات Category — منبع واحد برای هدر فیلتر. */
+export const CATEGORY_PRODUCTS_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
+  media: { field: "media", kind: "none" },
+  title: { field: "title", kind: "text" },
+  assignmentRole: {
+    field: "assignmentRole",
+    kind: "status",
+    statusFilterOptions: CATEGORY_PRODUCT_ROLE_FILTER_OPTIONS,
+  },
+  status: { field: "status", kind: "status" },
+  // عضویت دسته با equals اجباری است؛ فیلتر متنی این ستون با همان فیلد تداخل دارد.
+  categorySummary: { field: "categorySummary", kind: "none" },
+  updatedAt: { field: "updatedAt", kind: "jalali-date" },
+  actions: { field: "actions", kind: "none" },
+};
+
+export const CATEGORY_PRODUCTS_EXTERNAL_FILTER_FIELDS = appGridExternalFilterFields(
+  CATEGORY_PRODUCTS_GRID_FILTER_MATRIX,
+);
+
+const CATEGORY_PRODUCTS_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
+  { id: "title", header: "نام محصول", filterKind: "text" },
+  {
+    id: "status",
+    header: "وضعیت",
+    filterKind: "status",
+    enumOptions: [...CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS],
+  },
+  { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
+];
+
+function applyCategoryProductsFilterHeader<T extends AdminProductListRow>(
+  colDef: ColDef<T>,
+): ColDef<T> {
+  const field = String(colDef.field ?? colDef.colId ?? "");
+  return applyAppGridFilterHeader(colDef, CATEGORY_PRODUCTS_GRID_FILTER_MATRIX[field]);
+}
+
+function roleFilterValues(filter: GridFilterValue | undefined): string[] {
+  if (!filter || filter.kind !== "status") return [];
+  return filter.values ?? [];
+}
+
+function matchesAssignmentRole(
+  row: AdminProductListRow,
+  categoryId: string,
+  selected: string[],
+): boolean {
+  if (selected.length === 0) return true;
+  const isPrimary = row.primaryCategoryId === categoryId;
+  const role = isPrimary ? "primary" : "display";
+  return selected.includes(role);
+}
+
 function categorySummaryIncludes(summary: string, categoryName: string): boolean {
   const needle = categoryName.trim();
   if (!needle) return false;
@@ -292,28 +364,26 @@ export function CategoryProductsPanel({
 
   const columnDefs = useMemo(
     (): ColDef<AdminProductListRow>[] => [
-      {
+      applyCategoryProductsFilterHeader({
         colId: "media",
         headerName: "رسانه",
         width: 88,
         minWidth: 80,
         sortable: false,
-        filter: false,
         cellRenderer: MediaCell,
-      },
-      {
+      }),
+      applyCategoryProductsFilterHeader({
         field: "title",
         headerName: "نام محصول",
         minWidth: 200,
         flex: 1.4,
         cellRenderer: ProductCell,
-      },
-      {
+      }),
+      applyCategoryProductsFilterHeader({
         colId: "assignmentRole",
         headerName: "نقش",
         width: 128,
         sortable: false,
-        filter: false,
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) => {
           const row = params.data;
           if (!row) return null;
@@ -332,25 +402,26 @@ export function CategoryProductsPanel({
             </span>
           );
         },
-      },
-      {
+      }),
+      applyCategoryProductsFilterHeader({
         field: "status",
         headerName: "وضعیت",
         width: 120,
+        valueFormatter: (p) => formatAdminStatus(String(p.value ?? "")),
         cellRenderer: StatusCell,
-      },
-      {
+      }),
+      applyCategoryProductsFilterHeader({
         field: "categorySummary",
         headerName: "دسته‌ها",
         minWidth: 160,
         flex: 1,
-      },
-      {
+      }),
+      applyCategoryProductsFilterHeader({
         field: "updatedAt",
         headerName: "به‌روزرسانی",
         width: 120,
         valueFormatter: (p) => formatJalaliDate(String(p.value ?? ""), "fa"),
-      },
+      }),
       buildPinnedActionsColumnDef<AdminProductListRow>({
         direction: "rtl",
         cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
@@ -362,18 +433,22 @@ export function CategoryProductsPanel({
 
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
-      const merged: GridServerQuery = {
-        ...query,
-        filters: {
-          ...query.filters,
-          categorySummary: {
-            kind: "text",
-            operator: "equals",
-            query: categoryName.trim(),
-          },
-        },
+      const roleSelected = roleFilterValues(query.filters.assignmentRole);
+      const hostFilters = { ...query.filters };
+      delete hostFilters.assignmentRole;
+      // عضویت در دستهٔ جاری — فیلتر دامنهٔ پنل؛ فیلتر ستون دسته‌ها غیرفعال است.
+      hostFilters.categorySummary = {
+        kind: "text",
+        operator: "equals",
+        query: categoryName.trim(),
       };
-      const result = await queryAdminProductGrid(merged);
+
+      const needsWideFetch = roleSelected.length > 0;
+      const hostQuery: GridServerQuery = needsWideFetch
+        ? { ...query, page: 1, pageSize: 100, filters: hostFilters }
+        : { ...query, filters: hostFilters };
+
+      const result = await queryAdminProductGrid(hostQuery);
       void reloadToken;
       if (result.denied) {
         setGridError(toUiError("admin.authorization.denied"));
@@ -384,9 +459,21 @@ export function CategoryProductsPanel({
         throw new Error(result.message ?? "host-unreachable");
       }
       setGridError(null);
-      return result.page;
+
+      if (!needsWideFetch) {
+        return result.page;
+      }
+
+      const filtered = result.page.rows.filter((row) =>
+        matchesAssignmentRole(row, categoryId, roleSelected),
+      );
+      const start = (query.page - 1) * query.pageSize;
+      return {
+        rows: filtered.slice(start, start + query.pageSize),
+        total: filtered.length,
+      };
     },
-    [categoryName, reloadToken, toUiError],
+    [categoryId, categoryName, reloadToken, toUiError],
   );
 
   const assignDialogQueryAdapter = useCallback(
@@ -635,12 +722,19 @@ export function CategoryProductsPanel({
           gridId={`grid.admin.category-products.${categoryId}`}
           columnDefs={columnDefs}
           queryAdapter={queryAdapter}
+          advancedFilterColumns={CATEGORY_PRODUCTS_ADVANCED_FILTERS}
+          externalFilterFields={CATEGORY_PRODUCTS_EXTERNAL_FILTER_FIELDS}
+          statusFilterOptions={[...CATEGORY_PRODUCT_STATUS_FILTER_OPTIONS]}
           locale="fa"
           direction="rtl"
           rowCountNoun={{ fa: "محصول", en: "products" }}
+          messageOverrides={{
+            advancedFilterTitle: "فیلتر پیشرفته محصولات دسته",
+            advancedFilterSubtitle: "جستجوی دقیق میان محصولات این دسته",
+          }}
           capabilities={{
             search: true,
-            advancedFilter: false,
+            advancedFilter: true,
             savedViews: false,
             columnManager: false,
             csvExport: false,

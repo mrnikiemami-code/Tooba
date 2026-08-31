@@ -23,6 +23,8 @@ export type AppGridHeaderContext = {
 export type AppColumnHeaderParams = {
   externalFilter?: ExternalHeaderFilterKind;
   filterValueLabel?: string;
+  /** اگر باشد، بر گزینه‌های سراسری گرید اولویت دارد (مثلاً نقش اختصاص vs وضعیت محصول). */
+  statusFilterOptions?: StatusFilterOption[];
 };
 
 /** هدر ستون با فیلتر app-owned — آیکون یکپارچه؛ بدون AG Grid filter popup. */
@@ -34,6 +36,7 @@ export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
   const locale = ctx.locale ?? "fa";
   const activeFilter = ctx.externalFilters?.[field];
   const isActive = Boolean(activeFilter && isFilterActive(activeFilter));
+  const statusOptions = props.statusFilterOptions ?? ctx.statusFilterOptions ?? [];
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -103,7 +106,7 @@ export function AppColumnHeader(props: IHeaderParams & AppColumnHeaderParams) {
               <StatusHeaderFilterPanel
                 locale={locale}
                 value={activeFilter?.kind === "status" ? activeFilter : undefined}
-                options={ctx.statusFilterOptions ?? []}
+                options={statusOptions}
                 onApply={applyFilter}
                 onClear={() => applyFilter(null)}
               />
