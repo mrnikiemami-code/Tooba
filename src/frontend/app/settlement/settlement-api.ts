@@ -3,6 +3,8 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import {
   DEV_ACTOR_HEADER,
   SELLER_PARTY_HEADER,
@@ -288,6 +290,16 @@ export async function loadAdminPayoutQueue(): Promise<AdminResult<PayoutRequestR
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+export type PayoutQueueRow = PayoutRequestRow & { id: string };
+
+/** Server GridQuery — صف payout Admin. */
+export function queryAdminPayoutGrid(query: GridServerQuery): Promise<AdminGridQueryResult<PayoutQueueRow>> {
+  return postAdminGridQuery("/v1/admin/settlement/payout-queue/query", query, adminHeaders(), (item) => {
+    const row = mapPayoutRequest(item);
+    return row ? { ...row, id: row.payoutRequestId } : null;
+  });
 }
 
 export async function processAdminPayout(payoutRequestId: string): Promise<boolean> {

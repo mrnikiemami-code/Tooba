@@ -1,0 +1,341 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Promotion.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Promotion.Domain.PromotionStatus">
+            <summary>
+            وضعیت انتشار پروموشن. پیش‌نویس در ارزیابی شرکت نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionStatus.Draft">
+            <summary>
+            هنوز برای تسویه قابل‌اعمال نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionStatus.Active">
+            <summary>
+            در پنجرهٔ اعتبار می‌تواند ارزیابی شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionStatus.Expired">
+            <summary>
+            منقضی یا بازنشسته؛ سفارش تاریخی را عوض نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionStackingPolicy">
+            <summary>
+            سیاست ترکیب با سایر پروموشن‌های منطبق.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionStackingPolicy.Stackable">
+            <summary>
+            با سایر Stackableها به ترتیب اولویت قطعی جمع می‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionStackingPolicy.Exclusive">
+            <summary>
+            با هیچ پروموشن دیگری جمع نمی‌شود؛ بین چند Exclusive برنده با اولویت سپس شناسه انتخاب می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionDiscountKind">
+            <summary>
+            گونهٔ عمل تخفیف. تخفیف جایگزین قیمت تألیف‌شدهٔ Pricing نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionDiscountKind.PercentageOff">
+            <summary>
+            درصد از مبلغ بدون مالیات خط.
+            </summary>
+        </member>
+        <member name="F:Tooba.Promotion.Domain.PromotionDiscountKind.FixedAmountOff">
+            <summary>
+            مبلغ ثابت با ارز صریح.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionRounding">
+            <summary>
+            گرد کردن قطعی مبلغ تخفیف طبق مقیاس ارز. ممیز شناور نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionRounding.Round(System.Decimal,System.String)">
+            <summary>
+            IRR/JPY/KRW بدون اعشار؛ بقیه دو رقم. Midpoint AwayFromZero.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionCouponNormalizer">
+            <summary>
+            نرمال‌سازی کد کوپن. داشتن کد به‌تنهایی مجوز اعمال نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionCouponNormalizer.Normalize(System.String)">
+            <summary>
+            فاصله‌ها را می‌زداید و حروف راInvariant بزرگ می‌کند تا مقایسه قطعی باشد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionDefinition">
+            <summary>
+            پروموشن شرطی. قیمت پایهٔ Pricing را بازنویسی نمی‌کند و مالیات حساب نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.PromotionId">
+            <summary>
+            شناسهٔ پایدار پروموشن.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.Name">
+            <summary>
+            نام عملیاتی؛ محتوای بازاریابی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.Status">
+            <summary>
+            وضعیت انتشار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.Priority">
+            <summary>
+            اولویت قطعی؛ عدد بزرگ‌تر زودتر اعمال می‌شود. ترتیب ردیف دیتابیس ملاک نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.EffectiveFrom">
+            <summary>
+            شروع اعتبار UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.EffectiveTo">
+            <summary>
+            پایان اعتبار اختیاری UTC؛ مقدار تهی یعنی باز.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.StackingPolicy">
+            <summary>
+            سیاست ترکیب.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.DiscountKind">
+            <summary>
+            گونهٔ تخفیف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.PercentageRate">
+            <summary>
+            نرخ کسری درصد (مثلاً ۰٫۱۰). برای مبلغ ثابت صفر است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.FixedAmount">
+            <summary>
+            مبلغ ثابت. برای درصد صفر است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.FixedAmountCurrency">
+            <summary>
+            ارز مبلغ ثابت؛ برای درصد تهی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.CouponCode">
+            <summary>
+            کد کوپن نرمال‌شدهٔ اختیاری. تهی یعنی اعمال خودکار در صورت احراز صلاحیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.OfferId">
+            <summary>
+            محدودکنندهٔ Offer؛ تهی یعنی این محور فیلتر نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.CatalogVariantId">
+            <summary>
+            محدودکنندهٔ گونهٔ کاتالوگ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.CategoryId">
+            <summary>
+            محدودکنندهٔ طبقه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.SellerPartyId">
+            <summary>
+            محدودکنندهٔ فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.Market">
+            <summary>
+            بازار تجاری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.SalesChannel">
+            <summary>
+            کانال فروش به‌صورت متن پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.Currency">
+            <summary>
+            ارز صلاحیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.CustomerPartyId">
+            <summary>
+            مشتری اختیاری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.OrganizationPartyId">
+            <summary>
+            سازمان اختیاری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.MinimumQuantity">
+            <summary>
+            حداقل تعداد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.MinimumSubtotal">
+            <summary>
+            حداقل جمع بدون مالیات خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.CreatedAt">
+            <summary>
+            ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.UpdatedAt">
+            <summary>
+            به‌روزرسانی UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionDefinition.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.Create(System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionStackingPolicy,Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Int32},System.Nullable{System.Decimal},System.DateTimeOffset)">
+            <summary>
+            پروموشن پیش‌نویس می‌سازد. منطق کمپین در کنترلر نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.Activate(System.DateTimeOffset)">
+            <summary>
+            پروموشن را برای ارزیابی فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.Change(System.String,System.Int32,System.DateTimeOffset)">
+            <summary>
+            نام یا اولویت را عوض می‌کند. تصویر سفارش قبلی بازنویسی نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.UpdateEditableFields(System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Decimal},System.DateTimeOffset)">
+            <summary>
+            فیلدهای پیش‌نویس یا منقضی را به‌روز می‌کند. پروموشن Active قابل ویرایش اقتصادی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.Expire(System.DateTimeOffset)">
+            <summary>
+            پروموشن را منقضی می‌کند. سفارش‌های ثبت‌شده را لمس نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.IsEffectiveAt(System.DateTimeOffset)">
+            <summary>
+            آیا لحظه داخل پنجره و وضعیت Active است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.IsEligible(Tooba.Promotion.Domain.PromotionEligibilityFacts)">
+            <summary>
+            صلاحیت محورها را روی واقعیت‌های ورودی قرارداد می‌سنجد؛ DbContext خارجی خوانده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionDefinition.ComputeDiscount(System.Decimal,System.String)">
+            <summary>
+            مبلغ تخفیف را از پایهٔ بدون مالیات حساب می‌کند. سقف باقیمانده از منفی شدن جلوگیری می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionEligibilityFacts">
+            <summary>
+            واقعیت‌های صلاحیت که از قرارداد/تصویر Checkout می‌آید نه از JOIN به schemaهای بیگانه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionEligibilityFacts.#ctor(System.Guid,System.Guid,System.Nullable{System.Guid},System.Guid,System.String,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Int32,System.Decimal,System.String)">
+            <summary>
+            واقعیت‌های صلاحیت که از قرارداد/تصویر Checkout می‌آید نه از JOIN به schemaهای بیگانه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionCreatedDomainEvent">
+            <summary>
+            ایجاد پروموشن.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionCreatedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionCreatedDomainEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionActivatedDomainEvent">
+            <summary>
+            فعال‌سازی پروموشن.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionActivatedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionActivatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionActivatedDomainEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionChangedDomainEvent">
+            <summary>
+            تغییر تعریف. تصویر سفارش را عوض نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionChangedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionChangedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionChangedDomainEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Domain.PromotionExpiredDomainEvent">
+            <summary>
+            انقضای پروموشن.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Domain.PromotionExpiredDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionExpiredDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Promotion.Domain.PromotionExpiredDomainEvent.PromotionId">
+            <summary>
+            پروموشن.
+            </summary>
+        </member>
+    </members>
+</doc>

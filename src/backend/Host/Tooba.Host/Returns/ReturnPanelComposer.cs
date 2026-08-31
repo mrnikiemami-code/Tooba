@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Grid;
 using Tooba.Returns.Application;
 
 namespace Tooba.Host.Returns;
@@ -80,6 +82,15 @@ public sealed class ReturnPanelComposer
     /// </summary>
     public Task<IReadOnlyList<ReturnSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _returns.ListAllAsync(cancellationToken);
+
+    /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin.</summary>
+    public async Task<GridPageResponse<ReturnSnapshot>> QueryGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListAllAsync(cancellationToken);
+        return AdminListGridPolicies.Returns.Execute(rows, request);
+    }
 
     /// <summary>
     /// درخواست مرجوعی می‌سازد.

@@ -1,6 +1,8 @@
 /**
  * کلاینت خواندنی Admin؛ هویت توسعه فقط به Host ارسال می‌شود و هیچ مجوزی در مرورگر صادر نمی‌شود.
  */
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 export const ADMIN_DEV_ACTOR_HEADER = "X-Tooba-Dev-Actor-User-Id";
 export const ADMIN_ACTOR_STORAGE_KEY = "tooba.adminActorUserId";
 export const DEFAULT_ADMIN_ACTOR_ID = "";
@@ -579,6 +581,50 @@ export async function deactivateAdminPromotion(promotionId: string): Promise<Adm
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+function mapAdminReviewGridItem(value: unknown): AdminReviewRow | null {
+  const item = record(value);
+  if (!item) return null;
+  const id = text(prop(item, "reviewId", "ReviewId"));
+  if (!id) return null;
+  const body = text(prop(item, "body", "Body"));
+  return {
+    id,
+    reviewerDisplayName: text(prop(item, "authorDisplayName", "AuthorDisplayName"), "مشتری"),
+    productTitle: text(prop(item, "productTitle", "ProductTitle"), "کالا"),
+    rating: number(prop(item, "rating", "Rating")),
+    excerpt: body.length > 120 ? `${body.slice(0, 120)}…` : body,
+    verifiedPurchase: prop(item, "verifiedPurchase", "VerifiedPurchase") === true,
+    status: text(prop(item, "status", "Status"), "Pending"),
+    createdAt: text(prop(item, "createdAt", "CreatedAt")),
+  };
+}
+
+/** Server GridQuery — سفارش‌های Admin. */
+export function queryAdminOrdersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminOrderRow>> {
+  return postAdminGridQuery("/v1/admin/orders/query", query, adminHeaders(), (item) => mapAdminOrder(item));
+}
+
+/** Server GridQuery — فروشندگان Admin. */
+export function queryAdminSellersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminSellerRow>> {
+  return postAdminGridQuery("/v1/admin/sellers/query", query, adminHeaders(), (item) => {
+    const rows = mapAdminSellers([item]);
+    return rows[0] ?? null;
+  });
+}
+
+/** Server GridQuery — مشتریان Admin. */
+export function queryAdminCustomersGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminCustomerRow>> {
+  return postAdminGridQuery("/v1/admin/customers/query", query, adminHeaders(), (item) => {
+    const rows = mapAdminCustomers([item]);
+    return rows[0] ?? null;
+  });
+}
+
+/** Server GridQuery — نظرات Admin. */
+export function queryAdminReviewsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminReviewRow>> {
+  return postAdminGridQuery("/v1/admin/reviews/query", query, adminHeaders(), (item) => mapAdminReviewGridItem(item));
 }
 
 /** هدر Admin را برای کلاینت قدیمی Product Workspace فراهم می‌کند. */

@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 
@@ -24,6 +25,7 @@ public static class SettlementEndpoints
         var admin = app.MapGroup("/v1/admin");
         admin.MapGet("/settlement/balances", AdminBalancesAsync);
         admin.MapGet("/settlement/payout-queue", AdminPayoutQueueAsync);
+        admin.MapPost("/settlement/payout-queue/query", AdminQueryPayoutGridAsync);
         admin.MapPost("/settlement/payout-requests/{payoutRequestId:guid}/process", AdminProcessPayoutAsync);
         admin.MapPost("/settlement/payout-requests/{payoutRequestId:guid}/retry", AdminRetryPayoutAsync);
     }
@@ -158,6 +160,26 @@ public static class SettlementEndpoints
             await SettlementAdminAccess.RequireAuthorizedAsync(
                 request, session, tenant, registry, guard, environment, cancellationToken);
             return Results.Json(await composer.ListPayoutQueueAsync(cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+    }
+
+    private static async Task<IResult> AdminQueryPayoutGridAsync(
+        GridQueryRequest body,
+        SettlementPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        ControlPlaneRegistry registry,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SettlementAdminAccess.RequireAuthorizedAsync(
+                request, session, tenant, registry, guard, environment, cancellationToken);
+            return Results.Json(await composer.QueryPayoutGridAsync(body, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }

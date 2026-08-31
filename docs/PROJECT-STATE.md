@@ -59,13 +59,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T040
+TB-P07-T041
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T040
+TB-P07-T041
 ```
 
 Current Repair Task:
@@ -77,7 +77,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T040
+TB-P07-T041
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -793,15 +793,15 @@ Recorded principle: Seller authorization must bind authenticated actor to Seller
 Resume: `PIPELINE-PROTOCOL: BRIDGE-WAKE-V1`; channel `tooba-main`. P05 = COMPLETE. P06 = COMPLETE. P07 = IN_PROGRESS. TB-P07-T017 = ACCEPTED (Product SEO). TB-P07-T018 / T018-R1 = ACCEPTED (publishing lifecycle). TB-P07-T019 = Product History / Audit (`docs/catalog/PRODUCT-HISTORY.md`). TB-P07-T020 = Product Admin visual polish (workspace edit-across-tabs, shell/list/panel tokens; `docs/evidence/TB-P07-T020/`). Runtimes: Host `:5088`, FE `:3000`, Shopeiva `:3001`. Product Admin: `http://localhost:3000/fa/admin/products`. `USER_VISUAL_ACCEPTED` = NO.
 
 
-## Current focus (TB-P07-T040)
+## Current focus (TB-P07-T041)
 
 ```text
-Admin Grid Standardization Gate — migrate eligible legacy lists to canonical AppDataGrid
+Admin Grid Standardization Repair — remove LegacyAppDataGrid; direct AppDataGrid + server GridQuery for non-trivial lists
 USER_VISUAL_ACCEPTED=NO
 Worker next = IDLE / waits for Bridge Task (no invented next task)
 ```
 
-Final HEAD/origin (TB-P07-T040):
+Final HEAD/origin (TB-P07-T041):
 
 ```text
 6ca4601d

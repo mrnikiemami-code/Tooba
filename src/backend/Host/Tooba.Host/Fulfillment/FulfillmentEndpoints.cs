@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 
@@ -28,6 +29,7 @@ public static class FulfillmentEndpoints
 
         var admin = app.MapGroup("/v1/admin");
         admin.MapGet("/fulfillments", AdminListAsync);
+        admin.MapPost("/fulfillments/query", AdminQueryGridAsync);
         admin.MapGet("/fulfillments/{fulfillmentId:guid}", AdminGetAsync);
 
         var customer = app.MapGroup("/v1/customer");
@@ -264,6 +266,25 @@ public static class FulfillmentEndpoints
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }
+
+    private static Task<IResult> AdminQueryGridAsync(
+        GridQueryRequest body,
+        FulfillmentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> AdminGetAsync(
         Guid fulfillmentId,

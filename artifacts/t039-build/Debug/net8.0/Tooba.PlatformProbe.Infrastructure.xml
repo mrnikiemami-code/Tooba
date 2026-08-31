@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.PlatformProbe.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedDomainEvent">
+            <summary>
+            واقعیت داخلی ایجاد ردیف probe. قرارداد خارجی نیست و به‌تنهایی منتشر نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد دامنه را با شناسهٔ ردیف probe می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedDomainEvent.RecordId">
+            <summary>
+            کلید ردیف probe که ایجاد شده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Events.ProbeInternalNoteDomainEvent">
+            <summary>
+            واقعیت داخلی بدون ترجمهٔ Integration؛ برای اثبات «هر Domain Event منتشر نمی‌شود».
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Events.ProbeInternalNoteDomainEvent.#ctor(System.String)">
+            <summary>
+            یادداشت داخلی ماژول که نباید Outbox بسازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeInternalNoteDomainEvent.Note">
+            <summary>
+            متن داخلی؛ نباید به Integration تبدیل شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeInternalNoteDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedIntegrationEvent">
+            <summary>
+            قرارداد Integration نمونه برای PlatformProbe. disposable است و الگوی Catalog نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام type map پایدار این قرارداد.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedIntegrationEvent.Metadata">
+            <summary>
+            فراداده از ستون‌های Outbox پس از deserialize بازنویسی می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Events.ProbeRecordCreatedIntegrationEvent.RecordId">
+            <summary>
+            شناسهٔ ردیف probe در payload؛ منبع Tenant نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.InitialPlatformProbe">
+            <summary>
+            مهاجرت دستی اولیهٔ schema <c>platform_probe</c> و جدول <c>probe_records</c>.
+            snapshot/designer تولیدشده را فقط برای توضیح فارسی ویرایش نکنید.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.InitialPlatformProbe.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.InitialPlatformProbe.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.InitialPlatformProbe.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.AddPlatformProbeOutbox">
+            <summary>
+            افزودن جدول Outbox ماژول PlatformProbe در schema مالک؛ جدول سراسری همهٔ ماژول‌ها نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.AddPlatformProbeOutbox.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.AddPlatformProbeOutbox.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.Migrations.AddPlatformProbeOutbox.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord">
+            <summary>
+            ردیف نمونهٔ خنثی در schema <c>platform_probe</c>. قرارداد Catalog/Identity نیست و FK به ماژول دیگر ندارد.
+            رویداد دامنه را نگه می‌دارد تا interceptor همان تراکنش Outbox را پر کند؛ صف DomainEvents ستون جدول نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.Id">
+            <summary>
+            کلید UUID v7 تولیدشده در دامنه؛ پایگاه مقدار را تولید نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.CreatedAt">
+            <summary>
+            زمان ایجاد به‌صورت Instant (UTC مفهومی NodaTime).
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.ExternalReference">
+            <summary>
+            ارجاع اختیاری UUID بدون رابطهٔ دیتابیس؛ برای اثبات «بدون FK بین‌ماژول».
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.Raise(Tooba.BuildingBlocks.IDomainEvent)">
+            <summary>
+            واقعیت دامنه را صف می‌کند؛ انتشار Integration نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext">
+            <summary>
+            DbContext اختصاصی PlatformProbe. schema جدا است تا الگوی مالکیت داده قبل از ماژول‌های واقعی قفل شود.
+            این نمونه disposable است و الگوی تجاری Catalog نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.Schema">
+            <summary>
+            نام schema مالک این ماژول؛ ماژول دیگر نباید در آن بنویسد.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext})">
+            <summary>
+            DbContext را با گزینه‌های ازپیش‌پیکربندی‌شده می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.Records">
+            <summary>
+            مجموعهٔ ردیف‌های probe؛ جدول کسب‌وکار نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول در schema <c>platform_probe</c>؛ جدول سراسری همهٔ ماژول‌ها نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <summary>
+            نگاشت جدول <c>probe_records</c> و <c>outbox_messages</c> بدون رابطه به schema دیگر.
+            </summary>
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContextFactory">
+            <summary>
+            کارخانهٔ design-time برای ابزار EF. از متغیر <see cref="F:Tooba.Persistence.ToobaNpgsql.DesignTimeConnectionVariable"/> می‌خواند نه از Tenant درخواست.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbePersistence">
+            <summary>
+            سازندهٔ ردیف نمونه با UUID v7 و ساعت سیستم. منطق کسب‌وکار ندارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbePersistence.NewRecord(System.Nullable{System.Guid})">
+            <summary>
+            یک <see cref="T:Tooba.PlatformProbe.Infrastructure.Persistence.PlatformProbeRecord"/> جدید با شناسهٔ v7 می‌سازد.
+            </summary>
+            <param name="externalReference">ارجاع اختیاری بدون FK.</param>
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.PlatformProbeModule">
+            <summary>
+            نمونهٔ disposable ثبت PlatformProbe. قابلیت کسب‌وکار نیست و فقط ترکیب و مرز ماژول را ثابت می‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.PlatformProbeModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.PlatformProbeModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration">
+            <summary>
+            ثبت نمونهٔ disposable برای Outbox ماژول PlatformProbe. هستهٔ عمومی نام این ماژول را hard-code نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PlatformProbe.Infrastructure.PlatformProbeOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

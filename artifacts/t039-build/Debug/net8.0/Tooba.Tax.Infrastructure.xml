@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Tax.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Tax.Infrastructure.Events.TaxRuleCreatedIntegrationEvent">
+            <summary>
+            ایجاد قاعدهٔ مالیاتی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Infrastructure.Events.TaxRuleCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleCreatedIntegrationEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Events.TaxRuleActivatedIntegrationEvent">
+            <summary>
+            فعال‌سازی قاعده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Infrastructure.Events.TaxRuleActivatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleActivatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleActivatedIntegrationEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Events.TaxRuleChangedIntegrationEvent">
+            <summary>
+            تغییر قاعده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Infrastructure.Events.TaxRuleChangedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleChangedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxRuleChangedIntegrationEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Events.TaxCalculationFailedIntegrationEvent">
+            <summary>
+            شکست محاسبه.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Infrastructure.Events.TaxCalculationFailedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxCalculationFailedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Events.TaxCalculationFailedIntegrationEvent.Outcome">
+            <summary>
+            نتیجه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Persistence.Migrations.InitialTax">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.Migrations.InitialTax.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.Migrations.InitialTax.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.Migrations.InitialTax.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Persistence.TaxDbContext">
+            <summary>
+            DbContext مالک schema <c>tax</c>. قیمت، سفارش و فاکتور را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.Schema">
+            <summary>
+            schema اختصاصی Tax.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Tax.Infrastructure.Persistence.TaxDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.Categories">
+            <summary>
+            طبقه‌های مالیاتی مات.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.OfferClassifications">
+            <summary>
+            انتساب Offer به طبقه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.Rules">
+            <summary>
+            قواعد مؤثر به تاریخ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.TaxDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.Persistence.TaxDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Tax.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.Persistence.TaxDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.OpenTaxUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Tax.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.OpenTaxUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.TaxDirectory">
+            <summary>
+            پیکربندی و محاسبهٔ مالیات در schema tax. Pricing و Order را بازنویسی نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.#ctor(Tooba.Tax.Infrastructure.Persistence.TaxDbContext,Tooba.Tax.Application.ITaxUseCaseGuard)">
+            <summary>
+            دایرکتوری را به schema tax وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.CreateCategoryAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.AssignOfferCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.CreateRuleAsync(System.String,System.String,System.Guid,Tooba.Tax.Domain.TaxRuleKind,System.Decimal,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Int32,Tooba.Tax.Domain.TaxOverridePolicy,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.ActivateRuleAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.ChangeRuleRateAsync(System.Guid,System.Decimal,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxDirectory.CalculateAsync(Tooba.Tax.Application.TaxCalculationRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.TaxModule">
+            <summary>
+            ماژول Tax: قواعد مؤثر به تاریخ و محاسبهٔ جدا از Pricing. فاکتور و پرداخت اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.TaxModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Tax.Infrastructure.TaxOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Tax.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.TaxOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.TaxOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Infrastructure.TaxOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Infrastructure.TaxOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

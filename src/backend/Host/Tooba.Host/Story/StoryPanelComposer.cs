@@ -1,7 +1,9 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using global::Tooba.Story.Application;
 using global::Tooba.Story.Domain;
+using Tooba.Host.Grid;
 
 namespace Tooba.Host.Story;
 
@@ -27,6 +29,17 @@ public sealed class StoryPanelComposer
         StoryReviewStatus? reviewStatus,
         CancellationToken cancellationToken) =>
         _stories.AdminListAsync(tenantId, reviewStatus, cancellationToken);
+
+    /// <summary>صفحه‌بندی server-side گرید استوری Admin.</summary>
+    public async Task<GridPageResponse<AdminStorySnapshot>> QueryAdminGridAsync(
+        Guid tenantId,
+        StoryReviewStatus? reviewStatus,
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await AdminListAsync(tenantId, reviewStatus, cancellationToken);
+        return AdminListGridPolicies.Stories.Execute(rows, request);
+    }
 
     /// <summary>فهرست در انتظار بازبینی.</summary>
     public Task<IReadOnlyList<AdminStorySnapshot>> AdminListPendingReviewAsync(

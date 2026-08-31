@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P07-T040).
+ * Recovery SoT staleness guard (TB-P07-T041).
  * Deterministic, repo-local — does NOT call Bridge API.
  *
  * Authoritative files:
@@ -26,7 +26,7 @@ const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
 /** Active Bridge task under implementation (update when Architect issues next). */
-const CURRENT_TASK_ID = "TB-P07-T040";
+const CURRENT_TASK_ID = "TB-P07-T041";
 
 /** Markers that must appear for the active wave. */
 const REQUIRED_MARKERS = [

@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T040
+
+Parent-Task:
+TB-P07-T039
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+ce72345e-959c-480b-bea1-fb85fe784806
+
+Summary:
+Admin grid standardization gate: inventoried Admin list surfaces; migrated all eligible legacy DataGrid/raw-table lists to canonical AppDataGrid via central LegacyAppDataGrid + buildLegacyGridBridge. Preserved product/category-products canonical grids, specialized tree/workspace/panels. Saved Views keys per grid. USER_VISUAL_ACCEPTED=NO.
+
+Inventory:
+15+ Admin surfaces classified; eligible legacy lists migrated; specialized non-tabular UX kept.
+
+Migrated-Grids:
+Orders, Fulfillments, Returns, Sellers, Customers, Settlement, Reviews, Promotions, Payouts, Content, Stories, Attribute Definitions, Category Schema, Gift Cards.
+
+Already-Canonical:
+/admin/products, category→products tab.
+
+Specialized-Surfaces-Kept:
+Category tree, attribute/facet reorder panels, product workspace/wizard, tickets feed, wallet ledger, access-control pickers, page composition.
+
+Blocked-Surfaces:
+None — client-side query preserved for migrated legacy lists; server GridQuery deferred per module.
+
+AppDataGrid-Central-Changes:
+legacy-grid-bridge.ts + LegacyAppDataGrid.tsx exported; no raw AgGridReact; no page-specific grid wrapper.
+
+Query-Contracts:
+Products server query unchanged; migrated lists use existing loaders + executeGridQuery client adapter.
+
+Filters:
+Typed filters via applyAppGridFilterHeader mapping (text/status/date/number).
+
+Saved-Views:
+createHostSavedViewStore grid.admin.* keys for migrated grids.
+
+Export:
+Canonical AppDataGrid CSV/XLSX via getExportRow from bridge.
+
+Permissions:
+Row actions/cells preserved from legacy column cell renderers; no new destructive bulk ops.
+
+Focused-Validation:
+legacy-grid-bridge 2/2; admin-grid-migration 5/5; product-catalog-admin; guard 3/3.
+
+Smoke-Check:
+Source/contract checks confirm AppDataGrid on migrated routes; products reference intact.
+
+Recovery-SoT:
+Current TB-P07-T040; USER_VISUAL_ACCEPTED=NO.
+
+Runtime:
+Host :5088; FE :3000; Shopeiva :3001 (unchanged).
+
+Evidence:
+docs/evidence/TB-P07-T040/
+
+Git:
+HEAD=6ca4601dbdf4b382cba585890efe093503fe459c
+origin/main=6ca4601dbdf4b382cba585890efe093503fe459c
+HEAD==origin/main
+
+Architectural-Concerns:
+Future module-owned server GridQuery may replace client-side LegacyAppDataGrid mode without UI fork.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO — human should confirm unified grid chrome across migrated Admin lists.
+
+Blockers:
+None.
+
+END_TOOBA_RESULT

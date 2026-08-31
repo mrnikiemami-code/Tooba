@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Returns.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Returns.Infrastructure.Persistence.Migrations.InitialReturns">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.Migrations.InitialReturns.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.Migrations.InitialReturns.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.Migrations.InitialReturns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.Persistence.Migrations.AddRefundDestination">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.Migrations.AddRefundDestination.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.Migrations.AddRefundDestination.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext">
+            <summary>
+            DbContext مالک schema <c>returns</c>. سفارش و پرداخت را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.Schema">
+            <summary>
+            schema اختصاصی Returns.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.ReturnRequests">
+            <summary>
+            درخواست‌های مرجوعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.ReturnItems">
+            <summary>
+            خطوط مرجوعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.RefundAttempts">
+            <summary>
+            تلاش‌های refund.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContextFactory">
+            <summary>
+            کارخانهٔ زمان طراحی مهاجرت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.Persistence.ReturnsDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.OpenReturnUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Returns.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.OpenReturnUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnDirectory">
+            <summary>
+            ارکستراسیون مرجوعی در schema returns.
+            مقصد Wallet: اعتبار ledger یک‌بار؛ PSP refund gateway صدا زده نمی‌شود (no double-credit).
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.#ctor(Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext,Tooba.Returns.Application.IReturnUseCaseGuard,Tooba.Order.Application.IOrderReturnReader,Tooba.Fulfillment.Application.IFulfillmentReturnReader,Tooba.Payment.Application.IPaymentDirectory,Tooba.Payment.Application.IPaymentRefundGateway,Tooba.Wallet.Application.IWalletDirectory,Tooba.Returns.Application.IReturnInventoryGateway,Tooba.Returns.Infrastructure.ReturnsInstrumentation,Microsoft.Extensions.Logging.ILogger{Tooba.Returns.Infrastructure.ReturnDirectory})">
+            <summary>
+            دایرکتوری را به schema returns و درز Order/Fulfillment/Payment/Wallet وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.CreateAsync(Tooba.Returns.Application.CreateReturnCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.ListForCustomerAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.ListForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.ListAllAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.ApproveAsync(Tooba.Returns.Application.ApproveReturnCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.RejectAsync(Tooba.Returns.Application.RejectReturnCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnDirectory.RetryRefundAsync(Tooba.Returns.Application.RetryRefundCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnInventoryGateway">
+            <summary>
+            restock از طریق قرارداد Inventory؛ بدون DbContext مشترک.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnInventoryGateway.#ctor(Tooba.Inventory.Application.IInventoryReturnGateway)">
+            <summary>
+            gateway را به قرارداد Inventory وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnInventoryGateway.RestockConsumedReservationAsync(System.Guid,System.Int32,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnSettlementBridge">
+            <summary>
+            snapshot refund برای Settlement بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnSettlementBridge.#ctor(Tooba.Returns.Infrastructure.Persistence.ReturnsDbContext)">
+            <summary>پل settlement را به schema returns وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnSettlementBridge.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnsInstrumentation">
+            <summary>
+            متریک‌های مرجوعی بدون PII.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.#ctor">
+            <summary>
+            متریک‌های in-process Returns.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordCreated">
+            <summary>ثبت ایجاد درخواست.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordApproved">
+            <summary>ثبت تأیید.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordRejected">
+            <summary>ثبت رد.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordRetry">
+            <summary>ثبت retry refund.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordRefundSucceeded">
+            <summary>ثبت refund موفق.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsInstrumentation.RecordRefundFailed">
+            <summary>ثبت refund شکست.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnsModule">
+            <summary>
+            ماژول Returns: ارکستراسیون مرجوعی پس از تحویل. سفارش و پرداخت مستقیم اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.ReturnsModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Returns. سفارش/پرداخت را مستقیم به‌روز نمی‌کند؛ ترجمه فقط Integration پایدار است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Infrastructure.ReturnsOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

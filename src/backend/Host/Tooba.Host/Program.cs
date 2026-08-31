@@ -136,6 +136,7 @@ builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();
 builder.Services.AddScoped<Tooba.Host.Content.ContentPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Reviews.ReviewPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.PageComposition.PageCompositionPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Story.StoryPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Promotion.PromotionPanelComposer>();

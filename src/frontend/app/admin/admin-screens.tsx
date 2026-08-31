@@ -3,21 +3,22 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CheckCircle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
-import { ErrorState, faWorkspaceMessages, LegacyAppDataGrid } from "../../design-system";
-import type { GridColumnDef, SavedViewStore } from "../../design-system/data-grid";
+import { ErrorState, faWorkspaceMessages, AppDataGrid, adminGridQueryAdapter, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
+import type { GridColumnDef, GridServerQuery, SavedViewStore } from "../../design-system/data-grid";
+import type { AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import {
   formatAdminDate,
   formatAdminMoney,
   formatAdminStatus,
-  loadAdminCustomers,
   loadAdminDashboard,
   loadAdminOrderDetail,
-  loadAdminOrders,
-  loadAdminSellers,
-  loadAdminReviews,
   moderateAdminReview,
   loadAdminPromotions,
   deactivateAdminPromotion,
+  queryAdminOrdersGrid,
+  queryAdminSellersGrid,
+  queryAdminCustomersGrid,
+  queryAdminReviewsGrid,
   type AdminCustomerRow,
   type AdminDashboard,
   type AdminLoadState,
@@ -33,7 +34,7 @@ import {
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
   loadAdminFulfillmentDetail,
-  loadAdminFulfillments,
+  queryAdminFulfillmentsGrid,
   type FulfillmentListRow,
   type FulfillmentSnapshot,
 } from "../fulfillment/fulfillment-api";
@@ -43,7 +44,7 @@ import {
   formatReturnDate,
   formatReturnStatus,
   loadAdminReturnDetail,
-  loadAdminReturns,
+  queryAdminReturnsGrid,
   returnStatusBadgeClass,
   type ReturnListRow,
   type ReturnSnapshot,
@@ -52,8 +53,8 @@ import { ReturnDetailCard } from "../returns/return-ui";
 import {
   formatPayoutStatus,
   formatSettlementMoney,
-  loadAdminPayoutQueue,
   loadAdminSettlementBalances,
+  queryAdminPayoutGrid,
   payoutStatusClass,
   processAdminPayout,
   type PayoutRequestRow,
@@ -62,7 +63,7 @@ import {
 import {
   createAdminArticle,
   formatContentDate,
-  loadAdminContentArticles,
+  queryAdminContentArticlesGrid,
   publishAdminArticle,
   unpublishAdminArticle,
   type AdminContentArticle,
@@ -186,13 +187,67 @@ function Metric({ label, value }: { label: string; value?: number }) {
   );
 }
 
-function GridPage<T extends { id: string }>({
+function ServerGridPage<T extends { id: string }>({
+  title,
+  description,
+  gridId,
+  columns,
+  queryFn,
+  savedViewStore: savedViewStoreInput,
+  testId,
+}: {
+  title: string;
+  description: string;
+  gridId: string;
+  columns: GridColumnDef<T>[];
+  queryFn: (query: GridServerQuery) => Promise<AdminGridQueryResult<T>>;
+  savedViewStore?: SavedViewStore;
+  testId?: string;
+}) {
+  const savedViewStore = useMemo(
+    () => savedViewStoreInput ?? createHostSavedViewStore(gridId),
+    [gridId, savedViewStoreInput],
+  );
+  const [denied, setDenied] = useState(false);
+  const [gridError, setGridError] = useState<string>();
+  const [reloadToken, setReloadToken] = useState(0);
+  const refresh = () => setReloadToken((value) => value + 1);
+  const queryAdapter = useCallback(
+    async (query: GridServerQuery) => {
+      void reloadToken;
+      return adminGridQueryAdapter(queryFn, () => setDenied(true), (message) => setGridError(message))(query);
+    },
+    [queryFn, reloadToken],
+  );
+  const gridProps = useLegacyAdminGridDirectProps({ gridId, columns, queryAdapter, savedViewStore });
+  if (denied) return <Denied retry={refresh} />;
+  return (
+    <main data-testid={testId}>
+      <PageHeading title={title} description={description} />
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
+          <span className="text-sm text-muted">دادهٔ زندهٔ فروشگاه — server GridQuery</span>
+        </div>
+        <div className="p-2 md:p-4">
+          {gridError ? (
+            <ErrorState title="فروشگاه در دسترس نیست" detail={gridError} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
+          ) : (
+            <AppDataGrid<T> {...gridProps} />
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ClientGridPage<T extends { id: string }>({
   title,
   description,
   loader,
   columns,
   gridId,
   savedViewStore: savedViewStoreInput,
+  boundedReason,
 }: {
   title: string;
   description: string;
@@ -200,6 +255,7 @@ function GridPage<T extends { id: string }>({
   columns: GridColumnDef<T>[];
   gridId: string;
   savedViewStore?: SavedViewStore;
+  boundedReason?: string;
 }) {
   const savedViewStore = useMemo(
     () => savedViewStoreInput ?? createHostSavedViewStore(gridId),
@@ -214,13 +270,20 @@ function GridPage<T extends { id: string }>({
     setMessage(result.message);
   });
   useEffect(refresh, [loader]);
+  const queryAdapter = useCallback(
+    async (query: GridServerQuery) => createClientGridQueryAdapter(rows, columns)(query),
+    [rows, columns],
+  );
+  const gridProps = useLegacyAdminGridDirectProps({ gridId, columns, queryAdapter, savedViewStore });
   if (state === "denied") return <Denied retry={refresh} />;
   return (
     <main>
       <PageHeading title={title} description={description} />
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">{state === "ok" ? "دادهٔ زندهٔ فروشگاه" : state === "loading" ? "در حال بارگذاری" : "اتصال برقرار نیست"}</span>
+          <span className="text-sm text-muted">
+            {boundedReason ?? (state === "ok" ? "فهرست bounded — client GridQuery" : state === "loading" ? "در حال بارگذاری" : "اتصال برقرار نیست")}
+          </span>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} مورد</span>
         </div>
         <div className="p-2 md:p-4">
@@ -229,7 +292,7 @@ function GridPage<T extends { id: string }>({
           ) : state === "loading" ? (
             <p className="py-8 text-center text-sm text-muted">در حال بارگذاری…</p>
           ) : (
-            <LegacyAppDataGrid gridId={gridId} columns={columns} rows={rows} savedViewStore={savedViewStore} />
+            <AppDataGrid<T> {...gridProps} />
           )}
         </div>
       </section>
@@ -313,13 +376,14 @@ function Status({ value }: { value: string }) {
 export function AdminOrdersScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_ORDER_GRID_VIEW_KEY), []);
   return (
-    <GridPage
+    <ServerGridPage
       title="سفارش‌ها"
       description="پیگیری تسویه و سفارش‌های فروشندگان"
-      loader={loadAdminOrders}
+      queryFn={queryAdminOrdersGrid}
       columns={orderColumns}
       gridId={ADMIN_ORDER_GRID_VIEW_KEY}
       savedViewStore={savedViewStore}
+      testId="admin-orders"
     />
   );
 }
@@ -373,7 +437,15 @@ const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
 
 /** فهرست زندهٔ ارسال و تحویل برای Admin. */
 export function AdminFulfillmentsScreen() {
-  return <GridPage title="ارسال و تحویل" description="نظارت عملیاتی بر ارسال و تحویل و محموله‌ها" loader={loadAdminFulfillments} columns={fulfillmentColumns} gridId={ADMIN_FULFILLMENT_GRID_VIEW_KEY} />;
+  return (
+    <ServerGridPage
+      title="ارسال و تحویل"
+      description="نظارت عملیاتی بر ارسال و تحویل و محموله‌ها"
+      queryFn={queryAdminFulfillmentsGrid}
+      columns={fulfillmentColumns}
+      gridId={ADMIN_FULFILLMENT_GRID_VIEW_KEY}
+    />
+  );
 }
 
 /** جزئیات ارسال و تحویل برای Admin (فقط‌خواندنی). */
@@ -482,7 +554,15 @@ const returnColumns: GridColumnDef<ReturnListRow>[] = [
 
 /** فهرست زندهٔ مرجوعی برای Admin. */
 export function AdminReturnsScreen() {
-  return <GridPage title="مرجوعی و بازپرداخت" description="نظارت بر درخواست‌های مرجوعی و بازپرداخت" loader={loadAdminReturns} columns={returnColumns} gridId={ADMIN_RETURN_GRID_VIEW_KEY} />;
+  return (
+    <ServerGridPage
+      title="مرجوعی و بازپرداخت"
+      description="نظارت بر درخواست‌های مرجوعی و بازپرداخت"
+      queryFn={queryAdminReturnsGrid}
+      columns={returnColumns}
+      gridId={ADMIN_RETURN_GRID_VIEW_KEY}
+    />
+  );
 }
 
 /** جزئیات مرجوعی Admin با retry refund. */
@@ -525,37 +605,58 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
 
 /** فهرست زندهٔ فروشندگان. */
 export function AdminSellersScreen() {
-  return <GridPage title="فروشندگان" description="فروشندگان و رابطهٔ عملیاتی ثبت‌شده" loader={loadAdminSellers} columns={sellerColumns} gridId={ADMIN_SELLER_GRID_VIEW_KEY} />;
+  return (
+    <ServerGridPage
+      title="فروشندگان"
+      description="فروشندگان و رابطهٔ عملیاتی ثبت‌شده"
+      queryFn={queryAdminSellersGrid}
+      columns={sellerColumns}
+      gridId={ADMIN_SELLER_GRID_VIEW_KEY}
+    />
+  );
 }
 
 /** فهرست صادقانهٔ خریداران شناخته‌شده؛ نه CRM. */
 export function AdminCustomersScreen() {
-  return <GridPage title="مشتریان" description="خریداران شناخته‌شده از سفارش‌های زنده" loader={loadAdminCustomers} columns={customerColumns} gridId={ADMIN_CUSTOMER_GRID_VIEW_KEY} />;
+  return (
+    <ServerGridPage
+      title="مشتریان"
+      description="خریداران شناخته‌شده از سفارش‌های زنده"
+      queryFn={queryAdminCustomersGrid}
+      columns={customerColumns}
+      gridId={ADMIN_CUSTOMER_GRID_VIEW_KEY}
+    />
+  );
 }
 
-/** حداقل سطح تعدیل نظر با DataGrid توبا و فرمان‌های مقتدر Host. */
+/** حداقل سطح تعدیل نظر با AppDataGrid canonical و server GridQuery. */
 export function AdminReviewsScreen() {
-  const [state, setState] = useState<AdminLoadState | "loading">("loading");
-  const [rows, setRows] = useState<AdminReviewRow[]>([]);
-  const [message, setMessage] = useState<string>();
-  const refresh = useCallback(() => void loadAdminReviews().then((result) => {
-    setState(result.state); setRows(result.data?.rows ?? []); setMessage(result.message);
-  }), []);
-  useEffect(refresh, [refresh]);
-  const moderate = useCallback((id: string, action: "publish" | "reject") => void moderateAdminReview(id, action).then((result) => {
-    if (result.state === "denied") setState("denied");
-    else if (result.state === "error") { setState("error"); setMessage(result.message); }
-    else refresh();
-  }), [refresh]);
+  const [reloadToken, setReloadToken] = useState(0);
+  const moderate = useCallback(
+    (id: string, action: "publish" | "reject") =>
+      void moderateAdminReview(id, action).then((result) => {
+        if (result.state === "ok") setReloadToken((value) => value + 1);
+      }),
+    [],
+  );
   const columns = useMemo(() => reviewColumns(moderate), [moderate]);
-  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_REVIEW_GRID_VIEW_KEY), []);
-  if (state === "denied") return <Denied retry={refresh} />;
-  return <main data-testid="admin-reviews"><PageHeading title="مدیریت نظرات" description="بررسی نظرهای در انتظار انتشار" />
-    <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-      <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} نظر در انتظار</div>
-      <div className="p-2 md:p-4">{state === "error" ? <ErrorState title="نظرها خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : state === "loading" ? <p className="py-8 text-center text-sm text-muted">در حال بارگذاری…</p> : <LegacyAppDataGrid gridId={ADMIN_REVIEW_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />}</div>
-    </section>
-  </main>;
+  const queryFn = useCallback(
+    (query: GridServerQuery) => {
+      void reloadToken;
+      return queryAdminReviewsGrid(query);
+    },
+    [reloadToken],
+  );
+  return (
+    <ServerGridPage
+      title="مدیریت نظرات"
+      description="بررسی نظرهای در انتظار انتشار"
+      queryFn={queryFn}
+      columns={columns}
+      gridId={ADMIN_REVIEW_GRID_VIEW_KEY}
+      testId="admin-reviews"
+    />
+  );
 }
 
 const promotionColumns = (deactivate: (id: string) => void): GridColumnDef<AdminPromotionRow>[] => [
@@ -638,63 +739,30 @@ const promotionColumns = (deactivate: (id: string) => void): GridColumnDef<Admin
   },
 ];
 
-/** نظارت ادمین بر پروموشن/کوپن فروشندگان — DataGrid نازک. */
+/** نظارت ادمین بر پروموشن/کوپن فروشندگان — bounded client grid. */
 export function AdminPromotionsScreen() {
-  const [state, setState] = useState<AdminLoadState | "loading">("loading");
-  const [rows, setRows] = useState<AdminPromotionRow[]>([]);
-  const [message, setMessage] = useState<string>();
-  const refresh = useCallback(
-    () =>
-      void loadAdminPromotions().then((result) => {
-        setState(result.state);
-        setRows(result.data ?? []);
-        setMessage(result.message);
-      }),
-    [],
-  );
-  useEffect(refresh, [refresh]);
+  const [reloadToken, setReloadToken] = useState(0);
+  const loader = useCallback(async () => {
+    void reloadToken;
+    return loadAdminPromotions();
+  }, [reloadToken]);
   const deactivate = useCallback(
     (id: string) =>
       void deactivateAdminPromotion(id).then((result) => {
-        if (result.state === "denied") {
-          setState("denied");
-        } else if (result.state === "error") {
-          setState("error");
-          setMessage(result.message);
-        } else {
-          refresh();
-        }
+        if (result.state === "ok") setReloadToken((value) => value + 1);
       }),
-    [refresh],
+    [],
   );
   const columns = useMemo(() => promotionColumns(deactivate), [deactivate]);
-  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_PROMOTION_GRID_VIEW_KEY), []);
-  if (state === "denied") {
-    return <Denied retry={refresh} />;
-  }
   return (
-    <main data-testid="admin-promotions">
-      <PageHeading title="نظارت پروموشن‌ها" description="فهرست و غیرفعال‌سازی نظارتی کدهای تخفیف فروشندگان" />
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="border-b border-border px-5 py-3 text-sm text-muted">
-          {rows.length.toLocaleString("fa-IR")} پروموشن
-        </div>
-        <div className="p-2 md:p-4">
-          {state === "error" ? (
-            <ErrorState
-              title="پروموشن‌ها خوانده نشد"
-              detail={message}
-              onRetry={refresh}
-              retryLabel={faWorkspaceMessages.retry}
-            />
-          ) : state === "loading" ? (
-            <p className="py-8 text-center text-sm text-muted">در حال بارگذاری…</p>
-          ) : (
-            <LegacyAppDataGrid gridId={ADMIN_PROMOTION_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />
-          )}
-        </div>
-      </section>
-    </main>
+    <ClientGridPage
+      title="نظارت پروموشن‌ها"
+      description="فهرست و غیرفعال‌سازی نظارتی کدهای تخفیف فروشندگان"
+      loader={loader}
+      columns={columns}
+      gridId={ADMIN_PROMOTION_GRID_VIEW_KEY}
+      boundedReason="SMALL_BOUNDED_CLIENT_SAFE — bounded by active seller promotions"
+    />
   );
 }
 
@@ -836,12 +904,13 @@ async function loadAdminSettlementBalanceRows(): Promise<AdminResult<SettlementB
 /** فهرست ماندهٔ تسویه فروشندگان. */
 export function AdminSettlementScreen() {
   return (
-    <GridPage
+    <ClientGridPage
       title="تسویه فروشندگان"
       description="ماندهٔ ثبت‌شده و قابل برداشت هر فروشنده بازارگاه"
       loader={loadAdminSettlementBalanceRows}
       columns={settlementBalanceColumns}
       gridId={ADMIN_SETTLEMENT_GRID_VIEW_KEY}
+      boundedReason="SMALL_BOUNDED_CLIENT_SAFE — bounded by seller-party count"
     />
   );
 }
@@ -856,16 +925,8 @@ const payoutStatusEnumOptions = [
 
 /** صف پرداخت به فروشنده با پردازش admin. */
 export function AdminPayoutQueueScreen() {
-  const [state, setState] = useState<AdminLoadState | "loading">("loading");
-  const [rows, setRows] = useState<PayoutQueueRow[]>([]);
-  const [message, setMessage] = useState<string>();
-  const refresh = useCallback(() => void loadAdminPayoutQueue().then((result) => {
-    setState(result.state);
-    setRows((result.data ?? []).map((row) => ({ ...row, id: row.payoutRequestId })));
-    setMessage(result.message);
-  }), []);
-  useEffect(refresh, [refresh]);
-
+  const [reloadToken, setReloadToken] = useState(0);
+  const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
   const columns = useMemo((): GridColumnDef<PayoutQueueRow>[] => [
     {
       id: "seller",
@@ -934,34 +995,30 @@ export function AdminPayoutQueueScreen() {
       maxWidth: 130,
     },
   ], [refresh]);
-
-  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_PAYOUT_GRID_VIEW_KEY), []);
-  if (state === "denied") return <Denied retry={refresh} />;
+  const queryFn = useCallback(
+    (query: GridServerQuery) => {
+      void reloadToken;
+      return queryAdminPayoutGrid(query);
+    },
+    [reloadToken],
+  );
   return (
-    <main data-testid="admin-payout-queue">
-      <PageHeading title="صف پرداخت به فروشنده" description="درخواست‌های برداشت فروشندگان بازارگاه" />
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} درخواست</div>
-        <div className="p-2 md:p-4">
-          {state === "error" ? (
-            <ErrorState title="صف پرداخت خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-          ) : state === "loading" ? (
-            <p className="py-8 text-center text-sm text-muted">در حال بارگذاری…</p>
-          ) : (
-            <LegacyAppDataGrid gridId={ADMIN_PAYOUT_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />
-          )}
-        </div>
-      </section>
-    </main>
+    <ServerGridPage
+      title="صف پرداخت به فروشنده"
+      description="درخواست‌های برداشت فروشندگان بازارگاه"
+      queryFn={queryFn}
+      columns={columns}
+      gridId={ADMIN_PAYOUT_GRID_VIEW_KEY}
+      testId="admin-payout-queue"
+    />
   );
 }
 
 /** مدیریت مقالات Content / بلاگ. */
 export function AdminContentScreen() {
-  const [state, setState] = useState<AdminLoadState | "loading">("loading");
-  const [rows, setRows] = useState<AdminContentArticle[]>([]);
-  const [message, setMessage] = useState<string>();
+  const [reloadToken, setReloadToken] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
+  const [message, setMessage] = useState<string>();
   const [draft, setDraft] = useState({
     slug: "",
     title: "",
@@ -973,12 +1030,7 @@ export function AdminContentScreen() {
     seoDescription: "",
   });
 
-  const refresh = useCallback(() => void loadAdminContentArticles().then((result) => {
-    setState(result.state);
-    setRows(result.data ?? []);
-    setMessage(result.message);
-  }), []);
-  useEffect(refresh, [refresh]);
+  const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
 
   const columns = useMemo((): GridColumnDef<AdminContentArticle>[] => [
     {
@@ -1055,7 +1107,24 @@ export function AdminContentScreen() {
   ], [refresh]);
 
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
-  if (state === "denied") return <Denied retry={refresh} />;
+  const queryFn = useCallback(
+    (query: GridServerQuery) => {
+      void reloadToken;
+      return queryAdminContentArticlesGrid(query);
+    },
+    [reloadToken],
+  );
+  const queryAdapter = useCallback(
+    async (query: GridServerQuery) =>
+      adminGridQueryAdapter(queryFn, undefined, (detail) => setMessage(detail))(query),
+    [queryFn],
+  );
+  const gridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_CONTENT_GRID_VIEW_KEY,
+    columns,
+    queryAdapter,
+    savedViewStore,
+  });
 
   return (
     <main data-testid="admin-content">
@@ -1064,14 +1133,12 @@ export function AdminContentScreen() {
         <button type="button" className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white" onClick={() => setShowCreate(true)}>مقاله جدید</button>
       </div>
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="border-b border-border px-5 py-3 text-sm text-muted">{rows.length.toLocaleString("fa-IR")} مقاله</div>
+        <div className="border-b border-border px-5 py-3 text-sm text-muted">server GridQuery — Content articles</div>
         <div className="p-2 md:p-4">
-          {state === "error" ? (
+          {message ? (
             <ErrorState title="مقالات خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-          ) : state === "loading" ? (
-            <p className="py-8 text-center text-sm text-muted">در حال بارگذاری…</p>
           ) : (
-            <LegacyAppDataGrid gridId={ADMIN_CONTENT_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />
+            <AppDataGrid<AdminContentArticle> {...gridProps} />
           )}
         </div>
       </section>

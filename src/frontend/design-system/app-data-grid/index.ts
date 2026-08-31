@@ -21,7 +21,13 @@ export {
   AppGridTruncatedCell,
 } from "./app-grid-cells";
 export { gridTooltipText, useOverflowTooltip } from "./use-overflow-tooltip";
-export { LegacyAppDataGrid } from "./LegacyAppDataGrid";
-export type { LegacyAppDataGridProps } from "./LegacyAppDataGrid";
 export { buildLegacyGridBridge } from "./legacy-grid-bridge";
 export type { LegacyGridBridge } from "./legacy-grid-bridge";
+export {
+  adminGridQueryAdapter,
+  createClientGridQueryAdapter,
+  useLegacyAdminGridDirectProps,
+} from "./legacy-grid-adapters";
+export type { LegacyAdminGridDirectProps } from "./legacy-grid-adapters";
+export { postAdminGridQuery } from "./admin-grid-query-client";
+export type { AdminGridQueryResult } from "./admin-grid-query-client";

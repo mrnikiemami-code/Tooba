@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Reviews.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Reviews.Application.SubmitProductReview">
+            <summary>ورودی ثبت بررسی؛ هویت Actor و نام عمومی از سرور تأمین می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.SubmitProductReview.#ctor(System.Guid,System.Int32,System.String,System.String)">
+            <summary>ورودی ثبت بررسی؛ هویت Actor و نام عمومی از سرور تأمین می‌شود.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.PublishedReview">
+            <summary>DTO عمومی و امن بررسی؛ هیچ شناسهٔ داخلی نویسنده یا یادداشت مدیریتی ندارد.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.PublishedReview.#ctor(System.Guid,System.String,System.Int32,System.String,System.String,System.Boolean,System.DateTimeOffset)">
+            <summary>DTO عمومی و امن بررسی؛ هیچ شناسهٔ داخلی نویسنده یا یادداشت مدیریتی ندارد.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.ReviewSummary">
+            <summary>خلاصهٔ عمومی امتیازهای Published.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.ReviewSummary.#ctor(System.Int64,System.Decimal,System.Collections.Generic.IReadOnlyDictionary{System.Int32,System.Int64})">
+            <summary>خلاصهٔ عمومی امتیازهای Published.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.ProductReviewSummary">
+            <summary>خلاصهٔ Published یک محصول برای ترکیب کارت و PDP.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.ProductReviewSummary.#ctor(System.Guid,System.Int64,System.Nullable{System.Decimal})">
+            <summary>خلاصهٔ Published یک محصول برای ترکیب کارت و PDP.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.PublishedReviewPage">
+            <summary>صفحهٔ عمومی بررسی‌های Published.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.PublishedReviewPage.#ctor(Tooba.Reviews.Application.ReviewSummary,System.Collections.Generic.IReadOnlyList{Tooba.Reviews.Application.PublishedReview},System.Int32,System.Int32)">
+            <summary>صفحهٔ عمومی بررسی‌های Published.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.HomeFeaturedReview">
+            <summary>نظر منتشرشدهٔ اخیر برای ریل خانه همراه مرجع محصول خریداری‌شده.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.HomeFeaturedReview.#ctor(System.Guid,System.String,System.Int32,System.String,System.String,System.Boolean,System.DateTimeOffset,System.Guid,System.String,System.String)">
+            <summary>نظر منتشرشدهٔ اخیر برای ریل خانه همراه مرجع محصول خریداری‌شده.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.ModerationReview">
+            <summary>ردیف صف مدیریت که دادهٔ ممیزی را فقط در مرز مدیر ارائه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.ModerationReview.#ctor(System.Guid,System.Guid,System.String,System.Int32,System.String,System.String,System.Boolean,System.DateTimeOffset,Tooba.Reviews.Domain.ReviewStatus)">
+            <summary>ردیف صف مدیریت که دادهٔ ممیزی را فقط در مرز مدیر ارائه می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.ModerationReviewPage">
+            <summary>صف شمارش‌دار صف مدیریت.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.ModerationReviewPage.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Reviews.Application.ModerationReview},System.Int32,System.Int32,System.Int64)">
+            <summary>صف شمارش‌دار صف مدیریت.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.SellerScopedReviewPage">
+            <summary>
+            صفحهٔ بررسی‌های محدود به مجموعهٔ ProductId مالک فروشنده؛ پاسخ فروشنده در دامنه پشتیبانی نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.SellerScopedReviewPage.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Reviews.Application.ModerationReview},System.Int32,System.Int32,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            صفحهٔ بررسی‌های محدود به مجموعهٔ ProductId مالک فروشنده؛ پاسخ فروشنده در دامنه پشتیبانی نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.ReviewSummaryCalculator">
+            <summary>محاسبهٔ قطعی خلاصه از امتیازهای Published که لایهٔ زیرساخت فیلتر کرده است.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.ReviewSummaryCalculator.Calculate(System.Collections.Generic.IEnumerable{System.ValueTuple{System.Int32,System.Int64}})">
+            <summary>تعداد، میانگین دو رقمی و توزیع کامل یک تا پنج را می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Application.IReviewDirectory">
+            <summary>قابلیت کاربردی ثبت، خواندن عمومی و تعدیل بررسی‌های محصول.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.SubmitAsync(System.Guid,Tooba.Reviews.Application.SubmitProductReview,System.Threading.CancellationToken)">
+            <summary>بررسی را برای Actor نشست ثبت می‌کند و تکرار محصول/Actor را قطعی رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.GetPublishedSummariesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>خلاصهٔ Published چند محصول را در یک خواندن گروهی برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.GetRecentPublishedForHomeAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>جدیدترین نظرهای Published را برای ریل خانه برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.GetPublishedAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>خلاصه و صفحهٔ Published محصول را با slug برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.GetPendingAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>صف Pending را برای مرز مدیر برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.ListForProductsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Nullable{Tooba.Reviews.Domain.ReviewStatus},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            بررسی‌های متعلق به مجموعهٔ ProductId داده‌شده را برای مرز فروشنده برمی‌گرداند؛
+            مالکیت فروشنده باید قبلاً در Host از Offer/Catalog ترکیب شده باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.PublishAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>بررسی Pending را منتشر می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Application.IReviewDirectory.RejectAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>بررسی Pending را با دلیل رد می‌کند.</summary>
+        </member>
+    </members>
+</doc>

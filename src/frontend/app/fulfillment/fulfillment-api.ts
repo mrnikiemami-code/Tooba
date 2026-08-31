@@ -4,6 +4,8 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import {
   DEV_ACTOR_HEADER,
@@ -432,6 +434,16 @@ export async function loadAdminFulfillments(): Promise<AdminResult<FulfillmentLi
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+/** Server GridQuery — fulfillment Admin. */
+export function queryAdminFulfillmentsGrid(
+  query: GridServerQuery,
+): Promise<AdminGridQueryResult<FulfillmentListRow>> {
+  return postAdminGridQuery("/v1/admin/fulfillments/query", query, adminActorHeader(), (item) => {
+    const rows = mapFulfillmentList([item]);
+    return rows[0] ?? null;
+  });
 }
 
 /** جزئیات fulfillment برای Admin. */

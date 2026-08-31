@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LegacyAppDataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
-import type { GridColumnDef } from "../../../design-system/data-grid";
+import { AppDataGrid, ErrorState, faWorkspaceMessages, createClientGridQueryAdapter, adminGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../../design-system";
+import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
 import { ADMIN_STORY_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
 import type { AdminLoadState } from "../../admin/admin-api";
 import {
@@ -15,6 +15,7 @@ import {
   enableAdminStory,
   listAdminStories,
   listSellerStories,
+  queryAdminStoriesGrid,
   rejectAdminStory,
   scheduleAdminStory,
   submitSellerStory,
@@ -91,17 +92,23 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
   });
   const [itemDraft, setItemDraft] = useState({ mediaType: "image", mediaUrl: "/images/stories/2.jpg" });
   const [scheduleDraft, setScheduleDraft] = useState({ startAt: "", endAt: "" });
+  const [reloadToken, setReloadToken] = useState(0);
 
   const refresh = useCallback(() => {
-    const request =
-      capabilities.mode === "seller"
-        ? listSellerStories()
-        : listAdminStories(reviewFilter ? { reviewStatus: reviewFilter } : undefined);
-    void request.then((result) => {
+    if (capabilities.mode === "seller") {
+      void listSellerStories().then((result) => {
+        setState(result.state);
+        setRows(result.data ?? []);
+        setMessage(result.message);
+      });
+      return;
+    }
+    void listAdminStories(reviewFilter ? { reviewStatus: reviewFilter } : undefined).then((result) => {
       setState(result.state);
       setRows(result.data ?? []);
       setMessage(result.message);
     });
+    setReloadToken((value) => value + 1);
   }, [capabilities.mode, reviewFilter]);
 
   useEffect(refresh, [refresh]);
@@ -315,6 +322,27 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
   }, [capabilities, refresh]);
 
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_STORY_GRID_VIEW_KEY), []);
+  const queryAdapter = useCallback(
+    async (query: GridServerQuery) => {
+      if (capabilities.mode === "seller") {
+        return createClientGridQueryAdapter(rows, columns)(query);
+      }
+      void reloadToken;
+      return adminGridQueryAdapter(
+        (serverQuery) =>
+          queryAdminStoriesGrid(serverQuery, reviewFilter ? { reviewStatus: reviewFilter } : undefined),
+        () => setState("denied"),
+        (detail) => setMessage(detail),
+      )(query);
+    },
+    [capabilities.mode, columns, reloadToken, reviewFilter, rows],
+  );
+  const gridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_STORY_GRID_VIEW_KEY,
+    columns,
+    queryAdapter,
+    savedViewStore,
+  });
 
   if (state === "denied") return <Denied retry={refresh} />;
 
@@ -362,7 +390,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
           {state === "error" ? (
             <ErrorState title={STORY_COPY.loadErrorTitle} detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
-            <LegacyAppDataGrid gridId={ADMIN_STORY_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />
+            <AppDataGrid<AdminStorySnapshot> {...gridProps} />
           )}
         </div>
       </section>

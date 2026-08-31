@@ -1,3 +1,5 @@
+using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Grid;
 using Tooba.Settlement.Application;
 
 namespace Tooba.Host.Settlement;
@@ -62,6 +64,15 @@ public sealed class SettlementPanelComposer
     /// <summary>صف payout (admin).</summary>
     public Task<IReadOnlyList<PayoutRequestSnapshot>> ListPayoutQueueAsync(CancellationToken cancellationToken) =>
         _settlement.ListPayoutQueueAsync(cancellationToken);
+
+    /// <summary>صفحه‌بندی server-side گرید payout Admin.</summary>
+    public async Task<GridPageResponse<PayoutRequestSnapshot>> QueryPayoutGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListPayoutQueueAsync(cancellationToken);
+        return AdminListGridPolicies.Payouts.Execute(rows, request);
+    }
 
     /// <summary>payout را پردازش می‌کند (admin/dev).</summary>
     public Task<PayoutRequestSnapshot> ProcessPayoutAsync(

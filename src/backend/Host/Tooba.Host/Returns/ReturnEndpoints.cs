@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 
@@ -27,6 +28,7 @@ public static class ReturnEndpoints
 
         var admin = app.MapGroup("/v1/admin");
         admin.MapGet("/returns", AdminListAsync);
+        admin.MapPost("/returns/query", AdminQueryGridAsync);
         admin.MapGet("/returns/{returnRequestId:guid}", AdminGetAsync);
         admin.MapPost("/returns/{returnRequestId:guid}/retry-refund", AdminRetryRefundAsync);
     }
@@ -210,6 +212,25 @@ public static class ReturnEndpoints
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }
+
+    private static Task<IResult> AdminQueryGridAsync(
+        GridQueryRequest body,
+        ReturnPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> AdminGetAsync(
         Guid returnRequestId,

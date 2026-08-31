@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
 using Tooba.Host.Admin;
 
@@ -15,6 +16,7 @@ public static class ContentEndpoints
 
         var admin = app.MapGroup("/v1/admin/content");
         admin.MapGet("/articles", AdminListAsync);
+        admin.MapPost("/articles/query", AdminQueryGridAsync);
         admin.MapGet("/articles/{id:guid}", AdminGetAsync);
         admin.MapPost("/articles", AdminCreateAsync);
         admin.MapPut("/articles/{id:guid}", AdminUpdateAsync);
@@ -61,6 +63,25 @@ public static class ContentEndpoints
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }
+
+    private static Task<IResult> AdminQueryGridAsync(
+        GridQueryRequest body,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> AdminGetAsync(
         Guid id,

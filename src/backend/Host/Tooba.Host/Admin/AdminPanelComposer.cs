@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
 using Tooba.Order.Domain;
@@ -79,6 +81,15 @@ public sealed class AdminPanelComposer
     {
         var groups = await LoadOrderGroupsAsync(cancellationToken);
         return groups.Select(MapOrderListItem).ToList();
+    }
+
+    /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin.</summary>
+    public async Task<GridPageResponse<AdminOrderListItem>> QueryOrdersGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListOrdersAsync(cancellationToken);
+        return AdminListGridPolicies.Orders.Execute(rows, request);
     }
 
     /// <summary>
@@ -219,6 +230,24 @@ public sealed class AdminPanelComposer
             })
             .OrderByDescending(x => x.LastOrderAt)
             .ToList();
+    }
+
+    /// <summary>صفحه‌بندی server-side گرید فروشندگان Admin.</summary>
+    public async Task<GridPageResponse<AdminSellerListItem>> QuerySellersGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListSellersAsync(cancellationToken);
+        return AdminListGridPolicies.Sellers.Execute(rows, request);
+    }
+
+    /// <summary>صفحه‌بندی server-side گرید مشتریان Admin.</summary>
+    public async Task<GridPageResponse<AdminCustomerListItem>> QueryCustomersGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListCustomersAsync(cancellationToken);
+        return AdminListGridPolicies.Customers.Execute(rows, request);
     }
 
     private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>

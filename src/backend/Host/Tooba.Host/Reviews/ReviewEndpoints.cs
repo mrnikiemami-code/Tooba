@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using Tooba.Reviews.Application;
@@ -19,6 +20,7 @@ public static class ReviewEndpoints
         app.MapPost("/v1/customer/reviews", SubmitAsync);
         app.MapGet("/v1/seller/reviews", SellerListAsync);
         app.MapGet("/v1/admin/reviews", PendingAsync);
+        app.MapPost("/v1/admin/reviews/query", QueryPendingGridAsync);
         app.MapPost("/v1/admin/reviews/{reviewId:guid}/publish", PublishAsync);
         app.MapPost("/v1/admin/reviews/{reviewId:guid}/reject", RejectAsync);
     }
@@ -133,6 +135,25 @@ public static class ReviewEndpoints
             pending.PageSize,
             pending.TotalCount));
     }
+
+    private static Task<IResult> QueryPendingGridAsync(
+        GridQueryRequest body,
+        ReviewPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryPendingGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> PublishAsync(Guid reviewId, HttpRequest request, CurrentAuthenticatedSession session,
         ICurrentTenant tenant, IAuthorizationGuard guard, IHostEnvironment environment, IReviewDirectory reviews, CancellationToken cancellationToken)

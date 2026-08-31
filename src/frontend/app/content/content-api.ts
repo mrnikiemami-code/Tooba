@@ -3,6 +3,8 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 
 export interface ContentArticleCard {
   articleId: string;
@@ -208,6 +210,15 @@ export async function loadAdminContentArticles(): Promise<AdminResult<AdminConte
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+/** Server GridQuery — مقالات Admin. */
+export function queryAdminContentArticlesGrid(
+  query: GridServerQuery,
+): Promise<AdminGridQueryResult<AdminContentArticle>> {
+  return postAdminGridQuery("/v1/admin/content/articles/query", query, adminHeaders(), (item) =>
+    mapAdminContentArticle(item),
+  );
 }
 
 export async function publishAdminArticle(articleId: string): Promise<boolean> {

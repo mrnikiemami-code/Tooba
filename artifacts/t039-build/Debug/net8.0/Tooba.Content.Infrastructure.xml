@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Content.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Content.Infrastructure.ContentDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ قطعی و idempotent برای مقالات Published خانه و بلاگ.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Threading.CancellationToken)">
+            <summary>چند مقالهٔ Published فارسی برای ریل خانه و بلاگ درج/تکمیل می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.ContentDirectory">
+            <summary>دایرکتوری Content با schema مستقل.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.#ctor(Tooba.Content.Infrastructure.Persistence.ContentDbContext)">
+            <summary>DbContext مالک را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.ListPublishedAsync(System.Int32,System.Int32,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.GetPublishedBySlugAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.ListPublishedForHomeAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.ListAllAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.GetByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.CreateAsync(Tooba.Content.Application.CreateArticleCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.UpdateAsync(System.Guid,Tooba.Content.Application.UpdateArticleCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.PublishAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentDirectory.UnpublishAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.ContentModule">
+            <summary>ماژول مستقل Content و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.ContentModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.ContentOutboxRegistration">
+            <summary>ثبت Outbox Content؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.ContentOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.ContentOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.ContentOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.ContentOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.Migrations.InitialContent">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContent.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContent.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContent.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.Migrations.InitialContentExpand">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContentExpand.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContentExpand.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Migrations.InitialContentExpand.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.Persistence.ContentDbContext">
+            <summary>DbContext مالک schema مستقل content.</summary>
+        </member>
+        <member name="F:Tooba.Content.Infrastructure.Persistence.ContentDbContext.Schema">
+            <summary>schema اختصاصی Content.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Persistence.ContentDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Content.Infrastructure.Persistence.ContentDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.Persistence.ContentDbContext.Articles">
+            <summary>مقالات تحریری.</summary>
+        </member>
+        <member name="P:Tooba.Content.Infrastructure.Persistence.ContentDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Persistence.ContentDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Content.Infrastructure.Persistence.ContentDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Content.</summary>
+        </member>
+        <member name="M:Tooba.Content.Infrastructure.Persistence.ContentDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

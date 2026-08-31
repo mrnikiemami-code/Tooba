@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LegacyAppDataGrid } from "../../design-system";
+import { AppDataGrid, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
 import type { GridColumnDef } from "../../design-system/data-grid";
 import { ADMIN_GIFT_CARD_GRID_VIEW_KEY, createHostSavedViewStore } from "../admin/saved-view-store";
 import {
@@ -573,6 +573,17 @@ export function AdminGiftCardsScreen() {
     },
   ], []);
 
+  const giftCardQueryAdapter = useCallback(
+    async (query) => createClientGridQueryAdapter(giftCardGridRows, giftCardColumns)(query),
+    [giftCardGridRows, giftCardColumns],
+  );
+  const giftCardGridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_GIFT_CARD_GRID_VIEW_KEY,
+    columns: giftCardColumns,
+    queryAdapter: giftCardQueryAdapter,
+    savedViewStore: giftCardSavedViewStore,
+  });
+
   useEffect(() => {
     void loadWalletDemoPreview().then((result) => {
       if (result.state === "ok" && result.data) {
@@ -722,12 +733,7 @@ export function AdminGiftCardsScreen() {
         </p>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden p-2" data-testid="admin-gift-cards-grid">
-          <LegacyAppDataGrid
-            gridId={ADMIN_GIFT_CARD_GRID_VIEW_KEY}
-            columns={giftCardColumns}
-            rows={giftCardGridRows}
-            savedViewStore={giftCardSavedViewStore}
-          />
+          <AppDataGrid<GiftCardSummary & { id: string }> {...giftCardGridProps} />
         </div>
       )}
     </div>

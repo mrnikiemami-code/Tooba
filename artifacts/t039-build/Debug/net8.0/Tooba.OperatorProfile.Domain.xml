@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.OperatorProfile.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.OperatorProfile.Domain.OperatorProfile">
+            <summary>
+            پروفایل توصیفی خصوصی اپراتور Admin. شناسه‌های ورود در Identity می‌مانند
+            و این aggregate جای تنظیمات سراسری platform را نمی‌گیرد.
+            </summary>
+        </member>
+        <member name="F:Tooba.OperatorProfile.Domain.OperatorProfile.DisplayNameMinLength">
+            <summary>حداقل طول نام نمایشی.</summary>
+        </member>
+        <member name="F:Tooba.OperatorProfile.Domain.OperatorProfile.DisplayNameMaxLength">
+            <summary>حداکثر طول نام نمایشی.</summary>
+        </member>
+        <member name="F:Tooba.OperatorProfile.Domain.OperatorProfile.NamePartMaxLength">
+            <summary>حداکثر طول نام/نام‌خانوادگی.</summary>
+        </member>
+        <member name="F:Tooba.OperatorProfile.Domain.OperatorProfile.BioMaxLength">
+            <summary>حداکثر طول بیوگرافی.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.OwnerUserId">
+            <summary>مالک سرورمحور؛ کلید اصلی و هرگز از بدنهٔ HTTP پذیرفته نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.FirstName">
+            <summary>نام کوچک اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.LastName">
+            <summary>نام خانوادگی اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.DisplayName">
+            <summary>نام نمایشی که UI اپراتور از آن استفاده می‌کند.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.Bio">
+            <summary>بیوگرافی اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Domain.OperatorProfile.UpdatedAt">
+            <summary>زمان آخرین ویرایش UTC.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Domain.OperatorProfile.Create(System.Guid,System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>پروفایل جدید برای Actor مشخص می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Domain.OperatorProfile.Update(System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>فیلدهای توصیفی مجاز را به‌روز می‌کند.</summary>
+        </member>
+    </members>
+</doc>

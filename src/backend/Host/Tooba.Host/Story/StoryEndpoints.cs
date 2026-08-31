@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using global::Tooba.Story.Application;
@@ -27,6 +28,7 @@ public static class StoryEndpoints
 
         var admin = app.MapGroup("/v1/admin/stories");
         admin.MapGet("", AdminListAsync);
+        admin.MapPost("/query", AdminQueryGridAsync);
         admin.MapGet("/{id:guid}", AdminGetAsync);
         admin.MapPost("", AdminCreateAsync);
         admin.MapPut("/{id:guid}", AdminUpdateAsync);
@@ -300,6 +302,46 @@ public static class StoryEndpoints
             }
 
             return Results.Json(await composer.AdminListAsync(tenantId, parsed, cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(
+                new { title = "Bad Request", errorCode = "story.tenant.missing", detail = ex.Message },
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+
+    private static async Task<IResult> AdminQueryGridAsync(
+        GridQueryRequest body,
+        StoryPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        string? reviewStatus = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            var tenantId = StoryPanelComposer.RequireTenantId(tenant);
+            StoryReviewStatus? parsed = null;
+            if (!string.IsNullOrWhiteSpace(reviewStatus))
+            {
+                if (!Enum.TryParse<StoryReviewStatus>(reviewStatus, ignoreCase: true, out var value)
+                    || !Enum.IsDefined(value))
+                {
+                    return Results.Json(
+                        new { title = "Bad Request", errorCode = "story.reviewStatus.invalid" },
+                        statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                parsed = value;
+            }
+
+            return Results.Json(await composer.QueryAdminGridAsync(tenantId, parsed, body, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
         catch (InvalidOperationException ex)

@@ -1,4 +1,6 @@
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Fulfillment.Application;
+using Tooba.Host.Grid;
 
 namespace Tooba.Host.Fulfillment;
 
@@ -57,6 +59,15 @@ public sealed class FulfillmentPanelComposer
     /// </summary>
     public Task<IReadOnlyList<FulfillmentSnapshot>> ListAllAsync(CancellationToken cancellationToken) =>
         _fulfillment.ListAllAsync(cancellationToken);
+
+    /// <summary>صفحه‌بندی server-side گرید fulfillment Admin.</summary>
+    public async Task<GridPageResponse<FulfillmentSnapshot>> QueryGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var rows = await ListAllAsync(cancellationToken);
+        return AdminListGridPolicies.Fulfillments.Execute(rows, request);
+    }
 
     /// <summary>
     /// fulfillmentهای یک checkout.

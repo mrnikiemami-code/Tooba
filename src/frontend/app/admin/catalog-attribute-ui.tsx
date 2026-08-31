@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LegacyAppDataGrid } from "../../design-system";
+import { AppDataGrid, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
 import type { GridColumnDef } from "../../design-system/data-grid";
 import { useSearchParams } from "next/navigation";
 import {
@@ -233,6 +233,17 @@ export function AttributeDefinitionsScreen() {
     },
   ], []);
 
+  const definitionQueryAdapter = useCallback(
+    async (query) => createClientGridQueryAdapter(definitionGridRows, definitionColumns)(query),
+    [definitionGridRows, definitionColumns],
+  );
+  const definitionGridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY,
+    columns: definitionColumns,
+    queryAdapter: definitionQueryAdapter,
+    savedViewStore: attributeSavedViewStore,
+  });
+
   async function onCreate() {
     setBusy(true);
     setError(null);
@@ -429,12 +440,7 @@ export function AttributeDefinitionsScreen() {
           <p className="mt-4 text-sm text-gray-500">تعریفی ثبت نشده است.</p>
         ) : (
           <div className="mt-4" data-testid="admin-attribute-definitions-grid">
-            <LegacyAppDataGrid
-              gridId={ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY}
-              columns={definitionColumns}
-              rows={definitionGridRows}
-              savedViewStore={attributeSavedViewStore}
-            />
+            <AppDataGrid<AttributeDefinition & { id: string }> {...definitionGridProps} />
           </div>
         )}
       </section>
@@ -823,6 +829,17 @@ export function CategorySchemaScreen() {
     },
   ], [busy]);
 
+  const schemaQueryAdapter = useCallback(
+    async (query) => createClientGridQueryAdapter(schemaGridRows, schemaColumns)(query),
+    [schemaGridRows, schemaColumns],
+  );
+  const schemaGridProps = useLegacyAdminGridDirectProps({
+    gridId: ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY,
+    columns: schemaColumns,
+    queryAdapter: schemaQueryAdapter,
+    savedViewStore: schemaSavedViewStore,
+  });
+
   return (
     <div className="space-y-6" dir="rtl" data-testid="admin-category-schema">
       <div>
@@ -863,12 +880,7 @@ export function CategorySchemaScreen() {
           <p className="mt-4 text-sm text-gray-500">ردیفی نیست یا رده بارگذاری نشده است.</p>
         ) : (
           <div className="mt-4" data-testid="admin-category-schema-grid">
-            <LegacyAppDataGrid
-              gridId={ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY}
-              columns={schemaColumns}
-              rows={schemaGridRows}
-              savedViewStore={schemaSavedViewStore}
-            />
+            <AppDataGrid<EffectiveSchemaEntry & { id: string }> {...schemaGridProps} />
           </div>
         )}
       </section>

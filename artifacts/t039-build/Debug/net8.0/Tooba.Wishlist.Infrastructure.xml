@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wishlist.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wishlist.Infrastructure.Migrations.InitialWishlist">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Migrations.InitialWishlist.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Migrations.InitialWishlist.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Migrations.InitialWishlist.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext">
+            <summary>DbContext مالک schema مستقل wishlist و Outbox همان ماژول.</summary>
+        </member>
+        <member name="F:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext.Schema">
+            <summary>نام schema اختصاصی Wishlist.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext})">
+            <summary>DbContext را با گزینه‌های ماژول می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext.Items">
+            <summary>مراجع خصوصی محصولات ذخیره‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext.OutboxMessages">
+            <summary>پیام‌های Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت‌های Wishlist.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wishlist.Infrastructure.WishlistDirectory">
+            <summary>پیاده‌سازی Wishlist که فقط schema خود و درگاه کاربردی Catalog را مصرف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.#ctor(Tooba.Wishlist.Infrastructure.Persistence.WishlistDbContext,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>وابستگی‌های مالک را بدون DbContext خارجی دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.AddAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.RemoveAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.ListAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.GetMembershipAsync(System.Guid,System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistDirectory.CountAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wishlist.Infrastructure.WishlistModule">
+            <summary>ماژول مستقل Wishlist با schema، قرارداد و Outbox اختصاصی.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.WishlistModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration">
+            <summary>ثبت Outbox Wishlist؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wishlist.Infrastructure.WishlistOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

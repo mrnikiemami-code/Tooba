@@ -4,6 +4,8 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import {
   DEV_ACTOR_HEADER,
@@ -431,6 +433,14 @@ export async function loadAdminReturns(): Promise<AdminResult<ReturnListRow[]>> 
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+/** Server GridQuery — مرجوعی Admin. */
+export function queryAdminReturnsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<ReturnListRow>> {
+  return postAdminGridQuery("/v1/admin/returns/query", query, adminActorHeader(), (item) => {
+    const rows = mapReturnList([item]);
+    return rows[0] ?? null;
+  });
 }
 
 /** جزئیات مرجوعی Admin. */

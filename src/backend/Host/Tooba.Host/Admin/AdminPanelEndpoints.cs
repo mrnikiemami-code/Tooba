@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.BuildingBlocks.Grid;
 using Tooba.Payment.Application;
 
 namespace Tooba.Host.Admin;
@@ -16,11 +17,14 @@ public static class AdminPanelEndpoints
         var group = app.MapGroup("/v1/admin");
         group.MapGet("/dashboard", GetDashboardAsync);
         group.MapGet("/orders", ListOrdersAsync);
+        group.MapPost("/orders/query", QueryOrdersGridAsync);
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
         group.MapPost("/payments/{paymentId:guid}/reconcile", ReconcilePaymentAsync);
         group.MapGet("/sellers", ListSellersAsync);
+        group.MapPost("/sellers/query", QuerySellersGridAsync);
         group.MapGet("/customers", ListCustomersAsync);
+        group.MapPost("/customers/query", QueryCustomersGridAsync);
         group.MapGet("/dev-context", GetDevContext);
     }
 
@@ -45,6 +49,25 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.ListOrdersAsync(cancellationToken));
+
+    private static Task<IResult> QueryOrdersGridAsync(
+        GridQueryRequest body,
+        AdminPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryOrdersGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> GetOrderAsync(
         Guid checkoutId,
@@ -134,6 +157,25 @@ public static class AdminPanelEndpoints
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.ListSellersAsync(cancellationToken));
 
+    private static Task<IResult> QuerySellersGridAsync(
+        GridQueryRequest body,
+        AdminPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QuerySellersGridAsync,
+            cancellationToken);
+
     private static async Task<IResult> ListCustomersAsync(
         AdminPanelComposer composer,
         HttpRequest request,
@@ -144,6 +186,25 @@ public static class AdminPanelEndpoints
         CancellationToken cancellationToken) =>
         await ExecuteAsync(request, session, tenant, guard, environment, cancellationToken,
             () => composer.ListCustomersAsync(cancellationToken));
+
+    private static Task<IResult> QueryCustomersGridAsync(
+        GridQueryRequest body,
+        AdminPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryCustomersGridAsync,
+            cancellationToken);
 
     private static async Task<IResult> ExecuteAsync<T>(
         HttpRequest request,

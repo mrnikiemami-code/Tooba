@@ -3,6 +3,8 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
+import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import {
   DEV_ACTOR_HEADER,
   readActorUserId,
@@ -329,6 +331,18 @@ export async function listAdminStories(options?: {
   } catch {
     return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
+}
+
+/** Server GridQuery — استوری Admin. */
+export function queryAdminStoriesGrid(
+  query: GridServerQuery,
+  options?: { reviewStatus?: string | null },
+): Promise<AdminGridQueryResult<AdminStorySnapshot>> {
+  const params = new URLSearchParams();
+  if (options?.reviewStatus) params.set("reviewStatus", options.reviewStatus);
+  const suffix = params.toString();
+  const path = `/v1/admin/stories/query${suffix ? `?${suffix}` : ""}`;
+  return postAdminGridQuery(path, query, adminHeaders(), (item) => mapAdminStory(item));
 }
 
 export async function createAdminStory(input: {

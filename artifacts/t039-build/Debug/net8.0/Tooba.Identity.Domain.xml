@@ -1,0 +1,516 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Identity.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Identity.Domain.UserAccountStatus">
+            <summary>
+            وضعیت چرخهٔ عمر حساب احراز هویت. مشتری، فروشنده یا Tenant نیست؛ فقط اجازهٔ ورود را محدود می‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.UserAccountStatus.Active">
+            <summary>
+            حساب فعال است و در صورت اعتبار درست می‌تواند احراز شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.UserAccountStatus.Disabled">
+            <summary>
+            حساب به‌صورت اداری تعلیق شده و نباید احراز شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.UserAccountStatus.Locked">
+            <summary>
+            حساب قفل شده (مثلاً پس از شکست‌های امنیتی) و نباید احراز شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.LoginIdentifierKind">
+            <summary>
+            گونهٔ شناسهٔ ورود. ستون ثابت Username/Email/Phone روی User نیست؛ نوع جدید با ثبت handler اضافه می‌شود نه بازنویسی هسته.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.LoginIdentifierKind.Username">
+            <summary>
+            نام کاربری انتخابی کاربر داخل همان دامنهٔ هویت.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.LoginIdentifierKind.Email">
+            <summary>
+            نشانی رایانامه پس از نرمال‌سازی مخصوص ایمیل.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.LoginIdentifierKind.Phone">
+            <summary>
+            شمارهٔ تلفن پس از نرمال‌سازی رقم‌محور بدون فرض ایران‌محور.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.LoginIdentifierKind.NationalId">
+            <summary>
+            شناسهٔ ملی یا معادل آینده؛ در این تسک احراز نمی‌شود ولی نوع رزرو شده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.LoginIdentifierKind.ExternalProvider">
+            <summary>
+            شناسهٔ پایدار ارائه‌دهندهٔ خارجی (issuer+subject جداگانه ذخیره می‌شود).
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.IdentifierVerificationState">
+            <summary>
+            وضعیت اثبات مالکیت شناسه. وجود شناسه با تأیید مالکیت یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.IdentifierVerificationState.Unverified">
+            <summary>
+            هنوز اثبات کنترل انجام نشده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.IdentifierVerificationState.Verified">
+            <summary>
+            مالکیت شناسه اثبات شده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.IdentifierVerificationState.Revoked">
+            <summary>
+            تأیید لغو شده و نباید برای ورود سیاست‌محور استفاده شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.MfaFactorKind">
+            <summary>
+            گونهٔ عامل MFA آینده. سیاست MFA نقش کسب‌وکار نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.MfaFactorKind.Otp">
+            <summary>
+            چالش یک‌بارمصرف پیامکی/ایمیلی به‌عنوان عامل دوم.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.MfaFactorKind.Totp">
+            <summary>
+            رمز زمان‌محور Authenticator.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.MfaFactorKind.WebAuthn">
+            <summary>
+            Passkey / WebAuthn.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.MfaFactorKind.ExternalIdpStepUp">
+            <summary>
+            ارتقای جلسه از طریق IdP خارجی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.OtpPurpose">
+            <summary>
+            هدف چالش OTP. یک هدف واحد hard-code نمی‌شود تا login/verify/reset/MFA جدا بمانند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.OtpPurpose.Login">
+            <summary>
+            ورود بدون رمز یا تکمیل ورود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.OtpPurpose.IdentifierVerification">
+            <summary>
+            اثبات مالکیت شناسه.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.OtpPurpose.PasswordReset">
+            <summary>
+            بازیابی رمز.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Domain.OtpPurpose.Mfa">
+            <summary>
+            عامل دوم MFA.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.LoginIdentifierNormalizer">
+            <summary>
+            نرمال‌سازی نوع‌ویژه برای جستجوی پایدار شناسه. یک Lowercase عمومی روی همهٔ انواع اعمال نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.LoginIdentifierNormalizer.Normalize(Tooba.Identity.Domain.LoginIdentifierKind,System.String)">
+            <summary>
+            مقدار نمایشی را trim می‌کند و مقدار نرمال را بر اساس گونه می‌سازد.
+            </summary>
+            <param name="kind">گونهٔ شناسه؛ قوانین جدا دارند.</param>
+            <param name="rawValue">ورودی کاربر؛ نباید لاگ شود اگر محرمانه تلقی شود.</param>
+            <returns>جفت نمایش و کلید نرمال.</returns>
+            <exception cref="T:System.ArgumentException">وقتی مقدار پس از نرمال تهی است.</exception>
+        </member>
+        <member name="M:Tooba.Identity.Domain.LoginIdentifierNormalizer.NormalizeEmail(System.String)">
+            <summary>
+            ایمیل: پیرایش و lowercase اینورینت؛ نقطه/plus collapsing انجام نمی‌شود تا رفتار ارائه‌دهنده حدس زده نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.LoginIdentifierNormalizer.NormalizeUsername(System.String)">
+            <summary>
+            نام کاربری: پیرایش و lowercase اینورینت برای یکتایی؛ فاصلهٔ داخلی حذف نمی‌شود تا قانون محصول جدا بماند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.LoginIdentifierNormalizer.NormalizePhone(System.String)">
+            <summary>
+            تلفن: فقط ارقام و حداکثر یک + ابتدایی؛ پیش‌فرض کشور ایران hard-code نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.LoginIdentifierNormalizer.NormalizeNationalId(System.String)">
+            <summary>
+            شناسهٔ ملی آینده: پیرایش و حذف جداکننده؛ قانون رقم ایران اینجا قفل نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.LoginIdentifier">
+            <summary>
+            شناسهٔ ورود متعلق به یک User. ستون ثابت روی خود User نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.Id">
+            <summary>
+            شناسهٔ پایدار ردیف شناسه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.UserId">
+            <summary>
+            کلید User مالک؛ FK بین‌ماژولی به Party نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.Kind">
+            <summary>
+            گونهٔ typed برای lookup.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.DisplayValue">
+            <summary>
+            مقدار نمایش برای کاربر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.NormalizedValue">
+            <summary>
+            کلید یکتایی در دامنهٔ هویت همان پایگاه Tenant/Marketplace.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.VerificationState">
+            <summary>
+            وضعیت اثبات مالکیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.IsPreferred">
+            <summary>
+            نشانهٔ ترجیح UX؛ جایگزین یکتایی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.CreatedAt">
+            <summary>
+            زمان ایجاد به‌وقت UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.LoginIdentifier.VerifiedAt">
+            <summary>
+            زمان تأیید در صورت Verified.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.PasswordCredential">
+            <summary>
+            فرادادهٔ هش رمز. plaintext و خود هش نباید لاگ شوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.PasswordCredential.UserId">
+            <summary>
+            کلید User.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.PasswordCredential.PasswordHash">
+            <summary>
+            خروجی hasher استاندارد ASP.NET؛ الگوریتم سفارشی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.PasswordCredential.HasherFormatVersion">
+            <summary>
+            نسخهٔ قالب هش برای ارتقای بعدی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.PasswordCredential.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر اعتبار.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.ExternalIdentityBinding">
+            <summary>
+            اتصال آینده به IdP. User به یک Keycloak خاص وابسته نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.ExternalIdentityBinding.Id">
+            <summary>
+            کلید پایدار اتصال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.ExternalIdentityBinding.UserId">
+            <summary>
+            User داخلی Tooba.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.ExternalIdentityBinding.Issuer">
+            <summary>
+            صادرکنندهٔ پایدار (مثلاً issuer OIDC)؛ ایمیل کلید نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.ExternalIdentityBinding.Subject">
+            <summary>
+            subject پایدار در همان issuer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.ExternalIdentityBinding.CreatedAt">
+            <summary>
+            زمان ایجاد اتصال.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.MfaFactorEnrollment">
+            <summary>
+            ثبت نام‌نویسی عامل MFA بدون پیاده‌سازی UI.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.MfaFactorEnrollment.Id">
+            <summary>
+            کلید ردیف نام‌نویسی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.MfaFactorEnrollment.UserId">
+            <summary>
+            User مالک عامل.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.MfaFactorEnrollment.FactorKind">
+            <summary>
+            گونهٔ عامل آینده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.MfaFactorEnrollment.IsEnabled">
+            <summary>
+            آیا عامل فعال است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.MfaFactorEnrollment.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.UserAccount">
+            <summary>
+            اصل احراز هویت. پروفایل مشتری، سازمان فروشنده یا Tenant نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.UserId">
+            <summary>
+            شناسهٔ پایدار User برای تحویل به Authorization بعدی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.Status">
+            <summary>
+            وضعیت ورود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر وضعیت یا اعتبار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.SecurityStamp">
+            <summary>
+            مهر امنیتی حساب. با تغییر رمز/بازنشانی/قفل افزایش می‌یابد تا نشست‌های قبلی Refresh نشوند. ماتریس مجوز محصول نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.Password">
+            <summary>
+            اعتبار رمز در صورت ثبت؛ نبودن یعنی ورود رمزی ممکن نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.Identifiers">
+            <summary>
+            شناسه‌های ورود متعلق به همین User. جدول جدا است نه ستون ثابت روی User.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserAccount.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserAccount.Register(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.DateTimeOffset)">
+            <summary>
+            User جدید با یک شناسه می‌سازد. فیلد کسب‌وکار Party اضافه نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserAccount.BumpSecurityStamp(System.DateTimeOffset)">
+            <summary>
+            مهر امنیتی را جلو می‌برد تا Refresh نشست‌های قبلی با همان نسخه نامعتبر شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserAccount.AddIdentifier(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.DateTimeOffset)">
+            <summary>
+            شناسهٔ ورود اضافی به همین User وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserAccount.Raise(Tooba.BuildingBlocks.IDomainEvent)">
+            <summary>
+            رویداد دامنه را صف می‌کند؛ انتشار Integration نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserAccount.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Domain.UserRegisteredDomainEvent">
+            <summary>
+            واقعیت داخلی ثبت User. هر Domain Event قرارداد خارجی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.UserRegisteredDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد ثبت را با UserId پایدار می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserRegisteredDomainEvent.UserId">
+            <summary>
+            User تازه ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.UserRegisteredDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Domain.AuthSession">
+            <summary>
+            نشست احراز هویت. User نیست، بلیت مجوز محصول نیست، و راز Refresh را plaintext نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.SessionId">
+            <summary>
+            شناسهٔ پایدار نشست؛ همان SessionHandle بلیت است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.UserId">
+            <summary>
+            اصل ورود مالک نشست. FK به Party نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.CreatedAt">
+            <summary>
+            زمان ایجاد نشست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.ExpiresAt">
+            <summary>
+            پایان اعتبار Refresh؛ پس از آن چرخش مجاز نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.LastUsedAt">
+            <summary>
+            آخرین استفادهٔ موفق (صدور یا چرخش).
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.RevokedAt">
+            <summary>
+            زمان لغو؛ تهی یعنی هنوز قابل Refresh است اگر مهر و انقضا درست باشند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.RevocationReason">
+            <summary>
+            علت لغو برای audit؛ راز نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.CredentialVersion">
+            <summary>
+            نسخهٔ مهر امنیتی در زمان صدور. اگر از User.SecurityStamp عقب بماند Refresh شکست می‌خورد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.Edition">
+            <summary>
+            Edition فرآیند در زمان صدور؛ از Host پارس نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.TenantId">
+            <summary>
+            Tenant پایدار فقط در Single-Store؛ در Marketplace تهی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.ClientLabel">
+            <summary>
+            برچسب اختیاری دستگاه/کلاینت؛ User-Agent خام نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.RefreshSecretHash">
+            <summary>
+            هش SHA-256 راز Refresh جاری. plaintext هرگز persist نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.PreviousRefreshSecretHash">
+            <summary>
+            هش راز قبلی پس از چرخش برای تشخیص reuse. اگر ارائه شود خانواده لغو می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthSession.RefreshFamilyId">
+            <summary>
+            خانوادهٔ چرخش برای تشخیص replay.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Domain.AuthSession.IsRefreshable(System.DateTimeOffset,System.Int32)">
+            <summary>
+            نشست هنوز برای چرخش زنده است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Domain.AuthChallenge">
+            <summary>
+            چالش یک‌بارمصرف هویت (ورود OTP، تأیید شناسه، بازنشانی رمز، MFA). راز plaintext ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.ChallengeId">
+            <summary>
+            شناسهٔ پایدار چالش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.UserId">
+            <summary>
+            User در صورت شناخته بودن. برای enumeration عمومی ممکن است تهی نماند فقط وقتی حساب پیدا شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.IdentifierHash">
+            <summary>
+            هش شناسه/مقصد؛ مقدار خام ایمیل/تلفن persist نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.Purpose">
+            <summary>
+            هدف کنترل‌شده. کلاینت نمی‌تواند رشتهٔ آزاد بفرستد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.SecretHash">
+            <summary>
+            هش راز یک‌بارمصرف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.CreatedAt">
+            <summary>
+            زمان صدور.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.ExpiresAt">
+            <summary>
+            انقضا؛ پس از آن Verify شکست می‌خورد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.ConsumedAt">
+            <summary>
+            زمان مصرف موفق؛ پس از آن چالش single-use است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.LockedAt">
+            <summary>
+            زمان قفل پس از حد تلاش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Domain.AuthChallenge.AttemptCount">
+            <summary>
+            شمار تلاش ناموفق. برای محدود کردن brute-force روی همین چالش است نه antifraud تجاری.
+            </summary>
+        </member>
+    </members>
+</doc>

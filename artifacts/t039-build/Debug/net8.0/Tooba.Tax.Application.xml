@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Tax.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Tax.Application.TaxCalculationRequest">
+            <summary>
+            ورودی محاسبه. نرخ را مشتری تزریق نمی‌کند؛ حوزه از Locale حدس زده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.TaxCalculationRequest.#ctor(System.Guid,System.String,System.String,System.String,System.Decimal,System.Int32,System.DateTimeOffset,System.Nullable{System.Guid},System.Boolean,System.Nullable{System.Decimal})">
+            <summary>
+            ورودی محاسبه. نرخ را مشتری تزریق نمی‌کند؛ حوزه از Locale حدس زده نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.TaxCalculationResult">
+            <summary>
+            خروجی صریح محاسبه. معافیت با نرخ صفر و نبودن قاعده یکی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.TaxCalculationResult.#ctor(Tooba.Tax.Domain.TaxOutcome,System.Decimal,System.Decimal,System.Decimal,System.Decimal,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            خروجی صریح محاسبه. معافیت با نرخ صفر و نبودن قاعده یکی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.TaxCategoryReference">
+            <summary>
+            مرجع طبقه برای Catalog/Offer بدون مبلغ مالیات.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.TaxCategoryReference.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            مرجع طبقه برای Catalog/Offer بدون مبلغ مالیات.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.TaxRuleReference">
+            <summary>
+            مرجع قاعده برای ادمین/آزمون. قانون کشور در کد نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.TaxRuleReference.#ctor(System.Guid,System.String,System.String,System.Guid,Tooba.Tax.Domain.TaxRuleKind,System.Decimal,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Tax.Domain.TaxRuleStatus,System.Int32)">
+            <summary>
+            مرجع قاعده برای ادمین/آزمون. قانون کشور در کد نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.ITaxUseCaseGuard">
+            <summary>
+            نگهبان موردکاربرد Tax.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن قاعده و طبقه را بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.ITaxCalculator">
+            <summary>
+            محاسبهٔ مالیات برای Checkout و نمایش تخمینی. Pricing را بازنویسی نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxCalculator.CalculateAsync(Tooba.Tax.Application.TaxCalculationRequest,System.Threading.CancellationToken)">
+            <summary>
+            مالیات را برای یک خط تجاری حساب می‌کند. شکست‌خورده صفر ساختگی برنمی‌گرداند مگر outcome صریح معاف/نرخ‌صفر.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Application.ITaxDirectory">
+            <summary>
+            نوشتن پیکربندی مالیات. فاکتور B2B و درگاه پرداخت اینجا نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxDirectory.CreateCategoryAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            طبقهٔ مات می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxDirectory.AssignOfferCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Offer را به طبقه وصل می‌کند؛ نرخ روی Offer ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxDirectory.CreateRuleAsync(System.String,System.String,System.Guid,Tooba.Tax.Domain.TaxRuleKind,System.Decimal,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Int32,Tooba.Tax.Domain.TaxOverridePolicy,System.Threading.CancellationToken)">
+            <summary>
+            قاعدهٔ مؤثر به تاریخ می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxDirectory.ActivateRuleAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            قاعده را فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Application.ITaxDirectory.ChangeRuleRateAsync(System.Guid,System.Decimal,System.Threading.CancellationToken)">
+            <summary>
+            نرخ قاعدهٔ درصدی را عوض می‌کند. تصویر سفارش قبلی را تغییر نمی‌دهد.
+            </summary>
+        </member>
+    </members>
+</doc>

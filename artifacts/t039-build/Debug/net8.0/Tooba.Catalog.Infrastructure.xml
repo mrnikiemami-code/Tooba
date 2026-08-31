@@ -1,0 +1,733 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Catalog.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Catalog.Infrastructure.OpenCatalogUseCaseGuard">
+            <summary>
+            نگهبان موقتی موردکاربرد. ماتریس SpiceDB/نقش روی موجودیت Catalog نوشته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.OpenCatalogUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.CatalogDirectory">
+            <summary>
+            پیاده‌سازی نوشتن/خواندن Catalog روی schema همین ماژول. Host و Search را parse/ایندکس نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.#ctor(Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext,Tooba.Catalog.Application.ICatalogUseCaseGuard,Tooba.Catalog.Application.ICatalogActorContext)">
+            <summary>
+            دایرکتوری را به DbContext Tenant-aware وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.FindProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.FindVariantAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.FindCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.FindReviewableProductBySlugAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.FindReviewableProductByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductTitlesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetCategoryNamesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetPrimaryCategoryIdsByVariantIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListCategoriesForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListBrandsForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListProductsForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetReviewableProductsByIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateCategoryAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateCategoryAsync(Tooba.Catalog.Application.CategoryCreateRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpdateCategoryCoreAsync(System.Guid,Tooba.Catalog.Application.CategoryCoreUpdateRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpsertCategoryTranslationAsync(System.Guid,Tooba.Catalog.Application.CategoryTranslationUpsertRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.MoveCategoryAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ReorderCategorySiblingsAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetCategoryTreeAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetCategoryWorkspaceAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ResolveCategoryRouteAsync(System.String,System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ArchiveCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PublishCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateBrandAsync(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateTagAsync(System.String,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListTagsAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetTagAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PublishTagAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AssignProductTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RemoveProductTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListProductTagsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AssignCategoryTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RemoveCategoryTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListCategoryTagsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateAttributeDefinitionAsync(System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Boolean,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpdateAttributeDefinitionAsync(System.Guid,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Int32},System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListAttributeDefinitionsAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetAttributeDefinitionAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PreviewVariantAxisCapabilityDisableImpactAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.SetAttributeDefinitionVariantAxisCapabilityAsync(System.Guid,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AddAttributeOptionAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.BindCategoryAttributeAsync(System.Guid,System.Guid,System.Int32,Tooba.Catalog.Application.CategoryAttributeAssignmentFlags,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpdateCategoryAttributeBindingAsync(System.Guid,System.Guid,Tooba.Catalog.Application.CategoryAttributeAssignmentFlags,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UnbindCategoryAttributeAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ReorderCategoryAttributeBindingsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetEffectiveCategorySchemaAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetEffectiveCategoryFacetsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListLocalFacetConfigurationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpsertCategoryFacetConfigurationAsync(System.Guid,System.Guid,Tooba.Catalog.Application.CategoryFacetConfigurationInput,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RemoveCategoryFacetOverrideAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ReorderCategoryFacetConfigurationsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetCategoryMegaMenuConfigurationAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpsertCategoryMegaMenuBindingAsync(System.Guid,System.String,Tooba.Catalog.Application.CategoryMegaMenuBindingInput,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RemoveCategoryMegaMenuBindingAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListMegaMenuPlacementOptionsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetStorefrontMegaMenuAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateProductAsync(Tooba.Catalog.Domain.CatalogProductKind,System.String,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpsertProductLocalizedFieldAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AssignCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AttachMediaReferenceAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AttachMediaReferenceAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AttachGeneratedPlaceholderMediaAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductMediaEditorStateAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ReorderProductMediaAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.SetProductPrimaryMediaAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PatchProductMediaAltAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.DetachProductMediaAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductMediaReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductSeoAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UpdateProductSeoAsync(System.Guid,Tooba.Catalog.Application.ProductSeoUpdateInput,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductSeoReadinessAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.EnforcePrimaryUniqueness(System.Collections.Generic.IList{Tooba.Catalog.Domain.CatalogProductMediaReference})">
+            <summary>
+            دقیقاً یک IsPrimary وقتی count&gt;0؛ در غیر این صورت اولین DisplayOrder.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.SetProductAttributeAsync(System.Guid,System.Guid,System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductAttributeEditorStateAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.SetProductAttributesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductAttributeValueInput},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductAttributeReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.SetProductVariantAxesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductVariantEditorStateAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PreviewProductVariantCombinationsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantSelectedAxisInput},System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ApplyProductVariantMatrixAsync(System.Guid,Tooba.Catalog.Application.ProductVariantApplyInput,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductVariantReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PreviewCategoryChangeAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PreviewCategoryChangeReportAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ReplaceProductPrimaryCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AddProductAdditionalCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RemoveProductAdditionalCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListProductCategoryAssignmentsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ValidateProductAttributesAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.GetProductPublishReadinessAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PublishProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.UnpublishProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ArchiveProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.RestoreProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.ListProductHistoryAsync(System.Guid,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.AppendProductHistoryAsync(System.Guid,System.String,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.PublishBrandAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.CreateVariantAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Guid,System.String,System.Nullable{System.Guid}}},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogDirectory.EnsureNotEffectiveVariantAxisOnProductAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            فقط وقتی در schema مؤثر دسته اصلی، این تعریف واقعاً محور تنوع است، ذخیره روی Product ممنوع است.
+            IsVariantAxis روی تعریف یعنی «مجاز به محور بودن»، نه الزام محور بودن در همهٔ دسته‌ها.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.CatalogModule">
+            <summary>
+            ماژول Catalog: حقیقت توصیفی محصول. قیمت، موجودی، Offer و UI تجاری اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.CatalogModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Catalog. ترجمه فقط رویدادهای صریح تصویر Search آینده است نه هر تغییر داخلی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.CatalogOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Events.CatalogProductCreatedIntegrationEvent">
+            <summary>
+            قرارداد Integration ایجاد محصول برای تصویر Search آینده. ایندکس اینجا ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Infrastructure.Events.CatalogProductCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductCreatedIntegrationEvent.ProductId">
+            <summary>
+            محصول توصیفی ایجادشده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Events.CatalogProductPublishedIntegrationEvent">
+            <summary>
+            قرارداد انتشار Catalog. قابل‌خرید بودن Offer را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Infrastructure.Events.CatalogProductPublishedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductPublishedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductPublishedIntegrationEvent.ProductId">
+            <summary>
+            محصول منتشرشده در Catalog.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Events.CatalogProductUpdatedIntegrationEvent">
+            <summary>
+            قرارداد به‌روزرسانی توصیفی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Infrastructure.Events.CatalogProductUpdatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductUpdatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogProductUpdatedIntegrationEvent.ProductId">
+            <summary>
+            محصول تغییر یافته.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Events.CatalogVariantCreatedIntegrationEvent">
+            <summary>
+            قرارداد ایجاد گونه. هویت Offer نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Infrastructure.Events.CatalogVariantCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogVariantCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogVariantCreatedIntegrationEvent.VariantId">
+            <summary>
+            گونه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Events.CatalogVariantCreatedIntegrationEvent.ProductId">
+            <summary>
+            محصول والد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext">
+            <summary>
+            DbContext مالک schema <c>catalog</c>. قیمت، موجودی و Offer اینجا نیستند و mega-context نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Schema">
+            <summary>
+            schema اختصاصی Catalog در پایگاه Tenant یا Marketplace.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Products">
+            <summary>
+            محصولات توصیفی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Variants">
+            <summary>
+            گونه‌های Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Categories">
+            <summary>
+            رده‌های طبقه‌بندی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.CategoryTranslations">
+            <summary>
+            ترجمه‌های محلی رده (نام/slug/SEO).
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.CategorySlugHistories">
+            <summary>
+            تاریخچهٔ slug محلی برای redirect.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Brands">
+            <summary>
+            برندهای تحریری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.Tags">
+            <summary>
+            برچسب‌های تاکسونومی Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.ProductTagAssignments">
+            <summary>
+            پیوند محصول ↔ برچسب.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.CategoryTagAssignments">
+            <summary>
+            پیوند رده ↔ برچسب.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.AttributeDefinitions">
+            <summary>
+            تعریف ویژگی تایپ‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.AttributeOptions">
+            <summary>
+            گزینه‌های شمارشی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.LocalizedTexts">
+            <summary>
+            متن چندزبانه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.ProductCategories">
+            <summary>
+            پیوند محصول-رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.MediaReferences">
+            <summary>
+            مرجع مات رسانه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.ProductAttributeValues">
+            <summary>
+            مشخصات غیرمحور محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.VariantAttributeValues">
+            <summary>
+            محورهای گونه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.CategoryAttributeBindings">
+            <summary>
+            پیوند تعریف ویژگی به رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.CategoryFacetConfigurations">
+            <summary>پیکربندی facet PLP رده.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.MegaMenuItems">
+            <summary>آیتم‌های presentation مگامنو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.MegaMenuItemTranslations">
+            <summary>override محلی عنوان مگامنو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.ProductVariantAxes">
+            <summary>
+            محورهای Variant انتخاب‌شدهٔ محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.ProductHistoryEntries">
+            <summary>
+            تاریخچهٔ append-only محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول برای تصویر Search آینده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Catalog. Tenant را از Host نمی‌خواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.CatalogDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.InitialCatalog">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.InitialCatalog.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.InitialCatalog.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.InitialCatalog.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddBrandLogoMediaAssetId">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddBrandLogoMediaAssetId.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddBrandLogoMediaAssetId.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddBrandLogoMediaAssetId.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.EnsureBrandLogoMediaAssetIdColumn">
+            <inheritdoc />
+            <remarks>
+            جبران migration خالی قبلی: ستون را فقط در صورت نبود اضافه می‌کند.
+            </remarks>
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.EnsureBrandLogoMediaAssetIdColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.EnsureBrandLogoMediaAssetIdColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.EnsureBrandLogoMediaAssetIdColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeSchemaFoundation">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeSchemaFoundation.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeSchemaFoundation.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeSchemaFoundation.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductMediaGalleryColumns">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductMediaGalleryColumns.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductMediaGalleryColumns.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductMediaGalleryColumns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFoundation">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFoundation.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFoundation.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFoundation.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeBindingBehavior">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeBindingBehavior.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeBindingBehavior.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryAttributeBindingBehavior.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFacetConfigurations">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFacetConfigurations.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFacetConfigurations.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryFacetConfigurations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddMegaMenuItems">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddMegaMenuItems.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddMegaMenuItems.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddMegaMenuItems.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogVariantSortOrderAndDefault">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogVariantSortOrderAndDefault.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogVariantSortOrderAndDefault.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogVariantSortOrderAndDefault.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductHistoryEntries">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductHistoryEntries.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductHistoryEntries.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductHistoryEntries.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductCategoryAssignmentRole">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductCategoryAssignmentRole.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddProductCategoryAssignmentRole.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryBannerMedia">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryBannerMedia.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCategoryBannerMedia.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogTagFoundation">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogTagFoundation.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Infrastructure.Persistence.Migrations.AddCatalogTagFoundation.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

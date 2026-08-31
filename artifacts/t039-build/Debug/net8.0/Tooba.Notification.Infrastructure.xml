@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Notification.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationDirectory">
+            <summary>
+            پیاده‌سازی دایرکتوری اعلان با idempotency روی SourceEventId.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.#ctor(Tooba.Notification.Infrastructure.Persistence.NotificationDbContext,Tooba.Notification.Infrastructure.NotificationInstrumentation)">
+            <summary>دایرکتوری را به schema notification وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.CreateIfAbsentAsync(Tooba.Notification.Application.CreateNotificationCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.ListAsync(Tooba.Notification.Application.NotificationRecipientQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.UnreadCountAsync(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.MarkReadAsync(System.Guid,Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.MarkAllReadAsync(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationDirectory.SoftDeleteAsync(System.Guid,Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationProjector">
+            <summary>
+            پروجکشن اعلان از snapshot گیرندگان Order بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationProjector.#ctor(Tooba.Notification.Application.INotificationDirectory,Tooba.Order.Application.IOrderNotificationReader)">
+            <summary>پروژکتور را به دایرکتوری و Order reader وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationProjector.ProjectFromCheckoutAsync(System.Guid,System.String,System.String,System.String,System.String,System.Object,System.Object,System.String,System.Func{System.Guid,System.String},System.Threading.CancellationToken)">
+            <summary>اعلان مشتری و فروشندگان checkout را از CheckoutId می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationProjector.ProjectFromSellerOrderAsync(System.Guid,System.String,System.String,System.String,System.String,System.Object,System.Func{System.Guid,System.String},System.String,System.Threading.CancellationToken)">
+            <summary>اعلان مشتری و فروشندهٔ یک SellerOrder را می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationPaymentSucceededHandler">
+            <summary>مصرف payment.succeeded.v1 → مشتری + فروشندگان.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationPaymentSucceededHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationPaymentSucceededHandler.HandleAsync(Tooba.Payment.Application.PaymentSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationPaymentFailedHandler">
+            <summary>مصرف payment.failed.v1 → فقط مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationPaymentFailedHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationPaymentFailedHandler.HandleAsync(Tooba.Payment.Application.PaymentFailedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationFulfillmentCreatedHandler">
+            <summary>مصرف fulfillment.created.v1 → مشتری + فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationFulfillmentCreatedHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationFulfillmentCreatedHandler.HandleAsync(Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationShipmentDispatchedHandler">
+            <summary>مصرف shipment.dispatched.v1 → مشتری + فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationShipmentDispatchedHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationShipmentDispatchedHandler.HandleAsync(Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationReturnRequestedHandler">
+            <summary>مصرف return.requested.v1 → مشتری + فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationReturnRequestedHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationReturnRequestedHandler.HandleAsync(Tooba.Returns.Application.ReturnRequestedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationReturnApprovedHandler">
+            <summary>مصرف return.approved.v1 → مشتری + فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationReturnApprovedHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationReturnApprovedHandler.HandleAsync(Tooba.Returns.Application.ReturnApprovedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationRefundSucceededHandler">
+            <summary>مصرف refund.succeeded.v1 → مشتری + فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationRefundSucceededHandler.#ctor(Tooba.Notification.Infrastructure.NotificationProjector)">
+            <summary>handler را به پروژکتور وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationRefundSucceededHandler.HandleAsync(Tooba.Returns.Application.RefundSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationInstrumentation">
+            <summary>
+            تله‌متری سبک Notification بدون محتوای خصوصی پیام.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationInstrumentation.RecordCreated(System.String,System.String)">
+            <summary>اعلان جدید.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationInstrumentation.RecordDuplicateSuppressed(System.String)">
+            <summary>تکرار رویداد سرکوب شد.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationInstrumentation.RecordReadTransition">
+            <summary>انتقال به خوانده‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationInstrumentation.CreatedCount">
+            <summary>شمارندهٔ ایجاد برای تست.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationInstrumentation.DuplicateSuppressedCount">
+            <summary>شمارندهٔ duplicate برای تست.</summary>
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationModule">
+            <summary>
+            ماژول Notification: inbox پایدار مشتری/فروشنده از رویدادهای تجاری. سفارش و پرداخت را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.NotificationOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Notification. فعلاً emit ندارد؛ فقط مصرف‌کنندهٔ رویدادهای تجاری است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.NotificationOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.Persistence.Migrations.InitialNotification">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.Migrations.InitialNotification.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.Migrations.InitialNotification.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.Migrations.InitialNotification.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext">
+            <summary>
+            DbContext مالک schema <c>notification</c>. سفارش و پرداخت را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext.Schema">
+            <summary>schema اختصاصی Notification.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Notification.Infrastructure.Persistence.NotificationDbContext})">
+            <summary>DbContext را با گزینه‌های Host می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext.Notifications">
+            <summary>اعلان‌های تراکنشی.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext.OutboxMessages">
+            <summary>Outbox همین ماژول (مصرف‌کننده؛ فعلاً emit ندارد).</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.NotificationDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Notification.Infrastructure.Persistence.NotificationDbContextFactory">
+            <summary>کارخانهٔ زمان طراحی مهاجرت.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Infrastructure.Persistence.NotificationDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>
