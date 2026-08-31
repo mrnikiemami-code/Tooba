@@ -804,5 +804,5 @@ Worker next = IDLE / waits for Bridge Task (no invented next task)
 Final HEAD/origin (TB-P07-T041):
 
 ```text
-6ca4601d
+0616ee47
 ```

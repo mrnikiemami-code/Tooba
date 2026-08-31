@@ -65,19 +65,19 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT current issued/repair points at TB-P07-T040 not stale pointers", () => {
+test("recovery SoT current issued/repair points at TB-P07-T041 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
-  assert.match(recovery, /TB-P07-T040/);
-  assert.match(state, /TB-P07-T040/);
+  assert.match(recovery, /TB-P07-T041/);
+  assert.match(state, /TB-P07-T041/);
   assert.match(recovery, /TB-P07-T039/);
   assert.match(state, /TB-P07-T039/);
 
   assert.match(
     state,
-    /Current Issued Task:\s*```text\s*TB-P07-T040\s*```/,
-    "PROJECT-STATE Current Issued Task must be TB-P07-T040",
+    /Current Issued Task:\s*```text\s*TB-P07-T041\s*```/,
+    "PROJECT-STATE Current Issued Task must be TB-P07-T041",
   );
 
   for (const stale of STALE_CURRENT_POINTERS) {
