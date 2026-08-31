@@ -33,6 +33,12 @@ test("admin nav groups Categories and Products distinctly", () => {
   assert.equal(messages.includes("Catalog / Products"), false);
 });
 
+test("categorySummaryIncludes matches full taxonomy path leaf", () => {
+  const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
+  assert.match(panel, /endsWith\(` > \$\{needle\}`\)/);
+  assert.match(panel, /split\(\/\\s\*>\\s\*\/\)/);
+});
+
 test("category products panel wires column header filters like product list", () => {
   const panel = fs.readFileSync(path.join(root, "app/admin/category-products-panel.tsx"), "utf8");
   assert.match(panel, /applyCategoryProductsFilterHeader/);

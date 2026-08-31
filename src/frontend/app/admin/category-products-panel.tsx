@@ -127,7 +127,14 @@ function categorySummaryIncludes(summary: string, categoryName: string): boolean
     .split(/[،,]/)
     .map((part) => part.trim())
     .filter(Boolean)
-    .some((part) => part === needle || part.endsWith(` / ${needle}`) || part.endsWith(`/${needle}`));
+    .some((part) => {
+      if (part === needle) return true;
+      if (part.endsWith(` / ${needle}`) || part.endsWith(`/${needle}`)) return true;
+      // مسیر کامل taxonomy: «L1 > L2 > L3»
+      if (part.endsWith(` > ${needle}`)) return true;
+      const segments = part.split(/\s*>\s*/).map((s) => s.trim()).filter(Boolean);
+      return segments[segments.length - 1] === needle;
+    });
 }
 
 function productStatusClass(status: string): string {

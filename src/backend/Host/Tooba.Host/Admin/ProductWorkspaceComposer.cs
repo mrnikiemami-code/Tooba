@@ -106,8 +106,7 @@ public sealed class ProductWorkspaceComposer
             : await _catalog.ProductCategories.AsNoTracking()
                 .Where(x => productIds.Contains(x.ProductId))
                 .ToListAsync(cancellationToken);
-        var categoryNames = await LoadNamesAsync(
-            CatalogLocalizedOwnerKind.Category,
+        var categoryPathById = await BuildCategoryPathMapAsync(
             categoryLinks.Select(x => x.CategoryId).Distinct().ToList(),
             cancellationToken);
         var brandIds = products
@@ -136,9 +135,9 @@ public sealed class ProductWorkspaceComposer
             var primaryLink = productLinks.FirstOrDefault(link => link.Role == CatalogProductCategoryRole.Primary);
             var categories = productLinks
                 .OrderByDescending(link => link.Role == CatalogProductCategoryRole.Primary)
-                .Select(link => categoryNames.GetValueOrDefault(link.CategoryId))
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .Select(name => name!)
+                .Select(link => categoryPathById.GetValueOrDefault(link.CategoryId))
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path!)
                 .Distinct()
                 .ToList();
             var productMedia = mediaRows
@@ -537,25 +536,78 @@ public sealed class ProductWorkspaceComposer
 
     private async Task<string> BuildCategoryPathAsync(Guid categoryId, CancellationToken cancellationToken)
     {
-        var categories = await _catalog.Categories.AsNoTracking().ToListAsync(cancellationToken);
-        var byId = categories.ToDictionary(x => x.CategoryId);
-        var chain = new List<Guid>();
-        var current = categoryId;
-        var seen = new HashSet<Guid>();
-        while (byId.TryGetValue(current, out var node) && seen.Add(current))
-        {
-            chain.Add(current);
-            if (node.ParentCategoryId is not Guid parent)
-            {
-                break;
-            }
+        var map = await BuildCategoryPathMapAsync([categoryId], cancellationToken);
+        return map.GetValueOrDefault(categoryId) ?? "رده";
+    }
 
-            current = parent;
+    /// <summary>
+    /// مسیر کامل رده‌ها را برای مجموعهٔ شناسه‌ها یک‌جا می‌سازد (یک بار درخت ParentId + یک بار نام‌ها).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, string>> BuildCategoryPathMapAsync(
+        IReadOnlyCollection<Guid> categoryIds,
+        CancellationToken cancellationToken)
+    {
+        if (categoryIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
         }
 
-        chain.Reverse();
-        var names = await LoadNamesAsync(CatalogLocalizedOwnerKind.Category, chain, cancellationToken);
-        return string.Join(" > ", chain.Select(id => names.GetValueOrDefault(id) ?? "رده"));
+        var parentById = await _catalog.Categories.AsNoTracking()
+            .ToDictionaryAsync(c => c.CategoryId, c => c.ParentCategoryId, cancellationToken);
+
+        var neededNames = new HashSet<Guid>();
+        foreach (var id in categoryIds)
+        {
+            var current = id;
+            var guard = 0;
+            while (parentById.ContainsKey(current) && neededNames.Add(current))
+            {
+                if (parentById[current] is not Guid parent)
+                {
+                    break;
+                }
+
+                current = parent;
+                if (++guard > parentById.Count + 2)
+                {
+                    break;
+                }
+            }
+        }
+
+        var names = await LoadNamesAsync(
+            CatalogLocalizedOwnerKind.Category,
+            neededNames.ToList(),
+            cancellationToken);
+
+        var paths = new Dictionary<Guid, string>(categoryIds.Count);
+        foreach (var id in categoryIds.Distinct())
+        {
+            if (!parentById.ContainsKey(id))
+            {
+                paths[id] = names.GetValueOrDefault(id) ?? "رده";
+                continue;
+            }
+
+            var chain = new List<Guid>();
+            var current = id;
+            var seen = new HashSet<Guid>();
+            while (parentById.ContainsKey(current) && seen.Add(current))
+            {
+                chain.Add(current);
+                if (parentById[current] is not Guid parent)
+                {
+                    break;
+                }
+
+                current = parent;
+            }
+
+            chain.Reverse();
+            paths[id] = string.Join(" > ", chain.Select(cid => names.GetValueOrDefault(cid) ?? "رده"));
+        }
+
+        return paths;
     }
 
     /// <summary>
