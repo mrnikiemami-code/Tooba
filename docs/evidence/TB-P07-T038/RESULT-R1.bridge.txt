@@ -1,0 +1,73 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_RESULT
+
+Task-ID:
+TB-P07-T038-R1
+
+Parent-Task:
+TB-P07-T038
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+1c6599cd-7bc0-4663-b22f-3ac717992d30
+
+Summary:
+Category Products grid + tree UX polish per user feedback: compact resizable actions column; comma-separated «نمایش در دسته‌های دیگر» with overflow tooltip; column header filters including additionalCategoryNames (FE matrix + BE grid filter on Additional-role links); tree expand/collapse-all + collapsible pane rail. T037/T038 semantics preserved (Primary no trash, L3-only). USER_VISUAL_ACCEPTED=NO.
+
+Category-Products-Grid:
+Compact actions (actionSlots 1–2, compact icons, resizable). Additional categories comma list via AdditionalCategoryListCell + AppGridTruncatedCell. Column widths/tooltips tuned (updatedAt 128px). Filters on all columns except media/primary/actions.
+
+Additional-Category-Filter:
+CATEGORY_PRODUCTS_GRID_FILTER_MATRIX additionalCategoryNames kind=text; AdminProductGridQueryPolicy FilterableFields + ResolveAdditionalCategoryNamesProductIdsAsync (Additional role only).
+
+Tree-UX:
+AppCategoryTree expand-all/collapse-all toolbar; category-admin-screen tree pane collapse + expand rail; collectExpandableParentIds helper.
+
+T038-Preservation:
+product-list still uses chips +N; category route-synced selection unchanged; batched leaf names unchanged.
+
+Full-Backend-Validation:
+Policy tests added (AdminProductGridAdditionalCategoryFilterPolicyTests). Full Host suite not re-run this session (Tooba.Host process lock). MigrationRunner not re-run.
+
+Full-Frontend-Validation:
+Focused suite 32/0 (category-products-panel, t038-category-grid-ux, app-category-tree contract + tree-model). Full production build not re-run this session.
+
+Live-Browser-R1:
+Prior live-browser-r1.json gaps remain (tree selection/search, +N live proof). Human visual review requested for new comma list + tree collapse UX.
+
+Recovery-SoT:
+Current repair TB-P07-T038-R1; HEAD aligned.
+
+Validation:
+git diff --check on committed files PASS. Focused FE tests PASS.
+
+Runtime:
+Host :5088 expected; FE :3000 expected (not re-probed this post).
+
+Evidence:
+docs/evidence/TB-P07-T038/category-products-ux-r2.md
+
+Git:
+HEAD=aa4346fc7ea40b6e09bfd69cba6ac61c6eebb629
+origin/main=aa4346fc7ea40b6e09bfd69cba6ac61c6eebb629
+HEAD==origin/main
+
+Architectural-Concerns:
+None blocking.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO — confirm filters, comma overflow tooltip, actions resize, tree collapse in browser.
+
+Blockers:
+Full backend suite + live browser R1 proof still open for Architect acceptance of original R1 gaps.
+
+END_TOOBA_RESULT
