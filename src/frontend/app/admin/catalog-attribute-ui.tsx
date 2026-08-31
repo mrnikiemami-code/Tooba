@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { LegacyAppDataGrid } from "../../design-system";
+import type { GridColumnDef } from "../../design-system/data-grid";
 import { useSearchParams } from "next/navigation";
 import {
   addAttributeOption,
@@ -30,6 +32,11 @@ import {
   VARIANT_AXIS_DISABLE_ZERO_USAGE_CONFIRM,
   VARIANT_AXIS_DISABLED_BY_KIND,
 } from "./variant-axis-messages.ts";
+import {
+  ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY,
+  ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY,
+  createHostSavedViewStore,
+} from "./saved-view-store.ts";
 
 const VALUE_KINDS: CatalogAttributeValueKind[] = [
   "Text",
@@ -123,6 +130,108 @@ export function AttributeDefinitionsScreen() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  const attributeSavedViewStore = useMemo(
+    () => createHostSavedViewStore(ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY),
+    [],
+  );
+  const definitionGridRows = useMemo(
+    () => rows.map((row) => ({ ...row, id: row.definitionId })),
+    [rows],
+  );
+  const definitionColumns = useMemo((): GridColumnDef<AttributeDefinition & { id: string }>[] => [
+    {
+      id: "code",
+      header: "کد",
+      accessor: (row) => row.code,
+      cell: (row) => (
+        <span className="font-medium" dir="ltr">
+          {row.code}
+        </span>
+      ),
+      width: 120,
+      minWidth: 90,
+      maxWidth: 180,
+      filterKind: "text",
+      sortable: true,
+      sticky: "start",
+    },
+    {
+      id: "valueKind",
+      header: "گونه",
+      accessor: (row) => row.valueKind,
+      cell: (row) => valueKindLabel(row.valueKind),
+      width: 110,
+      minWidth: 90,
+      maxWidth: 140,
+      sortable: true,
+    },
+    {
+      id: "variantAxis",
+      header: "محور",
+      accessor: (row) => (row.isVariantAxisAllowed ? "yes" : "no"),
+      cell: (row) => (row.isVariantAxisAllowed ? "بله" : "خیر"),
+      width: 80,
+      minWidth: 70,
+      maxWidth: 100,
+      filterKind: "status",
+      enumOptions: [
+        { value: "yes", label: "بله" },
+        { value: "no", label: "خیر" },
+      ],
+    },
+    {
+      id: "required",
+      header: "الزامی",
+      accessor: (row) => (row.isRequired ? "yes" : "no"),
+      cell: (row) => (row.isRequired ? "بله" : "خیر"),
+      width: 80,
+      minWidth: 70,
+      maxWidth: 100,
+    },
+    {
+      id: "active",
+      header: "فعال",
+      accessor: (row) => (row.isActive ? "yes" : "no"),
+      cell: (row) => (row.isActive ? "فعال" : "غیرفعال"),
+      width: 90,
+      minWidth: 70,
+      maxWidth: 110,
+      filterKind: "status",
+      enumOptions: [
+        { value: "yes", label: "فعال" },
+        { value: "no", label: "غیرفعال" },
+      ],
+    },
+    {
+      id: "actions",
+      header: "عملیات",
+      accessor: () => "",
+      cell: (row) => (
+        <span className="flex flex-wrap gap-2">
+          <button type="button" className={btnSecondary} onClick={() => openEdit(row)}>
+            فراداده
+          </button>
+          {row.valueKind === "Enumeration" ? (
+            <button
+              type="button"
+              className={btnSecondary}
+              onClick={() => {
+                setOptionDefId(row.definitionId);
+                setLastOptionId(null);
+                setSuccess(null);
+              }}
+            >
+              گزینه
+            </button>
+          ) : null}
+        </span>
+      ),
+      width: 180,
+      minWidth: 140,
+      maxWidth: 240,
+    },
+  ], []);
 
   async function onCreate() {
     setBusy(true);
@@ -319,50 +428,13 @@ export function AttributeDefinitionsScreen() {
         ) : rows.length === 0 ? (
           <p className="mt-4 text-sm text-gray-500">تعریفی ثبت نشده است.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[640px] text-right text-sm">
-              <thead className="border-b border-gray-200 text-gray-500">
-                <tr>
-                  <th className="py-2 font-medium">کد</th>
-                  <th className="font-medium">گونه</th>
-                  <th className="font-medium">محور</th>
-                  <th className="font-medium">الزامی</th>
-                  <th className="font-medium">فعال</th>
-                  <th className="font-medium">عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.definitionId} className="border-b border-gray-100">
-                    <td className="py-3 font-medium" dir="ltr">
-                      {row.code}
-                    </td>
-                    <td>{valueKindLabel(row.valueKind)}</td>
-                    <td>{row.isVariantAxisAllowed ? "بله" : "خیر"}</td>
-                    <td>{row.isRequired ? "بله" : "خیر"}</td>
-                    <td>{row.isActive ? "فعال" : "غیرفعال"}</td>
-                    <td className="space-x-2 space-x-reverse py-3">
-                      <button type="button" className={btnSecondary} onClick={() => openEdit(row)}>
-                        فراداده
-                      </button>
-                      {row.valueKind === "Enumeration" ? (
-                        <button
-                          type="button"
-                          className={btnSecondary}
-                          onClick={() => {
-                            setOptionDefId(row.definitionId);
-                            setLastOptionId(null);
-                            setSuccess(null);
-                          }}
-                        >
-                          گزینه
-                        </button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-4" data-testid="admin-attribute-definitions-grid">
+            <LegacyAppDataGrid
+              gridId={ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY}
+              columns={definitionColumns}
+              rows={definitionGridRows}
+              savedViewStore={attributeSavedViewStore}
+            />
           </div>
         )}
       </section>
@@ -670,6 +742,87 @@ export function CategorySchemaScreen() {
     await load(categoryId);
   }
 
+  const schemaSavedViewStore = useMemo(
+    () => createHostSavedViewStore(ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY),
+    [],
+  );
+  const schemaGridRows = useMemo(
+    () => rows.map((row) => ({ ...row, id: row.definitionId })),
+    [rows],
+  );
+  const schemaColumns = useMemo((): GridColumnDef<EffectiveSchemaEntry & { id: string }>[] => [
+    {
+      id: "code",
+      header: "کد",
+      accessor: (row) => row.code,
+      cell: (row) => (
+        <span className="font-medium" dir="ltr">
+          {row.code}
+        </span>
+      ),
+      width: 120,
+      minWidth: 90,
+      maxWidth: 180,
+      filterKind: "text",
+      sortable: true,
+      sticky: "start",
+    },
+    {
+      id: "required",
+      header: "الزامی",
+      accessor: (row) => (row.isRequired ? "yes" : "no"),
+      cell: (row) => (row.isRequired ? "بله" : "خیر"),
+      width: 80,
+      minWidth: 70,
+      maxWidth: 100,
+    },
+    {
+      id: "inheritedFrom",
+      header: "ارث از",
+      accessor: (row) => row.inheritedFromCategoryId ?? "",
+      cell: (row) => (
+        <span className="max-w-[180px] truncate font-mono text-xs" dir="ltr" title={row.inheritedFromCategoryId}>
+          {row.inheritedFromCategoryId || "—"}
+        </span>
+      ),
+      width: 140,
+      minWidth: 100,
+      maxWidth: 200,
+    },
+    {
+      id: "variantAllowed",
+      header: "محور مجاز",
+      accessor: (row) => (row.isVariantAxisAllowed ? "yes" : "no"),
+      cell: (row) => (row.isVariantAxisAllowed ? "بله" : "خیر"),
+      width: 100,
+      minWidth: 80,
+      maxWidth: 120,
+    },
+    {
+      id: "displayOrder",
+      header: "ترتیب",
+      accessor: (row) => row.displayOrder,
+      cell: (row) => <span className="tabular-nums">{row.displayOrder}</span>,
+      width: 80,
+      minWidth: 64,
+      maxWidth: 100,
+      sortable: true,
+    },
+    {
+      id: "actions",
+      header: "عملیات",
+      accessor: () => "",
+      cell: (row) => (
+        <button type="button" className={btnDanger} disabled={busy} onClick={() => void onUnbind(row.definitionId)}>
+          حذف پیوند
+        </button>
+      ),
+      width: 120,
+      minWidth: 100,
+      maxWidth: 150,
+    },
+  ], [busy]);
+
   return (
     <div className="space-y-6" dir="rtl" data-testid="admin-category-schema">
       <div>
@@ -709,44 +862,13 @@ export function CategorySchemaScreen() {
         ) : rows.length === 0 ? (
           <p className="mt-4 text-sm text-gray-500">ردیفی نیست یا رده بارگذاری نشده است.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-right text-sm">
-              <thead className="border-b border-gray-200 text-gray-500">
-                <tr>
-                  <th className="py-2 font-medium">کد</th>
-                  <th className="font-medium">الزامی</th>
-                  <th className="font-medium">ارث از</th>
-                  <th className="font-medium">محور مجاز</th>
-                  <th className="font-medium">ترتیب</th>
-                  <th className="font-medium">عملیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.definitionId} className="border-b border-gray-100">
-                    <td className="py-3 font-medium" dir="ltr">
-                      {row.code}
-                    </td>
-                    <td>{row.isRequired ? "بله" : "خیر"}</td>
-                    <td className="max-w-[180px] truncate font-mono text-xs" dir="ltr" title={row.inheritedFromCategoryId}>
-                      {row.inheritedFromCategoryId || "—"}
-                    </td>
-                    <td>{row.isVariantAxisAllowed ? "بله" : "خیر"}</td>
-                    <td className="tabular-nums">{row.displayOrder}</td>
-                    <td className="py-3">
-                      <button
-                        type="button"
-                        className={btnDanger}
-                        disabled={busy}
-                        onClick={() => void onUnbind(row.definitionId)}
-                      >
-                        حذف پیوند
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-4" data-testid="admin-category-schema-grid">
+            <LegacyAppDataGrid
+              gridId={ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY}
+              columns={schemaColumns}
+              rows={schemaGridRows}
+              savedViewStore={schemaSavedViewStore}
+            />
           </div>
         )}
       </section>

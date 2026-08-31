@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
-import { executeGridQuery } from "../../../design-system/data-grid/query-engine";
-import type { GridColumnDef, GridServerQuery } from "../../../design-system/data-grid";
+import { LegacyAppDataGrid, ErrorState, faWorkspaceMessages } from "../../../design-system";
+import type { GridColumnDef } from "../../../design-system/data-grid";
+import { ADMIN_STORY_GRID_VIEW_KEY, createHostSavedViewStore } from "../../admin/saved-view-store";
 import type { AdminLoadState } from "../../admin/admin-api";
 import {
   addAdminStoryItem,
@@ -314,7 +314,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
     return cols;
   }, [capabilities, refresh]);
 
-  const queryAdapter = useMemo(() => async (query: GridServerQuery) => executeGridQuery(rows, columns, query), [rows, columns]);
+  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_STORY_GRID_VIEW_KEY), []);
 
   if (state === "denied") return <Denied retry={refresh} />;
 
@@ -362,7 +362,7 @@ export function StoryManagementScreen({ capabilities }: { capabilities: StoryCap
           {state === "error" ? (
             <ErrorState title={STORY_COPY.loadErrorTitle} detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
           ) : (
-            <DataGrid columns={columns} queryAdapter={queryAdapter} />
+            <LegacyAppDataGrid gridId={ADMIN_STORY_GRID_VIEW_KEY} columns={columns} rows={rows} savedViewStore={savedViewStore} />
           )}
         </div>
       </section>

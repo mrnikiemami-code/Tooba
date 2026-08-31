@@ -5,6 +5,19 @@ import { migrateSavedView } from "../../design-system/app-data-grid/saved-view-s
 /** کلیدهای ترجیح UI برای نمایش‌های ذخیره‌شدهٔ Admin. */
 export const ADMIN_PRODUCT_GRID_VIEW_KEY = "grid.admin.products";
 export const ADMIN_ORDER_GRID_VIEW_KEY = "grid.admin.orders";
+export const ADMIN_FULFILLMENT_GRID_VIEW_KEY = "grid.admin.fulfillments";
+export const ADMIN_RETURN_GRID_VIEW_KEY = "grid.admin.returns";
+export const ADMIN_SELLER_GRID_VIEW_KEY = "grid.admin.sellers";
+export const ADMIN_CUSTOMER_GRID_VIEW_KEY = "grid.admin.customers";
+export const ADMIN_SETTLEMENT_GRID_VIEW_KEY = "grid.admin.settlement";
+export const ADMIN_REVIEW_GRID_VIEW_KEY = "grid.admin.reviews";
+export const ADMIN_PROMOTION_GRID_VIEW_KEY = "grid.admin.promotions";
+export const ADMIN_PAYOUT_GRID_VIEW_KEY = "grid.admin.payouts";
+export const ADMIN_CONTENT_GRID_VIEW_KEY = "grid.admin.content";
+export const ADMIN_STORY_GRID_VIEW_KEY = "grid.admin.stories";
+export const ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY = "grid.admin.catalog.attributes";
+export const ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY = "grid.admin.catalog.category-schema";
+export const ADMIN_GIFT_CARD_GRID_VIEW_KEY = "grid.admin.gift-cards";
 
 export const SAVED_VIEW_COLLECTION_SCHEMA_VERSION = 1;
 

@@ -40,13 +40,14 @@ TB-P07-T036-R1
 TB-P07-T037
 TB-P07-T038
 TB-P07-T038-R1
+TB-P07-T039
 ```
 
 
 Last Implementation Task:
 
 ```text
-TB-P07-T039
+TB-P07-T040
 ```
 
 Current Repair Task:
@@ -58,7 +59,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T039
+TB-P07-T040
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -398,16 +399,16 @@ by Bridge on channel `tooba-main`.
 7. P00 architecture docs remain `docs/architecture/00` through `27`. Bootstrap layout: `docs/architecture/28-platform-foundation-bootstrap.md`. Observability/error foundation: `docs/architecture/29-observability-error-foundation.md`. Tenant/edition/database foundation: `docs/architecture/30-tenant-edition-database-foundation.md`. PostgreSQL persistence foundation: `docs/architecture/31-postgresql-persistence-foundation.md`. Persian documentation standard: `docs/architecture/32-persian-code-documentation-standard.md`. Outbox/events/background foundation: `docs/architecture/33-outbox-domain-events-background-foundation.md`. MassTransit PostgreSQL SQL Transport: `docs/architecture/34-masstransit-postgresql-sql-transport.md`. Cache abstraction foundation: `docs/architecture/35-cache-abstraction-foundation.md`. Module composition and boundary enforcement: `docs/architecture/36-module-composition-boundary-enforcement.md`. P01 gate evidence: `docs/evidence/TB-P01-GATE.md`. Identity authentication foundation: `docs/architecture/37-identity-authentication-foundation.md`. SpiceDB authorization foundation: `docs/architecture/38-spicedb-authorization-foundation.md`. Party organization membership foundation: `docs/architecture/39-party-organization-membership-foundation.md`. Session/token/credential lifecycle: `docs/architecture/40-session-token-credential-lifecycle.md`. Authentication HTTP boundary: `docs/architecture/41-authentication-http-boundary.md`. Catalog product/variant foundation: `docs/architecture/42-catalog-product-variant-foundation.md`. Seller offer/listing foundation: `docs/architecture/43-seller-offer-listing-foundation.md`. Pricing foundation: `docs/architecture/44-pricing-foundation.md`. Deep Shopeiva Study and Professional Data Grid remain mandatory before serious UI.
 
 
-## Current focus (TB-P07-T039)
+## Current focus (TB-P07-T040)
 
 ```text
-Variant axis capability UX + impact-aware definition editing
+Admin grid standardization — LegacyAppDataGrid bridge for eligible Admin list surfaces
 USER_VISUAL_ACCEPTED=NO
 Worker next = IDLE / waits for Bridge Task (no invented next task)
 ```
 
-Final HEAD/origin (TB-P07-T039):
+Final HEAD/origin (TB-P07-T040):
 
 ```text
-3eeade1f
+(pending commit)
 ```

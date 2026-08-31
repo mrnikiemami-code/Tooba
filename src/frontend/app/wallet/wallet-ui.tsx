@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { LegacyAppDataGrid } from "../../design-system";
+import type { GridColumnDef } from "../../design-system/data-grid";
+import { ADMIN_GIFT_CARD_GRID_VIEW_KEY, createHostSavedViewStore } from "../admin/saved-view-store";
 import {
   CheckCircle,
   FileText,
@@ -494,6 +497,82 @@ export function AdminGiftCardsScreen() {
 
   useEffect(refresh, [refresh]);
 
+  const giftCardSavedViewStore = useMemo(
+    () => createHostSavedViewStore(ADMIN_GIFT_CARD_GRID_VIEW_KEY),
+    [],
+  );
+  const giftCardGridRows = useMemo(
+    () => rows.map((row) => ({ ...row, id: row.cardId })),
+    [rows],
+  );
+  const giftCardStatusOptions = [
+    { value: "Active", label: formatGiftCardStatus("Active") },
+    { value: "PartiallyRedeemed", label: formatGiftCardStatus("PartiallyRedeemed") },
+    { value: "Redeemed", label: formatGiftCardStatus("Redeemed") },
+    { value: "Expired", label: formatGiftCardStatus("Expired") },
+    { value: "Revoked", label: formatGiftCardStatus("Revoked") },
+  ];
+  const giftCardColumns = useMemo((): GridColumnDef<GiftCardSummary & { id: string }>[] => [
+    {
+      id: "cardId",
+      header: "شناسه",
+      accessor: (row) => row.cardId,
+      cell: (row) => (
+        <Link href={`/admin/gift-cards/${row.cardId}`} className="font-mono text-xs text-[#2563EB] hover:underline">
+          {row.cardId.slice(0, 8)}…
+        </Link>
+      ),
+      width: 120,
+      minWidth: 100,
+      maxWidth: 160,
+      filterKind: "text",
+      sortable: true,
+      sticky: "start",
+    },
+    {
+      id: "initialAmount",
+      header: "مبلغ اولیه",
+      accessor: (row) => row.initialAmount,
+      cell: (row) => formatWalletMoney(row.initialAmount),
+      width: 120,
+      minWidth: 100,
+      maxWidth: 160,
+      sortable: true,
+    },
+    {
+      id: "remainingAmount",
+      header: "مانده",
+      accessor: (row) => row.remainingAmount,
+      cell: (row) => formatWalletMoney(row.remainingAmount),
+      width: 120,
+      minWidth: 100,
+      maxWidth: 160,
+      sortable: true,
+    },
+    {
+      id: "status",
+      header: "وضعیت",
+      accessor: (row) => row.status,
+      cell: (row) => formatGiftCardStatus(row.status),
+      width: 120,
+      minWidth: 100,
+      maxWidth: 160,
+      filterKind: "status",
+      enumOptions: giftCardStatusOptions,
+    },
+    {
+      id: "issuedAt",
+      header: "صدور",
+      accessor: (row) => row.issuedAt,
+      cell: (row) => <span className="text-xs text-gray-500">{formatLedgerDate(row.issuedAt)}</span>,
+      width: 130,
+      minWidth: 100,
+      maxWidth: 170,
+      filterKind: "date",
+      sortable: true,
+    },
+  ], []);
+
   useEffect(() => {
     void loadWalletDemoPreview().then((result) => {
       if (result.state === "ok" && result.data) {
@@ -642,36 +721,13 @@ export function AdminGiftCardsScreen() {
           کارتی یافت نشد.
         </p>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm" data-testid="admin-gift-cards-table">
-            <thead className="bg-gray-50 text-gray-500 text-xs">
-              <tr>
-                <th className="text-right p-3 font-bold">شناسه</th>
-                <th className="text-right p-3 font-bold">مبلغ اولیه</th>
-                <th className="text-right p-3 font-bold">مانده</th>
-                <th className="text-right p-3 font-bold">وضعیت</th>
-                <th className="text-right p-3 font-bold">صدور</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {rows.map((row) => (
-                <tr key={row.cardId} className="hover:bg-gray-50">
-                  <td className="p-3">
-                    <Link
-                      href={`/admin/gift-cards/${row.cardId}`}
-                      className="font-mono text-xs text-[#2563EB] hover:underline"
-                    >
-                      {row.cardId.slice(0, 8)}…
-                    </Link>
-                  </td>
-                  <td className="p-3">{formatWalletMoney(row.initialAmount)}</td>
-                  <td className="p-3">{formatWalletMoney(row.remainingAmount)}</td>
-                  <td className="p-3">{formatGiftCardStatus(row.status)}</td>
-                  <td className="p-3 text-xs text-gray-500">{formatLedgerDate(row.issuedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden p-2" data-testid="admin-gift-cards-grid">
+          <LegacyAppDataGrid
+            gridId={ADMIN_GIFT_CARD_GRID_VIEW_KEY}
+            columns={giftCardColumns}
+            rows={giftCardGridRows}
+            savedViewStore={giftCardSavedViewStore}
+          />
         </div>
       )}
     </div>

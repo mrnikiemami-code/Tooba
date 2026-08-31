@@ -21,4 +21,7 @@ export {
   AppGridTruncatedCell,
 } from "./app-grid-cells";
 export { gridTooltipText, useOverflowTooltip } from "./use-overflow-tooltip";
-export { pinnedGridEdge } from "./grid-direction";
+export { LegacyAppDataGrid } from "./LegacyAppDataGrid";
+export type { LegacyAppDataGridProps } from "./LegacyAppDataGrid";
+export { buildLegacyGridBridge } from "./legacy-grid-bridge";
+export type { LegacyGridBridge } from "./legacy-grid-bridge";
