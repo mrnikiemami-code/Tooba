@@ -54,6 +54,48 @@ public sealed record AdminSellerOrderView(
     IReadOnlyList<AdminOrderLineView> Lines);
 
 /// <summary>
+/// برش مالی یک فروشنده در جزئیات سفارش مدیر.
+/// </summary>
+public sealed record AdminSellerFinancialView(
+    Guid SellerOrderId,
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    int LineCount,
+    decimal GrossAmount,
+    decimal CommissionAmount,
+    decimal PayableAmount,
+    string Currency,
+    string SettlementStatus);
+
+/// <summary>
+/// رویداد مالی در تاریخچهٔ checkout مدیر.
+/// </summary>
+public sealed record AdminFinancialEventView(
+    DateTimeOffset OccurredAt,
+    string EventType,
+    decimal Amount,
+    string Currency,
+    string PartyDisplayName,
+    string Reference,
+    string PaymentMethod,
+    string Status,
+    string Description);
+
+/// <summary>
+/// جمع‌بندی مالی checkout برای تب خلاصهٔ مالی.
+/// </summary>
+public sealed record AdminFinancialSummaryView(
+    decimal TotalSellerShare,
+    decimal TotalCommission,
+    decimal GrossOrderProfit,
+    decimal PayableToSellers,
+    decimal CustomerGrossAmount,
+    decimal ShippingCost,
+    decimal CustomerDiscounts,
+    decimal TotalReceivedFromCustomer,
+    string Currency);
+
+/// <summary>
 /// جزئیات عملیاتی سفارش با snapshot گیرنده و ارسال؛ راز پرداختی در آن وجود ندارد.
 /// </summary>
 public sealed record AdminOrderDetailPage(
@@ -62,6 +104,8 @@ public sealed record AdminOrderDetailPage(
     DateTimeOffset SubmittedAt,
     string Status,
     string PaymentState,
+    int LineCount,
+    int SellerCount,
     decimal Subtotal,
     decimal TaxAmount,
     decimal DiscountAmount,
@@ -75,7 +119,53 @@ public sealed record AdminOrderDetailPage(
     string PostalCode,
     string ShippingMethodLabel,
     IReadOnlyList<AdminSellerOrderView> SellerOrders,
+    IReadOnlyList<AdminSellerFinancialView> SellerFinancials,
+    IReadOnlyList<AdminFinancialEventView> FinancialEvents,
+    AdminFinancialSummaryView FinancialSummary,
     AdminPaymentOpsView? Payment = null);
+
+/// <summary>
+/// ردیف دریافت مشتری (پرداخت) برای گرید Admin.
+/// </summary>
+public sealed record AdminReceiptListItem(
+    Guid PaymentId,
+    Guid CheckoutId,
+    string OrderReference,
+    string CustomerDisplayName,
+    decimal Amount,
+    string Currency,
+    string Status,
+    string ProviderCode,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? CompletedAt);
+
+/// <summary>
+/// ماندهٔ تسویه با نام نمایشی فروشنده برای گرید Admin.
+/// </summary>
+public sealed record AdminSettlementBalanceListItem(
+    Guid SettlementAccountId,
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    string Currency,
+    decimal PostedCredits,
+    decimal PostedDebits,
+    decimal ReservedPayouts,
+    decimal AvailableBalance);
+
+/// <summary>
+/// درخواست payout با نام نمایشی فروشنده برای گرید Admin.
+/// </summary>
+public sealed record AdminPayoutListItem(
+    Guid PayoutRequestId,
+    Guid SettlementAccountId,
+    Guid SellerPartyId,
+    string SellerDisplayName,
+    decimal Amount,
+    string Currency,
+    string Status,
+    string IdempotencyKey,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
 
 /// <summary>
 /// بازرسی عملیاتی پرداخت روی جزئیات سفارش مدیر؛ راز یا payload خام ندارد.

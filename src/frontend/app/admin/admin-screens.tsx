@@ -13,25 +13,28 @@ import {
   formatAdminStatus,
   formatOrderSellerLabel,
   loadAdminDashboard,
-  loadAdminOrderDetail,
   moderateAdminReview,
   loadAdminPromotions,
   deactivateAdminPromotion,
   queryAdminOrdersGrid,
   queryAdminSellersGrid,
   queryAdminCustomersGrid,
+  queryAdminReceiptsGrid,
   queryAdminReviewsGrid,
   type AdminCustomerRow,
   type AdminDashboard,
   type AdminLoadState,
-  type AdminOrderDetail,
   type AdminOrderRow,
   type AdminResult,
   type AdminSellerRow,
   type AdminReviewRow,
   type AdminPromotionRow,
+  type AdminReceiptRow,
 } from "./admin-api";
-import { ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_FULFILLMENT_GRID_VIEW_KEY, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_CONTENT_GRID_VIEW_KEY } from "./saved-view-store";
+export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
+import {
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_FULFILLMENT_GRID_VIEW_KEY, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_CONTENT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+} from "./saved-view-store";
 import {
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
@@ -823,79 +826,110 @@ export function AdminPromotionsScreen() {
   );
 }
 
-/** جزئیات checkout شامل snapshot ارسال و خطوط هر فروشنده. */
-export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
-  const [result, setResult] = useState<AdminResult<AdminOrderDetail>>({ state: "ok", data: null, status: 0 });
-  const refresh = () => void loadAdminOrderDetail(checkoutId).then(setResult);
-  useEffect(refresh, [checkoutId]);
-  if (result.state === "denied") return <Denied retry={refresh} />;
-  const detail = result.data;
-  return (
-    <main>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title="جزئیات سفارش" description={detail?.reference ?? "در حال بارگذاری سفارش"} />
-        <Link className="text-sm text-primary hover:underline" href="/admin/orders">بازگشت به سفارش‌ها</Link>
-      </div>
-      {result.state === "error" ? <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} /> : detail ? (
-        <div className="grid gap-5">
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Info label="وضعیت" value={formatAdminStatus(detail.status)} />
-              <Info label="پرداخت" value={formatAdminStatus(detail.paymentState)} />
-              <Info label="تاریخ" value={formatAdminDate(detail.createdAt)} />
-              <Info label="قابل پرداخت" value={formatAdminMoney(detail.payableAmount, detail.currency)} />
-            </dl>
-          </section>
-          {detail.payment ? (
-            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-              <h2 className="font-semibold">پرداخت (سامانه)</h2>
-              <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Info label="PaymentId" value={detail.payment.paymentId} dir="ltr" />
-                <Info label="وضعیت درگاه" value={formatAdminStatus(detail.payment.status)} />
-                <Info label="Provider" value={detail.payment.providerCode || "—"} dir="ltr" />
-                <Info label="مرجع درگاه" value={detail.payment.providerRequestReference || "—"} dir="ltr" />
-                <Info label="تراکنش تأییدشده" value={detail.payment.providerTransactionReference || "—"} dir="ltr" />
-                <Info label="ایجاد" value={formatAdminDate(detail.payment.createdAt)} />
-                <Info label="به‌روزرسانی" value={formatAdminDate(detail.payment.updatedAt)} />
-                <Info label="شکست ایمن" value={detail.payment.lastFailureCode || "—"} />
-              </dl>
-            </section>
-          ) : null}
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <h2 className="font-semibold">گیرنده و ارسال</h2>
-            <p className="mt-3">{detail.recipientName} · <span dir="ltr">{detail.contactMobile || "—"}</span></p>
-            <p className="mt-2 text-sm text-muted">{detail.provinceName}، {detail.cityName}، {detail.postalAddress} · {detail.postalCode} · {detail.shippingMethodLabel}</p>
-          </section>
-          {detail.sellerOrders.map((order) => (
-            <section key={order.id} className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-              <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-semibold">{order.sellerDisplayName}</h2><p className="text-sm text-muted">{order.orderNumber}</p></div><Status value={order.status} /></div>
-              <ul className="mt-4 divide-y divide-border">
-                {order.lines.map((line) => <li key={line.id} className="flex flex-wrap justify-between gap-3 py-3"><div><p className="font-medium">{line.title}</p><p className="text-sm text-muted">{line.quantity.toLocaleString("fa-IR")} عدد × {formatAdminMoney(line.unitAmount, line.currency)}</p></div><strong>{formatAdminMoney(line.linePayable, line.currency)}</strong></li>)}
-              </ul>
-            </section>
-          ))}
-          <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
-            <div className="grid gap-3 sm:grid-cols-2"><MetricMoney label="جمع" value={detail.subtotal} currency={detail.currency} /><MetricMoney label="مالیات" value={detail.taxAmount} currency={detail.currency} /><MetricMoney label="تخفیف" value={detail.discountAmount} currency={detail.currency} /><MetricMoney label="قابل پرداخت" value={detail.payableAmount} currency={detail.currency} /></div>
-          </section>
-        </div>
-      ) : <p className="text-muted">در حال بارگذاری…</p>}
-    </main>
-  );
-}
+/** جزئیات checkout — re-export از admin-order-detail-screen. */
 
-function Info({ label, value, dir }: { label: string; value: string; dir?: "ltr" | "rtl" }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-sm text-muted">{label}</dt>
-      <dd className="mt-1 truncate font-semibold" dir={dir} title={value}>
-        {value}
-      </dd>
-    </div>
-  );
-}
+const receiptStatusEnumOptions = [
+  { value: "Pending", label: formatAdminStatus("Pending") },
+  { value: "Succeeded", label: formatAdminStatus("Succeeded") },
+  { value: "Failed", label: formatAdminStatus("Failed") },
+  { value: "Cancelled", label: formatAdminStatus("Cancelled") },
+];
 
-function MetricMoney({ label, value, currency }: { label: string; value: number; currency: string }) {
-  return <div className="flex justify-between rounded-ds bg-secondary/60 px-3 py-3"><span>{label}</span><strong>{formatAdminMoney(value, currency)}</strong></div>;
+const receiptRowActions: AppGridRowAction<AdminReceiptRow>[] = [
+  {
+    id: "view",
+    label: "مشاهده",
+    icon: Eye,
+    href: (row) => `/admin/orders/${row.checkoutId}`,
+    testId: (row) => `admin-receipt-view-${row.paymentId}`,
+  },
+];
+
+const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
+  {
+    id: "reference",
+    header: "سفارش",
+    accessor: (row) => row.orderReference,
+    cell: (row) => (
+      <Link className="font-semibold text-primary hover:underline" href={`/admin/orders/${row.checkoutId}`}>
+        {row.orderReference}
+      </Link>
+    ),
+    width: 180,
+    minWidth: 140,
+    maxWidth: 240,
+    sticky: "start",
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "customer",
+    header: "مشتری",
+    accessor: (row) => row.customerDisplayName,
+    width: 150,
+    minWidth: 110,
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "amount",
+    header: "مبلغ",
+    accessor: (row) => row.amount,
+    cell: (row) => formatAdminMoney(row.amount, row.currency),
+    width: 140,
+    minWidth: 110,
+    sortable: true,
+  },
+  {
+    id: "status",
+    header: "وضعیت",
+    accessor: (row) => row.status,
+    cell: (row) => <Status value={row.status} />,
+    width: 120,
+    minWidth: 100,
+    filterKind: "status",
+    enumOptions: receiptStatusEnumOptions,
+  },
+  {
+    id: "provider",
+    header: "درگاه",
+    accessor: (row) => row.providerCode,
+    cell: (row) => <span dir="ltr">{row.providerCode || "—"}</span>,
+    width: 120,
+    minWidth: 90,
+    filterKind: "text",
+  },
+  {
+    id: "created",
+    header: "تاریخ",
+    accessor: (row) => row.createdAt,
+    cell: (row) => formatAdminDate(row.createdAt),
+    width: 120,
+    minWidth: 100,
+    sortable: true,
+  },
+  {
+    id: "actions",
+    header: "عملیات",
+    accessor: () => "",
+    cell: (row) => <AppGridRowActionsCell row={row} actions={receiptRowActions} compact />,
+    exportable: false,
+    sortable: false,
+  },
+];
+
+/** فهرست دریافت‌های مشتری (پرداخت) برای Admin. */
+export function AdminReceiptsScreen() {
+  return (
+    <ServerGridPage
+      title="دریافت‌ها"
+      description="پرداخت‌های واقعی مشتریان با enrich سفارش از Host"
+      queryFn={queryAdminReceiptsGrid}
+      columns={receiptColumns}
+      gridId={ADMIN_RECEIPT_GRID_VIEW_KEY}
+      testId="admin-receipts"
+    />
+  );
 }
 
 type SettlementBalanceRow = SettlementBalance & { id: string };
@@ -905,11 +939,16 @@ const settlementBalanceColumns: GridColumnDef<SettlementBalanceRow>[] = [
   {
     id: "seller",
     header: "فروشنده",
-    accessor: (row) => row.sellerPartyId,
-    cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}…</span>,
-    width: 140,
-    minWidth: 110,
-    maxWidth: 180,
+    accessor: (row) => row.sellerDisplayName || row.sellerPartyId,
+    cell: (row) => (
+      <span className="text-sm">
+        <span className="block font-semibold">{row.sellerDisplayName || "فروشنده"}</span>
+        <span dir="ltr" className="font-mono text-xs text-muted">{row.sellerPartyId.slice(0, 8)}…</span>
+      </span>
+    ),
+    width: 180,
+    minWidth: 140,
+    maxWidth: 240,
     sticky: "start",
     filterKind: "text",
     sortable: true,
@@ -995,16 +1034,16 @@ export function AdminPayoutQueueScreen() {
     {
       id: "seller",
       header: "فروشنده",
-      accessor: (row) => row.sellerPartyId,
+      accessor: (row) => row.sellerDisplayName || row.sellerPartyId,
       cell: (row) => (
         <span className="text-sm">
-          <span className="block text-muted">شناسه کوتاه</span>
-          <span dir="ltr" className="font-mono text-xs">{row.sellerPartyId.slice(0, 8)}</span>
+          <span className="block font-semibold">{row.sellerDisplayName || "فروشنده"}</span>
+          <span dir="ltr" className="font-mono text-xs text-muted">{row.sellerPartyId.slice(0, 8)}…</span>
         </span>
       ),
-      width: 130,
-      minWidth: 100,
-      maxWidth: 170,
+      width: 170,
+      minWidth: 130,
+      maxWidth: 220,
       sticky: "start",
     },
     {

@@ -20,6 +20,11 @@ public sealed class AdminPanelCompositionTests
 
         var detail = typeof(AdminOrderDetailPage).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
         Assert.Contains("SellerOrders", detail);
+        Assert.Contains("LineCount", detail);
+        Assert.Contains("SellerCount", detail);
+        Assert.Contains("SellerFinancials", detail);
+        Assert.Contains("FinancialEvents", detail);
+        Assert.Contains("FinancialSummary", detail);
         Assert.Contains("PostalAddress", detail);
         Assert.DoesNotContain("ProductPrice", detail);
     }
@@ -52,6 +57,8 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("_orders.Checkouts.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("_parties.Parties.Join(", source, StringComparison.Ordinal);
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("_payments.GetLatestOperationalForCheckoutAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_settlement.ListEntriesBySellerOrderIdsAsync", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
     }

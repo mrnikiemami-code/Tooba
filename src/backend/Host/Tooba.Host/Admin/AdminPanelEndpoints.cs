@@ -25,6 +25,7 @@ public static class AdminPanelEndpoints
         group.MapPost("/sellers/query", QuerySellersGridAsync);
         group.MapGet("/customers", ListCustomersAsync);
         group.MapPost("/customers/query", QueryCustomersGridAsync);
+        group.MapPost("/payments/query", QueryPaymentsGridAsync);
         group.MapGet("/dev-context", GetDevContext);
     }
 
@@ -204,6 +205,25 @@ public static class AdminPanelEndpoints
             guard,
             environment,
             composer.QueryCustomersGridAsync,
+            cancellationToken);
+
+    private static Task<IResult> QueryPaymentsGridAsync(
+        GridQueryRequest body,
+        AdminPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryPaymentsGridAsync,
             cancellationToken);
 
     private static async Task<IResult> ExecuteAsync<T>(

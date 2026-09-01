@@ -61,6 +61,8 @@ test("maps admin order detail seller snapshots", () => {
   const detail = mapAdminOrderDetail({
     checkoutId: "c1",
     reference: "TOOBA-101",
+    lineCount: 2,
+    sellerCount: 1,
     payableAmount: 500,
     sellerOrders: [{
       sellerOrderId: "so1",
@@ -68,9 +70,34 @@ test("maps admin order detail seller snapshots", () => {
       sellerDisplayName: "آرمان",
       lines: [{ offerId: "o1", title: "پیراهن", quantity: 2, unitAmount: 200, linePayable: 400 }],
     }],
+    sellerFinancials: [{
+      sellerOrderId: "so1",
+      sellerPartyId: "sp1",
+      sellerDisplayName: "آرمان",
+      lineCount: 2,
+      grossAmount: 400,
+      commissionAmount: 8,
+      payableAmount: 392,
+      currency: "IRR",
+      settlementStatus: "Settled",
+    }],
+    financialSummary: {
+      totalSellerShare: 400,
+      totalCommission: 8,
+      grossOrderProfit: 8,
+      payableToSellers: 392,
+      customerGrossAmount: 400,
+      shippingCost: 0,
+      customerDiscounts: 0,
+      totalReceivedFromCustomer: 500,
+      currency: "IRR",
+    },
+    financialEvents: [],
   });
   assert.equal(detail?.sellerOrders[0]?.sellerDisplayName, "آرمان");
-  assert.equal(detail?.sellerOrders[0]?.lines[0]?.quantity, 2);
+  assert.equal(detail?.lineCount, 2);
+  assert.equal(detail?.sellerFinancials[0]?.settlementStatus, "Settled");
+  assert.equal(detail?.financialSummary.payableToSellers, 392);
 });
 
 test("uses Persian money and status labels", () => {

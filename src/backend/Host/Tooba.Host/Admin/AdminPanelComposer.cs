@@ -9,6 +9,9 @@ using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Application;
+using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Settlement.Application;
+using Tooba.Settlement.Domain;
 
 namespace Tooba.Host.Admin;
 
@@ -23,9 +26,11 @@ public sealed class AdminPanelComposer
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
     private readonly IPaymentAdminDirectory _payments;
+    private readonly ISettlementDirectory _settlement;
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
     private readonly AdminCustomersGridQueryEngine _customersGrid;
+    private readonly AdminPaymentsGridQueryEngine _paymentsGrid;
 
     /// <summary>
     /// ترکیب‌گر Host را با contextهای مستقل ماژول‌ها می‌سازد.
@@ -35,16 +40,20 @@ public sealed class AdminPanelComposer
         OfferDbContext offers,
         OrderDbContext orders,
         PartyDbContext parties,
-        IPaymentAdminDirectory payments)
+        PaymentDbContext paymentDb,
+        IPaymentAdminDirectory payments,
+        ISettlementDirectory settlement)
     {
         _catalog = catalog;
         _offers = offers;
         _orders = orders;
         _parties = parties;
         _payments = payments;
+        _settlement = settlement;
         _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
+        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders);
     }
 
     /// <summary>
@@ -167,12 +176,23 @@ public sealed class AdminPanelComposer
                 paymentOps.CompletedAt,
                 paymentOps.LastFailureCode,
                 paymentOps.ReconcileEligible);
+
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var settlementByOrder = await _settlement.ListEntriesBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
+        var lineCount = group.SellerOrders.Sum(x => x.Lines.Sum(line => line.Quantity));
+        var sellerCount = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count();
+        var sellerFinancials = BuildSellerFinancials(group, sellerNames, settlementByOrder);
+        var financialEvents = BuildFinancialEvents(group, sellerNames, paymentView, settlementByOrder);
+        var financialSummary = BuildFinancialSummary(group, sellerFinancials, paymentView);
+
         return new AdminOrderDetailPage(
             group.CheckoutId,
             listItem.Reference,
             group.SubmittedAt,
             listItem.Status,
             listItem.PaymentState,
+            lineCount,
+            sellerCount,
             group.SellerOrders.Sum(x => x.SubtotalSnapshot),
             group.SellerOrders.Sum(x => x.TaxSnapshot),
             group.SellerOrders.Sum(x => x.DiscountSnapshot),
@@ -186,6 +206,9 @@ public sealed class AdminPanelComposer
             group.PostalCode,
             group.ShippingMethodLabel,
             sellerOrders,
+            sellerFinancials,
+            financialEvents,
+            financialSummary,
             paymentView);
     }
 
@@ -256,6 +279,15 @@ public sealed class AdminPanelComposer
     {
         var q = AdminListGridPolicies.Customers.Normalize(request);
         return _customersGrid.QueryAsync(q, cancellationToken);
+    }
+
+    /// <summary>صفحه‌بندی server-side گرید دریافت‌های Admin (DB-native).</summary>
+    public Task<GridPageResponse<AdminReceiptListItem>> QueryPaymentsGridAsync(
+        GridQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var q = AdminListGridPolicies.Payments.Normalize(request);
+        return _paymentsGrid.QueryAsync(q, cancellationToken);
     }
 
     private async Task<IReadOnlyList<CheckoutGroup>> LoadOrderGroupsAsync(CancellationToken cancellationToken) =>
@@ -351,4 +383,122 @@ public sealed class AdminPanelComposer
 
     private static string PaymentState(SellerOrderStatus status) =>
         status == SellerOrderStatus.Paid ? "Paid" : status == SellerOrderStatus.Cancelled ? "Cancelled" : "PendingPayment";
+
+    private static IReadOnlyList<AdminSellerFinancialView> BuildSellerFinancials(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, string> sellerNames,
+        IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder)
+    {
+        return group.SellerOrders.Select(order =>
+        {
+            sellerNames.TryGetValue(order.SellerPartyId, out var sellerName);
+            settlementByOrder.TryGetValue(order.SellerOrderId, out var entries);
+            var credit = entries?.FirstOrDefault(x => x.EntryType == EntryType.Credit);
+            decimal gross;
+            decimal commission;
+            decimal payable;
+            string settlementStatus;
+            if (credit is not null)
+            {
+                gross = credit.GrossAmount;
+                commission = credit.CommissionAmount;
+                payable = credit.NetAmount;
+                settlementStatus = "Settled";
+            }
+            else
+            {
+                gross = order.SubtotalSnapshot;
+                commission = 0m;
+                payable = order.GrandTotalSnapshot;
+                settlementStatus = order.Status == SellerOrderStatus.Paid
+                    ? "WaitingForSettlement"
+                    : "NotSettled";
+            }
+
+            return new AdminSellerFinancialView(
+                order.SellerOrderId,
+                order.SellerPartyId,
+                sellerName ?? "فروشنده",
+                order.Lines.Sum(line => line.Quantity),
+                gross,
+                commission,
+                payable,
+                order.Currency,
+                settlementStatus);
+        }).ToList();
+    }
+
+    private static IReadOnlyList<AdminFinancialEventView> BuildFinancialEvents(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, string> sellerNames,
+        AdminPaymentOpsView? payment,
+        IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder)
+    {
+        var events = new List<AdminFinancialEventView>();
+        if (payment is not null)
+        {
+            events.Add(new AdminFinancialEventView(
+                payment.CompletedAt ?? payment.CreatedAt,
+                "CustomerReceipt",
+                payment.Amount,
+                payment.Currency,
+                string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+                payment.ProviderTransactionReference ?? payment.ProviderRequestReference ?? payment.PaymentId.ToString("N")[..12],
+                payment.ProviderCode,
+                payment.Status,
+                "دریافت از مشتری"));
+        }
+
+        foreach (var order in group.SellerOrders)
+        {
+            if (!settlementByOrder.TryGetValue(order.SellerOrderId, out var entries))
+            {
+                continue;
+            }
+
+            sellerNames.TryGetValue(order.SellerPartyId, out var sellerName);
+            foreach (var entry in entries)
+            {
+                events.Add(new AdminFinancialEventView(
+                    entry.PostedAt,
+                    entry.EntryType == EntryType.Credit ? "SellerSettlement" : "SettlementAdjustment",
+                    entry.NetAmount,
+                    entry.Currency,
+                    sellerName ?? "فروشنده",
+                    entry.EntryId.ToString("N")[..12],
+                    entry.SourceType,
+                    "Succeeded",
+                    entry.EntryType == EntryType.Credit
+                        ? $"تسویه سهم سفارش {order.OrderNumber}"
+                        : $"تعدیل تسویه سفارش {order.OrderNumber}"));
+            }
+        }
+
+        return events.OrderByDescending(x => x.OccurredAt).ToList();
+    }
+
+    private static AdminFinancialSummaryView BuildFinancialSummary(
+        CheckoutGroup group,
+        IReadOnlyList<AdminSellerFinancialView> sellerFinancials,
+        AdminPaymentOpsView? payment)
+    {
+        var currency = group.SellerOrders.Select(x => x.Currency).FirstOrDefault() ?? "IRR";
+        var totalSellerShare = sellerFinancials.Sum(x => x.GrossAmount);
+        var totalCommission = sellerFinancials.Sum(x => x.CommissionAmount);
+        var payableToSellers = sellerFinancials.Sum(x => x.PayableAmount);
+        var customerGross = group.SellerOrders.Sum(x => x.SubtotalSnapshot);
+        var shippingCost = 0m;
+        var customerDiscounts = group.SellerOrders.Sum(x => x.DiscountSnapshot);
+        var totalReceived = payment?.Amount ?? group.SellerOrders.Sum(x => x.GrandTotalSnapshot);
+        return new AdminFinancialSummaryView(
+            totalSellerShare,
+            totalCommission,
+            totalCommission,
+            payableToSellers,
+            customerGross,
+            shippingCost,
+            customerDiscounts,
+            totalReceived,
+            currency);
+    }
 }

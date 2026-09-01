@@ -59,25 +59,25 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T041
+TB-P07-T042
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T041-R1
+TB-P07-T042
 ```
 
 Current Repair Task:
 
 ```text
-TB-P07-T041-R1
+(none)
 ```
 
 Implemented Under Review:
 
 ```text
-TB-P07-T041 (under repair by TB-P07-T041-R1); TB-P07-T040 = NOT_ACCEPTED; last accepted baseline TB-P07-T039
+TB-P07-T042 — Order Detail + Marketplace Finance UX; TB-P07-T041-R1 superseded by T042 scope overlap; last accepted baseline TB-P07-T039
 ```
 
 USER_VISUAL_ACCEPTED:

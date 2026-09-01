@@ -33,7 +33,7 @@ public sealed class AdminListGridQueryEngineTests
     }
 
     [Fact]
-    public void Orders_policy_rejects_invalid_filter_field()
+    public void Payments_policy_rejects_invalid_filter_field()
     {
         var request = new GridQueryRequest(
             1,
@@ -43,6 +43,6 @@ public sealed class AdminListGridQueryEngineTests
             [new GridFilterRequest("unknown", "contains", "x", null, null)],
             null);
 
-        Assert.Throws<PlatformHttpException>(() => AdminListGridPolicies.Orders.Normalize(request));
+        Assert.Throws<PlatformHttpException>(() => AdminListGridPolicies.Payments.Normalize(request));
     }
 }

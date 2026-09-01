@@ -202,6 +202,27 @@ public sealed class SettlementDirectory : ISettlementDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>>> ListEntriesBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerOrderIds.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>>();
+        }
+
+        var entries = await _db.SettlementEntries.AsNoTracking()
+            .Where(x => x.SellerOrderId != null && sellerOrderIds.Contains(x.SellerOrderId.Value))
+            .OrderByDescending(x => x.PostedAt)
+            .ToListAsync(cancellationToken);
+        return entries
+            .GroupBy(x => x.SellerOrderId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<SettlementEntrySnapshot>)group.Select(MapEntry).ToArray());
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<SettlementStatementSnapshot>> ListStatementsAsync(
         Guid sellerPartyId,
         CancellationToken cancellationToken)

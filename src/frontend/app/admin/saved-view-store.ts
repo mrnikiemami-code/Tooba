@@ -13,6 +13,7 @@ export const ADMIN_SETTLEMENT_GRID_VIEW_KEY = "grid.admin.settlement";
 export const ADMIN_REVIEW_GRID_VIEW_KEY = "grid.admin.reviews";
 export const ADMIN_PROMOTION_GRID_VIEW_KEY = "grid.admin.promotions";
 export const ADMIN_PAYOUT_GRID_VIEW_KEY = "grid.admin.payouts";
+export const ADMIN_RECEIPT_GRID_VIEW_KEY = "grid.admin.receipts";
 export const ADMIN_CONTENT_GRID_VIEW_KEY = "grid.admin.content";
 export const ADMIN_STORY_GRID_VIEW_KEY = "grid.admin.stories";
 export const ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY = "grid.admin.catalog.attributes";

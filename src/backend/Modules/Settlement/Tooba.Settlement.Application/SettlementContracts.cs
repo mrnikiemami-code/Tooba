@@ -198,6 +198,11 @@ public interface ISettlementDirectory
     /// <summary>سطرهای posted فروشنده را فهرست می‌کند.</summary>
     Task<IReadOnlyList<SettlementEntrySnapshot>> ListEntriesAsync(Guid sellerPartyId, CancellationToken cancellationToken);
 
+    /// <summary>سطرهای posted مرتبط با سفارش‌های فروشنده را batch می‌خواند.</summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>>> ListEntriesBySellerOrderIdsAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+
     /// <summary>صورت‌حساب‌های فروشنده را فهرست می‌کند.</summary>
     Task<IReadOnlyList<SettlementStatementSnapshot>> ListStatementsAsync(Guid sellerPartyId, CancellationToken cancellationToken);
 

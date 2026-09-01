@@ -62,12 +62,50 @@ export interface AdminSellerOrder {
   lines: AdminOrderLine[];
 }
 
+export interface AdminSellerFinancial {
+  sellerOrderId: string;
+  sellerPartyId: string;
+  sellerDisplayName: string;
+  lineCount: number;
+  grossAmount: number;
+  commissionAmount: number;
+  payableAmount: number;
+  currency: string;
+  settlementStatus: string;
+}
+
+export interface AdminFinancialEvent {
+  occurredAt: string;
+  eventType: string;
+  amount: number;
+  currency: string;
+  partyDisplayName: string;
+  reference: string;
+  paymentMethod: string;
+  status: string;
+  description: string;
+}
+
+export interface AdminFinancialSummary {
+  totalSellerShare: number;
+  totalCommission: number;
+  grossOrderProfit: number;
+  payableToSellers: number;
+  customerGrossAmount: number;
+  shippingCost: number;
+  customerDiscounts: number;
+  totalReceivedFromCustomer: number;
+  currency: string;
+}
+
 export interface AdminOrderDetail {
   checkoutId: string;
   reference: string;
   createdAt: string;
   status: string;
   paymentState: string;
+  lineCount: number;
+  sellerCount: number;
   subtotal: number;
   taxAmount: number;
   discountAmount: number;
@@ -81,7 +119,24 @@ export interface AdminOrderDetail {
   postalCode: string;
   shippingMethodLabel: string;
   sellerOrders: AdminSellerOrder[];
+  sellerFinancials: AdminSellerFinancial[];
+  financialEvents: AdminFinancialEvent[];
+  financialSummary: AdminFinancialSummary;
   payment?: AdminPaymentOps | null;
+}
+
+export interface AdminReceiptRow {
+  id: string;
+  paymentId: string;
+  checkoutId: string;
+  orderReference: string;
+  customerDisplayName: string;
+  amount: number;
+  currency: string;
+  status: string;
+  providerCode: string;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export interface AdminPaymentOps {
@@ -311,6 +366,8 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     createdAt: text(prop(item, "createdAt", "CreatedAt"), text(prop(item, "submittedAt", "SubmittedAt"))),
     status: text(prop(item, "status", "Status")),
     paymentState: text(prop(item, "paymentState", "PaymentState")),
+    lineCount: number(prop(item, "lineCount", "LineCount")),
+    sellerCount: number(prop(item, "sellerCount", "SellerCount")),
     subtotal: number(prop(item, "subtotal", "Subtotal")),
     taxAmount: number(prop(item, "taxAmount", "TaxAmount")),
     discountAmount: number(prop(item, "discountAmount", "DiscountAmount")),
@@ -324,7 +381,89 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     postalCode: text(prop(item, "postalCode", "PostalCode")),
     shippingMethodLabel: text(prop(item, "shippingMethodLabel", "ShippingMethodLabel")),
     sellerOrders,
+    sellerFinancials: array(prop(item, "sellerFinancials", "SellerFinancials")).flatMap((raw): AdminSellerFinancial[] => {
+      const row = record(raw);
+      if (!row) return [];
+      const sellerOrderId = text(prop(row, "sellerOrderId", "SellerOrderId"));
+      if (!sellerOrderId) return [];
+      return [{
+        sellerOrderId,
+        sellerPartyId: text(prop(row, "sellerPartyId", "SellerPartyId")),
+        sellerDisplayName: text(prop(row, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
+        lineCount: number(prop(row, "lineCount", "LineCount")),
+        grossAmount: number(prop(row, "grossAmount", "GrossAmount")),
+        commissionAmount: number(prop(row, "commissionAmount", "CommissionAmount")),
+        payableAmount: number(prop(row, "payableAmount", "PayableAmount")),
+        currency: text(prop(row, "currency", "Currency"), "IRR"),
+        settlementStatus: text(prop(row, "settlementStatus", "SettlementStatus"), "NotSettled"),
+      }];
+    }),
+    financialEvents: array(prop(item, "financialEvents", "FinancialEvents")).flatMap((raw): AdminFinancialEvent[] => {
+      const row = record(raw);
+      if (!row) return [];
+      return [{
+        occurredAt: text(prop(row, "occurredAt", "OccurredAt")),
+        eventType: text(prop(row, "eventType", "EventType")),
+        amount: number(prop(row, "amount", "Amount")),
+        currency: text(prop(row, "currency", "Currency"), "IRR"),
+        partyDisplayName: text(prop(row, "partyDisplayName", "PartyDisplayName"), "—"),
+        reference: text(prop(row, "reference", "Reference")),
+        paymentMethod: text(prop(row, "paymentMethod", "PaymentMethod")),
+        status: text(prop(row, "status", "Status")),
+        description: text(prop(row, "description", "Description")),
+      }];
+    }),
+    financialSummary: mapAdminFinancialSummary(prop(item, "financialSummary", "FinancialSummary")),
     payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
+  };
+}
+
+function mapAdminFinancialSummary(value: unknown): AdminFinancialSummary {
+  const item = record(value);
+  if (!item) {
+    return {
+      totalSellerShare: 0,
+      totalCommission: 0,
+      grossOrderProfit: 0,
+      payableToSellers: 0,
+      customerGrossAmount: 0,
+      shippingCost: 0,
+      customerDiscounts: 0,
+      totalReceivedFromCustomer: 0,
+      currency: "IRR",
+    };
+  }
+  return {
+    totalSellerShare: number(prop(item, "totalSellerShare", "TotalSellerShare")),
+    totalCommission: number(prop(item, "totalCommission", "TotalCommission")),
+    grossOrderProfit: number(prop(item, "grossOrderProfit", "GrossOrderProfit")),
+    payableToSellers: number(prop(item, "payableToSellers", "PayableToSellers")),
+    customerGrossAmount: number(prop(item, "customerGrossAmount", "CustomerGrossAmount")),
+    shippingCost: number(prop(item, "shippingCost", "ShippingCost")),
+    customerDiscounts: number(prop(item, "customerDiscounts", "CustomerDiscounts")),
+    totalReceivedFromCustomer: number(prop(item, "totalReceivedFromCustomer", "TotalReceivedFromCustomer")),
+    currency: text(prop(item, "currency", "Currency"), "IRR"),
+  };
+}
+
+export function mapAdminReceipt(value: unknown): AdminReceiptRow | null {
+  const item = record(value);
+  if (!item) return null;
+  const paymentId = text(prop(item, "paymentId", "PaymentId"));
+  const checkoutId = text(prop(item, "checkoutId", "CheckoutId"));
+  if (!paymentId || !checkoutId) return null;
+  return {
+    id: paymentId,
+    paymentId,
+    checkoutId,
+    orderReference: text(prop(item, "orderReference", "OrderReference"), checkoutId.slice(0, 12)),
+    customerDisplayName: text(prop(item, "customerDisplayName", "CustomerDisplayName"), "مشتری"),
+    amount: number(prop(item, "amount", "Amount")),
+    currency: text(prop(item, "currency", "Currency"), "IRR"),
+    status: text(prop(item, "status", "Status")),
+    providerCode: text(prop(item, "providerCode", "ProviderCode")),
+    createdAt: text(prop(item, "createdAt", "CreatedAt")),
+    completedAt: text(prop(item, "completedAt", "CompletedAt")) || null,
   };
 }
 
@@ -635,6 +774,11 @@ export function queryAdminCustomersGrid(query: GridServerQuery): Promise<AdminGr
     const rows = mapAdminCustomers([item]);
     return rows[0] ?? null;
   });
+}
+
+/** Server GridQuery — دریافت‌های Admin. */
+export function queryAdminReceiptsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<AdminReceiptRow>> {
+  return postAdminGridQuery("/v1/admin/payments/query", query, adminHeaders(), (item) => mapAdminReceipt(item));
 }
 
 /** Server GridQuery — نظرات Admin. */

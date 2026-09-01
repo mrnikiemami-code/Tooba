@@ -1,19 +1,26 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Admin;
+using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
 using Tooba.Settlement.Infrastructure.Persistence;
 
 namespace Tooba.Host.Grid;
 
-/// <summary>پرس‌وجوی DB-native صف payout Admin (Pending|Failed) با batch attempt.</summary>
+/// <summary>پرس‌وجوی DB-native صف payout Admin (Pending|Failed) با batch attempt و نام فروشنده.</summary>
 internal sealed class AdminPayoutGridQueryEngine
 {
     private readonly SettlementDbContext _db;
+    private readonly PartyDbContext _parties;
 
-    public AdminPayoutGridQueryEngine(SettlementDbContext db) => _db = db;
+    public AdminPayoutGridQueryEngine(SettlementDbContext db, PartyDbContext parties)
+    {
+        _db = db;
+        _parties = parties;
+    }
 
-    public async Task<GridPageResponse<PayoutRequestSnapshot>> QueryAsync(
+    public async Task<GridPageResponse<AdminPayoutListItem>> QueryAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
@@ -103,7 +110,7 @@ internal sealed class AdminPayoutGridQueryEngine
         };
     }
 
-    private async Task<IReadOnlyList<PayoutRequestSnapshot>> MapPageAsync(
+    private async Task<IReadOnlyList<AdminPayoutListItem>> MapPageAsync(
         List<PayoutRequest> rows,
         CancellationToken cancellationToken)
     {
@@ -112,37 +119,27 @@ internal sealed class AdminPayoutGridQueryEngine
             return [];
         }
 
-        var ids = rows.Select(x => x.PayoutRequestId).ToList();
-        var attempts = await _db.PayoutAttempts.AsNoTracking()
-            .Where(x => ids.Contains(x.PayoutRequestId))
-            .OrderBy(x => x.CreatedAt)
+        var sellerIds = rows.Select(x => x.SellerPartyId).Distinct().ToList();
+        var sellerRows = await _parties.Parties.AsNoTracking()
+            .Where(x => sellerIds.Contains(x.PartyId))
+            .Select(x => new { x.PartyId, x.DisplayName })
             .ToListAsync(cancellationToken);
-        var byRequest = attempts.GroupBy(x => x.PayoutRequestId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        var sellerNames = sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
 
         return rows.Select(request =>
         {
-            byRequest.TryGetValue(request.PayoutRequestId, out var list);
-            list ??= [];
-            return new PayoutRequestSnapshot(
+            sellerNames.TryGetValue(request.SellerPartyId, out var sellerName);
+            return new AdminPayoutListItem(
                 request.PayoutRequestId,
                 request.SettlementAccountId,
                 request.SellerPartyId,
+                sellerName ?? "فروشنده",
                 request.Amount,
                 request.Currency,
-                request.Status,
+                request.Status.ToString(),
                 request.IdempotencyKey,
                 request.CreatedAt,
-                request.UpdatedAt,
-                list.Select(x => new PayoutAttemptSnapshot(
-                    x.PayoutAttemptId,
-                    x.PayoutRequestId,
-                    x.Status,
-                    x.IdempotencyKey,
-                    x.ProviderReference,
-                    x.FailureCode,
-                    x.CreatedAt,
-                    x.CompletedAt)).ToArray());
+                request.UpdatedAt);
         }).ToList();
     }
 }

@@ -88,6 +88,20 @@ public static class AdminListGridPolicies
         defaultSortField: "created",
         tieBreakerField: "seller");
 
+    /// <summary>گرید دریافت‌های Admin (پرداخت مشتری).</summary>
+    public static readonly AdminListGridQueryPolicy<AdminReceiptListItem> Payments = new(
+    [
+        new("reference", x => x.OrderReference, InMemoryGridFieldKind.Text, searchable: true),
+        new("customer", x => x.CustomerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
+        new("amount", x => x.Amount, InMemoryGridFieldKind.Number),
+        new("status", x => x.Status, InMemoryGridFieldKind.Enum),
+        new("provider", x => x.ProviderCode, InMemoryGridFieldKind.Text, searchable: true),
+        new("created", x => x.CreatedAt, InMemoryGridFieldKind.Date),
+        new("completed", x => x.CompletedAt ?? x.CreatedAt, InMemoryGridFieldKind.Date),
+    ],
+        defaultSortField: "created",
+        tieBreakerField: "reference");
+
     /// <summary>گرید مقالات Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminArticleSnapshot> Content = new(
     [

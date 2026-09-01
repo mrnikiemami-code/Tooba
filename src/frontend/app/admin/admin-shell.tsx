@@ -24,6 +24,7 @@ import {
   Users,
   Wallet,
   WalletCards,
+  CreditCard,
   FileText,
   Tag,
   Tags,
@@ -69,11 +70,18 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
       { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
-      { id: "settlement", labelKey: "settlement", href: "/admin/settlement", icon: Wallet, live: true, viewPermission: "settlement.view" },
-      { id: "payouts", labelKey: "payouts", href: "/admin/payouts", icon: Wallet, live: true, viewPermission: "settlement.view" },
       { id: "content", labelKey: "content", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
+    ],
+  },
+  {
+    id: "finance",
+    labelKey: "groupFinance",
+    items: [
+      { id: "receipts", labelKey: "receipts", href: "/admin/receipts", icon: CreditCard, live: true, viewPermission: "order.view" },
+      { id: "settlement", labelKey: "settlement", href: "/admin/settlement", icon: Wallet, live: true, viewPermission: "settlement.view" },
+      { id: "payouts", labelKey: "payouts", href: "/admin/payouts", icon: WalletCards, live: true, viewPermission: "settlement.view" },
     ],
   },
   {

@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Admin;
 using Tooba.Host.Grid;
+using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Infrastructure.Persistence;
 
@@ -16,13 +19,18 @@ public sealed record RequestPayoutBody(decimal Amount, string IdempotencyKey);
 public sealed class SettlementPanelComposer
 {
     private readonly ISettlementDirectory _settlement;
+    private readonly PartyDbContext _parties;
     private readonly AdminPayoutGridQueryEngine _payoutGrid;
 
     /// <summary>سازندهٔ ترکیب تسویه.</summary>
-    public SettlementPanelComposer(ISettlementDirectory settlement, SettlementDbContext db)
+    public SettlementPanelComposer(
+        ISettlementDirectory settlement,
+        SettlementDbContext db,
+        PartyDbContext parties)
     {
         _settlement = settlement;
-        _payoutGrid = new AdminPayoutGridQueryEngine(db);
+        _parties = parties;
+        _payoutGrid = new AdminPayoutGridQueryEngine(db, parties);
     }
 
     /// <summary>مانده فروشنده را برمی‌گرداند.</summary>
@@ -64,15 +72,38 @@ public sealed class SettlementPanelComposer
     }
 
     /// <summary>مانده همه فروشندگان (admin).</summary>
-    public Task<IReadOnlyList<SettlementBalanceSnapshot>> ListAllBalancesAsync(CancellationToken cancellationToken) =>
-        _settlement.ListAllBalancesAsync(cancellationToken);
+    public async Task<IReadOnlyList<AdminSettlementBalanceListItem>> ListAllBalancesAsync(
+        CancellationToken cancellationToken)
+    {
+        var balances = await _settlement.ListAllBalancesAsync(cancellationToken);
+        if (balances.Count == 0)
+        {
+            return [];
+        }
+
+        var sellerIds = balances.Select(x => x.SellerPartyId).Distinct().ToList();
+        var sellerNames = await LoadSellerDisplayNamesAsync(sellerIds, cancellationToken);
+        return balances.Select(balance =>
+        {
+            sellerNames.TryGetValue(balance.SellerPartyId, out var displayName);
+            return new AdminSettlementBalanceListItem(
+                balance.SettlementAccountId,
+                balance.SellerPartyId,
+                displayName ?? "فروشنده",
+                balance.Currency,
+                balance.PostedCredits,
+                balance.PostedDebits,
+                balance.ReservedPayouts,
+                balance.AvailableBalance);
+        }).ToList();
+    }
 
     /// <summary>صف payout (admin).</summary>
     public Task<IReadOnlyList<PayoutRequestSnapshot>> ListPayoutQueueAsync(CancellationToken cancellationToken) =>
         _settlement.ListPayoutQueueAsync(cancellationToken);
 
     /// <summary>صفحه‌بندی server-side گرید payout Admin (DB-native).</summary>
-    public Task<GridPageResponse<PayoutRequestSnapshot>> QueryPayoutGridAsync(
+    public Task<GridPageResponse<AdminPayoutListItem>> QueryPayoutGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {
@@ -93,4 +124,20 @@ public sealed class SettlementPanelComposer
         Guid actorUserId,
         CancellationToken cancellationToken) =>
         _settlement.RetryPayoutAsync(new RetryPayoutCommand(payoutRequestId, actorUserId), cancellationToken);
+
+    private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerDisplayNamesAsync(
+        IReadOnlyCollection<Guid> sellerIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var sellerRows = await _parties.Parties.AsNoTracking()
+            .Where(x => sellerIds.Contains(x.PartyId))
+            .Select(x => new { x.PartyId, x.DisplayName })
+            .ToListAsync(cancellationToken);
+        return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
+    }
 }

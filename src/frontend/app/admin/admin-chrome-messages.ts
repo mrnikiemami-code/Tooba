@@ -6,6 +6,7 @@ export type AdminChromeLocale = "fa" | "en";
 
 export type AdminNavLabels = {
   groupOps: string;
+  groupFinance: string;
   groupCatalogCategories: string;
   groupProducts: string;
   groupMarket: string;
@@ -20,6 +21,7 @@ export type AdminNavLabels = {
   orders: string;
   fulfillments: string;
   returns: string;
+  receipts: string;
   settlement: string;
   payouts: string;
   content: string;
@@ -42,6 +44,7 @@ export type AdminNavLabels = {
 
 const faNav: AdminNavLabels = {
   groupOps: "عملیات",
+  groupFinance: "مالی",
   groupCatalogCategories: "کاتالوگ / دسته‌بندی‌ها",
   groupProducts: "محصولات",
   groupMarket: "بازار",
@@ -56,8 +59,9 @@ const faNav: AdminNavLabels = {
   orders: "سفارش‌ها و پرداخت",
   fulfillments: "ارسال و تحویل",
   returns: "مرجوعی و بازپرداخت",
+  receipts: "دریافت‌ها",
   settlement: "تسویه فروشندگان",
-  payouts: "صف پرداخت به فروشنده",
+  payouts: "پرداخت به فروشندگان",
   content: "محتوا / بلاگ",
   stories: "استوری‌ها",
   pageComposition: "ترکیب صفحهٔ خانه",
@@ -78,6 +82,7 @@ const faNav: AdminNavLabels = {
 
 const enNav: AdminNavLabels = {
   groupOps: "Operations",
+  groupFinance: "Finance",
   groupCatalogCategories: "Catalog / Categories",
   groupProducts: "Products",
   groupMarket: "Marketplace",
@@ -92,8 +97,9 @@ const enNav: AdminNavLabels = {
   orders: "Orders & payments",
   fulfillments: "Shipping & fulfillment",
   returns: "Returns & refunds",
+  receipts: "Receipts",
   settlement: "Seller settlement",
-  payouts: "Seller payout queue",
+  payouts: "Seller payouts",
   content: "Content / blog",
   stories: "Stories",
   pageComposition: "Home page composition",

@@ -15,6 +15,7 @@ import {
 export interface SettlementBalance {
   settlementAccountId: string;
   sellerPartyId: string;
+  sellerDisplayName: string;
   currency: string;
   postedCredits: number;
   postedDebits: number;
@@ -47,6 +48,7 @@ export interface SettlementStatementRow {
 export interface PayoutRequestRow {
   payoutRequestId: string;
   sellerPartyId: string;
+  sellerDisplayName: string;
   amount: number;
   currency: string;
   status: string;
@@ -99,6 +101,7 @@ export function mapSettlementBalance(value: unknown): SettlementBalance | null {
   return {
     settlementAccountId: id,
     sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
+    sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName"), text(prop(item, "displayName", "DisplayName"), "فروشنده")),
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     postedCredits: number(prop(item, "postedCredits", "PostedCredits")),
     postedDebits: number(prop(item, "postedDebits", "PostedDebits")),
@@ -134,6 +137,7 @@ export function mapPayoutRequest(value: unknown): PayoutRequestRow | null {
   return {
     payoutRequestId: id,
     sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
+    sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName"), text(prop(item, "displayName", "DisplayName"), "فروشنده")),
     amount: number(prop(item, "amount", "Amount")),
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     status: text(prop(item, "status", "Status")),
