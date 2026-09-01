@@ -412,5 +412,5 @@ Architect note: commit 9d350a9a = user-directed orders/products grid polish (out
 Final HEAD/origin (TB-P07-T042):
 
 ```text
-(pending push — see RESULT.bridge.txt)
+8721e22754179582355d5e802d2db20ab75661c9
 ```

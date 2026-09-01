@@ -1,0 +1,65 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T042
+
+Parent-Task:
+TB-P07-T041
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+2fcdbef6-f32b-413a-b50a-b6434845e92f
+
+Summary:
+Order Detail + Marketplace Finance UX delivered: extended AdminOrderDetailPage with LineCount, SellerCount, seller financial breakdown (SettlementEntry when available else order snapshots), financial history events, financial summary totals; new AdminPaymentsGridQueryEngine + POST /v1/admin/payments/query + AdminReceiptListItem; finance nav group (مالی) with receipts/settlement/payouts; premium admin-order-detail-screen.tsx; settlement/payout seller display-name enrichment. Reused Payment/Settlement/Payout domains only.
+
+Backend:
+- ISettlementDirectory.ListEntriesBySellerOrderIdsAsync + SettlementDirectory implementation
+- AdminPanelComposer injects ISettlementDirectory; enriched GetOrderAsync
+- AdminPaymentsGridQueryEngine (Payment DB-native + Order batch enrich, no cross-schema JOIN)
+- AdminSettlementBalanceListItem / AdminPayoutListItem seller name enrich
+- POST /v1/admin/payments/query
+
+Frontend:
+- src/frontend/app/admin/admin-order-detail-screen.tsx (reference-fidelity layout)
+- /admin/receipts + AdminReceiptsScreen (ServerGridPage, Eye → order detail)
+- admin-shell finance nav group; admin-chrome-messages fa/en labels
+- Settlement/payout grids show seller display names
+
+Focused-Validation:
+- dotnet build -o artifacts/t042-build PASS (in-place build blocked by live :5088 Host lock)
+- dotnet test AdminPanelCompositionTests|AdminListGridQueryEngineTests 7/7 PASS
+- node --test admin-api.test.ts 6/6 PASS
+
+Recovery-SoT:
+HEAD=8721e22754179582355d5e802d2db20ab75661c9
+origin/main=8721e22754179582355d5e802d2db20ab75661c9
+HEAD==origin/main
+
+Evidence:
+docs/evidence/TB-P07-T042/
+
+Git:
+8721e22754179582355d5e802d2db20ab75661c9
+
+Architect-Concerns:
+Commit 9d350a9a was USER-DIRECTED UI polish (orders/products grids) requested directly by user outside architect task scope — preserved, not reverted.
+USER_VISUAL_ACCEPTED=NO — human should confirm order detail + finance nav against reference image.
+
+Visual-Concerns:
+Reference image fidelity implemented structurally; no live screenshot capture in this pass.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
