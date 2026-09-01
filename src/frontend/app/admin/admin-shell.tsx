@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   Gift,
+  Globe,
   LayoutDashboard,
   LayoutTemplate,
   LogOut,
@@ -124,6 +125,7 @@ const navGroupDefs: NavGroupDef[] = [
     labelKey: "groupSystem",
     items: [
       { id: "settings", labelKey: "settings", href: "/admin/settings", icon: Settings, live: true },
+      { id: "languages", labelKey: "languages", href: "/admin/languages", icon: Globe, live: true },
       { id: "access-control", labelKey: "accessControl", href: "/admin/access-control", icon: Shield, live: true, viewPermission: "accesscontrol.view" },
     ],
   },

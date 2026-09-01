@@ -1,0 +1,225 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Returns.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Returns.Application.IReturnInventoryGateway">
+            <summary>
+            درز موجودی برای restock؛ Returns مستقیم Inventory DbContext باز نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnInventoryGateway.RestockConsumedReservationAsync(System.Guid,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            رزرو مصرف‌شده را پس از refund موفق restock می‌کند. پیاده‌سازی فعلی می‌تواند no-op log باشد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnLineCommand">
+            <summary>
+            خط مرجوعی در فرمان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.ReturnLineCommand.#ctor(System.Guid,System.Int32)">
+            <summary>
+            خط مرجوعی در فرمان.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.CreateReturnCommand">
+            <summary>
+            فرمان ایجاد درخواست مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.CreateReturnCommand.#ctor(System.Guid,System.Guid,System.String,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Returns.Application.ReturnLineCommand},Tooba.Returns.Domain.RefundDestination)">
+            <summary>
+            فرمان ایجاد درخواست مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ApproveReturnCommand">
+            <summary>
+            فرمان تأیید مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.ApproveReturnCommand.#ctor(System.Guid,System.Guid,System.Nullable{Tooba.Returns.Domain.RefundDestination})">
+            <summary>
+            فرمان تأیید مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.RejectReturnCommand">
+            <summary>
+            فرمان رد مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.RejectReturnCommand.#ctor(System.Guid,System.Guid,System.String)">
+            <summary>
+            فرمان رد مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.RetryRefundCommand">
+            <summary>
+            فرمان retry refund (admin).
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.RetryRefundCommand.#ctor(System.Guid,System.Guid)">
+            <summary>
+            فرمان retry refund (admin).
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnSnapshot">
+            <summary>
+            snapshot خواندنی درخواست مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.ReturnSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Guid,Tooba.Returns.Domain.ReturnRequestStatus,System.String,System.String,System.Decimal,System.Nullable{System.Guid},Tooba.Returns.Domain.RefundDestination,System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.Returns.Application.ReturnItemSnapshot},System.Collections.Generic.IReadOnlyList{Tooba.Returns.Application.RefundAttemptSnapshot})">
+            <summary>
+            snapshot خواندنی درخواست مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnItemSnapshot">
+            <summary>
+            snapshot خط مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.ReturnItemSnapshot.#ctor(System.Guid,System.Guid,System.Int32,System.Decimal,System.String,System.Nullable{System.Guid})">
+            <summary>
+            snapshot خط مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.RefundAttemptSnapshot">
+            <summary>
+            snapshot تلاش refund.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.RefundAttemptSnapshot.#ctor(System.Guid,System.Guid,System.Decimal,System.String,Tooba.Returns.Domain.RefundAttemptStatus,System.String,System.String,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            snapshot تلاش refund.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.IReturnDirectory">
+            <summary>
+            ارکستراسیون مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.CreateAsync(Tooba.Returns.Application.CreateReturnCommand,System.Threading.CancellationToken)">
+            <summary>درخواست مرجوعی می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>درخواست را می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.ListForCustomerAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست درخواست‌های یک مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.ListForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست درخواست‌های یک فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.ListAllAsync(System.Threading.CancellationToken)">
+            <summary>فهرست همه درخواست‌ها برای admin.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.ApproveAsync(Tooba.Returns.Application.ApproveReturnCommand,System.Threading.CancellationToken)">
+            <summary>درخواست را تأیید و refund را آغاز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.RejectAsync(Tooba.Returns.Application.RejectReturnCommand,System.Threading.CancellationToken)">
+            <summary>درخواست را رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnDirectory.RetryRefundAsync(Tooba.Returns.Application.RetryRefundCommand,System.Threading.CancellationToken)">
+            <summary>refund شکست‌خورده را دوباره تلاش می‌کند (admin).</summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.IReturnUseCaseGuard">
+            <summary>
+            نگهبان use-case مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>اجازهٔ mutate را بررسی می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnRequestedIntegrationEvent">
+            <summary>
+            رویداد Outbox return.requested.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Application.ReturnRequestedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnRequestedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnRequestedIntegrationEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnRequestedIntegrationEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnRequestedIntegrationEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnApprovedIntegrationEvent">
+            <summary>
+            رویداد Outbox return.approved.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.RefundAmount">
+            <summary>مبلغ refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.ReturnApprovedIntegrationEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.RefundSucceededIntegrationEvent">
+            <summary>
+            رویداد Outbox refund.succeeded.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Application.RefundSucceededIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.PaymentId">
+            <summary>پرداخت مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.RefundAmount">
+            <summary>مبلغ refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Application.RefundSucceededIntegrationEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.ReturnSettlementSnapshot">
+            <summary>
+            snapshot refund برای ماژول‌های مصرف‌کننده مثل Settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.ReturnSettlementSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>
+            snapshot refund برای ماژول‌های مصرف‌کننده مثل Settlement.
+            </summary>
+        </member>
+        <member name="T:Tooba.Returns.Application.IReturnSettlementReader">
+            <summary>
+            خواندن snapshot refund بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Application.IReturnSettlementReader.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>snapshot refund را برمی‌گرداند.</summary>
+        </member>
+    </members>
+</doc>

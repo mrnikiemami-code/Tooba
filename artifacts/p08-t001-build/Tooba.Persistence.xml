@@ -1,0 +1,360 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Persistence</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Persistence.JsonIntegrationEventSerializer">
+            <summary>
+            JSON با camelCase و type map ماژول‌ها. هیچ TypeNameHandling یا GetType آزاد روی payload نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.JsonIntegrationEventSerializer.#ctor(System.Collections.Generic.IEnumerable{Tooba.Persistence.IOutboxModuleRegistration})">
+            <summary>
+            serializer را به ثبت‌های ماژول وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.JsonIntegrationEventSerializer.SerializePayload(Tooba.BuildingBlocks.IIntegrationEvent)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.JsonIntegrationEventSerializer.Deserialize(Tooba.Persistence.OutboxMessage)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.JsonIntegrationEventSerializer.MetadataFromColumns(Tooba.Persistence.OutboxMessage)">
+            <summary>
+            فراداده را فقط از ستون‌های Outbox می‌سازد تا payload نتواند Tenant را جعل کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.NpgsqlOutboxDispatcherStore">
+            <summary>
+            Claim و به‌روزرسانی Outbox با SQL خام PostgreSQL. هر فراخوانی اتصال جدا می‌گیرد تا Tenantها DbContext مشترک نداشته باشند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.NpgsqlOutboxDispatcherStore.ClaimAsync(System.String,System.String,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.NpgsqlOutboxDispatcherStore.MarkProcessedAsync(System.String,System.String,System.String,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.NpgsqlOutboxDispatcherStore.MarkRetryAsync(System.String,System.String,System.String,System.Guid,NodaTime.Instant,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.NpgsqlOutboxDispatcherStore.MarkDeadLetterAsync(System.String,System.String,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Persistence.OutboxMessage">
+            <summary>
+            شکل CLR ردیف Outbox. جدول سراسری مشترک بین ماژول‌ها نیست؛ هر DbContext آن را به schema خودش map می‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.Id">
+            <summary>
+            کلید ردیف؛ برابر EventId قرارداد Integration است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.OccurredAt">
+            <summary>
+            زمان وقوع رویداد؛ ترتیب سراسری بین Tenantها تضمین نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.EventType">
+            <summary>
+            نام قراردادی type map (مثلاً <c>platform_probe.record_created.v1</c>) نه AssemblyQualifiedName.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.Payload">
+            <summary>
+            بدنهٔ JSON فیلدهای کسب‌وکار بدون $type؛ هرگز لاگ نشود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.CorrelationId">
+            <summary>
+            همبستگی اختیاری با درخواست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.Version">
+            <summary>
+            نسخهٔ قرارداد Integration.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.TenantId">
+            <summary>
+            TenantId پایدار یا تهی برای Marketplace. از Host استخراج نشده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.DeploymentId">
+            <summary>
+            برچسب استقرار در زمان persist.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.Edition">
+            <summary>
+            نام Edition ذخیره‌شده (Marketplace / SingleStore).
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.ProcessedAt">
+            <summary>
+            زمان موفقیت انتشار به transport پایدار؛ تهی یعنی هنوز pending. موفقیت مصرف‌کننده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.AttemptCount">
+            <summary>
+            تعداد دفعات claim؛ برای سقف retry و dead-letter.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.NextAttemptAt">
+            <summary>
+            زودترین زمان مجاز claim بعدی پس از شکست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.DeadLetteredAt">
+            <summary>
+            زمان انتقال به dead-letter پس از عبور از MaxAttempts.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.LastError">
+            <summary>
+            خلاصهٔ خطای بهداشتی‌شده؛ بدون secret، stack و payload.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxMessage.LockedUntil">
+            <summary>
+            قفل نرم claim تا worker دیگر همان ردیف را با SKIP LOCKED برندارد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.IOutboxModuleRegistration">
+            <summary>
+            ثبت ماژول برای Outbox بدون چسباندن نام PlatformProbe به هستهٔ عمومی.
+            Host فقط در ترکیب نمونه، پیاده‌سازی ماژول را DI می‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.IOutboxModuleRegistration.Schema">
+            <summary>
+            schema مالک ماژول؛ جدول Outbox داخل همین schema است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.IOutboxModuleRegistration.TableName">
+            <summary>
+            نام فیزیکی جدول؛ قرارداد Tooba برابر <c>outbox_messages</c> است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Persistence.IOutboxModuleRegistration.DbContextType">
+            <summary>
+            نوع DbContext همین ماژول تا interceptor فقط روی همان context بنویسد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxModuleRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <summary>
+            ترجمهٔ صریح Domain → Integration. null یعنی این واقعیت دامنه منتشر نشود.
+            </summary>
+            <param name="domainEvent">رویداد دامنه از ChangeTracker.</param>
+            <param name="metadata">فرادادهٔ تکمیل‌شده از زمینهٔ تجارت.</param>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxModuleRegistration.GetEventTypeName(System.Type)">
+            <summary>
+            نام قراردادی برای نوع Integration جهت ستون event_type.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxModuleRegistration.ResolveEventClrType(System.String)">
+            <summary>
+            CLR type از نام قراردادی؛ ناشناخته یعنی deserialization رد شود نه Type.GetType آزاد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.IIntegrationEventSerializer">
+            <summary>
+            سریالایزر JSON با type map صریح. TypeNameHandling / polymorphic CLR ممنوع است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IIntegrationEventSerializer.SerializePayload(Tooba.BuildingBlocks.IIntegrationEvent)">
+            <summary>
+            فقط فیلدهای کسب‌وکار را JSON می‌کند؛ Metadata ستون جدا است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IIntegrationEventSerializer.Deserialize(Tooba.Persistence.OutboxMessage)">
+            <summary>
+            رویداد را با type map و فرادادهٔ ستون‌ها بازسازی می‌کند. payload منبع Tenant نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.IOutboxDispatcherStore">
+            <summary>
+            فروشگاه dispatcher با SQL خام و <c>FOR UPDATE SKIP LOCKED</c>. DbContext بین Tenantها reuse نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxDispatcherStore.ClaimAsync(System.String,System.String,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            دسته‌ای از ردیف‌های قابل‌پردازش را claim می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxDispatcherStore.MarkProcessedAsync(System.String,System.String,System.String,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            انتشار موفق را با processed_at علامت می‌زند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxDispatcherStore.MarkRetryAsync(System.String,System.String,System.String,System.Guid,NodaTime.Instant,System.String,System.Threading.CancellationToken)">
+            <summary>
+            شکست قابل‌retry: LastError بهداشتی، next_attempt_at، آزاد کردن قفل.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxDispatcherStore.MarkDeadLetterAsync(System.String,System.String,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            عبور از سقف تلاش: dead_lettered_at بدون حذف payload از دیسک (اما لاگ نمی‌شود).
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.OutboxPollTarget">
+            <summary>
+            هدف polling کارگر: یک اتصال منطقی، نه Host درخواست.
+            </summary>
+            <param name="Edition">Edition فرآیند.</param>
+            <param name="TenantId">در Single-Store هویت پایدار؛ در Marketplace تهی.</param>
+            <param name="ConnectionReference">مرجع اتصال این پایگاه.</param>
+            <param name="DeploymentId">برچسب استقرار.</param>
+        </member>
+        <member name="M:Tooba.Persistence.OutboxPollTarget.#ctor(Tooba.BuildingBlocks.ToobaEdition,System.String,Tooba.BuildingBlocks.ConnectionReference,System.String)">
+            <summary>
+            هدف polling کارگر: یک اتصال منطقی، نه Host درخواست.
+            </summary>
+            <param name="Edition">Edition فرآیند.</param>
+            <param name="TenantId">در Single-Store هویت پایدار؛ در Marketplace تهی.</param>
+            <param name="ConnectionReference">مرجع اتصال این پایگاه.</param>
+            <param name="DeploymentId">برچسب استقرار.</param>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxPollTarget.Edition">
+            <summary>Edition فرآیند.</summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxPollTarget.TenantId">
+            <summary>در Single-Store هویت پایدار؛ در Marketplace تهی.</summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxPollTarget.ConnectionReference">
+            <summary>مرجع اتصال این پایگاه.</summary>
+        </member>
+        <member name="P:Tooba.Persistence.OutboxPollTarget.DeploymentId">
+            <summary>برچسب استقرار.</summary>
+        </member>
+        <member name="T:Tooba.Persistence.IOutboxPollTargetSource">
+            <summary>
+            منبع فهرست پایگاه‌هایی که کارگر باید جداگانه poll کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.IOutboxPollTargetSource.GetTargets">
+            <summary>
+            Marketplace: فقط DB مارکت. Single-Store: Tenantهای Active. Unset: خالی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.OutboxErrorSanitizer">
+            <summary>
+            بهداشتی‌سازی LastError برای Outbox: بدون secret، stack، connection string و payload.
+            </summary>
+        </member>
+        <member name="F:Tooba.Persistence.OutboxErrorSanitizer.MaxLength">
+            <summary>
+            حداکثر طول ستون last_error.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.OutboxErrorSanitizer.Sanitize(System.Exception)">
+            <summary>
+            نوع استثنا به‌علاوهٔ پیام کوتاه بهداشتی. <see cref="M:System.Exception.ToString"/> استفاده نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.OutboxMessageMapping">
+            <summary>
+            نگاشت per-module جدول <c>outbox_messages</c> داخل schema همان ماژول. یک جدول فیزیکی سراسری نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Persistence.OutboxMessageMapping.TableName">
+            <summary>
+            نام فیزیکی قرارداد Outbox در هر schema ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.OutboxMessageMapping.Map(Microsoft.EntityFrameworkCore.ModelBuilder,System.String,System.String)">
+            <summary>
+            موجودیت <see cref="T:Tooba.Persistence.OutboxMessage"/> را به schema داده‌شده می‌چسباند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.SqlIdentifiers">
+            <summary>
+            اعتبارسنجی شناسهٔ SQL تا schema/table از پیکربندی به injection تبدیل نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.SqlIdentifiers.EnsureSafe(System.String)">
+            <summary>
+            شناسه را می‌پذیرد یا استثنا می‌اندازد. برای درونی‌سازی در SQL پویا است نه ورودی کاربر نهایی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.SqlIdentifiers.Quote(System.String)">
+            <summary>
+            شناسه را با کوتیشن PostgreSQL برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.OutboxSaveChangesInterceptor">
+            <summary>
+            در SavingChanges رویداد دامنه را جمع می‌کند، فقط ترجمه‌های ثبت‌شده را به Outbox همان تراکنش می‌نویسد، و handler صدا نمی‌زند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.OutboxSaveChangesInterceptor.#ctor(Tooba.BuildingBlocks.ICurrentCommerceContext,System.Collections.Generic.IEnumerable{Tooba.Persistence.IOutboxModuleRegistration},Tooba.Persistence.IIntegrationEventSerializer)">
+            <summary>
+            interceptor را به زمینهٔ درخواست و ثبت ماژول‌ها وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.OutboxSaveChangesInterceptor.SavingChanges(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32})">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.OutboxSaveChangesInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData,Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult{System.Int32},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.OutboxSaveChangesInterceptor.SavedChanges(Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesCompletedEventData,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Persistence.OutboxSaveChangesInterceptor.SavedChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesCompletedEventData,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Persistence.ToobaInstantMapping">
+            <summary>
+            تبدیل Instant به DateTimeOffset برای Npgsql بدون افزونهٔ سراسری NodaTime.
+            افزونهٔ سراسری Dapper/MassTransit را برای ستون timestamptz می‌شکند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.ToobaInstantMapping.MapAsTimestamp(Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder{NodaTime.Instant})">
+            <summary>
+            ستون اجباری Instant را بدون UseNodaTime سراسری نگاشت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.ToobaInstantMapping.MapAsTimestamp(Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder{System.Nullable{NodaTime.Instant}})">
+            <summary>
+            ستون اختیاری Instant را بدون UseNodaTime سراسری نگاشت می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Persistence.ToobaNpgsql">
+            <summary>
+            کمک‌های مشترک Npgsql/EF برای DbContextهای ماژول: یک schema، تاریخچهٔ مهاجرت جدا، بدون mega-DbContext.
+            اتصال از <see cref="T:Tooba.BuildingBlocks.ICurrentCommerceContext"/> و <see cref="T:Tooba.BuildingBlocks.IDatabaseConnectionResolver"/> می‌آید نه از Host خام در ماژول.
+            DataSource/NodaTime سراسری روی Npgsql ثبت نمی‌شود تا Dapper MassTransit timestamptz را Instant نبیند.
+            Instantهای ماژول با تبدیل DateTimeOffset نگاشت می‌شوند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Persistence.ToobaNpgsql.DesignTimeConnectionVariable">
+            <summary>
+            متغیر محیطی اتصال design-time؛ فقط برای ابزار EF، نه runtime تولید.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.ToobaNpgsql.DesignTimeConnectionString">
+            <summary>
+            رشتهٔ اتصال design-time. مقدار پیش‌فرض محلی است و credential تولید نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Persistence.ToobaNpgsql.ConfigureModuleContext(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder,System.String,System.String,System.Type)">
+            <summary>
+            پیکربندی استاندارد یک DbContext ماژول: Npgsql + NodaTime + snake_case + جدول مهاجرت داخل همان schema.
+            </summary>
+            <param name="options">سازندهٔ گزینه‌های EF.</param>
+            <param name="connectionString">رشتهٔ اتصال resolveشده؛ نباید لاگ حساس شود.</param>
+            <param name="schema">مالکیت دادهٔ همین ماژول؛ join بین‌ماژولی ممنوع است.</param>
+            <param name="migrationsAssemblyMarker">نوع نشانگر اسمبلی مهاجرت‌ها.</param>
+        </member>
+        <member name="M:Tooba.Persistence.ToobaNpgsql.ResolveForContext(Tooba.BuildingBlocks.ICurrentCommerceContext,Tooba.BuildingBlocks.IDatabaseConnectionResolver)">
+            <summary>
+            اتصال DbContext را از زمینهٔ تجارت درخواست استخراج می‌کند.
+            </summary>
+            <exception cref="T:Tooba.BuildingBlocks.PlatformHttpException">اگر زمینه هنوز resolve نشده (۵۰۳ edition).</exception>
+        </member>
+    </members>
+</doc>

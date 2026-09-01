@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.BulkInquiry.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.BulkInquiry.Domain.BulkInquiryStatus">
+            <summary>وضعیت چرخهٔ درخواست خرید عمده.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkInquiryStatus.Submitted">
+            <summary>ثبت‌شده و در انتظار پیگیری.</summary>
+        </member>
+        <member name="T:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry">
+            <summary>درخواست خرید عمده برای یک محصول منتشرشده؛ بدون قیمت یا تخفیف.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.FullNameMinLength">
+            <summary>حداقل طول نام فارسی/عربی پس از trim.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.FullNameMaxLength">
+            <summary>حداکثر طول نام پس از trim.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.PhoneLength">
+            <summary>طول دقیق شمارهٔ موبایل ایران.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.EmailMaxLength">
+            <summary>حداکثر طول ایمیل.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.CompanyNameMaxLength">
+            <summary>حداکثر طول نام شرکت.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.AddressMinLength">
+            <summary>حداقل طول نشانی.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.AddressMaxLength">
+            <summary>حداکثر طول نشانی.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.QuantityMin">
+            <summary>حداقل مقدار سفارش.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.QuantityMax">
+            <summary>حداکثر مقدار سفارش.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.NotesMaxLength">
+            <summary>حداکثر طول یادداشت.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.InquiryId">
+            <summary>شناسهٔ پایدار درخواست.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.ProductId">
+            <summary>مرجع opaque محصول در Catalog.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.FullName">
+            <summary>نام کامل درخواست‌کننده.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Phone">
+            <summary>شمارهٔ تماس ۱۱ رقمی شروع با ۰۹.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Email">
+            <summary>ایمیل اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.CompanyName">
+            <summary>نام شرکت اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Address">
+            <summary>نشانی تحویل.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Quantity">
+            <summary>مقدار درخواستی.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Notes">
+            <summary>یادداشت اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Status">
+            <summary>وضعیت درخواست.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Domain.BulkPurchaseInquiry.Create(System.Guid,System.String,System.String,System.String,System.String,System.String,System.Int32,System.String,System.DateTimeOffset)">
+            <summary>درخواست Submitted معتبر می‌سازد.</summary>
+        </member>
+    </members>
+</doc>

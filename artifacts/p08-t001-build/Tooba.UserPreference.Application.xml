@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.UserPreference.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.UserPreference.Application.UserPreferenceSnapshot">
+            <summary>نمایهٔ ترجیح کاربر بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.UserPreferenceSnapshot.#ctor(System.String,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>نمایهٔ ترجیح کاربر بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Application.UserPreferenceWrite">
+            <summary>ورودی نوشتن ترجیح؛ فقط locale.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.UserPreferenceWrite.#ctor(System.String)">
+            <summary>ورودی نوشتن ترجیح؛ فقط locale.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Application.IUserPreferenceDirectory">
+            <summary>
+            قرارداد کاربردی ترجیح کاربر. تمام عملیات با Actor تأمین‌شده از Host محدود می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.IUserPreferenceDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>ترجیح Actor را برمی‌گرداند؛ در صورت نبود ردیف تهی است.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.IUserPreferenceDirectory.UpsertAsync(System.Guid,Tooba.UserPreference.Application.UserPreferenceWrite,System.Threading.CancellationToken)">
+            <summary>ترجیح Actor را ایجاد یا به‌روز می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Application.UiPreferenceSnapshot">
+            <summary>نمایهٔ ترجیح کلیددار UI بدون شناسهٔ مالک در پاسخ.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.UiPreferenceSnapshot.#ctor(System.String,System.String,System.DateTimeOffset)">
+            <summary>نمایهٔ ترجیح کلیددار UI بدون شناسهٔ مالک در پاسخ.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Application.UiPreferenceWrite">
+            <summary>ورودی نوشتن ترجیح UI؛ فقط JSON متنی.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.UiPreferenceWrite.#ctor(System.String)">
+            <summary>ورودی نوشتن ترجیح UI؛ فقط JSON متنی.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Application.IUiPreferenceDirectory">
+            <summary>
+            قرارداد ترجیح‌های کلیددار UI. مالکیت فقط از Actor Host می‌آید.
+            </summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.IUiPreferenceDirectory.GetAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>ترجیح کلید را برای Actor برمی‌گرداند؛ نبود ردیف تهی است.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Application.IUiPreferenceDirectory.UpsertAsync(System.Guid,System.String,Tooba.UserPreference.Application.UiPreferenceWrite,System.Threading.CancellationToken)">
+            <summary>ترجیح کلید را ایجاد یا به‌روز می‌کند.</summary>
+        </member>
+    </members>
+</doc>

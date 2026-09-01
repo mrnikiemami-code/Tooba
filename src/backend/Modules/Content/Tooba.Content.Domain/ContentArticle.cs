@@ -12,6 +12,9 @@ public enum ContentPublicationStatus
 }
 
 /// <summary>مقالهٔ تحریری برای ریل خانه و مسیرهای عمومی تجاری.</summary>
+/// <remarks>
+/// هر مقاله یک موجودیت مستقل در یک زبان (Locale) است؛ انتشار فارسی همتای انگلیسی اجباری نمی‌سازد.
+/// </remarks>
 public sealed class ContentArticle
 {
     /// <summary>حداکثر طول slug.</summary>

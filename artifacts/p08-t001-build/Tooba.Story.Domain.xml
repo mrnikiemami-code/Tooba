@@ -1,0 +1,296 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Story.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Story.Domain.StoryStatus">
+            <summary>وضعیت انتشار استوری (چرخهٔ عمر عمومی).</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryStatus.Draft">
+            <summary>پیش‌نویس و غیرقابل نمایش عمومی.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryStatus.Scheduled">
+            <summary>زمان‌بندی‌شده برای آینده.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryStatus.Active">
+            <summary>فعال برای نمایش عمومی در بازهٔ زمانی.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryStatus.Expired">
+            <summary>منقضی‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryStatus.Disabled">
+            <summary>غیرفعال دستی.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.StoryOrigin">
+            <summary>منبع ایجاد استوری.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryOrigin.Admin">
+            <summary>ایجادشده توسط ادمین.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryOrigin.Seller">
+            <summary>ایجادشده توسط فروشنده.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.StoryReviewStatus">
+            <summary>وضعیت بازبینی استوری‌های فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryReviewStatus.None">
+            <summary>بدون بازبینی فعال (ادمین یا پیش‌نویس فروشنده).</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryReviewStatus.Submitted">
+            <summary>ارسال‌شده برای بازبینی ادمین.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryReviewStatus.Approved">
+            <summary>تأییدشده؛ آمادهٔ زمان‌بندی/فعال‌سازی.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryReviewStatus.Rejected">
+            <summary>ردشده با دلیل.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.StoryTenantIds">
+            <summary>شناسهٔ پایدار Tenant برای ماژول Story.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryTenantIds.StoreAlpha">
+            <summary>Tenant توسعهٔ store-alpha.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryTenantIds.StoreBeta">
+            <summary>Tenant توسعهٔ store-beta برای تست جداسازی.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryTenantIds.FromTenantKey(System.String)">
+            <summary>کلید Tenant پیکربندی‌شده را به Guid پایدار نگاشت می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.StoryRules">
+            <summary>ثابت‌ها و اعتبارسنجی CTA و رسانهٔ استوری.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.TitleMaxLength">
+            <summary>حداکثر طول عنوان.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.LocaleMaxLength">
+            <summary>حداکثر طول locale.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.MarketMaxLength">
+            <summary>حداکثر طول market.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.MediaUrlMaxLength">
+            <summary>حداکثر طول URL رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.CtaTypeMaxLength">
+            <summary>حداکثر طول نوع CTA.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.CtaTargetMaxLength">
+            <summary>حداکثر طول هدف CTA.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.CaptionMaxLength">
+            <summary>حداکثر طول caption آیتم.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.MediaTypeMaxLength">
+            <summary>حداکثر طول نوع رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.RejectionReasonMaxLength">
+            <summary>حداکثر طول دلیل رد بازبینی.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.CtaNone">
+            <summary>نوع CTA بدون لینک.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.MediaImage">
+            <summary>نوع رسانه تصویر.</summary>
+        </member>
+        <member name="F:Tooba.Story.Domain.StoryRules.MediaVideo">
+            <summary>نوع رسانه ویدیو.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryRules.ValidateCta(System.String,System.String)">
+            <summary>نوع و هدف CTA را اعتبارسنجی و نرمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryRules.ValidateMediaType(System.String)">
+            <summary>نوع رسانه را اعتبارسنجی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryRules.MatchesLocale(System.String,System.String)">
+            <summary>آیا locale استوری با locale درخواست عمومی سازگار است.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryRules.MatchesMarket(System.String,System.String)">
+            <summary>آیا market استوری با فیلتر درخواست سازگار است.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.Story">
+            <summary>aggregate استوری فروشگاهی با آیتم‌های رسانه.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.StoryId">
+            <summary>شناسهٔ پایدار استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.TenantId">
+            <summary>Tenant مالک.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Origin">
+            <summary>منبع ایجاد استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.SellerPartyId">
+            <summary>Party فروشندهٔ مالک برای استوری‌های Seller.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.ReviewStatus">
+            <summary>وضعیت بازبینی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.SubmittedByActorUserId">
+            <summary>Actor ارسال‌کننده برای بازبینی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.ReviewedByActorUserId">
+            <summary>Actor ادمین بازبین.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.SubmittedAt">
+            <summary>زمان ارسال برای بازبینی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.ReviewedAt">
+            <summary>زمان آخرین بازبینی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.RejectionReason">
+            <summary>دلیل رد بازبینی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Locale">
+            <summary>locale اختیاری؛ null یعنی همهٔ localeها.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Market">
+            <summary>بازار اختیاری؛ از locale استنباط نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Title">
+            <summary>برچسب ریل استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.CoverMediaAssetId">
+            <summary>مرجع مات رسانهٔ جلد.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.CoverMediaUrl">
+            <summary>URL ایستا یا سرو شدهٔ جلد.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.DisplayOrder">
+            <summary>ترتیب نمایش در ریل.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.StartAt">
+            <summary>شروع نمایش اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.EndAt">
+            <summary>پایان نمایش اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Status">
+            <summary>وضعیت انتشار.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.CtaType">
+            <summary>نوع CTA سطح استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.CtaTarget">
+            <summary>هدف CTA سطح استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.VersionToken">
+            <summary>توکن همزمانی.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.Story.Items">
+            <summary>آیتم‌های استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.CreateDraft(System.Guid,System.String,System.Int32,System.DateTimeOffset,System.String,System.String,System.Nullable{System.Guid},System.String,System.String,System.String)">
+            <summary>استوری Draft ادمین می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.CreateSellerDraft(System.Guid,System.Guid,System.Guid,System.String,System.Int32,System.DateTimeOffset,System.String,System.String,System.Nullable{System.Guid},System.String,System.String,System.String)">
+            <summary>پیش‌نویس فروشنده می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.IsSellerContentEditable">
+            <summary>آیا فروشنده مجاز به ویرایش محتوا است.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.IsPublicationEligible">
+            <summary>آیا مسیر انتشار (زمان‌بندی/فعال) باز است.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.Update(System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>فیلدهای سطح استوری را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.SetSchedule(System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.DateTimeOffset)">
+            <summary>زمان‌بندی را تنظیم و وضعیت Scheduled یا Active را بر اساس now تعیین می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.Activate(System.DateTimeOffset)">
+            <summary>استوری را فعال می‌کند؛ فقط پس از واجد شرایط بودن انتشار.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.SubmitForReview(System.Guid,System.DateTimeOffset)">
+            <summary>استوری را برای بازبینی ارسال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.Approve(System.Guid,System.DateTimeOffset)">
+            <summary>استوری را تأیید می‌کند؛ فراخوانی تکراری امن است.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.Reject(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>استوری را با دلیل رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.Disable(System.DateTimeOffset)">
+            <summary>استوری را غیرفعال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.MarkExpired(System.DateTimeOffset)">
+            <summary>استوری را منقضی علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.SetDisplayOrder(System.Int32,System.DateTimeOffset)">
+            <summary>ترتیب نمایش سطح استوری را تنظیم می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.IsPubliclyVisible(System.DateTimeOffset)">
+            <summary>آیا استوری در زمان داده‌شده برای عموم قابل نمایش است.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.AddItem(System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>آیتم رسانهٔ جدید اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.UpdateItem(System.Guid,System.String,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.DateTimeOffset)">
+            <summary>آیتم موجود را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.RemoveItem(System.Guid,System.DateTimeOffset)">
+            <summary>آیتم را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.ReorderItems(System.Collections.Generic.IReadOnlyList{System.Guid},System.DateTimeOffset)">
+            <summary>آیتم‌ها را با شناسه‌های داده‌شده مرتب می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.Story.AttachItems(System.Collections.Generic.IEnumerable{Tooba.Story.Domain.StoryItem})">
+            <summary>آیتم‌های بارگذاری‌شده را به aggregate متصل می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Story.Domain.StoryItem">
+            <summary>یک اسلاید رسانه در استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.StoryItemId">
+            <summary>شناسهٔ پایدار آیتم.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.StoryId">
+            <summary>شناسهٔ استوری والد.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.DisplayOrder">
+            <summary>ترتیب نمایش.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.MediaType">
+            <summary>نوع رسانه image یا video.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.MediaAssetId">
+            <summary>مرجع مات رسانه.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.MediaUrl">
+            <summary>URL ایستا یا سرو شده.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.Caption">
+            <summary>زیرنویس اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.DurationMs">
+            <summary>مدت نمایش اختیاری به میلی‌ثانیه.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.CtaType">
+            <summary>نوع CTA آیتم.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.CtaTarget">
+            <summary>هدف CTA آیتم.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Story.Domain.StoryItem.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryItem.Create(System.Guid,System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>آیتم جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryItem.Update(System.String,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.DateTimeOffset)">
+            <summary>فیلدهای آیتم را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Domain.StoryItem.SetDisplayOrder(System.Int32,System.DateTimeOffset)">
+            <summary>ترتیب نمایش را تنظیم می‌کند.</summary>
+        </member>
+    </members>
+</doc>

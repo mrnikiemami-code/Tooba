@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Media.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Media.Domain.MediaAssetStatus">
+            <summary>وضعیت پردازش دارایی رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAssetStatus.Ready">
+            <summary>باینری و فراداده آمادهٔ ارائه است.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAssetStatus.Failed">
+            <summary>آپلود یا ذخیره‌سازی ناموفق بوده است.</summary>
+        </member>
+        <member name="T:Tooba.Media.Domain.MediaAsset">
+            <summary>دارایی رسانهٔ canonical؛ مالک باینری و فراداده در schema مستقل Media.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAsset.OriginalFileNameMaxLength">
+            <summary>حداکثر طول نام فایل اصلی.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAsset.StorageKeyMaxLength">
+            <summary>حداکثر طول کلید ذخیره‌سازی نسبی.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAsset.ContentTypeMaxLength">
+            <summary>حداکثر طول نوع محتوا.</summary>
+        </member>
+        <member name="F:Tooba.Media.Domain.MediaAsset.ChecksumSha256Length">
+            <summary>طول ثابت هش SHA-256 به صورت hex.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.MediaAssetId">
+            <summary>شناسهٔ پایدار دارایی.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.StorageKey">
+            <summary>کلید نسبی داخل object store؛ هرگز از نام کلاینت ساخته نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.OriginalFileName">
+            <summary>نام فایل اصلی برای نمایش Admin.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.ContentType">
+            <summary>MIME نرمال‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.ByteSize">
+            <summary>اندازهٔ بایت ذخیره‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.Width">
+            <summary>عرض پیکسل در صورت استخراج موفق؛ وگرنه null.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.Height">
+            <summary>ارتفاع پیکسل در صورت استخراج موفق؛ وگرنه null.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.ChecksumSha256">
+            <summary>هش SHA-256 هگزادسیمال اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.Status">
+            <summary>وضعیت Ready/Failed.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="P:Tooba.Media.Domain.MediaAsset.CreatedByUserId">
+            <summary>شناسهٔ کاربر آپلودکننده در صورت موجود بودن.</summary>
+        </member>
+        <member name="M:Tooba.Media.Domain.MediaAsset.CreateReady(System.String,System.String,System.String,System.Int64,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Guid},System.DateTimeOffset,System.Nullable{System.Guid})">
+            <summary>دارایی Ready جدید می‌سازد؛ شناسه اختیاری برای هم‌ترازی با کلید ذخیره‌سازی است.</summary>
+        </member>
+        <member name="M:Tooba.Media.Domain.MediaAsset.MarkFailed(System.DateTimeOffset)">
+            <summary>دارایی را Failed علامت می‌زند.</summary>
+        </member>
+    </members>
+</doc>

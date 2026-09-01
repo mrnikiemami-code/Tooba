@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.PageComposition.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.PageComposition.Infrastructure.Migrations.InitialPageComposition">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Migrations.InitialPageComposition.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Migrations.InitialPageComposition.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Migrations.InitialPageComposition.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.PageCompositionDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ idempotent برای ترکیب پیش‌فرض خانه به‌ازای Tenant.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Threading.CancellationToken)">
+            <summary>ترکیب home پیش‌فرض را برای Tenantهای dev درج می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDevelopmentSeed.EnsureHomeAsync(Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext,System.Guid,System.DateTimeOffset,System.Threading.CancellationToken)">
+            <summary>ترکیب home پیش‌فرض را برای Tenant مشخص idempotent می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.PageCompositionDirectory">
+            <summary>دایرکتوری Page Composition با schema مستقل.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.#ctor(Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext)">
+            <summary>DbContext مالک را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.GetCatalogAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.GetHomeCompositionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminGetHomeAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminReorderHomeAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminUpdateSectionAsync(System.Guid,System.String,System.Guid,Tooba.PageComposition.Application.UpdateHomeSectionCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminAddSectionAsync(System.Guid,System.String,Tooba.PageComposition.Application.AddHomeSectionCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminRemoveSectionAsync(System.Guid,System.String,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionDirectory.AdminRestoreDefaultHomeAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.PageCompositionModule">
+            <summary>ماژول مستقل Page Composition و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.PageCompositionModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration">
+            <summary>ثبت Outbox PageComposition؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.PageCompositionOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext">
+            <summary>DbContext مالک schema مستقل page_composition.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.Schema">
+            <summary>schema اختصاصی PageComposition.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.PageDefinitions">
+            <summary>تعاریف صفحه.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.PageSections">
+            <summary>sectionهای صفحه.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت PageComposition.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Infrastructure.Persistence.PageCompositionDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,413 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Payment.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Payment.Domain.PaymentStatus">
+            <summary>
+            وضعیت پرداخت. با وضعیت سفارش یکی نیست؛ شروع درگاه به‌معنای Succeeded نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Created">
+            <summary>
+            رکورد ساخته شده و هنوز به درگاه نرفته.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Pending">
+            <summary>
+            شروع درگاه انجام شده؛ تا تأیید مستقل Succeeded نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Succeeded">
+            <summary>
+            فقط پس از Verify موفق درگاه.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Failed">
+            <summary>
+            تأیید یا تلاش شکست خورد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Cancelled">
+            <summary>
+            لغو شده؛ سفارش را خودکار Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentStatus.Expired">
+            <summary>
+            مهلت تلاش تمام شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentAttemptStatus">
+            <summary>
+            وضعیت یک تلاش درگاه. تاریخچهٔ تلاش بازنویسی نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentAttemptStatus.Initiated">
+            <summary>
+            شروع شده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentAttemptStatus.VerifiedSucceeded">
+            <summary>
+            درگاه Verify را تأیید کرد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentAttemptStatus.VerifiedFailed">
+            <summary>
+            درگاه Verify را رد کرد یا شکست اعلام کرد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Domain.PaymentAttemptStatus.Cancelled">
+            <summary>
+            تلاش لغو شد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentAllocation">
+            <summary>
+            تخصیص مبلغ یک پرداخت مشتری روی سفارش فروشنده. تسویه/پayout نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAllocation.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAllocation.AllocationId">
+            <summary>
+            شناسهٔ تخصیص.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAllocation.PaymentId">
+            <summary>
+            پرداخت مالک.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAllocation.SellerOrderId">
+            <summary>
+            سفارش فروشنده؛ FK به schema سفارش نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAllocation.AllocatedAmount">
+            <summary>
+            مبلغ تخصیص‌یافته.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAllocation.Currency">
+            <summary>
+            ارز تخصیص؛ باید با پرداخت یکی باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAllocation.Create(System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>
+            تخصیص را می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentAttempt">
+            <summary>
+            یک تلاش درگاه. شناسهٔ داخلی با شمارهٔ تراکنش ارائه‌دهنده یکی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAttempt.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.AttemptId">
+            <summary>
+            شناسهٔ تلاش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.PaymentId">
+            <summary>
+            پرداخت مالک.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.ProviderCode">
+            <summary>
+            کد درگاه انتزاعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.ProviderRequestReference">
+            <summary>
+            مرجع درخواست نزد درگاه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.ProviderTransactionReference">
+            <summary>
+            مرجع تراکنش پس از تأیید؛ کلید یکتایی درگاه است نه PK داخلی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.Status">
+            <summary>
+            وضعیت تلاش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.CompletedAt">
+            <summary>
+            زمان پایان تلاش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentAttempt.FailureCode">
+            <summary>
+            کد شکست درگاه در صورت وجود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAttempt.Initiate(System.Guid,System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            تلاش را پس از شروع درگاه می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAttempt.MarkVerifiedSuccess(System.String,System.DateTimeOffset)">
+            <summary>
+            تأیید موفق درگاه را روی همین تلاش ثبت می‌کند؛ تلاش قبلی را پاک نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentAttempt.MarkVerifiedFailure(System.String,System.DateTimeOffset)">
+            <summary>
+            تأیید ناموفق درگاه را ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.CustomerPayment">
+            <summary>
+            پرداخت مشتری روی تصویر تجاری سفارش. کارت ذخیره نمی‌شود و متن callback حقیقت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.PaymentId">
+            <summary>
+            شناسهٔ داخلی پرداخت؛ شمارهٔ درگاه نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.CheckoutId">
+            <summary>
+            گروه checkout مرجع؛ FK دیتابیس سفارش نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.Amount">
+            <summary>
+            مبلغ از تصویر سفارش؛ مشتری تعیین نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.Currency">
+            <summary>
+            ارز تصویر سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.Status">
+            <summary>
+            وضعیت پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.ProviderCode">
+            <summary>
+            کد درگاه انتخاب‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.IdempotencyKey">
+            <summary>
+            کلید تکرار شروع.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.CompletedAt">
+            <summary>
+            زمان موفقیت تأییدشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.Attempts">
+            <summary>
+            تلاش‌ها.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.Allocations">
+            <summary>
+            تخصیص چندفروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.CustomerPayment.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.Open(System.Guid,System.Decimal,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Guid,System.Decimal}},System.DateTimeOffset)">
+            <summary>
+            پرداخت را از تصویر سفارش می‌سازد. مبلغ ورودی مشتری پذیرفته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.RecordInitiation(System.String,System.DateTimeOffset)">
+            <summary>
+            شروع درگاه را ثبت می‌کند؛ Succeeded نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.ApplyVerifiedSuccess(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>
+            فقط پس از Verify درگاه Succeeded می‌شود. متن callback کافی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.ApplyVerifiedFailure(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>
+            شکست تأییدشدهٔ درگاه را اعمال می‌کند؛ سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.AlreadySucceededWith(System.String)">
+            <summary>
+            تلاش تکراری با همان مرجع تراکنش را تشخیص می‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.AttachLoadedAttempt(Tooba.Payment.Domain.PaymentAttempt)">
+            <summary>
+            تلاش بارگذاری‌شده از DbSet را به ریشه وصل می‌کند چون navigation در EF نادیده گرفته شده است.
+            بدون این اتصال، Verify روی مجموعهٔ خالی شکست می‌خورد و متن callback جای حقیقت درگاه را می‌گیرد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.CustomerPayment.AttachLoadedAllocations(System.Collections.Generic.IEnumerable{Tooba.Payment.Domain.PaymentAllocation})">
+            <summary>
+            تخصیص‌های بارگذاری‌شده از DbSet را به ریشه وصل می‌کند چون navigation در EF نادیده گرفته شده است.
+            بدون این اتصال، رویداد موفقیت SellerOrderIds خالی می‌سازد و تصویر Paid سفارش هرگز اعمال نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentCreatedDomainEvent">
+            <summary>
+            ایجاد پرداخت. سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentCreatedDomainEvent.#ctor(System.Guid,System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentCreatedDomainEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentCreatedDomainEvent.CheckoutId">
+            <summary>
+            checkout مرجع.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentInitiatedDomainEvent">
+            <summary>
+            شروع درگاه؛ موفقیت پرداخت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentInitiatedDomainEvent.#ctor(System.Guid,System.Guid,System.String)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentInitiatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentInitiatedDomainEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentInitiatedDomainEvent.AttemptId">
+            <summary>
+            تلاش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentInitiatedDomainEvent.ProviderRequestReference">
+            <summary>
+            مرجع درخواست درگاه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentSucceededDomainEvent">
+            <summary>
+            موفقیت فقط پس از Verify درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentSucceededDomainEvent.#ctor(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.Amount">
+            <summary>
+            مبلغ تصویر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.Currency">
+            <summary>
+            ارز.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.ProviderTransactionReference">
+            <summary>
+            مرجع تراکنش تأییدشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentSucceededDomainEvent.SellerOrderIds">
+            <summary>
+            سفارش‌های فروشندهٔ تخصیص‌یافته. تصویر Paid فقط روی همین‌ها اعمال می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Domain.PaymentFailedDomainEvent">
+            <summary>
+            شکست پس از Verify. سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Domain.PaymentFailedDomainEvent.#ctor(System.Guid,System.Guid,System.String)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentFailedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentFailedDomainEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentFailedDomainEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Domain.PaymentFailedDomainEvent.FailureCode">
+            <summary>
+            کد شکست درگاه.
+            </summary>
+        </member>
+    </members>
+</doc>

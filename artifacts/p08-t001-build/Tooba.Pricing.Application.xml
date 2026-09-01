@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Pricing.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Pricing.Application.PriceQuote">
+            <summary>
+            نتیجهٔ انتخاب قیمت پایه. مالیات محاسبه‌شده و نرخ FX نیست و قابل‌خرید بودن را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.PriceQuote.#ctor(System.Guid,System.Guid,System.String,Tooba.Offer.Domain.SalesChannel,System.Decimal,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            نتیجهٔ انتخاب قیمت پایه. مالیات محاسبه‌شده و نرخ FX نیست و قابل‌خرید بودن را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Application.PriceResolutionQuery">
+            <summary>
+            زمینهٔ انتخاب قیمت. فیلدهای اختیاری درز B2B آینده‌اند و امروز در DB اجباری نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.PriceResolutionQuery.#ctor(System.Guid,System.String,Tooba.Offer.Domain.SalesChannel,System.String,System.DateTimeOffset,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Decimal})">
+            <summary>
+            زمینهٔ انتخاب قیمت. فیلدهای اختیاری درز B2B آینده‌اند و امروز در DB اجباری نیستند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Application.IPriceLookupGateway">
+            <summary>
+            درز خواندن قیمت برای ماژول‌های بعدی بدون نشت EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPriceLookupGateway.ResolvePriceAsync(Tooba.Pricing.Application.PriceResolutionQuery,System.Threading.CancellationToken)">
+            <summary>
+            قیمت پایهٔ نوشته‌شده را در پایگاه Tenant/Marketplace جاری انتخاب می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Application.IPricingUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز موردکاربرد Pricing. ماتریس ادمین قیمت اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPricingUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن قیمت را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Application.IPriceDirectory">
+            <summary>
+            نوشتن foundation قیمت. پروموشن، مالیات، FX و UI اینجا نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPriceDirectory.CreatePriceAsync(System.Guid,System.String,Tooba.Offer.Domain.SalesChannel,System.Decimal,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <summary>
+            قیمت نوشته‌شده می‌سازد پس از تأیید Offer از قرارداد Lookup نه از DbContext Offer.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPriceDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            قیمت را برای انتخاب پایه فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPriceDirectory.ChangeAmountAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <summary>
+            مبلغ نوشته‌شده را عوض می‌کند. نتیجهٔ FX را جای حقیقت نمی‌گذارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Application.IPriceDirectory.ExpireAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            قیمت را از انتخاب خارج می‌کند.
+            </summary>
+        </member>
+    </members>
+</doc>

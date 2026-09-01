@@ -1,0 +1,342 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Inventory.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent">
+            <summary>
+            قرارداد Integration اصلاح موجودی. قیمت داخل payload نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent.StockItemId">
+            <summary>
+            موقعیت اصلاح‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent.OfferId">
+            <summary>
+            Offer هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAdjustedIntegrationEvent.Delta">
+            <summary>
+            تغییر OnHand.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent">
+            <summary>
+            قرارداد رزرو موجودی. سبد خرید ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent.ReservationId">
+            <summary>
+            رزرو ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservedIntegrationEvent.Quantity">
+            <summary>
+            مقدار قفل‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent">
+            <summary>
+            قرارداد آزادسازی رزرو.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent.ReservationId">
+            <summary>
+            رزرو آزادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReleasedIntegrationEvent.Quantity">
+            <summary>
+            مقدار برگشتی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent">
+            <summary>
+            قرارداد مصرف رزرو.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent.ReservationId">
+            <summary>
+            رزرو مصرف‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryReservationConsumedIntegrationEvent.Quantity">
+            <summary>
+            مقدار کسرشده از OnHand.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent">
+            <summary>
+            قرارداد تغییر موجودی قابل‌مشاهده. به‌تنهایی قابل‌خرید بودن نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent.StockItemId">
+            <summary>
+            موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Events.InventoryAvailabilityChangedIntegrationEvent.Available">
+            <summary>
+            موجودی قابل‌فروش مشتق.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.OpenInventoryUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد. ماتریس انبار اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.OpenInventoryUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.InventoryDirectory">
+            <summary>
+            نوشتن و خواندن موجودی با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
+            رزرو با UPDATE اتمی PostgreSQL است تا آخرین واحد دو بار فروخته نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.#ctor(Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext,Tooba.Inventory.Application.IInventoryUseCaseGuard,Tooba.Offer.Application.IOfferLookupGateway,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>
+            دایرکتوری را به schema Inventory و درز Offer/Catalog وصل می‌کند نه به join بین‌schema.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.GetAvailabilityAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.CreateLocationAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.OpenPositionAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.AdjustAsync(System.Guid,Tooba.Inventory.Domain.StockAdjustmentKind,System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.ReserveAsync(System.Guid,System.Int32,System.String,System.String,System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.ReleaseExpiredHoldsAsync(System.DateTimeOffset,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.ReleaseAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryDirectory.ConsumeAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.InventoryModule">
+            <summary>
+            ماژول Inventory: حقیقت موجودی Offer در محل. Product و Offer ستون موجودی ندارند؛ Cart اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.InventoryModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Inventory. ترجمه فقط رویدادهای صریح موجودی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.InventoryReturnGateway">
+            <summary>
+            restock مرجوعی از طریق schema inventory با dedup idempotency.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryReturnGateway.#ctor(Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext,Tooba.Inventory.Application.IInventoryUseCaseGuard,Tooba.Inventory.Application.IInventoryDirectory)">
+            <summary>
+            gateway را به schema inventory وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.InventoryReturnGateway.RestockFromReturnAsync(System.Guid,System.Int32,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext">
+            <summary>
+            DbContext مالک schema <c>inventory</c>. موجودی را روی Product یا Offer نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.Schema">
+            <summary>
+            schema اختصاصی Inventory.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.Locations">
+            <summary>
+            محل‌های نگهداری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.Positions">
+            <summary>
+            موقعیت‌های موجودی Offer در محل.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.Reservations">
+            <summary>
+            رزروهای Held/Released/Consumed.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.ReturnRestockInbox">
+            <summary>
+            dedup restock مرجوعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Inventory.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.InventoryDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.Migrations.InitialInventory">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.InitialInventory.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.InitialInventory.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.InitialInventory.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReservationExpiry">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReservationExpiry.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReservationExpiry.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReservationExpiry.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReturnRestockInbox">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReturnRestockInbox.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReturnRestockInbox.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Infrastructure.Persistence.Migrations.ReturnRestockInbox.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord">
+            <summary>
+            dedup idempotent restock مرجوعی در schema inventory.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord.IdempotencyKey">
+            <summary>کلید idempotency یکتا.</summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord.ReservationId">
+            <summary>رزرو مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord.Quantity">
+            <summary>تعداد restock.</summary>
+        </member>
+        <member name="P:Tooba.Inventory.Infrastructure.Persistence.ReturnRestockInboxRecord.ProcessedAt">
+            <summary>زمان پردازش.</summary>
+        </member>
+    </members>
+</doc>

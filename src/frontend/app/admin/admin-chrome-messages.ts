@@ -35,6 +35,7 @@ export type AdminNavLabels = {
   wallets: string;
   promotions: string;
   settings: string;
+  languages: string;
   accessControl: string;
   operations: string;
   signOut: string;
@@ -73,6 +74,7 @@ const faNav: AdminNavLabels = {
   wallets: "کیف پول مشتریان",
   promotions: "پروموشن‌ها",
   settings: "تنظیمات",
+  languages: "زبان‌ها",
   accessControl: "کنترل دسترسی",
   operations: "عملیات",
   signOut: "خروج",
@@ -111,6 +113,7 @@ const enNav: AdminNavLabels = {
   wallets: "Customer wallets",
   promotions: "Promotions",
   settings: "Settings",
+  languages: "Languages",
   accessControl: "Access control",
   operations: "Operations",
   signOut: "Sign out",

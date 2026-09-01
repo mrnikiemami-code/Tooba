@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Support.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Support.Application.TicketMessageDto">
+            <summary>پیام تیکت مطابق قرارداد FE.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.TicketMessageDto.#ctor(System.Guid,System.Guid,System.String,System.Guid,System.String,System.DateTimeOffset,System.Boolean)">
+            <summary>پیام تیکت مطابق قرارداد FE.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.TicketSnapshotDto">
+            <summary>جزئیات کامل تیکت مطابق TicketSnapshot.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.TicketSnapshotDto.#ctor(System.Guid,System.String,System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Nullable{System.Guid},System.DateTimeOffset,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Support.Application.TicketMessageDto})">
+            <summary>جزئیات کامل تیکت مطابق TicketSnapshot.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.TicketListRowDto">
+            <summary>ردیف فهرست تیکت.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.TicketListRowDto.#ctor(System.Guid,System.Guid,System.String,System.String,System.String,System.String,System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.DateTimeOffset})">
+            <summary>ردیف فهرست تیکت.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.TicketListPageDto">
+            <summary>صفحهٔ فهرست.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.TicketListPageDto.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Support.Application.TicketListRowDto},System.Int32,System.Int32,System.Int32)">
+            <summary>صفحهٔ فهرست.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.CreateTicketCommand">
+            <summary>ورودی ایجاد تیکت.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.CreateTicketCommand.#ctor(System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String)">
+            <summary>ورودی ایجاد تیکت.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.ReplyTicketCommand">
+            <summary>ورودی پاسخ.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ReplyTicketCommand.#ctor(System.String,System.Boolean,System.String)">
+            <summary>ورودی پاسخ.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.AdminTicketPatchCommand">
+            <summary>پچ Admin.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.AdminTicketPatchCommand.#ctor(System.String,System.String,System.Nullable{System.Guid})">
+            <summary>پچ Admin.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.AdminTicketListQuery">
+            <summary>فیلتر فهرست Admin.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.AdminTicketListQuery.#ctor(System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32)">
+            <summary>فیلتر فهرست Admin.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.AudienceTicketListQuery">
+            <summary>فیلتر فهرست مشتری/فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.AudienceTicketListQuery.#ctor(System.String,System.Int32,System.Int32)">
+            <summary>فیلتر فهرست مشتری/فروشنده.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.ISupportDirectory">
+            <summary>دایرکتوری کاربردی تیکت پشتیبانی.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ListForCustomerAsync(System.Guid,Tooba.Support.Application.AudienceTicketListQuery,System.Threading.CancellationToken)">
+            <summary>فهرست تیکت‌های مشتری مالک.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.GetForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات تیکت مشتری بدون یادداشت داخلی.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.CreateForCustomerAsync(System.Guid,Tooba.Support.Application.CreateTicketCommand,System.Threading.CancellationToken)">
+            <summary>ایجاد تیکت مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ReplyForCustomerAsync(System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <summary>پاسخ مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.CloseForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>بستن تیکت مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ReopenForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>بازگشایی تیکت مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ListForSellerAsync(System.Guid,Tooba.Support.Application.AudienceTicketListQuery,System.Threading.CancellationToken)">
+            <summary>فهرست تیکت‌های SellerParty.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.GetForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات تیکت فروشنده بدون یادداشت داخلی.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.CreateForSellerAsync(System.Guid,System.Guid,Tooba.Support.Application.CreateTicketCommand,System.Threading.CancellationToken)">
+            <summary>ایجاد تیکت فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ReplyForSellerAsync(System.Guid,System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <summary>پاسخ فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.CloseForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>بستن تیکت فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ReopenForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>بازگشایی تیکت فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ListForAdminAsync(Tooba.Support.Application.AdminTicketListQuery,System.Threading.CancellationToken)">
+            <summary>فهرست Admin با فیلتر.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.GetForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات Admin شامل یادداشت داخلی.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.ReplyForAdminAsync(System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <summary>پاسخ Admin؛ پاسخ عمومی ممکن است اعلان بسازد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.ISupportDirectory.PatchForAdminAsync(System.Guid,Tooba.Support.Application.AdminTicketPatchCommand,System.Threading.CancellationToken)">
+            <summary>پچ وضعیت/اولویت/ارجاع Admin.</summary>
+        </member>
+        <member name="T:Tooba.Support.Application.SupportEnumParsing">
+            <summary>کمک‌های پارس enum برای مرز Application.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.SupportEnumParsing.ParseCategory(System.String)">
+            <summary>دسته را پارس می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.SupportEnumParsing.ParsePriority(System.String)">
+            <summary>اولویت را پارس می‌کند؛ پیش‌فرض Normal.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.SupportEnumParsing.TryParseStatus(System.String)">
+            <summary>وضعیت اختیاری فیلتر را پارس می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.SupportEnumParsing.ParseStatus(System.String)">
+            <summary>وضعیت اجباری پچ را پارس می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Support.Application.SupportEnumParsing.TryParseRequesterKind(System.String)">
+            <summary>RequesterKind فیلتر را پارس می‌کند.</summary>
+        </member>
+    </members>
+</doc>

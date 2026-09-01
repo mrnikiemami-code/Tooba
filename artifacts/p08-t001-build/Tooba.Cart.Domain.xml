@@ -1,0 +1,462 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Cart.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Cart.Domain.CartStatus">
+            <summary>
+            وضعیت عمر سبد. سفارش، پرداخت یا موجودی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartStatus.Active">
+            <summary>
+            سبد باز است و خط می‌پذیرد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartStatus.Converted">
+            <summary>
+            سبد به درز تبدیل سفارش آینده رفته؛ Checkout اینجا اجرا نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartStatus.Expired">
+            <summary>
+            مهلت UTC سبد گذشته و رزروها باید آزاد شوند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartStatus.Abandoned">
+            <summary>
+            مالک سبد را رها کرده؛ رزروها آزاد می‌شوند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartAccessKind">
+            <summary>
+            گونهٔ دسترسی به سبد. CartId به‌تنهایی مجوز نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartAccessKind.Authenticated">
+            <summary>
+            مالک با هویت پایدار User.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartAccessKind.Guest">
+            <summary>
+            مهمان با راز پرمخاطره؛ فقط هش ذخیره می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartConversionIntent">
+            <summary>
+            مسیر تبدیل آینده. هر دو مدل سفارش از همین سبد شروع می‌شوند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartConversionIntent.None">
+            <summary>
+            هنوز تبدیل نشده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartConversionIntent.RequestToReserve">
+            <summary>
+            مبدأ سفارش Request-to-Reserve آینده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Domain.CartConversionIntent.OnlinePurchase">
+            <summary>
+            مبدأ خرید آنلاین آینده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartLine">
+            <summary>
+            خط سبد روی Offer فروشنده. Product به‌تنهایی هدف نیست و قیمت حقیقت تسویه نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLine.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.LineId">
+            <summary>
+            شناسهٔ پایدار خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.CartId">
+            <summary>
+            سبد مالک خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.OfferId">
+            <summary>
+            Offer فروشنده؛ موجودی و قیمت جداگانه از قرارداد خوانده می‌شوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.CatalogVariantId">
+            <summary>
+            گونهٔ Catalog کپی‌شده از Lookup؛ FK به schema کاتالوگ نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.SellerPartyId">
+            <summary>
+            فروشندهٔ Offer؛ چندفروشنده در یک سبد مجاز است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.Quantity">
+            <summary>
+            تعداد صحیح مثبت. اعشار نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.ReservationId">
+            <summary>
+            رزرو موجودی متعلق به این خط؛ جداول Inventory اینجا join نمی‌شوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.QuotedAmount">
+            <summary>
+            مبلغ نقل‌قول نمایشی. حقیقت تسویه یا مالیات محاسبه‌شده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.QuotedCurrency">
+            <summary>
+            ارز نقل‌قول؛ Locale نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.QuotedTaxExclusive">
+            <summary>
+            آیا مبلغ نقل‌قول بدون مالیات نوشته شده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.PriceId">
+            <summary>
+            شناسهٔ قیمت انتخاب‌شده در زمان نقل‌قول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLine.QuotedAt">
+            <summary>
+            زمان UTC گرفتن نقل‌قول نمایشی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLine.Open(System.Guid,System.Guid,System.Guid,System.Guid,System.Int32,System.Nullable{System.Guid},System.Decimal,System.String,System.Boolean,System.Guid,System.DateTimeOffset)">
+            <summary>
+            خط جدید با تعداد و نقل‌قول می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLine.ReplaceHold(System.Int32,System.Nullable{System.Guid},System.Decimal,System.String,System.Boolean,System.Guid,System.DateTimeOffset)">
+            <summary>
+            تعداد و رزرو و نقل‌قول را پس از هم‌ترازسازی موجودی عوض می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLine.ClearReservation">
+            <summary>
+            رزرو را پس از آزادسازی از خط جدا می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLine.EnsureQuantity(System.Int32)">
+            <summary>
+            تعداد باید عدد صحیح مثبت و حداکثر ۹۹ باشد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.ShoppingCart">
+            <summary>
+            سبد پایدار. سفارش، پرداخت، موجودی و منبع حقیقت قیمت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.CartId">
+            <summary>
+            شناسهٔ پایدار سبد؛ به‌تنهایی Bearer نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Status">
+            <summary>
+            وضعیت عمر سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.AccessKind">
+            <summary>
+            گونهٔ مالکیت و دسترسی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.OwnerUserId">
+            <summary>
+            هویت User برای سبد واردشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.GuestCredentialHash">
+            <summary>
+            هش SHA-256 راز مهمان؛ راز خام ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Market">
+            <summary>
+            بازار تجاری سبد. Locale نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Currency">
+            <summary>
+            ارز زمینهٔ سبد. Locale یا نام نمایشی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Channel">
+            <summary>
+            کانال فروش پایدار سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.ExpiresAt">
+            <summary>
+            مهلت UTC رزرو/عمر سبد؛ تایمر مرورگر نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.ConversionIntent">
+            <summary>
+            مسیر تبدیل ثبت‌شده پس از MarkConverted.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Version">
+            <summary>
+            نسخهٔ خوش‌بینانه برای جهش همزمان خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.CreatedAt">
+            <summary>
+            زمان ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.Lines">
+            <summary>
+            خطوط Offer داخل سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.ShoppingCart.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.CreateAuthenticated(System.Guid,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>
+            سبد واردشده می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.CreateGuest(System.String,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>
+            سبد مهمان می‌سازد؛ فقط هش راز را نگه می‌دارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.AddLine(Tooba.Cart.Domain.CartLine,System.DateTimeOffset)">
+            <summary>
+            خط تازه را اضافه می‌کند. ادغام Offer تکراری باید از مسیر تغییر تعداد باشد تا رزرو از مقدار خط بیشتر نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.FindLineByOffer(System.Guid)">
+            <summary>
+            خط را برای Offer پیدا می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.RequireLine(System.Guid)">
+            <summary>
+            خط را با شناسه پیدا می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.RecordLineChanged(System.Guid,System.Guid,System.Int32,System.DateTimeOffset)">
+            <summary>
+            پس از تغییر تعداد، رویداد و نسخه را جلو می‌برد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.RemoveLine(System.Guid,System.DateTimeOffset)">
+            <summary>
+            خط را حذف می‌کند پس از آزادسازی رزرو.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.Expire(System.DateTimeOffset)">
+            <summary>
+            سبد را منقضی می‌کند؛ سفارش ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.Abandon(System.DateTimeOffset)">
+            <summary>
+            سبد را رها می‌کند و از حالت فعال خارج می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.MarkConverted(Tooba.Cart.Domain.CartConversionIntent,System.DateTimeOffset)">
+            <summary>
+            درز تبدیل را بدون ساختن Order ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.RefreshExpiry(System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>
+            مهلت UTC سبد را برای رزروهای جدید هم‌تراز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.ShoppingCart.EnsureVersion(System.Int32)">
+            <summary>
+            نسخهٔ مورد انتظار کلاینت را با ردیف مقایسه می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد سبد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartCreatedDomainEvent.#ctor(System.Guid,Tooba.Cart.Domain.CartAccessKind)">
+            <summary>
+            رویداد ایجاد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartCreatedDomainEvent.CartId">
+            <summary>
+            سبد ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartCreatedDomainEvent.AccessKind">
+            <summary>
+            گونهٔ دسترسی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartLineAddedDomainEvent">
+            <summary>
+            رویداد افزودن خط Offer.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLineAddedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Int32)">
+            <summary>
+            رویداد افزودن را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineAddedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineAddedDomainEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineAddedDomainEvent.LineId">
+            <summary>
+            خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineAddedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineAddedDomainEvent.Quantity">
+            <summary>
+            تعداد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartLineChangedDomainEvent">
+            <summary>
+            رویداد تغییر تعداد خط.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLineChangedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Int32)">
+            <summary>
+            رویداد تغییر را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineChangedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineChangedDomainEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineChangedDomainEvent.LineId">
+            <summary>
+            خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineChangedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineChangedDomainEvent.Quantity">
+            <summary>
+            تعداد جدید.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartLineRemovedDomainEvent">
+            <summary>
+            رویداد حذف خط.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartLineRemovedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>
+            رویداد حذف را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineRemovedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineRemovedDomainEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineRemovedDomainEvent.LineId">
+            <summary>
+            خط حذف‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartLineRemovedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartExpiredDomainEvent">
+            <summary>
+            رویداد انقضا یا رهاسازی سبد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartExpiredDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد انقضا را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartExpiredDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartExpiredDomainEvent.CartId">
+            <summary>
+            سبد منقضی یا رهاشده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Domain.CartConvertedDomainEvent">
+            <summary>
+            رویداد درز تبدیل بدون ساختن Order.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Domain.CartConvertedDomainEvent.#ctor(System.Guid,Tooba.Cart.Domain.CartConversionIntent)">
+            <summary>
+            رویداد تبدیل را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartConvertedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartConvertedDomainEvent.CartId">
+            <summary>
+            سبد تبدیل‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Domain.CartConvertedDomainEvent.Intent">
+            <summary>
+            مسیر سفارش آینده.
+            </summary>
+        </member>
+    </members>
+</doc>

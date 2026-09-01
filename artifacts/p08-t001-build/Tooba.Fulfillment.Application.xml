@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Fulfillment.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Fulfillment.Application.IFulfillmentInventoryGateway">
+            <summary>
+            درز موجودی برای dispatch؛ Fulfillment مستقیم Inventory DbContext باز نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentInventoryGateway.ConsumeReservationAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            رزرو را پس از dispatch کامل خط مصرف می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.ShipmentLineCommand">
+            <summary>
+            خط محموله در فرمان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.ShipmentLineCommand.#ctor(System.Guid,System.Int32)">
+            <summary>
+            خط محموله در فرمان.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.FulfillmentSnapshot">
+            <summary>
+            snapshot خواندنی fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.FulfillmentSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,Tooba.Fulfillment.Domain.FulfillmentStatus,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Fulfillment.Application.FulfillmentItemSnapshot},System.Collections.Generic.IReadOnlyList{Tooba.Fulfillment.Application.ShipmentSnapshot})">
+            <summary>
+            snapshot خواندنی fulfillment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.FulfillmentItemSnapshot">
+            <summary>
+            snapshot خط fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.FulfillmentItemSnapshot.#ctor(System.Guid,System.Guid,System.Int32,System.Int32,System.Nullable{System.Guid})">
+            <summary>
+            snapshot خط fulfillment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.ShipmentSnapshot">
+            <summary>
+            snapshot محموله.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.ShipmentSnapshot.#ctor(System.Guid,Tooba.Fulfillment.Domain.ShipmentStatus,System.String,System.String,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.Collections.Generic.IReadOnlyList{Tooba.Fulfillment.Application.ShipmentLineSnapshot})">
+            <summary>
+            snapshot محموله.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.ShipmentLineSnapshot">
+            <summary>
+            snapshot خط محموله.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.ShipmentLineSnapshot.#ctor(System.Guid,System.Int32)">
+            <summary>
+            snapshot خط محموله.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.IFulfillmentDirectory">
+            <summary>
+            ارکستراسیون fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>fulfillment را می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.GetBySellerOrderAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>fulfillment را با SellerOrder می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.ListForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست fulfillment یک فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.ListAllAsync(System.Threading.CancellationToken)">
+            <summary>فهرست همه fulfillmentها برای admin.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.ListForCheckoutAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>fulfillmentهای یک checkout.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.MarkProcessingAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>به Processing می‌رود.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.MarkPackedAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>به Packed می‌رود.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.CreateShipmentAsync(System.Guid,System.Guid,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Fulfillment.Application.ShipmentLineCommand},System.Threading.CancellationToken)">
+            <summary>محموله می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.AssignTrackingAsync(System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>tracking idempotent ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.DispatchShipmentAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>محموله را dispatch می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentDirectory.DeliverShipmentAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>محموله را delivered علامت می‌زند.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.FulfillmentReturnEligibilitySnapshot">
+            <summary>
+            snapshot eligibility مرجوعی از fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.FulfillmentReturnEligibilitySnapshot.#ctor(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Int32},System.Nullable{System.DateTimeOffset})">
+            <summary>
+            snapshot eligibility مرجوعی از fulfillment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.IFulfillmentReturnReader">
+            <summary>
+            خواندن evidence تحویل برای Returns بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentReturnReader.GetEligibilityAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            snapshot eligibility مرجوعی را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.IFulfillmentUseCaseGuard">
+            <summary>
+            نگهبان use-case fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Application.IFulfillmentUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>اجازهٔ mutate را بررسی می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent">
+            <summary>
+            رویداد Outbox fulfillment.created.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.FulfillmentCreatedIntegrationEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent">
+            <summary>
+            رویداد Outbox shipment.dispatched.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent.ShipmentId">
+            <summary>شناسه محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Application.ShipmentDispatchedIntegrationEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+    </members>
+</doc>

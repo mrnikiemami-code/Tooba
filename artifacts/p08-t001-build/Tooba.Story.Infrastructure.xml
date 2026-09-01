@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Story.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Story.Infrastructure.Migrations.InitialStory">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.InitialStory.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.InitialStory.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.InitialStory.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.Migrations.AddStoryReviewOwnership">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.AddStoryReviewOwnership.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.AddStoryReviewOwnership.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Migrations.AddStoryReviewOwnership.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.Persistence.StoryDbContext">
+            <summary>DbContext مالک schema مستقل story.</summary>
+        </member>
+        <member name="F:Tooba.Story.Infrastructure.Persistence.StoryDbContext.Schema">
+            <summary>schema اختصاصی Story.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Persistence.StoryDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Story.Infrastructure.Persistence.StoryDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.Persistence.StoryDbContext.Stories">
+            <summary>استوری‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.Persistence.StoryDbContext.StoryItems">
+            <summary>آیتم‌های استوری.</summary>
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.Persistence.StoryDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Persistence.StoryDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.Persistence.StoryDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Story.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.Persistence.StoryDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.StoryDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ idempotent برای استوری‌های فعال StoreAlpha.</summary>
+        </member>
+        <member name="F:Tooba.Story.Infrastructure.StoryDevelopmentSeed.DevSellerPartyId">
+            <summary>فروشندهٔ نمونهٔ Marketplace برای استوری‌های Seller.</summary>
+        </member>
+        <member name="F:Tooba.Story.Infrastructure.StoryDevelopmentSeed.DevSellerActorId">
+            <summary>Actor نمونهٔ فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Threading.CancellationToken)">
+            <summary>استوری‌های نمونه را برای Tenantهای dev درج می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDevelopmentSeed.EnsureAsync(Tooba.Story.Infrastructure.Persistence.StoryDbContext,System.Guid,System.DateTimeOffset,System.Threading.CancellationToken)">
+            <summary>حداقل دو استوری Active با آیتم برای Tenant مشخص می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.StoryDirectory">
+            <summary>دایرکتوری Story با schema مستقل.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.#ctor(Tooba.Story.Infrastructure.Persistence.StoryDbContext)">
+            <summary>DbContext مالک را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.GetPublicStoriesAsync(System.Guid,System.String,System.String,System.DateTimeOffset,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminListAsync(System.Guid,System.Nullable{Tooba.Story.Domain.StoryReviewStatus},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminListPendingReviewAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminGetAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminCreateAsync(System.Guid,Tooba.Story.Application.CreateStoryCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminUpdateAsync(System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminSetStatusAsync(System.Guid,System.Guid,Tooba.Story.Domain.StoryStatus,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminSetScheduleAsync(System.Guid,System.Guid,Tooba.Story.Application.SetStoryScheduleCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminReorderStoriesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminAddItemAsync(System.Guid,System.Guid,Tooba.Story.Application.AddStoryItemCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminUpdateItemAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryItemCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminRemoveItemAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminReorderItemsAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminSoftDisableAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminApproveAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.AdminRejectAsync(System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerListAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerGetAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerCreateDraftAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.CreateStoryCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerUpdateAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerSubmitAsync(System.Guid,System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerAddItemAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.AddStoryItemCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerUpdateItemAsync(System.Guid,System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryItemCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerRemoveItemAsync(System.Guid,System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryDirectory.SellerReorderItemsAsync(System.Guid,System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.StoryModule">
+            <summary>ماژول مستقل Story و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.StoryModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Story.Infrastructure.StoryOutboxRegistration">
+            <summary>ثبت Outbox Story؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.StoryOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.StoryOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Story.Infrastructure.StoryOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Story.Infrastructure.StoryOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

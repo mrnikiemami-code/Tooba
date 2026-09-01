@@ -1,0 +1,336 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Tax.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Tax.Domain.TaxOutcome">
+            <summary>
+            نتیجهٔ محاسبهٔ مالیات. معافیت، نرخ صفر، نبودن قاعده و خطای محاسبه یکی نیستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOutcome.Taxable">
+            <summary>
+            قاعدهٔ درصدی اعمال شد و مبلغ مالیات جدا از قیمت پایه است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOutcome.Exempt">
+            <summary>
+            معافیت صریح؛ صفر شدن مبلغ به‌معنای نرخ صفر یا نبودن قاعده نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOutcome.ZeroRated">
+            <summary>
+            قاعدهٔ قابل‌اعمال با نرخ صفر؛ معافیت یا خطای پیکربندی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOutcome.NoApplicableRule">
+            <summary>
+            هیچ قاعدهٔ قابل‌اعمالی برای حوزه/بازار/طبقه در زمان محاسبات پیدا نشد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOutcome.CalculationError">
+            <summary>
+            محاسبه به‌خاطر ابهام قاعده، ارز ناسازگار یا دادهٔ نامعتبر شکست خورد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRuleKind">
+            <summary>
+            گونهٔ قاعده. نرخ درصد در کد حوزهٔ مالیاتی قفل نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleKind.Percentage">
+            <summary>
+            درصد پیکربندی‌شده روی مبلغ بدون مالیات.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleKind.Exempt">
+            <summary>
+            معافیت صریح با دلیل؛ نرخ صفر ساختگی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleKind.ZeroRated">
+            <summary>
+            نرخ صفرِ قابل‌اعمال.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRuleStatus">
+            <summary>
+            وضعیت انتشار قاعده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleStatus.Draft">
+            <summary>
+            پیش‌نویس؛ در محاسبه شرکت نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleStatus.Active">
+            <summary>
+            فعال در پنجرهٔ اعتبار.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxRuleStatus.Retired">
+            <summary>
+            بازنشسته.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxOverridePolicy">
+            <summary>
+            سیاست بازنویسی نرخ. مشتری/درخواست HTTP نرخ را تزریق نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOverridePolicy.Disabled">
+            <summary>
+            بازنویسی ممنوع است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Tax.Domain.TaxOverridePolicy.TrustedInternal">
+            <summary>
+            فقط مسیر داخلی معتمد با پرچم صریح سرور.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxCategory">
+            <summary>
+            طبقهٔ مالیاتی مات برای ارجاع Catalog/Offer؛ نرخ روی کالا ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxCategory.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCategory.CategoryId">
+            <summary>
+            شناسهٔ طبقه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCategory.Code">
+            <summary>
+            کد پایدار پیکربندی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCategory.DisplayName">
+            <summary>
+            توضیح عملیاتی؛ متن قانون نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCategory.CreatedAt">
+            <summary>
+            زمان ایجاد UTC.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxCategory.Create(System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            طبقه می‌سازد. نرخ مالیات اینجا نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxOfferClassification">
+            <summary>
+            انتساب طبقه به Offer. نرخ و مبلغ مالیات اینجا ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxOfferClassification.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxOfferClassification.OfferId">
+            <summary>
+            Offer طرف قرارداد؛ FK به schema offer نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxOfferClassification.CategoryId">
+            <summary>
+            طبقهٔ مالیاتی مات.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxOfferClassification.Assign(System.Guid,System.Guid)">
+            <summary>
+            انتساب می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRule">
+            <summary>
+            قاعدهٔ مؤثر به تاریخ با حوزهٔ مالیاتی صریح. نرخ ایران یا تاریخ قانون در کد قفل نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.RuleId">
+            <summary>
+            شناسهٔ قاعده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Jurisdiction">
+            <summary>
+            حوزهٔ مالیاتی صریح؛ از Locale یا Market استنباط نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Market">
+            <summary>
+            بازار تجاری در صورت نیاز به تفکیک پیکربندی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.CategoryId">
+            <summary>
+            طبقهٔ مشمول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Kind">
+            <summary>
+            گونهٔ قاعده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Rate">
+            <summary>
+            نرخ کسری (مثلاً ۰٫۰۹). برای معافیت و نرخ صفر صفر است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.EffectiveFrom">
+            <summary>
+            شروع اعتبار UTC. تاریخ جلالی کلید دامنه نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.EffectiveTo">
+            <summary>
+            پایان اعتبار اختیاری UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Status">
+            <summary>
+            وضعیت انتشار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.Specificity">
+            <summary>
+            اولویت؛ عدد بزرگ‌تر خاص‌تر است. تساوی اولویت در همپوشانی خطا است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.OverridePolicy">
+            <summary>
+            سیاست بازنویسی داخلی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRule.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.Create(System.String,System.String,System.Guid,Tooba.Tax.Domain.TaxRuleKind,System.Decimal,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Int32,Tooba.Tax.Domain.TaxOverridePolicy,System.DateTimeOffset)">
+            <summary>
+            قاعده می‌سازد. درصد حوزه در کد سخت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.Activate(System.DateTimeOffset)">
+            <summary>
+            قاعده را برای انتخاب فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.ChangeRate(System.Decimal,System.DateTimeOffset)">
+            <summary>
+            نرخ پیش‌نویس را عوض می‌کند. تصویر سفارش تاریخی را بازنویسی نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRule.IsEffectiveAt(System.DateTimeOffset)">
+            <summary>
+            آیا لحظه داخل پنجره است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRounding">
+            <summary>
+            گرد کردن قطعی مبلغ مالیات طبق مقیاس ارز. ممیز شناور نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRounding.Round(System.Decimal,System.String)">
+            <summary>
+            IRR بدون اعشار؛ بقیه دو رقم. Midpoint AwayFromZero.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRuleCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد قاعده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRuleCreatedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleCreatedDomainEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRuleActivatedDomainEvent">
+            <summary>
+            رویداد فعال‌سازی قاعده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRuleActivatedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleActivatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleActivatedDomainEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxRuleChangedDomainEvent">
+            <summary>
+            رویداد تغییر قاعده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxRuleChangedDomainEvent.#ctor(System.Guid)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleChangedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxRuleChangedDomainEvent.RuleId">
+            <summary>
+            قاعده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Tax.Domain.TaxCalculationFailedDomainEvent">
+            <summary>
+            رویداد شکست محاسبه برای مشاهده‌پذیری.
+            </summary>
+        </member>
+        <member name="M:Tooba.Tax.Domain.TaxCalculationFailedDomainEvent.#ctor(Tooba.Tax.Domain.TaxOutcome)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCalculationFailedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Tax.Domain.TaxCalculationFailedDomainEvent.Outcome">
+            <summary>
+            نتیجهٔ شکست.
+            </summary>
+        </member>
+    </members>
+</doc>

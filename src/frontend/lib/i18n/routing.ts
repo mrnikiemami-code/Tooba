@@ -8,6 +8,7 @@ import {
   parseLocale,
   type Locale,
 } from "./locale.ts";
+import { contentApiLocaleForUrlPrefix } from "./supported-locales.ts";
 
 export const LOCALE_HEADER_NAME = "x-tooba-locale";
 
@@ -96,7 +97,7 @@ export function resolvePreferredLocale(cookieValue: string | null | undefined): 
 
 /** BCP-47 برای API Content/PageComposition. */
 export function localeToContentApi(locale: Locale): string {
-  return locale === "fa" ? "fa-IR" : "en";
+  return contentApiLocaleForUrlPrefix(locale);
 }
 
 /** hreflang tag value. */

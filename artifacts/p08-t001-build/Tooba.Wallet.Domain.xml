@@ -1,0 +1,248 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wallet.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wallet.Domain.WalletAccountStatus">
+            <summary>وضعیت حساب کیف پول مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletAccountStatus.Active">
+            <summary>فعال و قابل اعتبار/بدهکار.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletAccountStatus.Frozen">
+            <summary>مسدود؛ فقط خواندن.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.LedgerDirection">
+            <summary>جهت سطر دفتر کیف پول؛ مبلغ همیشه مثبت است.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerDirection.Credit">
+            <summary>افزایش موجودی مشتق‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerDirection.Debit">
+            <summary>کاهش موجودی مشتق‌شده.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.LedgerEntryType">
+            <summary>نوع معنایی سطر دفتر.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerEntryType.GiftCardCredit">
+            <summary>اعتبار از بازخرید کارت هدیه.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerEntryType.AdminAdjustment">
+            <summary>تعدیل ممیزی‌شدهٔ Admin.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerEntryType.OrderPaymentDebit">
+            <summary>بدهکار پرداخت سفارش (ATOMIC_DEBIT_AT_PAID).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.LedgerEntryType.RefundCredit">
+            <summary>اعتبار بازگشت وجه به کیف پول.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.GiftCardStatus">
+            <summary>وضعیت کارت هدیه.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardStatus.Active">
+            <summary>فعال و قابل بازخرید.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardStatus.Redeemed">
+            <summary>کاملاً مصرف‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardStatus.PartiallyRedeemed">
+            <summary>بخشی مصرف‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardStatus.Expired">
+            <summary>منقضی.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardStatus.Revoked">
+            <summary>باطل‌شده توسط Admin.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.WalletAccount">
+            <summary>حساب کیف پول مشتری؛ موجودی در خود حساب ذخیره نمی‌شود.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletAccount.DefaultCurrency">
+            <summary>ارز پیش‌فرض IRR.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.AccountId">
+            <summary>شناسهٔ پایدار حساب.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.CustomerActorUserId">
+            <summary>Actor مشتری مالک.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.Currency">
+            <summary>ارز حساب.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.Status">
+            <summary>وضعیت حساب.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletAccount.Create(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>حساب Active جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletAccount.CreateSeeded(System.Guid,System.Guid,System.String,Tooba.Wallet.Domain.WalletAccountStatus,System.DateTimeOffset)">
+            <summary>حساب با شناسهٔ ثابت برای دانهٔ توسعه.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletAccount.CanMutateLedger">
+            <summary>آیا حساب برای اعتبار/بدهکار باز است.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletAccount.NormalizeCurrency(System.String)">
+            <summary>ارز را نرمال و اعتبارسنجی می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.WalletLedgerEntry">
+            <summary>سطر immutable دفتر کیف پول؛ موجودی فقط از مجموع این سطرها مشتق می‌شود.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletLedgerEntry.IdempotencyKeyMaxLength">
+            <summary>حداکثر طول کلید idempotency.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletLedgerEntry.SourceTypeMaxLength">
+            <summary>حداکثر طول نوع منبع.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.WalletLedgerEntry.MetadataMaxLength">
+            <summary>حداکثر طول metadata JSON.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.EntryId">
+            <summary>شناسهٔ سطر.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.AccountId">
+            <summary>حساب مالک.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.Type">
+            <summary>نوع معنایی.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.Amount">
+            <summary>مبلغ مثبت.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.Direction">
+            <summary>جهت Credit/Debit.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.SourceType">
+            <summary>نوع منبع بدون FK.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.SourceId">
+            <summary>شناسهٔ منبع بدون FK.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.IdempotencyKey">
+            <summary>کلید یکتای idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.Metadata">
+            <summary>metadata امن اختیاری.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletLedgerEntry.PostGiftCardCredit(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.DateTimeOffset,System.String)">
+            <summary>سطر Credit از کارت هدیه می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletLedgerEntry.PostAdminAdjustment(System.Guid,System.Guid,System.Decimal,System.String,Tooba.Wallet.Domain.LedgerDirection,System.String,System.DateTimeOffset,System.String)">
+            <summary>سطر تعدیل Admin می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletLedgerEntry.PostOrderPaymentDebit(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.DateTimeOffset,System.String)">
+            <summary>سطر بدهکار پرداخت سفارش می‌سازد؛ SourceType=payment.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletLedgerEntry.PostRefundCredit(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.DateTimeOffset,System.String)">
+            <summary>سطر اعتبار refund به کیف پول می‌سازد؛ SourceType=refund.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.WalletLedgerEntry.CreateSeeded(System.Guid,System.Guid,Tooba.Wallet.Domain.LedgerEntryType,System.Decimal,System.String,Tooba.Wallet.Domain.LedgerDirection,System.String,System.Guid,System.String,System.DateTimeOffset,System.String)">
+            <summary>سطر با شناسهٔ ثابت برای دانه.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.WalletLedgerEntry.SignedAmount">
+            <summary>سهم سطر در موجودی مشتق‌شده.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.GiftCard">
+            <summary>کارت هدیه؛ فقط CodeHash ذخیره می‌شود.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCard.CodeHashMaxLength">
+            <summary>حداکثر طول هش کد.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCard.IdempotencyKeyMaxLength">
+            <summary>حداکثر طول کلید idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.CardId">
+            <summary>شناسهٔ کارت.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.CodeHash">
+            <summary>هش یک‌طرفهٔ کد؛ plaintext ذخیره نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.InitialAmount">
+            <summary>مبلغ اولیه.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.RemainingAmount">
+            <summary>ماندهٔ قابل بازخرید.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.Status">
+            <summary>وضعیت.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.IssuedAt">
+            <summary>زمان صدور.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.ExpiresAt">
+            <summary>انقضا اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.RecipientActorUserId">
+            <summary>گیرندهٔ اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.CreatedByActorUserId">
+            <summary>Actor صادرکننده.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCard.IdempotencyKey">
+            <summary>کلید idempotency صدور.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.Issue(System.Decimal,System.String,System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid},System.String)">
+            <summary>کارت جدید صادر می‌کند و کد نمایشی را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.CreateSeeded(System.Guid,System.String,System.Decimal,System.Decimal,System.String,Tooba.Wallet.Domain.GiftCardStatus,System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid})">
+            <summary>کارت دانه‌شده با کد شناخته‌شده.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.Revoke(System.DateTimeOffset)">
+            <summary>باطل‌کردن کارت توسط Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.ApplyRedemption(System.Decimal,System.DateTimeOffset)">
+            <summary>بازخرید مبلغ از کارت؛ وضعیت را به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.EnsureRedeemable(System.DateTimeOffset)">
+            <summary>اعتبارسنجی قبل از بازخرید.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.HashCode(System.String)">
+            <summary>هش پایدار کد نرمال‌شده.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCard.NormalizeCode(System.String)">
+            <summary>کد را برای مقایسه نرمال می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Domain.GiftCardRedemption">
+            <summary>ثبت بازخرید کارت هدیه به حساب کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Domain.GiftCardRedemption.IdempotencyKeyMaxLength">
+            <summary>حداکثر طول کلید idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.RedemptionId">
+            <summary>شناسهٔ بازخرید.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.CardId">
+            <summary>کارت.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.AccountId">
+            <summary>حساب اعتبارگیرنده.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.Amount">
+            <summary>مبلغ بازخرید.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.IdempotencyKey">
+            <summary>کلید یکتای idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Domain.GiftCardRedemption.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCardRedemption.Create(System.Guid,System.Guid,System.Decimal,System.String,System.DateTimeOffset)">
+            <summary>بازخرید جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Domain.GiftCardRedemption.CreateSeeded(System.Guid,System.Guid,System.Guid,System.Decimal,System.String,System.DateTimeOffset)">
+            <summary>بازخرید دانه‌شده.</summary>
+        </member>
+    </members>
+</doc>

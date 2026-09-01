@@ -12,7 +12,9 @@ test("order detail screen keeps compact premium layout hooks", () => {
   assert.match(screenSource, /min-h-\[104px\]/);
   assert.match(screenSource, /بخش مالی سفارش/);
   assert.match(screenSource, /formatAdminPaymentProvider/);
-  assert.doesNotMatch(screenSource, /AgGridReact/);
+  assert.match(screenSource, /resolvePaymentStatusCard/);
+  assert.match(screenSource, /resolveOrderStatusCard/);
+  assert.doesNotMatch(screenSource, /value=\{.*BadgeState\.text\}/);
 });
 
 test("T042-R1 finance fields still map after visual polish", () => {

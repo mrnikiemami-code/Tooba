@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AddressBook.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AddressBook.Application.CustomerAddressRecord">
+            <summary>نمایهٔ خصوصی یک نشانی متعلق به Actor جاری؛ شناسهٔ مالک را به کلاینت برنمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.CustomerAddressRecord.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>نمایهٔ خصوصی یک نشانی متعلق به Actor جاری؛ شناسهٔ مالک را به کلاینت برنمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.AddressBook.Application.CustomerAddressWrite">
+            <summary>ورودی نوشتن دفترچه؛ OwnerUserId ندارد و هویت از Host می‌آید.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.CustomerAddressWrite.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean)">
+            <summary>ورودی نوشتن دفترچه؛ OwnerUserId ندارد و هویت از Host می‌آید.</summary>
+        </member>
+        <member name="T:Tooba.AddressBook.Application.IAddressBookDirectory">
+            <summary>
+            قرارداد کاربردی دفترچهٔ آدرس مشتری. تمام عملیات با Actor تأمین‌شده از Host محدود می‌شوند
+            و بدنهٔ درخواست اختیار مالکیت ندارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.CreateAsync(System.Guid,Tooba.AddressBook.Application.CustomerAddressWrite,System.Threading.CancellationToken)">
+            <summary>نشانی جدید را برای Actor می‌سازد و در صورت پیش‌فرض بودن، پیش‌فرض قبلی را اتمیک پاک می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.ListAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست خصوصی Actor را با پیش‌فرض‌ها در ابتدا برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.GetAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>یک نشانی متعلق به Actor را برمی‌گرداند؛ ردیف غریبه یا غایب تهی است.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.UpdateAsync(System.Guid,System.Guid,Tooba.AddressBook.Application.CustomerAddressWrite,System.Threading.CancellationToken)">
+            <summary>نشانی متعلق به Actor را ویرایش می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.DeleteAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>نشانی متعلق به Actor را حذف می‌کند؛ حذف پیش‌فرض جایگزین خودکار ندارد.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.SetDefaultAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>یک نشانی متعلق به Actor را پیش‌فرض می‌کند و پیش‌فرض قبلی را اتمیک برمی‌دارد.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Application.IAddressBookDirectory.CountAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>تعداد نشانی‌های خصوصی Actor را برمی‌گرداند.</summary>
+        </member>
+    </members>
+</doc>

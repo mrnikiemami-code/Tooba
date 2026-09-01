@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Order.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Order.Application.OrderLineSnapshot">
+            <summary>
+            خط سفارش برای خواندن. موجودیت EF نیست و قیمت جاری Pricing نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderLineSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Int32,System.Decimal,System.Decimal,System.String,System.Boolean,System.Guid,System.Nullable{System.Guid},System.String,System.Decimal,System.Decimal,System.Decimal,System.Nullable{System.Guid},System.Decimal,System.Nullable{System.Guid},System.String,System.String,System.String,System.Decimal,System.Decimal,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            خط سفارش برای خواندن. موجودیت EF نیست و قیمت جاری Pricing نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.SellerOrderSnapshot">
+            <summary>
+            سفارش یک فروشنده داخل checkout. چرخهٔ ارسال نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.SellerOrderSnapshot.#ctor(System.Guid,System.String,System.Guid,Tooba.Order.Domain.SellerOrderStatus,System.Decimal,System.Decimal,System.Decimal,System.Decimal,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Order.Application.OrderLineSnapshot})">
+            <summary>
+            سفارش یک فروشنده داخل checkout. چرخهٔ ارسال نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.CheckoutSnapshot">
+            <summary>
+            نتیجهٔ checkout. سبد نیست و پرداخت انجام‌شده نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.CheckoutSnapshot.#ctor(System.Guid,System.Guid,Tooba.Order.Domain.OrderMode,System.Nullable{System.Guid},System.Guid,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.Order.Application.SellerOrderSnapshot},System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            نتیجهٔ checkout. سبد نیست و پرداخت انجام‌شده نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.SubmitCheckoutCommand">
+            <summary>
+            فرمان ارسال checkout از روی سبد فعال.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.SubmitCheckoutCommand.#ctor(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,Tooba.Order.Domain.OrderMode,System.Nullable{System.Guid},System.Guid,System.String,System.String,System.String,System.Nullable{System.Decimal},System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            فرمان ارسال checkout از روی سبد فعال.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderAccess">
+            <summary>
+            هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderAccess.#ctor(System.Nullable{System.Guid},System.Nullable{System.Guid})">
+            <summary>
+            هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.IOrderUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز Order. ماتریس نهایی فروشنده اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن checkout را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.ICheckoutDirectory">
+            <summary>
+            ارکستراسیون checkout روی قراردادهای Cart/Offer/Pricing/Inventory. DbContext آن‌ها لمس نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.ICheckoutDirectory.SubmitAsync(Tooba.Order.Application.SubmitCheckoutCommand,System.Threading.CancellationToken)">
+            <summary>
+            سبد را به گروه checkout و سفارش‌های فروشنده تبدیل می‌کند. تکرار با همان کلید سفارش تکراری نمی‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.ICheckoutDirectory.PreviewAsync(Tooba.Order.Application.SubmitCheckoutCommand,System.Threading.CancellationToken)">
+            <summary>
+            همان ارزیابی تجاری Submit را بدون ماندگاری CheckoutGroup برمی‌گرداند تا ویترین مبلغ را از React حساب نکند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.ICheckoutDirectory.GetCheckoutAsync(System.Guid,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <summary>
+            checkout را پس از احراز هویت خریدار یا کاربر عامل برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.ICheckoutDirectory.GetSellerOrderByNumberAsync(System.String,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <summary>
+            سفارش فروشنده را با شمارهٔ مرجع پس از احراز هویت برمی‌گرداند. شماره به‌تنهایی کافی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.ICheckoutDirectory.CancelSellerOrderAsync(System.Guid,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <summary>
+            سفارش فروشنده را در صورت ایمن بودن لغو می‌کند و رزرو را از قرارداد Inventory آزاد می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderPurchaseVerification">
+            <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderPurchaseVerification.#ctor(System.Boolean,System.Nullable{System.Guid})">
+            <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Order.Application.OrderPurchaseVerification.NotVerified">
+            <summary>نتیجهٔ بسته و بدون اثبات.</summary>
+        </member>
+        <member name="T:Tooba.Order.Application.IOrderPurchaseVerificationGateway">
+            <summary>درز Order-owned برای اثبات خرید محصول بدون وابستگی Order به Catalog.</summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderPurchaseVerificationGateway.VerifyPaidPurchaseAsync(System.Guid,System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            وجود سفارش Paid متعلق به Actor را برای یکی از شناسه‌های گونهٔ داده‌شده بررسی می‌کند؛
+            نگاشت محصول به گونه‌ها پیش از فراخوانی و توسط مصرف‌کنندهٔ Catalog انجام می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderFulfillmentHandoffSnapshot">
+            <summary>
+            snapshot immutable سفارش برای handoff fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderFulfillmentHandoffSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Boolean,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Order.Application.OrderFulfillmentLineSnapshot})">
+            <summary>
+            snapshot immutable سفارش برای handoff fulfillment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderFulfillmentLineSnapshot">
+            <summary>
+            خط سفارش برای fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderFulfillmentLineSnapshot.#ctor(System.Guid,System.Int32,System.Nullable{System.Guid})">
+            <summary>
+            خط سفارش برای fulfillment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.IOrderFulfillmentReader">
+            <summary>
+            خواندن snapshot سفارش برای Fulfillment بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderFulfillmentReader.GetHandoffAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            snapshot handoff را برای SellerOrder برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderFulfillmentReader.GetHandoffForCheckoutAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            snapshot checkout را برای مشتری برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderReturnLineSnapshot">
+            <summary>
+            snapshot خط سفارش برای مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderReturnLineSnapshot.#ctor(System.Guid,System.Int32,System.Decimal,System.String,System.Nullable{System.Guid})">
+            <summary>
+            snapshot خط سفارش برای مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderReturnContextSnapshot">
+            <summary>
+            snapshot سفارش برای eligibility مرجوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderReturnContextSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Boolean,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Order.Application.OrderReturnLineSnapshot})">
+            <summary>
+            snapshot سفارش برای eligibility مرجوعی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.IOrderReturnReader">
+            <summary>
+            خواندن snapshot سفارش برای Returns بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderReturnReader.GetReturnContextAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            snapshot سفارش را برای مرجوعی برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderNotificationRecipientSnapshot">
+            <summary>
+            snapshot گیرندگان اعلان از checkout بدون افشای DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderNotificationRecipientSnapshot.#ctor(System.Guid,System.Nullable{System.Guid},System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Order.Application.OrderNotificationSellerSnapshot})">
+            <summary>
+            snapshot گیرندگان اعلان از checkout بدون افشای DbContext.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.OrderNotificationSellerSnapshot">
+            <summary>
+            فروشندهٔ یک سفارش برای اعلان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.OrderNotificationSellerSnapshot.#ctor(System.Guid,System.Guid)">
+            <summary>
+            فروشندهٔ یک سفارش برای اعلان.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Application.IOrderNotificationReader">
+            <summary>
+            خواندن گیرندگان اعلان از Order بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderNotificationReader.GetByCheckoutIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>گیرندگان را از CheckoutId می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Order.Application.IOrderNotificationReader.GetBySellerOrderIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>گیرندگان را از SellerOrderId می‌خواند.</summary>
+        </member>
+    </members>
+</doc>

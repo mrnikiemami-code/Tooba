@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.BulkInquiry.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.BulkInquiryDirectory">
+            <summary>دایرکتوری BulkInquiry با خواندن فقط از قرارداد Catalog و schema خودش.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryDirectory.#ctor(Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>وابستگی‌های مالک را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryDirectory.SubmitAsync(Tooba.BulkInquiry.Application.SubmitBulkInquiryRequest,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.BulkInquiryModule">
+            <summary>ماژول مستقل BulkInquiry و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.BulkInquiryModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration">
+            <summary>ثبت Outbox BulkInquiry؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.BulkInquiryOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.Migrations.InitialBulkInquiry">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Migrations.InitialBulkInquiry.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Migrations.InitialBulkInquiry.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Migrations.InitialBulkInquiry.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext">
+            <summary>DbContext مالک schema مستقل bulk_inquiry.</summary>
+        </member>
+        <member name="F:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext.Schema">
+            <summary>schema اختصاصی BulkInquiry.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext.Inquiries">
+            <summary>درخواست‌های خرید عمده.</summary>
+        </member>
+        <member name="P:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت BulkInquiry.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Infrastructure.Persistence.BulkInquiryDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

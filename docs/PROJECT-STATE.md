@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P07 — Advanced Catalog
+P08 — Content / i18n Foundation
 ```
 
 Pipeline Mode:
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P07-T037
+TB-P07-T043
 ```
 
 Prior accepted catalog wave:
@@ -47,6 +47,9 @@ TB-P07-T037
 TB-P07-T038
 TB-P07-T038-R1
 TB-P07-T039
+TB-P07-T041
+TB-P07-T042-R1
+TB-P07-T043
 ```
 
 
@@ -59,13 +62,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T043
+TB-P08-T001
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T043
+(none)
 ```
 
 Current Repair Task:
@@ -77,9 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T043 — Order Detail visual fidelity polish (header density, summary cards, financial section, history grid); T042-R1 data wiring preserved; user-directed UI polish 9d350a9a preserved
-TB-P07-T042-R1 — Order Detail financial data wiring repair (accepted baseline)
-TB-P07-T041 — admin DB-native grid query repair
+TB-P08-T001 — Order status card repair + Content/i18n discovery + Language foundation/admin
+TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserved
 ```
 
 USER_VISUAL_ACCEPTED:

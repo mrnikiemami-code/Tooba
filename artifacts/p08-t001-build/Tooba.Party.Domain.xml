@@ -1,0 +1,395 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Party.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Party.Domain.PartyKind">
+            <summary>
+            گونهٔ Party. شخص کسب‌وکار است نه UserAccount؛ سازمان هم ردیف User نیست.
+            Seller/Agency/Customer اینجا enum نهایی مجوز یا نقش ورود نیستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyKind.Person">
+            <summary>
+            موجودیت انسانی کسب‌وکار. اعتبار ورود Identity را کپی نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyKind.Organization">
+            <summary>
+            موجودیت سازمانی. قابلیت‌های تجاری بعدی با کدهای گسترش‌پذیر ثبت می‌شوند نه با SellerOnly.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.PartyStatus">
+            <summary>
+            وضعیت چرخهٔ عمر Party در منبع حقیقت کسب‌وکار. مجوز SpiceDB نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyStatus.Active">
+            <summary>
+            Party برای پیوند و عضویت قابل استفاده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyStatus.Disabled">
+            <summary>
+            Party از جریان کسب‌وکار کنار گذاشته شده؛ حذف سخت هویت ورود نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.MembershipStatus">
+            <summary>
+            وضعیت عضویت. وجود عضویت به‌تنهایی همهٔ مجوزها را نمی‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.MembershipStatus.Active">
+            <summary>
+            پیوند کسب‌وکار برقرار است و می‌تواند به SpiceDB تصویر شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.MembershipStatus.Ended">
+            <summary>
+            پیوند پایان یافته؛ مجوز را SpiceDB schema تعیین می‌کند نه این مقدار به‌تنهایی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.MembershipRelationCodes">
+            <summary>
+            کدهای رابطهٔ عضویت به‌عنوان انجمن کسب‌وکار. ستون Role/Permission نهایی نیستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.MembershipRelationCodes.Member">
+            <summary>
+            عضو سازمان یا مرتبط با Party؛ معادل ماتریس مجوز محصول نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.OrganizationRelationCodes">
+            <summary>
+            کدهای رابطهٔ سازمان‌به‌سازمان. فهرست بستهٔ B2B نیست؛ کد جدید بدون بازنویسی هسته اضافه می‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.OrganizationRelationCodes.ParentOf">
+            <summary>
+            رابطهٔ والد/فرزند سازمانی برای سلسله‌مراتب آینده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.OrganizationRelationCodes.OperatedBy">
+            <summary>
+            درز «فروشنده توسط» بدون قفل Seller module.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.OrganizationRelationCodes.Represents">
+            <summary>
+            درز نمایندگی آژانس بدون پورتال آژانس.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.PartyCapabilityCodes">
+            <summary>
+            کد قابلیت تجاری گسترش‌پذیر روی سازمان. یک سازمان می‌تواند چند قابلیت داشته باشد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyCapabilityCodes.Seller">
+            <summary>
+            درز فروشنده؛ در این foundation فعال‌سازی onboarding نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyCapabilityCodes.Agency">
+            <summary>
+            درز آژانس.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.PartyCapabilityCodes.CorporateBuyer">
+            <summary>
+            درز خریدار سازمانی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.BusinessParty">
+            <summary>
+            ریشهٔ کسب‌وکار شخص/سازمان. نام CLR با namespace ماژول یکی نیست تا ابهام Tooba.Party پیش نیاید.
+            Tenant نیست، UserAccount نیست، و credential ورود ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.PartyId">
+            <summary>
+            شناسهٔ پایدار Party در schema همین ماژول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.Kind">
+            <summary>
+            شخص یا سازمان. ارث از Identity نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.DisplayName">
+            <summary>
+            نام نمایشی کسب‌وکار؛ ایمیل ورود Identity نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.LegalName">
+            <summary>
+            نام حقوقی اختیاری. قانون مالیاتی کشور اینجا قفل نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.BusinessParty.DescriptionMaxLength">
+            <summary>
+            حداکثر طول توضیح عملیاتی سازمان.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.BusinessParty.SupportPhoneMaxLength">
+            <summary>
+            حداکثر طول تلفن پشتیبانی سازمان.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.BusinessParty.SupportEmailMaxLength">
+            <summary>
+            حداکثر طول ایمیل پشتیبانی سازمان.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Domain.BusinessParty.AddressLineMaxLength">
+            <summary>
+            حداکثر طول نشانی عملیاتی سازمان.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.Description">
+            <summary>
+            توضیح کوتاه عملیاتی سازمان؛ برای Person معنا ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.SupportPhone">
+            <summary>
+            تلفن پشتیبانی سازمان؛ شناسهٔ ورود Identity نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.SupportEmail">
+            <summary>
+            ایمیل پشتیبانی سازمان؛ credential ورود نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.AddressLine">
+            <summary>
+            خط نشانی عملیاتی سازمان.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.Status">
+            <summary>
+            وضعیت Party در منبع حقیقت محلی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر فرادادهٔ Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.Capabilities">
+            <summary>
+            قابلیت‌های تجاری سازمان. برای Person معمولاً خالی می‌ماند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.BusinessParty.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.CreatePerson(System.String,System.DateTimeOffset)">
+            <summary>
+            Person کسب‌وکار می‌سازد بدون کپی ایمیل/تلفن ورود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.CreateOrganization(System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            سازمان می‌سازد بدون قفل به یک نقش تجاری واحد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.GrantCapability(System.String,System.DateTimeOffset)">
+            <summary>
+            قابلیت تجاری را بدون enum SellerOnly به سازمان می‌چسباند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.UpdateOrganizationProfile(System.String,System.String,System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            پروفایل عملیاتی Organization را به‌روز می‌کند؛ برای Person رد می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.Raise(Tooba.BuildingBlocks.IDomainEvent)">
+            <summary>
+            رویداد دامنه را صف می‌کند؛ تماس SpiceDB نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.BusinessParty.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Domain.PartyCapability">
+            <summary>
+            قابلیت تجاری جدا از نوع Party و جدا از مجوز SpiceDB.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyCapability.Id">
+            <summary>
+            کلید ردیف قابلیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyCapability.PartyId">
+            <summary>
+            سازمان مالک قابلیت. FK به Identity نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyCapability.CapabilityCode">
+            <summary>
+            کد گسترش‌پذیر مثل seller/agency؛ ماتریس مجوز نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyCapability.CreatedAt">
+            <summary>
+            زمان اعطای قابلیت.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.UserPartyLink">
+            <summary>
+            پیوند صریح UserId مبهم Identity به Party. ستون PartyId روی UserAccount گذاشته نمی‌شود و FK بین‌ماژولی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.UserPartyLink.LinkId">
+            <summary>
+            کلید پیوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.UserPartyLink.UserId">
+            <summary>
+            اصل ورود به‌صورت Guid مات. جدول identity.users اینجا join نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.UserPartyLink.PartyId">
+            <summary>
+            Party مقصد پیوند، معمولاً Person.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.UserPartyLink.CreatedAt">
+            <summary>
+            زمان ایجاد پیوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.UserPartyLink.Bind(System.Guid,System.Guid,System.DateTimeOffset)">
+            <summary>
+            پیوند User به Party را در مالکیت همین ماژول می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.PartyMembership">
+            <summary>
+            عضویت User در Party/سازمان. Membership برابر Authorization نیست و ستون Role نهایی ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.MembershipId">
+            <summary>
+            شناسهٔ پایدار عضویت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.UserId">
+            <summary>
+            اصل ورود مبهم.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.PartyId">
+            <summary>
+            Party/سازمان مقصد عضویت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.Status">
+            <summary>
+            وضعیت عضویت در منبع حقیقت Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.RelationCode">
+            <summary>
+            رابطهٔ کسب‌وکار (مثلاً member). مجوز view/edit اینجا ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.CreatedAt">
+            <summary>
+            زمان ایجاد عضویت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembership.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Domain.PartyMembership.Establish(System.Guid,System.Guid,System.String,System.DateTimeOffset)">
+            <summary>
+            عضویت فعال می‌سازد و رویداد تصویرسازی مجوز را صف می‌کند، بدون تماس شبکه SpiceDB.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.PartyMembership.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Domain.OrganizationRelationship">
+            <summary>
+            رابطهٔ typed سازمان‌به‌سازمان برای ساختارهای آینده. قوانین کامل B2B اینجا پیاده نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.RelationshipId">
+            <summary>
+            کلید رابطه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.FromPartyId">
+            <summary>
+            Party مبدأ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.ToPartyId">
+            <summary>
+            Party مقصد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.RelationCode">
+            <summary>
+            کد گسترش‌پذیر رابطه؛ فهرست بستهٔ SellerOnly نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.Status">
+            <summary>
+            وضعیت رابطه در منبع حقیقت Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.OrganizationRelationship.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.OrganizationRelationship.Connect(System.Guid,System.Guid,System.String,System.DateTimeOffset)">
+            <summary>
+            رابطهٔ سازمانی را بدون اجرای workflow فروشنده/آژانس ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent">
+            <summary>
+            واقعیت دامنهٔ برقراری عضویت. تماس SpiceDB نیست؛ ترجمه به Integration فقط از Outbox است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.#ctor(Tooba.Party.Domain.PartyMembership)">
+            <summary>
+            رویداد را از عضویت persistشونده می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.MembershipId">
+            <summary>
+            عضویت منبع حقیقت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.UserId">
+            <summary>
+            اصل ورود برای تصویرسازی بعدی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.PartyId">
+            <summary>
+            Party مقصد تصویرسازی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.RelationCode">
+            <summary>
+            رابطهٔ کسب‌وکار؛ handler مجوز را از schema SpiceDB می‌گیرد نه از این رشته به‌عنوان Role.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Domain.PartyMembershipEstablishedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

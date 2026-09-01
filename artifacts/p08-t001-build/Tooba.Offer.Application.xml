@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Offer.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Offer.Application.OfferReference">
+            <summary>
+            مرجع پایدار Offer بدون نشت EF. مبلغ و موجودی ندارد؛ هویت User ورود نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.OfferReference.#ctor(System.Guid,System.Guid,System.Guid,Tooba.Offer.Domain.SalesChannel,Tooba.Offer.Domain.OfferStatus,System.String)">
+            <summary>
+            مرجع پایدار Offer بدون نشت EF. مبلغ و موجودی ندارد؛ هویت User ورود نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Application.IOfferLookupGateway">
+            <summary>
+            درز خواندن Offer برای Pricing و Inventory آینده. Search منبع حقیقت Offer نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferLookupGateway.FindOfferAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Offer را در پایگاه Tenant یا Marketplace جاری پیدا می‌کند؛ Host parse نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferLookupGateway.CountOffersByCatalogVariantIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            تعداد Offerهای وابسته به هر CatalogVariant را بدون join به Catalog برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Application.IOfferUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز موردکاربرد Offer. ماتریس نهایی Seller Portal و SDK اسپایس‌دی‌بی اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن listing را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Application.IOfferDirectory">
+            <summary>
+            نوشتن foundation Offer. Pricing، Tax، Inventory و UI فروشنده اینجا نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferDirectory.CreateOfferAsync(System.Guid,System.Guid,Tooba.Offer.Domain.SalesChannel,System.String,System.Threading.CancellationToken)">
+            <summary>
+            listing می‌سازد پس از تأیید Variant از قرارداد Catalog و سازمان فروشنده از قرارداد Party؛ DbContext آن ماژول‌ها خوانده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            listing را فعال می‌کند. اعتبار قیمت یا موجودی را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferDirectory.SuspendAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            listing را معلق می‌کند. موجودی صفر نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Application.IOfferDirectory.ArchiveAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            listing را بایگانی می‌کند تا جای همان فروشنده و گونه و کانال آزاد شود.
+            </summary>
+        </member>
+    </members>
+</doc>

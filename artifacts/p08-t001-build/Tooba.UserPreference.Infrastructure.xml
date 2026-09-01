@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.UserPreference.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.UserPreference.Infrastructure.Persistence.Migrations.InitialUserPreference">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.InitialUserPreference.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.InitialUserPreference.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.InitialUserPreference.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.Persistence.Migrations.AddUiPreferences">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.AddUiPreferences.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.AddUiPreferences.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.Migrations.AddUiPreferences.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext">
+            <summary>DbContext مالک schema مستقل user_preference و Outbox همان ماژول.</summary>
+        </member>
+        <member name="F:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.Schema">
+            <summary>نام schema اختصاصی ترجیح کاربر.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext})">
+            <summary>DbContext را با گزینه‌های ماژول می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.Preferences">
+            <summary>ردیف‌های خصوصی ترجیح کاربر.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.UiPreferences">
+            <summary>ترجیح‌های کلیددار UI (مثل نمایش‌های ذخیره‌شدهٔ گرید).</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.OutboxMessages">
+            <summary>پیام‌های Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت‌های UserPreference.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.UiPreferenceDirectory">
+            <summary>پیاده‌سازی ترجیح کلیددار UI با مالکیت سرورمحور.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UiPreferenceDirectory.#ctor(Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext)">
+            <summary>DbContext مالک را دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UiPreferenceDirectory.GetAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UiPreferenceDirectory.UpsertAsync(System.Guid,System.String,Tooba.UserPreference.Application.UiPreferenceWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.UserPreferenceDirectory">
+            <summary>پیاده‌سازی ترجیح که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceDirectory.#ctor(Tooba.UserPreference.Infrastructure.Persistence.UserPreferenceDbContext)">
+            <summary>DbContext مالک را دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceDirectory.UpsertAsync(System.Guid,Tooba.UserPreference.Application.UserPreferenceWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.UserPreferenceModule">
+            <summary>ماژول مستقل ترجیح کاربر با schema، قرارداد و Outbox اختصاصی.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.UserPreferenceModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration">
+            <summary>ثبت Outbox ترجیح کاربر؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.UserPreference.Infrastructure.UserPreferenceOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wishlist.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wishlist.Domain.WishlistItem">
+            <summary>قصد خصوصی یک کاربر برای نگهداری مرجع یک محصول؛ دادهٔ قیمت و موجودی را مالک نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Domain.WishlistItem.WishlistItemId">
+            <summary>شناسهٔ پایدار ردیف علاقه‌مندی.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Domain.WishlistItem.OwnerUserId">
+            <summary>شناسهٔ کاربر مالک که فقط از نشست سرور تعیین می‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Domain.WishlistItem.ProductId">
+            <summary>مرجع opaque محصول در Catalog.</summary>
+        </member>
+        <member name="P:Tooba.Wishlist.Domain.WishlistItem.CreatedAt">
+            <summary>زمان UTC افزودن محصول.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Domain.WishlistItem.Create(System.Guid,System.Guid,System.DateTimeOffset)">
+            <summary>ردیف معتبر را برای مالک و محصول مشخص می‌سازد.</summary>
+        </member>
+    </members>
+</doc>

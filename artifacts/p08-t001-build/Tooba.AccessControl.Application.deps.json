@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Tooba.AccessControl.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.AccessControl.Domain": "1.0.0",
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.AccessControl.Application.dll": {}
+        }
+      },
+      "Tooba.AccessControl.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.AccessControl.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.BuildingBlocks/1.0.0": {
+        "runtime": {
+          "Tooba.BuildingBlocks.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Tooba.AccessControl.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.AccessControl.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.BuildingBlocks/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

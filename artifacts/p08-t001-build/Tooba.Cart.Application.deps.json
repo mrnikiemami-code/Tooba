@@ -1,0 +1,191 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Tooba.Cart.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.Cart.Domain": "1.0.0",
+          "Tooba.Inventory.Application": "1.0.0",
+          "Tooba.Offer.Application": "1.0.0",
+          "Tooba.Pricing.Application": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Cart.Application.dll": {}
+        }
+      },
+      "Tooba.BuildingBlocks/1.0.0": {
+        "runtime": {
+          "Tooba.BuildingBlocks.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Cart.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0",
+          "Tooba.Offer.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Cart.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Catalog.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.Catalog.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Catalog.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Catalog.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Catalog.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Inventory.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.Catalog.Application": "1.0.0",
+          "Tooba.Inventory.Domain": "1.0.0",
+          "Tooba.Offer.Application": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Inventory.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Inventory.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Inventory.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Offer.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.Offer.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Offer.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Offer.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Offer.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Pricing.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.Offer.Application": "1.0.0",
+          "Tooba.Pricing.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Pricing.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Pricing.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0",
+          "Tooba.Offer.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Pricing.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Tooba.Cart.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.BuildingBlocks/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Cart.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Catalog.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Catalog.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Inventory.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Inventory.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Offer.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Offer.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Pricing.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Pricing.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -1,0 +1,472 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Identity.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Identity.Infrastructure.CapturingOtpDeliveryProvider">
+            <summary>
+            Dev/Test provider: captures last OTP in memory, never logs code.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.CapturingOtpDeliveryProvider.LastCode">
+            <summary>
+            Last captured code for integration tests only.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.CapturingOtpDeliveryProvider.LastDestination">
+            <summary>
+            Last destination for tests.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.CapturingOtpDeliveryProvider.DeliverAsync(Tooba.Identity.Application.OtpDeliveryMessage,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.EfIdentityContactLookup">
+            <summary>lookup فقط‌خواندنی شناسه‌های تماس Identity بدون افشای credential.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfIdentityContactLookup.#ctor(Tooba.Identity.Infrastructure.Persistence.IdentityDbContext)">
+            <summary>DbContext Identity را دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfIdentityContactLookup.GetContactAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.Events.UserRegisteredIntegrationEvent">
+            <summary>
+            قرارداد Integration ثبت User. ورود موفق از این مسیر خارج نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Infrastructure.Events.UserRegisteredIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Events.UserRegisteredIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Events.UserRegisteredIntegrationEvent.UserId">
+            <summary>
+            اصل پایدار؛ PartyId نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.FailClosedOtpDeliveryProvider">
+            <summary>
+            Production fail-closed when provider mode is Disabled or misconfigured.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.FailClosedOtpDeliveryProvider.#ctor(Tooba.Identity.Infrastructure.OtpDeliveryInstrumentation)">
+            <summary>Fail-closed production placeholder.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.FailClosedOtpDeliveryProvider.DeliverAsync(Tooba.Identity.Application.OtpDeliveryMessage,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.OpaqueSecretHasher">
+            <summary>
+            هش SHA-256 استاندارد BCL برای رازهای Refresh/OTP. الگوریتم اختصاصی اختراع نمی‌شود و plaintext persist نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OpaqueSecretHasher.Generate">
+            <summary>
+            راز با آنتروپی بالا می‌سازد. فقط در مرز صدور برگردانده می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OpaqueSecretHasher.GenerateNumericCode(System.Int32)">
+            <summary>
+            کد عددی برای OTP پیامکی/ایمیلی از RNG نه از Random ضعیف.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OpaqueSecretHasher.Hash(System.String)">
+            <summary>
+            هش پایدار برای ذخیره. ورودی خام لاگ نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.SessionAccessCredentialBoundary">
+            <summary>
+            بلیت دسترسی همان نشست است؛ JWT سفارشی ساخته نمی‌شود تا cookie/BFF/IdP بعداً جایگزین شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.SessionAccessCredentialBoundary.ToAccessTicket(Tooba.Identity.Application.AuthenticationTicket)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.IdentityLifecycleService">
+            <summary>
+            نشست، چرخش Refresh، چالش پایدار و تغییر اعتبار روی schema Identity. Host parse نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.#ctor(Tooba.Identity.Infrastructure.Persistence.IdentityDbContext,Tooba.Identity.Application.IPasswordHashingService,Microsoft.Extensions.Options.IOptions{Tooba.Identity.Application.IdentityPasswordPolicyOptions},Microsoft.Extensions.Options.IOptions{Tooba.Identity.Application.IdentityLifecycleOptions},Tooba.Identity.Application.IIdentitySecurityEventSink,Tooba.BuildingBlocks.ICurrentCommerceContext,Tooba.Identity.Application.IOtpSender)">
+            <summary>
+            سرویس چرخهٔ عمر را به DbContext Tenant-aware و فرستندهٔ انتزاعی وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.EstablishSessionAsync(Tooba.Identity.Domain.UserAccount,System.Threading.CancellationToken)">
+            <summary>
+            نشست جدید با راز Refresh هش‌شده می‌سازد. راز خام فقط در بلیت برمی‌گردد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.ResolveAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.RefreshSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Refresh را می‌چرخاند. راز قبلی پس از موفقیت نامعتبر است؛ reuse راز قبلی خانواده را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.RevokeSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            یک نشست را لغو می‌کند تا Refresh بعدی شکست بخورد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.RevokeAllSessionsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            همهٔ نشست‌های زندهٔ User را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.IssueAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.VerifyAsync(Tooba.Identity.Application.OtpChallengeHandle,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.RequestPasswordResetAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.CompletePasswordResetAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.IssueIdentifierVerificationAsync(System.Guid,Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.CompleteIdentifierVerificationAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityLifecycleService.ChangePasswordAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            تغییر رمز احرازشده: رمز جاری را می‌سنجد، هش را عوض می‌کند، مهر را جلو می‌برد و نشست‌ها را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.IdentityModule">
+            <summary>
+            ماژول Identity: احراز اصل، نه مجوز کسب‌وکار و نه Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.IdentityOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Identity. فقط قرارداد صریح ثبت User را ترجمه می‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.IdentityAuthenticationService">
+            <summary>
+            پیاده‌سازی موارد استفادهٔ Identity روی DbContext همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.#ctor(Tooba.Identity.Infrastructure.Persistence.IdentityDbContext,Tooba.Identity.Application.IPasswordHashingService,Microsoft.Extensions.Options.IOptions{Tooba.Identity.Application.IdentityPasswordPolicyOptions},Tooba.Identity.Application.IIdentitySecurityEventSink,Tooba.Identity.Infrastructure.IdentityLifecycleService)">
+            <summary>
+            سرویس را با وابستگی‌های ماژول می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.RegisterAsync(Tooba.Identity.Application.RegisterUserCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.AuthenticateWithPasswordAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.FindUserIdByIdentifierAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.DisableAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.LockAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.ChangePasswordAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.RefreshSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.RevokeSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityAuthenticationService.RevokeAllSessionsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.IdentityDuplicateIdentifierException">
+            <summary>
+            یکتایی شناسهٔ نرمال در همان دامنهٔ پایگاه نقض شده است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.IdentityDuplicateIdentifierException.#ctor(Tooba.Identity.Domain.LoginIdentifierKind,System.String)">
+            <summary>
+            استثنا را با گونه و مقدار نرمال می‌سازد. مقدار نباید در لاگ عمومی تکرار شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityDuplicateIdentifierException.Kind">
+            <summary>
+            گونهٔ شناسه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.IdentityDuplicateIdentifierException.NormalizedValue">
+            <summary>
+            مقدار نرمال تکراری.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.AspNetPasswordHashingService">
+            <summary>
+            پوشش <see cref="T:Microsoft.AspNetCore.Identity.PasswordHasher`1"/> بدون اختراع رمزنگاری.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.AspNetPasswordHashingService.Hash(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.AspNetPasswordHashingService.Verify(System.String,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.InMemoryOtpChallengeService">
+            <summary>
+            OTP درون‌فرآیندی برای تست/dev. ارائه‌دهندهٔ SMS نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.InMemoryOtpChallengeService.#ctor(Tooba.Identity.Application.IOtpSender)">
+            <summary>
+            سرویس را با فرستندهٔ قابل تعویض می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.InMemoryOtpChallengeService.IssueAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.InMemoryOtpChallengeService.VerifyAsync(Tooba.Identity.Application.OtpChallengeHandle,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.CapturingOtpSender">
+            <summary>
+            فرستندهٔ جعلی که کد را در حافظه نگه می‌دارد نه در لاگ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.CapturingOtpSender.LastCode">
+            <summary>
+            آخرین کد برای تست؛ در تولید استفاده نشود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.CapturingOtpSender.LastPurpose">
+            <summary>
+            آخرین هدف.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.CapturingOtpSender.SendAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.EfExternalIdentityDirectory">
+            <summary>
+            ذخیرهٔ اتصال IdP روی جدول Identity.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfExternalIdentityDirectory.#ctor(Tooba.Identity.Infrastructure.Persistence.IdentityDbContext)">
+            <summary>
+            فهرست را روی DbContext ماژول می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfExternalIdentityDirectory.BindAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfExternalIdentityDirectory.FindUserIdAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.EfMfaEnrollmentStore">
+            <summary>
+            ذخیرهٔ MFA روی جدول Identity.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfMfaEnrollmentStore.#ctor(Tooba.Identity.Infrastructure.Persistence.IdentityDbContext)">
+            <summary>
+            فروشگاه را روی DbContext ماژول می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfMfaEnrollmentStore.EnrollAsync(System.Guid,Tooba.Identity.Domain.MfaFactorKind,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.EfMfaEnrollmentStore.ListEnabledAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.InMemoryIdentitySecurityEventSink">
+            <summary>
+            جمع‌آوری رخداد امنیتی در حافظه برای تست و درز Audit بعدی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.InMemoryIdentitySecurityEventSink.Events">
+            <summary>
+            رخدادهای ثبت‌شده بدون راز.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.InMemoryIdentitySecurityEventSink.RecordAsync(Tooba.Identity.Application.IdentitySecurityEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.OtpDeliveryInstrumentation">
+            <summary>
+            متریک تحویل OTP بدون destination/code.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OtpDeliveryInstrumentation.#ctor">
+            <summary>Creates OTP delivery metrics.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OtpDeliveryInstrumentation.RecordDelivery(System.String)">
+            <summary>Records delivery outcome without destination/code.</summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.OtpDeliveryOptions">
+            <summary>
+            پیکربندی تحویل OTP: Tooba:Identity:OtpDelivery
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.OtpDeliveryOptions.Mode">
+            <summary>
+            Capturing (dev/test), Webhook (production provider), Disabled.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.OtpDeliveryOptions.WebhookUrl">
+            <summary>
+            Webhook endpoint for provider-backed delivery.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.OtpDeliveryOptions.WebhookApiKey">
+            <summary>
+            Bearer/API key header value (env-injected in Production).
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.OtpDeliveryOptions.TimeoutSeconds">
+            <summary>
+            Per-request timeout seconds.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.OtpDeliveryProviderSender">
+            <summary>
+            IOtpSender adapter over IOtpDeliveryProvider with stable Identity error codes.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OtpDeliveryProviderSender.#ctor(Tooba.Identity.Application.IOtpDeliveryProvider)">
+            <summary>Wraps provider as Identity IOtpSender.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.OtpDeliveryProviderSender.SendAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext">
+            <summary>
+            DbContext مالک schema <c>identity</c>. FK به Party/Catalog ندارد و mega-context نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.Schema">
+            <summary>
+            schema اختصاصی Identity در همان پایگاه Tenant یا Marketplace.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Identity.Infrastructure.Persistence.IdentityDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.Users">
+            <summary>
+            حساب‌های احراز هویت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.Identifiers">
+            <summary>
+            شناسه‌های ورود typed.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.ExternalBindings">
+            <summary>
+            اتصالات IdP خارجی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.MfaEnrollments">
+            <summary>
+            نام‌نویسی عامل MFA.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.Sessions">
+            <summary>
+            نشست‌های احراز هویت. راز Refresh فقط به‌صورت هش ذخیره می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.Challenges">
+            <summary>
+            چالش‌های یک‌بارمصرف پایدار. کد OTP plaintext اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.IdentityDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.Persistence.IdentityDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Identity. Tenant را از Host نمی‌خواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.IdentityDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.Persistence.Migrations.InitialIdentity">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.InitialIdentity.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.InitialIdentity.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.InitialIdentity.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.Persistence.Migrations.SessionCredentialLifecycle">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.SessionCredentialLifecycle.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.SessionCredentialLifecycle.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.Persistence.Migrations.SessionCredentialLifecycle.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Identity.Infrastructure.WebhookOtpDeliveryProvider">
+            <summary>
+            Production webhook adapter: POST JSON to configured provider endpoint.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.WebhookOtpDeliveryProvider.#ctor(System.Net.Http.HttpClient,Microsoft.Extensions.Options.IOptions{Tooba.Identity.Infrastructure.OtpDeliveryOptions},Tooba.Identity.Infrastructure.OtpDeliveryInstrumentation)">
+            <summary>Webhook-backed production OTP delivery.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Infrastructure.WebhookOtpDeliveryProvider.DeliverAsync(Tooba.Identity.Application.OtpDeliveryMessage,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -34,6 +34,7 @@ import {
   type AdminResult,
   type AdminSellerFinancial,
 } from "./admin-api";
+import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -121,15 +122,6 @@ function eventTypeClass(type: string): string {
   }
 }
 
-function paymentBadge(state: string): { text: string; className: string } {
-  if (state === "Paid" || state === "Succeeded") {
-    return { text: formatAdminStatus(state), className: "bg-emerald-50 text-emerald-700" };
-  }
-  if (state === "PendingPayment" || state === "Pending") {
-    return { text: formatAdminStatus(state), className: "bg-blue-50 text-blue-700" };
-  }
-  return { text: formatAdminStatus(state), className: "bg-gray-100 text-gray-700" };
-}
 
 const historyColumns: GridColumnDef<AdminFinancialEvent & { id: string }>[] = [
   {
@@ -189,7 +181,7 @@ const historyColumns: GridColumnDef<AdminFinancialEvent & { id: string }>[] = [
     header: "وضعیت",
     accessor: (row) => row.status,
     cell: (row) => {
-      const badge = paymentBadge(row.status);
+      const badge = paymentStatusBadge(row.status);
       return <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${badge.className}`}>{badge.text}</span>;
     },
     width: 100,
@@ -333,8 +325,8 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
 
   if (result.state === "denied") return <Denied retry={refresh} />;
   const detail = result.data;
-  const paymentBadgeState = paymentBadge(detail?.paymentState ?? "PendingPayment");
-  const statusBadge = paymentBadge(detail?.status ?? "Submitted");
+  const paymentBadgeState = detail ? resolvePaymentStatusCard(detail) : paymentStatusBadge("PendingPayment");
+  const orderBadgeState = detail ? resolveOrderStatusCard(detail) : resolveOrderStatusCard({ status: "Submitted" });
 
   return (
     <main data-testid="admin-order-detail" className="pb-4">
@@ -369,8 +361,8 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
             <SummaryCard label="تعداد اقلام" value={`${detail.lineCount.toLocaleString("fa-IR")} قلم`} icon={<ShoppingBag className="size-4" />} tone="from-violet-500 to-violet-600" />
             <SummaryCard label="تعداد فروشنده" value={`${detail.sellerCount.toLocaleString("fa-IR")} فروشنده`} icon={<Store className="size-4" />} tone="from-blue-500 to-blue-600" />
             <SummaryCard label="مبلغ کل سفارش" value={formatAdminMoney(detail.payableAmount, detail.currency)} icon={<Wallet className="size-4" />} tone="from-emerald-500 to-emerald-600" />
-            <SummaryCard label="وضعیت پرداخت" value={paymentBadgeState.text} icon={<CreditCard className="size-4" />} tone="from-teal-500 to-teal-600" badge={paymentBadgeState} />
-            <SummaryCard label="وضعیت سفارش" value={statusBadge.text} icon={<ClipboardList className="size-4" />} tone="from-amber-500 to-amber-600" badge={statusBadge} />
+            <SummaryCard label="وضعیت پرداخت" value="" icon={<CreditCard className="size-4" />} tone="from-teal-500 to-teal-600" badge={paymentBadgeState} />
+            <SummaryCard label="وضعیت سفارش" value="" icon={<ClipboardList className="size-4" />} tone="from-amber-500 to-amber-600" badge={orderBadgeState} />
           </div>
 
           <div className="grid gap-3 lg:grid-cols-2">
@@ -395,7 +387,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                 <dl className="mt-2 flex-1 border-t border-gray-100 pt-1">
                   <InfoRow label="درگاه">{formatAdminPaymentProvider(detail.payment.providerCode)}</InfoRow>
                   <InfoRow label="شناسه تراکنش"><span dir="ltr" className="font-mono text-[11px] font-medium text-gray-600">{formatAdminPaymentReference(detail.payment)}</span></InfoRow>
-                  <InfoRow label="وضعیت درگاه"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${paymentBadge(detail.payment.status).className}`}>{formatAdminStatus(detail.payment.status)}</span></InfoRow>
+                  <InfoRow label="وضعیت درگاه"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${paymentStatusBadge(detail.payment.status).className}`}>{formatAdminStatus(detail.payment.status)}</span></InfoRow>
                   <InfoRow label="تاریخ پرداخت">{formatAdminDate(detail.payment.completedAt ?? detail.payment.createdAt)}</InfoRow>
                   <InfoRow label="مبلغ قابل پرداخت">{formatAdminMoney(detail.payment.amount, detail.payment.currency)}</InfoRow>
                 </dl>

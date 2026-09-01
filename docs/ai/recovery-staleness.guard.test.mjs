@@ -26,10 +26,11 @@ const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
 /** Active Bridge task under implementation (update when Architect issues next). */
-const CURRENT_TASK_ID = "TB-P07-T043";
+const CURRENT_TASK_ID = "TB-P08-T001";
 
 /** Markers that must appear for the active wave. */
 const REQUIRED_MARKERS = [
+  "P08",
   "P07",
   "TB-P07-T035",
   "TB-P07-T036",
@@ -38,6 +39,7 @@ const REQUIRED_MARKERS = [
   "TB-P07-T039",
   "TB-P07-T041",
   "TB-P07-T042-R1",
+  "TB-P07-T043",
   CURRENT_TASK_ID,
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
@@ -52,6 +54,7 @@ const STALE_CURRENT_POINTERS = [
   "TB-P07-T041",
   "TB-P07-T041-R1",
   "TB-P07-T042",
+  "TB-P07-T043",
 ];
 
 function read(p) {
@@ -72,19 +75,19 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT current issued/repair points at TB-P07-T043 not stale pointers", () => {
+test("recovery SoT current issued/repair points at idle after TB-P08-T001 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
+  assert.match(recovery, /TB-P08-T001/);
+  assert.match(state, /TB-P08-T001/);
   assert.match(recovery, /TB-P07-T043/);
   assert.match(state, /TB-P07-T043/);
-  assert.match(recovery, /TB-P07-T042-R1/);
-  assert.match(state, /TB-P07-T042-R1/);
 
   assert.match(
     state,
-    /Current Issued Task:\s*```text\s*TB-P07-T043\s*```/,
-    "PROJECT-STATE Current Issued Task must be TB-P07-T043",
+    /Current Issued Task:\s*```text\s*\(none\)\s*```/,
+    "PROJECT-STATE Current Issued Task must be (none)",
   );
   assert.match(
     state,

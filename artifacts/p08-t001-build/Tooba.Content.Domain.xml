@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Content.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Content.Domain.ContentPublicationStatus">
+            <summary>وضعیت انتشار مقالهٔ تحریری.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentPublicationStatus.Draft">
+            <summary>پیش‌نویس و غیرقابل نمایش عمومی.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentPublicationStatus.Published">
+            <summary>منتشرشده برای نمایش عمومی.</summary>
+        </member>
+        <member name="T:Tooba.Content.Domain.ContentArticle">
+            <summary>مقالهٔ تحریری برای ریل خانه و مسیرهای عمومی تجاری.</summary>
+            <remarks>
+            هر مقاله یک موجودیت مستقل در یک زبان (Locale) است؛ انتشار فارسی همتای انگلیسی اجباری نمی‌سازد.
+            </remarks>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.SlugMaxLength">
+            <summary>حداکثر طول slug.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.TitleMaxLength">
+            <summary>حداکثر طول عنوان.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.ExcerptMaxLength">
+            <summary>حداکثر طول چکیده.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.BodyMaxLength">
+            <summary>حداکثر طول بدنه.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.LocaleMaxLength">
+            <summary>حداکثر طول locale.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.SeoTitleMaxLength">
+            <summary>حداکثر طول عنوان SEO.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.SeoDescriptionMaxLength">
+            <summary>حداکثر طول توضیح SEO.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.CategoryMaxLength">
+            <summary>حداکثر طول دسته.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.AuthorDisplayNameMaxLength">
+            <summary>حداکثر طول نام نمایشی نویسنده.</summary>
+        </member>
+        <member name="F:Tooba.Content.Domain.ContentArticle.DefaultLocale">
+            <summary>locale پیش‌فرض فارسی.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.ArticleId">
+            <summary>شناسهٔ پایدار مقاله.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Slug">
+            <summary>slug پایدار برای URL.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Title">
+            <summary>عنوان فارسی.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Excerpt">
+            <summary>چکیدهٔ کوتاه.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Body">
+            <summary>بدنهٔ HTML/متن مقاله.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Locale">
+            <summary>locale محتوا.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.SeoTitle">
+            <summary>عنوان SEO اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.SeoDescription">
+            <summary>توضیح SEO اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Category">
+            <summary>برچسب سادهٔ taxonomy.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.CoverMediaAssetId">
+            <summary>مرجع مات تصویر جلد.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.AuthorDisplayName">
+            <summary>نام نمایشی نویسنده.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.TagsCsv">
+            <summary>برچسب‌های CSV ساده.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.IsFeatured">
+            <summary>آیا در ریل خانه به‌عنوان ویژه نشان داده شود.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.Status">
+            <summary>وضعیت انتشار.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.PublishDate">
+            <summary>زمان انتشار UTC.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Content.Domain.ContentArticle.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="M:Tooba.Content.Domain.ContentArticle.Create(System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.DateTimeOffset,System.DateTimeOffset,System.String,System.String,System.String,System.String)">
+            <summary>مقالهٔ Draft معتبر می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Content.Domain.ContentArticle.Update(System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.DateTimeOffset,System.String)">
+            <summary>فیلدهای تحریری مقاله را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Domain.ContentArticle.Publish(System.DateTimeOffset)">
+            <summary>مقاله را برای نمایش عمومی منتشر می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Domain.ContentArticle.Unpublish(System.DateTimeOffset)">
+            <summary>مقاله را از انتشار خارج و به Draft برمی‌گرداند.</summary>
+        </member>
+    </members>
+</doc>
