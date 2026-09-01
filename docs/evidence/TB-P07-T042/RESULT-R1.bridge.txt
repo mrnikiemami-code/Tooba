@@ -1,0 +1,56 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T042-R1
+
+Parent-Task:
+TB-P07-T042
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+342cb658-050b-4215-8139-7eeca45d22f0
+
+Summary:
+Repaired order detail financial data wiring without reverting T042 UX or user-directed UI polish (9d350a9a). Root cause: stale Host served pre-T042 AdminOrderDetailPage (missing LineCount/SellerFinancials/FinancialEvents/FinancialSummary) while frontend mapped absent fields as zero. Added enrichAdminOrderDetail fallback from sellerOrders+payment; humanized wallet provider labels; backend gates customer receipt events to successful payments and humanizes provider in history.
+
+Root-Cause:
+Stale :5088 runtime + missing frontend finance projection fallback + raw provider references.
+
+Backend:
+AdminPanelComposer HumanizeProviderCode + IsSuccessfulPaymentStatus for financial history; existing GetOrderAsync projections verified (counts from order lines, seller rows without settlement, receipt from payment).
+
+Frontend:
+admin-api enrichAdminOrderDetail + formatAdminPaymentProvider/Reference; order detail commission dash for unsettled rows; payment card humanized.
+
+Focused-Validation:
+FE admin-api.test.ts 8/8; BE AdminPanelCompositionTests 5/5 + AdminListGridQueryEngineTests PASS; live GET order detail lineCount=1 sellerCount=1 totalReceived=381500 paymentMethod=کیف پول after Host restart.
+
+Recovery-SoT:
+HEAD=35737ff5e7a8f3daaaa35e4a084fe5296a65e2fc; origin/main match; TB-P07-T042-R1 AWAITING_ARCHITECT_ACCEPT; USER_VISUAL_ACCEPTED=NO.
+
+Evidence:
+docs/evidence/TB-P07-T042/r1-*.md
+
+Git:
+35737ff5e7a8f3daaaa35e4a084fe5296a65e2fc
+
+Architect-Concerns:
+Commit 9d350a9a remains USER-DIRECTED UI polish outside architect scope — preserved.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO — human should confirm paid order detail counts/breakdown/history against live admin.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
