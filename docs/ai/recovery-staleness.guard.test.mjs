@@ -26,7 +26,7 @@ const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
 /** Active Bridge task under implementation (update when Architect issues next). */
-const CURRENT_TASK_ID = "TB-P07-T041-R1";
+const CURRENT_TASK_ID = "TB-P07-T043";
 
 /** Markers that must appear for the active wave. */
 const REQUIRED_MARKERS = [
@@ -37,6 +37,7 @@ const REQUIRED_MARKERS = [
   "TB-P07-T037",
   "TB-P07-T039",
   "TB-P07-T041",
+  "TB-P07-T042-R1",
   CURRENT_TASK_ID,
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
@@ -49,6 +50,8 @@ const STALE_CURRENT_POINTERS = [
   "TB-P07-T036-R1",
   "TB-P07-T040",
   "TB-P07-T041",
+  "TB-P07-T041-R1",
+  "TB-P07-T042",
 ];
 
 function read(p) {
@@ -69,29 +72,29 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT current issued/repair points at TB-P07-T041-R1 not stale pointers", () => {
+test("recovery SoT current issued/repair points at TB-P07-T043 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
-  assert.match(recovery, /TB-P07-T041-R1/);
-  assert.match(state, /TB-P07-T041-R1/);
-  assert.match(recovery, /TB-P07-T039/);
-  assert.match(state, /TB-P07-T039/);
+  assert.match(recovery, /TB-P07-T043/);
+  assert.match(state, /TB-P07-T043/);
+  assert.match(recovery, /TB-P07-T042-R1/);
+  assert.match(state, /TB-P07-T042-R1/);
 
   assert.match(
     state,
-    /Current Issued Task:\s*```text\s*TB-P07-T041-R1\s*```/,
-    "PROJECT-STATE Current Issued Task must be TB-P07-T041-R1",
+    /Current Issued Task:\s*```text\s*TB-P07-T043\s*```/,
+    "PROJECT-STATE Current Issued Task must be TB-P07-T043",
   );
   assert.match(
     state,
-    /Current Repair Task:\s*```text\s*TB-P07-T041-R1\s*```/,
-    "PROJECT-STATE Current Repair Task must be TB-P07-T041-R1",
+    /Current Repair Task:\s*```text\s*\(none\)\s*```/,
+    "PROJECT-STATE Current Repair Task must be (none)",
   );
   assert.match(
     recovery,
-    /Current Repair Task:\s*```text\s*TB-P07-T041-R1\s*```/,
-    "recovery Current Repair Task must be TB-P07-T041-R1",
+    /Current Repair Task:\s*```text\s*\(none\)\s*```/,
+    "recovery Current Repair Task must be (none)",
   );
 
   for (const stale of STALE_CURRENT_POINTERS) {

@@ -47,7 +47,7 @@ TB-P07-T039
 Last Implementation Task:
 
 ```text
-TB-P07-T042-R1
+TB-P07-T043
 ```
 
 Current Repair Task:
@@ -59,8 +59,9 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T042-R1 — Order Detail financial data wiring repair
-TB-P07-T042 — parent marketplace finance UX
+TB-P07-T043 — Order Detail visual fidelity polish (header, cards, financial section, history)
+TB-P07-T042-R1 — financial data wiring (accepted baseline)
+TB-P07-T041 — admin DB-native grids
 TB-P07-T040 = NOT_ACCEPTED
 ```
 

@@ -59,13 +59,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T042-R1
+TB-P07-T043
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T042-R1
+TB-P07-T043
 ```
 
 Current Repair Task:
@@ -77,7 +77,9 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T042-R1 — Order Detail financial data wiring repair (counts, seller breakdown, customer receipt, history, provider labels); parent TB-P07-T042; user-directed UI polish 9d350a9a preserved
+TB-P07-T043 — Order Detail visual fidelity polish (header density, summary cards, financial section, history grid); T042-R1 data wiring preserved; user-directed UI polish 9d350a9a preserved
+TB-P07-T042-R1 — Order Detail financial data wiring repair (accepted baseline)
+TB-P07-T041 — admin DB-native grid query repair
 ```
 
 USER_VISUAL_ACCEPTED:
