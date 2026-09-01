@@ -35,6 +35,14 @@ function buildColumns(onEdit: (row: AdminLanguageRow) => void): GridColumnDef<Ad
     { id: "nativeName", header: "نام", accessor: (row) => row.nativeName, width: 140, minWidth: 120, flex: 1.2 },
     { id: "displayName", header: "نام نمایشی", accessor: (row) => row.displayName, width: 160, minWidth: 140, flex: 1.4 },
     {
+      id: "urlPrefix",
+      header: "پیشوند مسیر",
+      accessor: (row) => row.urlPrefix,
+      cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.urlPrefix}</span>,
+      width: 90,
+      minWidth: 80,
+    },
+    {
       id: "code",
       header: "کد",
       accessor: (row) => row.code,

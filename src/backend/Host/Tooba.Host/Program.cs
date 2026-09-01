@@ -13,6 +13,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Host;
 using Tooba.Host.Admin;
 using Tooba.Host.Localization;
+using Tooba.Localization.Application;
 using Tooba.Host.Admin.CatalogDemo;
 using Tooba.Host.Customer;
 using Tooba.Host.Seller;
@@ -75,7 +76,7 @@ builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("
 builder.Services.Configure<CartExpiryHostOptions>(builder.Configuration.GetSection("Tooba:CartExpiry"));
 builder.Services.Configure<PaymentReconciliationHostOptions>(builder.Configuration.GetSection("Tooba:PaymentReconciliation"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
-builder.Services.AddSingleton<SupportedLocaleRegistry>();
+builder.Services.AddScoped<ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
 builder.Services.AddOptions<MessagingHostOptions>()
     .Bind(builder.Configuration.GetSection("Tooba:Messaging"))
     .ValidateOnStart();

@@ -4,6 +4,7 @@ using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Localization.Application;
 using Tooba.Persistence;
 using Xunit;
 
@@ -64,7 +65,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var directory = new ContentDirectory(db);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory());
         var now = DateTimeOffset.Parse("2026-08-27T00:00:00Z");
 
         var draft = await directory.CreateAsync(
@@ -150,5 +151,28 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         var options = new DbContextOptionsBuilder<ContentDbContext>();
         ToobaNpgsql.ConfigureModuleContext(options, connectionString, ContentDbContext.Schema, typeof(ContentDbContext));
         return new ContentDbContext(options.Options);
+    }
+
+    private sealed class PermissiveLanguageDirectory : ILanguageDirectory
+    {
+        public Task EnsureActiveLanguageCodeAsync(string code, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task<IReadOnlyList<LanguageSnapshot>> ListAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<LanguageSnapshot>>([]);
+
+        public Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken) =>
+            Task.FromResult<LanguageSnapshot?>(null);
+
+        public Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageCommand command, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<LanguageSnapshot> PatchAsync(string code, PatchLanguageCommand command, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task BootstrapAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T001
+TB-P08-T001-R1
 ```
 
 Current Repair Task:
@@ -62,7 +62,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P08-T001 — Order status card repair + Content/i18n discovery + Language foundation/admin
+TB-P08-T001 — under repair (parent; NOT accepted)
+TB-P08-T001-R1 — Persisted Language registry repair (DB-backed localization.languages)
 TB-P07-T043 — Order Detail visual fidelity polish (accepted baseline)
 ```
 

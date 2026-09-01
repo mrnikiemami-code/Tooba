@@ -1,6 +1,6 @@
 /**
- * Canonical Language/Locale registry types and routing helpers.
- * Admin mutations go through Host `/v1/admin/languages`; this file is read-only on the client.
+ * Types and routing helpers for Language/Locale.
+ * Authoritative registry is persisted in Host `localization.languages` (see /v1/admin/languages).
  */
 import { type Locale, type TextDirection } from "./locale.ts";
 
@@ -19,6 +19,7 @@ export interface SupportedLocaleDefinition {
   sortOrder: number;
 }
 
+/** Routing bootstrap fallback only — Admin reads authoritative data from /v1/admin/languages. */
 export const SUPPORTED_LOCALE_DEFINITIONS: SupportedLocaleDefinition[] = [
   {
     code: "fa-IR",

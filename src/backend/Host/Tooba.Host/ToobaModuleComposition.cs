@@ -17,6 +17,7 @@ using Tooba.BulkInquiry.Infrastructure;
 using Tooba.Wishlist.Infrastructure;
 using Tooba.AddressBook.Infrastructure;
 using Tooba.CustomerProfile.Infrastructure;
+using Tooba.Localization.Infrastructure;
 using Tooba.UserPreference.Infrastructure;
 using Tooba.OperatorProfile.Infrastructure;
 using Tooba.Content.Infrastructure;
@@ -62,6 +63,7 @@ internal static class ToobaModuleComposition
         new AddressBookModule(),
         new CustomerProfileModule(),
         new UserPreferenceModule(),
+        new LocalizationModule(),
         new OperatorProfileModule(),
         new ContentModule(),
         new MediaModule(),

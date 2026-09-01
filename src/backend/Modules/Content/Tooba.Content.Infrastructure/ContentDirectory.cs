@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Localization.Application;
 
 namespace Tooba.Content.Infrastructure;
 
@@ -9,9 +10,14 @@ namespace Tooba.Content.Infrastructure;
 public sealed class ContentDirectory : IContentDirectory
 {
     private readonly ContentDbContext _db;
+    private readonly ILanguageDirectory _languages;
 
     /// <summary>DbContext مالک را تزریق می‌کند.</summary>
-    public ContentDirectory(ContentDbContext db) => _db = db;
+    public ContentDirectory(ContentDbContext db, ILanguageDirectory languages)
+    {
+        _db = db;
+        _languages = languages;
+    }
 
     /// <inheritdoc />
     public async Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
@@ -115,6 +121,9 @@ public sealed class ContentDirectory : IContentDirectory
         if (await _db.Articles.AnyAsync(article => article.Slug == slug, cancellationToken))
             throw new InvalidOperationException("slug مقاله تکراری است.");
 
+        var locale = string.IsNullOrWhiteSpace(command.Locale) ? ContentArticle.DefaultLocale : command.Locale.Trim();
+        await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
+
         var article = ContentArticle.Create(
             command.Slug,
             command.Title,
@@ -126,7 +135,7 @@ public sealed class ContentDirectory : IContentDirectory
             command.IsFeatured,
             command.PublishDate ?? now,
             now,
-            command.Locale,
+            locale,
             command.SeoTitle,
             command.SeoDescription,
             command.Category);
@@ -144,6 +153,8 @@ public sealed class ContentDirectory : IContentDirectory
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
         var now = DateTimeOffset.UtcNow;
+        var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
+        await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
         article.Update(
             command.Title,
             command.Excerpt,
@@ -156,7 +167,7 @@ public sealed class ContentDirectory : IContentDirectory
             command.Tags ?? [],
             command.IsFeatured,
             now,
-            command.Locale);
+            locale);
         await _db.SaveChangesAsync(cancellationToken);
         return MapAdmin(article);
     }
