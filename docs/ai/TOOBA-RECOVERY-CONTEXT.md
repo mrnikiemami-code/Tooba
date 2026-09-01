@@ -412,5 +412,5 @@ Architect note: commit 9d350a9a = user-directed orders/products grid polish (out
 Final HEAD/origin (TB-P07-T042):
 
 ```text
-8721e22754179582355d5e802d2db20ab75661c9
+babdb350ed580e04257814e8270ed1907ce755e4
 ```

@@ -42,15 +42,15 @@ Focused-Validation:
 - node --test admin-api.test.ts 6/6 PASS
 
 Recovery-SoT:
-HEAD=ea04bd546655ec49d3563ad565ceb3936f6b38e5
-origin/main=ea04bd546655ec49d3563ad565ceb3936f6b38e5
+HEAD=babdb350ed580e04257814e8270ed1907ce755e4
+origin/main=babdb350ed580e04257814e8270ed1907ce755e4
 HEAD==origin/main
 
 Evidence:
 docs/evidence/TB-P07-T042/
 
 Git:
-ea04bd546655ec49d3563ad565ceb3936f6b38e5
+babdb350ed580e04257814e8270ed1907ce755e4
 
 Architect-Concerns:
 Commit 9d350a9a was USER-DIRECTED UI polish (orders/products grids) requested directly by user outside architect task scope — preserved, not reverted.
