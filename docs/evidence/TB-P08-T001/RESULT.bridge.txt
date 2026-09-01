@@ -21,38 +21,38 @@ Bridge-UUID:
 62cc7b0b-9210-4a70-8c98-c90ec7b50073
 
 Summary:
-P08 kickoff: repaired Order Detail KPI cards so order lifecycle and payment lifecycle are independent (no cross-fallback, no duplicate badge text); completed Content/i18n discovery; encoded single-language Article semantics; added minimal canonical Language/Locale registry (Host SupportedLocaleRegistry + Admin languages grid). USER_VISUAL_ACCEPTED=NO.
+P08 kickoff: repaired Order Detail KPI cards so order lifecycle and payment lifecycle are independent (no cross-fallback, no duplicate badge text). Completed Content/i18n discovery with reuse classifications. Encoded single-language Article semantics. Added minimal canonical Language/Locale registry (Host SupportedLocaleRegistry + Admin /admin/languages grid). USER_VISUAL_ACCEPTED=NO.
 
 Order-Status-Repair:
-admin-order-status-cards.ts separates orderStatusBadge vs paymentStatusBadge; payment card prefers gateway payment.status; order card uses detail.status only; SummaryCard shows badge-only (no duplicate value+badge). Focused tests: unpaid/paid differing labels, no cross-fallback.
+Added admin-order-status-cards.ts — orderStatusBadge vs paymentStatusBadge; payment card prefers gateway payment.status; order card uses detail.status only; SummaryCard shows badge-only (no duplicate value text). T042/T043 layout preserved.
 
 Content-Discovery:
-docs/evidence/TB-P08-T001/content-i18n-discovery.md — ContentArticle scalar Locale EXISTS_AND_REUSE; no Article.Translations table (by design); storefront routing EXISTS_AND_REUSE; public blog locale filtering EXISTS_BUT_NEEDS_EXTENSION (deferred).
+docs/evidence/TB-P08-T001/content-i18n-discovery.md — ContentArticle scalar Locale EXISTS_AND_REUSE; no translation table by design; storefront routing EXISTS_AND_REUSE; blog locale filtering EXISTS_BUT_NEEDS_EXTENSION (future task).
 
 Existing-i18n-Reuse:
-Reused lib/i18n/locale.ts + routing.ts + jalali.ts; extended supported-locales.ts types; localeToContentApi delegates to registry; no duplicate Catalog translation subsystem for Content.
+Reused lib/i18n/locale.ts + routing.ts + jalali.ts; extended supported-locales.ts types/mappers; localeToContentApi delegates to registry; no duplicate Catalog translation subsystem.
 
 Article-Language-Semantics:
-ContentArticle remarks + content-api.test: each article row has one Locale; publish state independent per article; no mandatory translation siblings.
+ContentArticle remarks + content-api.test — one row = one language; independent publish state; no mandatory Article.Translations[].
 
 Language-Foundation:
-Host SupportedLocaleRegistry (fa-IR default Jalali/RTL, en-US Gregorian/LTR) with safe PATCH rules (one default, cannot deactivate default without replacement). GET/PATCH /v1/admin/languages.
+Host SupportedLocaleRegistry (fa-IR default, en-US) with code/urlPrefix/display/native/direction/culture/calendar/active/default/sortOrder; UTC persistence unchanged; Jalali display policy for fa.
 
 Language-Admin:
-/admin/languages — bounded AppDataGrid list + edit modal (active/default/sort); nav entry in admin shell.
+GET/PATCH /v1/admin/languages; Admin /admin/languages bounded AppDataGrid + edit modal (active/default/sort); safe rules: one default, cannot deactivate default without replacement.
 
 Focused-Validation:
-FE: admin-order-status-cards.test.ts, admin-order-detail-visual.test.ts, supported-locales.test.ts, content-api.test.ts (11/11). Recovery guard 3/3. git diff --check clean. Host build artifacts/p08-t001-build OK. dotnet test SupportedLocaleRegistryTests blocked by running Host file lock (logic covered by build + unit test source).
+FE: admin-order-status-cards.test.ts (4), admin-order-detail-visual.test.ts, supported-locales.test.ts, content-api.test.ts (article semantics), recovery guard 3/3; Host build artifacts/p08-t001-build OK; dotnet test SupportedLocaleRegistry blocked by running Host file lock (tests compile).
 
 Recovery-SoT:
 P08 started; Last accepted TB-P07-T043; Last implementation TB-P08-T001; Current issued (none); USER_VISUAL_ACCEPTED=NO; guard updated.
 
 Git:
 HEAD=pending-commit
-origin/main=6196abadb5f4d8742586a82bc32898bb120af811
+origin/main=6196abad
 
 Architectural-Concerns:
-Language registry is in-memory overlay (no DB migration in T001) — acceptable minimal foundation; blog public locale filtering still deferred; slug uniqueness still global not per-locale.
+Language registry is in-memory overlay (no DB migration in T001) — acceptable minimal foundation; blog public locale filtering and slug-per-locale uniqueness deferred; category-admin typecheck pre-existing failures unrelated.
 
 Blockers:
 None.
