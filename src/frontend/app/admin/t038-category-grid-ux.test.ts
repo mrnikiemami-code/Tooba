@@ -19,7 +19,7 @@ test("product list uses separate primary and additional category columns", () =>
   const panel = fs.readFileSync(path.join(root, "app/admin/product-list.tsx"), "utf8");
   assert.match(panel, /headerName:\s*"دسته اصلی"/);
   assert.match(panel, /headerName:\s*"نمایش در دسته‌های دیگر"/);
-  assert.match(panel, /AdditionalCategoryChipsCell/);
+  assert.match(panel, /AdditionalCategoryListCell/);
   assert.match(panel, /primaryCategoryName/);
   assert.match(panel, /additionalCategoryNames/);
   assert.equal(panel.includes('headerName: "دسته"'), false);

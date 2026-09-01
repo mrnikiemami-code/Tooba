@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Party.Infrastructure.Persistence;
 
 namespace Tooba.Host.Grid;
 
@@ -10,8 +11,13 @@ namespace Tooba.Host.Grid;
 internal sealed class AdminOrdersGridQueryEngine
 {
     private readonly OrderDbContext _orders;
+    private readonly PartyDbContext _parties;
 
-    public AdminOrdersGridQueryEngine(OrderDbContext orders) => _orders = orders;
+    public AdminOrdersGridQueryEngine(OrderDbContext orders, PartyDbContext parties)
+    {
+        _orders = orders;
+        _parties = parties;
+    }
 
     public async Task<GridPageResponse<AdminOrderListItem>> QueryAsync(
         GridQueryRequest request,
@@ -22,15 +28,23 @@ internal sealed class AdminOrdersGridQueryEngine
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var term = request.Search.Trim().ToLower();
+            var matchingSellerIds = await _parties.Parties.AsNoTracking()
+                .Where(p => p.DisplayName.ToLower().Contains(term))
+                .Select(p => p.PartyId)
+                .ToListAsync(cancellationToken);
             q = q.Where(c =>
                 c.RecipientName.ToLower().Contains(term)
                 || c.CheckoutId.ToString().ToLower().Contains(term)
-                || c.SellerOrders.Any(o => o.OrderNumber.ToLower().Contains(term)));
+                || c.SellerOrders.Any(o => o.OrderNumber.ToLower().Contains(term))
+                || (matchingSellerIds.Count > 0
+                    && c.SellerOrders.Any(o => matchingSellerIds.Contains(o.SellerPartyId))));
         }
 
         foreach (var filter in request.Filters)
         {
-            q = ApplyFilter(q, filter);
+            q = filter.Field == "sellers"
+                ? await ApplySellerNamesFilterAsync(q, filter, cancellationToken)
+                : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -110,7 +124,7 @@ internal sealed class AdminOrdersGridQueryEngine
             case "customer":
                 return AdminEfGridQuery.ApplyTextFilter(source, x => x.RecipientName, filter);
             case "sellers":
-                return ApplyIntAggFilter(source, c => c.SellerOrders.Count(), filter);
+                return source;
             case "lines":
                 return ApplyIntAggFilter(source, c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity), filter);
             case "payment":
@@ -214,6 +228,73 @@ internal sealed class AdminOrdersGridQueryEngine
         return AdminEfGridQuery.ApplyIntFilter(source, selector, filter);
     }
 
+    private async Task<IQueryable<CheckoutGroup>> ApplySellerNamesFilterAsync(
+        IQueryable<CheckoutGroup> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var op = (filter.Operator ?? string.Empty).Trim();
+        if (op is "blank")
+        {
+            return source.Where(c => !c.SellerOrders.Any());
+        }
+
+        if (op is "notBlank")
+        {
+            return source.Where(c => c.SellerOrders.Any());
+        }
+
+        var value = (filter.Value ?? string.Empty).Trim();
+        var values = (filter.Values ?? [])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToList();
+        if (values.Count == 0 && !string.IsNullOrWhiteSpace(value))
+        {
+            values = [value];
+        }
+
+        IQueryable<Guid> partyIds = _parties.Parties.AsNoTracking().Select(p => p.PartyId);
+        if (values.Count > 0)
+        {
+            var lowered = values.Select(v => v.ToLower()).ToList();
+            partyIds = op switch
+            {
+                "equals" => _parties.Parties.AsNoTracking()
+                    .Where(p => lowered.Contains(p.DisplayName.ToLower()))
+                    .Select(p => p.PartyId),
+                "notEqual" => _parties.Parties.AsNoTracking()
+                    .Where(p => !lowered.Contains(p.DisplayName.ToLower()))
+                    .Select(p => p.PartyId),
+                "startsWith" => _parties.Parties.AsNoTracking()
+                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().StartsWith(v)))
+                    .Select(p => p.PartyId),
+                "endsWith" => _parties.Parties.AsNoTracking()
+                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().EndsWith(v)))
+                    .Select(p => p.PartyId),
+                "notContains" => _parties.Parties.AsNoTracking()
+                    .Where(p => lowered.All(v => !p.DisplayName.ToLower().Contains(v)))
+                    .Select(p => p.PartyId),
+                _ => _parties.Parties.AsNoTracking()
+                    .Where(p => lowered.Any(v => p.DisplayName.ToLower().Contains(v)))
+                    .Select(p => p.PartyId),
+            };
+        }
+
+        var ids = await partyIds.ToListAsync(cancellationToken);
+        if (ids.Count == 0)
+        {
+            return op is "notEqual" or "notContains" or "notIn" ? source : source.Where(_ => false);
+        }
+
+        return op switch
+        {
+            "notEqual" or "notIn" or "notContains" =>
+                source.Where(c => c.SellerOrders.Any(o => !ids.Contains(o.SellerPartyId))),
+            _ => source.Where(c => c.SellerOrders.Any(o => ids.Contains(o.SellerPartyId))),
+        };
+    }
+
     private static IQueryable<CheckoutGroup> ApplyDecimalAggFilter(
         IQueryable<CheckoutGroup> source,
         System.Linq.Expressions.Expression<Func<CheckoutGroup, decimal>> selector,
@@ -276,13 +357,33 @@ internal sealed class AdminOrdersGridQueryEngine
             .Where(x => ids.Contains(x.CheckoutId))
             .ToListAsync(cancellationToken);
         var byId = groups.ToDictionary(x => x.CheckoutId);
+        var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
+        var sellerNames = await LoadSellerNamesAsync(sellerIds, cancellationToken);
         return rows
             .Where(r => byId.ContainsKey(r.CheckoutId))
-            .Select(r => MapOrderListItem(byId[r.CheckoutId]))
+            .Select(r => MapOrderListItem(byId[r.CheckoutId], sellerNames))
             .ToList();
     }
 
-    private static AdminOrderListItem MapOrderListItem(CheckoutGroup group)
+    private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerNamesAsync(
+        IReadOnlyCollection<Guid> sellerIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var sellerRows = await _parties.Parties.AsNoTracking()
+            .Where(x => sellerIds.Contains(x.PartyId))
+            .Select(x => new { x.PartyId, x.DisplayName })
+            .ToListAsync(cancellationToken);
+        return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
+    }
+
+    private static AdminOrderListItem MapOrderListItem(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, string> sellerNames)
     {
         var orders = group.SellerOrders;
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
@@ -293,10 +394,31 @@ internal sealed class AdminOrdersGridQueryEngine
             group.SubmittedAt,
             string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
             orders.Count,
+            FormatSellerDisplayNames(orders, sellerNames),
             orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
             orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid) ? "Paid" : "PendingPayment",
             statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
+    }
+
+    private static string FormatSellerDisplayNames(
+        IEnumerable<SellerOrder> orders,
+        IReadOnlyDictionary<Guid, string> sellerNames)
+    {
+        var sellerIds = orders.Select(o => o.SellerPartyId).Distinct().ToList();
+        if (sellerIds.Count == 0)
+        {
+            return "—";
+        }
+
+        if (sellerIds.Count == 1)
+        {
+            return sellerNames.TryGetValue(sellerIds[0], out var name) && !string.IsNullOrWhiteSpace(name)
+                ? name
+                : "—";
+        }
+
+        return $"{sellerIds.Count} فروشنده";
     }
 }

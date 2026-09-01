@@ -48,3 +48,9 @@ test("product list keeps actions column pinned to rtl grid end", () => {
   assert.match(source, /admin-product-delete-/);
   assert.match(source, /scope=view/);
 });
+
+test("legacy bridge pins actions like product list (rtl end = left pin)", () => {
+  const source = readFileSync(join(dir, "legacy-grid-bridge.ts"), "utf8");
+  assert.match(source, /pinnedGridEdge\(direction\)/);
+  assert.match(source, /lockPosition: actionsPin/);
+});

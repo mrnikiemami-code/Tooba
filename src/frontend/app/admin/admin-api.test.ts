@@ -8,6 +8,7 @@ import {
   mapAdminCustomers,
   mapAdminDashboard,
   mapAdminOrder,
+  formatOrderSellerLabel,
   mapAdminOrderDetail,
   mapAdminSellers,
   loadAdminReviews,
@@ -20,8 +21,11 @@ test("maps live dashboard, order, seller and customer DTOs", () => {
   assert.equal(dashboard?.activeOffers, 3);
   assert.equal(dashboard?.customersCount, 6);
 
-  const order = mapAdminOrder({ CheckoutId: "c1", Reference: "TOOBA-101", RecipientName: "سارا", SellerCount: 2, ItemCount: 3, PayableAmount: 1200, Currency: "IRR", PaymentState: "Paid", Status: "Submitted" });
+  const order = mapAdminOrder({ CheckoutId: "c1", Reference: "TOOBA-101", RecipientName: "سارا", SellerCount: 2, SellerDisplayNames: "فروشگاه آرمان", ItemCount: 3, PayableAmount: 1200, Currency: "IRR", PaymentState: "Paid", Status: "Submitted" });
   assert.equal(order?.reference, "TOOBA-101");
+  assert.equal(order?.sellerDisplayNames, "فروشگاه آرمان");
+  assert.equal(formatOrderSellerLabel({ sellerCount: 1, sellerDisplayNames: "فروشگاه آرمان" }), "فروشگاه آرمان");
+  assert.equal(formatOrderSellerLabel({ sellerCount: 3, sellerDisplayNames: "3 فروشنده" }), "۳ فروشنده");
   assert.equal(order?.lineCount, 3);
 
   assert.equal(mapAdminSellers([{ SellerPartyId: "s1", SellerDisplayName: "فروشگاه آرمان", ActiveOffers: 7 }])[0]?.activeOfferCount, 7);

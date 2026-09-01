@@ -14,6 +14,7 @@ public sealed class AdminPanelCompositionTests
         var list = typeof(AdminOrderListItem).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
         Assert.Contains("CheckoutId", list);
         Assert.Contains("SellerCount", list);
+        Assert.Contains("SellerDisplayNames", list);
         Assert.Contains("PayableAmount", list);
         Assert.DoesNotContain("PaymentSecret", list);
 

@@ -13,8 +13,8 @@ public sealed class AdminListGridQueryEngineTests
     {
         var rows = new List<AdminOrderListItem>
         {
-            new(Guid.NewGuid(), "ORD-1", DateTimeOffset.UtcNow, "Ali", 1, 2, 100m, "IRR", "Paid", "Paid"),
-            new(Guid.NewGuid(), "ORD-2", DateTimeOffset.UtcNow.AddDays(-1), "Sara", 2, 3, 200m, "IRR", "PendingPayment", "Submitted"),
+            new(Guid.NewGuid(), "ORD-1", DateTimeOffset.UtcNow, "Ali", 1, "فروشگاه آرمان", 2, 100m, "IRR", "Paid", "Paid"),
+            new(Guid.NewGuid(), "ORD-2", DateTimeOffset.UtcNow.AddDays(-1), "Sara", 2, "2 فروشنده", 3, 200m, "IRR", "PendingPayment", "Submitted"),
         };
 
         var request = new GridQueryRequest(

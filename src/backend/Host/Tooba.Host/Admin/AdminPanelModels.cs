@@ -21,6 +21,7 @@ public sealed record AdminOrderListItem(
     DateTimeOffset SubmittedAt,
     string CustomerDisplayName,
     int SellerCount,
+    string SellerDisplayNames,
     int LineCount,
     decimal PayableAmount,
     string Currency,

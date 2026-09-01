@@ -42,7 +42,7 @@ public sealed class AdminPanelComposer
         _orders = orders;
         _parties = parties;
         _payments = payments;
-        _ordersGrid = new AdminOrdersGridQueryEngine(orders);
+        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
     }
@@ -86,7 +86,9 @@ public sealed class AdminPanelComposer
     public async Task<IReadOnlyList<AdminOrderListItem>> ListOrdersAsync(CancellationToken cancellationToken)
     {
         var groups = await LoadOrderGroupsAsync(cancellationToken);
-        return groups.Select(MapOrderListItem).ToList();
+        var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
+        var sellerNames = await LoadSellerDisplayNamesAsync(sellerIds, cancellationToken);
+        return groups.Select(group => MapOrderListItem(group, sellerNames)).ToList();
     }
 
     /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin (DB-native).</summary>
@@ -147,7 +149,7 @@ public sealed class AdminPanelComposer
                 order.Currency,
                 lines);
         }).ToList();
-        var listItem = MapOrderListItem(group);
+        var listItem = MapOrderListItem(group, sellerNames);
         var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
         AdminPaymentOpsView? paymentView = paymentOps is null
             ? null
@@ -290,7 +292,25 @@ public sealed class AdminPanelComposer
             .ToDictionary(x => x.VariantId, x => productNames[x.ProductId]);
     }
 
-    private static AdminOrderListItem MapOrderListItem(CheckoutGroup group)
+    private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerDisplayNamesAsync(
+        IReadOnlyCollection<Guid> sellerIds,
+        CancellationToken cancellationToken)
+    {
+        if (sellerIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var sellerRows = await _parties.Parties.AsNoTracking()
+            .Where(x => sellerIds.Contains(x.PartyId))
+            .Select(x => new { x.PartyId, x.DisplayName })
+            .ToListAsync(cancellationToken);
+        return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
+    }
+
+    private static AdminOrderListItem MapOrderListItem(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, string> sellerNames)
     {
         var orders = group.SellerOrders;
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
@@ -301,11 +321,32 @@ public sealed class AdminPanelComposer
             group.SubmittedAt,
             string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
             orders.Count,
+            FormatSellerDisplayNames(orders, sellerNames),
             orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
             orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid) ? "Paid" : "PendingPayment",
             statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
+    }
+
+    private static string FormatSellerDisplayNames(
+        IEnumerable<SellerOrder> orders,
+        IReadOnlyDictionary<Guid, string> sellerNames)
+    {
+        var sellerIds = orders.Select(o => o.SellerPartyId).Distinct().ToList();
+        if (sellerIds.Count == 0)
+        {
+            return "—";
+        }
+
+        if (sellerIds.Count == 1)
+        {
+            return sellerNames.TryGetValue(sellerIds[0], out var name) && !string.IsNullOrWhiteSpace(name)
+                ? name
+                : "—";
+        }
+
+        return $"{sellerIds.Count} فروشنده";
     }
 
     private static string PaymentState(SellerOrderStatus status) =>

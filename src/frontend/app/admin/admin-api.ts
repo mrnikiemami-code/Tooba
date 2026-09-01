@@ -32,6 +32,7 @@ export interface AdminOrderRow {
   reference: string;
   customerDisplayName: string;
   sellerCount: number;
+  sellerDisplayNames: string;
   lineCount: number;
   paymentState: string;
   status: string;
@@ -232,6 +233,16 @@ export function mapAdminDashboard(value: unknown): AdminDashboard | null {
   };
 }
 
+/** برچسب ستون فروشنده: یک فروشنده → نام؛ چند فروشنده → «N فروشنده». */
+export function formatOrderSellerLabel(row: Pick<AdminOrderRow, "sellerCount" | "sellerDisplayNames">): string {
+  if (row.sellerCount <= 0) return "—";
+  if (row.sellerCount === 1) {
+    const name = row.sellerDisplayNames.trim();
+    return name || "—";
+  }
+  return `${row.sellerCount.toLocaleString("fa-IR")} فروشنده`;
+}
+
 /** یک ردیف سفارش Admin را نگاشت می‌کند. */
 export function mapAdminOrder(value: unknown): AdminOrderRow | null {
   const item = record(value);
@@ -247,6 +258,10 @@ export function mapAdminOrder(value: unknown): AdminOrderRow | null {
       text(prop(item, "recipientName", "RecipientName"), "مشتری"),
     ),
     sellerCount: number(prop(item, "sellerCount", "SellerCount")),
+    sellerDisplayNames: text(
+      prop(item, "sellerDisplayNames", "SellerDisplayNames"),
+      text(prop(item, "sellerDisplayName", "SellerDisplayName"), "—"),
+    ),
     lineCount: number(prop(item, "lineCount", "LineCount") ?? prop(item, "itemCount", "ItemCount")),
     paymentState: text(prop(item, "paymentState", "PaymentState")),
     status: text(prop(item, "status", "Status")),

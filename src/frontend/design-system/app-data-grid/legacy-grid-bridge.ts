@@ -46,8 +46,10 @@ export function buildLegacyGridBridge<T>(
 ): LegacyGridBridge<T> {
   const filterMatrix: Record<string, AppGridFilterSpec> = {};
   const advancedFilterColumns: AppGridFilterColumnDef[] = [];
+  const dataColumns = columns.filter((column) => column.id !== "actions");
+  const actionsColumn = columns.find((column) => column.id === "actions");
 
-  const columnDefs = columns.map((col) => {
+  const columnDefs = dataColumns.map((col) => {
     const field = col.id;
     const kind = mapFilterKind(col.filterKind);
     if (kind !== "none" && col.filterKind) {
@@ -83,7 +85,27 @@ export function buildLegacyGridBridge<T>(
     );
   });
 
-  const exportableColumns = columns.filter((column) => column.exportable !== false);
+  if (actionsColumn) {
+    const actionsPin = pinnedGridEdge(direction);
+    columnDefs.push({
+      colId: "actions",
+      headerName: actionsColumn.header,
+      width: actionsColumn.width ?? 108,
+      minWidth: actionsColumn.minWidth ?? 100,
+      maxWidth: actionsColumn.maxWidth ?? 156,
+      sortable: false,
+      filter: false,
+      resizable: true,
+      lockVisible: true,
+      lockPinned: true,
+      lockPosition: actionsPin,
+      pinned: actionsPin,
+      cellClass: "app-grid-cell-align-center app-grid-actions-cell",
+      cellRenderer: (params: ICellRendererParams<T>) => renderLegacyCell(actionsColumn, params),
+    });
+  }
+
+  const exportableColumns = columns.filter((column) => column.exportable !== false && column.id !== "actions");
   return {
     columnDefs,
     advancedFilterColumns,

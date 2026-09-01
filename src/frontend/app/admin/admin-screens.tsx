@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { CheckCircle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
 import { ErrorState, faWorkspaceMessages, AppDataGrid, adminGridQueryAdapter, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
+import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridColumnDef, GridServerQuery, SavedViewStore } from "../../design-system/data-grid";
 import type { AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import {
   formatAdminDate,
   formatAdminMoney,
   formatAdminStatus,
+  formatOrderSellerLabel,
   loadAdminDashboard,
   loadAdminOrderDetail,
   moderateAdminReview,
@@ -316,10 +318,71 @@ const orderStatusEnumOptions = [
   { value: "Processing", label: formatAdminStatus("Processing") },
 ];
 
+const orderRowActions: AppGridRowAction<AdminOrderRow>[] = [
+  {
+    id: "view",
+    label: "مشاهده",
+    icon: Eye,
+    href: (row) => `/admin/orders/${row.checkoutId}`,
+    testId: (row) => `admin-order-view-${row.checkoutId}`,
+  },
+];
+
+function truncatedCell(content: ReactNode, title?: string) {
+  return (
+    <div className="app-grid-cell-content min-w-0">
+      <span className="block truncate" title={title}>{content}</span>
+    </div>
+  );
+}
+
 const orderColumns: GridColumnDef<AdminOrderRow>[] = [
-  { id: "reference", header: "سفارش", accessor: (row) => row.reference, cell: (row) => <Link className="font-semibold text-primary hover:underline" href={`/admin/orders/${row.checkoutId}`}>{row.reference}</Link>, width: 140, minWidth: 110, maxWidth: 190, sticky: "start", filterKind: "text", sortable: true },
-  { id: "customer", header: "مشتری / گیرنده", accessor: (row) => row.customerDisplayName, width: 150, minWidth: 110, maxWidth: 220, filterKind: "text", sortable: true },
-  { id: "sellers", header: "فروشنده", accessor: (row) => row.sellerCount, cell: (row) => row.sellerCount.toLocaleString("fa-IR"), width: 85, minWidth: 70, maxWidth: 110, sortable: true },
+  {
+    id: "reference",
+    header: "سفارش",
+    accessor: (row) => row.reference,
+    cell: (row) => (
+      <div className="app-grid-cell-content min-w-0">
+        <Link
+          className="block truncate font-semibold text-primary hover:underline"
+          href={`/admin/orders/${row.checkoutId}`}
+          title={row.reference}
+        >
+          {row.reference}
+        </Link>
+      </div>
+    ),
+    width: 220,
+    minWidth: 160,
+    maxWidth: 280,
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "customer",
+    header: "مشتری / گیرنده",
+    accessor: (row) => row.customerDisplayName,
+    cell: (row) => truncatedCell(row.customerDisplayName, row.customerDisplayName),
+    width: 150,
+    minWidth: 110,
+    maxWidth: 220,
+    filterKind: "text",
+    sortable: true,
+  },
+  {
+    id: "sellers",
+    header: "فروشنده",
+    accessor: (row) => formatOrderSellerLabel(row),
+    cell: (row) => {
+      const label = formatOrderSellerLabel(row);
+      return truncatedCell(label, label === "—" ? undefined : label);
+    },
+    width: 210,
+    minWidth: 160,
+    maxWidth: 300,
+    filterKind: "text",
+    sortable: true,
+  },
   { id: "lines", header: "قلم", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 75, minWidth: 64, maxWidth: 100, sortable: true },
   { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, maxWidth: 170, filterKind: "status", enumOptions: orderPaymentEnumOptions },
   { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, maxWidth: 160, filterKind: "status", enumOptions: orderStatusEnumOptions },
@@ -328,15 +391,9 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
   {
     id: "actions",
     header: "عملیات",
-    accessor: (row) => row.checkoutId,
-    cell: (row) => (
-      <Link className="text-primary underline-offset-4 hover:underline" href={`/admin/orders/${row.checkoutId}`}>
-        مشاهده
-      </Link>
-    ),
-    width: 88,
-    minWidth: 80,
-    maxWidth: 120,
+    accessor: () => "",
+    cell: (row) => <AppGridRowActionsCell row={row} actions={orderRowActions} compact />,
+    exportable: false,
     sortable: false,
   },
 ];
@@ -793,11 +850,11 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
             <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm">
               <h2 className="font-semibold">پرداخت (سامانه)</h2>
               <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Info label="PaymentId" value={detail.payment.paymentId} />
+                <Info label="PaymentId" value={detail.payment.paymentId} dir="ltr" />
                 <Info label="وضعیت درگاه" value={formatAdminStatus(detail.payment.status)} />
-                <Info label="Provider" value={detail.payment.providerCode || "—"} />
-                <Info label="مرجع درگاه" value={detail.payment.providerRequestReference || "—"} />
-                <Info label="تراکنش تأییدشده" value={detail.payment.providerTransactionReference || "—"} />
+                <Info label="Provider" value={detail.payment.providerCode || "—"} dir="ltr" />
+                <Info label="مرجع درگاه" value={detail.payment.providerRequestReference || "—"} dir="ltr" />
+                <Info label="تراکنش تأییدشده" value={detail.payment.providerTransactionReference || "—"} dir="ltr" />
                 <Info label="ایجاد" value={formatAdminDate(detail.payment.createdAt)} />
                 <Info label="به‌روزرسانی" value={formatAdminDate(detail.payment.updatedAt)} />
                 <Info label="شکست ایمن" value={detail.payment.lastFailureCode || "—"} />
@@ -826,8 +883,15 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
-  return <div><dt className="text-sm text-muted">{label}</dt><dd className="mt-1 font-semibold">{value}</dd></div>;
+function Info({ label, value, dir }: { label: string; value: string; dir?: "ltr" | "rtl" }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-1 truncate font-semibold" dir={dir} title={value}>
+        {value}
+      </dd>
+    </div>
+  );
 }
 
 function MetricMoney({ label, value, currency }: { label: string; value: number; currency: string }) {

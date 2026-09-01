@@ -16,7 +16,7 @@ public static class AdminListGridPolicies
     [
         new("reference", x => x.Reference, InMemoryGridFieldKind.Text, searchable: true),
         new("customer", x => x.CustomerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
-        new("sellers", x => x.SellerCount, InMemoryGridFieldKind.Number),
+        new("sellers", x => x.SellerDisplayNames, InMemoryGridFieldKind.Text, searchable: true),
         new("lines", x => x.LineCount, InMemoryGridFieldKind.Number),
         new("payment", x => x.PaymentState, InMemoryGridFieldKind.Enum),
         new("status", x => x.Status, InMemoryGridFieldKind.Enum),

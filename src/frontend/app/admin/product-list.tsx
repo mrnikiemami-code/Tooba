@@ -27,7 +27,7 @@ import {
 } from "./host-client";
 import { ADMIN_PRODUCT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
-import { AdditionalCategoryChipsCell } from "./additional-category-chips-cell";
+import { AdditionalCategoryListCell } from "./additional-category-list-cell";
 
 function productStatusClass(status: string): string {
   if (status === "Published") return "inline-flex rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success";
@@ -105,7 +105,7 @@ function PrimaryCategoryCell(params: ICellRendererParams<AdminProductListRow>) {
 function AdditionalCategoriesCell(params: ICellRendererParams<AdminProductListRow>) {
   const row = params.data;
   if (!row) return null;
-  return <AdditionalCategoryChipsCell names={row.additionalCategoryNames} />;
+  return <AdditionalCategoryListCell params={params} names={row.additionalCategoryNames} />;
 }
 
 function StatusCell(params: ICellRendererParams<AdminProductListRow>) {
@@ -131,16 +131,17 @@ function buildColumnDefs(
     applyProductGridFilterHeader({
       colId: "media",
       headerName: "رسانه",
-      width: 88,
-      minWidth: 80,
+      width: 68,
+      minWidth: 64,
+      maxWidth: 76,
       sortable: false,
       cellRenderer: MediaCell,
     }),
     applyProductGridFilterHeader({
       field: "title",
       headerName: "محصول",
-      minWidth: 220,
-      flex: 1.4,
+      minWidth: 280,
+      flex: 2,
       cellRenderer: ProductCell,
     }),
     applyProductGridFilterHeader({
@@ -160,8 +161,10 @@ function buildColumnDefs(
       colId: "additionalCategoryNames",
       field: "additionalCategoryNames",
       headerName: "نمایش در دسته‌های دیگر",
-      minWidth: 200,
-      flex: 1,
+      width: 320,
+      minWidth: 260,
+      maxWidth: 480,
+      flex: 1.2,
       sortable: false,
       cellRenderer: AdditionalCategoriesCell,
     }),
@@ -186,6 +189,10 @@ function buildColumnDefs(
     applyProductGridFilterHeader({ field: "locationCount", headerName: "محل", width: 90, hide: true }),
     buildPinnedActionsColumnDef<AdminProductListRow>({
       direction: "rtl",
+      actionSlots: 3,
+      width: 168,
+      minWidth: 152,
+      maxWidth: 220,
       cellRenderer: (params: ICellRendererParams<AdminProductListRow>) =>
         params.data ? <AppGridRowActionsCell row={params.data} actions={rowActions} /> : null,
     }),
