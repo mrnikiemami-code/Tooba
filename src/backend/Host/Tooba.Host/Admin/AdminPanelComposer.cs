@@ -384,6 +384,22 @@ public sealed class AdminPanelComposer
     private static string PaymentState(SellerOrderStatus status) =>
         status == SellerOrderStatus.Paid ? "Paid" : status == SellerOrderStatus.Cancelled ? "Cancelled" : "PendingPayment";
 
+    private static string HumanizeProviderCode(string? providerCode) =>
+        providerCode?.Trim().ToLowerInvariant() switch
+        {
+            "wallet" => "کیف پول",
+            "fake" => "درگاه آزمایشی",
+            "webhook" => "درگاه وب‌هوک",
+            "fail-closed" => "درگاه غیرفعال",
+            null or "" => "—",
+            _ => providerCode!
+        };
+
+    private static bool IsSuccessfulPaymentStatus(string status) =>
+        string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "Captured", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "Paid", StringComparison.OrdinalIgnoreCase);
+
     private static IReadOnlyList<AdminSellerFinancialView> BuildSellerFinancials(
         CheckoutGroup group,
         IReadOnlyDictionary<Guid, string> sellerNames,
@@ -435,7 +451,7 @@ public sealed class AdminPanelComposer
         IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder)
     {
         var events = new List<AdminFinancialEventView>();
-        if (payment is not null)
+        if (payment is not null && IsSuccessfulPaymentStatus(payment.Status))
         {
             events.Add(new AdminFinancialEventView(
                 payment.CompletedAt ?? payment.CreatedAt,
@@ -444,7 +460,7 @@ public sealed class AdminPanelComposer
                 payment.Currency,
                 string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
                 payment.ProviderTransactionReference ?? payment.ProviderRequestReference ?? payment.PaymentId.ToString("N")[..12],
-                payment.ProviderCode,
+                HumanizeProviderCode(payment.ProviderCode),
                 payment.Status,
                 "دریافت از مشتری"));
         }

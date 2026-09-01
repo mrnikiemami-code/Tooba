@@ -59,6 +59,8 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("_payments.GetLatestOperationalForCheckoutAsync", source, StringComparison.Ordinal);
         Assert.Contains("_settlement.ListEntriesBySellerOrderIdsAsync", source, StringComparison.Ordinal);
+        Assert.Contains("HumanizeProviderCode", source, StringComparison.Ordinal);
+        Assert.Contains("IsSuccessfulPaymentStatus", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
     }

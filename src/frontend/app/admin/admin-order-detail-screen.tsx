@@ -23,6 +23,9 @@ import type { GridColumnDef, GridServerQuery } from "../../design-system/data-gr
 import {
   formatAdminDate,
   formatAdminMoney,
+  formatAdminMoneyOptional,
+  formatAdminPaymentProvider,
+  formatAdminPaymentReference,
   formatAdminStatus,
   loadAdminOrderDetail,
   type AdminFinancialEvent,
@@ -236,7 +239,13 @@ function SellerFinancialTable({
                 <td className="px-4 py-3 font-semibold">{row.sellerDisplayName}</td>
                 <td className="px-4 py-3 tabular-nums">{row.lineCount.toLocaleString("fa-IR")}</td>
                 <td className="px-4 py-3 tabular-nums">{formatAdminMoney(row.grossAmount, row.currency)}</td>
-                <td className="px-4 py-3 tabular-nums">{formatAdminMoney(row.commissionAmount, row.currency)}</td>
+                <td className="px-4 py-3 tabular-nums">
+                  {formatAdminMoneyOptional(
+                    row.commissionAmount,
+                    row.currency,
+                    row.settlementStatus !== "Settled" && row.commissionAmount === 0,
+                  )}
+                </td>
                 <td className="px-4 py-3 tabular-nums">{formatAdminMoney(row.payableAmount, row.currency)}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${badge.className}`}>{badge.text}</span>
@@ -367,8 +376,8 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
               <h2 className="font-black">اطلاعات پرداخت</h2>
               {detail.payment ? (
                 <dl className="mt-4 space-y-3 text-sm">
-                  <div className="flex justify-between gap-3"><dt className="text-gray-500">درگاه</dt><dd className="font-bold" dir="ltr">{detail.payment.providerCode || "—"}</dd></div>
-                  <div className="flex justify-between gap-3"><dt className="text-gray-500">شناسه تراکنش</dt><dd className="font-mono text-xs" dir="ltr">{detail.payment.providerTransactionReference || detail.payment.providerRequestReference || "—"}</dd></div>
+                  <div className="flex justify-between gap-3"><dt className="text-gray-500">درگاه</dt><dd className="font-bold">{formatAdminPaymentProvider(detail.payment.providerCode)}</dd></div>
+                  <div className="flex justify-between gap-3"><dt className="text-gray-500">شناسه تراکنش</dt><dd className="font-mono text-xs" dir="ltr">{formatAdminPaymentReference(detail.payment)}</dd></div>
                   <div className="flex justify-between gap-3"><dt className="text-gray-500">وضعیت درگاه</dt><dd><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${paymentBadge(detail.payment.status).className}`}>{formatAdminStatus(detail.payment.status)}</span></dd></div>
                   <div className="flex justify-between gap-3"><dt className="text-gray-500">تاریخ پرداخت</dt><dd className="font-bold">{formatAdminDate(detail.payment.completedAt ?? detail.payment.createdAt)}</dd></div>
                   <div className="flex justify-between gap-3"><dt className="text-gray-500">مبلغ قابل پرداخت</dt><dd className="font-bold">{formatAdminMoney(detail.payment.amount, detail.payment.currency)}</dd></div>

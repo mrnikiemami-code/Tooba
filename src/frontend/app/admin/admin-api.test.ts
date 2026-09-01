@@ -3,12 +3,15 @@ import test from "node:test";
 import {
   ADMIN_DEV_ACTOR_HEADER,
   formatAdminMoney,
+  formatAdminPaymentProvider,
+  formatAdminPaymentReference,
   formatAdminStatus,
   loadAdminOrders,
   mapAdminCustomers,
   mapAdminDashboard,
   mapAdminOrder,
   formatOrderSellerLabel,
+  enrichAdminOrderDetail,
   mapAdminOrderDetail,
   mapAdminSellers,
   loadAdminReviews,
@@ -98,6 +101,83 @@ test("maps admin order detail seller snapshots", () => {
   assert.equal(detail?.lineCount, 2);
   assert.equal(detail?.sellerFinancials[0]?.settlementStatus, "Settled");
   assert.equal(detail?.financialSummary.payableToSellers, 392);
+});
+
+test("enriches legacy order detail payload without finance projections", () => {
+  const detail = mapAdminOrderDetail({
+    checkoutId: "c2",
+    reference: "TOOBA-202",
+    status: "Paid",
+    paymentState: "Paid",
+    subtotal: 350000,
+    payableAmount: 381500,
+    currency: "IRR",
+    recipientName: "سارا",
+    sellerOrders: [{
+      sellerOrderId: "so2",
+      orderNumber: "SO-2",
+      sellerDisplayName: "فروشگاه آرمان",
+      paymentState: "Paid",
+      payableAmount: 381500,
+      currency: "IRR",
+      lines: [{ offerId: "o2", productTitle: "کالا", quantity: 1, unitAmount: 350000, linePayable: 381500, currency: "IRR" }],
+    }],
+    payment: {
+      paymentId: "p1",
+      checkoutId: "c2",
+      status: "Succeeded",
+      amount: 381500,
+      currency: "IRR",
+      providerCode: "wallet",
+      providerRequestReference: "w|aeb80a42139f425ea7b5204a9a410b80|aaaaaaaaaaaa4aaa8aaa000000000009|381500|IRR",
+      providerTransactionReference: "wallet:aeb80a42-139f-425e-a7b5-204a9a410b80",
+      createdAt: "2026-08-27T21:58:36.445497+00:00",
+      updatedAt: "2026-08-27T21:58:36.474787+00:00",
+      completedAt: "2026-08-27T21:58:36.474787+00:00",
+      reconcileEligible: false,
+    },
+  });
+  assert.equal(detail?.lineCount, 1);
+  assert.equal(detail?.sellerCount, 1);
+  assert.equal(detail?.sellerFinancials.length, 1);
+  assert.equal(detail?.sellerFinancials[0]?.settlementStatus, "WaitingForSettlement");
+  assert.equal(detail?.financialSummary.totalReceivedFromCustomer, 381500);
+  assert.equal(detail?.financialEvents.length, 1);
+  assert.equal(detail?.financialEvents[0]?.paymentMethod, "کیف پول");
+  assert.equal(formatAdminPaymentProvider("wallet"), "کیف پول");
+  assert.match(formatAdminPaymentReference(detail!.payment!), /wallet:/);
+});
+
+test("enrichAdminOrderDetail keeps explicit server projections", () => {
+  const enriched = enrichAdminOrderDetail({
+    checkoutId: "c3",
+    reference: "TOOBA-303",
+    createdAt: "2026-08-27T00:00:00Z",
+    status: "Paid",
+    paymentState: "Paid",
+    lineCount: 4,
+    sellerCount: 2,
+    subtotal: 1000,
+    taxAmount: 0,
+    discountAmount: 0,
+    payableAmount: 1000,
+    currency: "IRR",
+    recipientName: "مینا",
+    contactMobile: "",
+    provinceName: "",
+    cityName: "",
+    postalAddress: "",
+    postalCode: "",
+    shippingMethodLabel: "",
+    sellerOrders: [],
+    sellerFinancials: [{ sellerOrderId: "so3", sellerPartyId: "sp3", sellerDisplayName: "آ", lineCount: 4, grossAmount: 1000, commissionAmount: 20, payableAmount: 980, currency: "IRR", settlementStatus: "Settled" }],
+    financialEvents: [],
+    financialSummary: { totalSellerShare: 1000, totalCommission: 20, grossOrderProfit: 20, payableToSellers: 980, customerGrossAmount: 1000, shippingCost: 0, customerDiscounts: 0, totalReceivedFromCustomer: 1000, currency: "IRR" },
+    payment: null,
+  });
+  assert.equal(enriched.lineCount, 4);
+  assert.equal(enriched.sellerCount, 2);
+  assert.equal(enriched.sellerFinancials[0]?.commissionAmount, 20);
 });
 
 test("uses Persian money and status labels", () => {

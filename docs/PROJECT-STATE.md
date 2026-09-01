@@ -59,13 +59,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P07-T042
+TB-P07-T042-R1
 ```
 
 Current Issued Task:
 
 ```text
-TB-P07-T042
+TB-P07-T042-R1
 ```
 
 Current Repair Task:
@@ -77,7 +77,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T042 — Order Detail + Marketplace Finance UX; TB-P07-T041-R1 superseded by T042 scope overlap; last accepted baseline TB-P07-T039
+TB-P07-T042-R1 — Order Detail financial data wiring repair (counts, seller breakdown, customer receipt, history, provider labels); parent TB-P07-T042; user-directed UI polish 9d350a9a preserved
 ```
 
 USER_VISUAL_ACCEPTED:

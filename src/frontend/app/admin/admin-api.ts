@@ -222,6 +222,177 @@ export function formatAdminMoney(amount: number, currency = "IRR"): string {
   return currency === "IRR" ? `${digits} ریال` : `${digits} ${currency}`;
 }
 
+/** مبلغ را برای فیلدهای اختیاری/ناموجود «—» برمی‌گرداند. */
+export function formatAdminMoneyOptional(
+  amount: number | null | undefined,
+  currency = "IRR",
+  missing = false,
+): string {
+  if (missing || amount == null || !Number.isFinite(amount)) return "—";
+  return formatAdminMoney(amount, currency);
+}
+
+/** کد درگاه Host را برای اپراتور فارسی می‌کند. */
+export function formatAdminPaymentProvider(providerCode: string | null | undefined): string {
+  const code = (providerCode ?? "").trim();
+  if (!code) return "—";
+  const labels: Record<string, string> = {
+    wallet: "کیف پول",
+    fake: "درگاه آزمایشی",
+    webhook: "درگاه وب‌هوک",
+    "fail-closed": "درگاه غیرفعال",
+  };
+  const normalized = code.toLowerCase();
+  if (labels[normalized]) return labels[normalized];
+  if (/^[0-9a-f-]{32,36}$/i.test(code)) return "کیف پول";
+  return code;
+}
+
+/** مرجع قابل‌نمایش پرداخت را از snapshot عملیاتی می‌سازد. */
+export function formatAdminPaymentReference(payment: AdminPaymentOps): string {
+  const tx = payment.providerTransactionReference?.trim();
+  if (tx) return tx;
+  const req = payment.providerRequestReference?.trim();
+  if (!req) return payment.paymentId.slice(0, 12);
+  if (req.includes("|")) {
+    const parts = req.split("|");
+    if (parts[0]?.toLowerCase() === "w" && parts.length > 1) {
+      return `wallet:${parts[1].slice(0, 8)}…`;
+    }
+  }
+  return req.length > 24 ? `${req.slice(0, 24)}…` : req;
+}
+
+function isSuccessfulPaymentStatus(status: string): boolean {
+  return status === "Succeeded" || status === "Captured" || status === "Paid";
+}
+
+function countOrderLines(sellerOrders: AdminSellerOrder[]): number {
+  return sellerOrders.reduce(
+    (sum, order) => sum + order.lines.reduce((lineSum, line) => lineSum + line.quantity, 0),
+    0,
+  );
+}
+
+function countDistinctSellers(sellerOrders: AdminSellerOrder[]): number {
+  const ids = new Set(sellerOrders.map((order) => order.id || order.orderNumber).filter(Boolean));
+  return ids.size;
+}
+
+function synthesizeSellerFinancials(sellerOrders: AdminSellerOrder[]): AdminSellerFinancial[] {
+  return sellerOrders.flatMap((order) => {
+    const sellerOrderId = order.id;
+    if (!sellerOrderId) return [];
+    const lineCount = order.lines.reduce((sum, line) => sum + line.quantity, 0);
+    const grossFromLines = order.lines.reduce((sum, line) => sum + line.linePayable, 0);
+    const grossAmount = grossFromLines > 0 ? grossFromLines : order.payableAmount;
+    const settlementStatus = order.paymentState === "Paid"
+      ? "WaitingForSettlement"
+      : "NotSettled";
+    return [{
+      sellerOrderId,
+      sellerPartyId: "",
+      sellerDisplayName: order.sellerDisplayName,
+      lineCount,
+      grossAmount,
+      commissionAmount: 0,
+      payableAmount: order.payableAmount,
+      currency: order.currency,
+      settlementStatus,
+    }];
+  });
+}
+
+function synthesizeFinancialEvents(
+  detail: AdminOrderDetail,
+): AdminFinancialEvent[] {
+  const payment = detail.payment;
+  if (!payment || !isSuccessfulPaymentStatus(payment.status)) return [];
+  return [{
+    occurredAt: payment.completedAt ?? payment.createdAt,
+    eventType: "CustomerReceipt",
+    amount: payment.amount,
+    currency: payment.currency,
+    partyDisplayName: detail.recipientName || "مشتری توبا",
+    reference: formatAdminPaymentReference(payment),
+    paymentMethod: formatAdminPaymentProvider(payment.providerCode),
+    status: payment.status,
+    description: "دریافت از مشتری",
+  }];
+}
+
+function isEmptyFinancialSummary(summary: AdminFinancialSummary): boolean {
+  return summary.totalSellerShare === 0
+    && summary.totalCommission === 0
+    && summary.payableToSellers === 0
+    && summary.customerGrossAmount === 0
+    && summary.totalReceivedFromCustomer === 0;
+}
+
+function synthesizeFinancialSummary(detail: AdminOrderDetail): AdminFinancialSummary {
+  const sellerFinancials = detail.sellerFinancials;
+  const currency = detail.currency || "IRR";
+  const totalSellerShare = sellerFinancials.reduce((sum, row) => sum + row.grossAmount, 0);
+  const totalCommission = sellerFinancials.reduce((sum, row) => sum + row.commissionAmount, 0);
+  const payableToSellers = sellerFinancials.reduce((sum, row) => sum + row.payableAmount, 0);
+  const customerGrossAmount = detail.subtotal > 0
+    ? detail.subtotal
+    : sellerFinancials.reduce((sum, row) => sum + row.grossAmount, 0);
+  const totalReceivedFromCustomer = detail.payment?.amount
+    ?? (detail.paymentState === "Paid" ? detail.payableAmount : 0);
+  return {
+    totalSellerShare,
+    totalCommission,
+    grossOrderProfit: totalCommission,
+    payableToSellers,
+    customerGrossAmount,
+    shippingCost: 0,
+    customerDiscounts: detail.discountAmount,
+    totalReceivedFromCustomer,
+    currency,
+  };
+}
+
+/** پس از نگاشت خام، شمارنده‌ها و برش مالی را از Order/Payment تکمیل می‌کند. */
+export function enrichAdminOrderDetail(detail: AdminOrderDetail): AdminOrderDetail {
+  const sellerOrders = detail.sellerOrders;
+  let lineCount = detail.lineCount;
+  let sellerCount = detail.sellerCount;
+  if (lineCount <= 0 && sellerOrders.length > 0) {
+    lineCount = countOrderLines(sellerOrders);
+  }
+  if (sellerCount <= 0 && sellerOrders.length > 0) {
+    sellerCount = countDistinctSellers(sellerOrders);
+  }
+
+  let sellerFinancials = detail.sellerFinancials;
+  if (sellerFinancials.length === 0 && sellerOrders.length > 0) {
+    sellerFinancials = synthesizeSellerFinancials(sellerOrders);
+  }
+
+  let financialEvents = detail.financialEvents.map((event) => ({
+    ...event,
+    paymentMethod: formatAdminPaymentProvider(event.paymentMethod),
+  }));
+  if (financialEvents.length === 0) {
+    financialEvents = synthesizeFinancialEvents(detail);
+  }
+
+  let financialSummary = detail.financialSummary;
+  if (isEmptyFinancialSummary(financialSummary) && (sellerFinancials.length > 0 || detail.payment)) {
+    financialSummary = synthesizeFinancialSummary({ ...detail, sellerFinancials });
+  }
+
+  return {
+    ...detail,
+    lineCount,
+    sellerCount,
+    sellerFinancials,
+    financialEvents,
+    financialSummary,
+  };
+}
+
 /** وضعیت‌های Host را برای اپراتور فارسی می‌کند. */
 export function formatAdminStatus(status: string): string {
   const labels: Record<string, string> = {
@@ -360,7 +531,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       lines,
     }];
   });
-  return {
+  const mapped: AdminOrderDetail = {
     checkoutId,
     reference: text(prop(item, "reference", "Reference"), "سفارش"),
     createdAt: text(prop(item, "createdAt", "CreatedAt"), text(prop(item, "submittedAt", "SubmittedAt"))),
@@ -416,6 +587,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     financialSummary: mapAdminFinancialSummary(prop(item, "financialSummary", "FinancialSummary")),
     payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
   };
+  return enrichAdminOrderDetail(mapped);
 }
 
 function mapAdminFinancialSummary(value: unknown): AdminFinancialSummary {

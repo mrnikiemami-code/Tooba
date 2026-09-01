@@ -47,7 +47,7 @@ TB-P07-T039
 Last Implementation Task:
 
 ```text
-TB-P07-T042
+TB-P07-T042-R1
 ```
 
 Current Repair Task:
@@ -59,7 +59,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P07-T042 — Order Detail + Marketplace Finance UX
+TB-P07-T042-R1 — Order Detail financial data wiring repair
+TB-P07-T042 — parent marketplace finance UX
 TB-P07-T040 = NOT_ACCEPTED
 ```
 
