@@ -1,0 +1,82 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P07-T043
+
+Parent-Task:
+TB-P07-T042-R1
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+da1a09bc-fce1-4fc8-95ab-ccf9d9abd86f
+
+Summary:
+Order Detail visual fidelity polish: compact header hierarchy, denser five summary KPI cards, balanced customer/payment info cards, integrated financial section with segmented tabs, tighter seller breakdown table and dual summary panels, compact financial history grid wrapper. T042-R1 data wiring and user-directed commits preserved. USER_VISUAL_ACCEPTED=NO.
+
+Visual-Reference:
+Matched locked reference regions (header, KPI row, dual info cards, financial tabs/table/summaries, history grid) per docs/evidence/TB-P07-T043/visual-reference-map.md — layout/density only.
+
+Header:
+Reduced top whitespace; inline order reference with title; compact breadcrumb and action buttons.
+
+Summary-Cards:
+Equal min-height cards, inline status badges, smaller icons/padding, stronger value emphasis.
+
+Customer-Payment-Cards:
+Equal-height sections, divider rows, de-emphasized transaction IDs, consistent label/value grid.
+
+Financial-Section:
+Tabs integrated in card chrome; denser seller table + highlighted totals; summary panels with dividers.
+
+Seller-Breakdown:
+Reduced cell padding, stronger seller name, settlement badge compact, footer payable emphasis.
+
+Financial-History:
+Tighter section header; canonical AppDataGrid with min-height wrapper; no raw AgGridReact.
+
+Responsive-RTL:
+RTL column order preserved; cards/tables use flex-wrap and overflow-x-auto; no new fixed-width traps.
+
+Data-Regression:
+No admin-api mapping/enrichment changes; lineCount/sellerCount/receipt/history/provider humanization intact (focused test).
+
+User-Changes-Preserved:
+No revert of 9d350a9a or T042/T042-R1 functional commits.
+
+Focused-Validation:
+FE admin-order-detail-visual.test.ts + admin-api.test.ts 10/10; recovery guard 3/3; git diff --check clean.
+
+Smoke-Check:
+GET /v1/admin/orders/{paid} → lineCount=1, financialEvents=1 on :5088.
+
+Recovery-SoT:
+Last accepted baseline TB-P07-T042-R1; current TB-P07-T043; USER_VISUAL_ACCEPTED=NO; guard updated.
+
+Runtime:
+Host :5088; FE dev not restarted (CSS-only change).
+
+Evidence:
+docs/evidence/TB-P07-T043/
+
+Git:
+HEAD=a246383981975d99410dd3746397e9625399c9be
+origin/main=a246383981975d99410dd3746397e9625399c9be
+HEAD==origin/main
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO — human should compare live /admin/orders/{id} against reference image.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
