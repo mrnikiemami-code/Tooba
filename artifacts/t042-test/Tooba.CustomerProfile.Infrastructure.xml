@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.CustomerProfile.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.CustomerProfileDirectory">
+            <summary>پیاده‌سازی پروفایل که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileDirectory.#ctor(Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext)">
+            <summary>DbContext مالک را دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileDirectory.UpsertAsync(System.Guid,Tooba.CustomerProfile.Application.CustomerProfileWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.CustomerProfileModule">
+            <summary>ماژول مستقل پروفایل توصیفی مشتری با schema، قرارداد و Outbox اختصاصی.</summary>
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.CustomerProfileModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration">
+            <summary>ثبت Outbox پروفایل مشتری؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.CustomerProfileOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.Migrations.InitialCustomerProfile">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Migrations.InitialCustomerProfile.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Migrations.InitialCustomerProfile.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Migrations.InitialCustomerProfile.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext">
+            <summary>DbContext مالک schema مستقل customer_profile و Outbox همان ماژول.</summary>
+        </member>
+        <member name="F:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext.Schema">
+            <summary>نام schema اختصاصی پروفایل مشتری.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext})">
+            <summary>DbContext را با گزینه‌های ماژول می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext.Profiles">
+            <summary>ردیف‌های خصوصی پروفایل مشتری.</summary>
+        </member>
+        <member name="P:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext.OutboxMessages">
+            <summary>پیام‌های Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت‌های CustomerProfile.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Infrastructure.Persistence.CustomerProfileDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

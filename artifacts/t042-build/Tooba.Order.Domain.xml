@@ -1,0 +1,465 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Order.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Order.Domain.OrderMode">
+            <summary>
+            حالت سفارش. از وضعیت پرداخت استنتاج نمی‌شود و سبد نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.OrderMode.RequestToReserve">
+            <summary>
+            درخواست رزرو؛ پرداخت الزامی نیست و خرید آنلاین پرداخت‌نشده نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.OrderMode.OnlinePurchase">
+            <summary>
+            خرید آنلاین؛ چرخهٔ پرداخت جدا است و اینجا Paid ثبت نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.SellerOrderStatus">
+            <summary>
+            وضعیت سفارش یک فروشنده. پرداخت و ارسال حقیقت جدا هستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.SellerOrderStatus.Submitted">
+            <summary>
+            ثبت شده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.SellerOrderStatus.PendingPayment">
+            <summary>
+            خرید آنلاین در انتظار پرداخت آینده؛ Paid نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.SellerOrderStatus.ReservationRequested">
+            <summary>
+            درخواست رزرو ثبت شده؛ پذیرش فروشنده آینده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.SellerOrderStatus.Cancelled">
+            <summary>
+            لغو شده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Domain.SellerOrderStatus.Paid">
+            <summary>
+            پرداخت تأییدشده از ماژول Payment؛ شروع درگاه این وضعیت را نمی‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.OrderLine">
+            <summary>
+            خط سفارش با تصویر قیمت تاریخی. حقیقت جاری Pricing نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.OrderLine.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.LineId">
+            <summary>
+            شناسهٔ خط سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.SellerOrderId">
+            <summary>
+            سفارش فروشندهٔ مالک.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.OfferId">
+            <summary>
+            Offer مبدأ خط سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.CatalogVariantId">
+            <summary>
+            گونهٔ کاتالوگ کپی‌شده؛ FK کاتالوگ نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.SellerPartyId">
+            <summary>
+            فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.Quantity">
+            <summary>
+            تعداد صحیح.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.UnitPriceSnapshot">
+            <summary>
+            مبلغ واحد در لحظهٔ تأیید checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.LineTotalSnapshot">
+            <summary>
+            جمع خط در لحظهٔ تأیید.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.Currency">
+            <summary>
+            ارز تصویر؛ Locale نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxExclusive">
+            <summary>
+            مبلغ پایه بدون مالیات طبق قرارداد Pricing.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PriceId">
+            <summary>
+            شناسهٔ قیمت انتخاب‌شده در تأیید.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.ReservationId">
+            <summary>
+            رزرو موجودی منتقل‌شده از سبد؛ جدول Inventory اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxOutcomeSnapshot">
+            <summary>
+            نتیجهٔ مالیات در لحظهٔ checkout. از قاعدهٔ بعدی بازمحاسبه نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxRateSnapshot">
+            <summary>
+            نرخ اعمال‌شده در تصویر تاریخی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxAmountSnapshot">
+            <summary>
+            مبلغ مالیات خط در تصویر تاریخی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxInclusiveSnapshot">
+            <summary>
+            مبلغ با مالیات خط در تصویر تاریخی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.TaxRuleIdSnapshot">
+            <summary>
+            قاعدهٔ اعمال‌شده؛ FK به schema tax نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.DiscountAmountSnapshot">
+            <summary>
+            مبلغ تخفیف اعمال‌شده روی خط در لحظهٔ checkout. قیمت تألیف‌شده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PromotionIdSnapshot">
+            <summary>
+            شناسهٔ پروموشن اعمال‌شده؛ FK به schema promotion نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PromotionNameSnapshot">
+            <summary>
+            نام پروموشن در لحظهٔ اعمال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PromotionCodeSnapshot">
+            <summary>
+            کد کوپن نرمال‌شده در تصویر تاریخی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.DiscountKindSnapshot">
+            <summary>
+            گونهٔ تخفیف در تصویر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PreDiscountTaxExclusiveSnapshot">
+            <summary>
+            مبلغ بدون مالیات قبل از تخفیف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PostDiscountTaxExclusiveSnapshot">
+            <summary>
+            مبلغ بدون مالیات بعد از تخفیف؛ پایهٔ Tax.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.PromotionAppliedAtSnapshot">
+            <summary>
+            زمان اعمال پروموشن در تسویه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.OrderLine.CategoryIdSnapshot">
+            <summary>
+            تصویر ردهٔ اصلی گونه در لحظهٔ checkout برای authorization؛ FK به جداول Catalog نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.OrderLine.FromCheckout(System.Guid,System.Guid,System.Guid,System.Guid,System.Int32,System.Decimal,System.String,System.Boolean,System.Guid,System.Nullable{System.Guid},System.String,System.Decimal,System.Decimal,System.Decimal,System.Nullable{System.Guid},System.Decimal,System.Nullable{System.Guid},System.String,System.String,System.String,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid})">
+            <summary>
+            خط را از نقل‌قول تازه، تخفیف ارزیابی‌شده و نتیجهٔ مالیات می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.SellerOrder">
+            <summary>
+            سفارش یک فروشنده داخل checkout. چرخهٔ ارسال جدا است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.Lines">
+            <summary>
+            خطوط این فروشنده برای پایداری EF. Navigation کاتالوگ نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.SellerOrder.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.SellerOrderId">
+            <summary>
+            شناسهٔ داخلی سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.CheckoutId">
+            <summary>
+            گروه checkout والد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.OrderNumber">
+            <summary>
+            شمارهٔ مرجع قابل‌نمایش؛ مجوز دسترسی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.SellerPartyId">
+            <summary>
+            فروشندهٔ این سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.Status">
+            <summary>
+            وضعیت این فروشنده، نه کل سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.SubtotalSnapshot">
+            <summary>
+            جمع تصویر خطوط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.TaxSnapshot">
+            <summary>
+            جمع مالیات تصویر خطوط در لحظهٔ checkout. قاعدهٔ بعدی این عدد را عوض نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.DiscountSnapshot">
+            <summary>
+            جمع تخفیف تصویر خطوط در لحظهٔ checkout. پروموشن بعدی این عدد را عوض نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.GrandTotalSnapshot">
+            <summary>
+            جمع نهایی تصویر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrder.Currency">
+            <summary>
+            ارز تصویر.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.SellerOrder.Open(System.Guid,System.Guid,System.String,Tooba.Order.Domain.OrderMode,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Order.Domain.OrderLine})">
+            <summary>
+            سفارش فروشنده را می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.SellerOrder.Cancel">
+            <summary>
+            لغو سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.SellerOrder.RecordVerifiedPayment">
+            <summary>
+            پرداخت تأییدشده را روی سفارش خرید آنلاین ثبت می‌کند. متن callback این متد را صدا نمی‌زند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.CheckoutGroup">
+            <summary>
+            گروه checkout مشتری. سبد نیست و پرداخت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.CheckoutGroup.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.CheckoutId">
+            <summary>
+            شناسهٔ checkout؛ مرجع مشترک چند سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.IdempotencyKey">
+            <summary>
+            کلید تکرارناپذیری ارسال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.CartId">
+            <summary>
+            سبد مبدأ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.Mode">
+            <summary>
+            حالت سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.BuyerPartyId">
+            <summary>
+            طرف اقتصادی خریدار؛ با کاربر عامل یکی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.PlacedByUserId">
+            <summary>
+            کاربر عامل ثبت؛ هویت فروشنده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.Market">
+            <summary>
+            بازار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.Currency">
+            <summary>
+            ارز.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.Channel">
+            <summary>
+            کانال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.CreatedAt">
+            <summary>
+            ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.SubmittedAt">
+            <summary>
+            ارسال UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.RecipientName">
+            <summary>
+            نام گیرنده در تصویر ارسال checkout. دفترچهٔ آدرس مشتری نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.ContactMobile">
+            <summary>
+            تماس گیرنده در تصویر checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.ProvinceName">
+            <summary>
+            استان تصویر ارسال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.CityName">
+            <summary>
+            شهر تصویر ارسال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.PostalAddress">
+            <summary>
+            نشانی پستی تصویر ارسال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.PostalCode">
+            <summary>
+            کد پستی تصویر ارسال.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.ShippingMethodCode">
+            <summary>
+            کد روش ارسال اولیه؛ موتور حمل‌ونقل جدا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.ShippingMethodLabel">
+            <summary>
+            برچسب روش ارسال اولیه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.SellerOrders">
+            <summary>
+            سفارش‌های فروشندهٔ این checkout. یک فروشنده کل checkout را مالک نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutGroup.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Domain.CheckoutGroup.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Domain.CheckoutGroup.Submit(System.Guid,System.String,System.Guid,Tooba.Order.Domain.OrderMode,System.Nullable{System.Guid},System.Guid,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Collections.Generic.IReadOnlyList{Tooba.Order.Domain.SellerOrder},System.DateTimeOffset,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            checkout را پس از اعتبارسنجی باز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.CheckoutGroup.CanBeViewedBy(System.Nullable{System.Guid},System.Nullable{System.Guid})">
+            <summary>
+            آیا هویت حق دیدن checkout را دارد. شمارهٔ سفارش به‌تنهایی کافی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.CheckoutSubmittedDomainEvent">
+            <summary>
+            رویداد ارسال checkout.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.CheckoutSubmittedDomainEvent.#ctor(System.Guid,System.Guid,Tooba.Order.Domain.OrderMode)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutSubmittedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutSubmittedDomainEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutSubmittedDomainEvent.CartId">
+            <summary>
+            سبد مبدأ.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.CheckoutSubmittedDomainEvent.Mode">
+            <summary>
+            حالت.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Domain.SellerOrderCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,Tooba.Order.Domain.OrderMode)">
+            <summary>
+            رویداد را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.SellerOrderId">
+            <summary>
+            سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.SellerPartyId">
+            <summary>
+            فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Domain.SellerOrderCreatedDomainEvent.Mode">
+            <summary>
+            حالت.
+            </summary>
+        </member>
+    </members>
+</doc>

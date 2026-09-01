@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Notification.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Notification.Domain.NotificationRecipientKind">
+            <summary>
+            نوع گیرندهٔ اعلان تراکنشی. با نقش Identity یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Notification.Domain.NotificationRecipientKind.Customer">
+            <summary>خریدار / مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Domain.NotificationRecipientKind.Seller">
+            <summary>فروشندهٔ مالک سفارش یا رویداد.</summary>
+        </member>
+        <member name="T:Tooba.Notification.Domain.UserNotification">
+            <summary>
+            اعلان پایدار تراکنشی. لاگ فنی، audit یا analytics نیست.
+            Tenant از اتصال commerce محیط جاری جدا می‌شود؛ ردیف TenantId نگه نمی‌دارد
+            (هم‌تراز Reviews/Settlement؛ Story استثنا است).
+            </summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.NotificationId">
+            <summary>شناسهٔ پایدار اعلان.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.RecipientKind">
+            <summary>نوع گیرنده.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.RecipientPartyId">
+            <summary>
+            کلید اصلی گیرنده: Party خریدار (یا surrogate بازیگر وقتی BuyerPartyId خالی است)
+            یا Party فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.RecipientActorUserId">
+            <summary>Actor اختیاری برای فیلتر پنل مشتری.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.Type">
+            <summary>نوع معنایی پایدار (مثلاً payment.succeeded).</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.PayloadJson">
+            <summary>JSON ساختاریافتهٔ امن بدون HTML.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.TargetRoute">
+            <summary>مسیر نسبی allowlist‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.IsRead">
+            <summary>آیا خوانده شده.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.ReadAt">
+            <summary>زمان خواندن.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.SourceEventId">
+            <summary>کلید idempotency از EventId منبع.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.SourceType">
+            <summary>نوع قرارداد Integration منبع.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.IsDeleted">
+            <summary>حذف نرم.</summary>
+        </member>
+        <member name="P:Tooba.Notification.Domain.UserNotification.DeletedAt">
+            <summary>زمان حذف نرم.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Domain.UserNotification.Create(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.String,System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>اعلان خوانده‌نشدهٔ جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Domain.UserNotification.MarkRead(System.DateTimeOffset)">
+            <summary>خوانده‌شدن را به‌صورت idempotent علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Domain.UserNotification.SoftDelete(System.DateTimeOffset)">
+            <summary>حذف نرم idempotent.</summary>
+        </member>
+    </members>
+</doc>

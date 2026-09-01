@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Order.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Order.Infrastructure.OpenOrderUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Order. ماتریس هویت اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OpenOrderUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.CheckoutDirectory">
+            <summary>
+            ارکستراسیون checkout: سبد از قرارداد Cart، قیمت از Pricing، Offer از Lookup، رزرو از Inventory.
+            تراکنش توزیع‌شده نیست. نقل‌قول سبد حقیقت تسویه نیست؛ اختلاف قیمت با PRICE_CHANGED شکست می‌خورد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext,Tooba.Order.Application.IOrderUseCaseGuard,Tooba.Cart.Application.ICartQueryGateway,Tooba.Cart.Application.ICartDirectory,Tooba.Offer.Application.IOfferLookupGateway,Tooba.Pricing.Application.IPriceLookupGateway,Tooba.Inventory.Application.IInventoryDirectory,Tooba.Tax.Application.ITaxCalculator,Tooba.Promotion.Application.IPromotionEvaluator,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>
+            دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.SubmitAsync(Tooba.Order.Application.SubmitCheckoutCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.PreviewAsync(Tooba.Order.Application.SubmitCheckoutCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.GetCheckoutAsync(System.Guid,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.GetSellerOrderByNumberAsync(System.String,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.CancelSellerOrderAsync(System.Guid,Tooba.Order.Application.OrderAccess,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.QuoteSellerOrdersAsync(Tooba.Cart.Application.CartSnapshot,Tooba.Order.Application.SubmitCheckoutCommand,System.Guid,System.DateTimeOffset,System.Threading.CancellationToken)">
+            <summary>
+            قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.FindCheckoutAsync(System.Linq.Expressions.Expression{System.Func{Tooba.Order.Domain.CheckoutGroup,System.Boolean}},System.Threading.CancellationToken)">
+            <summary>
+            checkout موجود را با کلید idempotency یا CartId پیدا می‌کند تا سبد یک‌بار بیشتر سفارش نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.CheckoutDirectory.ReconcileCartConversionAsync(Tooba.Order.Domain.CheckoutGroup,Tooba.Order.Application.SubmitCheckoutCommand,System.Threading.CancellationToken)">
+            <summary>
+            اگر Order ذخیره شده و Cart هنوز Active است، تبدیل سبد را بدون تراکنش توزیع‌شده و بدون قیمت‌گذاری دوباره تکرار می‌کند.
+            شکست موقت تبدیل، checkout ذخیره‌شده را حذف نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Events.CheckoutSubmittedIntegrationEvent">
+            <summary>
+            Integration ارسال checkout. پرداخت موفق نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Infrastructure.Events.CheckoutSubmittedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.CheckoutSubmittedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.CheckoutSubmittedIntegrationEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.CheckoutSubmittedIntegrationEvent.CartId">
+            <summary>
+            سبد مبدأ.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent">
+            <summary>
+            Integration ایجاد سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent.CheckoutId">
+            <summary>
+            checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent.SellerOrderId">
+            <summary>
+            سفارش فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Events.SellerOrderCreatedIntegrationEvent.SellerPartyId">
+            <summary>
+            فروشنده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderFulfillmentBridge">
+            <summary>
+            snapshot handoff سفارش برای Fulfillment بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderFulfillmentBridge.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext)">
+            <summary>پل handoff را به schema order وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderFulfillmentBridge.GetHandoffAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderFulfillmentBridge.GetHandoffForCheckoutAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderModule">
+            <summary>
+            ماژول Order: checkout و سفارش فروشنده‌محور. سبد، پرداخت و ارسال اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderNotificationBridge">
+            <summary>
+            snapshot گیرندگان اعلان از schema order بدون نشت EF به Notification.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderNotificationBridge.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext)">
+            <summary>پل را به schema order وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderNotificationBridge.GetByCheckoutIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderNotificationBridge.GetBySellerOrderIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Order. رویداد پرداخت موفق ترجمه نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderPaymentBridge">
+            <summary>
+            درز سفارش برای پرداخت. DbContext پرداخت اینجا باز نمی‌شود و مبلغ از کلاینت خوانده نمی‌شود.
+            تصویر Paid فقط از مصرف رویداد پایدار نوشته می‌شود، نه از تراکنش همزمان Payment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPaymentBridge.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext)">
+            <summary>
+            پل را به schema order وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPaymentBridge.GetPayableAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPaymentBridge.ApplyVerifiedSuccessAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderPaymentInboxRecord">
+            <summary>
+            رکورد Inbox تصویر پرداخت. تکراری بودن delivery را در حافظه نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderPaymentInboxRecord.EventId">
+            <summary>
+            شناسهٔ رویداد Integration از ستون Outbox؛ کلید مصرف است نه PaymentId.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderPaymentInboxRecord.PaymentId">
+            <summary>
+            پرداخت مرجع برای ممیزی. حقیقت Verify نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.OrderPaymentInboxRecord.ProcessedAt">
+            <summary>
+            زمان اعمال موفق تصویر Paid روی سفارش.
+            </summary>
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderPaymentSucceededHandler">
+            <summary>
+            مصرف‌کنندهٔ متعلق به Order برای payment.succeeded.v1. PaymentDbContext باز نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPaymentSucceededHandler.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext,Tooba.Payment.Application.IOrderPaymentProjection)">
+            <summary>
+            مصرف‌کننده را به schema order و درز تصویر Paid وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPaymentSucceededHandler.HandleAsync(Tooba.Payment.Application.PaymentSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderPurchaseVerificationGateway">
+            <summary>اثبات خرید فقط با schema سفارش و ورودی شناسهٔ گونه‌های Catalog انجام می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPurchaseVerificationGateway.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext)">
+            <summary>درگاه را به DbContext مالک Order وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderPurchaseVerificationGateway.VerifyPaidPurchaseAsync(System.Guid,System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.OrderReturnBridge">
+            <summary>
+            snapshot سفارش برای Returns بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderReturnBridge.#ctor(Tooba.Order.Infrastructure.Persistence.OrderDbContext)">
+            <summary>پل return را به schema order وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.OrderReturnBridge.GetReturnContextAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.InitialOrder">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.InitialOrder.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.InitialOrder.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.InitialOrder.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.UniqueCheckoutCartId">
+            <summary>
+            یکتایی پایدار <c>cart_id</c> روی checkout تا دو Submit هم‌زمان نتوانند دو گروه سفارش برای یک سبد بسازند.
+            بدون ویژگی <see cref="T:Microsoft.EntityFrameworkCore.Migrations.MigrationAttribute"/> این کلاس به تاریخچهٔ EF وصل نمی‌شد و قید در Postgres اعمال نمی‌شد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.UniqueCheckoutCartId.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.UniqueCheckoutCartId.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.OrderTaxLineSnapshots">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderTaxLineSnapshots.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderTaxLineSnapshots.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPaymentInbox">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPaymentInbox.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPaymentInbox.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPromotionSnapshots">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPromotionSnapshots.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.OrderPromotionSnapshots.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.CheckoutShippingSnapshot">
+            <summary>
+            تصویر محدود ارسال/تماس روی checkout. ماژول Address جدا ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.CheckoutShippingSnapshot.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.CheckoutShippingSnapshot.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.Migrations.AddOrderLineCategoryIdSnapshot">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.AddOrderLineCategoryIdSnapshot.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.Migrations.AddOrderLineCategoryIdSnapshot.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.OrderDbContext">
+            <summary>
+            DbContext مالک schema <c>order</c>. پرداخت، ارسال و سبد را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Order.Infrastructure.Persistence.OrderDbContext.Schema">
+            <summary>
+            schema اختصاصی Order.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.OrderDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Order.Infrastructure.Persistence.OrderDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Persistence.OrderDbContext.Checkouts">
+            <summary>
+            گروه‌های checkout.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Persistence.OrderDbContext.SellerOrders">
+            <summary>
+            سفارش‌های فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Persistence.OrderDbContext.Lines">
+            <summary>
+            خطوط تصویر قیمت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Persistence.OrderDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Order.Infrastructure.Persistence.OrderDbContext.PaymentInbox">
+            <summary>
+            Inbox مصرف payment.succeeded.v1. تکراری بودن delivery را پایدار نگه می‌دارد نه در حافظه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.OrderDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Order.Infrastructure.Persistence.OrderDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Order.
+            </summary>
+        </member>
+        <member name="M:Tooba.Order.Infrastructure.Persistence.OrderDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

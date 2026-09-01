@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Reviews.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Reviews.Infrastructure.Migrations.InitialReviews">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Migrations.InitialReviews.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Migrations.InitialReviews.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Migrations.InitialReviews.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext">
+            <summary>DbContext مالک schema مستقل reviews.</summary>
+        </member>
+        <member name="F:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext.Schema">
+            <summary>schema اختصاصی Reviews.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext.Reviews">
+            <summary>بررسی‌های محصول.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Reviews.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.ReviewDirectory">
+            <summary>دایرکتوری Reviews با خواندن فقط از قرارداد Catalog/Order و schema خودش.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.#ctor(Tooba.Reviews.Infrastructure.Persistence.ReviewsDbContext,Tooba.Catalog.Application.ICatalogLookupGateway,Tooba.Order.Application.IOrderPurchaseVerificationGateway)">
+            <summary>وابستگی‌های مالک را تزریق می‌کند؛ DbContext خارجی پذیرفته نمی‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.SubmitAsync(System.Guid,Tooba.Reviews.Application.SubmitProductReview,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.GetPublishedSummariesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.GetRecentPublishedForHomeAsync(System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.GetPublishedAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.GetPendingAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.ListForProductsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Nullable{Tooba.Reviews.Domain.ReviewStatus},System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.PublishAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewDirectory.RejectAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.ReviewsDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ قطعی و idempotent؛ خرید تأییدشدهٔ جعلی تولید نمی‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewsDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Threading.CancellationToken)">
+            <summary>چند امتیاز Published و یک Pending را برای محصولات نمایشی موجود درج می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.ReviewsModule">
+            <summary>ماژول مستقل Reviews و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.ReviewsModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewsModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration">
+            <summary>ثبت Outbox Reviews؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Reviews.Infrastructure.ReviewsOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Media.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Media.Infrastructure.LocalFileMediaStore">
+            <summary>ذخیره‌ساز فایل محلی با کلید نسبی امن زیر ریشهٔ پیکربندی‌شده.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.LocalFileMediaStore.#ctor(System.String)">
+            <summary>ریشهٔ فیزیکی ذخیره‌سازی را تثبیت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.LocalFileMediaStore.SaveAsync(System.IO.Stream,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.LocalFileMediaStore.OpenReadAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.LocalFileMediaStore.ExistsAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.LocalFileMediaStore.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.MediaDirectory">
+            <summary>دایرکتوری Media با اعتبارسنجی MIME/اندازه و ذخیره‌سازی امن کلید.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.#ctor(Tooba.Media.Infrastructure.Persistence.MediaDbContext,Tooba.Media.Application.IMediaObjectStore,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>وابستگی‌های ذخیره‌سازی و پیکربندی را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.UploadAsync(System.IO.Stream,System.String,System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.QueryAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.GetManyAsync(System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaDirectory.GetStorageKeyAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.MediaModule">
+            <summary>ماژول مستقل Media و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.MediaModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.MediaOutboxRegistration">
+            <summary>ثبت Outbox Media؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.MediaOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.MediaOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.MediaOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.MediaOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.Migrations.InitialMedia">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.Migrations.InitialMedia.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.Migrations.InitialMedia.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.Persistence.MediaDbContext">
+            <summary>DbContext مالک schema مستقل media.</summary>
+        </member>
+        <member name="F:Tooba.Media.Infrastructure.Persistence.MediaDbContext.Schema">
+            <summary>schema اختصاصی Media.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.Persistence.MediaDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Media.Infrastructure.Persistence.MediaDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.Persistence.MediaDbContext.Assets">
+            <summary>دارایی‌های رسانه.</summary>
+        </member>
+        <member name="P:Tooba.Media.Infrastructure.Persistence.MediaDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.Persistence.MediaDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Media.Infrastructure.Persistence.MediaDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Media.</summary>
+        </member>
+        <member name="M:Tooba.Media.Infrastructure.Persistence.MediaDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,462 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AccessControl.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AccessControl.Application.AccessOwnerScope">
+            <summary>زمینهٔ مالک برای عملیات دایرکتوری.</summary>
+            <param name="Kind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="TenantId">Tenant اختیاری.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.AccessOwnerScope.#ctor(Tooba.AccessControl.Domain.AccessOwnerScopeKind,System.Nullable{System.Guid},System.String)">
+            <summary>زمینهٔ مالک برای عملیات دایرکتوری.</summary>
+            <param name="Kind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="TenantId">Tenant اختیاری.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessOwnerScope.Kind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessOwnerScope.OwnerScopeId">
+            <summary>شناسهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessOwnerScope.TenantId">
+            <summary>Tenant اختیاری.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.CreateAccessRoleCommand">
+            <summary>فرمان ایجاد نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.CreateAccessRoleCommand.#ctor(System.String,System.String,System.String)">
+            <summary>فرمان ایجاد نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CreateAccessRoleCommand.Name">
+            <summary>نام.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CreateAccessRoleCommand.Code">
+            <summary>کد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CreateAccessRoleCommand.Description">
+            <summary>توضیح.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.UpdateAccessRoleCommand">
+            <summary>فرمان به‌روزرسانی نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.UpdateAccessRoleCommand.#ctor(System.String,System.String)">
+            <summary>فرمان به‌روزرسانی نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UpdateAccessRoleCommand.Name">
+            <summary>نام.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UpdateAccessRoleCommand.Description">
+            <summary>توضیح.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.CloneAccessRoleCommand">
+            <summary>فرمان کلون نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.CloneAccessRoleCommand.#ctor(System.String,System.String,System.String)">
+            <summary>فرمان کلون نقش.</summary>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CloneAccessRoleCommand.Name">
+            <summary>نام.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CloneAccessRoleCommand.Code">
+            <summary>کد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.CloneAccessRoleCommand.Description">
+            <summary>توضیح.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.RolePermissionGrant">
+            <summary>یک اعطای مجوز روی نقش.</summary>
+            <param name="PermissionId">شناسهٔ مجوز.</param>
+            <param name="ScopeKind">گونهٔ scope.</param>
+            <param name="ScopeResourceId">منبع.</param>
+            <param name="Enabled">فعال.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.RolePermissionGrant.#ctor(System.String,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid},System.Boolean)">
+            <summary>یک اعطای مجوز روی نقش.</summary>
+            <param name="PermissionId">شناسهٔ مجوز.</param>
+            <param name="ScopeKind">گونهٔ scope.</param>
+            <param name="ScopeResourceId">منبع.</param>
+            <param name="Enabled">فعال.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.RolePermissionGrant.PermissionId">
+            <summary>شناسهٔ مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.RolePermissionGrant.ScopeKind">
+            <summary>گونهٔ scope.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.RolePermissionGrant.ScopeResourceId">
+            <summary>منبع.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.RolePermissionGrant.Enabled">
+            <summary>فعال.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.AccessRoleDto">
+            <summary>DTO نقش با شمارش‌ها.</summary>
+            <param name="Id">شناسه.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+            <param name="IsSystem">سیستمی.</param>
+            <param name="IsMutable">قابل ویرایش.</param>
+            <param name="IsArchived">بایگانی.</param>
+            <param name="PermissionCount">تعداد مجوز.</param>
+            <param name="AssignmentCount">تعداد تخصیص.</param>
+            <param name="CreatedAt">ایجاد.</param>
+            <param name="UpdatedAt">به‌روزرسانی.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.AccessRoleDto.#ctor(System.Guid,Tooba.AccessControl.Domain.AccessOwnerScopeKind,System.Nullable{System.Guid},System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Int32,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>DTO نقش با شمارش‌ها.</summary>
+            <param name="Id">شناسه.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="Name">نام.</param>
+            <param name="Code">کد.</param>
+            <param name="Description">توضیح.</param>
+            <param name="IsSystem">سیستمی.</param>
+            <param name="IsMutable">قابل ویرایش.</param>
+            <param name="IsArchived">بایگانی.</param>
+            <param name="PermissionCount">تعداد مجوز.</param>
+            <param name="AssignmentCount">تعداد تخصیص.</param>
+            <param name="CreatedAt">ایجاد.</param>
+            <param name="UpdatedAt">به‌روزرسانی.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.OwnerScopeKind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.OwnerScopeId">
+            <summary>شناسهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.Name">
+            <summary>نام.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.Code">
+            <summary>کد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.Description">
+            <summary>توضیح.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.IsSystem">
+            <summary>سیستمی.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.IsMutable">
+            <summary>قابل ویرایش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.IsArchived">
+            <summary>بایگانی.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.PermissionCount">
+            <summary>تعداد مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.AssignmentCount">
+            <summary>تعداد تخصیص.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.CreatedAt">
+            <summary>ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessRoleDto.UpdatedAt">
+            <summary>به‌روزرسانی.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.UserRoleAssignmentDto">
+            <summary>DTO تخصیص.</summary>
+            <param name="Id">شناسه.</param>
+            <param name="UserId">کاربر.</param>
+            <param name="RoleId">نقش.</param>
+            <param name="RoleName">نام نقش.</param>
+            <param name="RoleCode">کد نقش.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="AssignedAt">زمان.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.UserRoleAssignmentDto.#ctor(System.Guid,System.Guid,System.Guid,System.String,System.String,Tooba.AccessControl.Domain.AccessOwnerScopeKind,System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>DTO تخصیص.</summary>
+            <param name="Id">شناسه.</param>
+            <param name="UserId">کاربر.</param>
+            <param name="RoleId">نقش.</param>
+            <param name="RoleName">نام نقش.</param>
+            <param name="RoleCode">کد نقش.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="AssignedAt">زمان.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.UserId">
+            <summary>کاربر.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.RoleId">
+            <summary>نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.RoleName">
+            <summary>نام نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.RoleCode">
+            <summary>کد نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.OwnerScopeKind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.OwnerScopeId">
+            <summary>شناسهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.UserRoleAssignmentDto.AssignedAt">
+            <summary>زمان.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.SellerCeilingEntryDto">
+            <summary>DTO سقف فروشنده.</summary>
+            <param name="PermissionId">مجوز.</param>
+            <param name="Enabled">فعال.</param>
+            <param name="Delegable">قابل تفویض.</param>
+            <param name="Module">ماژول.</param>
+            <param name="ScopeKind">گونهٔ scope سقف.</param>
+            <param name="ScopeResourceId">منبع scope.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.SellerCeilingEntryDto.#ctor(System.String,System.Boolean,System.Boolean,System.String,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid})">
+            <summary>DTO سقف فروشنده.</summary>
+            <param name="PermissionId">مجوز.</param>
+            <param name="Enabled">فعال.</param>
+            <param name="Delegable">قابل تفویض.</param>
+            <param name="Module">ماژول.</param>
+            <param name="ScopeKind">گونهٔ scope سقف.</param>
+            <param name="ScopeResourceId">منبع scope.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.PermissionId">
+            <summary>مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.Enabled">
+            <summary>فعال.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.Delegable">
+            <summary>قابل تفویض.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.Module">
+            <summary>ماژول.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.ScopeKind">
+            <summary>گونهٔ scope سقف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.SellerCeilingEntryDto.ScopeResourceId">
+            <summary>منبع scope.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.EffectivePermissionDto">
+            <summary>یک مجوز مؤثر با محدوده.</summary>
+            <param name="PermissionId">مجوز.</param>
+            <param name="Module">ماژول.</param>
+            <param name="ScopeKind">scope.</param>
+            <param name="ScopeResourceId">منبع.</param>
+            <param name="InheritedViaRoleCodes">نقش‌ها.</param>
+            <param name="DeniedByCeiling">ردشده توسط سقف.</param>
+            <param name="ScopeDisplayName">نام خوانای منبع scope.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.EffectivePermissionDto.#ctor(System.String,System.String,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.String)">
+            <summary>یک مجوز مؤثر با محدوده.</summary>
+            <param name="PermissionId">مجوز.</param>
+            <param name="Module">ماژول.</param>
+            <param name="ScopeKind">scope.</param>
+            <param name="ScopeResourceId">منبع.</param>
+            <param name="InheritedViaRoleCodes">نقش‌ها.</param>
+            <param name="DeniedByCeiling">ردشده توسط سقف.</param>
+            <param name="ScopeDisplayName">نام خوانای منبع scope.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.PermissionId">
+            <summary>مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.Module">
+            <summary>ماژول.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.ScopeKind">
+            <summary>scope.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.ScopeResourceId">
+            <summary>منبع.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.InheritedViaRoleCodes">
+            <summary>نقش‌ها.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.DeniedByCeiling">
+            <summary>ردشده توسط سقف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectivePermissionDto.ScopeDisplayName">
+            <summary>نام خوانای منبع scope.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.EffectiveAccessDto">
+            <summary>پیش‌نمایش دسترسی مؤثر.</summary>
+            <param name="UserId">کاربر.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="Permissions">مجوزها.</param>
+            <param name="RoleCodes">کد نقش‌ها.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.EffectiveAccessDto.#ctor(System.Guid,Tooba.AccessControl.Domain.AccessOwnerScopeKind,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{Tooba.AccessControl.Application.EffectivePermissionDto},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>پیش‌نمایش دسترسی مؤثر.</summary>
+            <param name="UserId">کاربر.</param>
+            <param name="OwnerScopeKind">گونهٔ مالک.</param>
+            <param name="OwnerScopeId">شناسهٔ مالک.</param>
+            <param name="Permissions">مجوزها.</param>
+            <param name="RoleCodes">کد نقش‌ها.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectiveAccessDto.UserId">
+            <summary>کاربر.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectiveAccessDto.OwnerScopeKind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectiveAccessDto.OwnerScopeId">
+            <summary>شناسهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectiveAccessDto.Permissions">
+            <summary>مجوزها.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.EffectiveAccessDto.RoleCodes">
+            <summary>کد نقش‌ها.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.AccessUserHitDto">
+            <summary>کاربر قابل جستجو در محدوده.</summary>
+            <param name="UserId">کاربر.</param>
+            <param name="RoleCodes">نقش‌ها.</param>
+            <param name="DisplayName">نام نمایشی (توسط Host از Identity/پروفایل پر می‌شود).</param>
+            <param name="Email">ایمیل تماس.</param>
+            <param name="Mobile">موبایل تماس.</param>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.AccessUserHitDto.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{System.String},System.String,System.String,System.String)">
+            <summary>کاربر قابل جستجو در محدوده.</summary>
+            <param name="UserId">کاربر.</param>
+            <param name="RoleCodes">نقش‌ها.</param>
+            <param name="DisplayName">نام نمایشی (توسط Host از Identity/پروفایل پر می‌شود).</param>
+            <param name="Email">ایمیل تماس.</param>
+            <param name="Mobile">موبایل تماس.</param>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessUserHitDto.UserId">
+            <summary>کاربر.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessUserHitDto.RoleCodes">
+            <summary>نقش‌ها.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessUserHitDto.DisplayName">
+            <summary>نام نمایشی (توسط Host از Identity/پروفایل پر می‌شود).</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessUserHitDto.Email">
+            <summary>ایمیل تماس.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessUserHitDto.Mobile">
+            <summary>موبایل تماس.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.AccessControlException">
+            <summary>خطای دامنهٔ Access Control با کد پایدار.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.AccessControlException.#ctor(System.String,System.String)">
+            <summary>استثنا را با کد پایدار می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.AccessControlException.Code">
+            <summary>کد پایدار.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.IAccessControlDirectory">
+            <summary>دایرکتوری Access Control (پیکربندی PG + همگام‌سازی SpiceDB).</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.ListRolesAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Boolean,System.Threading.CancellationToken)">
+            <summary>فهرست نقش‌ها.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.GetRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <summary>خواندن نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.CreateRoleAsync(Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.CreateAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>ایجاد نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.UpdateRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.UpdateAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>به‌روزرسانی نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.CloneRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.CloneAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>کلون نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.ArchiveRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>بایگانی نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.SetRolePermissionsAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Collections.Generic.IReadOnlyList{Tooba.AccessControl.Application.RolePermissionGrant},System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>تنظیم مجوزهای نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.GetRolePermissionsAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <summary>خواندن مجوزهای نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.ListAssignmentsAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>فهرست تخصیص‌ها.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.AssignRoleAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>تخصیص نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.RemoveAssignmentAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>حذف تخصیص.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.GetSellerCeilingAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>خواندن سقف فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.SetSellerCeilingAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.String,System.Boolean,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid}}},System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>تنظیم سقف فروشنده با scope اختیاری.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.GetEffectiveAccessAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <summary>دسترسی مؤثر.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.ListCatalog">
+            <summary>کاتالوگ.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.SearchUsersInScopeAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.String,System.Threading.CancellationToken)">
+            <summary>جستجوی کاربران محدوده.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.EnsureBootstrapAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{System.Guid},System.String,System.Threading.CancellationToken)">
+            <summary>seed نقش‌های سیستمی.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.IAccessControlDirectory.SyncUserCapabilityTuplesAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <summary>همگام‌سازی tupleهای SpiceDB برای کاربر.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.PermissionDefinition">
+            <summary>
+            تعریف پایدار یک Permission کاتالوگ (نه نام endpoint).
+            </summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.PermissionDefinition.#ctor(System.String,System.String,System.String,System.String,System.Boolean,System.Collections.Generic.IReadOnlyList{Tooba.AccessControl.Domain.AccessScopeKind})">
+            <summary>
+            تعریف پایدار یک Permission کاتالوگ (نه نام endpoint).
+            </summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Application.PermissionCatalog">
+            <summary>
+            کاتالوگ معنایی ثابت مجوزهای Access Control.
+            </summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Application.PermissionCatalog.All">
+            <summary>فهرست کامل canonical.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.PermissionCatalog.Find(System.String)">
+            <summary>مجوز را با شناسه برمی‌گرداند یا null.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.PermissionCatalog.Require(System.String)">
+            <summary>وجود canonical را الزام می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Application.PermissionCatalog.IsDelegable(System.String)">
+            <summary>آیا مجوز قابل تفویض به فروشنده است.</summary>
+        </member>
+    </members>
+</doc>

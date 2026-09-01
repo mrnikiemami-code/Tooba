@@ -1,0 +1,310 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Cart.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Cart.Infrastructure.CartCredentialHasher">
+            <summary>
+            تولید و هش راز مهمان. راز خام در پایگاه ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartCredentialHasher.CreateSecret">
+            <summary>
+            راز پرمخاطرهٔ ۳۲ بایتی به‌صورت hex می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartCredentialHasher.Hash(System.String)">
+            <summary>
+            هش SHA-256 پایدار برای ذخیره می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartCredentialHasher.Matches(System.String,System.String)">
+            <summary>
+            مقایسهٔ زمان‌ثابت هش با راز ارائه‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.OpenCartUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد. ماتریس هویت اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.OpenCartUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.CartDirectory">
+            <summary>
+            نوشتن سبد با قرارداد Offer/Pricing/Inventory. DbContext آن ماژول‌ها لمس نمی‌شود و تراکنش توزیع‌شده نیست.
+            سیاست شکست: ابتدا رزرو Inventory؛ اگر persist سبد شکست بخورد رزرو با کلید idempotency در retry همان خط بازاستفاده می‌شود.
+            اگر آزادسازی موفق و رزرو جدید شکست بخورد، تلاش جبران رزرو قبلی انجام می‌شود و خطا شفاف برمی‌گردد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.#ctor(Tooba.Cart.Infrastructure.Persistence.CartDbContext,Tooba.Cart.Application.ICartUseCaseGuard,Tooba.Offer.Application.IOfferLookupGateway,Tooba.Pricing.Application.IPriceLookupGateway,Tooba.Inventory.Application.IInventoryDirectory,Tooba.Inventory.Application.IInventoryAvailabilityGateway)">
+            <summary>
+            دایرکتوری را به schema Cart و درزهای Offer/Pricing/Inventory وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.GetCartAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.CreateAuthenticatedAsync(System.Guid,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.CreateGuestAsync(System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.AddOrIncreaseLineAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.ChangeLineQuantityAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.RemoveLineAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.AbandonAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.ExpireDueCartsAsync(System.DateTimeOffset,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartDirectory.ConvertAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,Tooba.Cart.Domain.CartConversionIntent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.CartModule">
+            <summary>
+            ماژول Cart: سبد Offerمحور. سفارش، پرداخت، موجودی و منبع حقیقت قیمت اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.CartModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.CartOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Cart. ترجمه فقط رویدادهای صریح سبد است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.CartOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.CartOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.CartOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.CartOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartCreatedIntegrationEvent">
+            <summary>
+            قرارداد Integration ایجاد سبد. سفارش ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartCreatedIntegrationEvent.CartId">
+            <summary>
+            سبد ایجادشده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent">
+            <summary>
+            قرارداد افزودن خط Offer.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.LineId">
+            <summary>
+            خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineAddedIntegrationEvent.Quantity">
+            <summary>
+            تعداد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent">
+            <summary>
+            قرارداد تغییر تعداد خط.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.LineId">
+            <summary>
+            خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineChangedIntegrationEvent.Quantity">
+            <summary>
+            تعداد جدید.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent">
+            <summary>
+            قرارداد حذف خط.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent.CartId">
+            <summary>
+            سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent.LineId">
+            <summary>
+            خط.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartLineRemovedIntegrationEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartExpiredIntegrationEvent">
+            <summary>
+            قرارداد انقضای سبد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartExpiredIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartExpiredIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartExpiredIntegrationEvent.CartId">
+            <summary>
+            سبد منقضی یا رهاشده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Events.CartConvertedIntegrationEvent">
+            <summary>
+            قرارداد درز تبدیل بدون Order.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Events.CartConvertedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartConvertedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Events.CartConvertedIntegrationEvent.CartId">
+            <summary>
+            سبد تبدیل‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Persistence.CartDbContext">
+            <summary>
+            DbContext مالک schema <c>cart</c>. سفارش و پرداخت و موجودی را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Cart.Infrastructure.Persistence.CartDbContext.Schema">
+            <summary>
+            schema اختصاصی Cart.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.CartDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Cart.Infrastructure.Persistence.CartDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Persistence.CartDbContext.Carts">
+            <summary>
+            سبدهای پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Persistence.CartDbContext.Lines">
+            <summary>
+            خطوط Offer داخل سبد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Cart.Infrastructure.Persistence.CartDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.CartDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Persistence.CartDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Cart.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.CartDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Cart.Infrastructure.Persistence.Migrations.InitialCart">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.Migrations.InitialCart.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.Migrations.InitialCart.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Cart.Infrastructure.Persistence.Migrations.InitialCart.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

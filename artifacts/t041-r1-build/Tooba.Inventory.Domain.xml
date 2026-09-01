@@ -1,0 +1,435 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Inventory.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Inventory.Domain.InventoryLocationStatus">
+            <summary>
+            وضعیت محل نگهداری موجودی. توپولوژی لجستیک کامل اینجا مدل نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.InventoryLocationStatus.Active">
+            <summary>
+            محل برای دریافت و رزرو قابل‌استفاده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.InventoryLocationStatus.Retired">
+            <summary>
+            محل از گردش خارج شده؛ حذف Catalog نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockReservationStatus">
+            <summary>
+            وضعیت رزرو موجودی. سبد خرید یا سفارش نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockReservationStatus.Held">
+            <summary>
+            مقدار روی موقعیت قفل شده و هنوز مصرف نشده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockReservationStatus.Released">
+            <summary>
+            قفل آزاد شده و به موجودی قابل‌فروش برگشته.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockReservationStatus.Consumed">
+            <summary>
+            رزرو به خروج از OnHand تبدیل شده است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockAdjustmentKind">
+            <summary>
+            گونهٔ اصلاح موجودی. مقدار را مستقیماً از بیرون روی ردیف نمی‌نویسند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockAdjustmentKind.Increase">
+            <summary>
+            افزایش OnHand مثل رسید.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockAdjustmentKind.Decrease">
+            <summary>
+            کاهش OnHand مثل ضایعات، بدون عبور از رزرو.
+            </summary>
+        </member>
+        <member name="F:Tooba.Inventory.Domain.StockAdjustmentKind.Set">
+            <summary>
+            تصحیح شمارش؛ دلتا از مقدار فعلی محاسبه می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.InventoryLocation">
+            <summary>
+            محل نگهداری حداقل. انبار، فروشگاه یا محل مجازی بعداً گسترش می‌یابد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.LocationId">
+            <summary>
+            شناسهٔ پایدار محل.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.Code">
+            <summary>
+            کد کوتاه محل داخل Tenant.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.Name">
+            <summary>
+            نام نمایشی عملیاتی. آدرس لجستیک کامل نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.Status">
+            <summary>
+            وضعیت محل.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.CreatedAt">
+            <summary>
+            زمان ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.InventoryLocation.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Domain.InventoryLocation.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Domain.InventoryLocation.Create(System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            محل فعال می‌سازد. موجودی Offer را صفر نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockPosition">
+            <summary>
+            موقعیت موجودی یک Offer در یک محل. حقیقت موجودی روی Product نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.StockItemId">
+            <summary>
+            شناسهٔ پایدار موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.OfferId">
+            <summary>
+            Offer هدف. FK به schema offer نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.CatalogVariantId">
+            <summary>
+            گونهٔ Catalog برای جستجوی توصیفی. کلید فروشنده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.LocationId">
+            <summary>
+            محل نگهداری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.OnHand">
+            <summary>
+            موجودی فیزیکی. اعشار شناور نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.Reserved">
+            <summary>
+            مقدار قفل‌شده برای رزروهای Held.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.CreatedAt">
+            <summary>
+            زمان ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.Available">
+            <summary>
+            موجودی قابل‌فروش مشتق؛ ستون جدا ذخیره نمی‌شود تا منحرف نشود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockPosition.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.Open(System.Guid,System.Guid,System.Guid,System.DateTimeOffset)">
+            <summary>
+            موقعیت خالی می‌سازد. قابل‌خرید بودن Offer را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.SyncQuantities(System.Int32,System.Int32,System.DateTimeOffset)">
+            <summary>
+            پس از به‌روزرسانی اتمی پایگاه، مقادیر خوانده‌شده را با رویداد هم‌تراز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.RecordAdjustment(Tooba.Inventory.Domain.StockAdjustmentKind,System.Int32,System.String)">
+            <summary>
+            رویداد اصلاح را ثبت می‌کند. مقدار را جداگانه با SQL اتمی عوض می‌کنند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.RecordReserved(System.Guid,System.Int32)">
+            <summary>
+            رویداد رزرو موفق را ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.RecordReleased(System.Guid,System.Int32)">
+            <summary>
+            رویداد آزادسازی رزرو را ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.RecordConsumed(System.Guid,System.Int32)">
+            <summary>
+            رویداد مصرف رزرو را ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockPosition.EnsureLegal(System.Int32,System.Int32)">
+            <summary>
+            حالت غیرممکن موجودی را رد می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockReservation">
+            <summary>
+            رزرو مقدار روی یک موقعیت. Cart/Order اینجا نوع دامنه نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.ReservationId">
+            <summary>
+            شناسهٔ پایدار رزرو برای درز آیندهٔ سبد/سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.StockItemId">
+            <summary>
+            موقعیت موجودی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.Quantity">
+            <summary>
+            مقدار قفل‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.Status">
+            <summary>
+            وضعیت چرخهٔ رزرو.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.ExternalReference">
+            <summary>
+            مرجع خارجی اختیاری مثل کلید سبد آینده؛ نوع Cart نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.IdempotencyKey">
+            <summary>
+            کلید تکرارناپذیری اختیاری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.CreatedAt">
+            <summary>
+            زمان ایجاد UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.UpdatedAt">
+            <summary>
+            زمان آخرین تغییر UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservation.ExpiresAt">
+            <summary>
+            مهلت UTC آزادسازی خودکار؛ تهی یعنی بدون انقضای زمانی در این رزرو.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockReservation.Hold(System.Guid,System.Int32,System.String,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            رزرو Held می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockReservation.MoveTo(Tooba.Inventory.Domain.StockReservationStatus,System.DateTimeOffset)">
+            <summary>
+            وضعیت را عوض می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockAdjustedDomainEvent">
+            <summary>
+            رویداد اصلاح موجودی. قیمت را عوض نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockAdjustedDomainEvent.#ctor(System.Guid,System.Guid,Tooba.Inventory.Domain.StockAdjustmentKind,System.Int32,System.String)">
+            <summary>
+            رویداد اصلاح را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.StockItemId">
+            <summary>
+            موقعیت اصلاح‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.OfferId">
+            <summary>
+            Offer هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.Kind">
+            <summary>
+            گونهٔ اصلاح.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.Delta">
+            <summary>
+            تغییر OnHand.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAdjustedDomainEvent.Reason">
+            <summary>
+            دلیل عملیاتی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockReservedDomainEvent">
+            <summary>
+            رویداد رزرو موفق.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockReservedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Int32)">
+            <summary>
+            رویداد رزرو را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservedDomainEvent.ReservationId">
+            <summary>
+            رزرو ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservedDomainEvent.StockItemId">
+            <summary>
+            موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservedDomainEvent.Quantity">
+            <summary>
+            مقدار قفل‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockReleasedDomainEvent">
+            <summary>
+            رویداد آزادسازی رزرو.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockReleasedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Int32)">
+            <summary>
+            رویداد آزادسازی را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReleasedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReleasedDomainEvent.ReservationId">
+            <summary>
+            رزرو آزادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReleasedDomainEvent.StockItemId">
+            <summary>
+            موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReleasedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReleasedDomainEvent.Quantity">
+            <summary>
+            مقدار برگشتی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent">
+            <summary>
+            رویداد مصرف رزرو.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Int32)">
+            <summary>
+            رویداد مصرف را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.ReservationId">
+            <summary>
+            رزرو مصرف‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.StockItemId">
+            <summary>
+            موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockReservationConsumedDomainEvent.Quantity">
+            <summary>
+            مقدار کسرشده از OnHand.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent">
+            <summary>
+            رویداد تغییر موجودی قابل‌مشاهده. به‌تنهایی قابل‌خرید بودن نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.#ctor(System.Guid,System.Guid,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            رویداد تغییر موجودی را می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.StockItemId">
+            <summary>
+            موقعیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.OfferId">
+            <summary>
+            Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.OnHand">
+            <summary>
+            موجودی فیزیکی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.Reserved">
+            <summary>
+            مقدار رزرو.
+            </summary>
+        </member>
+        <member name="P:Tooba.Inventory.Domain.StockAvailabilityChangedDomainEvent.Available">
+            <summary>
+            موجودی قابل‌فروش مشتق.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,1686 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Catalog.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Catalog.Domain.CategoryFacetConfigurationMarker">
+            <summary>
+            نقطهٔ توسعهٔ آینده برای پیکربندی facet رده (TB بعدی). مالکیت با Category است؛ پیاده‌سازی کامل اینجا نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.MegaMenuItemCategoryBindingMarker">
+            <summary>
+            جداسازی مفهومی Mega Menu از taxonomy: آیتم منو به CategoryId اشاره می‌کند؛
+            Category مالک layout/ستون منو نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.MegaMenuItemCategoryBindingMarker.#ctor(System.Guid)">
+            <summary>
+            جداسازی مفهومی Mega Menu از taxonomy: آیتم منو به CategoryId اشاره می‌کند؛
+            Category مالک layout/ستون منو نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CategoryAttributeAssignmentMarker">
+            <summary>
+            نقطهٔ توسعه برای انتساب ویژگی به رده (از قبل binding زنده است؛ این فقط نشانگر معماری است).
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.AttributeInheritanceMarker">
+            <summary>
+            نقطهٔ توسعه برای ارث schema ویژگی در درخت رده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.VariantAxisAssignmentMarker">
+            <summary>
+            نقطهٔ توسعه برای محورهای Variant در سطح رده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategorySlugHistory">
+            <summary>
+            تاریخچهٔ slug محلی برای redirect امن پس از تغییر مسیر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategorySlugHistory.HistoryId">
+            <summary>شناسهٔ ردیف تاریخچه.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategorySlugHistory.CategoryId">
+            <summary>ردهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategorySlugHistory.Locale">
+            <summary>locale نرمال‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategorySlugHistory.OldSlug">
+            <summary>slug قبلی که دیگر جاری نیست.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategorySlugHistory.ChangedAt">
+            <summary>زمان ثبت تغییر.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySlugHistory.Create(System.Guid,System.String,System.String,System.DateTimeOffset)">
+            <summary>ردیفی برای slug قبلی پس از تغییر می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategorySlugNormalizer">
+            <summary>
+            نرمال‌سازی locale و slug محلی رده (kebab، lowercase، trim).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySlugNormalizer.NormalizeLocale(System.String)">
+            <summary>locale را trim می‌کند؛ خالی ممنوع است.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySlugNormalizer.NormalizeSlug(System.String)">
+            <summary>
+            slug را به شکل lowercase + kebab نرمال می‌کند؛ حروف یونیکد (مثلاً فارسی) حفظ می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySlugNormalizer.SlugifyFromName(System.String)">
+            <summary>از نام نمایشی یک slug اولیه می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryTranslation">
+            <summary>
+            ترجمهٔ محلی رده. هویت مسیر locale+slug است؛ ستون‌های NameFa/NameEn وجود ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.TranslationId">
+            <summary>شناسهٔ ردیف ترجمه.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.CategoryId">
+            <summary>ردهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.Locale">
+            <summary>برچسب زبان نرمال‌شده (مثلاً fa-IR).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.Name">
+            <summary>نام نمایشی الزامی.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.Slug">
+            <summary>slug محلی الزامی برای مسیر قابل‌مسیریابی.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.ShortDescription">
+            <summary>شرح کوتاه اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.Description">
+            <summary>شرح کامل اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.SeoTitle">
+            <summary>عنوان SEO اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.SeoDescription">
+            <summary>توضیح SEO اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.MetaKeywords">
+            <summary>کلمات کلیدی SEO اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTranslation.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی ترجمه.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTranslation.Create(System.Guid,System.String,System.String,System.String,System.DateTimeOffset,System.String,System.String,System.String,System.String,System.String)">
+            <summary>ترجمهٔ جدید برای یک رده+locale می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTranslation.Update(System.String,System.String,System.DateTimeOffset,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            فیلدهای ترجمه را به‌روز می‌کند. اگر slug عوض شود، فراخواننده باید history بنویسد.
+            </summary>
+            <returns>slug قبلی وقتی تغییر کرده؛ در غیر این صورت null.</returns>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryTreeRules">
+            <summary>
+            قواعد سلسله‌مراتب رده: خود-والد و descendant-as-parent ممنوع؛ ترتیب خواهر/برادر جداست.
+            سطح محصول: Level = 1 + تعداد اجداد (ParentId)؛ فقط سطح ۳ قابل اختصاص به محصول است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogCategoryTreeRules.ProductAssignableLevel">
+            <summary>سطح قابل اختصاص محصول به رده (سطح سوم).</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogCategoryTreeRules.MaxCategoryDepth">
+            <summary>حداکثر عمق درخت رده (ریشه = ۱)؛ ایجاد زیرسطح برای سطح ۳ ممنوع است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogCategoryTreeRules.ProductAssignableLevelRequiredMessageFa">
+            <summary>پیام خطای اختصاص ردهٔ غیرفعال برای محصول.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogCategoryTreeRules.AssignmentLevelInvalidErrorCode">
+            <summary>کد ماشین پایدار برای رد اختصاص به سطح ۱/۲.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogCategoryTreeRules.MaxCategoryDepthExceededMessageFa">
+            <summary>پیام خطای عمق بیش از حد درخت رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.IsDescendant(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>
+            آیا <paramref name="nodeId"/> زیر درخت <paramref name="ancestorId"/> است؟
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.GetCategoryLevel(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>
+            سطح رده = ۱ + تعداد اجداد از طریق ParentId. ریشه (بدون والد) سطح ۱ است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.IsAssignableProductCategory(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>آیا رده برای اختصاص به محصول مجاز است؟ (فقط سطح ۳)</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.EnsureAssignableProductCategory(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>اختصاص محصول به ردهٔ سطح ۱ یا ۲ را رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.CanAddChildUnder(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>
+            آیا می‌توان زیر ردهٔ والد، فرزند جدید ساخت؟ فقط وقتی سطح والد کمتر از MaxCategoryDepth باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.EnsureCanAddChildUnder(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>ایجاد فرزند زیر سطح ۳ را رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.GetSubtreeHeight(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>ارتفاع زیردرخت (خود = ۱).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.ValidateMove(System.Guid,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>جابه‌جایی را بدون ایجاد حلقه اعتبارسنجی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTreeRules.ValidateNoCycle(System.Guid,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.Guid,System.Nullable{System.Guid}})">
+            <summary>خود-والد و والد بودن descendant را رد می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogPublicationStatus">
+            <summary>
+            وضعیت انتشار توصیفی Catalog. قابل‌خرید بودن Offer نیست و موجودی انبار را نشان نمی‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogPublicationStatus.Draft">
+            <summary>
+            پیش‌نویس تحریری؛ وجود محصول با قابل‌فروش بودن Offer یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogPublicationStatus.Published">
+            <summary>
+            منتشرشده در Catalog. هنوز یعنی Offer/قیمت/موجودی آمادهٔ خرید نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogPublicationStatus.Archived">
+            <summary>
+            بایگانی تحریری؛ حذف Offer یا موجودی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductKind">
+            <summary>
+            درز گونهٔ محصول برای schema ویژگی‌های بعدی. نوع تجاری Offer نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogProductKind.PhysicalGood">
+            <summary>
+            کالای فیزیکی توصیفی. حمل و موجودی اینجا مدل نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogProductKind.Service">
+            <summary>
+            خدمت توصیفی. قیمت خدمت در Pricing است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogAttributeValueKind">
+            <summary>
+            گونهٔ مقدار ویژگی تایپ‌شده. از EAV آزاد بدون نوع جلوگیری می‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogAttributeValueKind.Text">
+            <summary>
+            متن آزاد محلی‌سازی‌پذیر در لایهٔ ترجمه، نه قیمت.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogAttributeValueKind.Number">
+            <summary>
+            عدد اعشاری توصیفی (وزن/اندازه)، نه مبلغ پول.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogAttributeValueKind.Boolean">
+            <summary>
+            مقدار بولی مشخصات، نه flag انبار.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogAttributeValueKind.Enumeration">
+            <summary>
+            گزینه از فهرست بسته؛ محور Variant معمولاً از این گونه است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogAttributeValueKind.Instant">
+            <summary>
+            تاریخ/زمان توصیفی، نه زمان تسویه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind">
+            <summary>
+            مالک متن چندزبانه. Locale با Market/Currency قاطی نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.Product">
+            <summary>
+            نام/شرح محصول Catalog.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.Category">
+            <summary>
+            نام ردهٔ طبقه‌بندی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.Brand">
+            <summary>
+            نام برند تحریری.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.AttributeDefinition">
+            <summary>
+            برچسب تعریف ویژگی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.AttributeOption">
+            <summary>
+            برچسب گزینهٔ شمارشی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogLocalizedOwnerKind.Tag">
+            <summary>
+            نام برچسب تاکسونومی Catalog (نه meta keywords).
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategory">
+            <summary>
+            ردهٔ طبقه‌بندی Catalog. درخت ناوبری فروشگاه عمومی نیست و قیمت ندارد.
+            نام/slug محلی در <see cref="T:Tooba.Catalog.Domain.CatalogCategoryTranslation"/> است؛ ستون NameFa/NameEn وجود ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.CategoryId">
+            <summary>
+            شناسهٔ پایدار رده داخل schema همین ماژول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.ParentCategoryId">
+            <summary>
+            والد اختیاری در همان schema؛ FK به ماژول دیگر نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.Status">
+            <summary>
+            انتشار رده برای طبقه‌بندی، نه برای خرید.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.SortOrder">
+            <summary>
+            ترتیب پایدار میان خواهر/برادرها زیر همان والد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.IsVisible">
+            <summary>
+            نمایش‌پذیری در ویترین؛ جدا از Status انتشار Admin.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.ImageMediaAssetId">
+            <summary>
+            مرجع مات تصویر رده در Media؛ مالکیت باینری اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.IconMediaAssetId">
+            <summary>
+            مرجع مات آیکون رده در Media.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.BannerMediaAssetId">
+            <summary>
+            مرجع مات بنر رده در Media؛ مالکیت باینری اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategory.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی فراداده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.Create(System.Nullable{System.Guid},System.DateTimeOffset,System.Int32,System.Boolean)">
+            <summary>
+            ردهٔ ریشه یا فرزند می‌سازد. والد نمی‌تواند خودش باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.Reparent(System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            والد را عوض می‌کند بدون join بیرون از Catalog.
+            فراخواننده باید با <see cref="T:Tooba.Catalog.Domain.CatalogCategoryTreeRules"/> حلقه را رد کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.Move(System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            جابه‌جایی زیر والد جدید؛ خود-والد ممنوع است. بررسی descendant در لایهٔ سرویس دامنه است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.SetCoreFields(System.Nullable{Tooba.Catalog.Domain.CatalogPublicationStatus},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Boolean,System.Boolean,System.Boolean,System.DateTimeOffset)">
+            <summary>
+            فیلدهای غیرمحلی هسته را به‌روز می‌کند؛ Parent از Move می‌آید نه از این متد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.SetSortOrder(System.Int32,System.DateTimeOffset)">
+            <summary>
+            ترتیب خواهر/برادر را تنظیم می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.Publish(System.DateTimeOffset)">
+            <summary>
+            رده را برای ناوبری منتشر می‌کند. انتشار رده فقط طبقه‌بندی را قابل‌کشف می‌کند و
+            هیچ قابلیت خریدی نمی‌سازد؛ قیمت و موجودی هرگز به رده تعلق ندارند.
+            </summary>
+            <param name="now">زمان UTC سرور برای مهر به‌روزرسانی؛ ساعت کلاینت مرجع نیست.</param>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategory.Archive(System.DateTimeOffset)">
+            <summary>
+            آرشیو تحریری رده؛ حذف سخت و cascade تاریخچهٔ slug نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogBrand">
+            <summary>
+            برند تحریری Catalog. مالکیت فروشنده و تسویه نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.BrandId">
+            <summary>
+            شناسهٔ پایدار برند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.SlugSeam">
+            <summary>
+            درز slug برای SEO بعدی؛ robots/index اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.Status">
+            <summary>
+            وضعیت انتشار برند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.LogoMediaAssetId">
+            <summary>
+            شناسهٔ مرجع مات لوگوی برند در Media؛ اختیاری و فقط برای نمایش ویترین.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogBrand.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogBrand.Create(System.String,System.DateTimeOffset)">
+            <summary>
+            برند توصیفی می‌سازد بدون SellerId.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogBrand.Publish(System.DateTimeOffset)">
+            <summary>
+            برند را برای سطوح عمومی برند منتشر می‌کند. انتشار برند صرفاً تحریری است و
+            نه مالکیت فروشنده می‌سازد و نه ادعای بازاریابی؛ Offer و قیمت بیرون از Catalog می‌مانند.
+            </summary>
+            <param name="now">زمان UTC سرور برای مهر به‌روزرسانی؛ ساعت کلاینت مرجع نیست.</param>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogTag">
+            <summary>
+            برچسب تاکسونومی Catalog برای گروه‌بندی/جستجو/نمایش هدفمند.
+            meta keywords نیست؛ صفحهٔ عمومی خودکار و SEO keyword strategy ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.TagId">
+            <summary>شناسهٔ پایدار برچسب.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.Code">
+            <summary>کد پایدار ماشینی (unique)؛ برچسب نمایش در LocalizedText است.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.SlugSeam">
+            <summary>درز slug اختیاری برای مسیریابی آینده؛ robots/index اینجا نیست.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.Status">
+            <summary>وضعیت انتشار تحریری برچسب.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogTag.UpdatedAt">
+            <summary>زمان به‌روزرسانی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogTag.Create(System.String,System.String,System.DateTimeOffset)">
+            <summary>برچسب تاکسونومی می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogTag.Publish(System.DateTimeOffset)">
+            <summary>برچسب را برای استفادهٔ تحریری منتشر می‌کند؛ صفحهٔ عمومی خودکار نمی‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductTagAssignment">
+            <summary>
+            پیوند چندبه‌چند محصول ↔ برچسب. ذخیرهٔ comma-separated نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductTagAssignment.AssignmentId">
+            <summary>شناسهٔ پیوند.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductTagAssignment.ProductId">
+            <summary>محصول Catalog.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductTagAssignment.TagId">
+            <summary>برچسب Catalog.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductTagAssignment.Assign(System.Guid,System.Guid)">
+            <summary>پیوند محصول-برچسب می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryTagAssignment">
+            <summary>
+            پیوند چندبه‌چند رده ↔ برچسب. ذخیرهٔ comma-separated نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTagAssignment.AssignmentId">
+            <summary>شناسهٔ پیوند.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTagAssignment.CategoryId">
+            <summary>ردهٔ Catalog.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryTagAssignment.TagId">
+            <summary>برچسب Catalog.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryTagAssignment.Assign(System.Guid,System.Guid)">
+            <summary>پیوند رده-برچسب می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogAttributeDefinition">
+            <summary>
+            تعریف ویژگی تایپ‌شده. ستون قیمت یا موجودی محصول نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.DefinitionId">
+            <summary>
+            شناسهٔ تعریف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.Code">
+            <summary>
+            کد پایدار ماشینی (مثلاً color). برچسب نمایش در جدول ترجمه است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.ValueKind">
+            <summary>
+            نوع مقدار؛ از Dictionary آزاد جلوگیری می‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsVariantAxis">
+            <summary>
+            اگر true باشد تعریف مجاز است به‌عنوان محور ترکیب Variant انتخاب شود (نه مشخصات سادهٔ محصول).
+            ستون DB همان <c>IsVariantAxis</c> است؛ معنای معنایی IsVariantAxisAllowed.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsVariantAxisAllowed">
+            <summary>
+            نام مستعار معنایی برای <see cref="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsVariantAxis"/>؛ در EF نادیده گرفته می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.Unit">
+            <summary>
+            واحد نمایشی اختیاری (مثلاً GB، inch)؛ قیمت نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsRequired">
+            <summary>
+            پیش‌فرض الزام در سطح تعریف؛ override رده می‌تواند سخت‌تر کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsFilterable">
+            <summary>
+            قابل استفاده در فیلتر ویترین آینده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsComparable">
+            <summary>
+            قابل مقایسه در جدول مقایسهٔ آینده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsMultivalue">
+            <summary>
+            چندمقداری بودن؛ در foundation فعلی مقدار تکی ذخیره می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.DisplayOrder">
+            <summary>
+            ترتیب نمایش پیش‌فرض تعریف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.ValidationMin">
+            <summary>
+            حداقل عددی اختیاری برای Number.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.ValidationMax">
+            <summary>
+            حداکثر عددی اختیاری برای Number.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.ValidationMaxLength">
+            <summary>
+            حداکثر طول متن اختیاری برای Text.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.IsActive">
+            <summary>
+            فعال بودن تعریف برای schema authoring؛ پیش‌فرض true برای BC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeDefinition.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeDefinition.Create(System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Boolean,System.DateTimeOffset)">
+            <summary>
+            تعریف ویژگی می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeDefinition.UpdateMetadata(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            فرادادهٔ schema را بدون تغییر Code/ValueKind/IsVariantAxis به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeDefinition.SetVariantAxisAllowed(System.Boolean)">
+            <summary>
+            قابلیت محور تنوع را به‌روز می‌کند؛ bindingهای رده را خودکار تغییر نمی‌دهد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogAttributeOption">
+            <summary>
+            گزینهٔ شمارشی یک تعریف. هویت Offer فروشنده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeOption.OptionId">
+            <summary>
+            شناسهٔ گزینه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeOption.DefinitionId">
+            <summary>
+            تعریف والد در همین schema.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeOption.Code">
+            <summary>
+            کد پایدار گزینه (مثلاً black).
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeOption.DisplayOrder">
+            <summary>
+            ترتیب نمایش گزینه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogAttributeOption.IsActive">
+            <summary>
+            فعال بودن گزینه برای انتخاب؛ پیش‌فرض true برای BC.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeOption.Create(System.Guid,System.String,System.Int32)">
+            <summary>
+            گزینه می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding">
+            <summary>
+            پیوند تعریف ویژگی به رده برای schema مؤثر. SQL بیرون از Catalog نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.BindingId">
+            <summary>
+            شناسهٔ پیوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.CategoryId">
+            <summary>
+            ردهٔ مالک schema.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.DefinitionId">
+            <summary>
+            تعریف ویژگی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.DisplayOrder">
+            <summary>
+            ترتیب نمایش در schema همین رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.IsRequired">
+            <summary>
+            الزام در همین رده (assignment-level).
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.IsFilterable">
+            <summary>
+            نمایش در فیلتر محصولات برای همین رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.IsVariantAxis">
+            <summary>
+            استفاده به‌عنوان محور تنوع در همین رده (نیاز به IsVariantAxisAllowed روی تعریف).
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.IsComparable">
+            <summary>
+            نمایش در مقایسه محصولات برای همین رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryAttributeBinding.Bind(System.Guid,System.Guid,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.DateTimeOffset)">
+            <summary>
+            پیوند رده-تعریف می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryAttributeAssignmentRules">
+            <summary>
+            قواعد اعتبارسنجی assignment رفتار category-specific.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryAttributeAssignmentRules.ValueKindSupportsVariantAxis(Tooba.Catalog.Domain.CatalogAttributeValueKind)">
+            <summary>
+            آیا نوع مقدار ذاتاً از محور تنوع پشتیبانی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryAttributeAssignmentRules.ValidateVariantAxisCapabilityEnable(Tooba.Catalog.Domain.CatalogAttributeValueKind)">
+            <summary>
+            فعال‌سازی capability محور تنوع را در برابر ValueKind بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryAttributeAssignmentRules.ValidateVariantAxis(Tooba.Catalog.Domain.CatalogAttributeDefinition,System.Boolean)">
+            <summary>
+            فعال‌سازی محور تنوع را در برابر capability/type تعریف بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogFacetDisplayType">
+            <summary>
+            نوع نمایش فیلتر در PLP — نه نام کامپوننت frontend.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogFacetDisplayType.CheckboxList">
+            <summary>چندانتخابی با checkbox.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogFacetDisplayType.SearchableSelect">
+            <summary>انتخاب با جستجو.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogFacetDisplayType.Range">
+            <summary>بازهٔ عددی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogFacetDisplayType.ColorSwatch">
+            <summary>نمایش رنگ (نیاز به متادیتای رنگ گزینه).</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogFacetDisplayType.BooleanToggle">
+            <summary>کلید روشن/خاموش برای بولی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration">
+            <summary>
+            پیکربندی نمایش فیلتر PLP برای یک ویژگی در یک رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.FacetConfigurationId">
+            <summary>
+            شناسهٔ پیکربندی facet.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.CategoryId">
+            <summary>
+            ردهٔ مالک پیکربندی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.DefinitionId">
+            <summary>
+            تعریف ویژگیٔ فیلتر.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.DisplayType">
+            <summary>
+            نوع نمایش فیلتر در PLP.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.SortOrder">
+            <summary>
+            ترتیب نمایش در بین facetهای محلی این رده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.IsVisible">
+            <summary>
+            آیا فیلتر در PLP نمایش داده شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.IsSearchable">
+            <summary>
+            آیا گزینه‌ها قابل جستجو باشند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.IsCollapsedByDefault">
+            <summary>
+            آیا فیلتر پیش‌فرض بسته باشد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.ShowCounts">
+            <summary>
+            آیا تعداد محصول کنار گزینه نمایش داده شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration.Create(System.Guid,System.Guid,Tooba.Catalog.Domain.CatalogFacetDisplayType,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.DateTimeOffset)">
+            <summary>
+            ایجاد پیکربندی facet برای یک ویژگی در رده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogEffectiveFacetBinding">
+            <summary>
+            ردیف میانی facet مؤثر.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogEffectiveFacetBinding.#ctor(System.Guid,Tooba.Catalog.Domain.CatalogFacetDisplayType,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Guid,Tooba.Catalog.Domain.CatalogAttributeDefinition)">
+            <summary>
+            ردیف میانی facet مؤثر.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryFacetRules">
+            <summary>
+            اعتبارسنجی نوع نمایش facet بر اساس ValueKind.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryFacetRules.SuggestDisplayType(Tooba.Catalog.Domain.CatalogAttributeValueKind)">
+            <summary>
+            پیشنهاد نوع نمایش بر اساس ValueKind.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryFacetRules.ValidateDisplayType(Tooba.Catalog.Domain.CatalogAttributeDefinition,Tooba.Catalog.Domain.CatalogFacetDisplayType)">
+            <summary>
+            اعتبارسنجی ترکیب ValueKind و DisplayType.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryFacetRules.IsSearchableAllowed(Tooba.Catalog.Domain.CatalogFacetDisplayType)">
+            <summary>
+            آیا IsSearchable برای این DisplayType مجاز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryFacetResolver">
+            <summary>
+            حل facet مؤثر رده با ارث والدین؛ eligibility از schema مؤثر IsFilterable.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryFacetResolver.ResolveEffectiveFacets(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogCategory},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogCategoryFacetConfiguration},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogEffectiveSchemaBinding},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogAttributeDefinition})">
+            <summary>
+            حل facet مؤثر رده با ارث والدین و eligibility از schema.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuItemType">
+            <summary>
+            نوع آیتم مگامنو — T009 فقط Category-backed را در Admin Category Workspace مدیریت می‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogMegaMenuItemType.Category">
+            <summary>پیوند به ردهٔ Catalog.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuItem">
+            <summary>
+            آیتم presentation مگامنو؛ hierarchy منو از ParentMegaMenuItemId جدا از taxonomy رده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.MegaMenuItemId">
+            <summary>شناسهٔ آیتم منو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.ItemType">
+            <summary>نوع آیتم.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.CategoryId">
+            <summary>ردهٔ مقصد (برای Category-backed).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.ParentMegaMenuItemId">
+            <summary>والد presentation در درخت منو (نه ParentCategoryId).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.SortOrder">
+            <summary>ترتیب بین خواهران presentation.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.IsVisible">
+            <summary>نمایش در مگامنو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.IsFeatured">
+            <summary>برجسته در منو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.ImageMediaAssetId">
+            <summary>تصویر تبلیغاتی اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.IconMediaAssetId">
+            <summary>آیکن اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItem.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogMegaMenuItem.BindCategory(System.Guid,System.Nullable{System.Guid},System.Int32,System.Boolean,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>ایجاد آیتم منو برای یک رده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation">
+            <summary>
+            override نمایشی محلی برای آیتم مگامنو.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.MegaMenuItemTranslationId">
+            <summary>شناسهٔ ترجمه.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.MegaMenuItemId">
+            <summary>آیتم منو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.Locale">
+            <summary>locale نرمال‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.TitleOverride">
+            <summary>عنوان متفاوت در مگامنو.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.BadgeText">
+            <summary>متن badge اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.ShortLabel">
+            <summary>برچسب کوتاه اختیاری.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation.Create(System.Guid,System.String,System.String,System.String,System.String)">
+            <summary>ایجاد یا به‌روزرسانی override.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuTreeRules">
+            <summary>
+            اعتبارسنجی placement مگامنو — جدا از درخت taxonomy.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogMegaMenuTreeRules.MaxPresentationDepth">
+            <summary>حداکثر عمق presentation (L1/L2/L3).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogMegaMenuTreeRules.ValidatePlacement(System.Guid,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogMegaMenuItem})">
+            <summary>
+            والد و عمق presentation را بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuComposer">
+            <summary>
+            حل عنوان و eligibility آیتم مگامنو برای locale.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogMegaMenuComposer.ComposeStorefrontMenu(System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogMegaMenuItem},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogCategory},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogCategoryTranslation},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogMegaMenuItemTranslation},System.String,System.String)">
+            <summary>
+            آیتم‌های قابل نمایش در ویترین را فیلتر و مرتب می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogMegaMenuRenderableItem">
+            <summary>ردیف renderable مگامنو برای Storefront.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogMegaMenuRenderableItem.#ctor(System.Guid,System.Nullable{System.Guid},System.Guid,System.String,System.String,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Int32)">
+            <summary>ردیف renderable مگامنو برای Storefront.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductVariantAxis">
+            <summary>
+            محورهای Variant انتخاب‌شده برای یک محصول. ماتریس کامل ترکیبی اینجا تولید نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductVariantAxis.AxisId">
+            <summary>
+            شناسهٔ ردیف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductVariantAxis.ProductId">
+            <summary>
+            محصول مالک محورهای انتخاب‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductVariantAxis.DefinitionId">
+            <summary>
+            تعریف مجاز محور (باید IsVariantAxis=true باشد).
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductVariantAxis.DisplayOrder">
+            <summary>
+            ترتیب محور در هویت ترکیب.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductVariantAxis.Create(System.Guid,System.Guid,System.Int32)">
+            <summary>
+            ردیف محور محصول می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogLocalizedText">
+            <summary>
+            متن محلی‌سازی‌شده. Locale با Market یکی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.TextId">
+            <summary>
+            شناسهٔ ردیف ترجمه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.OwnerKind">
+            <summary>
+            نوع مالک داخل Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.OwnerId">
+            <summary>
+            شناسهٔ مالک.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.FieldKey">
+            <summary>
+            فیلد منطقی مثل name یا description.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.Locale">
+            <summary>
+            برچسب زبان BCP-47؛ کد ارز نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogLocalizedText.Value">
+            <summary>
+            مقدار نمایشی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogLocalizedText.Create(Tooba.Catalog.Domain.CatalogLocalizedOwnerKind,System.Guid,System.String,System.String,System.String)">
+            <summary>
+            ردیف ترجمه می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductCategoryRole">
+            <summary>
+            نقش پیوند محصول↔رده: دسته اصلی (schema) یا اضافی (کشف/PLP).
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogProductCategoryRole.Primary">
+            <summary>دسته اصلی — منبع schema و breadcrumb.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.CatalogProductCategoryRole.Additional">
+            <summary>دسته اضافی — فقط کشف/ناوبری/PLP.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductCategory">
+            <summary>
+            پیوند محصول به رده. merchandising فروشنده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCategory.AssignmentId">
+            <summary>
+            شناسهٔ پیوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCategory.ProductId">
+            <summary>
+            محصول Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCategory.CategoryId">
+            <summary>
+            ردهٔ Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCategory.Role">
+            <summary>
+            نقش پیوند (اصلی / اضافی).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductCategory.Assign(System.Guid,System.Guid,Tooba.Catalog.Domain.CatalogProductCategoryRole)">
+            <summary>
+            پیوند می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductMediaReference">
+            <summary>
+            مرجع رسانهٔ مات. FK به جدول Media ماژول دیگر نیست و باینری ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.ReferenceId">
+            <summary>
+            شناسهٔ ردیف مرجع.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.ProductId">
+            <summary>
+            محصول مالک مرجع.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.MediaAssetId">
+            <summary>
+            شناسهٔ مات دارایی در قابلیت Media آینده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.DisplayOrder">
+            <summary>
+            ترتیب نمایش گالری داخل محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.IsPrimary">
+            <summary>
+            تصویر اصلی فهرست/بند انگشتی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductMediaReference.AltText">
+            <summary>
+            متن جایگزین دسترس‌پذیری؛ باینری نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductMediaReference.Link(System.Guid,System.Guid,System.Int32,System.Boolean,System.String)">
+            <summary>
+            مرجع مات می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductAttributeValue">
+            <summary>
+            مقدار ویژگی روی محصول (غیرمحور Variant). مبلغ و موجودی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductAttributeValue.ValueId">
+            <summary>
+            شناسهٔ مقدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductAttributeValue.ProductId">
+            <summary>
+            محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductAttributeValue.DefinitionId">
+            <summary>
+            تعریف ویژگی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductAttributeValue.CanonicalValue">
+            <summary>
+            مقدار نرمال‌شده برای مقایسهٔ نوعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductAttributeValue.Create(System.Guid,System.Guid,System.String)">
+            <summary>
+            مقدار محصول می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogVariantAttributeValue">
+            <summary>
+            مقدار محور Variant. ترکیب این مقادیر هویت Offer فروشنده نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantAttributeValue.ValueId">
+            <summary>
+            شناسهٔ مقدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantAttributeValue.VariantId">
+            <summary>
+            گونهٔ Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantAttributeValue.DefinitionId">
+            <summary>
+            تعریف محور.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantAttributeValue.CanonicalValue">
+            <summary>
+            مقدار نرمال ترکیب.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariantAttributeValue.Create(System.Guid,System.Guid,System.String)">
+            <summary>
+            مقدار محور می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogVariant">
+            <summary>
+            گونهٔ فروش‌پذیر توصیفی متعلق به یک Product. SKU Catalog با هویت Offer فروشنده یکی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.VariantId">
+            <summary>
+            شناسهٔ پایدار گونه در Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.ProductId">
+            <summary>
+            محصول والد. بدون Product گونه معنا ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.CatalogCodeSeam">
+            <summary>
+            کد کاتالوگ اختیاری؛ کد SKU اختصاصی فروشنده در Offer آینده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.CombinationFingerprint">
+            <summary>
+            اثرانگشت قطعی ترکیب محورها برای یکتایی داخل Product.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.Status">
+            <summary>
+            انتشار گونه. قابل‌خرید بودن Offer نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.SortOrder">
+            <summary>
+            ترتیب نمایش پایدار تنوع داخل محصول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.IsDefault">
+            <summary>
+            تنوع پیش‌فرض محصول؛ حداکثر یکی میان غیرآرشیو.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.AttributeValues">
+            <summary>
+            مقادیر محور بارگذاری‌شده توسط EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariant.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.ComputeFingerprint(System.Collections.Generic.IEnumerable{System.ValueTuple{System.Guid,System.String}})">
+            <summary>
+            اثرانگشت پایدار از جفت تعریف/مقدار مرتب‌شده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.Create(System.Guid,System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            تنوع می‌سازد و رویداد ایجاد را برای تصویر Search آینده صف می‌کند نه برای ایندکس کردن همین‌جا.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.SetStatus(Tooba.Catalog.Domain.CatalogPublicationStatus,System.DateTimeOffset)">
+            <summary>
+            وضعیت انتشار تنوع را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.SetSortOrder(System.Int32,System.DateTimeOffset)">
+            <summary>
+            ترتیب نمایش تنوع را به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.SetDefault(System.Boolean,System.DateTimeOffset)">
+            <summary>
+            پرچم پیش‌فرض را روی این موجودیت تنظیم می‌کند؛ یکتایی در دایرکتوری اعمال می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.UpdateCatalogCodeSeam(System.String,System.DateTimeOffset)">
+            <summary>
+            کد کاتالوگ را بدون تغییر اثرانگشت ترکیب به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariant.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProduct">
+            <summary>
+            محصول توصیفی Catalog. قیمت، موجودی، فروشنده و Offer داخل این ریشه نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.ProductId">
+            <summary>
+            شناسهٔ پایدار محصول توصیفی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.Kind">
+            <summary>
+            درز گونه برای schema ویژگی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.Status">
+            <summary>
+            وضعیت انتشار Catalog نه قابلیت خرید Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.BrandId">
+            <summary>
+            برند اختیاری تحریری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.SlugSeam">
+            <summary>
+            درز slug برای مسیر SEO بعدی؛ سیاست index/robots اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.SeoTitleSeam">
+            <summary>
+            درز عنوان SEO محتوایی؛ موتور SEO جدا است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.CategoryAssignments">
+            <summary>
+            انتساب رده‌ها.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.Variants">
+            <summary>
+            گونه‌ها.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProduct.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.Create(Tooba.Catalog.Domain.CatalogProductKind,System.String,System.DateTimeOffset)">
+            <summary>
+            محصول توصیفی می‌سازد بدون فیلد تجاری.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.Publish(System.DateTimeOffset)">
+            <summary>
+            انتشار تحریری. Offer را قابل‌خرید نمی‌کند.
+            فقط از پیش‌نویس؛ تکرار روی Published بی‌اثر است؛ Archived -> Published ممنوع است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.Unpublish(System.DateTimeOffset)">
+            <summary>
+            لغو انتشار تحریری به پیش‌نویس. آرشیو جدا می‌ماند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.Archive(System.DateTimeOffset)">
+            <summary>
+            آرشیو تحریری. حذف سخت نیست و با Offer قاطی نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.RestoreFromArchive(System.DateTimeOffset)">
+            <summary>
+            بازیابی صریح از بایگانی به پیش‌نویس؛ حذف سخت نیست و Offer را جهش نمی‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.TouchDescriptiveSeams(System.String,System.String,System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            به‌روزرسانی درزهای غیرتجاری (slug/SEO). Brand از مسیر اختصاصی AssignBrand تنظیم می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.AssignBrand(System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            انتساب یا حذف برند Catalog برای محصول (شامل پاک‌کردن با null).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProduct.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductCreatedDomainEvent">
+            <summary>
+            رویداد دامنهٔ ایجاد محصول. ایندکس Search اینجا اجرا نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductCreatedDomainEvent.#ctor(Tooba.Catalog.Domain.CatalogProduct)">
+            <summary>
+            رویداد را از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCreatedDomainEvent.ProductId">
+            <summary>
+            محصول ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductPublishedDomainEvent">
+            <summary>
+            رویداد انتشار Catalog. خرید Offer را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductPublishedDomainEvent.#ctor(Tooba.Catalog.Domain.CatalogProduct)">
+            <summary>
+            رویداد انتشار.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductPublishedDomainEvent.ProductId">
+            <summary>
+            محصول منتشرشده در Catalog.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductPublishedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductUpdatedDomainEvent">
+            <summary>
+            رویداد به‌روزرسانی توصیفی برای تصویر بعدی Search.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductUpdatedDomainEvent.#ctor(Tooba.Catalog.Domain.CatalogProduct)">
+            <summary>
+            رویداد به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductUpdatedDomainEvent.ProductId">
+            <summary>
+            محصول تغییر یافته.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductUpdatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogVariantCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد گونه. هویت Offer فروشنده نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogVariantCreatedDomainEvent.#ctor(Tooba.Catalog.Domain.CatalogVariant)">
+            <summary>
+            رویداد ایجاد گونه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantCreatedDomainEvent.VariantId">
+            <summary>
+            گونهٔ ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantCreatedDomainEvent.ProductId">
+            <summary>
+            محصول والد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogVariantCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogAttributeCanonicalizer">
+            <summary>
+            نرمال‌سازی مقدار ویژگی طبق نوع تعریف تا Type safety حفظ شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeCanonicalizer.Canonicalize(Tooba.Catalog.Domain.CatalogAttributeValueKind,System.String,System.Nullable{System.Guid})">
+            <summary>
+            مقدار خام را به شکل پایدار تبدیل می‌کند یا رد می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogAttributeCanonicalizer.EnforceValidationBounds(Tooba.Catalog.Domain.CatalogAttributeDefinition,System.String)">
+            <summary>
+            محدودیت‌های typed تعریف را پس از canonicalization اعمال می‌کند؛ JSON آزاد نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogEffectiveSchemaBinding">
+            <summary>
+            ردیف میانی حل schema مؤثر قبل از DTO لایهٔ Application.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogEffectiveSchemaBinding.#ctor(System.Guid,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Guid,Tooba.Catalog.Domain.CatalogAttributeDefinition,System.Nullable{System.Guid})">
+            <summary>
+            ردیف میانی حل schema مؤثر قبل از DTO لایهٔ Application.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategoryChangeImpactReport">
+            <summary>
+            گزارش تأثیر تغییر رده بدون حذف خاموش مقادیر.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategoryChangeImpactReport.#ctor(System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Guid,System.String}},System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>
+            گزارش تأثیر تغییر رده بدون حذف خاموش مقادیر.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogCategorySchemaResolver">
+            <summary>
+            حل schema مؤثر رده با ارث از والدین؛ حلقهٔ درخت تشخیص داده می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySchemaResolver.ResolveEffectiveSchema(System.Guid,System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogCategory},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogCategoryAttributeBinding},System.Collections.Generic.IReadOnlyDictionary{System.Guid,Tooba.Catalog.Domain.CatalogAttributeDefinition})">
+            <summary>
+            از ردهٔ هدف به ریشه راه می‌رود، پیوندها را ادغام می‌کند (فرزند روی همان DefinitionId غالب است)،
+            و فهرست مرتب با فرادادهٔ تعریف برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogCategorySchemaResolver.PreviewCategoryChange(System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogProductAttributeValue},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogProductVariantAxis},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Domain.CatalogEffectiveSchemaBinding})">
+            <summary>
+            مقادیر محصول و محورهایی که در schema جدید جایی ندارند را فهرست می‌کند؛ حذف نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.CatalogProductHistoryEntry">
+            <summary>
+            ردیف append-only تاریخچهٔ محصول Catalog — بدون Offer/Price/Stock.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.HistoryId">
+            <summary>شناسهٔ ردیف.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.ProductId">
+            <summary>محصول مالک.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.EventType">
+            <summary>کد پایدار رویداد (مثلاً product.publish).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.Section">
+            <summary>بخش Workspace: general/category/attributes/variants/media/seo/lifecycle.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.SummaryFa">
+            <summary>خلاصهٔ انسانی فارسی برای UI.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.BeforeSummary">
+            <summary>خلاصهٔ فشردهٔ قبل (اختیاری).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.AfterSummary">
+            <summary>خلاصهٔ فشردهٔ بعد (اختیاری).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.ActorUserId">
+            <summary>شناسهٔ بازیگر؛ null یعنی سیستم/نامشخص.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.ActorDisplayName">
+            <summary>نام نمایشی بازیگر در زمان ثبت (اختیاری).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Domain.CatalogProductHistoryEntry.OccurredAt">
+            <summary>زمان رخداد UTC.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.CatalogProductHistoryEntry.Create(System.Guid,System.String,System.String,System.String,System.DateTimeOffset,System.Nullable{System.Guid},System.String,System.String,System.String)">
+            <summary>ردیف تاریخچه می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.ProductHistoryRules">
+            <summary>کدها و برچسب‌های فارسی تاریخچهٔ محصول.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionGeneral">
+            <summary>بخش عمومی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionTranslations">
+            <summary>بخش ترجمه‌ها / محتوای محلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionCategory">
+            <summary>بخش دسته‌بندی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionAttributes">
+            <summary>بخش ویژگی‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionVariants">
+            <summary>بخش تنوع‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionMedia">
+            <summary>بخش رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionSeo">
+            <summary>بخش سئو.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SectionLifecycle">
+            <summary>بخش چرخهٔ عمر انتشار.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventCreated">
+            <summary>رویداد ایجاد محصول.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventGeneralChanged">
+            <summary>رویداد ویرایش اطلاعات اصلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventCategoryChanged">
+            <summary>رویداد تغییر دسته.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventLocalizedChanged">
+            <summary>رویداد ویرایش محتوای محلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventAttributesChanged">
+            <summary>رویداد ویرایش ویژگی‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventVariantsChanged">
+            <summary>رویداد به‌روزرسانی تنوع‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventMediaChanged">
+            <summary>رویداد تغییر رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventSeoChanged">
+            <summary>رویداد ویرایش سئو.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventPublished">
+            <summary>رویداد انتشار.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventUnpublished">
+            <summary>رویداد خروج از انتشار.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventArchived">
+            <summary>رویداد بایگانی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.EventRestored">
+            <summary>رویداد خروج از بایگانی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryCreatedFa">
+            <summary>خلاصهٔ ایجاد.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryGeneralFa">
+            <summary>خلاصهٔ ویرایش عمومی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryCategoryFa">
+            <summary>خلاصهٔ تغییر دسته.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryCategoryMigrationFa">
+            <summary>خلاصهٔ مهاجرت دستهٔ اصلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryUnpublishedByMigrationFa">
+            <summary>خلاصهٔ Unpublish به‌خاطر مهاجرت ناسازگار.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductHistoryRules.FormatCategoryMigrationAfterSummaryFa(System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            خلاصهٔ انسانی مهاجرت دستهٔ اصلی بدون GUID/JSON خام.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryLocalizedFa">
+            <summary>خلاصهٔ محتوای محلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryAttributesFa">
+            <summary>خلاصهٔ ویژگی‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryVariantsFa">
+            <summary>خلاصهٔ تنوع‌ها.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryMediaFa">
+            <summary>خلاصهٔ رسانه.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryMediaPrimaryFa">
+            <summary>خلاصهٔ تصویر اصلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummarySeoFa">
+            <summary>خلاصهٔ سئو.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryPublishedFa">
+            <summary>خلاصهٔ انتشار.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryUnpublishedFa">
+            <summary>خلاصهٔ Unpublish.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryArchivedFa">
+            <summary>خلاصهٔ بایگانی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.SummaryRestoredFa">
+            <summary>خلاصهٔ Restore.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductHistoryRules.ActorSystemFa">
+            <summary>نام نمایشی بازیگر سیستم.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductHistoryRules.SectionLabelFa(System.String)">
+            <summary>برچسب فارسی بخش.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.ProductPublishRules">
+            <summary>
+            برچسب‌ها و خلاصهٔ فارسی آمادگی انتشار محصول — بدون Offer/Price/Stock.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageRestoreBeforePublishFa">
+            <summary>انتشار مستقیم از بایگانی ممنوع است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageReadyFa">
+            <summary>آمادگی کامل برای انتشار.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageCategoryIncompleteFa">
+            <summary>دستهٔ سطح سوم ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageIdentityIncompleteFa">
+            <summary>هویت/ترجمه ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageAttributesIncompleteFa">
+            <summary>ویژگی‌های الزامی ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageVariantsIncompleteFa">
+            <summary>تنوع‌ها نامعتبر است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageMediaIncompleteFa">
+            <summary>رسانه ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageSeoIncompleteFa">
+            <summary>سئو ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductPublishRules.MessageNotReadyFa">
+            <summary>انتشار از بایگانی بدون آمادگی رد می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductPublishRules.LifecycleLabelFa(Tooba.Catalog.Domain.CatalogPublicationStatus)">
+            <summary>برچسب فارسی وضعیت چرخهٔ عمر.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductPublishRules.SummarizeMissingFa(System.Int32)">
+            <summary>
+            خلاصهٔ فارسی تعداد موارد ناقص: «برای انتشار، N مورد دیگر باید تکمیل شود.»
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.ProductSeoRules">
+            <summary>
+            قوانین آمادگی و مسیر عمومی SEO محصول — بدون Offer/Price/Stock.
+            Slug عمومی سراسری است (SlugSeam)؛ عنوان/توضیح SEO محلی‌اند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductSeoRules.MessageSlugIncompleteFa">
+            <summary>آدرس محصول (slug) ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductSeoRules.MessageTitleIncompleteFa">
+            <summary>عنوان نتیجهٔ جستجو ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductSeoRules.MessageDescriptionIncompleteFa">
+            <summary>توضیح نتیجهٔ جستجو ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductSeoRules.MessageIdentityIncompleteFa">
+            <summary>هویت محلی محصول ناقص است.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Domain.ProductSeoRules.MessageReadyFa">
+            <summary>SEO کامل است.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductSeoRules.BuildPublicPath(System.String,System.String)">
+            <summary>
+            مسیر عمومی canonical فروشگاه: /{fa|en}/products/{slug}.
+            شکل /product/ (مفرد) عمداً استفاده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductSeoRules.ToStorefrontLocalePrefix(System.String)">
+            <summary>locale Catalog → پیشوند دو حرفی مسیر فروشگاه.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductSeoRules.NormalizeLocale(System.String)">
+            <summary>locale را برای LocalizedText نرمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductSeoRules.Evaluate(System.String,System.String,System.String,System.String)">
+            <summary>
+            آمادگی SEO را از فیلدهای موجود می‌سازد.
+            عنوان خالی با نام محصول به‌عنوان fallback مستند پذیرفته می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Domain.ProductSeoReadinessSnapshot">
+            <summary>نتیجهٔ ارزیابی آمادگی SEO در Domain (بدون وابستگی Application).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Domain.ProductSeoReadinessSnapshot.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String)">
+            <summary>نتیجهٔ ارزیابی آمادگی SEO در Domain (بدون وابستگی Application).</summary>
+        </member>
+    </members>
+</doc>

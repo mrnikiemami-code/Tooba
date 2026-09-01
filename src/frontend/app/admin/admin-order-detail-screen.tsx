@@ -64,13 +64,14 @@ function SummaryCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-gray-500">{label}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <p className="text-lg font-black leading-tight tabular-nums text-gray-900">{value}</p>
+          <div className="mt-1">
             {badge ? (
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${badge.className}`}>
+              <span className={`inline-flex rounded-full px-2.5 py-1 text-sm font-bold ${badge.className}`}>
                 {badge.text}
               </span>
-            ) : null}
+            ) : (
+              <p className="text-lg font-black leading-tight tabular-nums text-gray-900">{value}</p>
+            )}
           </div>
         </div>
         <span className={`inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${tone} text-white shadow-sm`}>

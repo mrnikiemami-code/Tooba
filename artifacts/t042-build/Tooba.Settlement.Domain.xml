@@ -1,0 +1,405 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Settlement.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Settlement.Domain.EntryType">
+            <summary>
+            نوع سطر دفتر تسویه. Credit یعنی بستانکار فروشنده؛ Debit یعنی بدهکار.
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.EntryType.Credit">
+            <summary>بستانکار فروشنده (مثلاً پس از پرداخت).</summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.EntryType.Debit">
+            <summary>بدهکار فروشنده (مثلاً پس از refund).</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.StatementStatus">
+            <summary>
+            وضعیت صورت‌حساب دوره‌ای. با PayoutStatus یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.StatementStatus.Open">
+            <summary>دوره باز و قابل جمع‌بندی.</summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.StatementStatus.Closed">
+            <summary>دوره بسته شده.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.PayoutStatus">
+            <summary>
+            وضعیت درخواست/تلاش payout. با PaymentStatus یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.PayoutStatus.Pending">
+            <summary>در انتظار پردازش.</summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.PayoutStatus.Processing">
+            <summary>در حال ارسال به درگاه.</summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.PayoutStatus.Succeeded">
+            <summary>موفق.</summary>
+        </member>
+        <member name="F:Tooba.Settlement.Domain.PayoutStatus.Failed">
+            <summary>شکست.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.CommissionPolicy">
+            <summary>
+            سیاست کارمزد marketplace قابل پیکربندی. snapshot روی سطر ثبت می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicy.PolicyId">
+            <summary>شناسه سیاست.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicy.Name">
+            <summary>نام نمایشی.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicy.Rate">
+            <summary>نرخ کارمزد (۰.۱۰ = ۱۰٪).</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicy.IsDefault">
+            <summary>آیا پیش‌فرض marketplace است.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicy.EffectiveFrom">
+            <summary>زمان اعتبار.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.CommissionPolicy.CreateDefaultMarketplace(System.DateTimeOffset)">
+            <summary>سیاست پیش‌فرض ۱۰٪ marketplace را می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.CommissionPolicySnapshot">
+            <summary>
+            snapshot immutable سیاست کارمزد روی سطر posted.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicySnapshot.PolicyId">
+            <summary>شناسه سیاست مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicySnapshot.PolicyName">
+            <summary>نام snapshot.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.CommissionPolicySnapshot.Rate">
+            <summary>نرخ snapshot.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.CommissionPolicySnapshot.FromPolicy(Tooba.Settlement.Domain.CommissionPolicy)">
+            <summary>snapshot را از سیاست فعال می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.SettlementAccount">
+            <summary>
+            حساب تسویهٔ یک فروشنده. FK Party نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementAccount.SettlementAccountId">
+            <summary>شناسه حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementAccount.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementAccount.Currency">
+            <summary>ارز حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementAccount.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementAccount.Create(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>حساب جدید برای فروشنده می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.SettlementEntry">
+            <summary>
+            سطر posted غیرقابل‌ویرایش دفتر تسویه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.EntryId">
+            <summary>شناسه سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.SettlementAccountId">
+            <summary>حساب مالک.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.SellerPartyId">
+            <summary>فروشنده snapshot.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.EntryType">
+            <summary>نوع سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.GrossAmount">
+            <summary>مبلغ ناخالص مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.CommissionAmount">
+            <summary>کارمزد marketplace.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.NetAmount">
+            <summary>مبلغ خالص posted.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.CommissionPolicySnapshot">
+            <summary>snapshot سیاست کارمزد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.SourceType">
+            <summary>نوع منبع (payment/refund).</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.SourceId">
+            <summary>شناسه منبع بدون FK.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.SellerOrderId">
+            <summary>سفارش فروشنده مرجع در صورت وجود.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.IdempotencyKey">
+            <summary>کلید idempotency posting.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.PostedAt">
+            <summary>زمان posting.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntry.DomainEvents">
+            <summary>رویدادهای دامنه.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementEntry.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementEntry.PostCreditFromPayment(System.Guid,System.Guid,System.Guid,System.Guid,System.Decimal,System.String,Tooba.Settlement.Domain.CommissionPolicySnapshot,System.String,System.DateTimeOffset)">
+            <summary>سطر Credit از پرداخت می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementEntry.PostDebitFromRefund(System.Guid,System.Guid,System.Guid,System.Guid,System.Decimal,System.String,Tooba.Settlement.Domain.CommissionPolicySnapshot,System.String,System.DateTimeOffset)">
+            <summary>سطر Debit از refund می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.SettlementStatement">
+            <summary>
+            صورت‌حساب دوره‌ای حساب تسویه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.StatementId">
+            <summary>شناسه صورت‌حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.SettlementAccountId">
+            <summary>حساب مالک.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.Status">
+            <summary>وضعیت دوره.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.PeriodStart">
+            <summary>شروع دوره.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.PeriodEnd">
+            <summary>پایان دوره.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.OpeningBalance">
+            <summary>مانده ابتدای دوره.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.ClosingBalance">
+            <summary>مانده انتهای دوره.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementStatement.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementStatement.Open(System.Guid,System.DateTimeOffset,System.DateTimeOffset,System.Decimal,System.String,System.DateTimeOffset)">
+            <summary>صورت‌حساب باز می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementStatement.Close(System.Decimal,System.DateTimeOffset)">
+            <summary>دوره را می‌بندد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.SellerPayoutProfile">
+            <summary>
+            پروفایل payout فروشنده. FK Party نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.SellerPayoutProfileId">
+            <summary>شناسه پروفایل.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.Iban">
+            <summary>شماره شبا/IBAN.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.AccountHolderName">
+            <summary>نام صاحب حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.IsVerified">
+            <summary>آیا پروفایل تأیید شده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SellerPayoutProfile.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SellerPayoutProfile.CreateDevPlaceholder(System.Guid,System.DateTimeOffset)">
+            <summary>پروفایل placeholder برای dev می‌سازد.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.PayoutAttempt">
+            <summary>
+            تلاش payout نزد درگاه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.PayoutAttemptId">
+            <summary>شناسه تلاش.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.PayoutRequestId">
+            <summary>درخواست مالک.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.Status">
+            <summary>وضعیت تلاش.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.IdempotencyKey">
+            <summary>کلید idempotency درگاه.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.ProviderReference">
+            <summary>مرجع درگاه.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.FailureCode">
+            <summary>کد شکست.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutAttempt.CompletedAt">
+            <summary>زمان تکمیل.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutAttempt.MarkSucceeded(System.String,System.DateTimeOffset)">
+            <summary>تلاش را موفق علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutAttempt.MarkFailed(System.String,System.DateTimeOffset)">
+            <summary>تلاش را شکست‌خورده علامت می‌زند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.PayoutRequest">
+            <summary>
+            درخواست payout فروشنده. aggregate root.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.PayoutRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.SettlementAccountId">
+            <summary>حساب مالک.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.Amount">
+            <summary>مبلغ درخواستی.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.Status">
+            <summary>وضعیت درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.IdempotencyKey">
+            <summary>کلید idempotency ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.UpdatedAt">
+            <summary>آخرین به‌روزرسانی.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.Attempts">
+            <summary>تلاش‌های payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutRequest.DomainEvents">
+            <summary>رویدادهای دامنه.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.Create(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.DateTimeOffset)">
+            <summary>درخواست payout جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.AttachLoadedAttempts(System.Collections.Generic.IEnumerable{Tooba.Settlement.Domain.PayoutAttempt})">
+            <summary>تلاش‌های بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.BeginAttempt(System.String,System.DateTimeOffset)">
+            <summary>به Processing می‌رود و تلاش جدید ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.MarkSucceeded(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>درخواست را موفق علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutRequest.MarkFailed(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>درخواست را شکست‌خورده علامت می‌زند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent">
+            <summary>رویداد posting سطر تسویه.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,Tooba.Settlement.Domain.EntryType,System.Decimal,System.String,System.String,System.Guid)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.EntryId">
+            <summary>شناسه سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.EntryType">
+            <summary>نوع سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.NetAmount">
+            <summary>مبلغ خالص.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.SourceType">
+            <summary>نوع منبع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.SettlementEntryPostedDomainEvent.SourceId">
+            <summary>شناسه منبع.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.PayoutSucceededDomainEvent">
+            <summary>رویداد موفقیت payout.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.PayoutRequestId">
+            <summary>درخواست payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.Amount">
+            <summary>مبلغ.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutSucceededDomainEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Domain.PayoutFailedDomainEvent">
+            <summary>رویداد شکست payout.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Domain.PayoutFailedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String,System.String)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.PayoutRequestId">
+            <summary>درخواست payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.Amount">
+            <summary>مبلغ.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Domain.PayoutFailedDomainEvent.FailureCode">
+            <summary>کد شکست.</summary>
+        </member>
+    </members>
+</doc>

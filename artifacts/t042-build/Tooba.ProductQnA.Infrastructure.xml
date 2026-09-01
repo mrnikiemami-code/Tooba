@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.ProductQnA.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.ProductQnA.Infrastructure.Migrations.InitialProductQnA">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Migrations.InitialProductQnA.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Migrations.InitialProductQnA.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Migrations.InitialProductQnA.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext">
+            <summary>DbContext مالک schema مستقل product_qna.</summary>
+        </member>
+        <member name="F:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.Schema">
+            <summary>schema اختصاصی ProductQnA.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.Questions">
+            <summary>پرسش‌های محصول.</summary>
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.Answers">
+            <summary>پاسخ‌های پرسش.</summary>
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت ProductQnA.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.ProductQaDirectory">
+            <summary>دایرکتوری ProductQnA با خواندن فقط از قرارداد Catalog و schema خودش.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQaDirectory.#ctor(Tooba.ProductQnA.Infrastructure.Persistence.ProductQnADbContext,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>وابستگی‌های مالک را تزریق می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQaDirectory.SubmitQuestionAsync(System.Guid,Tooba.ProductQnA.Application.SubmitProductQuestion,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQaDirectory.GetPublishedAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQaDirectory.CountPublishedAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQaDirectory.PublishQuestionWithAnswerAsync(System.Guid,System.Guid,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.ProductQnADevelopmentSeed">
+            <summary>دانهٔ توسعهٔ قطعی و idempotent برای پرسش و پاسخ نمایشی.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQnADevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Threading.CancellationToken)">
+            <summary>
+            دو پرسش Published با پاسخ برای محصول demo-mobile-1 درج می‌کند.
+            فراخواننده باید CommerceContext را روی همین scope تنظیم کرده باشد
+            و پس از دانهٔ فروشگاه (وجود demo-mobile-1) صدا بزند.
+            </summary>
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.ProductQnAModule">
+            <summary>ماژول مستقل ProductQnA و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.ProductQnAModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQnAModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration">
+            <summary>ثبت Outbox ProductQnA؛ نسخهٔ پایه هنوز رویداد بیرونی منتشر نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.ProductQnA.Infrastructure.ProductQnAOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

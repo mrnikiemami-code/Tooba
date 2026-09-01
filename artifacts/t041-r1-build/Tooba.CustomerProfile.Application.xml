@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.CustomerProfile.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.CustomerProfile.Application.CustomerProfileSnapshot">
+            <summary>نمایهٔ خصوصی پروفایل مشتری بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Application.CustomerProfileSnapshot.#ctor(System.String,System.String,System.String,System.String,System.String,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>نمایهٔ خصوصی پروفایل مشتری بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="T:Tooba.CustomerProfile.Application.CustomerProfileWrite">
+            <summary>ورودی نوشتن پروفایل؛ email/mobile/password/nationalCode ندارد.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Application.CustomerProfileWrite.#ctor(System.String,System.String,System.String,System.String,System.String)">
+            <summary>ورودی نوشتن پروفایل؛ email/mobile/password/nationalCode ندارد.</summary>
+        </member>
+        <member name="T:Tooba.CustomerProfile.Application.ICustomerProfileDirectory">
+            <summary>
+            قرارداد کاربردی پروفایل توصیفی مشتری. تمام عملیات با Actor تأمین‌شده از Host محدود می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Application.ICustomerProfileDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>پروفایل Actor را برمی‌گرداند؛ در صورت نبود ردیف تهی است.</summary>
+        </member>
+        <member name="M:Tooba.CustomerProfile.Application.ICustomerProfileDirectory.UpsertAsync(System.Guid,Tooba.CustomerProfile.Application.CustomerProfileWrite,System.Threading.CancellationToken)">
+            <summary>پروفایل Actor را ایجاد یا به‌روز می‌کند.</summary>
+        </member>
+    </members>
+</doc>

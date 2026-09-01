@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Story.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Story.Application.PublicStoryItem">
+            <summary>آیتم عمومی استوری برای storefront.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.PublicStoryItem.#ctor(System.Guid,System.String,System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>آیتم عمومی استوری برای storefront.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.PublicStoryCard">
+            <summary>کارت عمومی استوری در ریل.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.PublicStoryCard.#ctor(System.Guid,System.String,System.String,System.Boolean,System.Int32,System.String,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Story.Application.PublicStoryItem})">
+            <summary>کارت عمومی استوری در ریل.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.AdminStoryItemSnapshot">
+            <summary>آیتم مدیریتی استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.AdminStoryItemSnapshot.#ctor(System.Guid,System.Int32,System.String,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>آیتم مدیریتی استوری.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.AdminStorySnapshot">
+            <summary>نمای مدیریتی/فروشنده کامل استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.AdminStorySnapshot.#ctor(System.Guid,System.Guid,Tooba.Story.Domain.StoryOrigin,System.Nullable{System.Guid},Tooba.Story.Domain.StoryReviewStatus,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Int32,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},Tooba.Story.Domain.StoryStatus,System.String,System.String,System.Int32,System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.Story.Application.AdminStoryItemSnapshot})">
+            <summary>نمای مدیریتی/فروشنده کامل استوری.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.CreateStoryCommand">
+            <summary>فرمان ایجاد استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.CreateStoryCommand.#ctor(System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>فرمان ایجاد استوری.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.UpdateStoryCommand">
+            <summary>فرمان به‌روزرسانی استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.UpdateStoryCommand.#ctor(System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.String,System.String)">
+            <summary>فرمان به‌روزرسانی استوری.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.SetStoryScheduleCommand">
+            <summary>فرمان زمان‌بندی استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.SetStoryScheduleCommand.#ctor(System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset})">
+            <summary>فرمان زمان‌بندی استوری.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.AddStoryItemCommand">
+            <summary>فرمان افزودن آیتم.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.AddStoryItemCommand.#ctor(System.String,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String,System.Nullable{System.Int32})">
+            <summary>فرمان افزودن آیتم.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.UpdateStoryItemCommand">
+            <summary>فرمان به‌روزرسانی آیتم.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.UpdateStoryItemCommand.#ctor(System.String,System.Nullable{System.Guid},System.String,System.String,System.Nullable{System.Int32},System.String,System.String)">
+            <summary>فرمان به‌روزرسانی آیتم.</summary>
+        </member>
+        <member name="T:Tooba.Story.Application.IStoryDirectory">
+            <summary>قابلیت خواندن و مدیریت استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.GetPublicStoriesAsync(System.Guid,System.String,System.String,System.DateTimeOffset,System.Threading.CancellationToken)">
+            <summary>استوری‌های قابل نمایش عمومی را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminListAsync(System.Guid,System.Nullable{Tooba.Story.Domain.StoryReviewStatus},System.Threading.CancellationToken)">
+            <summary>فهرست مدیریتی استوری‌های Tenant با فیلتر اختیاری بازبینی.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminListPendingReviewAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست استوری‌های در انتظار بازبینی.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminGetAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات مدیریتی یک استوری.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminCreateAsync(System.Guid,Tooba.Story.Application.CreateStoryCommand,System.Threading.CancellationToken)">
+            <summary>استوری Draft ادمین می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminUpdateAsync(System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryCommand,System.Threading.CancellationToken)">
+            <summary>فیلدهای استوری را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminSetStatusAsync(System.Guid,System.Guid,Tooba.Story.Domain.StoryStatus,System.Threading.CancellationToken)">
+            <summary>وضعیت استوری را فعال یا غیرفعال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminSetScheduleAsync(System.Guid,System.Guid,Tooba.Story.Application.SetStoryScheduleCommand,System.Threading.CancellationToken)">
+            <summary>زمان‌بندی استوری را تنظیم می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminReorderStoriesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>ترتیب استوری‌ها را تنظیم می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminAddItemAsync(System.Guid,System.Guid,Tooba.Story.Application.AddStoryItemCommand,System.Threading.CancellationToken)">
+            <summary>آیتم به استوری اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminUpdateItemAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryItemCommand,System.Threading.CancellationToken)">
+            <summary>آیتم استوری را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminRemoveItemAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>آیتم استوری را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminReorderItemsAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>آیتم‌های استوری را مرتب می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminSoftDisableAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>استوری را با SoftDisable غیرفعال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminApproveAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>استوری فروشنده را تأیید می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.AdminRejectAsync(System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>استوری فروشنده را با دلیل رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerListAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست استوری‌های یک فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerGetAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات استوری متعلق به فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerCreateDraftAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.CreateStoryCommand,System.Threading.CancellationToken)">
+            <summary>پیش‌نویس فروشنده می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerUpdateAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryCommand,System.Threading.CancellationToken)">
+            <summary>پیش‌نویس/ردشدهٔ فروشنده را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerSubmitAsync(System.Guid,System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>استوری فروشنده را برای بازبینی ارسال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerAddItemAsync(System.Guid,System.Guid,System.Guid,Tooba.Story.Application.AddStoryItemCommand,System.Threading.CancellationToken)">
+            <summary>آیتم به استوری قابل‌ویرایش فروشنده اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerUpdateItemAsync(System.Guid,System.Guid,System.Guid,System.Guid,Tooba.Story.Application.UpdateStoryItemCommand,System.Threading.CancellationToken)">
+            <summary>آیتم استوری قابل‌ویرایش فروشنده را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerRemoveItemAsync(System.Guid,System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>آیتم استوری قابل‌ویرایش فروشنده را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Story.Application.IStoryDirectory.SellerReorderItemsAsync(System.Guid,System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>آیتم‌های استوری قابل‌ویرایش فروشنده را مرتب می‌کند.</summary>
+        </member>
+    </members>
+</doc>

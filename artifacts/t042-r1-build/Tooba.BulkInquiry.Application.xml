@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.BulkInquiry.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.BulkInquiry.Application.SubmitBulkInquiryRequest">
+            <summary>ورودی ثبت درخواست خرید عمده؛ slug محصول از مسیر HTTP تأمین می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Application.SubmitBulkInquiryRequest.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.Int32,System.String)">
+            <summary>ورودی ثبت درخواست خرید عمده؛ slug محصول از مسیر HTTP تأمین می‌شود.</summary>
+        </member>
+        <member name="T:Tooba.BulkInquiry.Application.IBulkInquiryDirectory">
+            <summary>قابلیت کاربردی ثبت درخواست خرید عمده.</summary>
+        </member>
+        <member name="M:Tooba.BulkInquiry.Application.IBulkInquiryDirectory.SubmitAsync(Tooba.BulkInquiry.Application.SubmitBulkInquiryRequest,System.Threading.CancellationToken)">
+            <summary>درخواست را برای محصول منتشرشده ثبت می‌کند.</summary>
+        </member>
+    </members>
+</doc>

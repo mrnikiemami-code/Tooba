@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Settlement.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Settlement.Application.SettlementOrderSnapshot">
+            <summary>
+            snapshot سفارش برای تسویه. FK Order نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementOrderSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Boolean,System.String)">
+            <summary>
+            snapshot سفارش برای تسویه. FK Order نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementPaymentAllocationSnapshot">
+            <summary>
+            snapshot تخصیص پرداخت برای accrual.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementPaymentAllocationSnapshot.#ctor(System.Guid,System.Decimal,System.String)">
+            <summary>
+            snapshot تخصیص پرداخت برای accrual.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementPaymentSnapshot">
+            <summary>
+            snapshot پرداخت برای تسویه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementPaymentSnapshot.#ctor(System.Guid,System.Guid,System.Decimal,System.String,System.Boolean)">
+            <summary>
+            snapshot پرداخت برای تسویه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementRefundSnapshot">
+            <summary>
+            snapshot refund برای adjustment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementRefundSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>
+            snapshot refund برای adjustment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ISettlementOrderReader">
+            <summary>
+            خواندن snapshot سفارش بدون DbContext Order.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementOrderReader.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>snapshot سفارش را برمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ISettlementPaymentReader">
+            <summary>
+            خواندن snapshot پرداخت بدون DbContext Payment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementPaymentReader.GetPaymentAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>snapshot پرداخت را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementPaymentReader.GetAllocationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>تخصیص‌های پرداخت را برمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ISettlementReturnsReader">
+            <summary>
+            خواندن snapshot refund بدون DbContext Returns.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementReturnsReader.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>snapshot refund را برمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.GatewayPayoutResult">
+            <summary>
+            نتیجهٔ payout از درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.GatewayPayoutResult.#ctor(System.Boolean,System.String,System.String)">
+            <summary>
+            نتیجهٔ payout از درگاه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.IPayoutGateway">
+            <summary>
+            قرارداد درگاه payout. PSP واقعی اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.IPayoutGateway.ProviderCode">
+            <summary>کد پایدار درگاه.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.IPayoutGateway.PayoutAsync(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>payout را با idempotency نزد درگاه اجرا می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementBalanceSnapshot">
+            <summary>
+            snapshot مانده حساب تسویه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementBalanceSnapshot.#ctor(System.Guid,System.Guid,System.String,System.Decimal,System.Decimal,System.Decimal,System.Decimal)">
+            <summary>
+            snapshot مانده حساب تسویه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementEntrySnapshot">
+            <summary>
+            snapshot سطر posted.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementEntrySnapshot.#ctor(System.Guid,System.Guid,System.Guid,Tooba.Settlement.Domain.EntryType,System.Decimal,System.Decimal,System.Decimal,System.String,Tooba.Settlement.Domain.CommissionPolicySnapshot,System.String,System.Guid,System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            snapshot سطر posted.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementStatementSnapshot">
+            <summary>
+            snapshot صورت‌حساب.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.SettlementStatementSnapshot.#ctor(System.Guid,System.Guid,Tooba.Settlement.Domain.StatementStatus,System.DateTimeOffset,System.DateTimeOffset,System.Decimal,System.Decimal,System.String,System.DateTimeOffset)">
+            <summary>
+            snapshot صورت‌حساب.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.PayoutAttemptSnapshot">
+            <summary>
+            snapshot تلاش payout.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.PayoutAttemptSnapshot.#ctor(System.Guid,System.Guid,Tooba.Settlement.Domain.PayoutStatus,System.String,System.String,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            snapshot تلاش payout.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.PayoutRequestSnapshot">
+            <summary>
+            snapshot درخواست payout.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.PayoutRequestSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String,Tooba.Settlement.Domain.PayoutStatus,System.String,System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.Settlement.Application.PayoutAttemptSnapshot})">
+            <summary>
+            snapshot درخواست payout.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.RequestPayoutCommand">
+            <summary>
+            فرمان درخواست payout.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.RequestPayoutCommand.#ctor(System.Guid,System.Decimal,System.String,System.Guid)">
+            <summary>
+            فرمان درخواست payout.
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ProcessPayoutCommand">
+            <summary>
+            فرمان پردازش payout (admin/dev).
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ProcessPayoutCommand.#ctor(System.Guid,System.Guid)">
+            <summary>
+            فرمان پردازش payout (admin/dev).
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.RetryPayoutCommand">
+            <summary>
+            فرمان retry payout (admin/dev).
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.RetryPayoutCommand.#ctor(System.Guid,System.Guid)">
+            <summary>
+            فرمان retry payout (admin/dev).
+            </summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ISettlementDirectory">
+            <summary>
+            ارکستراسیون تسویه و payout.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.GetBalanceAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>مانده فروشنده را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListEntriesAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>سطرهای posted فروشنده را فهرست می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListEntriesBySellerOrderIdsAsync(System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>سطرهای posted مرتبط با سفارش‌های فروشنده را batch می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListStatementsAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>صورت‌حساب‌های فروشنده را فهرست می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.RequestPayoutAsync(Tooba.Settlement.Application.RequestPayoutCommand,System.Threading.CancellationToken)">
+            <summary>درخواست payout می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.GetPayoutRequestAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>درخواست payout را می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListPayoutRequestsForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست payoutهای فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListAllBalancesAsync(System.Threading.CancellationToken)">
+            <summary>مانده همه فروشندگان (admin).</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ListPayoutQueueAsync(System.Threading.CancellationToken)">
+            <summary>صف payout (admin).</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.ProcessPayoutAsync(Tooba.Settlement.Application.ProcessPayoutCommand,System.Threading.CancellationToken)">
+            <summary>payout را پردازش می‌کند (admin/dev).</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.RetryPayoutAsync(Tooba.Settlement.Application.RetryPayoutCommand,System.Threading.CancellationToken)">
+            <summary>payout شکست‌خورده را retry می‌کند (admin/dev).</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.AccrueFromPaymentAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>accrual idempotent از payment.succeeded.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementDirectory.AdjustFromRefundAsync(System.Guid,System.Decimal,System.String,System.Guid,System.Threading.CancellationToken)">
+            <summary>adjustment idempotent از refund.succeeded.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.ISettlementUseCaseGuard">
+            <summary>
+            نگهبان use-case تسویه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Application.ISettlementUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>اجازهٔ mutate را بررسی می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent">
+            <summary>
+            رویداد Outbox settlement.entry.posted.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.EntryId">
+            <summary>شناسه سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.EntryType">
+            <summary>نوع سطر.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.NetAmount">
+            <summary>مبلغ خالص.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.SourceType">
+            <summary>نوع منبع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.SettlementEntryPostedIntegrationEvent.SourceId">
+            <summary>شناسه منبع.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent">
+            <summary>
+            رویداد Outbox payout.succeeded.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.PayoutRequestId">
+            <summary>درخواست payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.Amount">
+            <summary>مبلغ.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutSucceededIntegrationEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Application.PayoutFailedIntegrationEvent">
+            <summary>
+            رویداد Outbox payout.failed.v1
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.EventTypeName">
+            <summary>نام قرارداد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.PayoutRequestId">
+            <summary>درخواست payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.SettlementAccountId">
+            <summary>حساب.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.Amount">
+            <summary>مبلغ.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Application.PayoutFailedIntegrationEvent.FailureCode">
+            <summary>کد شکست.</summary>
+        </member>
+    </members>
+</doc>

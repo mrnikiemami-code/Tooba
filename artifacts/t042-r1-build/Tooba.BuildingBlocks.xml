@@ -1,0 +1,1203 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.BuildingBlocks</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationDecisionKind">
+            <summary>
+            نتیجهٔ صریح بررسی مجوز. DENY عادی استثنا نیست؛ شکست زیرساخت هرگز ALLOW نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationDecisionKind.Allow">
+            <summary>
+            رابطه اجازه می‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationDecisionKind.Deny">
+            <summary>
+            رابطه وجود ندارد یا کافی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationDecisionKind.Unavailable">
+            <summary>
+            SpiceDB/پیکربندی در دسترس نیست؛ عملیات محافظت‌شده نباید ادامه یابد.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationDecision">
+            <summary>
+            تصمیم مجوز به‌همراه علت داخلی غیرقابل افشا در ProblemDetails عمومی.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationDecision.Kind">
+            <summary>
+            گونهٔ تصمیم.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationDecision.ReasonCode">
+            <summary>
+            کد پایدار داخلی؛ متن خطای زیرساخت SpiceDB نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationDecision.IsAllow">
+            <summary>
+            موفقیت مجوز.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationDecision.Allow">
+            <summary>
+            اجازه.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationDecision.Deny">
+            <summary>
+            رد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationDecision.Unavailable(System.String)">
+            <summary>
+            زیرساخت مجوز در دسترس نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationSubject">
+            <summary>
+            اصل مجوز. فعلاً فقط user؛ سازمان/گروه بعداً اضافه می‌شود نه با ستون نقش روی User.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationSubject.Type">
+            <summary>
+            گونهٔ پایدار قرارداد؛ از namespace CLR ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationSubject.Id">
+            <summary>
+            شناسهٔ پایدار اصل؛ hostname نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationSubject.ForUser(System.Guid)">
+            <summary>
+            User احرازشده را به subject قرارداد Tooba تبدیل می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationResource">
+            <summary>
+            منبع مجوز. شناسه نباید راز یا hostname باشد.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationResource.Type">
+            <summary>
+            نوع منبع snake_case پایدار.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationResource.Id">
+            <summary>
+            شناسهٔ منبع داخل همان نوع.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationCallContext">
+            <summary>
+            زمینهٔ بررسی. Tenant از Host ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCallContext.TenantId">
+            <summary>
+            Tenant پایدار Single-Store یا تهی در Marketplace.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCallContext.Edition">
+            <summary>
+            Edition فرآیند.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCallContext.TraceId">
+            <summary>
+            همبستگی تله‌متری؛ بعد متریک با کاردینالیتی بالا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCallContext.ConsistencyToken">
+            <summary>
+            نشانهٔ سازگاری آینده (ZedToken). در این foundation اجباری نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationCheck">
+            <summary>
+            درخواست بررسی مجوز در مرز Application.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCheck.Subject">
+            <summary>
+            اصل.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCheck.Resource">
+            <summary>
+            منبع.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCheck.Permission">
+            <summary>
+            نام permission پایدار snake_case.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationCheck.CallContext">
+            <summary>
+            زمینهٔ Tenant/Edition.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationRelationshipOperation">
+            <summary>
+            عملیات نوشتن/حذف رابطه در SpiceDB.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelationshipOperation.Touch">
+            <summary>
+            ایجاد یا به‌روزرسانی idempotent (TOUCH).
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelationshipOperation.Delete">
+            <summary>
+            حذف رابطه (DELETE).
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationRelationshipWrite">
+            <summary>
+            درخواست typed نوشتن رابطه؛ رشتهٔ خام SpiceDB از ماژول‌ها پذیرفته نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationRelationshipWrite.Subject">
+            <summary>
+            اصل.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationRelationshipWrite.Resource">
+            <summary>
+            منبع.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationRelationshipWrite.Relation">
+            <summary>
+            رابطهٔ snake_case.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.AuthorizationRelationshipWrite.Operation">
+            <summary>
+            Touch (پیش‌فرض) یا Delete برای revoke.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationObjectTypes">
+            <summary>
+            نام‌های پایدار نوع شیء. از CLR تولید نمی‌شوند.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.User">
+            <summary>
+            اصل کاربر.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.Tenant">
+            <summary>
+            منبع خنثی Tenant برای اثبات isolation؛ مدل Catalog نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.Party">
+            <summary>
+            منبع کسب‌وکار Party برای تصویرسازی عضویت؛ Catalog/Order نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.Role">
+            <summary>
+            نقش Access Control؛ عضویت کاربر در نقش برای تصویرسازی ReBAC.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.Permission">
+            <summary>
+            قابلیت معنایی کاتالوگ (مثلاً product.view)؛ ماتریس محصول UI نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationObjectTypes.Category">
+            <summary>
+            دستهٔ کالا برای محدودهٔ سفارش (مثلاً Mobile در برابر Books).
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationRelations">
+            <summary>
+            نام‌های پایدار رابطه/مجوز foundation.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.Member">
+            <summary>
+            رابطهٔ member برای تصویرسازی عضویت در Tenant یا Party؛ ماتریس مجوز محصول نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.View">
+            <summary>
+            مجوز مشاهدهٔ منبع Tenant.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.Granted">
+            <summary>
+            اعطای مستقیم قابلیت روی منبع permission.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.Check">
+            <summary>
+            بررسی قابلیت روی منبع capability (معادل schema allow = granted).
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.Handler">
+            <summary>
+            رابطه‌ی handler برای دستهٔ سفارش.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.AuthorizationRelations.HandleOrders">
+            <summary>
+            مجوز handle_orders روی category (سیاست محدوده؛ فیلتر کامل سفارش جدا است).
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationService">
+            <summary>
+            قرارداد بررسی مجوز در مرز use-case. نوع SDK SpiceDB اینجا نمی‌آید.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IAuthorizationService.CanAsync(Tooba.BuildingBlocks.AuthorizationCheck,System.Threading.CancellationToken)">
+            <summary>
+            بررسی Can. DENY استثنا نیست. شکست زیرساخت ALLOW برنمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationTupleWriter">
+            <summary>
+            نوشتن رابطهٔ typed.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IAuthorizationTupleWriter.WriteAsync(Tooba.BuildingBlocks.AuthorizationRelationshipWrite,System.Threading.CancellationToken)">
+            <summary>
+            رابطه را پس از اعتبارسنجی نام‌ها می‌نویسد.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationSchemaProvider">
+            <summary>
+            schema نسخه‌بندی‌شدهٔ foundation.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IAuthorizationSchemaProvider.SchemaVersion">
+            <summary>
+            نسخهٔ صریح schema؛ با هر استارت تولید بازنویسی کور نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IAuthorizationSchemaProvider.SchemaText">
+            <summary>
+            متن schema سازگار با SpiceDB برای منبع خنثی.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationSchemaBootstrapper">
+            <summary>
+            اعمال اختیاری schema در dev/test وقتی صریحاً پیکربندی شده باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IAuthorizationSchemaBootstrapper.BootstrapIfConfiguredAsync(System.Threading.CancellationToken)">
+            <summary>
+            اگر ApplySchemaOnStartup روشن باشد schema را اعمال می‌کند؛ در غیر این صورت no-op.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationGuard">
+            <summary>
+            الگوی مرز use-case: ابتدا مجوز، سپس منطق کسب‌وکار. SpiceDB داخل Domain صدا نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IAuthorizationGuard.AuthorizeUseCaseAsync(Tooba.BuildingBlocks.AuthorizationCheck,System.Threading.CancellationToken)">
+            <summary>
+            تصمیم را برمی‌گرداند تا caller DENY را بدون استثنا هندل کند و Unavailable را fail-closed کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IAuthorizationSecurityEventSink">
+            <summary>
+            درز Security Audit برای رد حساس و تغییر رابطه. فروشگاه کامل Audit نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IAuthorizationSecurityEventSink.RecordAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            رخداد را بدون توکن و بدون راز ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.AuthorizationContractValidator">
+            <summary>
+            اعتبارسنجی نام قرارداد مجوز قبل از رسیدن به adapter.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationContractValidator.ValidateToken(System.String,System.String)">
+            <summary>
+            نام نوع/رابطه/مجوز را می‌سنجد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationContractValidator.ValidateResourceId(System.String)">
+            <summary>
+            شناسهٔ منبع نباید خالی یا شبیه hostname خام باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationContractValidator.Validate(Tooba.BuildingBlocks.AuthorizationCheck)">
+            <summary>
+            درخواست بررسی را کامل می‌سنجد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.AuthorizationContractValidator.Validate(Tooba.BuildingBlocks.AuthorizationRelationshipWrite)">
+            <summary>
+            درخواست نوشتن را می‌سنجد.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.BuildingBlocksMarker">
+            <summary>
+            نشانگر اسمبلی BuildingBlocks: محل primitives فنی مشترک (شناسه، زمینهٔ تجارت، تله‌متری، خطاهای پلتفرم).
+            هیچ persistence ماژولی و هیچ جدول کسب‌وکار اینجا تعریف نمی‌شود؛ مالکیت داده متعلق به ماژول است.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.CacheKey">
+            <summary>
+            کلید پایدار کش پس از نرمال‌سازی بخش‌ها. مقدار خام برای ارائه‌دهنده است؛ TenantId یا Host در خود ارائه‌دهنده ساخته نمی‌شود.
+            </summary>
+            <param name="Value">رشتهٔ قطعی پس از escape و محدودیت طول؛ راز یا PII ندارد.</param>
+            <param name="Namespace">فضای منطقی برای متریک با کاردینالیتی محدود و ابطال namespace.</param>
+            <param name="EditionLabel">برچسب Edition برای متریک؛ هویت Tenant نیست.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CacheKey.#ctor(System.String,System.String,System.String)">
+            <summary>
+            کلید پایدار کش پس از نرمال‌سازی بخش‌ها. مقدار خام برای ارائه‌دهنده است؛ TenantId یا Host در خود ارائه‌دهنده ساخته نمی‌شود.
+            </summary>
+            <param name="Value">رشتهٔ قطعی پس از escape و محدودیت طول؛ راز یا PII ندارد.</param>
+            <param name="Namespace">فضای منطقی برای متریک با کاردینالیتی محدود و ابطال namespace.</param>
+            <param name="EditionLabel">برچسب Edition برای متریک؛ هویت Tenant نیست.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKey.Value">
+            <summary>رشتهٔ قطعی پس از escape و محدودیت طول؛ راز یا PII ندارد.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKey.Namespace">
+            <summary>فضای منطقی برای متریک با کاردینالیتی محدود و ابطال namespace.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKey.EditionLabel">
+            <summary>برچسب Edition برای متریک؛ هویت Tenant نیست.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.CachePolicy">
+            <summary>
+            سیاست انقضا و برچسب ابطال برای یک ورود. TTL سراسری اجباری نیست؛ دادهٔ تغییرپذیر نباید بی‌انقضا ذخیره شود.
+            </summary>
+            <param name="AbsoluteExpiration">انقضای مطلق از لحظهٔ Set؛ برای دادهٔ تغییرپذیر الزامی است مگر Sliding مشخص باشد.</param>
+            <param name="SlidingExpiration">تمدید انقضا با هر خواندن موفق؛ جایگزین منبع حقیقت نیست.</param>
+            <param name="Tags">برچسب‌های ابطال گروهی؛ نام کسب‌وکار خاص اینجا تعریف نمی‌شود.</param>
+            <param name="CacheNull">اگر true باشد فقط با <see cref="P:Tooba.BuildingBlocks.CachePolicy.NullAbsoluteExpiration"/> کوتاه، نبودن مقدار به‌صورت صریح کش می‌شود.</param>
+            <param name="NullAbsoluteExpiration">عمر ورود منفی؛ بدون این مقدار، null ذخیره نمی‌شود.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CachePolicy.#ctor(System.Nullable{System.TimeSpan},System.Nullable{System.TimeSpan},System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.Nullable{System.TimeSpan})">
+            <summary>
+            سیاست انقضا و برچسب ابطال برای یک ورود. TTL سراسری اجباری نیست؛ دادهٔ تغییرپذیر نباید بی‌انقضا ذخیره شود.
+            </summary>
+            <param name="AbsoluteExpiration">انقضای مطلق از لحظهٔ Set؛ برای دادهٔ تغییرپذیر الزامی است مگر Sliding مشخص باشد.</param>
+            <param name="SlidingExpiration">تمدید انقضا با هر خواندن موفق؛ جایگزین منبع حقیقت نیست.</param>
+            <param name="Tags">برچسب‌های ابطال گروهی؛ نام کسب‌وکار خاص اینجا تعریف نمی‌شود.</param>
+            <param name="CacheNull">اگر true باشد فقط با <see cref="P:Tooba.BuildingBlocks.CachePolicy.NullAbsoluteExpiration"/> کوتاه، نبودن مقدار به‌صورت صریح کش می‌شود.</param>
+            <param name="NullAbsoluteExpiration">عمر ورود منفی؛ بدون این مقدار، null ذخیره نمی‌شود.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CachePolicy.AbsoluteExpiration">
+            <summary>انقضای مطلق از لحظهٔ Set؛ برای دادهٔ تغییرپذیر الزامی است مگر Sliding مشخص باشد.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CachePolicy.SlidingExpiration">
+            <summary>تمدید انقضا با هر خواندن موفق؛ جایگزین منبع حقیقت نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CachePolicy.Tags">
+            <summary>برچسب‌های ابطال گروهی؛ نام کسب‌وکار خاص اینجا تعریف نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CachePolicy.CacheNull">
+            <summary>اگر true باشد فقط با <see cref="P:Tooba.BuildingBlocks.CachePolicy.NullAbsoluteExpiration"/> کوتاه، نبودن مقدار به‌صورت صریح کش می‌شود.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CachePolicy.NullAbsoluteExpiration">
+            <summary>عمر ورود منفی؛ بدون این مقدار، null ذخیره نمی‌شود.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CachePolicy.Expiring(System.TimeSpan,System.Nullable{System.TimeSpan},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+            سیاست بدون ورود منفی و بدون برچسب.
+            </summary>
+            <param name="absoluteExpiration">انقضای مطلق اجباری برای دادهٔ تغییرپذیر.</param>
+            <param name="slidingExpiration">انقضای لغزان اختیاری.</param>
+            <param name="tags">برچسب‌های ابطال.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CachePolicy.EnsureBounded">
+            <summary>
+            بررسی می‌کند انقضا کران‌دار است و ورود منفی بدون TTL کوتاه مجاز نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.CacheKeyParts">
+            <summary>
+            بخش‌های صریح کلید. فقط ابعادی که روی مقدار اثر دارند باید پر شوند. Locale از Market و Currency و حوزهٔ مالیات جدا است.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Namespace">
+            <summary>
+            فضای منطقی مثل catalog یا theme؛ برچسب متریک و ابطال namespace است نه TenantId.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.ResourceType">
+            <summary>
+            نوع منبع منطقی مثل product؛ نام جدول EF نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.ResourceId">
+            <summary>
+            شناسهٔ منبع در مالک ماژول؛ بین Tenantها به‌تنهایی یکتا فرض نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Edition">
+            <summary>
+            Edition فرآیند استقرار تا Marketplace با SingleStore تصادم نکند.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.DeploymentId">
+            <summary>
+            برچسب استقرار/محیط؛ نام ماشین نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.TenantId">
+            <summary>
+            هویت پایدار Tenant فقط وقتی مقدار مختص فروشگاه است. در Marketplace باید تهی بماند.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Market">
+            <summary>
+            بازار تجاری وقتی مقدار به Market وابسته است؛ Locale یا Currency نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Locale">
+            <summary>
+            زبان/فرهنگ وقتی مقدار به Locale وابسته است؛ Market نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Currency">
+            <summary>
+            ارز وقتی مقدار به Currency وابسته است؛ حوزهٔ مالیات نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Theme">
+            <summary>
+            تم وقتی خروجی به Theme وابسته است.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.AuthorizationScope">
+            <summary>
+            دامنهٔ مجوز وقتی خروجی حساس به authorization است؛ مدل کاربر عمومی ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.Version">
+            <summary>
+            نسخه/بازنگری منبع وقتی کلید نسخه‌بندی می‌شود؛ اجباری برای همهٔ کلیدها نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CacheKeyParts.TenantScoped">
+            <summary>
+            اگر true باشد <see cref="P:Tooba.BuildingBlocks.CacheKeyParts.TenantId"/> الزامی است تا مقدار فروشگاه A با B مخلوط نشود.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICache">
+            <summary>
+            خواندن/نوشتن/GetOrCreate پشت ارائه‌دهنده. ماژول کسب‌وکار <c>IMemoryCache</c> یا Redis را نمی‌بیند.
+            موجودیت tracked مربوط به EF و DbContext و HttpContext نباید ذخیره شوند؛ فقط DTO/projection تغییرناپذیر.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICache.GetAsync``1(Tooba.BuildingBlocks.CacheKey,System.Threading.CancellationToken)">
+            <summary>
+            مقدار typed را اگر موجود و منقضی‌نشده باشد برمی‌گرداند. miss یعنی باید از منبع حقیقت خواند.
+            </summary>
+            <typeparam name="T">قرارداد سریالایزشدنی؛ موجودیت EF نیست.</typeparam>
+            <param name="key">کلید ساخته‌شده با <see cref="T:Tooba.BuildingBlocks.ICacheKeyBuilder"/>.</param>
+            <param name="cancellationToken">لغو انتظار؛ برای حافظه معمولاً فوری است.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICache.SetAsync``1(Tooba.BuildingBlocks.CacheKey,``0,Tooba.BuildingBlocks.CachePolicy,System.Threading.CancellationToken)">
+            <summary>
+            مقدار را با سیاست انقضا ذخیره می‌کند. شکست کارخانه اینجا مطرح نیست؛ null فقط با سیاست منفی صریح ذخیره می‌شود.
+            </summary>
+            <typeparam name="T">قرارداد سریالایزشدنی.</typeparam>
+            <param name="key">کلید canonical.</param>
+            <param name="value">مقدار؛ null بدون سیاست منفی ذخیره نمی‌شود.</param>
+            <param name="policy">انقضا و برچسب‌ها.</param>
+            <param name="cancellationToken">لغو.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICache.GetOrCreateAsync``1(Tooba.BuildingBlocks.CacheKey,System.Func{System.Threading.CancellationToken,System.Threading.Tasks.Task{``0}},Tooba.BuildingBlocks.CachePolicy,System.Threading.CancellationToken)">
+            <summary>
+            miss را با کارخانه پر می‌کند. برای یک کلید، اجرای همزمان کارخانه در فرآیند واحد single-flight است. نتیجهٔ شکست کش نمی‌شود.
+            </summary>
+            <typeparam name="T">قرارداد سریالایزشدنی.</typeparam>
+            <param name="key">کلید canonical.</param>
+            <param name="factory">منبع حقیقت؛ نباید DbContext را برگرداند.</param>
+            <param name="policy">انقضا پس از موفقیت.</param>
+            <param name="cancellationToken">لغو انتظار قفل per-key و کارخانه.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICache.RemoveAsync(Tooba.BuildingBlocks.CacheKey,System.Threading.CancellationToken)">
+            <summary>
+            یک کلید را حذف می‌کند و فهرست برچسب را پاک می‌کند.
+            </summary>
+            <param name="key">کلید canonical.</param>
+            <param name="cancellationToken">لغو.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICacheInvalidator">
+            <summary>
+            ابطال گروهی بدون وابستگی به تکنیک Redis. ابطال باید صریح باشد؛ TTL به‌تنهایی برای دادهٔ حساس به صحت کافی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICacheInvalidator.InvalidateByTagAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            همهٔ کلیدهای دارای برچسب را حذف می‌کند؛ برچسب‌های نامرتبط دست نمی‌خورند.
+            </summary>
+            <param name="tag">برچسب منطقی مثل آیندهٔ catalog:product:{id}؛ اینجا نمونهٔ کسب‌وکار ثبت نمی‌شود.</param>
+            <param name="cancellationToken">لغو.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICacheInvalidator.InvalidateByNamespaceAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            همهٔ کلیدهای یک فضای منطقی را حذف می‌کند. معادل ابطال برچسب داخلی namespace است.
+            </summary>
+            <param name="ns">همان Namespace کلید.</param>
+            <param name="cancellationToken">لغو.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICacheKeyBuilder">
+            <summary>
+            ساخت کلید قطعی از بخش‌های typed. Host یا hostname داخل کلید نمی‌رود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICacheKeyBuilder.Build(Tooba.BuildingBlocks.CacheKeyParts)">
+            <summary>
+            بخش‌ها را نرمال و escape می‌کند. Marketplace نباید TenantId جعلی بگیرد؛ مقدار Tenant-scoped بدون TenantId رد می‌شود.
+            </summary>
+            <param name="parts">ابعاد مؤثر بر مقدار.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.CanonicalCacheKeyBuilder">
+            <summary>
+            پیاده‌سازی canonical بخش‌ها با جداکنندهٔ پایدار و محدودیت طول. راز در کلید قرار نمی‌گیرد.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CanonicalCacheKeyBuilder.Build(Tooba.BuildingBlocks.CacheKeyParts)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ToobaEdition">
+            <summary>
+            حالت استقرار فرآیند: یک فرآیند فقط یک Edition دارد و از پیکربندی می‌آید، نه از Host درخواست.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaEdition.Unset">
+            <summary>
+            Edition هنوز قفل نشده؛ مسیرهای غیر health باید ۵۰۳ با <c>platform.edition.unconfigured</c> بدهند.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaEdition.Marketplace">
+            <summary>
+            یک پایگاه marketplace؛ Host نباید به دیتابیس فروشگاه جدا resolve شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaEdition.SingleStore">
+            <summary>
+            یک دیتابیس به‌ازای هر فروشگاه؛ Host ورودی routing است نه هویت پایدار Tenant.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.TenantStatus">
+            <summary>
+            وضعیت عملیاتی Tenant در control plane پیکربندی‌شده. ناشناخته/غیرفعال باید مثل ناموجود fail-closed شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.TenantStatus.Active">
+            <summary>
+            Tenant مجاز به سرویس است.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.TenantStatus.Disabled">
+            <summary>
+            غیرفعال؛ resolve نباید وجود را لو بدهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.TenantStatus.Suspended">
+            <summary>
+            معلق؛ همان سیاست fail-closed ۴۰۴.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.TenantId">
+            <summary>
+            شناسهٔ پایدار Tenant. مستقل از hostname است و لایه‌های پایین نباید آن را دوباره از Request بسازند.
+            </summary>
+            <param name="Value">مقدار پایدار TenantId؛ برابر Host نیست.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.TenantId.#ctor(System.String)">
+            <summary>
+            شناسهٔ پایدار Tenant. مستقل از hostname است و لایه‌های پایین نباید آن را دوباره از Request بسازند.
+            </summary>
+            <param name="Value">مقدار پایدار TenantId؛ برابر Host نیست.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantId.Value">
+            <summary>مقدار پایدار TenantId؛ برابر Host نیست.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.TenantId.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ConnectionReference">
+            <summary>
+            مرجع منطقی اتصال پایگاه‌داده. credential خام نیست و نباید در ProblemDetails یا لاگ متنی چاپ شود.
+            </summary>
+            <param name="Value">کلید lookup در پیکربندی Host (بدون نویسهٔ <c>:</c> در کلید dictionary ASP.NET).</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ConnectionReference.#ctor(System.String)">
+            <summary>
+            مرجع منطقی اتصال پایگاه‌داده. credential خام نیست و نباید در ProblemDetails یا لاگ متنی چاپ شود.
+            </summary>
+            <param name="Value">کلید lookup در پیکربندی Host (بدون نویسهٔ <c>:</c> در کلید dictionary ASP.NET).</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.ConnectionReference.Value">
+            <summary>کلید lookup در پیکربندی Host (بدون نویسهٔ <c>:</c> در کلید dictionary ASP.NET).</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ConnectionReference.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BuildingBlocks.EditionContext">
+            <summary>
+            زمینهٔ Edition فرآیند جاری پس از خواندن پیکربندی معتبر.
+            </summary>
+            <param name="Edition">Marketplace یا SingleStore یا Unset.</param>
+            <param name="DeploymentId">برچسب استقرار برای تله‌متری؛ هویت Tenant نیست.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.EditionContext.#ctor(Tooba.BuildingBlocks.ToobaEdition,System.String)">
+            <summary>
+            زمینهٔ Edition فرآیند جاری پس از خواندن پیکربندی معتبر.
+            </summary>
+            <param name="Edition">Marketplace یا SingleStore یا Unset.</param>
+            <param name="DeploymentId">برچسب استقرار برای تله‌متری؛ هویت Tenant نیست.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EditionContext.Edition">
+            <summary>Marketplace یا SingleStore یا Unset.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EditionContext.DeploymentId">
+            <summary>برچسب استقرار برای تله‌متری؛ هویت Tenant نیست.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.TenantContext">
+            <summary>
+            زمینهٔ تغییرناپذیر Tenant جاری پس از resolve امن Host در Single-Store.
+            TenantId هویت پایدار است؛ ResolvedHost فقط ورودی routing است.
+            </summary>
+            <param name="TenantId">شناسهٔ پایدار، نه hostname.</param>
+            <param name="Status">باید Active باشد وگرنه resolve fail-closed می‌شود.</param>
+            <param name="ConnectionReference">مرجع اتصال فروشگاه این Tenant.</param>
+            <param name="DisplayName">نام نمایشی اختیاری از control plane پیکربندی.</param>
+            <param name="ThemeReference">ارجاع تم؛ قرارداد UI تجاری اینجا پیاده نمی‌شود.</param>
+            <param name="DefaultMarketReference">ارجاع بازار پیش‌فرض؛ Locale/Currency/Tax جدا هستند.</param>
+            <param name="ResolvedHost">Host نرمال‌شدهٔ همین درخواست؛ هویت نیست.</param>
+            <param name="PrimaryDomain">دامنهٔ اصلی ثبت‌شده در صورت وجود.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.TenantContext.#ctor(Tooba.BuildingBlocks.TenantId,Tooba.BuildingBlocks.TenantStatus,Tooba.BuildingBlocks.ConnectionReference,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            زمینهٔ تغییرناپذیر Tenant جاری پس از resolve امن Host در Single-Store.
+            TenantId هویت پایدار است؛ ResolvedHost فقط ورودی routing است.
+            </summary>
+            <param name="TenantId">شناسهٔ پایدار، نه hostname.</param>
+            <param name="Status">باید Active باشد وگرنه resolve fail-closed می‌شود.</param>
+            <param name="ConnectionReference">مرجع اتصال فروشگاه این Tenant.</param>
+            <param name="DisplayName">نام نمایشی اختیاری از control plane پیکربندی.</param>
+            <param name="ThemeReference">ارجاع تم؛ قرارداد UI تجاری اینجا پیاده نمی‌شود.</param>
+            <param name="DefaultMarketReference">ارجاع بازار پیش‌فرض؛ Locale/Currency/Tax جدا هستند.</param>
+            <param name="ResolvedHost">Host نرمال‌شدهٔ همین درخواست؛ هویت نیست.</param>
+            <param name="PrimaryDomain">دامنهٔ اصلی ثبت‌شده در صورت وجود.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.TenantId">
+            <summary>شناسهٔ پایدار، نه hostname.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.Status">
+            <summary>باید Active باشد وگرنه resolve fail-closed می‌شود.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.ConnectionReference">
+            <summary>مرجع اتصال فروشگاه این Tenant.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.DisplayName">
+            <summary>نام نمایشی اختیاری از control plane پیکربندی.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.ThemeReference">
+            <summary>ارجاع تم؛ قرارداد UI تجاری اینجا پیاده نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.DefaultMarketReference">
+            <summary>ارجاع بازار پیش‌فرض؛ Locale/Currency/Tax جدا هستند.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.ResolvedHost">
+            <summary>Host نرمال‌شدهٔ همین درخواست؛ هویت نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.TenantContext.PrimaryDomain">
+            <summary>دامنهٔ اصلی ثبت‌شده در صورت وجود.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.CommerceContext">
+            <summary>
+            زمینهٔ تجارت درخواست پس از middleware. در Marketplace مقدار Tenant تهی است و اتصال متعلق به marketplace است.
+            هدر/کوکی/query به‌عنوان مرجع Tenant پذیرفته نمی‌شوند.
+            </summary>
+            <param name="Edition">Edition فرآیند.</param>
+            <param name="Tenant">فقط Single-Store پس از allowlist و Active.</param>
+            <param name="DatabaseConnectionReference">مرجعی که DbContext باید resolve کند.</param>
+            <param name="TraceId">همبستگی تله‌متری؛ جایگزین Audit نیست.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.CommerceContext.#ctor(Tooba.BuildingBlocks.EditionContext,Tooba.BuildingBlocks.TenantContext,Tooba.BuildingBlocks.ConnectionReference,System.String)">
+            <summary>
+            زمینهٔ تجارت درخواست پس از middleware. در Marketplace مقدار Tenant تهی است و اتصال متعلق به marketplace است.
+            هدر/کوکی/query به‌عنوان مرجع Tenant پذیرفته نمی‌شوند.
+            </summary>
+            <param name="Edition">Edition فرآیند.</param>
+            <param name="Tenant">فقط Single-Store پس از allowlist و Active.</param>
+            <param name="DatabaseConnectionReference">مرجعی که DbContext باید resolve کند.</param>
+            <param name="TraceId">همبستگی تله‌متری؛ جایگزین Audit نیست.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CommerceContext.Edition">
+            <summary>Edition فرآیند.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CommerceContext.Tenant">
+            <summary>فقط Single-Store پس از allowlist و Active.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CommerceContext.DatabaseConnectionReference">
+            <summary>مرجعی که DbContext باید resolve کند.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.CommerceContext.TraceId">
+            <summary>همبستگی تله‌متری؛ جایگزین Audit نیست.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICurrentCommerceContext">
+            <summary>
+            دسترسی به <see cref="T:Tooba.BuildingBlocks.CommerceContext"/> درخواست جاری. بدون resolve موفق مقدار تهی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.ICurrentCommerceContext.Current">
+            <summary>
+            زمینهٔ تثبیت‌شده برای همین درخواست، یا تهی اگر هنوز resolve نشده یا مسیر skip است.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICurrentEdition">
+            <summary>
+            دسترسی محدود به Edition فرآیند در درخواست جاری.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.ICurrentEdition.Current">
+            <summary>
+            Edition تثبیت‌شده یا تهی.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICurrentTenant">
+            <summary>
+            دسترسی محدود به Tenant درخواست. در Marketplace همیشه تهی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.ICurrentTenant.Current">
+            <summary>
+            Tenant Single-Store یا تهی.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.HostNormalizer">
+            <summary>
+            نرمال‌سازی Host ورودی routing: حروف کوچک، حذف پورت، حذف نقطهٔ انتهایی، IDNA.
+            خروجی هویت Tenant نیست و نباید به‌عنوان TenantId ذخیره شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.HostNormalizer.TryNormalize(System.String,System.String@)">
+            <summary>
+            Host هدر را به شکل canonical ASCII تبدیل می‌کند.
+            </summary>
+            <param name="hostHeader">مقدار خام Host؛ ممکن است پورت یا IDN داشته باشد.</param>
+            <param name="normalized">خروجی نرمال‌شده در صورت موفقیت.</param>
+            <returns>false برای مقدار خالی، <c>*</c>، یا IDN نامعتبر — بدون تشخیص وجود Tenant.</returns>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.EventMetadata">
+            <summary>
+            فرادادهٔ پایدار رویداد برای همبستگی تله‌متری و بازسازی زمینهٔ کارگر.
+            TenantId از Host ساخته نمی‌شود؛ اگر تهی باشد یعنی Marketplace یا رویداد بدون Tenant.
+            </summary>
+            <param name="EventId">شناسهٔ پایدار رویداد؛ معمولاً همان کلید Outbox.</param>
+            <param name="OccurredAt">زمان وقوع به‌وقت UTC؛ منبع ترتیب سراسری تضمین‌شده نیست.</param>
+            <param name="EventType">نام قراردادی ثبت‌شده در type map؛ نام CLR برای deserialization نیست.</param>
+            <param name="CorrelationId">همبستگی اختیاری با درخواست/فرآیند؛ جایگزین Audit نیست.</param>
+            <param name="Version">نسخهٔ قرارداد رویداد برای سازگاری روبه‌عقب.</param>
+            <param name="TenantId">هویت پایدار Tenant در Single-Store یا تهی در Marketplace.</param>
+            <param name="DeploymentId">برچسب استقرار فرآیند؛ هویت Tenant نیست.</param>
+            <param name="Edition">Edition فرآیند در زمان وقوع؛ کارگر نباید Edition را از Host حدس بزند.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.EventMetadata.#ctor(System.Guid,System.DateTimeOffset,System.String,System.String,System.Int32,System.String,System.String,Tooba.BuildingBlocks.ToobaEdition)">
+            <summary>
+            فرادادهٔ پایدار رویداد برای همبستگی تله‌متری و بازسازی زمینهٔ کارگر.
+            TenantId از Host ساخته نمی‌شود؛ اگر تهی باشد یعنی Marketplace یا رویداد بدون Tenant.
+            </summary>
+            <param name="EventId">شناسهٔ پایدار رویداد؛ معمولاً همان کلید Outbox.</param>
+            <param name="OccurredAt">زمان وقوع به‌وقت UTC؛ منبع ترتیب سراسری تضمین‌شده نیست.</param>
+            <param name="EventType">نام قراردادی ثبت‌شده در type map؛ نام CLR برای deserialization نیست.</param>
+            <param name="CorrelationId">همبستگی اختیاری با درخواست/فرآیند؛ جایگزین Audit نیست.</param>
+            <param name="Version">نسخهٔ قرارداد رویداد برای سازگاری روبه‌عقب.</param>
+            <param name="TenantId">هویت پایدار Tenant در Single-Store یا تهی در Marketplace.</param>
+            <param name="DeploymentId">برچسب استقرار فرآیند؛ هویت Tenant نیست.</param>
+            <param name="Edition">Edition فرآیند در زمان وقوع؛ کارگر نباید Edition را از Host حدس بزند.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.EventId">
+            <summary>شناسهٔ پایدار رویداد؛ معمولاً همان کلید Outbox.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.OccurredAt">
+            <summary>زمان وقوع به‌وقت UTC؛ منبع ترتیب سراسری تضمین‌شده نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.EventType">
+            <summary>نام قراردادی ثبت‌شده در type map؛ نام CLR برای deserialization نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.CorrelationId">
+            <summary>همبستگی اختیاری با درخواست/فرآیند؛ جایگزین Audit نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.Version">
+            <summary>نسخهٔ قرارداد رویداد برای سازگاری روبه‌عقب.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.TenantId">
+            <summary>هویت پایدار Tenant در Single-Store یا تهی در Marketplace.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.DeploymentId">
+            <summary>برچسب استقرار فرآیند؛ هویت Tenant نیست.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.EventMetadata.Edition">
+            <summary>Edition فرآیند در زمان وقوع؛ کارگر نباید Edition را از Host حدس بزند.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IDomainEvent">
+            <summary>
+            واقعیت کسب‌وکار داخل مرز یک ماژول. هر Domain Event به‌طور خودکار Integration Event نیست و نباید از SaveChanges به مصرف‌کننده برسد.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IDomainEvent.Metadata">
+            <summary>
+            فرادادهٔ رویداد دامنه در زمان Raise؛ Tenant نهایی روی ردیف Outbox از زمینهٔ تجارت تکمیل می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IIntegrationEvent">
+            <summary>
+            واقعیت پایدار و نسخه‌بندی‌شده برای ماژول‌ها/سرویس‌های دیگر. فقط از روی ترجمهٔ صریح و پس از persist در Outbox منتشر می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IIntegrationEvent.Metadata">
+            <summary>
+            فرادادهٔ قرارداد خارجی؛ کارگر زمینه را از این مقادیر و registry بازسازی می‌کند نه از Host.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IDomainEventCollector">
+            <summary>
+            جمع‌آوری رویدادهای دامنه قبل از SaveChanges. ترکیب است نه ارث‌بری اجباری موجودیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IDomainEventCollector.Events">
+            <summary>
+            رویدادهای هنوز تخلیه‌نشده به ترتیب Raise.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IDomainEventCollector.Add(Tooba.BuildingBlocks.IDomainEvent)">
+            <summary>
+            یک واقعیت دامنه را برای همان تراکنش محلی صف می‌کند؛ انتشار نیست.
+            </summary>
+            <param name="domainEvent">رویداد داخل مرز ماژول.</param>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IDomainEventCollector.Clear">
+            <summary>
+            صف را پس از موفقیت SaveChanges خالی می‌کند تا retry دامنه رویداد تکراری نسازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IHasDomainEvents">
+            <summary>
+            موجودیتی که رویداد دامنه نگه می‌دارد تا interceptor همان تراکنش Outbox را پر کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.IHasDomainEvents.DomainEvents">
+            <summary>
+            صف رویدادهای دامنهٔ هنوز persistنشده به‌عنوان Integration.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IHasDomainEvents.ClearDomainEvents">
+            <summary>
+            پس از commit موفق فراخوانی می‌شود؛ در rollback نباید صدا زده شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.DomainEventCollector">
+            <summary>
+            پیاده‌سازی سادهٔ صف رویداد دامنه برای ترکیب در موجودیت‌ها.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.DomainEventCollector.Events">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BuildingBlocks.DomainEventCollector.Add(Tooba.BuildingBlocks.IDomainEvent)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.BuildingBlocks.DomainEventCollector.Clear">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IIntegrationEventHandler`1">
+            <summary>
+            مصرف‌کنندهٔ درون‌فرآیندی یک نوع Integration Event. از SaveChanges صدا زده نمی‌شود.
+            تحویل at-least-once است؛ مصرف‌کننده بایدidempotent باشد یا بعداً از Inbox استفاده کند.
+            </summary>
+            <typeparam name="TEvent">نوع قرارداد Integration ثبت‌شده در type map.</typeparam>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IIntegrationEventHandler`1.HandleAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            پردازش قرارداد خارجی پس از claim از Outbox. payload نباید لاگ شود.
+            </summary>
+            <param name="integrationEvent">رویداد بازسازی‌شده با فرادادهٔ ستون‌های Outbox.</param>
+            <param name="cancellationToken">لغو حلقهٔ dispatcher.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IIntegrationEventPublisher">
+            <summary>
+            مرز Tooba برای انتشار Integration Event پس از persist در Outbox. پیاده‌سازی پیش‌فرض تولید MassTransit است؛ کد کسب‌وکار به IBus وابسته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IIntegrationEventPublisher.PublishAsync(Tooba.BuildingBlocks.IIntegrationEvent,System.Threading.CancellationToken)">
+            <summary>
+            رویداد را به transport پایدار می‌سپارد. شکست اینجا یعنی retry/dead-letter Outbox، نه retry مصرف‌کننده.
+            </summary>
+            <param name="integrationEvent">رویداد از type map؛ deserialization چندریختی CLR نیست.</param>
+            <param name="cancellationToken">لغو انتشار.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IInboxProcessedStore">
+            <summary>
+            درز Inbox برای جلوگیری از پردازش تکراری در مصرف‌کننده. Outbox جایگزین Inbox نیست و جدول Inbox در این Task پیاده نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IInboxProcessedStore.TryMarkProcessedAsync(System.String,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            تلاش برای ثبت «این مصرف‌کننده این EventId را دیده است». پیاده‌سازی کامل به Task بعدی موکول است.
+            </summary>
+            <param name="consumerName">نام پایدار مصرف‌کننده داخل یک ماژول.</param>
+            <param name="eventId">شناسهٔ رویداد Integration.</param>
+            <param name="cancellationToken">لغو.</param>
+            <returns>true اگر اجازهٔ پردازش داده شود؛ قرارداد نهایی با جدول Inbox مشخص می‌شود.</returns>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ICommerceContextAssigner">
+            <summary>
+            انتساب زمینهٔ تجارت بدون resolve از Host. مخصوص کارگر Outbox و تست؛ هدر درخواست مرجع Tenant نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.ICommerceContextAssigner.Assign(Tooba.BuildingBlocks.CommerceContext)">
+            <summary>
+            زمینهٔ بازسازی‌شده از Outbox + registry را روی scope جاری می‌گذارد تا handlerها Host نخوانند.
+            </summary>
+            <param name="context">زمینهٔ immutable ساخته‌شده از TenantId پایدار پیام.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.EventMetadataFactory">
+            <summary>
+            سازندهٔ فرادادهٔ اولیه در زمان Raise دامنه؛ Tenant/Edition نهایی هنگام نوشتن Outbox تکمیل می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.EventMetadataFactory.ForDomain(System.String,System.Int32,System.String)">
+            <summary>
+            فرادادهٔ موقت دامنه با شناسهٔ UUID v7. Edition/Tenant در interceptor از <see cref="T:Tooba.BuildingBlocks.CommerceContext"/> می‌آید.
+            </summary>
+            <param name="eventType">نام قراردادی یا نام موقت دامنه؛ Integration از type map مقدار نهایی می‌گیرد.</param>
+            <param name="version">نسخهٔ قرارداد.</param>
+            <param name="correlationId">همبستگی اختیاری.</param>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridAdvancedFilterEvaluator">
+            <summary>
+            ارزیابی left-to-right برای Advanced Filter: ((A op1 B) op2 C).
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridAdvancedFilterEvaluator.EvaluateLeftToRight(System.Collections.Generic.IReadOnlyList{System.Collections.Generic.HashSet{System.Guid}},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>اتصال‌دهنده‌های and/or را به ترتیب چپ→راست روی مجموعهٔ idها اعمال می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridSortRequest">
+            <summary>
+            قرارداد پرس‌وجوی گرید سمت سرور. AG Grid یا هر UI دیگر نباید مستقیماً به Host برسد.
+            </summary>
+            <summary>مرتب‌سازی whitelist‌شده.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridSortRequest.#ctor(System.String,System.String)">
+            <summary>
+            قرارداد پرس‌وجوی گرید سمت سرور. AG Grid یا هر UI دیگر نباید مستقیماً به Host برسد.
+            </summary>
+            <summary>مرتب‌سازی whitelist‌شده.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridFilterRequest">
+            <summary>فیلتر تایپ‌شده با فیلد whitelist‌شده.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridFilterRequest.#ctor(System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>فیلتر تایپ‌شده با فیلد whitelist‌شده.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridAdvancedFilterCondition">
+            <summary>یک شرط فیلتر پیشرفته — application-owned، نه AG Grid.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridAdvancedFilterCondition.#ctor(System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>یک شرط فیلتر پیشرفته — application-owned، نه AG Grid.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridAdvancedFilterExpression">
+            <summary>عبارت فیلتر پیشرفته با AND/OR صریح — left-to-right ارزیابی می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridAdvancedFilterExpression.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.BuildingBlocks.Grid.GridAdvancedFilterCondition},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>عبارت فیلتر پیشرفته با AND/OR صریح — left-to-right ارزیابی می‌شود.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridQueryRequest">
+            <summary>درخواست صفحه‌بندی/مرتب‌سازی/فیلتر گرید.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryRequest.#ctor(System.Int32,System.Int32,System.String,System.Collections.Generic.IReadOnlyList{Tooba.BuildingBlocks.Grid.GridSortRequest},System.Collections.Generic.IReadOnlyList{Tooba.BuildingBlocks.Grid.GridFilterRequest},Tooba.BuildingBlocks.Grid.GridAdvancedFilterExpression)">
+            <summary>درخواست صفحه‌بندی/مرتب‌سازی/فیلتر گرید.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridPageResponse`1">
+            <summary>پاسخ صفحه‌بندی‌شدهٔ گرید.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridPageResponse`1.#ctor(System.Collections.Generic.IReadOnlyList{`0},System.Int32,System.Int32,System.Int32)">
+            <summary>پاسخ صفحه‌بندی‌شدهٔ گرید.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridQueryOperators">
+            <summary>مجموعهٔ عملگرهای استاندارد GridQuery — برای reuse در policyهای ماژول.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryOperators.Text">
+            <summary>عملگرهای متنی مجاز.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryOperators.Number">
+            <summary>عملگرهای عددی مجاز.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryOperators.Date">
+            <summary>عملگرهای تاریخ مجاز.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryOperators.Enum">
+            <summary>عملگرهای enum/set مجاز.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase">
+            <summary>
+            اعتبارسنجی ساختاری مشترک GridQuery — بدون whitelist فیلد.
+            ماژول‌ها پس از این مرحله فیلتر/مرتب‌سازی دامنه‌ای خود را اعمال می‌کنند.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.DefaultMaxPageSize">
+            <summary>حداکثر pageSize پیش‌فرض canonical.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.DefaultDefaultPageSize">
+            <summary>pageSize پیش‌فرض canonical.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.DefaultMaxSearchLength">
+            <summary>حداکثر طول search.</summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.DefaultMaxSortCount">
+            <summary>حداکثر تعداد sort همزمان.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.NormalizePaging(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>page و pageSize را clamp می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.NormalizeSearch(System.String,System.Int32)">
+            <summary>search را trim و محدود به maxLength می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.NormalizeFilter(Tooba.BuildingBlocks.Grid.GridFilterRequest)">
+            <summary>یک GridFilterRequest را normalize می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.NormalizeScalar(System.String)">
+            <summary>مقدار scalar فیلتر را trim می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryPolicyBase.ValidateAdvancedConnectors(System.Int32,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>تعداد connectorهای advanced filter را validate می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.GridQueryValidationException">
+            <summary>خطای اعتبارسنجی GridQuery — در Host به PlatformHttpException map می‌شود.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.Grid.GridQueryValidationException.StatusCode">
+            <summary>کد HTTP پیشنهادی.</summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.Grid.GridQueryValidationException.ErrorCode">
+            <summary>کد خطای application-owned.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryValidationException.ConnectorCount">
+            <summary>connector count mismatch.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryValidationException.ConnectorInvalid">
+            <summary>connector نامعتبر.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryValidationException.FilterFieldInvalid">
+            <summary>فیلد فیلتر نامعتبر.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryValidationException.FilterOperatorInvalid">
+            <summary>عملگر فیلتر نامعتبر.</summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.GridQueryValidationException.AdvancedFieldInvalid">
+            <summary>فیلد advanced filter نامعتبر.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.Grid.IGridQueryPolicy">
+            <summary>
+            سیاست اعتبارسنجی و نرمال‌سازی GridQuery برای یک گرید مشخص.
+            هر ماژول whitelist فیلد/عملگر خود را تعریف می‌کند؛ Host/engine اجرای پرس‌وجو را مالک می‌ماند.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.Grid.IGridQueryPolicy.Normalize(Tooba.BuildingBlocks.Grid.GridQueryRequest)">
+            <summary>Query ورودی را sanitize می‌کند یا خطای 400 می‌دهد.</summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.IDatabaseConnectionResolver">
+            <summary>
+            درز حل اتصال پایگاه‌داده: <see cref="T:Tooba.BuildingBlocks.ConnectionReference"/> را به connection string قابل‌استفاده تبدیل می‌کند.
+            پیاده‌سازی Host است؛ ماژول‌ها نباید credential خام را از پیکربندی بخوانند یا لاگ کنند.
+            </summary>
+            <remarks>
+            شکست باید fail-closed باشد (مثلاً 503 با کد <c>platform.connection.unconfigured</c>) نه افشای جزئیات اتصال.
+            </remarks>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.IDatabaseConnectionResolver.Resolve(Tooba.BuildingBlocks.ConnectionReference)">
+            <summary>
+            مقدار connection string متناظر با مرجع را برمی‌گرداند.
+            </summary>
+            <param name="reference">شناسهٔ منطقی اتصال، نه خودِ credential.</param>
+            <returns>رشتهٔ اتصال معتبر برای Npgsql؛ هرگز برای لاگ فنی در نظر گرفته نشود.</returns>
+            <exception cref="T:Tooba.BuildingBlocks.PlatformHttpException">وقتی مرجع خالی، ناشناخته، یا از نظر نحوی نامعتبر است.</exception>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.UuidV7">
+            <summary>
+            تولید UUID نسخهٔ ۷ (زمان‌محور RFC 9562) برای کلیدهای پایدار موجودیت‌ها.
+            روی .NET 8 از Guid big-endian استفاده می‌شود تا ترتیب بایتری با نسخهٔ ۷ سازگار بماند.
+            </summary>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.UuidV7.New">
+            <summary>
+            یک شناسهٔ UUID v7 جدید تولید می‌کند. نسخه در nibble بالای بایت ۶ برابر ۷ است.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.PlatformHttpException">
+            <summary>
+            درز نگاشت HTTP فنی برای Host؛ طبقه‌بندی استثنای دامنه نیست و جایگزین Audit نمی‌شود.
+            </summary>
+            <remarks>
+            جزئیات پیاده‌سازی و connection string نباید از طریق این نوع به کلاینت نشت کند.
+            کد پایدار خطا (در صورت وجود) برای ProblemDetails است، نه پیام داخلی.
+            </remarks>
+        </member>
+        <member name="M:Tooba.BuildingBlocks.PlatformHttpException.#ctor(System.Int32,System.String,System.String)">
+            <summary>
+            استثنای قابل‌نگاشت به پاسخ HTTP کنترل‌شده می‌سازد.
+            </summary>
+            <param name="statusCode">وضعیت HTTP هدف (مثلاً ۴۰۴ fail-closed یا ۵۰۳ پیکربندی ناقص).</param>
+            <param name="title">عنوان عمومی قابل‌نمایش؛ نباید مسیر فایل یا SQL باشد.</param>
+            <param name="errorCode">کد پایدار اختیاری برای کلاینت‌های پلتفرم.</param>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.PlatformHttpException.StatusCode">
+            <summary>
+            وضعیت HTTP که Host باید بنویسد.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.PlatformHttpException.Title">
+            <summary>
+            عنوان ProblemDetails؛ پیام فنی داخلی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.BuildingBlocks.PlatformHttpException.ErrorCode">
+            <summary>
+            شناسهٔ پایدار خطا (مثلاً <c>platform.resolution.failed</c>) یا تهی برای خطای عمومی.
+            </summary>
+        </member>
+        <member name="T:Tooba.BuildingBlocks.ToobaTelemetry">
+            <summary>
+            نام‌های پایدار منبع Activity و Meter برای OpenTelemetry در کل فرآیند Tooba.
+            لاگ فنی و رویداد Audit کسب‌وکار از هم جدا می‌مانند؛ این نوع فقط تله‌متری فنی است.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaTelemetry.ActivitySourceName">
+            <summary>
+            نام ActivitySource ثبت‌شده در Host برای tracing.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaTelemetry.MeterName">
+            <summary>
+            نام Meter ثبت‌شده در Host برای metrics.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaTelemetry.ActivitySource">
+            <summary>
+            منبع spanهای سفارشی Tooba؛ مسیرهای health/ready نباید نویز tracing تولید کنند.
+            </summary>
+        </member>
+        <member name="F:Tooba.BuildingBlocks.ToobaTelemetry.Meter">
+            <summary>
+            Meter سفارشی Tooba برای شمارنده‌ها و quantiles فنی (نه KPI کسب‌وکار).
+            </summary>
+        </member>
+    </members>
+</doc>

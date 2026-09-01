@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.PageComposition.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.PageComposition.Domain.PageKeys">
+            <summary>کلید صفحهٔ پشتیبانی‌شده در نسخهٔ پایه.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageKeys.Home">
+            <summary>صفحهٔ خانه.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Domain.PageCompositionTenantIds">
+            <summary>شناسهٔ پایدار Tenant برای Page Composition.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageCompositionTenantIds.StoreAlpha">
+            <summary>Tenant توسعهٔ store-alpha.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageCompositionTenantIds.StoreBeta">
+            <summary>Tenant توسعهٔ store-beta برای تست جداسازی.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageCompositionTenantIds.FromTenantKey(System.String)">
+            <summary>کلید Tenant پیکربندی‌شده را به Guid پایدار نگاشت می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Domain.SectionCatalog">
+            <summary>کاتالوگ ثابت انواع section تأییدشده.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.Hero">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.Stories">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.CategoryGrid">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.ProductRailFlash">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.BestSellers">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.ProductRailMostViewed">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.MiddleBanners">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.Brands">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.NewestProducts">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.CustomerReviews">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.LatestArticles">
+            <summary>نوع section.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.DefaultVariant">
+            <summary>variant پیش‌فرض.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.TitleMaxLength">
+            <summary>حداکثر طول عنوان config.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.ItemCountMin">
+            <summary>حداقل itemCount.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.ItemCountMax">
+            <summary>حداکثر itemCount.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.SectionCatalog.HrefMaxLength">
+            <summary>حداکثر طول href.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.SectionCatalog.AllSectionTypes">
+            <summary>همهٔ انواع section ثابت.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.SectionCatalog.DefaultHomeSectionTypes">
+            <summary>ترتیب پیش‌فرض sectionهای خانه.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.SectionCatalog.GetAllowedVariants(System.String)">
+            <summary>variantهای مجاز برای یک نوع section.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.SectionCatalog.EnsureKnownSectionType(System.String)">
+            <summary>نوع section ناشناخته را رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.SectionCatalog.EnsureAllowedVariant(System.String,System.String)">
+            <summary>variant را برای نوع section اعتبارسنجی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.SectionCatalog.ValidateAndNormalizeConfiguration(System.String,System.String)">
+            <summary>JSON config امن را اعتبارسنجی و نرمال می‌کند.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.SectionCatalog.ConfigSchemaMetadata">
+            <summary>متادیتای schema config برای catalog API.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Domain.PageDefinition">
+            <summary>تعریف صفحهٔ قابل ترکیب برای یک Tenant/locale.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageDefinition.PageKeyMaxLength">
+            <summary>حداکثر طول PageKey.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageDefinition.LocaleMaxLength">
+            <summary>حداکثر طول locale.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.PageDefinitionId">
+            <summary>شناسهٔ پایدار تعریف صفحه.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.PageKey">
+            <summary>کلید صفحه مثل home.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.TenantId">
+            <summary>Tenant مالک.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.Locale">
+            <summary>locale اختیاری؛ null یعنی همه localeها.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.VersionToken">
+            <summary>توکن همزمانی.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageDefinition.Sections">
+            <summary>sectionهای صفحه.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.CreateDefaultHome(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>تعریف صفحهٔ home با sectionهای پیش‌فرض می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.ReorderSections(System.Collections.Generic.IReadOnlyList{System.Guid},System.DateTimeOffset)">
+            <summary>sectionها را با شناسه‌های داده‌شده مرتب می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.SetSectionVisibility(System.Guid,System.Boolean,System.DateTimeOffset)">
+            <summary>نمایش section را تغییر می‌دهد.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.UpdateSectionConfiguration(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>پیکربندی section را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.UpdateSectionVariant(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>variant section را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.AddApprovedSection(System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>section تأییدشدهٔ جدید اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.RemoveSection(System.Guid,System.DateTimeOffset)">
+            <summary>section را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.RestoreDefaultSections(System.DateTimeOffset)">
+            <summary>sectionهای پیش‌فرض خانه را بازمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageDefinition.AttachSections(System.Collections.Generic.IEnumerable{Tooba.PageComposition.Domain.PageSection})">
+            <summary>sectionهای بارگذاری‌شده را به aggregate متصل می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Domain.PageSection">
+            <summary>یک section در ترکیب صفحه.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageSection.SectionTypeMaxLength">
+            <summary>حداکثر طول SectionType.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageSection.VariantMaxLength">
+            <summary>حداکثر طول Variant.</summary>
+        </member>
+        <member name="F:Tooba.PageComposition.Domain.PageSection.ConfigurationJsonMaxLength">
+            <summary>حداکثر طول ConfigurationJson.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.PageSectionId">
+            <summary>شناسهٔ پایدار section.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.PageDefinitionId">
+            <summary>شناسهٔ PageDefinition والد.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.SectionType">
+            <summary>نوع section از کاتالوگ ثابت.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.DisplayOrder">
+            <summary>ترتیب نمایش.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.IsVisible">
+            <summary>آیا section قابل نمایش است.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.Variant">
+            <summary>variant تأییدشده.</summary>
+        </member>
+        <member name="P:Tooba.PageComposition.Domain.PageSection.ConfigurationJson">
+            <summary>پیکربندی JSON امن.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageSection.Create(System.Guid,System.String,System.String,System.Int32,System.String,System.DateTimeOffset)">
+            <summary>section جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageSection.SetDisplayOrder(System.Int32,System.DateTimeOffset)">
+            <summary>ترتیب نمایش را تنظیم می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageSection.SetVisibility(System.Boolean,System.DateTimeOffset)">
+            <summary>visibility را تغییر می‌دهد.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageSection.UpdateConfiguration(System.String,System.DateTimeOffset)">
+            <summary>پیکربندی را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Domain.PageSection.UpdateVariant(System.String,System.DateTimeOffset)">
+            <summary>variant را به‌روزرسانی می‌کند.</summary>
+        </member>
+    </members>
+</doc>

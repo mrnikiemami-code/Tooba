@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.ProductQnA.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.ProductQnA.Application.SubmitProductQuestion">
+            <summary>ورودی ثبت پرسش؛ هویت Actor و نام عمومی از سرور تأمین می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.SubmitProductQuestion.#ctor(System.Guid,System.String)">
+            <summary>ورودی ثبت پرسش؛ هویت Actor و نام عمومی از سرور تأمین می‌شود.</summary>
+        </member>
+        <member name="T:Tooba.ProductQnA.Application.PublishedQaItem">
+            <summary>DTO عمومی و امن پرسش Published با پاسخ Published اختیاری.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.PublishedQaItem.#ctor(System.Guid,System.String,System.String,System.DateTimeOffset,System.String,System.String,System.Nullable{System.DateTimeOffset})">
+            <summary>DTO عمومی و امن پرسش Published با پاسخ Published اختیاری.</summary>
+        </member>
+        <member name="T:Tooba.ProductQnA.Application.PublishedQaPage">
+            <summary>صفحهٔ عمومی پرسش‌های Published.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.PublishedQaPage.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.ProductQnA.Application.PublishedQaItem},System.Int32,System.Int32,System.Int64)">
+            <summary>صفحهٔ عمومی پرسش‌های Published.</summary>
+        </member>
+        <member name="T:Tooba.ProductQnA.Application.IProductQaDirectory">
+            <summary>قابلیت کاربردی ثبت و خواندن عمومی پرسش‌های محصول.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.IProductQaDirectory.SubmitQuestionAsync(System.Guid,Tooba.ProductQnA.Application.SubmitProductQuestion,System.Threading.CancellationToken)">
+            <summary>پرسش را برای Actor نشست ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.IProductQaDirectory.GetPublishedAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>صفحهٔ Published محصول را با slug برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.IProductQaDirectory.CountPublishedAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>شمارش Published برای نشان PDP.</summary>
+        </member>
+        <member name="M:Tooba.ProductQnA.Application.IProductQaDirectory.PublishQuestionWithAnswerAsync(System.Guid,System.Guid,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>پرسش و پاسخ Published را برای دانهٔ توسعه منتشر می‌کند.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Fulfillment.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Fulfillment.Infrastructure.OpenFulfillmentUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.OpenFulfillmentUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory">
+            <summary>
+            ارکستراسیون fulfillment در schema fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.#ctor(Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext,Tooba.Fulfillment.Application.IFulfillmentUseCaseGuard,Tooba.Order.Application.IOrderFulfillmentReader,Tooba.Fulfillment.Application.IFulfillmentInventoryGateway,Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation)">
+            <summary>
+            دایرکتوری را به schema fulfillment و درز Order/Inventory وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.CreateFromPaidSellerOrdersAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            از رویداد payment.succeeded با dedup inbox، fulfillment idempotent می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.GetBySellerOrderAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.ListForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.ListAllAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.ListForCheckoutAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.MarkProcessingAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.MarkPackedAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.CreateShipmentAsync(System.Guid,System.Guid,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Fulfillment.Application.ShipmentLineCommand},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.AssignTrackingAsync(System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.DispatchShipmentAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentDirectory.DeliverShipmentAsync(System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation">
+            <summary>
+            متریک‌های fulfillment بدون PII.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.#ctor">
+            <summary>
+            متریک‌های in-process Fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordCreated">
+            <summary>
+            ثبت ایجاد fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordTransition(System.String)">
+            <summary>
+            ثبت انتقال وضعیت fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordShipmentCreated">
+            <summary>
+            ثبت ایجاد محموله.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordTrackingAssigned">
+            <summary>
+            ثبت تخصیص tracking.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordDispatched">
+            <summary>
+            ثبت dispatch محموله.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInstrumentation.RecordDelivered">
+            <summary>
+            ثبت تحویل محموله.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentInventoryGateway">
+            <summary>
+            مصرف رزرو موجودی از طریق قرارداد Inventory.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInventoryGateway.#ctor(Tooba.Inventory.Application.IInventoryDirectory)">
+            <summary>
+            gateway را به قرارداد Inventory وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentInventoryGateway.ConsumeReservationAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentModule">
+            <summary>
+            ماژول Fulfillment: ارکستراسیون ارسال پس از Paid. سفارش و موجودی مستقیم اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.FulfillmentModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Fulfillment. سفارش را مستقیم به‌روز نمی‌کند؛ ترجمه فقط Integration پایدار است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentPaymentSucceededHandler">
+            <summary>
+            مصرف‌کننده payment.succeeded.v1 برای ایجاد idempotent fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentPaymentSucceededHandler.#ctor(Tooba.Fulfillment.Infrastructure.FulfillmentDirectory)">
+            <summary>
+            handler را به دایرکتوری fulfillment وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentPaymentSucceededHandler.HandleAsync(Tooba.Payment.Application.PaymentSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.FulfillmentReturnBridge">
+            <summary>
+            snapshot تحویل برای Returns بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentReturnBridge.#ctor(Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext)">
+            <summary>پل return را به schema fulfillment وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.FulfillmentReturnBridge.GetEligibilityAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext">
+            <summary>
+            DbContext مالک schema <c>fulfillment</c>. سفارش و موجودی را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.Schema">
+            <summary>
+            schema اختصاصی Fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.Fulfillments">
+            <summary>
+            واحدهای fulfillment.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.Items">
+            <summary>
+            خطوط fulfillment.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.Shipments">
+            <summary>
+            محموله‌ها.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.ShipmentItems">
+            <summary>
+            خطوط محموله.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.PaymentInbox">
+            <summary>
+            dedup رویداد payment.succeeded برای ایجاد fulfillment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContextFactory">
+            <summary>
+            کارخانهٔ زمان طراحی مهاجرت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentPaymentInboxRecord">
+            <summary>
+            dedup رویداد payment.succeeded برای ایجاد fulfillment.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentPaymentInboxRecord.EventId">
+            <summary>
+            شناسهٔ یکتا رویداد integration.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentPaymentInboxRecord.PaymentId">
+            <summary>
+            پرداخت مرجع.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentPaymentInboxRecord.ProcessedAt">
+            <summary>
+            زمان پردازش inbox.
+            </summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Infrastructure.Persistence.Migrations.InitialFulfillment">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.Migrations.InitialFulfillment.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.Migrations.InitialFulfillment.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Infrastructure.Persistence.Migrations.InitialFulfillment.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

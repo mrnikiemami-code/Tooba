@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Notification.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Notification.Application.CreateNotificationCommand">
+            <summary>
+            فرمان ایجاد idempotent اعلان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.CreateNotificationCommand.#ctor(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.String,System.Object,System.String,System.String,System.String)">
+            <summary>
+            فرمان ایجاد idempotent اعلان.
+            </summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.NotificationRecipientQuery">
+            <summary>
+            فیلتر فهرست اعلان‌های یک گیرنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationRecipientQuery.#ctor(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Int32,System.Int32,System.String)">
+            <summary>
+            فیلتر فهرست اعلان‌های یک گیرنده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.NotificationListItemDto">
+            <summary>
+            آیتم فهرست اعلان با عنوان/متن محلی‌سازی‌شده در زمان خواندن.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationListItemDto.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Nullable{System.DateTimeOffset},System.DateTimeOffset,System.String)">
+            <summary>
+            آیتم فهرست اعلان با عنوان/متن محلی‌سازی‌شده در زمان خواندن.
+            </summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.NotificationListPage">
+            <summary>
+            صفحهٔ فهرست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationListPage.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Notification.Application.NotificationListItemDto},System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>
+            صفحهٔ فهرست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.INotificationDirectory">
+            <summary>
+            دایرکتوری اعلان‌های تراکنشی پایدار.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.CreateIfAbsentAsync(Tooba.Notification.Application.CreateNotificationCommand,System.Threading.CancellationToken)">
+            <summary>اگر SourceEventId تکراری باشد ایجاد نمی‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.ListAsync(Tooba.Notification.Application.NotificationRecipientQuery,System.Threading.CancellationToken)">
+            <summary>فهرست گیرنده به‌ترتیب جدیدترین.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.UnreadCountAsync(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>تعداد خوانده‌نشدهٔ گیرنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.MarkReadAsync(System.Guid,Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>علامت خوانده‌شدن یک اعلان متعلق به گیرنده؛ idempotent.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.MarkAllReadAsync(Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>همهٔ خوانده‌نشده‌های گیرنده را می‌خواند؛ idempotent.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.INotificationDirectory.SoftDeleteAsync(System.Guid,Tooba.Notification.Domain.NotificationRecipientKind,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>حذف نرم اعلان متعلق به گیرنده.</summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.NotificationTargetRoutes">
+            <summary>
+            مسیرهای نسبی امن برای deep-link اعلان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.RequireAllowed(System.String)">
+            <summary>مسیر نسبی allowlist را اعتبارسنجی و نرمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.CustomerOrder(System.Guid)">
+            <summary>مسیر سفارش مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.CustomerPaymentResult(System.Guid)">
+            <summary>مسیر نتیجهٔ پرداخت مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.SellerOrder(System.Guid)">
+            <summary>مسیر سفارش فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.SellerReturn(System.Guid)">
+            <summary>مسیر مرجوعی فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.CustomerReturn(System.Guid)">
+            <summary>مسیر مرجوعی مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.CustomerTicket(System.Guid)">
+            <summary>مسیر تیکت پشتیبانی مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.SellerTicket(System.Guid)">
+            <summary>مسیر تیکت پشتیبانی فروشنده.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationTargetRoutes.CustomerWallet">
+            <summary>مسیر کیف پول مشتری.</summary>
+        </member>
+        <member name="T:Tooba.Notification.Application.NotificationCopy">
+            <summary>
+            انواع معنایی اعلان و کپی محلی در زمان خواندن.
+            </summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.PaymentSucceeded">
+            <summary>پرداخت موفق.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.PaymentFailed">
+            <summary>پرداخت ناموفق.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.OrderPaidSeller">
+            <summary>سفارش پرداخت‌شده برای فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.FulfillmentCreated">
+            <summary>ایجاد fulfillment.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.ShipmentDispatched">
+            <summary>ارسال محموله.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.ReturnRequested">
+            <summary>درخواست مرجوعی.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.ReturnApproved">
+            <summary>تأیید مرجوعی.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.RefundSucceeded">
+            <summary>موفقیت refund.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.SupportAdminReply">
+            <summary>پاسخ عمومی پشتیبانی از Admin.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.WalletGiftCardRedeemed">
+            <summary>بازخرید کارت هدیه به کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.WalletAdminAdjustment">
+            <summary>تعدیل Admin روی کیف پول مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.WalletPaymentSucceeded">
+            <summary>پرداخت موفق سفارش از کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Notification.Application.NotificationCopy.WalletRefundCredited">
+            <summary>اعتبار refund به کیف پول.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationCopy.CategoryOf(System.String)">
+            <summary>دستهٔ فیلتر UI (order/offer/ticket) از نوع معنایی.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationCopy.Resolve(System.String,System.String,System.String)">
+            <summary>عنوان و متن را از Type و payload در locale درخواستی می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Notification.Application.NotificationCopy.ToPayloadJson(System.Object)">
+            <summary>payload امن JSON می‌سازد.</summary>
+        </member>
+    </members>
+</doc>

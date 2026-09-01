@@ -1,0 +1,289 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Fulfillment.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Fulfillment.Domain.FulfillmentStatus">
+            <summary>
+            وضعیت واحد fulfillment. با وضعیت تجاری Order یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.ReadyToFulfill">
+            <summary>پس از Paid و آماده عملیات.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Processing">
+            <summary>در حال پردازش انبار.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Packed">
+            <summary>بسته‌بندی شده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Dispatched">
+            <summary>حداقل یک محموله dispatch شده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.InTransit">
+            <summary>در مسیر تحویل.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Delivered">
+            <summary>تحویل نهایی.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Failed">
+            <summary>شکست عملیاتی.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.FulfillmentStatus.Cancelled">
+            <summary>لغو شده.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.ShipmentStatus">
+            <summary>
+            وضعیت محموله. Order نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.Created">
+            <summary>ایجاد شده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.Dispatched">
+            <summary>dispatch شده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.InTransit">
+            <summary>در مسیر.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.Delivered">
+            <summary>تحویل شده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.Failed">
+            <summary>شکست خورده.</summary>
+        </member>
+        <member name="F:Tooba.Fulfillment.Domain.ShipmentStatus.Cancelled">
+            <summary>لغو شده.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.FulfillmentItem">
+            <summary>
+            خط fulfillment با snapshot تعداد سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.FulfillmentItemId">
+            <summary>شناسه خط fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.FulfillmentId">
+            <summary>fulfillment مالک.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.OrderLineId">
+            <summary>شناسه خط سفارش مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.QuantityOrdered">
+            <summary>تعداد سفارش‌داده‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.QuantityShipped">
+            <summary>تعداد dispatch‌شده تجمعی.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.ReservationId">
+            <summary>رزرو موجودی مرجع؛ FK Inventory نیست.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentItem.ReservationConsumed">
+            <summary>آیا رزرو مصرف شده است.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentItem.MarkReservationConsumed">
+            <summary>رزرو را مصرف‌شده علامت می‌زند.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.FulfillmentUnit">
+            <summary>
+            واحد fulfillment برای یک SellerOrder پرداخت‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.SellerOrderId">
+            <summary>سفارش فروشنده مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.PlacedByUserId">
+            <summary>خریدار.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.Status">
+            <summary>وضعیت عملیاتی.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.RecipientName">
+            <summary>snapshot گیرنده.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.ContactMobile">
+            <summary>snapshot موبایل.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.ProvinceName">
+            <summary>snapshot استان.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.CityName">
+            <summary>snapshot شهر.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.PostalAddress">
+            <summary>snapshot آدرس.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.PostalCode">
+            <summary>snapshot کدپستی.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.ShippingMethodCode">
+            <summary>snapshot روش ارسال.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.ShippingMethodLabel">
+            <summary>snapshot برچسب روش ارسال.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.UpdatedAt">
+            <summary>آخرین به‌روزرسانی.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.Items">
+            <summary>خطوط fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.Shipments">
+            <summary>محموله‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentUnit.DomainEvents">
+            <summary>رویدادهای دامنه.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.CreateFromPaidOrder(System.Guid,System.Guid,System.Guid,System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Guid,System.Int32,System.Nullable{System.Guid}}},System.DateTimeOffset)">
+            <summary>
+            fulfillment را از snapshot Paid می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.AttachLoadedItems(System.Collections.Generic.IEnumerable{Tooba.Fulfillment.Domain.FulfillmentItem})">
+            <summary>خطوط بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.AttachLoadedShipments(System.Collections.Generic.IEnumerable{Tooba.Fulfillment.Domain.Shipment})">
+            <summary>محموله‌های بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.MarkProcessing(System.DateTimeOffset)">
+            <summary>به Processing می‌رود.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.MarkPacked(System.DateTimeOffset)">
+            <summary>به Packed می‌رود.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.CreateShipment(System.String,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Guid,System.Int32}},System.DateTimeOffset)">
+            <summary>محموله جدید ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.ApplyShipmentDispatched(System.Guid,System.DateTimeOffset)">
+            <summary>پس از dispatch محموله وضعیت را به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.ApplyShipmentDelivered(System.Guid,System.DateTimeOffset)">
+            <summary>محموله را Delivered علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentUnit.AssignTracking(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>ردیابی را idempotent ثبت می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.Shipment">
+            <summary>
+            محموله fulfillment. چند محموله برای یک fulfillment مجاز است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.ShipmentId">
+            <summary>شناسه محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.FulfillmentId">
+            <summary>fulfillment مالک.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.Status">
+            <summary>وضعیت محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.CarrierDisplayName">
+            <summary>نام نمایشی carrier.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.TrackingReference">
+            <summary>کد/مرجع ردیابی.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.DispatchedAt">
+            <summary>زمان dispatch.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.DeliveredAt">
+            <summary>زمان تحویل.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.Shipment.Items">
+            <summary>خطوط محموله.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.Shipment.AttachLoadedItems(System.Collections.Generic.IEnumerable{Tooba.Fulfillment.Domain.ShipmentItem})">
+            <summary>خطوط محموله بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.ShipmentItem">
+            <summary>
+            خط محموله.
+            </summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentItem.ShipmentItemId">
+            <summary>شناسه خط محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentItem.ShipmentId">
+            <summary>شناسه shipment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentItem.OrderLineId">
+            <summary>خط سفارش.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentItem.Quantity">
+            <summary>تعداد.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent">
+            <summary>رویداد ایجاد fulfillment.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.FulfillmentCreatedDomainEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent">
+            <summary>رویداد dispatch محموله.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent.ShipmentId">
+            <summary>شناسه محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDispatchedDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="T:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent">
+            <summary>رویداد تحویل محموله.</summary>
+        </member>
+        <member name="M:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent.FulfillmentId">
+            <summary>شناسه fulfillment.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent.ShipmentId">
+            <summary>شناسه محموله.</summary>
+        </member>
+        <member name="P:Tooba.Fulfillment.Domain.ShipmentDeliveredDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+    </members>
+</doc>

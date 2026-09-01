@@ -32,8 +32,9 @@ import {
   type AdminReceiptRow,
 } from "./admin-api";
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
+export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_FULFILLMENT_GRID_VIEW_KEY, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_CONTENT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_FULFILLMENT_GRID_VIEW_KEY, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
@@ -65,14 +66,6 @@ import {
   type PayoutRequestRow,
   type SettlementBalance,
 } from "../settlement/settlement-api";
-import {
-  createAdminArticle,
-  formatContentDate,
-  queryAdminContentArticlesGrid,
-  publishAdminArticle,
-  unpublishAdminArticle,
-  type AdminContentArticle,
-} from "../content/content-api";
 import {
   ADMIN_STORY_CAPABILITIES,
   StoryManagementScreen,
@@ -1114,189 +1107,6 @@ export function AdminPayoutQueueScreen() {
       gridId={ADMIN_PAYOUT_GRID_VIEW_KEY}
       testId="admin-payout-queue"
     />
-  );
-}
-
-/** مدیریت مقالات Content / بلاگ. */
-export function AdminContentScreen() {
-  const [reloadToken, setReloadToken] = useState(0);
-  const [showCreate, setShowCreate] = useState(false);
-  const [message, setMessage] = useState<string>();
-  const [draft, setDraft] = useState({
-    slug: "",
-    title: "",
-    excerpt: "",
-    body: "",
-    authorDisplayName: "تحریریه توبا",
-    category: "",
-    seoTitle: "",
-    seoDescription: "",
-  });
-
-  const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
-
-  const columns = useMemo((): GridColumnDef<AdminContentArticle>[] => [
-    {
-      id: "title",
-      header: "عنوان",
-      accessor: (row) => row.title,
-      cell: (row) => <strong className="line-clamp-2">{row.title}</strong>,
-      width: 220,
-      minWidth: 160,
-      maxWidth: 320,
-      sticky: "start",
-      filterKind: "text",
-      sortable: true,
-    },
-    {
-      id: "slug",
-      header: "نشانی صفحه",
-      accessor: (row) => row.slug,
-      cell: (row) => <span dir="ltr" className="font-mono text-xs">{row.slug}</span>,
-      width: 160,
-      minWidth: 120,
-      maxWidth: 220,
-    },
-    {
-      id: "status",
-      header: "وضعیت",
-      accessor: (row) => row.status,
-      cell: (row) => (
-        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${row.status === "Published" || row.status === "1" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-          {row.status === "Published" || row.status === "1" ? "منتشر" : "پیش‌نویس"}
-        </span>
-      ),
-      width: 110,
-      minWidth: 90,
-      maxWidth: 140,
-      filterKind: "status",
-    },
-    {
-      id: "category",
-      header: "دسته",
-      accessor: (row) => row.category ?? "",
-      cell: (row) => row.category ?? "—",
-      width: 120,
-      minWidth: 90,
-      maxWidth: 160,
-    },
-    {
-      id: "updated",
-      header: "به‌روزرسانی",
-      accessor: (row) => row.updatedAt,
-      cell: (row) => formatContentDate(row.updatedAt),
-      width: 130,
-      minWidth: 100,
-      maxWidth: 170,
-      sortable: true,
-    },
-    {
-      id: "actions",
-      header: "عملیات",
-      accessor: () => "",
-      cell: (row) => (
-        <span className="flex gap-2">
-          {row.status === "Published" || row.status === "1" ? (
-            <button type="button" className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs text-white" onClick={() => void unpublishAdminArticle(row.articleId).then(refresh)}>لغو انتشار</button>
-          ) : (
-            <button type="button" className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs text-white" onClick={() => void publishAdminArticle(row.articleId).then(refresh)}>انتشار</button>
-          )}
-        </span>
-      ),
-      width: 140,
-      minWidth: 120,
-      maxWidth: 180,
-    },
-  ], [refresh]);
-
-  const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
-  const queryFn = useCallback(
-    (query: GridServerQuery) => {
-      void reloadToken;
-      return queryAdminContentArticlesGrid(query);
-    },
-    [reloadToken],
-  );
-  const queryAdapter = useCallback(
-    async (query: GridServerQuery) =>
-      adminGridQueryAdapter(queryFn, undefined, (detail) => setMessage(detail))(query),
-    [queryFn],
-  );
-  const gridProps = useLegacyAdminGridDirectProps({
-    gridId: ADMIN_CONTENT_GRID_VIEW_KEY,
-    columns,
-    queryAdapter,
-    savedViewStore,
-  });
-
-  return (
-    <main data-testid="admin-content">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <PageHeading title="محتوا / بلاگ" description="ایجاد، انتشار و بهینه‌سازی جستجوی مقالات" />
-        <button type="button" className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white" onClick={() => setShowCreate(true)}>مقاله جدید</button>
-      </div>
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
-        <div className="border-b border-border px-5 py-3 text-sm text-muted">server GridQuery — Content articles</div>
-        <div className="p-2 md:p-4">
-          {message ? (
-            <ErrorState title="مقالات خوانده نشد" detail={message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
-          ) : (
-            <AppDataGrid<AdminContentArticle> {...gridProps} />
-          )}
-        </div>
-      </section>
-
-      {showCreate ? (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
-            <h2 className="mb-4 text-lg font-bold">ایجاد پیش‌نویس</h2>
-            <div className="space-y-3">
-              {([
-                ["slug", "نشانی صفحه"],
-                ["title", "عنوان"],
-                ["excerpt", "چکیده"],
-                ["body", "بدنه"],
-                ["authorDisplayName", "نویسنده"],
-                ["category", "دسته"],
-                ["seoTitle", "عنوان جستجو"],
-                ["seoDescription", "توضیح جستجو"],
-              ] as const).map(([key, label]) => (
-                <label key={key} className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{label}</span>
-                  {key === "body" || key === "excerpt" || key === "seoDescription" ? (
-                    <textarea
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      rows={key === "body" ? 5 : 2}
-                      value={draft[key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key]: e.target.value }))}
-                    />
-                  ) : (
-                    <input
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      value={draft[key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key]: e.target.value }))}
-                    />
-                  )}
-                </label>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>انصراف</button>
-              <button
-                type="button"
-                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => void createAdminArticle(draft).then((result) => {
-                  if (result.ok) { setShowCreate(false); refresh(); }
-                  else setMessage(result.message);
-                })}
-              >
-                ذخیره پیش‌نویس
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </main>
   );
 }
 

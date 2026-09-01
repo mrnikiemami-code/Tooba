@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AddressBook.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AddressBook.Domain.CustomerAddress">
+            <summary>
+            آدرس خصوصی یک مشتری برای تحویل/گیرنده. قیمت، موجودی و کلید سفارش را مالک نیست
+            و هویت سازمانی Party را جایگزین دفترچهٔ ارسال نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.RecipientNameMaxLength">
+            <summary>حداکثر طول نام گیرنده پس از trim.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.ContactMobileMinLength">
+            <summary>حداقل طول تماس پس از trim؛ قانون ملی ایران در هسته اعمال نمی‌شود.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.ContactMobileMaxLength">
+            <summary>حداکثر طول تماس پس از trim.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.CountryMaxLength">
+            <summary>حداکثر طول کد کشور ISO-مانند.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.DefaultCountry">
+            <summary>کشور پیش‌فرض وقتی درخواست مقدار نداده است.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.ProvinceNameMaxLength">
+            <summary>حداکثر طول نام استان/ایالت.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.CityNameMaxLength">
+            <summary>حداکثر طول نام شهر.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.PostalCodeMinLength">
+            <summary>حداقل طول کدپستی عمومی.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.PostalCodeMaxLength">
+            <summary>حداکثر طول کدپستی عمومی؛ رقم‌شمار ملی ایران اجباری نیست.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.PostalAddressMaxLength">
+            <summary>حداکثر طول خط نشانی.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.BuildingUnitMaxLength">
+            <summary>حداکثر طول واحد/ساختمان اختیاری.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Domain.CustomerAddress.LabelMaxLength">
+            <summary>حداکثر طول برچسب نمایشی اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.AddressId">
+            <summary>شناسهٔ پایدار ردیف دفترچه.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.OwnerUserId">
+            <summary>مالک سرورمحور؛ هرگز از بدنهٔ HTTP پذیرفته نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.RecipientName">
+            <summary>نام گیرندهٔ تحویل.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.ContactMobile">
+            <summary>شمارهٔ تماس گیرنده با محدودیت طول عمومی.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.Country">
+            <summary>کد کشور؛ پیش‌فرض <c>IR</c> است و قوانین اختصاصی بازار ایران را در هسته قفل نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.ProvinceName">
+            <summary>نام استان یا ایالت؛ برای دفترچه اختیاری است.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.CityName">
+            <summary>نام شهر الزامی.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.PostalCode">
+            <summary>کدپستی با محدودیت طول عمومی.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.PostalAddress">
+            <summary>خط نشانی پستی الزامی.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.BuildingUnit">
+            <summary>واحد یا پلاک ساختمان؛ اختیاری است.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.Label">
+            <summary>برچسب نمایشی مثل خانه/محل کار؛ اختیاری است.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.IsDefault">
+            <summary>آیا این ردیف پیش‌فرض مالک است؛ حداکثر یکی برای هر مالک.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Domain.CustomerAddress.UpdatedAt">
+            <summary>زمان آخرین ویرایش UTC.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Domain.CustomerAddress.Create(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.DateTimeOffset,System.Nullable{System.Guid})">
+            <summary>ردیف معتبر دفترچه را برای مالک مشخص می‌سازد.</summary>
+            <param name="ownerUserId">شناسهٔ Actor تأمین‌شده از Host.</param>
+            <param name="recipientName">نام گیرنده.</param>
+            <param name="contactMobile">تماس گیرنده.</param>
+            <param name="country">کشور؛ تهی یعنی پیش‌فرض <c>IR</c>.</param>
+            <param name="provinceName">استان اختیاری.</param>
+            <param name="cityName">شهر الزامی.</param>
+            <param name="postalCode">کدپستی عمومی.</param>
+            <param name="postalAddress">خط نشانی.</param>
+            <param name="buildingUnit">واحد اختیاری.</param>
+            <param name="label">برچسب اختیاری.</param>
+            <param name="isDefault">درخواست پیش‌فرض بودن؛ یکتایی در لایهٔ دایرکتوری اعمال می‌شود.</param>
+            <param name="now">زمان UTC ایجاد.</param>
+            <param name="addressId">شناسهٔ قطعی دانه؛ در مسیر عادی تولید می‌شود.</param>
+        </member>
+        <member name="M:Tooba.AddressBook.Domain.CustomerAddress.Update(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.DateTimeOffset)">
+            <summary>فیلدهای قابل ویرایش مالک را با همان قواعد اعتبارسنجی به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Domain.CustomerAddress.MarkDefault(System.DateTimeOffset)">
+            <summary>این ردیف را پیش‌فرض می‌کند؛ پاک‌سازی پیش‌فرض قبلی وظیفهٔ تراکنش دایرکتوری است.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Domain.CustomerAddress.ClearDefault(System.DateTimeOffset)">
+            <summary>وضعیت پیش‌فرض را برمی‌دارد بدون انتخاب جایگزین.</summary>
+        </member>
+    </members>
+</doc>

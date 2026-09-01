@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AccessControl.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AccessControl.Domain.AccessOwnerScopeKind">
+            <summary>محدودهٔ مالک نقش: پلتفرم یا فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessOwnerScopeKind.Platform">
+            <summary>نقش‌های پلتفرم / Admin.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessOwnerScopeKind.Seller">
+            <summary>نقش‌های یک فروشنده.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.AccessScopeKind">
+            <summary>انواع scope منبع تایپ‌شده؛ بدون expression آزاد.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.GlobalWithinOwner">
+            <summary>کل محدودهٔ مالک بدون محدودیت منبع.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.Category">
+            <summary>محدود به دسته.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.Product">
+            <summary>محدود به محصول.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.Brand">
+            <summary>محدود به برند.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.Warehouse">
+            <summary>محدود به انبار.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.Store">
+            <summary>محدود به فروشگاه.</summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Domain.AccessScopeKind.OrderSegment">
+            <summary>محدود به قطعهٔ سفارش.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.AccessRole">
+            <summary>نقش پویای Access Control.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.TenantId">
+            <summary>Tenant اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.OwnerScopeKind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.OwnerScopeId">
+            <summary>شناسهٔ مالک (مثلاً SellerPartyId).</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.Name">
+            <summary>نام نمایشی.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.Code">
+            <summary>کد پایدار.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.Description">
+            <summary>توضیح.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.IsSystem">
+            <summary>نقش سیستمی.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.IsMutable">
+            <summary>قابل ویرایش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.IsArchived">
+            <summary>بایگانی‌شده.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessRole.UpdatedAt">
+            <summary>زمان به‌روزرسانی.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.RolePermission">
+            <summary>مجوز متصل به نقش با scope اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.RoleId">
+            <summary>نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.PermissionId">
+            <summary>شناسهٔ کاتالوگ مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.ScopeKind">
+            <summary>گونهٔ scope.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.ScopeResourceId">
+            <summary>منبع scope.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.RolePermission.Enabled">
+            <summary>فعال.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.UserRoleAssignment">
+            <summary>انتساب نقش به کاربر در محدودهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.UserId">
+            <summary>کاربر.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.RoleId">
+            <summary>نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.OwnerScopeKind">
+            <summary>گونهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.OwnerScopeId">
+            <summary>شناسهٔ مالک.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.UserRoleAssignment.AssignedAt">
+            <summary>زمان تخصیص.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.PlatformSellerCeiling">
+            <summary>سقف مجوز قابل تفویض فروشنده توسط پلتفرم.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.PermissionId">
+            <summary>مجوز.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.ScopeKind">
+            <summary>گونهٔ scope سقف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.ScopeResourceId">
+            <summary>منبع scope سقف (مثلاً CategoryId).</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.Enabled">
+            <summary>فعال در سقف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.PlatformSellerCeiling.UpdatedAt">
+            <summary>زمان به‌روزرسانی.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Domain.AccessAuditEvent">
+            <summary>رویداد حسابرسی Access Control.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.Id">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.ActorUserId">
+            <summary>بازیگر.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.Action">
+            <summary>عمل.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.TargetType">
+            <summary>نوع هدف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.TargetId">
+            <summary>شناسهٔ هدف.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.SellerScopeId">
+            <summary>محدودهٔ فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.BeforeSummary">
+            <summary>خلاصهٔ قبل.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.AfterSummary">
+            <summary>خلاصهٔ بعد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.TraceId">
+            <summary>شناسهٔ ردیابی.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Domain.AccessAuditEvent.At">
+            <summary>زمان.</summary>
+        </member>
+    </members>
+</doc>

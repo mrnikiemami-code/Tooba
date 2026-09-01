@@ -1,0 +1,292 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Settlement.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Settlement.Infrastructure.FailClosedPayoutGateway">
+            <summary>
+            Production fail-closed وقتی درگاه payout واقعی پیکربندی نشده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Infrastructure.FailClosedPayoutGateway.ProviderCodeValue">
+            <summary>کد پایدار درگاه fail-closed.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.FailClosedPayoutGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.FailClosedPayoutGateway.PayoutAsync(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.FakePayoutGateway">
+            <summary>
+            درگاه payout آزمایشی. dev همیشه موفق می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.FakePayoutGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.FakePayoutGateway.PayoutAsync(System.Guid,System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.Persistence.Migrations.InitialSettlement">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.Migrations.InitialSettlement.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.Migrations.InitialSettlement.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.Migrations.InitialSettlement.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext">
+            <summary>
+            DbContext مالک schema <c>settlement</c>. سفارش و پرداخت را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.Schema">
+            <summary>
+            schema اختصاصی Settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.CommissionPolicies">
+            <summary>سیاست‌های کارمزد.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.SettlementAccounts">
+            <summary>حساب‌های تسویه.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.SettlementEntries">
+            <summary>سطرهای posted.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.SettlementStatements">
+            <summary>صورت‌حساب‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.SellerPayoutProfiles">
+            <summary>پروفایل payout فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.PayoutRequests">
+            <summary>درخواست‌های payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.PayoutAttempts">
+            <summary>تلاش‌های payout.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.PaymentInbox">
+            <summary>inbox payment.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.RefundInbox">
+            <summary>inbox refund.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.OutboxMessages">
+            <summary>Outbox همین ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContextFactory">
+            <summary>
+            کارخانهٔ زمان طراحی مهاجرت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.Persistence.SettlementDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.Persistence.SettlementPaymentInboxRecord">
+            <summary>
+            dedup inbox برای payment.succeeded در schema settlement.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementPaymentInboxRecord.EventId">
+            <summary>شناسه رویداد integration.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementPaymentInboxRecord.PaymentId">
+            <summary>پرداخت مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementPaymentInboxRecord.ProcessedAt">
+            <summary>زمان پردازش.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.Persistence.SettlementRefundInboxRecord">
+            <summary>
+            dedup inbox برای refund.succeeded در schema settlement.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementRefundInboxRecord.EventId">
+            <summary>شناسه رویداد integration.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementRefundInboxRecord.ReturnRequestId">
+            <summary>درخواست مرجوعی مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.Persistence.SettlementRefundInboxRecord.ProcessedAt">
+            <summary>زمان پردازش.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.OpenSettlementUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.OpenSettlementUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementDirectory">
+            <summary>
+            ارکستراسیون تسویه و payout در schema settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.#ctor(Tooba.Settlement.Infrastructure.Persistence.SettlementDbContext,Tooba.Settlement.Application.ISettlementUseCaseGuard,Tooba.Settlement.Application.ISettlementOrderReader,Tooba.Settlement.Application.ISettlementPaymentReader,Tooba.Settlement.Application.ISettlementReturnsReader,Tooba.Settlement.Application.IPayoutGateway,Tooba.Settlement.Infrastructure.SettlementInstrumentation)">
+            <summary>
+            دایرکتوری را به schema settlement و درز Order/Payment/Returns وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.AccrueFromPaymentAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.AdjustFromRefundAsync(System.Guid,System.Decimal,System.String,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.GetBalanceAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListEntriesAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListEntriesBySellerOrderIdsAsync(System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListStatementsAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.RequestPayoutAsync(Tooba.Settlement.Application.RequestPayoutCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.GetPayoutRequestAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListPayoutRequestsForSellerAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListAllBalancesAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ListPayoutQueueAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.ProcessPayoutAsync(Tooba.Settlement.Application.ProcessPayoutCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementDirectory.RetryPayoutAsync(Tooba.Settlement.Application.RetryPayoutCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementPaymentSucceededHandler">
+            <summary>
+            مصرف‌کننده payment.succeeded.v1 برای accrual idempotent.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementPaymentSucceededHandler.#ctor(Tooba.Settlement.Infrastructure.SettlementDirectory)">
+            <summary>handler را به دایرکتوری settlement وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementPaymentSucceededHandler.HandleAsync(Tooba.Payment.Application.PaymentSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementRefundSucceededHandler">
+            <summary>
+            مصرف‌کننده refund.succeeded.v1 برای adjustment idempotent.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementRefundSucceededHandler.#ctor(Tooba.Settlement.Infrastructure.SettlementDirectory)">
+            <summary>handler را به دایرکتوری settlement وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementRefundSucceededHandler.HandleAsync(Tooba.Returns.Application.RefundSucceededIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementInstrumentation">
+            <summary>
+            تله‌متری سبک Settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementInstrumentation.RecordEntryPosted">
+            <summary>posted entry ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementInstrumentation.RecordPayoutSucceeded">
+            <summary>payout موفق ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementInstrumentation.RecordPayoutFailed">
+            <summary>payout شکست‌خورده ثبت می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementModule">
+            <summary>
+            ماژول Settlement: accrual پس از Paid و payout marketplace. سفارش و پرداخت مستقیم اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.SettlementModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementOrderBridge">
+            <summary>
+            پل snapshot سفارش برای Settlement از درز Order.Application.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementOrderBridge.#ctor(Tooba.Order.Application.IOrderReturnReader)">
+            <summary>پل را به reader سفارش وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementOrderBridge.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Settlement. سفارش/پرداخت را مستقیم به‌روز نمی‌کند؛ ترجمه فقط Integration پایدار است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementPaymentBridge">
+            <summary>
+            پل snapshot پرداخت برای Settlement از درز Payment.Application.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementPaymentBridge.#ctor(Tooba.Payment.Application.IPaymentSettlementReader)">
+            <summary>پل را به reader پرداخت وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementPaymentBridge.GetPaymentAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementPaymentBridge.GetAllocationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Settlement.Infrastructure.SettlementReturnsBridge">
+            <summary>
+            پل snapshot refund برای Settlement از درز Returns.Application.
+            </summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementReturnsBridge.#ctor(Tooba.Returns.Application.IReturnSettlementReader)">
+            <summary>پل را به reader refund وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Settlement.Infrastructure.SettlementReturnsBridge.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

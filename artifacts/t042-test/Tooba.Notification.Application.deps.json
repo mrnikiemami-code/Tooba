@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Tooba.Notification.Application/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0",
+          "Tooba.Notification.Domain": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Notification.Application.dll": {}
+        }
+      },
+      "Tooba.BuildingBlocks/1.0.0": {
+        "runtime": {
+          "Tooba.BuildingBlocks.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Tooba.Notification.Domain/1.0.0": {
+        "dependencies": {
+          "Tooba.BuildingBlocks": "1.0.0"
+        },
+        "runtime": {
+          "Tooba.Notification.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Tooba.Notification.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.BuildingBlocks/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Tooba.Notification.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

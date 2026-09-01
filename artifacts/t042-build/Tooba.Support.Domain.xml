@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Support.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Support.Domain.TicketStatus">
+            <summary>وضعیت چرخهٔ تیکت پشتیبانی.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.Open">
+            <summary>باز و در صف بررسی.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.InProgress">
+            <summary>در حال بررسی توسط اپراتور.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.WaitingForCustomer">
+            <summary>در انتظار پاسخ مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.WaitingForSeller">
+            <summary>در انتظار پاسخ فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.Resolved">
+            <summary>حل‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketStatus.Closed">
+            <summary>بسته‌شده.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.TicketPriority">
+            <summary>اولویت تیکت.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketPriority.Low">
+            <summary>پایین.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketPriority.Normal">
+            <summary>عادی.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketPriority.High">
+            <summary>بالا.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.TicketCategory">
+            <summary>دستهٔ موضوع تیکت.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketCategory.Order">
+            <summary>سفارش.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketCategory.Payment">
+            <summary>پرداخت.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketCategory.Return">
+            <summary>مرجوعی.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketCategory.Product">
+            <summary>محصول.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketCategory.Other">
+            <summary>سایر.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.RequesterKind">
+            <summary>نقش درخواست‌کنندهٔ تیکت.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.RequesterKind.Customer">
+            <summary>مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.RequesterKind.Seller">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.RequesterKind.Admin">
+            <summary>مدیر.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.AuthorKind">
+            <summary>نقش نویسندهٔ پیام.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.AuthorKind.Customer">
+            <summary>مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.AuthorKind.Seller">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.AuthorKind.Admin">
+            <summary>مدیر.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.AuthorKind.System">
+            <summary>سیستم.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.SupportTicket">
+            <summary>تجمیع تیکت پشتیبانی در schema مستقل support.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.SupportTicket.SubjectMaxLength">
+            <summary>حداکثر طول موضوع.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.SupportTicket.IdempotencyKeyMaxLength">
+            <summary>حداکثر طول کلید idempotency.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.SupportTicket.RelatedEntityTypeMaxLength">
+            <summary>حداکثر طول نوع موجودیت مرتبط.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.TicketId">
+            <summary>شناسهٔ پایدار تیکت.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.RequesterKind">
+            <summary>نقش درخواست‌کننده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.RequesterActorUserId">
+            <summary>Actor درخواست‌کننده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.RequesterPartyId">
+            <summary>Party اختیاری درخواست‌کننده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.SellerPartyId">
+            <summary>کلید scope فروشنده برای تیکت‌های Seller.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.Subject">
+            <summary>موضوع تیکت.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.Category">
+            <summary>دسته.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.Priority">
+            <summary>اولویت.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.Status">
+            <summary>وضعیت.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.AssignedOperatorActorUserId">
+            <summary>اپراتور ارجاع‌شده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.RelatedEntityType">
+            <summary>نوع موجودیت مرتبط (مثلاً Order).</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.RelatedEntityId">
+            <summary>شناسهٔ موجودیت مرتبط؛ بدون JOIN.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.IdempotencyKey">
+            <summary>کلید idempotency ایجاد؛ اختیاری و یکتا.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.UpdatedAt">
+            <summary>زمان آخرین به‌روزرسانی UTC.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.ClosedAt">
+            <summary>زمان بسته‌شدن UTC.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.LastMessageAt">
+            <summary>زمان آخرین پیام UTC.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.SupportTicket.MessageCount">
+            <summary>شمارش پیام‌ها.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.Create(Tooba.Support.Domain.RequesterKind,System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,Tooba.Support.Domain.TicketCategory,Tooba.Support.Domain.TicketPriority,System.String,System.Nullable{System.Guid},System.String,System.DateTimeOffset)">
+            <summary>تیکت Open معتبر می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.CreateSeeded(System.Guid,Tooba.Support.Domain.RequesterKind,System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,Tooba.Support.Domain.TicketCategory,Tooba.Support.Domain.TicketPriority,Tooba.Support.Domain.TicketStatus,System.String,System.Nullable{System.Guid},System.String,System.DateTimeOffset)">
+            <summary>تیکت با شناسهٔ ثابت برای دانهٔ توسعه.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.RegisterMessage(System.DateTimeOffset)">
+            <summary>پس از افزودن پیام، شمارنده و زمان را به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.CloseByRequester(System.DateTimeOffset)">
+            <summary>وضعیت را برای مشتری/فروشنده می‌بندد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.ReopenByRequester(System.DateTimeOffset)">
+            <summary>تیکت Closed را دوباره باز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.ApplyAdminPatch(System.Nullable{Tooba.Support.Domain.TicketStatus},System.Nullable{Tooba.Support.Domain.TicketPriority},System.Nullable{System.Guid},System.Boolean,System.DateTimeOffset)">
+            <summary>به‌روزرسانی وضعیت/اولویت/ارجاع توسط Admin.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.SupportTicket.MarkWaitingAfterAdminPublicReply(System.DateTimeOffset)">
+            <summary>پس از پاسخ عمومی Admin وضعیت را به انتظار درخواست‌کننده می‌برد.</summary>
+        </member>
+        <member name="T:Tooba.Support.Domain.TicketMessage">
+            <summary>پیام تیکت پشتیبانی.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketMessage.BodyMaxLength">
+            <summary>حداکثر طول بدنه.</summary>
+        </member>
+        <member name="F:Tooba.Support.Domain.TicketMessage.IdempotencyKeyMaxLength">
+            <summary>حداکثر طول کلید idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.MessageId">
+            <summary>شناسهٔ پایدار پیام.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.TicketId">
+            <summary>تیکت والد.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.AuthorKind">
+            <summary>نقش نویسنده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.AuthorActorUserId">
+            <summary>Actor نویسنده.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.Body">
+            <summary>متن پیام.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.IsInternalNote">
+            <summary>یادداشت داخلی فقط برای Admin.</summary>
+        </member>
+        <member name="P:Tooba.Support.Domain.TicketMessage.IdempotencyKey">
+            <summary>کلید idempotency پاسخ؛ اختیاری و یکتا.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.TicketMessage.Create(System.Guid,Tooba.Support.Domain.AuthorKind,System.Guid,System.String,System.Boolean,System.String,System.DateTimeOffset)">
+            <summary>پیام معتبر می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Domain.TicketMessage.CreateSeeded(System.Guid,System.Guid,Tooba.Support.Domain.AuthorKind,System.Guid,System.String,System.Boolean,System.String,System.DateTimeOffset)">
+            <summary>پیام با شناسهٔ ثابت برای دانهٔ توسعه.</summary>
+        </member>
+    </members>
+</doc>

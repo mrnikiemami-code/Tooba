@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wishlist.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wishlist.Application.WishlistEntry">
+            <summary>نمای خصوصی یک ردیف علاقه‌مندی متعلق به کاربر جاری.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.WishlistEntry.#ctor(System.Guid,System.Guid,System.DateTimeOffset)">
+            <summary>نمای خصوصی یک ردیف علاقه‌مندی متعلق به کاربر جاری.</summary>
+        </member>
+        <member name="T:Tooba.Wishlist.Application.WishlistAddResult">
+            <summary>نتیجهٔ افزودن idempotent که مشخص می‌کند ردیف تازه ساخته شده است یا خیر.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.WishlistAddResult.#ctor(System.Guid,System.Boolean)">
+            <summary>نتیجهٔ افزودن idempotent که مشخص می‌کند ردیف تازه ساخته شده است یا خیر.</summary>
+        </member>
+        <member name="T:Tooba.Wishlist.Application.IWishlistDirectory">
+            <summary>قرارداد کاربردی Wishlist؛ تمام عملیات با شناسهٔ Actor تأمین‌شده از Host محدود می‌شوند.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.IWishlistDirectory.AddAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>محصول Published را idempotent برای Actor می‌افزاید.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.IWishlistDirectory.RemoveAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>مرجع محصول را برای Actor حذف می‌کند و نبودن آن خطا نیست.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.IWishlistDirectory.ListAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فهرست خصوصی Actor را به ترتیب جدیدترین برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.IWishlistDirectory.GetMembershipAsync(System.Guid,System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>عضویت مجموعهٔ محصولات را در یک خواندن گروهی برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Wishlist.Application.IWishlistDirectory.CountAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>تعداد ردیف‌های خصوصی Actor را برمی‌گرداند.</summary>
+        </member>
+    </members>
+</doc>

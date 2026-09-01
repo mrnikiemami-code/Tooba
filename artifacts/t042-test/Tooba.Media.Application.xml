@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Media.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Media.Application.MediaPagedResult`1">
+            <summary>نتیجهٔ صفحه‌بندی‌شدهٔ عمومی Media.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.MediaPagedResult`1.#ctor(System.Collections.Generic.IReadOnlyList{`0},System.Int32,System.Int32,System.Int64)">
+            <summary>نتیجهٔ صفحه‌بندی‌شدهٔ عمومی Media.</summary>
+        </member>
+        <member name="T:Tooba.Media.Application.MediaAssetInfo">
+            <summary>DTO عمومی فرادادهٔ دارایی رسانه برای Admin و ارجاعات مات.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.MediaAssetInfo.#ctor(System.Guid,System.String,System.String,System.Int64,System.Nullable{System.Int32},System.Nullable{System.Int32},System.DateTimeOffset,System.String)">
+            <summary>DTO عمومی فرادادهٔ دارایی رسانه برای Admin و ارجاعات مات.</summary>
+        </member>
+        <member name="T:Tooba.Media.Application.IMediaObjectStore">
+            <summary>ذخیره‌ساز باینری محلی یا ابری برای کلیدهای نسبی امن.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaObjectStore.SaveAsync(System.IO.Stream,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>جریان را زیر کلید داده‌شده ذخیره می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaObjectStore.OpenReadAsync(System.String,System.Threading.CancellationToken)">
+            <summary>جریان خواندن برای کلید موجود برمی‌گرداند؛ در نبود null.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaObjectStore.ExistsAsync(System.String,System.Threading.CancellationToken)">
+            <summary>وجود کلید را بررسی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaObjectStore.DeleteAsync(System.String,System.Threading.CancellationToken)">
+            <summary>کلید را در صورت وجود حذف می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Media.Application.IMediaDirectory">
+            <summary>دایرکتوری canonical Media برای آپلود و پرس‌وجوی فراداده.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaDirectory.UploadAsync(System.IO.Stream,System.String,System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>جریان را اعتبارسنجی، ذخیره و به‌عنوان دارایی Ready ثبت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaDirectory.QueryAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>کتابخانهٔ دارایی‌ها را با جستجوی اختیاری صفحه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>فرادادهٔ یک دارایی Ready را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaDirectory.GetManyAsync(System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>فرادادهٔ چند دارایی را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Media.Application.IMediaDirectory.GetStorageKeyAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>کلید ذخیره‌سازی داخلی برای ارائهٔ باینری؛ فقط برای Host.</summary>
+        </member>
+    </members>
+</doc>

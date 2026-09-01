@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wallet.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wallet.Infrastructure.Migrations.InitialWallet">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.Migrations.InitialWallet.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.Migrations.InitialWallet.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext">
+            <summary>DbContext مالک schema مستقل wallet.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.Schema">
+            <summary>schema اختصاصی Wallet.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Wallet.Infrastructure.Persistence.WalletDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.Accounts">
+            <summary>حساب‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.LedgerEntries">
+            <summary>سطرهای دفتر.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.GiftCards">
+            <summary>کارت‌های هدیه.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.Redemptions">
+            <summary>بازخریدها.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.Persistence.WalletDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.Persistence.WalletDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Wallet.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.Persistence.WalletDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletDemoIds">
+            <summary>شناسه‌های پایدار دانهٔ توسعه Wallet.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.AccountId">
+            <summary>حساب کیف پول مشتری demo.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.AdminAdjustmentEntryId">
+            <summary>سطر تعدیل Admin.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.GiftCreditEntryId">
+            <summary>سطر اعتبار کارت هدیهٔ بخشی.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.OrderPaymentDebitEntryId">
+            <summary>سطر بدهکار سفارش demo (checkout کیف پول).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.RefundCreditEntryId">
+            <summary>سطر اعتبار refund-to-wallet demo.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.CheckoutTopUpEntryId">
+            <summary>سطر top-up idempotent برای پوشش سفارش demo.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletPaymentId">
+            <summary>PaymentId پایدار demo برای debit کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletReturnRequestId">
+            <summary>ReturnRequestId پایدار demo برای اعتبار کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletPaidCheckoutId">
+            <summary>CheckoutId پایدار demo سفارش پرداخت‌شده با کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletPaidSellerOrderId">
+            <summary>SellerOrderId پایدار demo.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.UnusedGiftCardId">
+            <summary>کارت هدیهٔ استفاده‌نشده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.PartiallyRedeemedGiftCardId">
+            <summary>کارت بخشی مصرف‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.ExpiredGiftCardId">
+            <summary>کارت منقضی.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.RevokedGiftCardId">
+            <summary>کارت باطل‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.PartialRedemptionId">
+            <summary>بازخرید بخشی.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.SpareUnusedGiftCardId">
+            <summary>کارت هدیهٔ استفاده‌نشدهٔ یدکی (اگر کارت اصلی در Dev مصرف شده باشد).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.RepairPreviewGiftCardId">
+            <summary>کارت پیش‌نمایش Repair وقتی یدکی هم مصرف شده.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.UnusedGiftCardDemoCode">
+            <summary>کد نمایشی کارت استفاده‌نشده (فقط demo-preview).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.SpareUnusedGiftCardDemoCode">
+            <summary>کد یدکی استفاده‌نشده برای USER-PREVIEW پس از smoke.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.RepairPreviewGiftCardDemoCode">
+            <summary>کد پیش‌نمایش Repair.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.ExpiredGiftCardDemoCode">
+            <summary>کد کارت منقضی (برای تست reject).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.RevokedGiftCardDemoCode">
+            <summary>کد کارت باطل (برای تست reject).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.PartialGiftCardDemoCode">
+            <summary>کد کارت بخشی (دیگر قابل بازخرید کامل نیست اگر مانده صفر).</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletOrderAmount">
+            <summary>مبلغ سفارش demo کیف پول.</summary>
+        </member>
+        <member name="F:Tooba.Wallet.Infrastructure.WalletDemoIds.DemoWalletRefundAmount">
+            <summary>مبلغ refund جزئی demo به کیف پول.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletDemoSnapshot">
+            <summary>snapshot پیش‌نمایش توسعه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDemoSnapshot.#ctor(System.Guid,System.Guid,System.Decimal,System.Guid,System.String,System.Guid,System.Guid,System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.String)">
+            <summary>snapshot پیش‌نمایش توسعه.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletDemoSnapshotStore">
+            <summary>نگهدارندهٔ snapshot پس از دانه.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.WalletDemoSnapshotStore.Current">
+            <summary>آخرین snapshot؛ null اگر آماده نباشد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDemoSnapshotStore.Publish(Tooba.Wallet.Infrastructure.WalletDemoSnapshot)">
+            <summary>snapshot را منتشر می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ idempotent برای کیف پول و کارت هدیه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            حساب مشتری با چند سطر دفتر، کارت استفاده‌نشده، بخشی، منقضی و باطل درج می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletDirectory">
+            <summary>پیاده‌سازی دایرکتوری کیف پول در schema wallet.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.#ctor(Tooba.Wallet.Infrastructure.Persistence.WalletDbContext,Tooba.Notification.Application.INotificationDirectory)">
+            <summary>دایرکتوری را می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.GetOrCreateSummaryForCustomerAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.ListLedgerForCustomerAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.RedeemGiftCardForCustomerAsync(System.Guid,Tooba.Wallet.Application.RedeemGiftCardCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.ListGiftCardsForAdminAsync(Tooba.Wallet.Application.AdminGiftCardListQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.GetGiftCardForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.IssueGiftCardForAdminAsync(System.Guid,Tooba.Wallet.Application.IssueGiftCardCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.RevokeGiftCardForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.GetWalletForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.ListLedgerForAdminAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.AdjustWalletForAdminAsync(System.Guid,System.Guid,Tooba.Wallet.Application.AdminWalletAdjustmentCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.SpendForOrderPaymentAsync(System.Guid,System.Decimal,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.CreditRefundAsync(System.Guid,System.Decimal,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletDirectory.QuoteForPayableAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletModule">
+            <summary>ماژول مستقل Wallet و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.WalletModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Wallet.Infrastructure.WalletOutboxRegistration">
+            <summary>ثبت Outbox Wallet؛ رویداد بیرونی در این نسخه منتشر نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Wallet.Infrastructure.WalletOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

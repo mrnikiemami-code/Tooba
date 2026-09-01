@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Inventory.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Inventory.Application.LocationAvailability">
+            <summary>
+            خلاصهٔ موجودی یک محل. موجودیت EF نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.LocationAvailability.#ctor(System.Guid,System.Guid,System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            خلاصهٔ موجودی یک محل. موجودیت EF نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.InventoryAvailability">
+            <summary>
+            نتیجهٔ خواندن موجودی Offer در Tenant جاری. قابل‌خرید بودن را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.InventoryAvailability.#ctor(System.Guid,System.Guid,System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Inventory.Application.LocationAvailability})">
+            <summary>
+            نتیجهٔ خواندن موجودی Offer در Tenant جاری. قابل‌خرید بودن را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.ReservationReceipt">
+            <summary>
+            نتیجهٔ رزرو. سبد خرید ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.ReservationReceipt.#ctor(System.Guid,System.Guid,System.Guid,System.Int32,Tooba.Inventory.Domain.StockReservationStatus,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            نتیجهٔ رزرو. سبد خرید ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.IInventoryAvailabilityGateway">
+            <summary>
+            درز خواندن موجودی بدون نشت EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryAvailabilityGateway.GetAvailabilityAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            موجودی Offer را در پایگاه Tenant/Marketplace جاری جمع می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.IInventoryUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز Inventory. ماتریس انبار اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن موجودی را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.IInventoryDirectory">
+            <summary>
+            نوشتن foundation موجودی. Cart و Order اینجا نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.CreateLocationAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            محل نگهداری می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.OpenPositionAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            موقعیت Offer در محل را باز می‌کند پس از تأیید Offer از قرارداد Lookup.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.AdjustAsync(System.Guid,Tooba.Inventory.Domain.StockAdjustmentKind,System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            موجودی را با دلیل اصلاح می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.ReserveAsync(System.Guid,System.Int32,System.String,System.String,System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <summary>
+            مقدار قابل‌فروش را اتمی رزرو می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.ReleaseAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            رزرو Held را آزاد می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.ReleaseExpiredHoldsAsync(System.DateTimeOffset,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            رزروهای Held منقضی‌شده را با زمان UTC سرور آزاد می‌کند؛ تایمر کلاینت نیست.
+            </summary>
+            <summary>
+            رزروهای Held منقضی را batch-wise با SKIP LOCKED آزاد می‌کند.
+            </summary>
+            <returns>تعداد رزروهای آزادشده.</returns>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryDirectory.ConsumeAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            رزرو Held را از OnHand کم می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Inventory.Application.IInventoryReturnGateway">
+            <summary>
+            درز Inventory برای restock پس از مرجوعی. Returns DbContext Inventory را باز نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Inventory.Application.IInventoryReturnGateway.RestockFromReturnAsync(System.Guid,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            پس از refund موفق، موجودی مصرف‌شده را با idempotency برمی‌گرداند.
+            </summary>
+        </member>
+    </members>
+</doc>

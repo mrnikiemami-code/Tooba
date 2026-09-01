@@ -1,0 +1,537 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Identity.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Identity.Application.IdentityPasswordPolicyOptions">
+            <summary>
+            سیاست رمز قابل پیکربندی. قانون تجاری نهایی در دامنه hard-code نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityPasswordPolicyOptions.MinimumLength">
+            <summary>
+            حداقل طول فعلی برای ایمنی پایه؛ پیچیدگی محصول بعداً اضافه می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityPasswordPolicyOptions.RequireLetterAndDigit">
+            <summary>
+            اگر true باشد باید حرف و رقم داشته باشد. پیش‌فرض خاموش است تا سیاست محصول جدا بماند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityPasswordPolicyOptions.EnableBreachedPasswordCheckLater">
+            <summary>
+            درز برای بررسی رمز افشاشده در آینده؛ این تسک اجرا نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityPasswordPolicyOptions.EnablePasswordHistoryLater">
+            <summary>
+            درز تاریخچهٔ رمز؛ این تسک ذخیرهٔ history ندارد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IdentityLifecycleOptions">
+            <summary>
+            عمر نشست، چالش و حد تلاش. antifraud تجاری اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityLifecycleOptions.SessionLifetimeHours">
+            <summary>
+            عمر Refresh نشست به ساعت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityLifecycleOptions.ChallengeLifetimeMinutes">
+            <summary>
+            عمر چالش OTP/بازنشانی به دقیقه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentityLifecycleOptions.MaxChallengeAttempts">
+            <summary>
+            حداکثر تلاش نادرست روی یک چالش قبل از قفل همان چالش.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.AuthenticationOutcome">
+            <summary>
+            نتیجهٔ داخلی احراز. برخی مقادیر نباید عیناً به سطح عمومی بروند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.Succeeded">
+            <summary>
+            احراز موفق.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.InvalidCredentials">
+            <summary>
+            شناسه یا رمز نادرست، یا کاربر یافت نشد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.Disabled">
+            <summary>
+            حساب Disabled است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.Locked">
+            <summary>
+            حساب Locked است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.IdentifierNotVerified">
+            <summary>
+            سیاست تأیید شناسه برقرار است و شناسه تأیید نشده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.RevokedSession">
+            <summary>
+            نشست لغو شده یا منقضی است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.AuthenticationOutcome.RefreshReuse">
+            <summary>
+            راز Refresh قبلی پس از چرخش دوباره استفاده شد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.PublicAuthenticationError">
+            <summary>
+            خطای عمومی احراز برای جلوگیری از enumeration آشکار.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.PublicAuthenticationError.InvalidCredentials">
+            <summary>
+            شکست عمومی ورود؛ جزئیات حساب لو نمی‌رود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.AuthenticationTicket">
+            <summary>
+            مرز نشست/توکن. JWT سفارشی در این تسک ساخته نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationTicket.UserId">
+            <summary>
+            اصل پایدار برای تحویل به لایهٔ Authorization بعدی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationTicket.SessionHandle">
+            <summary>
+            دستهٔ نشست داخلی؛ cookie/access/refresh بعداً روی همین مرز سوار می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationTicket.RefreshToken">
+            <summary>
+            راز Refresh خام فقط در مرز صدور/چرخش. persist نمی‌شود و JWT سفارشی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationTicket.AuthenticatedAt">
+            <summary>
+            زمان احراز.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.AuthenticationResult">
+            <summary>
+            نتیجهٔ عملیات احراز با تفکیک داخلی و عمومی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationResult.Succeeded">
+            <summary>
+            آیا بلیت صادر شده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationResult.Ticket">
+            <summary>
+            بلیت در صورت موفقیت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationResult.Outcome">
+            <summary>
+            علت داخلی برای audit و تست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.AuthenticationResult.PublicError">
+            <summary>
+            نمای عمومی جمع‌شده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.AuthenticationResult.Success(Tooba.Identity.Application.AuthenticationTicket)">
+            <summary>
+            موفقیت با بلیت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.AuthenticationResult.Fail(Tooba.Identity.Application.AuthenticationOutcome,System.Boolean)">
+            <summary>
+            شکست با علت داخلی؛ سطح عمومی معمولاً InvalidCredentials است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.RegisterUserCommand">
+            <summary>
+            فرمان ثبت حداقلی User.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.RegisterUserCommand.IdentifierKind">
+            <summary>
+            گونهٔ شناسهٔ اول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.RegisterUserCommand.Identifier">
+            <summary>
+            مقدار خام شناسه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.RegisterUserCommand.Password">
+            <summary>
+            رمز plaintext فقط در حافظهٔ درخواست؛ persist نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.RegisterUserResult">
+            <summary>
+            نتیجهٔ ثبت بدون افشای موجودیت EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.RegisterUserResult.UserId">
+            <summary>
+            User پایدار.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IIdentityAuthenticationService">
+            <summary>
+            موارد استفادهٔ احراز هویت. موجودیت EF را بیرون نمی‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.RegisterAsync(Tooba.Identity.Application.RegisterUserCommand,System.Threading.CancellationToken)">
+            <summary>
+            User و اعتبار رمز را در تراکنش ماژول Identity می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.AuthenticateWithPasswordAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            ورود با شناسه + رمز. Host را parse نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.FindUserIdByIdentifierAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <summary>
+            جستجوی User با شناسهٔ نرمال در همین دامنهٔ پایگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.DisableAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            حساب را Disabled می‌کند تا ورود ممکن نباشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.LockAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            حساب را Locked می‌کند تا ورود ممکن نباشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.ChangePasswordAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            رمز را پس از اثبات رمز جاری عوض می‌کند، مهر امنیتی را جلو می‌برد و نشست‌ها را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.RefreshSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Refresh را با راز خام می‌چرخاند. راز قبلی پس از موفقیت دیگر معتبر نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.RevokeSessionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            یک نشست را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityAuthenticationService.RevokeAllSessionsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            همهٔ نشست‌های User را لغو می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.AuthenticatedIdentity">
+            <summary>
+            اصل احرازشده پس از اعتبارسنجی نشست. رابطهٔ مجوز کسب‌وکار اینجا حل نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.AuthenticatedIdentity.#ctor(System.Guid,System.Guid,System.String,System.String)">
+            <summary>
+            اصل احرازشده پس از اعتبارسنجی نشست. رابطهٔ مجوز کسب‌وکار اینجا حل نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IIdentitySessionResolver">
+            <summary>
+            خواندن نشست برای مرز HTTP. Host نباید EF را مستقیم بخواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentitySessionResolver.ResolveAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            نشست زنده را به اصل تبدیل می‌کند. لغو/انقضا/مهر ناهماهنگ/حساب غیرفعال تهی برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IPasswordHashingService">
+            <summary>
+            هش استاندارد رمز؛ الگوریتم سفارشی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IPasswordHashingService.Hash(System.String)">
+            <summary>
+            هش را می‌سازد. ورودی plaintext لاگ نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IPasswordHashingService.Verify(System.String,System.String)">
+            <summary>
+            صحت را می‌سنجد و در صورت نیاز نشانهٔ rehash می‌دهد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.PasswordVerificationOutcome">
+            <summary>
+            نتیجهٔ Verify برای ارتقای قالب هش.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.PasswordVerificationOutcome.Failed">
+            <summary>
+            شکست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.PasswordVerificationOutcome.Success">
+            <summary>
+            موفقیت بدون نیاز به بازنویسی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.PasswordVerificationOutcome.SuccessRehashNeeded">
+            <summary>
+            موفقیت با نیاز به هش مجدد با قالب جدیدتر.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IOtpSender">
+            <summary>
+            فرستندهٔ OTP. ارائه‌دهندهٔ واقعی SMS/ایمیل اینجا وصل نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IOtpSender.SendAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            چالش را به کانال مقصد می‌فرستد. کد OTP نباید لاگ شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IOtpChallengeService">
+            <summary>
+            سرویس چالش OTP مستقل از ارائه‌دهنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IOtpChallengeService.IssueAsync(Tooba.Identity.Domain.OtpPurpose,System.String,System.Threading.CancellationToken)">
+            <summary>
+            چالش جدید برای هدف مشخص می‌سازد و از طریق <see cref="T:Tooba.Identity.Application.IOtpSender"/> می‌فرستد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IOtpChallengeService.VerifyAsync(Tooba.Identity.Application.OtpChallengeHandle,System.String,System.Threading.CancellationToken)">
+            <summary>
+            کد را می‌سنجد. plaintext کد persist بلندمدت نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.OtpChallengeHandle">
+            <summary>
+            دستهٔ چالش OTP بدون افشای راز.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.OtpChallengeHandle.ChallengeId">
+            <summary>
+            شناسهٔ چالش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.OtpChallengeHandle.Purpose">
+            <summary>
+            هدف چالش.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.ChallengeConsumeOutcome">
+            <summary>
+            نتیجهٔ داخلی مصرف چالش. سطح عمومی enumeration حساب را لو نمی‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.ChallengeConsumeOutcome.Succeeded">
+            <summary>
+            راز درست بود و چالش مصرف شد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.ChallengeConsumeOutcome.InvalidOrExpired">
+            <summary>
+            راز نادرست، منقضی، یا چالش ناموجود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.ChallengeConsumeOutcome.Consumed">
+            <summary>
+            چالش قبلاً مصرف شده (single-use).
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.ChallengeConsumeOutcome.TooManyAttempts">
+            <summary>
+            حد تلاش تمام شده و چالش قفل است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IIdentityCredentialLifecycle">
+            <summary>
+            بازنشانی/تأیید شناسه روی چالش پایدار PostgreSQL. ارائه‌دهندهٔ ایمیل/SMS واقعی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityCredentialLifecycle.RequestPasswordResetAsync(Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <summary>
+            درخواست بازنشانی. وجود یا نبود حساب در پاسخ عمومی یکسان است تا enumeration آشکار نشود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityCredentialLifecycle.CompletePasswordResetAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            بازنشانی را با راز یک‌بارمصرف کامل می‌کند و نشست‌ها را ung معتبر می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityCredentialLifecycle.IssueIdentifierVerificationAsync(System.Guid,Tooba.Identity.Domain.LoginIdentifierKind,System.String,System.Threading.CancellationToken)">
+            <summary>
+            چالش تأیید ایمیل/تلفن می‌سازد. صدور کد به‌تنهایی شناسه را Verified نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityCredentialLifecycle.CompleteIdentifierVerificationAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            کد تأیید را مصرف می‌کند و در صورت موفقیت وضعیت شناسه را Verified می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.PasswordResetRequestResult">
+            <summary>
+            پاسخ عمومی درخواست بازنشانی؛ همیشه پذیرفته‌شده نمایش داده می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.PasswordResetRequestResult.Accepted">
+            <summary>
+            پذیرش عمومی بدون افشای وجود حساب.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.PasswordResetRequestResult.ChallengeId">
+            <summary>
+            شناسهٔ چالش فقط وقتی حساب پیدا شده؛ تست داخلی نه سطح عمومی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IAccessCredentialBoundary">
+            <summary>
+            مرز access credential. JWT سفارشی اختراع نمی‌شود؛ cookie/BFF/IdP بعداً روی همین نشست سوار می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IAccessCredentialBoundary.ToAccessTicket(Tooba.Identity.Application.AuthenticationTicket)">
+            <summary>
+            بلیت کوتاه‌عمر آزمایشی از نشست صادر می‌کند بدون JWT اختصاصی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IExternalIdentityDirectory">
+            <summary>
+            نگاشت issuer+subject به User داخلی. به Keycloak گره نمی‌خورد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IExternalIdentityDirectory.BindAsync(System.Guid,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            اتصال را ذخیره می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IExternalIdentityDirectory.FindUserIdAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            User داخلی را از هویت خارجی پیدا می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IMfaEnrollmentStore">
+            <summary>
+            درز ثبت عامل MFA بدون UI.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IMfaEnrollmentStore.EnrollAsync(System.Guid,Tooba.Identity.Domain.MfaFactorKind,System.Threading.CancellationToken)">
+            <summary>
+            عامل را برای User علامت می‌زند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IMfaEnrollmentStore.ListEnabledAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            عوامل فعال را می‌خواند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IdentityContactSnapshot">
+            <summary>نمایهٔ فقط‌خواندنی شناسه‌های تماس Identity برای UI پروفایل.</summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IdentityContactSnapshot.#ctor(System.String,System.String)">
+            <summary>نمایهٔ فقط‌خواندنی شناسه‌های تماس Identity برای UI پروفایل.</summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IIdentityContactLookup">
+            <summary>
+            lookup محدود برای نمایش email/mobile در پروفایل. mutation از مسیر OTP/Auth انجام می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentityContactLookup.GetContactAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>ایمیل و موبایل تأیید‌شدهٔ نمایشی User را برمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IIdentitySecurityEventSink">
+            <summary>
+            درز Security Audit آینده. لاگ فنی جایگزین این درز نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IIdentitySecurityEventSink.RecordAsync(Tooba.Identity.Application.IdentitySecurityEvent,System.Threading.CancellationToken)">
+            <summary>
+            رخداد امنیتی را بدون راز به مصرف‌کنندهٔ بعدی می‌دهد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IdentitySecurityEvent">
+            <summary>
+            رخداد امنیتی بدون payload محرمانه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentitySecurityEvent.EventName">
+            <summary>
+            نام رخداد مانند login_success.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentitySecurityEvent.UserId">
+            <summary>
+            User در صورت شناخته بودن.
+            </summary>
+        </member>
+        <member name="P:Tooba.Identity.Application.IdentitySecurityEvent.OccurredAt">
+            <summary>
+            زمان رخداد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.OtpDeliveryOutcomeKind">
+            <summary>
+            نتیجهٔ تحویل OTP بدون افشای راز یا جزئیات vendor.
+            </summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.OtpDeliveryOutcomeKind.Succeeded">
+            <summary>تحویل موفق.</summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.OtpDeliveryOutcomeKind.Unavailable">
+            <summary>provider موقتاً در دسترس نیست.</summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.OtpDeliveryOutcomeKind.RateLimited">
+            <summary>provider نرخ را محدود کرده است.</summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.OtpDeliveryOutcomeKind.InvalidDestination">
+            <summary>مقصد نامعتبر.</summary>
+        </member>
+        <member name="F:Tooba.Identity.Application.OtpDeliveryOutcomeKind.Misconfigured">
+            <summary>پیکربندی Production ناقص است.</summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.OtpDeliveryMessage">
+            <summary>
+            پیام تحویل OTP provider-agnostic.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.OtpDeliveryMessage.#ctor(Tooba.Identity.Domain.OtpPurpose,System.String,System.String)">
+            <summary>
+            پیام تحویل OTP provider-agnostic.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.OtpDeliveryOutcome">
+            <summary>
+            نتیجهٔ provider با correlation اختیاری.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.OtpDeliveryOutcome.#ctor(Tooba.Identity.Application.OtpDeliveryOutcomeKind,System.String)">
+            <summary>
+            نتیجهٔ provider با correlation اختیاری.
+            </summary>
+        </member>
+        <member name="T:Tooba.Identity.Application.IOtpDeliveryProvider">
+            <summary>
+            مرز تحویل OTP تولید؛ domain به vendor خاص گره نمی‌خورد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Identity.Application.IOtpDeliveryProvider.DeliverAsync(Tooba.Identity.Application.OtpDeliveryMessage,System.Threading.CancellationToken)">
+            <summary>
+            OTP را به مقصد می‌فرستد. کد OTP نباید لاگ شود.
+            </summary>
+        </member>
+    </members>
+</doc>

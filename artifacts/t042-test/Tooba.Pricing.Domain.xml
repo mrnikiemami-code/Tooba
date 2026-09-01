@@ -1,0 +1,287 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Pricing.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Pricing.Domain.PriceStatus">
+            <summary>
+            وضعیت رکورد قیمت نوشته‌شده. موجودی، انتشار Catalog، و نرخ FX را نشان نمی‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Domain.PriceStatus.Draft">
+            <summary>
+            پیش‌نویس قیمت نوشته‌شده. هنوز برای انتخاب پایه فعال نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Domain.PriceStatus.Active">
+            <summary>
+            قیمت پایهٔ فعال در بازهٔ اعتبار. به‌تنهایی قابل‌خرید بودن Offer نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Domain.PriceStatus.Retired">
+            <summary>
+            قیمت از انتخاب خارج شده است. حذف Product یا Offer نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Domain.PriceQualifierKind">
+            <summary>
+            گونهٔ محدودکنندهٔ قیمت. فعلاً فقط پایه است تا قیمت مشتری/سازمان/قرارداد بعداً اضافه شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Domain.PriceQualifierKind.Base">
+            <summary>
+            قیمت پایهٔ کانال/بازار بدون مشتری یا قرارداد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Domain.CurrencyCode">
+            <summary>
+            کد ارز ISO. از Locale یا Market حدس زده نمی‌شود و تومان نمایشی با ریال مخلوط نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.CurrencyCode.Value">
+            <summary>
+            سه حرف بزرگ ISO مثل IRR یا USD.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.CurrencyCode.Parse(System.String)">
+            <summary>
+            کد ارز را نرمال می‌کند. تومان/IRT ممنوع است چون منبع حقیقت ریال (IRR) است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.CurrencyCode.Scale">
+            <summary>
+            مقیاس اعشار برای گرد کردن. IRR بدون اعشار؛ بیشتر ارزها دو رقم.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.CurrencyCode.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.Money">
+            <summary>
+            مبلغ نوشته‌شده با ارز صریح. ممیز شناور نیست و مالیات داخل مبلغ نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.Money.Amount">
+            <summary>
+            مقدار پس از گرد کردن با AwayFromZero مطابق مقیاس ارز.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.Money.Currency">
+            <summary>
+            ارز مبلغ نوشته‌شده. تبدیل FX اینجا ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.Money.Create(System.Decimal,System.String)">
+            <summary>
+            Money می‌سازد و به مقیاس ارز گرد می‌کند. نرخ ارز خارجی را به‌جای مبلغ نوشته‌شده نمی‌گذارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.Money.IsTaxExclusive">
+            <summary>
+            مبلغ بدون مالیات است؛ VAT جدا محاسبه می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Domain.MarketCode">
+            <summary>
+            هویت بازار تجاری. زبان UI نیست و لزوماً یک ارز یکتا ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.MarketCode.Value">
+            <summary>
+            کد پایدار بازار مثل IR یا UK.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.MarketCode.Parse(System.String)">
+            <summary>
+            کد بازار را نرمال می‌کند. فقط ایران در schema قفل نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.MarketCode.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.AuthoredPrice">
+            <summary>
+            قیمت نوشته‌شده برای یک Offer در بازار و کانال و ارز. موجودی و مالیات محاسبه‌شده اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.PriceId">
+            <summary>
+            شناسهٔ پایدار قیمت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.OfferId">
+            <summary>
+            Offer هدف؛ FK به schema offer نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.Market">
+            <summary>
+            بازار تجاری. Locale نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.Channel">
+            <summary>
+            کانال فروش همان مفهوم Offer است نه فهرست جدا.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.Currency">
+            <summary>
+            ارز نوشته‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.Amount">
+            <summary>
+            مبلغ بدون مالیات پس از گرد کردن.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.ValidFrom">
+            <summary>
+            شروع اعتبار به UTC.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.ValidTo">
+            <summary>
+            پایان اعتبار اختیاری به UTC. جلالی ذخیره نمی‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.Status">
+            <summary>
+            وضعیت انتخاب.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.QualifierKind">
+            <summary>
+            درز محدودکننده برای قیمت مشتری/سازمان/قرارداد آینده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.QualifierKey">
+            <summary>
+            کلید محدودکنندهٔ آینده؛ برای قیمت پایه تهی است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.AuthoredPrice.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.Create(System.Guid,System.String,Tooba.Offer.Domain.SalesChannel,System.Decimal,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.DateTimeOffset)">
+            <summary>
+            قیمت نوشته‌شده می‌سازد. قابل‌خرید بودن و نرخ FX را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.Activate(System.DateTimeOffset)">
+            <summary>
+            قیمت را برای انتخاب پایه فعال می‌کند. موجودی را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.ChangeAmount(System.Decimal,System.String,System.DateTimeOffset)">
+            <summary>
+            مبلغ نوشته‌شده را عوض می‌کند. نتیجهٔ FX را جای حقیقت نمی‌گذارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.Expire(System.DateTimeOffset)">
+            <summary>
+            قیمت را از انتخاب خارج می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.IsEffectiveAt(System.DateTimeOffset)">
+            <summary>
+            آیا در Instant داده‌شده برای انتخاب پایه معتبر است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.Overlaps(Tooba.Pricing.Domain.AuthoredPrice)">
+            <summary>
+            همپوشانی بازه با رکورد دیگر روی همان کلید انتخاب.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.AuthoredPrice.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.PriceCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد قیمت نوشته‌شده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.PriceCreatedDomainEvent.#ctor(Tooba.Pricing.Domain.AuthoredPrice)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceCreatedDomainEvent.PriceId">
+            <summary>
+            قیمت ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceCreatedDomainEvent.OfferId">
+            <summary>
+            Offer هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.PriceActivatedDomainEvent">
+            <summary>
+            رویداد فعال‌سازی قیمت پایه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.PriceActivatedDomainEvent.#ctor(Tooba.Pricing.Domain.AuthoredPrice)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceActivatedDomainEvent.PriceId">
+            <summary>
+            قیمت فعال‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceActivatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.PriceChangedDomainEvent">
+            <summary>
+            رویداد تغییر مبلغ نوشته‌شده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.PriceChangedDomainEvent.#ctor(Tooba.Pricing.Domain.AuthoredPrice)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceChangedDomainEvent.PriceId">
+            <summary>
+            قیمت تغییر یافته.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceChangedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Domain.PriceExpiredDomainEvent">
+            <summary>
+            رویداد خروج قیمت از انتخاب.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Domain.PriceExpiredDomainEvent.#ctor(Tooba.Pricing.Domain.AuthoredPrice)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceExpiredDomainEvent.PriceId">
+            <summary>
+            قیمت منقضی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Domain.PriceExpiredDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

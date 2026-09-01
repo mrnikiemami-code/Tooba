@@ -1,0 +1,419 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Payment.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Payment.Application.PayableCheckoutSnapshot">
+            <summary>
+            تصویر قابل‌پرداخت سفارش. مبلغ را مشتری نمی‌فرستد؛ Payment از این تصویر می‌خواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PayableCheckoutSnapshot.#ctor(System.Guid,Tooba.Payment.Application.OrderPaymentMode,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Payment.Application.PayableSellerOrderSnapshot})">
+            <summary>
+            تصویر قابل‌پرداخت سفارش. مبلغ را مشتری نمی‌فرستد؛ Payment از این تصویر می‌خواند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.OrderPaymentMode">
+            <summary>
+            حالت تجاری سفارش از دید پرداخت. با Status درگاه یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Application.OrderPaymentMode.RequestToReserve">
+            <summary>
+            درخواست رزرو؛ شروع پرداخت الزامی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Application.OrderPaymentMode.OnlinePurchase">
+            <summary>
+            خرید آنلاین؛ می‌تواند وارد جریان پرداخت شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PayableSellerOrderSnapshot">
+            <summary>
+            سهم سفارش فروشنده از مبلغ قابل پرداخت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PayableSellerOrderSnapshot.#ctor(System.Guid,System.Decimal,System.String,System.Boolean)">
+            <summary>
+            سهم سفارش فروشنده از مبلغ قابل پرداخت.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPayableCheckoutReader">
+            <summary>
+            خواندن تصویر مالی سفارش بدون DbContext سفارش.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPayableCheckoutReader.GetPayableAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            تصویر قابل پرداخت را پس از احراز هویت برمی‌گرداند. مبلغ را از کلاینت قبول نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IOrderPaymentProjection">
+            <summary>
+            اعمال موفقیت تأییدشدهٔ پرداخت روی سفارش. فقط مصرف‌کنندهٔ Outbox این درز را صدا می‌زند؛ دایرکتوری Payment پس از SaveChanges آن را صدا نمی‌زند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IOrderPaymentProjection.ApplyVerifiedSuccessAsync(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            سفارش‌های واجد شرایط خرید آنلاین را پس از Verify به Paid می‌برد. شروع درگاه کافی نیست و این متد به‌تنهایی منبع حقیقت Verify نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentInitiationResult">
+            <summary>
+            نتیجهٔ شروع درگاه. Redirect راز داخلی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentInitiationResult.#ctor(System.Guid,System.Guid,Tooba.Payment.Domain.PaymentStatus,System.String,System.String,System.String,System.Decimal,System.String)">
+            <summary>
+            نتیجهٔ شروع درگاه. Redirect راز داخلی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentVerificationResult">
+            <summary>
+            نتیجهٔ تأیید. متن callback جایگزین این نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentVerificationResult.#ctor(System.Guid,Tooba.Payment.Domain.PaymentStatus,System.Boolean)">
+            <summary>
+            نتیجهٔ تأیید. متن callback جایگزین این نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.InitiatePaymentCommand">
+            <summary>
+            فرمان شروع. Amount ندارد چون مشتری مبلغ را انتخاب نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.InitiatePaymentCommand.#ctor(System.Guid,System.Guid,System.Nullable{System.Guid},System.String,System.String)">
+            <summary>
+            فرمان شروع. Amount ندارد چون مشتری مبلغ را انتخاب نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.VerifyPaymentCommand">
+            <summary>
+            فرمان تأیید. Claim موفقیت در بدنه به‌تنهایی پذیرفته نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.VerifyPaymentCommand.#ctor(System.Guid,System.Guid,System.String,System.Boolean)">
+            <summary>
+            فرمان تأیید. Claim موفقیت در بدنه به‌تنهایی پذیرفته نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentGateway">
+            <summary>
+            قرارداد درگاه خنثی نسبت به PSP واقعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.IPaymentGateway.ProviderCode">
+            <summary>
+            کد پایدار درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <summary>
+            شروع پرداخت نزد درگاه. این متد وضعیت Succeeded نمی‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            حقیقت موفقیت را از درگاه می‌پرسد. مقدار callback را راست نمی‌گیرد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.GatewayInitiation">
+            <summary>
+            خروجی شروع درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.GatewayInitiation.#ctor(System.String,System.String,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            خروجی شروع درگاه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.GatewayVerification">
+            <summary>
+            خروجی Verify. فقط وقتی Succeeded است که درگاه واقعاً تأیید کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.GatewayVerification.#ctor(System.Boolean,System.String,System.String)">
+            <summary>
+            خروجی Verify. فقط وقتی Succeeded است که درگاه واقعاً تأیید کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentGatewayRegistry">
+            <summary>
+            فهرست درگاه‌های ثبت‌شده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentGatewayRegistry.Resolve(System.String)">
+            <summary>
+            درگاه را با کد پایدار برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.GatewayRefundResult">
+            <summary>
+            نتیجهٔ refund از درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.GatewayRefundResult.#ctor(System.Boolean,System.String,System.String)">
+            <summary>
+            نتیجهٔ refund از درگاه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentRefundGateway">
+            <summary>
+            قرارداد refund نزد درگاه. PSP واقعی اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentRefundGateway.RefundAsync(System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            refund را با idempotency نزد درگاه اجرا می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentUseCaseGuard">
+            <summary>
+            نگهبان موردکاربرد پرداخت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ شروع/تأیید را بررسی می‌کند. شمارهٔ سفارش به‌تنهایی کافی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentSnapshot">
+            <summary>
+            تصویر خواندنی پرداخت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentSnapshot.#ctor(System.Guid,System.Guid,System.Decimal,System.String,Tooba.Payment.Domain.PaymentStatus,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Payment.Application.PaymentAllocationSnapshot})">
+            <summary>
+            تصویر خواندنی پرداخت.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentOperationalSnapshot">
+            <summary>
+            تصویر عملیاتی مدیر برای پرداخت (بدون راز/payload خام).
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentOperationalSnapshot.#ctor(System.Guid,System.Guid,Tooba.Payment.Domain.PaymentStatus,System.Decimal,System.String,System.String,System.String,System.String,System.DateTimeOffset,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.String,System.Boolean)">
+            <summary>
+            تصویر عملیاتی مدیر برای پرداخت (بدون راز/payload خام).
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentAdminDirectory">
+            <summary>
+            بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentAdminDirectory.GetOperationalAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            تصویر عملیاتی پرداخت را بدون مالکیت خریدار برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentAdminDirectory.GetLatestOperationalForCheckoutAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            آخرین پرداخت checkout را برای بازرسی مدیر برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentAdminDirectory.ReconcileAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Verify/Reconcile یک پرداخت Pending را با idempotency اجرا می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentAllocationSnapshot">
+            <summary>
+            تخصیص خواندنی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentAllocationSnapshot.#ctor(System.Guid,System.Decimal,System.String)">
+            <summary>
+            تخصیص خواندنی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentDirectory">
+            <summary>
+            ارکستراسیون پرداخت. مبلغ را از سفارش می‌خواند نه از کلاینت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentDirectory.InitiateAsync(Tooba.Payment.Application.InitiatePaymentCommand,System.Threading.CancellationToken)">
+            <summary>
+            پرداخت را از تصویر سفارش شروع می‌کند. RequestToReserve را الزام به پرداخت نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentDirectory.VerifyAsync(Tooba.Payment.Application.VerifyPaymentCommand,System.Threading.CancellationToken)">
+            <summary>
+            callback را Verify می‌کند. متن success به‌تنهایی کافی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentDirectory.GetAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            پرداخت را پس از احراز هویت می‌خواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentDirectory.GetLatestForCheckoutAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            آخرین پرداخت checkout را پس از احراز مالکیت سفارش برمی‌گرداند تا مصرف‌کننده وضعیت واقعی
+            `PendingPayment`، `Paid` یا `Failed` را از ماژول Payment بخواند و از وضعیت Order حدس نزند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentReconciliationDirectory">
+            <summary>
+            reconciliation پرداخت‌های Pending برای callbackهای گم‌شده/دیررسیده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentReconciliationDirectory.ReconcileStalePendingAsync(System.DateTimeOffset,System.TimeSpan,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            پرداخت‌های Pending قدیمی‌تر از minAge را Verify می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentSucceededIntegrationEvent">
+            <summary>
+            رویداد پایدار موفقیت Verify. تصویر Paid سفارش فقط از مصرف این قرارداد ساخته می‌شود نه از تراکنش همزمان Payment.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار قرارداد Outbox.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.PaymentId">
+            <summary>
+            پرداخت تأییدشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.CheckoutId">
+            <summary>
+            checkout مرجع بدون FK.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.Amount">
+            <summary>
+            مبلغ تصویر سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.Currency">
+            <summary>
+            ارز تصویر سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.ProviderTransactionReference">
+            <summary>
+            مرجع تراکنش تأییدشدهٔ درگاه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentSucceededIntegrationEvent.SellerOrderIds">
+            <summary>
+            سفارش‌های فروشندهٔ هدف تخصیص.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentFailedIntegrationEvent">
+            <summary>
+            رویداد پایدار شکست Verify. سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Application.PaymentFailedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار قرارداد Outbox.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentFailedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentFailedIntegrationEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentFailedIntegrationEvent.CheckoutId">
+            <summary>
+            checkout مرجع بدون FK.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentFailedIntegrationEvent.FailureCode">
+            <summary>
+            کد شکست درگاه در صورت وجود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentGatewayActorContext">
+            <summary>
+            زمینهٔ scoped هویت خریدار برای Initiate درگاه‌هایی مثل wallet که Actor را در قرارداد پایه ندارند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Application.PaymentGatewayActorContext.ActorUserId">
+            <summary>Actor جاری فرمان Initiate؛ Guid.Empty اگر تنظیم نشده.</summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentGatewayOutcomes">
+            <summary>
+            کدهای نتیجهٔ درگاه که هنوز قطعی نیستند؛ Payment نباید به Failed برود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentGatewayOutcomes.IsIndeterminate(System.String)">
+            <summary>
+            آیا FailureCode به معنای نامعلوم/موقت است (Pending بماند).
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentSettlementAllocationSnapshot">
+            <summary>
+            snapshot تخصیص پرداخت برای ماژول‌های مصرف‌کننده مثل Settlement.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentSettlementAllocationSnapshot.#ctor(System.Guid,System.Decimal,System.String)">
+            <summary>
+            snapshot تخصیص پرداخت برای ماژول‌های مصرف‌کننده مثل Settlement.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentSettlementSnapshot">
+            <summary>
+            snapshot پرداخت برای تسویه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentSettlementSnapshot.#ctor(System.Guid,System.Guid,System.Decimal,System.String,Tooba.Payment.Domain.PaymentStatus)">
+            <summary>
+            snapshot پرداخت برای تسویه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentSettlementReader">
+            <summary>
+            خواندن snapshot پرداخت بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentSettlementReader.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>snapshot پرداخت را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentSettlementReader.GetAllocationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>تخصیص‌های پرداخت را برمی‌گرداند.</summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentWebhookNotification">
+            <summary>
+            بدنهٔ webhook/callback امضاشده از PSP.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentWebhookNotification.#ctor(System.String,System.Guid,System.Guid,System.String,System.Decimal,System.String,System.String)">
+            <summary>
+            بدنهٔ webhook/callback امضاشده از PSP.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.PaymentWebhookHandleResult">
+            <summary>
+            نتیجهٔ پردازش webhook.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.PaymentWebhookHandleResult.#ctor(System.Boolean,System.Boolean,System.String)">
+            <summary>
+            نتیجهٔ پردازش webhook.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Application.IPaymentWebhookHandler">
+            <summary>
+            پردازش webhook امضاشده و Verify مستقل از متن success.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Application.IPaymentWebhookHandler.HandleAsync(System.String,Tooba.Payment.Application.PaymentWebhookNotification,System.Threading.CancellationToken)">
+            <summary>
+            webhook را dedup، amount-match و Verify می‌کند.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Promotion.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Promotion.Application.PromotionReference">
+            <summary>
+            مرجع پروموشن برای ادمین/فروشنده/آزمون. قیمت تألیف‌شده نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.PromotionReference.#ctor(System.Guid,System.String,Tooba.Promotion.Domain.PromotionStatus,System.Int32,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionStackingPolicy,Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Decimal})">
+            <summary>
+            مرجع پروموشن برای ادمین/فروشنده/آزمون. قیمت تألیف‌شده نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.PromotionEvaluationRequest">
+            <summary>
+            ورودی ارزیابی. مبلغ پایه از Pricing می‌آید نه از سبد به‌عنوان حقیقت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.PromotionEvaluationRequest.#ctor(System.Guid,System.Guid,System.Nullable{System.Guid},System.Guid,System.String,System.String,System.String,System.Int32,System.Decimal,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.DateTimeOffset)">
+            <summary>
+            ورودی ارزیابی. مبلغ پایه از Pricing می‌آید نه از سبد به‌عنوان حقیقت.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.AppliedPromotion">
+            <summary>
+            یک پروموشن اعمال‌شده در نتیجهٔ ارزیابی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.AppliedPromotion.#ctor(System.Guid,System.String,System.String,Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal)">
+            <summary>
+            یک پروموشن اعمال‌شده در نتیجهٔ ارزیابی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.PromotionEvaluationResult">
+            <summary>
+            خروجی ارزیابی. Pricing را mutate نمی‌کند و مالیات حساب نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.PromotionEvaluationResult.#ctor(System.Decimal,System.Decimal,System.Collections.Generic.IReadOnlyList{Tooba.Promotion.Application.AppliedPromotion},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+            خروجی ارزیابی. Pricing را mutate نمی‌کند و مالیات حساب نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.IPromotionUseCaseGuard">
+            <summary>
+            درز نگهبان نوشتن پروموشن. ماتریس نهایی ادمین اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ تعریف/فعال‌سازی را بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.IPromotionEvaluator">
+            <summary>
+            ارزیابی قطعی پروموشن روی واقعیت‌های ورودی قرارداد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionEvaluator.EvaluateAsync(Tooba.Promotion.Application.PromotionEvaluationRequest,System.Threading.CancellationToken)">
+            <summary>
+            تخفیف را روی مبلغ بدون مالیات خط حساب می‌کند. ارز نامطابق مبلغ ثابت را اعمال نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.IPromotionRedemptionLedger">
+            <summary>
+            درز آیندهٔ سقف مصرف. الان ارزیابی‌only است و سهمیه را قفل نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionRedemptionLedger.CanRedeemAsync(System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            برای foundation فقط موفق بودن مسیر را اعلام می‌کند؛ شمارش همزمان به Task بعدی موکول است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Promotion.Application.IPromotionDirectory">
+            <summary>
+            نوشتن تعریف پروموشن و ارزیابی. Pricing/Order را مالک نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.CreateAsync(System.String,System.Int32,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionStackingPolicy,Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Int32},System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <summary>
+            پروموشن پیش‌نویس می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروموشن را فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ChangeAsync(System.Guid,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            نام/اولویت را عوض می‌کند بدون دست زدن به تصویر سفارش.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ExpireAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروموشن را منقضی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ListBySellerAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            فهرست پروموشن‌های متعلق به یک فروشنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.GetForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروموشن متعلق به فروشنده را برمی‌گرداند؛ در غیر این صورت تهی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.CreateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <summary>
+            پروموشن پیش‌نویس فروشنده می‌سازد و SellerPartyId را اجبار می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.UpdateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},Tooba.Promotion.Domain.PromotionDiscountKind,System.Decimal,System.Decimal,System.String,System.String,System.Nullable{System.Decimal},System.Threading.CancellationToken)">
+            <summary>
+            فیلدهای پیش‌نویس/غیرفعال متعلق به فروشنده را به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ActivateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروموشن متعلق به فروشنده را فعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.DeactivateForSellerAsync(System.Nullable{System.Guid},System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروموشن متعلق به فروشنده را منقضی/غیرفعال می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.ListForAdminAsync(System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            فهرست نظارتی ادمین؛ فیلتر اختیاری فروشنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.GetForAdminAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            جزئیات نظارتی ادمین.
+            </summary>
+        </member>
+        <member name="M:Tooba.Promotion.Application.IPromotionDirectory.DeactivateForAdminAsync(System.Nullable{System.Guid},System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            غیرفعال‌سازی نظارتی ادمین بدون مالکیت فروشنده.
+            </summary>
+        </member>
+    </members>
+</doc>

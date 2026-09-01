@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Content.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Content.Application.PagedResult`1">
+            <summary>نتیجهٔ صفحه‌بندی‌شدهٔ عمومی.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.PagedResult`1.#ctor(System.Collections.Generic.IReadOnlyList{`0},System.Int32,System.Int32,System.Int64)">
+            <summary>نتیجهٔ صفحه‌بندی‌شدهٔ عمومی.</summary>
+        </member>
+        <member name="T:Tooba.Content.Application.PublishedArticleItem">
+            <summary>DTO عمومی مقالهٔ Published برای ریل خانه و مسیرهای محتوا.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.PublishedArticleItem.#ctor(System.Guid,System.String,System.String,System.String,System.Nullable{System.Guid},System.DateTimeOffset,System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.String,System.String,System.String,System.String,System.String)">
+            <summary>DTO عمومی مقالهٔ Published برای ریل خانه و مسیرهای محتوا.</summary>
+        </member>
+        <member name="T:Tooba.Content.Application.AdminArticleSnapshot">
+            <summary>نمای کامل مدیریتی مقاله.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.AdminArticleSnapshot.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,Tooba.Content.Domain.ContentPublicationStatus,System.DateTimeOffset,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>نمای کامل مدیریتی مقاله.</summary>
+        </member>
+        <member name="T:Tooba.Content.Application.CreateArticleCommand">
+            <summary>فرمان ایجاد مقالهٔ Draft.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.CreateArticleCommand.#ctor(System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.Nullable{System.DateTimeOffset},System.String,System.String,System.String,System.String)">
+            <summary>فرمان ایجاد مقالهٔ Draft.</summary>
+        </member>
+        <member name="T:Tooba.Content.Application.UpdateArticleCommand">
+            <summary>فرمان به‌روزرسانی فیلدهای تحریری مقاله.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.UpdateArticleCommand.#ctor(System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.String,System.String,System.String,System.String)">
+            <summary>فرمان به‌روزرسانی فیلدهای تحریری مقاله.</summary>
+        </member>
+        <member name="T:Tooba.Content.Application.IContentDirectory">
+            <summary>قابلیت خواندن و مدیریت مقالات Content.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.ListPublishedAsync(System.Int32,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>صفحهٔ مقالات Published را با فیلتر اختیاری دسته برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.GetPublishedBySlugAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>جزئیات مقالهٔ Published را با slug و locale اختیاری برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.ListPublishedForHomeAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>جدیدترین مقالات Published را برای ریل خانه برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.ListAllAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>صفحهٔ همهٔ مقالات (admin) را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.GetByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>مقاله را با شناسه برای admin برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.CreateAsync(Tooba.Content.Application.CreateArticleCommand,System.Threading.CancellationToken)">
+            <summary>مقالهٔ Draft جدید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.UpdateAsync(System.Guid,Tooba.Content.Application.UpdateArticleCommand,System.Threading.CancellationToken)">
+            <summary>فیلدهای تحریری مقاله را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.PublishAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>مقاله را منتشر می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Content.Application.IContentDirectory.UnpublishAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>مقاله را از انتشار خارج می‌کند.</summary>
+        </member>
+    </members>
+</doc>

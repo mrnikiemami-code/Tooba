@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Offer.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Offer.Domain.OfferStatus">
+            <summary>
+            وضعیت تجاری Offer. موجودی، اعتبار قیمت، و انتشار Catalog را نشان نمی‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.OfferStatus.Draft">
+            <summary>
+            پیش‌نویس listing. قابل‌خرید بودن را تضمین نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.OfferStatus.Active">
+            <summary>
+            Offer برای کانال فعال است؛ هنوز Price/Stock جدا هستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.OfferStatus.Suspended">
+            <summary>
+            تعلیق تجاری فروشنده/کانال. موجودی صفر نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.OfferStatus.Archived">
+            <summary>
+            بایگانی listing. حذف Product نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Domain.SalesChannel">
+            <summary>
+            کانال فروش پایدار. رشتهٔ UI آزاد نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Direct">
+            <summary>
+            فروش مستقیم فروشگاه.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Marketplace">
+            <summary>
+            کانال Marketplace چندفروشنده.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Agency">
+            <summary>
+            کانال نمایندگی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Corporate">
+            <summary>
+            کانال سازمانی.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Affiliate">
+            <summary>
+            کانال همکاری در فروش.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Domain.SalesChannel.Api">
+            <summary>
+            کانال API یکپارچه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Domain.SellerOffer">
+            <summary>
+            listing تجاری فروشنده روی یک Variant Catalog. قیمت و موجودی ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.OfferId">
+            <summary>
+            شناسهٔ پایدار Offer.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.CatalogVariantId">
+            <summary>
+            شناسهٔ مات Variant Catalog؛ FK بین‌ماژولی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.SellerPartyId">
+            <summary>
+            Party سازمان فروشنده. UserId ورود نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.SellerSku">
+            <summary>
+            SKU اختصاصی فروشنده؛ کد Variant Catalog نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.Status">
+            <summary>
+            وضعیت listing.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.Channel">
+            <summary>
+            کانال فروش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.CreatedAt">
+            <summary>
+            زمان ایجاد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.UpdatedAt">
+            <summary>
+            زمان به‌روزرسانی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.SellerOffer.DomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Domain.SellerOffer.Create(System.Guid,System.Guid,Tooba.Offer.Domain.SalesChannel,System.String,System.DateTimeOffset)">
+            <summary>
+            Offer می‌سازد بدون مبلغ و موجودی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.SellerOffer.Activate(System.DateTimeOffset)">
+            <summary>
+            listing را فعال می‌کند. اعتبار Price/Stock را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.SellerOffer.Suspend(System.DateTimeOffset)">
+            <summary>
+            listing را معلق می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.SellerOffer.Archive(System.DateTimeOffset)">
+            <summary>
+            listing را بایگانی می‌کند تا جای همان فروشنده+گونه+کانال آزاد شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.SellerOffer.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Domain.OfferCreatedDomainEvent">
+            <summary>
+            رویداد ایجاد Offer.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.OfferCreatedDomainEvent.#ctor(Tooba.Offer.Domain.SellerOffer)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferCreatedDomainEvent.OfferId">
+            <summary>
+            Offer ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferCreatedDomainEvent.CatalogVariantId">
+            <summary>
+            Variant هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferCreatedDomainEvent.SellerPartyId">
+            <summary>
+            فروشندهٔ Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferCreatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Domain.OfferActivatedDomainEvent">
+            <summary>
+            رویداد فعال‌سازی listing.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.OfferActivatedDomainEvent.#ctor(Tooba.Offer.Domain.SellerOffer)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferActivatedDomainEvent.OfferId">
+            <summary>
+            Offer فعال‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferActivatedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Domain.OfferSuspendedDomainEvent">
+            <summary>
+            رویداد تعلیق listing.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.OfferSuspendedDomainEvent.#ctor(Tooba.Offer.Domain.SellerOffer)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferSuspendedDomainEvent.OfferId">
+            <summary>
+            Offer معلق.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferSuspendedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Domain.OfferArchivedDomainEvent">
+            <summary>
+            رویداد بایگانی listing.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Domain.OfferArchivedDomainEvent.#ctor(Tooba.Offer.Domain.SellerOffer)">
+            <summary>
+            از ریشه می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferArchivedDomainEvent.OfferId">
+            <summary>
+            Offer بایگانی‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Domain.OfferArchivedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

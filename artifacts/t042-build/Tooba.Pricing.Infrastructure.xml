@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Pricing.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Pricing.Infrastructure.Events.PriceCreatedIntegrationEvent">
+            <summary>
+            قرارداد Integration ایجاد قیمت نوشته‌شده. مالیات و FX داخل payload نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Infrastructure.Events.PriceCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceCreatedIntegrationEvent.PriceId">
+            <summary>
+            قیمت ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceCreatedIntegrationEvent.OfferId">
+            <summary>
+            Offer هدف.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Events.PriceActivatedIntegrationEvent">
+            <summary>
+            قرارداد فعال‌سازی قیمت پایه. قابل‌خرید بودن را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Infrastructure.Events.PriceActivatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceActivatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceActivatedIntegrationEvent.PriceId">
+            <summary>
+            قیمت فعال‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Events.PriceChangedIntegrationEvent">
+            <summary>
+            قرارداد تغییر مبلغ نوشته‌شده. نرخ تبدیل‌شده FX نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Infrastructure.Events.PriceChangedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceChangedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceChangedIntegrationEvent.PriceId">
+            <summary>
+            قیمت تغییر یافته.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Events.PriceExpiredIntegrationEvent">
+            <summary>
+            قرارداد خروج قیمت از انتخاب.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Infrastructure.Events.PriceExpiredIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceExpiredIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Events.PriceExpiredIntegrationEvent.PriceId">
+            <summary>
+            قیمت منقضی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Persistence.Migrations.InitialPricing">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.Migrations.InitialPricing.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.Migrations.InitialPricing.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.Migrations.InitialPricing.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext">
+            <summary>
+            DbContext مالک schema <c>pricing</c>. قیمت را روی Product یا Offer نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext.Schema">
+            <summary>
+            schema اختصاصی Pricing.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Pricing.Infrastructure.Persistence.PricingDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext.Prices">
+            <summary>
+            قیمت‌های نوشته‌شده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.PricingDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.Persistence.PricingDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Pricing.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.Persistence.PricingDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.OpenPricingUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد. ماتریس ادمین قیمت اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.OpenPricingUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.PriceDirectory">
+            <summary>
+            نوشتن و انتخاب قیمت با قرارداد Offer. DbContext کاتالوگ و Offer لمس نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.#ctor(Tooba.Pricing.Infrastructure.Persistence.PricingDbContext,Tooba.Pricing.Application.IPricingUseCaseGuard,Tooba.Offer.Application.IOfferLookupGateway)">
+            <summary>
+            دایرکتوری را به schema Pricing و درز Offer وصل می‌کند نه به join بین‌schema.
+            </summary>
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.ResolvePriceAsync(Tooba.Pricing.Application.PriceResolutionQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.CreatePriceAsync(System.Guid,System.String,Tooba.Offer.Domain.SalesChannel,System.Decimal,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.ChangeAmountAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PriceDirectory.ExpireAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.PricingModule">
+            <summary>
+            ماژول Pricing: حقیقت مبلغ نوشته‌شده برای Offer. Product و Offer مبلغ ندارند؛ مالیات و FX اینجا محاسبه نمی‌شوند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.PricingModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PricingModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Pricing.Infrastructure.PricingOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Pricing. ترجمه فقط رویدادهای صریح قیمت نوشته‌شده است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Pricing.Infrastructure.PricingOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

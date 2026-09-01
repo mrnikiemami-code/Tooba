@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Offer.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent">
+            <summary>
+            قرارداد Integration ایجاد listing. قیمت اینجا نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent.OfferId">
+            <summary>
+            Offer ایجادشده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent.CatalogVariantId">
+            <summary>
+            Variant Catalog هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferCreatedIntegrationEvent.SellerPartyId">
+            <summary>
+            Party فروشنده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Events.OfferActivatedIntegrationEvent">
+            <summary>
+            قرارداد فعال‌سازی listing. اعتبار Price/Stock را اعلام نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Infrastructure.Events.OfferActivatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferActivatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferActivatedIntegrationEvent.OfferId">
+            <summary>
+            Offer فعال‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Events.OfferSuspendedIntegrationEvent">
+            <summary>
+            قرارداد تعلیق listing.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Infrastructure.Events.OfferSuspendedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferSuspendedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferSuspendedIntegrationEvent.OfferId">
+            <summary>
+            Offer معلق.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Events.OfferArchivedIntegrationEvent">
+            <summary>
+            قرارداد بایگانی listing.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Infrastructure.Events.OfferArchivedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferArchivedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Events.OfferArchivedIntegrationEvent.OfferId">
+            <summary>
+            Offer بایگانی‌شده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.OpenOfferUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد. ماتریس Seller Portal اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OpenOfferUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.OfferDirectory">
+            <summary>
+            نوشتن Offer با قرارداد Catalog و Party. DbContext آن ماژول‌ها لمس نمی‌شود تا مرز Persistence حفظ شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.#ctor(Tooba.Offer.Infrastructure.Persistence.OfferDbContext,Tooba.Offer.Application.IOfferUseCaseGuard,Tooba.Catalog.Application.ICatalogLookupGateway,Tooba.Party.Application.IPartyLookupGateway)">
+            <summary>
+            دایرکتوری را به schema Offer و درزهای قرارداد وصل می‌کند نه به join بین‌schema.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.FindOfferAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.CountOffersByCatalogVariantIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.CreateOfferAsync(System.Guid,System.Guid,Tooba.Offer.Domain.SalesChannel,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.ActivateAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.SuspendAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferDirectory.ArchiveAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.OfferModule">
+            <summary>
+            ماژول Offer: listing تجاری فروشنده روی Variant. قیمت، موجودی، Catalog persistence و UI فروشنده اینجا نیست.
+            Single-Store هم از همین Offer استفاده می‌کند و Price را روی Product نمی‌گذارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.OfferModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.OfferOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Offer. ترجمه فقط رویدادهای صریح listing است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.OfferOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.OfferOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.OfferOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.OfferOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Persistence.Migrations.InitialOffer">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.Migrations.InitialOffer.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.Migrations.InitialOffer.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.Migrations.InitialOffer.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Persistence.OfferDbContext">
+            <summary>
+            DbContext مالک schema <c>offer</c>. قیمت و موجودی اینجا نیستند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Offer.Infrastructure.Persistence.OfferDbContext.Schema">
+            <summary>
+            schema اختصاصی Offer.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.OfferDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Offer.Infrastructure.Persistence.OfferDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Persistence.OfferDbContext.Offers">
+            <summary>
+            listingهای فروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Offer.Infrastructure.Persistence.OfferDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.OfferDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Offer.Infrastructure.Persistence.OfferDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Offer.
+            </summary>
+        </member>
+        <member name="M:Tooba.Offer.Infrastructure.Persistence.OfferDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

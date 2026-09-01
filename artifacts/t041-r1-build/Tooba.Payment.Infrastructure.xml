@@ -1,0 +1,531 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Payment.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Payment.Infrastructure.Events.PaymentCreatedIntegrationEvent">
+            <summary>
+            پرداخت ساخته شد. این رویداد سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.Events.PaymentCreatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار قرارداد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentCreatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentCreatedIntegrationEvent.PaymentId">
+            <summary>
+            پرداخت داخلی؛ شمارهٔ درگاه نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentCreatedIntegrationEvent.CheckoutId">
+            <summary>
+            checkout مرجع بدون FK دیتابیسی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Events.PaymentInitiatedIntegrationEvent">
+            <summary>
+            شروع درگاه. موفقیت پرداخت نیست و سفارش را Paid نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.Events.PaymentInitiatedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار قرارداد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentInitiatedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentInitiatedIntegrationEvent.PaymentId">
+            <summary>
+            پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Events.PaymentInitiatedIntegrationEvent.AttemptId">
+            <summary>
+            تلاش.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.FailClosedPaymentGateway">
+            <summary>
+            Production fail-closed وقتی Mode=Disabled یا Webhook پیکربندی نشده است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.FailClosedPaymentGateway.ProviderCodeValue">
+            <summary>
+            کد پایدار درگاه fail-closed.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FailClosedPaymentGateway.#ctor(Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation)">
+            <summary>
+            درگاه Production که بدون PSP واقعی شروع/Verify نمی‌کند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.FailClosedPaymentGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FailClosedPaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FailClosedPaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.FakePaymentGateway">
+            <summary>
+            درگاه آزمایشی قطعی. موفقیت را از متن callback نمی‌سازد؛ فقط وقتی Verify صریح باشد Succeeded می‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.FakePaymentGateway.FailOnVerifySuffix">
+            <summary>
+            اگر مرجع درخواست این پسوند را داشته باشد، Verify شکست می‌خورد حتی اگر callback success باشد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.FakePaymentGateway.SandboxDeclinedReferences">
+            <summary>
+            مراجع sandbox که Host برای شکست کنترل‌شده علامت زده است. PSP واقعی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.FakePaymentGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FakePaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FakePaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.FakeFailingPaymentGateway">
+            <summary>
+            درگاه آزمایشی که Verify را رد می‌کند حتی اگر callback success باشد. PSP واقعی نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.FakeFailingPaymentGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FakeFailingPaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FakeFailingPaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentGatewayRegistry">
+            <summary>
+            فهرست درگاه. SDK ارائه‌دهنده واقعی اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayRegistry.#ctor(System.Collections.Generic.IEnumerable{Tooba.Payment.Application.IPaymentGateway})">
+            <summary>
+            رجیستری را از درگاه‌های ثبت‌شده می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayRegistry.Resolve(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.FakePaymentRefundGateway">
+            <summary>
+            درگاه refund آزمایشی. موفقیت sandbox؛ پسوند -FAIL-REFUND شکست می‌دهد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.FakePaymentRefundGateway.FailRefundSuffix">
+            <summary>
+            اگر کلید idempotency این پسوند را داشته باشد، refund شکست می‌خورد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FakePaymentRefundGateway.RefundAsync(System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.FailClosedPaymentRefundGateway">
+            <summary>
+            Production fail-closed وقتی refund gateway پیکربندی نشده است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.FailClosedPaymentRefundGateway.RefundAsync(System.Guid,System.Decimal,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.OpenPaymentUseCaseGuard">
+            <summary>
+            نگهبان باز موردکاربرد Payment. شمارهٔ پرداخت به‌تنهایی اجازهٔ جهش نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.OpenPaymentUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentDirectory">
+            <summary>
+            ارکستراسیون پرداخت در schema payment. مبلغ از تصویر سفارش است نه از کلاینت؛ OrderDbContext اینجا باز نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.#ctor(Tooba.Payment.Infrastructure.Persistence.PaymentDbContext,Tooba.Payment.Application.IPaymentUseCaseGuard,Tooba.Payment.Application.IPayableCheckoutReader,Tooba.Payment.Application.IPaymentGatewayRegistry,Tooba.Payment.Application.PaymentGatewayActorContext)">
+            <summary>
+            دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.InitiateAsync(Tooba.Payment.Application.InitiatePaymentCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.ReconcileStalePendingAsync(System.DateTimeOffset,System.TimeSpan,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.VerifyAsync(Tooba.Payment.Application.VerifyPaymentCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.GetAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.GetLatestForCheckoutAsync(System.Guid,System.Guid,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.GetOperationalAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.GetLatestOperationalForCheckoutAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentDirectory.ReconcileAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation">
+            <summary>
+            متریک‌های درگاه پرداخت بدون لاگ راز یا PAN.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation.#ctor">
+            <summary>
+            متریک‌های in-process Payment gateway.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation.RecordInitiate(System.String)">
+            <summary>
+            ثبت نتیجهٔ شروع درگاه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation.RecordVerify(System.String)">
+            <summary>
+            ثبت نتیجهٔ Verify.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation.RecordWebhook(System.String)">
+            <summary>
+            ثبت webhook دریافتی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation.RecordReconcile(System.Int32)">
+            <summary>
+            ثبت چرخهٔ reconciliation.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentGatewayOptions">
+            <summary>
+            پیکربندی درگاه پرداخت: Payment:Gateway
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.PaymentGatewayOptions.SectionName">
+            <summary>
+            نام بخش پیکربندی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.Mode">
+            <summary>
+            Sandbox (dev/test)، Webhook (production provider)، Disabled.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.DefaultProvider">
+            <summary>
+            کد درگاه پیش‌فرض برای شروع پرداخت.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.WebhookSigningSecret">
+            <summary>
+            راز امضای webhook/callback. در Production از env تزریق می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.InitiateBaseUrl">
+            <summary>
+            پایهٔ URL شروع پرداخت نزد PSP (بدون انتخاب تجاری در کد).
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.StatusQueryBaseUrl">
+            <summary>
+            پایهٔ URL پرس‌وجوی وضعیت PSP برای Verify مستقل از متن callback.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.StatusQueryApiKey">
+            <summary>
+            Bearer/API key برای StatusQuery.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.AllowedStatusQueryHosts">
+            <summary>
+            میزبان‌های مجاز برای StatusQuery (SSRF fail-closed). خالی = فقط https و رد localhost/private.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.TimeoutSeconds">
+            <summary>
+            مهلت HTTP به ثانیه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentGatewayOptions.VerifyMaxAttempts">
+            <summary>
+            حداکثر تلاش Verify برای خطاهای موقت (timeout/rate-limit/unavailable).
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentModule">
+            <summary>
+            ماژول Payment: درگاه انتزاعی و تلاش تأییدشده. سفارش و ذخیره کارت اینجا نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Payment. سفارش را مستقیم به‌روز نمی‌کند؛ ترجمه فقط Integration پایدار است.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentSettlementBridge">
+            <summary>
+            snapshot پرداخت برای Settlement بدون cross-DbContext.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentSettlementBridge.#ctor(Tooba.Payment.Infrastructure.Persistence.PaymentDbContext)">
+            <summary>پل settlement را به schema payment وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentSettlementBridge.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentSettlementBridge.GetAllocationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentWebhookHandler">
+            <summary>
+            webhook امضاشده را dedup می‌کند و Verify را صدا می‌زند؛ متن status حقیقت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentWebhookHandler.#ctor(Tooba.Payment.Infrastructure.Persistence.PaymentDbContext,Tooba.Payment.Application.IPaymentDirectory,Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation)">
+            <summary>
+            handler را به schema payment و دایرکتوری وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentWebhookHandler.HandleAsync(System.String,Tooba.Payment.Application.PaymentWebhookNotification,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.PaymentWebhookSignatureValidator">
+            <summary>
+            اعتبارسنجی HMAC-SHA256 برای webhook/callback پرداخت.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.PaymentWebhookSignatureValidator.SignatureHeaderName">
+            <summary>
+            هدر امضای webhook.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.PaymentWebhookSignatureValidator.SignaturePrefix">
+            <summary>
+            پیشوند مورد انتظار: sha256=
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentWebhookSignatureValidator.TryValidate(System.String,System.ReadOnlySpan{System.Byte},System.String,System.String@)">
+            <summary>
+            امضای بدنهٔ خام را با راز پیکربندی‌شده مقایسه می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.PaymentWebhookSignatureValidator.ComputeSignature(System.String,System.ReadOnlySpan{System.Byte})">
+            <summary>
+            امضای تست/ارسال webhook می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Persistence.Migrations.InitialPayment">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.Migrations.InitialPayment.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.Migrations.InitialPayment.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.Migrations.InitialPayment.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Persistence.Migrations.PaymentWebhookInbox">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.Migrations.PaymentWebhookInbox.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.Migrations.PaymentWebhookInbox.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext">
+            <summary>
+            DbContext مالک schema <c>payment</c>. سفارش و کارت را نگه نمی‌دارد.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.Schema">
+            <summary>
+            schema اختصاصی Payment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Payment.Infrastructure.Persistence.PaymentDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.Payments">
+            <summary>
+            پرداخت‌های مشتری.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.Attempts">
+            <summary>
+            تلاش‌های درگاه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.Allocations">
+            <summary>
+            تخصیص چندفروشنده.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.WebhookInbox">
+            <summary>
+            dedup webhook/callback ارائه‌دهنده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.PaymentDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Persistence.PaymentDbContextFactory">
+            <summary>
+            کارخانهٔ زمان طراحی مهاجرت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.PaymentDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord">
+            <summary>
+            dedup رویداد webhook/callback ارائه‌دهنده. callback امضاشده حقیقت Paid نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.#ctor">
+            <summary>
+            سازندهٔ EF.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.InboxId">
+            <summary>
+            شناسهٔ داخلی inbox.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.ProviderCode">
+            <summary>
+            کد درگاه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.ProviderEventId">
+            <summary>
+            شناسهٔ یکتا رویداد از PSP.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.PaymentId">
+            <summary>
+            پرداخت هدف.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.ReceivedAt">
+            <summary>
+            زمان دریافت.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.Persistence.PaymentWebhookInboxRecord.Create(System.String,System.String,System.Guid,System.DateTimeOffset)">
+            <summary>
+            ردیف inbox را می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.WalletPaymentGateway">
+            <summary>
+            درگاه کیف پول: ATOMIC_DEBIT_AT_PAID در Verify؛ بدون redirect به sandbox/PSP.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.WalletPaymentGateway.ProviderCodeValue">
+            <summary>کد پایدار درگاه.</summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WalletPaymentGateway.#ctor(Tooba.Wallet.Application.IWalletDirectory,Tooba.Payment.Application.PaymentGatewayActorContext)">
+            <summary>درگاه کیف پول را به دایرکتوری ledger وصل می‌کند.</summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.WalletPaymentGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WalletPaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WalletPaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WalletPaymentGateway.ComposeReference(System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>مرجع درخواست درگاه را می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WalletPaymentGateway.TryParseReference(System.String,System.Guid@,System.Guid@,System.Decimal@,System.String@)">
+            <summary>مرجع را پارس می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Payment.Infrastructure.WebhookPaymentGateway">
+            <summary>
+            Production adapter boundary: Initiate از InitiateBaseUrl؛ Verify از StatusQuery؛ متن callback حقیقت نیست.
+            هیچ برند تجاری PSP در کد انتخاب نمی‌شود — فقط پیکربندی امن.
+            </summary>
+        </member>
+        <member name="F:Tooba.Payment.Infrastructure.WebhookPaymentGateway.ProviderCodeValue">
+            <summary>
+            کد پایدار درگاه webhook-backed.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.WebhookPaymentGateway.TestStatusOverrides">
+            <summary>
+            override آزمایشی برای Verify بدون HTTP واقعی. PSP واقعی نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WebhookPaymentGateway.#ctor(System.Net.Http.HttpClient,Microsoft.Extensions.Options.IOptions{Tooba.Payment.Infrastructure.PaymentGatewayOptions},Tooba.Payment.Infrastructure.PaymentGatewayInstrumentation)">
+            <summary>
+            درگاه Production با StatusQuery و webhook signing.
+            </summary>
+        </member>
+        <member name="P:Tooba.Payment.Infrastructure.WebhookPaymentGateway.ProviderCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WebhookPaymentGateway.InitiateAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Payment.Infrastructure.WebhookPaymentGateway.VerifyAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

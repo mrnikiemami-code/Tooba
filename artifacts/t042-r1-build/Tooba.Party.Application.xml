@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Party.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Party.Application.PartyReference">
+            <summary>
+            مرجع پایدار Party برای ماژول‌های دیگر بدون نشت موجودیت EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.PartyReference.#ctor(System.Guid,Tooba.Party.Domain.PartyKind,System.String)">
+            <summary>
+            مرجع پایدار Party برای ماژول‌های دیگر بدون نشت موجودیت EF.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.OrganizationReference">
+            <summary>
+            مرجع سازمان. نوع تجاری واحد را قفل نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.OrganizationReference.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            مرجع سازمان. نوع تجاری واحد را قفل نمی‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.MembershipReference">
+            <summary>
+            مرجع عضویت. مجوز SpiceDB داخل آن نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.MembershipReference.#ctor(System.Guid,System.Guid,System.Guid,System.String,Tooba.Party.Domain.MembershipStatus)">
+            <summary>
+            مرجع عضویت. مجوز SpiceDB داخل آن نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.UserPartyLinkReference">
+            <summary>
+            مرجع پیوند User به Party بدون EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.UserPartyLinkReference.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>
+            مرجع پیوند User به Party بدون EF.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.OrganizationRelationshipReference">
+            <summary>
+            مرجع رابطهٔ سازمان‌به‌سازمان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.OrganizationRelationshipReference.#ctor(System.Guid,System.Guid,System.Guid,System.String)">
+            <summary>
+            مرجع رابطهٔ سازمان‌به‌سازمان.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.IPartyLookupGateway">
+            <summary>
+            درز خواندن Party برای ماژول‌های دیگر بدون DbContext خارجی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyLookupGateway.FindByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Party را در پایگاه Tenant/Marketplace جاری پیدا می‌کند؛ Host parse نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.IPartyDirectory">
+            <summary>
+            نوشتن foundation Party. UI تجاری و onboarding فروشنده اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.CreatePersonAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Person کسب‌وکار می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.CreateOrganizationAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            سازمان می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.LinkUserAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            UserId مبهم را به Party وصل می‌کند بدون FK به Identity.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.EstablishMembershipAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            عضویت را در تراکنش محلی Party می‌نویسد و رویداد تصویرسازی را به Outbox می‌سپارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.RelateOrganizationsAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            رابطهٔ سازمان‌به‌سازمان گسترش‌پذیر ثبت می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.GrantOrganizationCapabilityAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            قابلیت تجاری گسترش‌پذیر به سازمان می‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.GetOrganizationProfileAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پروفایل عملیاتی Organization را می‌خواند؛ برای Person یا نبود Party تهی است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.IPartyDirectory.UpdateOrganizationProfileAsync(System.Guid,Tooba.Party.Application.OrganizationProfileWrite,System.Threading.CancellationToken)">
+            <summary>
+            پروفایل عملیاتی Organization را به‌روز می‌کند؛ Person رد می‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.OrganizationProfileSnapshot">
+            <summary>
+            نمایهٔ پروفایل عملیاتی سازمان بدون credential ورود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.OrganizationProfileSnapshot.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>
+            نمایهٔ پروفایل عملیاتی سازمان بدون credential ورود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Application.OrganizationProfileWrite">
+            <summary>
+            ورودی نوشتن پروفایل عملیاتی سازمان.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Application.OrganizationProfileWrite.#ctor(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            ورودی نوشتن پروفایل عملیاتی سازمان.
+            </summary>
+        </member>
+    </members>
+</doc>

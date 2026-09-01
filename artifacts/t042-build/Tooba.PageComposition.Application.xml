@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.PageComposition.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.PageComposition.Application.SectionCatalogEntry">
+            <summary>متادیتای یک نوع section در catalog.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.SectionCatalogEntry.#ctor(System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>متادیتای یک نوع section در catalog.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.SectionCatalogSnapshot">
+            <summary>نمای catalog section types.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.SectionCatalogSnapshot.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.PageComposition.Application.SectionCatalogEntry},System.Collections.Generic.IReadOnlyDictionary{System.String,System.Collections.Generic.IReadOnlyList{System.String}})">
+            <summary>نمای catalog section types.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.HomeCompositionSectionItem">
+            <summary>section قابل نمایش در storefront.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.HomeCompositionSectionItem.#ctor(System.Guid,System.String,System.Int32,System.String,System.String)">
+            <summary>section قابل نمایش در storefront.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.HomeCompositionSnapshot">
+            <summary>ترکیب عمومی خانه.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.HomeCompositionSnapshot.#ctor(System.String,System.Guid,System.String,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.PageComposition.Application.HomeCompositionSectionItem})">
+            <summary>ترکیب عمومی خانه.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.AdminHomeCompositionSectionItem">
+            <summary>section مدیریتی شامل visibility.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.AdminHomeCompositionSectionItem.#ctor(System.Guid,System.String,System.Int32,System.Boolean,System.String,System.String)">
+            <summary>section مدیریتی شامل visibility.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.AdminHomeCompositionSnapshot">
+            <summary>ترکیب مدیریتی خانه.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.AdminHomeCompositionSnapshot.#ctor(System.Guid,System.String,System.Guid,System.String,System.Int32,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.PageComposition.Application.AdminHomeCompositionSectionItem})">
+            <summary>ترکیب مدیریتی خانه.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.AddHomeSectionCommand">
+            <summary>فرمان افزودن section.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.AddHomeSectionCommand.#ctor(System.String,System.String,System.String,System.Boolean)">
+            <summary>فرمان افزودن section.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.UpdateHomeSectionCommand">
+            <summary>فرمان به‌روزرسانی section.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.UpdateHomeSectionCommand.#ctor(System.Nullable{System.Boolean},System.String,System.String)">
+            <summary>فرمان به‌روزرسانی section.</summary>
+        </member>
+        <member name="T:Tooba.PageComposition.Application.IPageCompositionDirectory">
+            <summary>قابلیت خواندن و مدیریت Page Composition.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.GetCatalogAsync(System.Threading.CancellationToken)">
+            <summary>کاتالوگ section types و schema config را برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.GetHomeCompositionAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>sectionهای visible خانه را به ترتیب برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminGetHomeAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>نمای admin خانه شامل sectionهای پنهان.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminReorderHomeAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>sectionهای خانه را مرتب می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminUpdateSectionAsync(System.Guid,System.String,System.Guid,Tooba.PageComposition.Application.UpdateHomeSectionCommand,System.Threading.CancellationToken)">
+            <summary>section را به‌روزرسانی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminAddSectionAsync(System.Guid,System.String,Tooba.PageComposition.Application.AddHomeSectionCommand,System.Threading.CancellationToken)">
+            <summary>section تأییدشده اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminRemoveSectionAsync(System.Guid,System.String,System.Guid,System.Threading.CancellationToken)">
+            <summary>section را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.PageComposition.Application.IPageCompositionDirectory.AdminRestoreDefaultHomeAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>ترکیب پیش‌فرض خانه را بازمی‌گرداند.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Party.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent">
+            <summary>
+            قرارداد Integration برقراری عضویت. نوشتن SpiceDB اینجا انجام نمی‌شود.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.EventTypeName">
+            <summary>
+            نام پایدار type map.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.MembershipId">
+            <summary>
+            عضویت منبع حقیقت Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.UserId">
+            <summary>
+            اصل ورود برای تصویرسازی رابطه.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.PartyId">
+            <summary>
+            Party مقصد؛ شناسهٔ سازمان در SpiceDB از همین مقدار ساخته می‌شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent.RelationCode">
+            <summary>
+            رابطهٔ کسب‌وکار برای ردیابی؛ مجوز را schema تعیین می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.PartyDirectory">
+            <summary>
+            پیاده‌سازی نوشتن/خواندن Party روی schema همین ماژول. SpiceDB را در SaveChanges صدا نمی‌زند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.#ctor(Tooba.Party.Infrastructure.Persistence.PartyDbContext)">
+            <summary>
+            دایرکتوری را به DbContext Tenant-aware وصل می‌کند نه به parse Host.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.FindByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.CreatePersonAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.CreateOrganizationAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.LinkUserAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.EstablishMembershipAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.RelateOrganizationsAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.GrantOrganizationCapabilityAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.GetOrganizationProfileAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyDirectory.UpdateOrganizationProfileAsync(System.Guid,Tooba.Party.Application.OrganizationProfileWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.PartyMembershipProjectionHandler">
+            <summary>
+            تصویرسازی رابطهٔ مجوز پس از persist عضویت. داخل تراکنش DbContext Party اجرا نمی‌شود تا در دسترس نبودن SpiceDB commit کسب‌وکار را rollback نکند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyMembershipProjectionHandler.#ctor(Tooba.BuildingBlocks.IAuthorizationTupleWriter)">
+            <summary>
+            handler را به abstraction Tooba وصل می‌کند نه به Authzed.Net.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyMembershipProjectionHandler.HandleAsync(Tooba.Party.Infrastructure.Events.PartyMembershipEstablishedIntegrationEvent,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.PartyModule">
+            <summary>
+            ماژول Party: شخص/سازمان/عضویت. احراز هویت Identity و ماتریس مجوز محصول اینجا نیست.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.PartyModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.PartyOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول Party. ترجمه فقط برای برقراری عضویت است تا تصویرسازی مجوز بعد از persist انجام شود.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.PartyOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.PartyOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.PartyOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.PartyOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.Persistence.Migrations.InitialParty">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.InitialParty.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.InitialParty.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.InitialParty.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.Persistence.Migrations.OrganizationProfileFields">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.OrganizationProfileFields.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.OrganizationProfileFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.Migrations.OrganizationProfileFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.Persistence.PartyDbContext">
+            <summary>
+            DbContext مالک schema <c>party</c>. FK به Identity ندارد و mega-context نیست.
+            دادهٔ Marketplace در پایگاه marketplace و دادهٔ Single-Store در پایگاه همان Tenant است.
+            </summary>
+        </member>
+        <member name="F:Tooba.Party.Infrastructure.Persistence.PartyDbContext.Schema">
+            <summary>
+            schema اختصاصی Party در همان پایگاه Tenant یا Marketplace.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.PartyDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Party.Infrastructure.Persistence.PartyDbContext})">
+            <summary>
+            DbContext را با گزینه‌های Host می‌سازد.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.Parties">
+            <summary>
+            ریشه‌های شخص/سازمان.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.Capabilities">
+            <summary>
+            قابلیت‌های تجاری گسترش‌پذیر سازمان.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.UserLinks">
+            <summary>
+            پیوند UserId مبهم به Party.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.Memberships">
+            <summary>
+            عضویت‌ها. مجوز نهایی نیستند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.OrganizationRelationships">
+            <summary>
+            روابط سازمان‌به‌سازمان.
+            </summary>
+        </member>
+        <member name="P:Tooba.Party.Infrastructure.Persistence.PartyDbContext.OutboxMessages">
+            <summary>
+            Outbox همین ماژول برای تصویرسازی بعدی SpiceDB.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.PartyDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Party.Infrastructure.Persistence.PartyDbContextFactory">
+            <summary>
+            کارخانهٔ design-time مهاجرت Party. Tenant را از Host نمی‌خواند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Party.Infrastructure.Persistence.PartyDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

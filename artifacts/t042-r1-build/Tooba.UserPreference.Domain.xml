@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.UserPreference.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.UserPreference.Domain.UiPreference">
+            <summary>
+            ترجیح کلیددار UI برای Actor. جدا از locale است؛ payload JSON آزاد است.
+            </summary>
+        </member>
+        <member name="F:Tooba.UserPreference.Domain.UiPreference.KeyMaxLength">
+            <summary>حداکثر طول کلید ترجیح.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UiPreference.PreferenceId">
+            <summary>شناسهٔ پایدار ردیف.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UiPreference.ActorUserId">
+            <summary>مالک سرورمحور؛ هرگز از بدنهٔ HTTP پذیرفته نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UiPreference.Key">
+            <summary>کلید منطقی مثل <c>grid.admin.products</c>.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UiPreference.JsonPayload">
+            <summary>بدنهٔ JSON به‌صورت متن.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UiPreference.UpdatedAt">
+            <summary>زمان آخرین ویرایش UTC.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UiPreference.Create(System.Guid,System.String,System.String,System.DateTimeOffset)">
+            <summary>ردیف جدید برای Actor و کلید می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UiPreference.Update(System.String,System.DateTimeOffset)">
+            <summary>کلید و payload را به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UiPreference.NormalizeKey(System.String)">
+            <summary>کلید را نرمال و اعتبارسنجی می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.UserPreference.Domain.UserPreference">
+            <summary>
+            ترجیح locale کاربر. فقط <c>fa</c> و <c>en</c> مجازند؛ theme/notification اینجا نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.UserPreference.Domain.UserPreference.LocaleFa">
+            <summary>locale فارسی.</summary>
+        </member>
+        <member name="F:Tooba.UserPreference.Domain.UserPreference.LocaleEn">
+            <summary>locale انگلیسی.</summary>
+        </member>
+        <member name="F:Tooba.UserPreference.Domain.UserPreference.LocaleMaxLength">
+            <summary>حداکثر طول کد locale.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UserPreference.OwnerUserId">
+            <summary>مالک سرورمحور؛ کلید اصلی و هرگز از بدنهٔ HTTP پذیرفته نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UserPreference.Locale">
+            <summary>کد locale پایدار (<c>fa</c> یا <c>en</c>).</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UserPreference.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.UserPreference.Domain.UserPreference.UpdatedAt">
+            <summary>زمان آخرین ویرایش UTC.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UserPreference.Create(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>ترجیح جدید برای Actor مشخص می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UserPreference.Update(System.String,System.DateTimeOffset)">
+            <summary>locale مجاز را به‌روز می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.UserPreference.Domain.UserPreference.NormalizeLocale(System.String)">
+            <summary>کد locale را نرمال و اعتبارسنجی می‌کند.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.OperatorProfile.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.OperatorProfile.Application.OperatorProfileSnapshot">
+            <summary>نمایهٔ خصوصی پروفایل اپراتور بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Application.OperatorProfileSnapshot.#ctor(System.String,System.String,System.String,System.String,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>نمایهٔ خصوصی پروفایل اپراتور بدون شناسهٔ مالک در پاسخ API.</summary>
+        </member>
+        <member name="T:Tooba.OperatorProfile.Application.OperatorProfileWrite">
+            <summary>ورودی نوشتن پروفایل اپراتور؛ تنظیمات سراسری platform ندارد.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Application.OperatorProfileWrite.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>ورودی نوشتن پروفایل اپراتور؛ تنظیمات سراسری platform ندارد.</summary>
+        </member>
+        <member name="T:Tooba.OperatorProfile.Application.IOperatorProfileDirectory">
+            <summary>
+            قرارداد کاربردی پروفایل توصیفی اپراتور. تمام عملیات با Actor تأمین‌شده از Host محدود می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Application.IOperatorProfileDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>پروفایل Actor را برمی‌گرداند؛ در صورت نبود ردیف تهی است.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Application.IOperatorProfileDirectory.UpsertAsync(System.Guid,Tooba.OperatorProfile.Application.OperatorProfileWrite,System.Threading.CancellationToken)">
+            <summary>پروفایل Actor را ایجاد یا به‌روز می‌کند.</summary>
+        </member>
+    </members>
+</doc>

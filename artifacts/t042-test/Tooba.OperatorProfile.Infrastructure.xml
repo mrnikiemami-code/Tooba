@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.OperatorProfile.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.OperatorProfileDirectory">
+            <summary>پیاده‌سازی پروفایل اپراتور که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileDirectory.#ctor(Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext)">
+            <summary>DbContext مالک را دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileDirectory.GetAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileDirectory.UpsertAsync(System.Guid,Tooba.OperatorProfile.Application.OperatorProfileWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.OperatorProfileModule">
+            <summary>ماژول مستقل پروفایل توصیفی اپراتور با schema، قرارداد و Outbox اختصاصی.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.OperatorProfileModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration">
+            <summary>ثبت Outbox پروفایل اپراتور؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.OperatorProfileOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.Persistence.Migrations.InitialOperatorProfile">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.Migrations.InitialOperatorProfile.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.Migrations.InitialOperatorProfile.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.Migrations.InitialOperatorProfile.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext">
+            <summary>DbContext مالک schema مستقل operator_profile و Outbox همان ماژول.</summary>
+        </member>
+        <member name="F:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext.Schema">
+            <summary>نام schema اختصاصی پروفایل اپراتور.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext})">
+            <summary>DbContext را با گزینه‌های ماژول می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext.Profiles">
+            <summary>ردیف‌های خصوصی پروفایل اپراتور.</summary>
+        </member>
+        <member name="P:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext.OutboxMessages">
+            <summary>پیام‌های Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت‌های OperatorProfile.</summary>
+        </member>
+        <member name="M:Tooba.OperatorProfile.Infrastructure.Persistence.OperatorProfileDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

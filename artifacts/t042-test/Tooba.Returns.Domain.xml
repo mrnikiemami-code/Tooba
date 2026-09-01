@@ -1,0 +1,286 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Returns.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Returns.Domain.RefundDestination">
+            <summary>
+            مقصد بازگشت وجه. فقط مقادیر typed؛ free-form نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.RefundDestination.OriginalPayment">
+            <summary>بازگشت به روش پرداخت اصلی (PSP/gateway).</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.RefundDestination.Wallet">
+            <summary>اعتبار به کیف پول مشتری.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.ReturnRequestStatus">
+            <summary>
+            وضعیت درخواست مرجوعی. با وضعیت Order یا Payment یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.Requested">
+            <summary>درخواست ثبت‌شده و در انتظار بررسی.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.Approved">
+            <summary>تأیید شده و آمادهٔ refund.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.Rejected">
+            <summary>رد شده.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.RefundProcessing">
+            <summary>refund در حال پردازش.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.Completed">
+            <summary>مرجوعی و refund تکمیل شده.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.RefundFailed">
+            <summary>refund شکست خورده.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.ReturnRequestStatus.Cancelled">
+            <summary>لغو شده توسط مشتری.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.RefundAttemptStatus">
+            <summary>
+            وضعیت تلاش refund. با PaymentStatus یکی نیست.
+            </summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.RefundAttemptStatus.Pending">
+            <summary>در انتظار پاسخ درگاه.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.RefundAttemptStatus.Succeeded">
+            <summary>موفق.</summary>
+        </member>
+        <member name="F:Tooba.Returns.Domain.RefundAttemptStatus.Failed">
+            <summary>شکست.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.ReturnItem">
+            <summary>
+            خط مرجوعی با snapshot قیمت سفارش.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.ReturnItemId">
+            <summary>شناسه خط مرجوعی.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.ReturnRequestId">
+            <summary>درخواست مالک.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.OrderLineId">
+            <summary>خط سفارش مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.Quantity">
+            <summary>تعداد درخواستی.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.UnitPriceSnapshot">
+            <summary>snapshot قیمت واحد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.Currency">
+            <summary>snapshot ارز.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnItem.ReservationId">
+            <summary>رزرو موجودی مرجع؛ FK Inventory نیست.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.RefundAttempt">
+            <summary>
+            تلاش refund برای یک درخواست مرجوعی.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.RefundAttemptId">
+            <summary>شناسه تلاش.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.ReturnRequestId">
+            <summary>درخواست مرجوعی مالک.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.PaymentId">
+            <summary>پرداخت مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.Amount">
+            <summary>مبلغ refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.Status">
+            <summary>وضعیت تلاش.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.IdempotencyKey">
+            <summary>کلید idempotency.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.ProviderReference">
+            <summary>مرجع درگاه.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.FailureCode">
+            <summary>کد شکست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundAttempt.CompletedAt">
+            <summary>زمان تکمیل.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.RefundAttempt.MarkSucceeded(System.String,System.DateTimeOffset)">
+            <summary>تلاش را موفق علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.RefundAttempt.MarkFailed(System.String,System.DateTimeOffset)">
+            <summary>تلاش را شکست‌خورده علامت می‌زند.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.ReturnRequest">
+            <summary>
+            درخواست مرجوعی برای یک SellerOrder. aggregate root.
+            </summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.SellerOrderId">
+            <summary>سفارش فروشنده مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.SellerPartyId">
+            <summary>فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.RequestedByUserId">
+            <summary>کاربر درخواست‌دهنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.IdempotencyKey">
+            <summary>کلید idempotency ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.Status">
+            <summary>وضعیت چرخه.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.Reason">
+            <summary>دلیل درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.Currency">
+            <summary>ارز refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.RefundAmount">
+            <summary>مبلغ refund محاسبه‌شده از snapshot خطوط.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.RefundDestination">
+            <summary>مقصد بازگشت وجه.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.PaymentId">
+            <summary>شناسه پرداخت snapshot.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.CreatedAt">
+            <summary>زمان ایجاد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.UpdatedAt">
+            <summary>آخرین به‌روزرسانی.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.Items">
+            <summary>خطوط مرجوعی.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.RefundAttempts">
+            <summary>تلاش‌های refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequest.DomainEvents">
+            <summary>رویدادهای دامنه.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.ClearDomainEvents">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.Create(System.Guid,System.Guid,System.Guid,System.Guid,System.String,System.String,System.String,System.Collections.Generic.IEnumerable{System.ValueTuple{System.Guid,System.Int32,System.Decimal,System.Nullable{System.Guid}}},System.DateTimeOffset,Tooba.Returns.Domain.RefundDestination)">
+            <summary>
+            درخواست مرجوعی را از snapshot خطوط می‌سازد. eligibility در Directory بررسی می‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.AttachLoadedItems(System.Collections.Generic.IEnumerable{Tooba.Returns.Domain.ReturnItem})">
+            <summary>خطوط بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.AttachLoadedRefundAttempts(System.Collections.Generic.IEnumerable{Tooba.Returns.Domain.RefundAttempt})">
+            <summary>تلاش‌های بارگذاری‌شده را وصل می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.Approve(System.Guid,System.DateTimeOffset,System.Nullable{Tooba.Returns.Domain.RefundDestination})">
+            <summary>درخواست را تأیید می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.Reject(System.DateTimeOffset)">
+            <summary>درخواست را رد می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.MarkRefundProcessing(System.DateTimeOffset)">
+            <summary>به RefundProcessing می‌رود.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.MarkRefundSucceeded(System.DateTimeOffset)">
+            <summary>refund را موفق علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.MarkRefundFailed(System.DateTimeOffset)">
+            <summary>refund را شکست‌خورده علامت می‌زند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.Cancel(System.DateTimeOffset)">
+            <summary>درخواست را لغو می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequest.BeginRefundAttempt(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>تلاش refund جدید ثبت می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.ReturnRequestedDomainEvent">
+            <summary>رویداد درخواست مرجوعی.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnRequestedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequestedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequestedDomainEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequestedDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnRequestedDomainEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.ReturnApprovedDomainEvent">
+            <summary>رویداد تأیید مرجوعی.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.ReturnApprovedDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.CheckoutId">
+            <summary>checkout مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.RefundAmount">
+            <summary>مبلغ refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.ReturnApprovedDomainEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+        <member name="T:Tooba.Returns.Domain.RefundSucceededDomainEvent">
+            <summary>رویداد موفقیت refund.</summary>
+        </member>
+        <member name="M:Tooba.Returns.Domain.RefundSucceededDomainEvent.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.String)">
+            <summary>رویداد را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.Metadata">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.ReturnRequestId">
+            <summary>شناسه درخواست.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.SellerOrderId">
+            <summary>سفارش فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.PaymentId">
+            <summary>پرداخت مرجع.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.RefundAmount">
+            <summary>مبلغ refund.</summary>
+        </member>
+        <member name="P:Tooba.Returns.Domain.RefundSucceededDomainEvent.Currency">
+            <summary>ارز.</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,1028 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Catalog.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Catalog.Application.ICatalogActorContext">
+            <summary>
+            زمینهٔ بازیگر برای ثبت تاریخچهٔ Catalog در همان درخواست Host.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.ICatalogActorContext.ActorUserId">
+            <summary>شناسهٔ کاربر بازیگر؛ null یعنی سیستم.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.ICatalogActorContext.ActorDisplayName">
+            <summary>نام نمایشی اختیاری در زمان ثبت.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CatalogActorContext">
+            <summary>پیاده‌سازی scoped زمینهٔ بازیگر Catalog.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.CatalogActorContext.ActorUserId">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Catalog.Application.CatalogActorContext.ActorDisplayName">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductReference">
+            <summary>
+            مرجع پایدار محصول توصیفی برای ماژول‌های بعدی بدون نشت EF. قیمت ندارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductReference.#ctor(System.Guid,Tooba.Catalog.Domain.CatalogProductKind,Tooba.Catalog.Domain.CatalogPublicationStatus)">
+            <summary>
+            مرجع پایدار محصول توصیفی برای ماژول‌های بعدی بدون نشت EF. قیمت ندارد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ReviewableProductReference">
+            <summary>مرجع محصول برای Reviews شامل گونه‌های Catalog و بدون نشت موجودیت EF.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ReviewableProductReference.#ctor(System.Guid,System.String,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus,System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>مرجع محصول برای Reviews شامل گونه‌های Catalog و بدون نشت موجودیت EF.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.VariantReference">
+            <summary>
+            مرجع گونهٔ Catalog. هویت Offer فروشنده نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.VariantReference.#ctor(System.Guid,System.Guid,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus)">
+            <summary>
+            مرجع گونهٔ Catalog. هویت Offer فروشنده نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryReference">
+            <summary>
+            مرجع ردهٔ طبقه‌بندی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryReference.#ctor(System.Guid,System.Nullable{System.Guid},Tooba.Catalog.Domain.CatalogPublicationStatus)">
+            <summary>
+            مرجع ردهٔ طبقه‌بندی.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.BrandReference">
+            <summary>
+            مرجع برند تحریری.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.BrandReference.#ctor(System.Guid,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus)">
+            <summary>
+            مرجع برند تحریری.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.TagView">
+            <summary>
+            نمای برچسب تاکسونومی برای Admin (نام انسانی؛ نه GUID خام به‌عنوان UX اصلی).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.TagView.#ctor(System.Guid,System.String,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus,System.String,System.DateTimeOffset,System.DateTimeOffset)">
+            <summary>
+            نمای برچسب تاکسونومی برای Admin (نام انسانی؛ نه GUID خام به‌عنوان UX اصلی).
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.AccessControlCategoryItem">
+            <summary>
+            ردهٔ Catalog برای انتخابگر scope در Access Control (نام محلی؛ نه JOIN از Order).
+            </summary>
+            <param name="CategoryId">شناسهٔ رده.</param>
+            <param name="ParentCategoryId">والد اختیاری.</param>
+            <param name="Name">نام محلی (اولویت fa سپس en).</param>
+            <param name="Status">وضعیت انتشار.</param>
+        </member>
+        <member name="M:Tooba.Catalog.Application.AccessControlCategoryItem.#ctor(System.Guid,System.Nullable{System.Guid},System.String,System.String)">
+            <summary>
+            ردهٔ Catalog برای انتخابگر scope در Access Control (نام محلی؛ نه JOIN از Order).
+            </summary>
+            <param name="CategoryId">شناسهٔ رده.</param>
+            <param name="ParentCategoryId">والد اختیاری.</param>
+            <param name="Name">نام محلی (اولویت fa سپس en).</param>
+            <param name="Status">وضعیت انتشار.</param>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlCategoryItem.CategoryId">
+            <summary>شناسهٔ رده.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlCategoryItem.ParentCategoryId">
+            <summary>والد اختیاری.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlCategoryItem.Name">
+            <summary>نام محلی (اولویت fa سپس en).</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlCategoryItem.Status">
+            <summary>وضعیت انتشار.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.AccessControlBrandItem">
+            <summary>
+            برند برای انتخابگر scope Access Control.
+            </summary>
+            <param name="BrandId">شناسه.</param>
+            <param name="Name">نام محلی.</param>
+            <param name="Status">وضعیت.</param>
+        </member>
+        <member name="M:Tooba.Catalog.Application.AccessControlBrandItem.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            برند برای انتخابگر scope Access Control.
+            </summary>
+            <param name="BrandId">شناسه.</param>
+            <param name="Name">نام محلی.</param>
+            <param name="Status">وضعیت.</param>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlBrandItem.BrandId">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlBrandItem.Name">
+            <summary>نام محلی.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlBrandItem.Status">
+            <summary>وضعیت.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.AccessControlProductItem">
+            <summary>
+            محصول منتشرشده برای انتخابگر scope Access Control.
+            </summary>
+            <param name="ProductId">شناسه.</param>
+            <param name="Title">عنوان محلی.</param>
+            <param name="Status">وضعیت.</param>
+        </member>
+        <member name="M:Tooba.Catalog.Application.AccessControlProductItem.#ctor(System.Guid,System.String,System.String)">
+            <summary>
+            محصول منتشرشده برای انتخابگر scope Access Control.
+            </summary>
+            <param name="ProductId">شناسه.</param>
+            <param name="Title">عنوان محلی.</param>
+            <param name="Status">وضعیت.</param>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlProductItem.ProductId">
+            <summary>شناسه.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlProductItem.Title">
+            <summary>عنوان محلی.</summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.AccessControlProductItem.Status">
+            <summary>وضعیت.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ICatalogLookupGateway">
+            <summary>
+            درز خواندن Catalog برای ماژول‌های دیگر. Search منبع حقیقت نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.FindProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            محصول را در پایگاه Tenant/Marketplace جاری پیدا می‌کند؛ Host parse نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.FindVariantAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            گونه را پیدا می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.FindCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>رده را برای اعتبارسنجی scope پیدا می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.FindReviewableProductBySlugAsync(System.String,System.Threading.CancellationToken)">
+            <summary>محصول را با slug پایدار همراه شناسهٔ گونه‌ها برای اثبات خرید پیدا می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.FindReviewableProductByIdAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>محصول قابل بررسی را با شناسهٔ Catalog پیدا می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.GetProductTitlesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>عنوان امن و محلی محصولات را برای ترکیب صف مدیریت به‌صورت گروهی می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.GetCategoryNamesAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>نام محلی رده‌ها را گروهی می‌خواند (اولویت fa سپس en).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.GetReviewableProductsByIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>مرجع قابل‌نمایش محصولات منتشرشده را برای ترکیب نظرات خانه به‌صورت گروهی می‌خواند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.GetPrimaryCategoryIdsByVariantIdsAsync(System.Collections.Generic.IReadOnlyCollection{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            ردهٔ اصلی هر گونه را از product→اولین ProductCategories.CategoryId به‌صورت دسته‌ای برمی‌گرداند (بدون N+1).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.ListCategoriesForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <summary>فهرست رده‌ها برای انتخابگر Access Control با جستجوی نام.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.ListBrandsForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <summary>فهرست برندها برای انتخابگر Access Control.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogLookupGateway.ListProductsForAccessControlAsync(System.String,System.Threading.CancellationToken)">
+            <summary>فهرست محصولات منتشرشده برای انتخابگر Access Control.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ICatalogUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز موردکاربرد. ماتریس نهایی Catalog و SDK اسپایس‌دی‌بی اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن foundation را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ICatalogDirectory">
+            <summary>
+            نوشتن foundation Catalog. UI تجاری و Offer اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateCategoryAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            رده می‌سازد (نام‌ها + auto-slug در ترجمه؛ LocalizedText برای سازگاری عقب‌رو).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateCategoryAsync(Tooba.Catalog.Application.CategoryCreateRequest,System.Threading.CancellationToken)">
+            <summary>
+            رده با فیلدهای هسته و ترجمه‌های صریح می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpdateCategoryCoreAsync(System.Guid,Tooba.Catalog.Application.CategoryCoreUpdateRequest,System.Threading.CancellationToken)">
+            <summary>هستهٔ غیرمحلی رده را به‌روز می‌کند؛ Parent فقط از Move.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpsertCategoryTranslationAsync(System.Guid,Tooba.Catalog.Application.CategoryTranslationUpsertRequest,System.Threading.CancellationToken)">
+            <summary>ترجمهٔ locale را درج/به‌روز می‌کند؛ تغییر slug تاریخچه می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.MoveCategoryAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.DateTimeOffset},System.Threading.CancellationToken)">
+            <summary>رده را زیر والد جدید جابه‌جا می‌کند با جلوگیری از حلقه.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ReorderCategorySiblingsAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>ترتیب خواهر/برادرها را بازنویسی می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetCategoryTreeAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>درخت رده را یک‌باره برای locale می‌خواند (بدون N+1).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetCategoryWorkspaceAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>خلاصهٔ workspace رده برای Admin.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ResolveCategoryRouteAsync(System.String,System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>مسیر locale+slug را به رده جاری یا redirect تاریخی resolve می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ArchiveCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>رده را آرشیو می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateBrandAsync(System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            برند تحریری می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateTagAsync(System.String,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.String,System.Threading.CancellationToken)">
+            <summary>
+            برچسب تاکسونومی می‌سازد (نام‌های محلی؛ کد پایدار اختیاری با تولید خودکار).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListTagsAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            فهرست/جستجوی برچسب‌ها بر اساس نام محلی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetTagAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>یک برچسب را با نام محلی برمی‌گرداند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PublishTagAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>برچسب را منتشر می‌کند (تحریری؛ صفحهٔ عمومی خودکار نیست).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AssignProductTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>برچسب را به محصول اختصاص می‌دهد؛ تکراری رد می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RemoveProductTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>پیوند محصول-برچسب را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListProductTagsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>برچسب‌های اختصاص‌یافته به محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AssignCategoryTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>برچسب را به رده اختصاص می‌دهد؛ تکراری رد می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RemoveCategoryTagAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>پیوند رده-برچسب را حذف می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListCategoryTagsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>برچسب‌های اختصاص‌یافته به رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateAttributeDefinitionAsync(System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Boolean,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            تعریف ویژگی تایپ‌شده می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpdateAttributeDefinitionAsync(System.Guid,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Int32},System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            فرادادهٔ تعریف ویژگی را به‌روز می‌کند (نه Code/ValueKind/IsVariantAxis).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListAttributeDefinitionsAsync(System.Threading.CancellationToken)">
+            <summary>
+            فهرست تعاریف ویژگی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetAttributeDefinitionAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            یک تعریف ویژگی را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PreviewVariantAxisCapabilityDisableImpactAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پیش‌نمایش غیرمخرب اثر غیرفعال‌کردن capability محور تنوع.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.SetAttributeDefinitionVariantAxisCapabilityAsync(System.Guid,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            قابلیت محور تنوع تعریف را به‌روز می‌کند؛ bindingهای رده را خودکار تغییر نمی‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AddAttributeOptionAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            گزینهٔ شمارشی اضافه می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.BindCategoryAttributeAsync(System.Guid,System.Guid,System.Int32,Tooba.Catalog.Application.CategoryAttributeAssignmentFlags,System.Threading.CancellationToken)">
+            <summary>
+            تعریف را به schema رده پیوند می‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpdateCategoryAttributeBindingAsync(System.Guid,System.Guid,Tooba.Catalog.Application.CategoryAttributeAssignmentFlags,System.Threading.CancellationToken)">
+            <summary>
+            رفتار assignment محلی رده را به‌روزرسانی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UnbindCategoryAttributeAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پیوند schema رده را برمی‌دارد؛ مقادیر محصول را حذف نمی‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ReorderCategoryAttributeBindingsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            ترتیب پیوندهای schema رده را بازنویسی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetEffectiveCategorySchemaAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            schema مؤثر رده (با ارث والدین) را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetEffectiveCategoryFacetsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            facetهای مؤثر رده برای PLP را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListLocalFacetConfigurationsAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            پیکربندی‌های facet محلی رده را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpsertCategoryFacetConfigurationAsync(System.Guid,System.Guid,Tooba.Catalog.Application.CategoryFacetConfigurationInput,System.Threading.CancellationToken)">
+            <summary>
+            پیکربندی facet رده را درج یا به‌روزرسانی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RemoveCategoryFacetOverrideAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            override محلی facet را حذف می‌کند (بازگشت به والد).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ReorderCategoryFacetConfigurationsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            ترتیب facetهای محلی رده را بازنویسی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetCategoryMegaMenuConfigurationAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            پیکربندی مگامنو برای یک رده را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpsertCategoryMegaMenuBindingAsync(System.Guid,System.String,Tooba.Catalog.Application.CategoryMegaMenuBindingInput,System.Threading.CancellationToken)">
+            <summary>
+            رده را به مگامنو متصل می‌کند یا به‌روزرسانی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RemoveCategoryMegaMenuBindingAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            اتصال رده را از مگامنو برمی‌دارد (رده حذف نمی‌شود).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListMegaMenuPlacementOptionsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            گزینه‌های والد presentation برای selector Admin.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetStorefrontMegaMenuAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            درخت مگامنو قابل نمایش ویترین را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateProductAsync(Tooba.Catalog.Domain.CatalogProductKind,System.String,System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            محصول توصیفی می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpsertProductLocalizedFieldAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            متن محلی یک فیلد مجاز محصول را درج یا به‌روزرسانی می‌کند؛ این درز فقط محتوای Catalog را می‌نویسد و قیمت یا موجودی نمی‌پذیرد.
+            </summary>
+            <param name="productId">شناسهٔ محصول در Catalog جاری.</param>
+            <param name="fieldKey">کلید محتوایی مجاز؛ در حال حاضر short_description و full_description.</param>
+            <param name="localizedValues">مقادیر غیرخالی بر اساس locale استاندارد.</param>
+            <param name="cancellationToken">توکن لغو عملیات.</param>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AssignCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            محصول را به رده وصل می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AttachMediaReferenceAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            مرجع مات رسانه می‌گذارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AttachMediaReferenceAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            مرجع مات رسانه با alt و ترتیب اولیه می‌گذارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AttachGeneratedPlaceholderMediaAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            شناسهٔ مات نمایشی می‌سازد و به محصول وصل می‌کند (بدون باینری؛ کتابخانهٔ Media هنوز نیست).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductMediaEditorStateAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            حالت ویرایشگر گالری رسانهٔ محصول با ترتیب و آمادگی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ReorderProductMediaAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            ترتیب گالری را بازنویسی می‌کند؛ فهرست باید دقیقاً همهٔ دارایی‌های فعلی باشد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.SetProductPrimaryMediaAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            تصویر اصلی را روی یک مرجع موجود تنظیم می‌کند (یکتایی اجباری).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PatchProductMediaAltAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            متن جایگزین زمینه‌ای روی انتساب محصول را به‌روز می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.DetachProductMediaAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            انتساب رسانه را از محصول جدا می‌کند؛ دارایی مشترک حذف نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductMediaReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            آمادگی گالری برای انتشار بعدی (تصویر اصلی + تعداد).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductSeoAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            فرادادهٔ SEO محصول برای یک locale (SlugSeam سراسری + LocalizedText).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UpdateProductSeoAsync(System.Guid,Tooba.Catalog.Application.ProductSeoUpdateInput,System.Threading.CancellationToken)">
+            <summary>
+            به‌روزرسانی SEO محصول: SlugSeam سراسری + seo_title/seo_description محلی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductSeoReadinessAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            آمادگی SEO محصول برای یک locale (بدون Offer/Price/Stock).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.SetProductAttributeAsync(System.Guid,System.Guid,System.String,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            مشخصهٔ غیرمحور روی محصول می‌گذارد (upsert). JSON آزاد نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductAttributeEditorStateAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            حالت ویرایشگر ویژگی‌های محصول بر اساس schema مؤثر ردهٔ اصلی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.SetProductAttributesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductAttributeValueInput},System.Threading.CancellationToken)">
+            <summary>
+            مقادیر ویژگی محصول را در یک تراکنش می‌گذارد/پاک می‌کند؛ محورهای تنوع رد می‌شوند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductAttributeReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            آمادگی مقادیر الزامی schema مؤثر برای محصول.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.SetProductVariantAxesAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid},System.Threading.CancellationToken)">
+            <summary>
+            محورهای Variant انتخاب‌شدهٔ محصول را جایگزین می‌کند؛ ماتریس کامل تولید نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductVariantEditorStateAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            حالت ویرایشگر ماتریس تنوع‌های محصول را بر اساس schema مؤثر برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PreviewProductVariantCombinationsAsync(System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantSelectedAxisInput},System.String,System.Threading.CancellationToken)">
+            <summary>
+            ترکیب‌های مطلوب را پیش‌نمایش می‌کند بدون نوشتن.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ApplyProductVariantMatrixAsync(System.Guid,Tooba.Catalog.Application.ProductVariantApplyInput,System.Threading.CancellationToken)">
+            <summary>
+            ماتریس تنوع را reconcile می‌کند؛ حذف سخت انجام نمی‌شود (آرشیو ترجیح داده می‌شود).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductVariantReadinessAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            آمادگی تنوع‌های محصول برای جریان انتشار بعدی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PreviewCategoryChangeAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            تأثیر تغییر رده را بدون حذف مقادیر گزارش می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PreviewCategoryChangeReportAsync(System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            گزارش انسانی تأثیر تغییر رده با برچسب‌ها و خلاصهٔ فارسی؛ حذف خاموش ندارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ReplaceProductPrimaryCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            مهاجرت تراکنشی دستهٔ اصلی: حفظ مقادیر سازگار، حذف orphanها، بازبینی تنوع‌های ناسازگار، و Unpublish در صورت ناسازگاری ساختاری روی محصول Published.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AddProductAdditionalCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            دستهٔ اضافی کشف/PLP را به محصول اضافه می‌کند؛ schema را تغییر نمی‌دهد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RemoveProductAdditionalCategoryAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            دستهٔ اضافی را حذف می‌کند؛ حذف دستهٔ اصلی مجاز نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListProductCategoryAssignmentsAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            فهرست پیوندهای دستهٔ محصول (اصلی + اضافی) با مسیر انسانی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ValidateProductAttributesAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            الزام‌های schema مؤثر را برای مقادیر فعلی محصول بررسی می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.GetProductPublishReadinessAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            آمادگی تجمیعی انتشار محصول — فقط Catalog؛ بدون Offer/Price/Stock.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PublishProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            محصول را در Catalog منتشر می‌کند نه در Offer. آمادگی تجمیعی را اجباری می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.UnpublishProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            محصول منتشرشده را به پیش‌نویس برمی‌گرداند. آرشیو جدا است.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ArchiveProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            محصول را در Catalog آرشیو می‌کند؛ حذف سخت نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.RestoreProductAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            بازیابی صریح از بایگانی به پیش‌نویس.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.ListProductHistoryAsync(System.Guid,System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            فهرست تاریخچهٔ محصول (جدیدترین اول) با صفحه‌بندی قطعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.AppendProductHistoryAsync(System.Guid,System.String,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            ثبت صریح یک رویداد تاریخچه (برای مسیرهای Host که همین SaveChanges را ندارند).
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PublishCategoryAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            رده را برای ناوبری منتشر می‌کند. رده منتشرنشده در سطوح عمومی دیده نمی‌شود،
+            اما انتشار رده هیچ قابلیت خریدی نمی‌سازد؛ قیمت و موجودی بیرون از Catalog می‌مانند.
+            </summary>
+            <param name="categoryId">شناسهٔ ردهٔ موجود در Catalog همین Tenant.</param>
+            <param name="cancellationToken">توکن لغو عملیات.</param>
+            <exception cref="T:System.InvalidOperationException">اگر رده در Catalog این Tenant نباشد.</exception>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.PublishBrandAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            برند را برای سطوح عمومی برند منتشر می‌کند. انتشار برند تحریری است و
+            مالکیت فروشنده، کمیسیون یا ادعای بازاریابی تولید نمی‌کند.
+            </summary>
+            <param name="brandId">شناسهٔ برند موجود در Catalog همین Tenant.</param>
+            <param name="cancellationToken">توکن لغو عملیات.</param>
+            <exception cref="T:System.InvalidOperationException">اگر برند در Catalog این Tenant نباشد.</exception>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ICatalogDirectory.CreateVariantAsync(System.Guid,System.String,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.Guid,System.String,System.Nullable{System.Guid}}},System.Threading.CancellationToken)">
+            <summary>
+            گونه با ترکیب یکتا می‌سازد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryAttributeAssignmentFlags">
+            <summary>
+            پرچم‌های رفتار category-specific روی assignment.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryAttributeAssignmentFlags.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            پرچم‌های رفتار category-specific روی assignment.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.AttributeDefinitionView">
+            <summary>
+            نمای تعریف ویژگی برای schema authoring بدون نشت EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.AttributeDefinitionView.#ctor(System.Guid,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Boolean,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Int32},System.Boolean,System.DateTimeOffset)">
+            <summary>
+            نمای تعریف ویژگی برای schema authoring بدون نشت EF.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.VariantAxisAffectedCategorySummary">
+            <summary>
+            خلاصهٔ ردهٔ تحت تأثیر غیرفعال‌سازی capability محور تنوع.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.VariantAxisAffectedCategorySummary.#ctor(System.Guid,System.String,System.Int32)">
+            <summary>
+            خلاصهٔ ردهٔ تحت تأثیر غیرفعال‌سازی capability محور تنوع.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.VariantAxisCapabilityDisableImpactView">
+            <summary>
+            پیش‌نمایش غیرمخرب اثر غیرفعال‌کردن capability محور تنوع.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.VariantAxisCapabilityDisableImpactView.#ctor(System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.VariantAxisAffectedCategorySummary},System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            پیش‌نمایش غیرمخرب اثر غیرفعال‌کردن capability محور تنوع.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.EffectiveSchemaEntry">
+            <summary>
+            ردیف schema مؤثر رده پس از ارث والدین.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.EffectiveSchemaEntry.#ctor(System.Guid,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Boolean,System.Boolean,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Guid,System.Boolean,System.Boolean,System.Nullable{System.Guid})">
+            <summary>
+            ردیف schema مؤثر رده پس از ارث والدین.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryFacetConfigurationInput">
+            <summary>
+            ورودی پیکربندی facet رده.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryFacetConfigurationInput.#ctor(Tooba.Catalog.Domain.CatalogFacetDisplayType,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            ورودی پیکربندی facet رده.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryFacetConfigurationView">
+            <summary>
+            نمای محلی پیکربندی facet.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryFacetConfigurationView.#ctor(System.Guid,System.Guid,System.Guid,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,Tooba.Catalog.Domain.CatalogFacetDisplayType,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            نمای محلی پیکربندی facet.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.EffectiveCategoryFacet">
+            <summary>
+            facet مؤثر رده برای Admin/Storefront.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.EffectiveCategoryFacet.#ctor(System.Guid,System.String,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,Tooba.Catalog.Domain.CatalogFacetDisplayType,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Guid,System.Boolean)">
+            <summary>
+            facet مؤثر رده برای Admin/Storefront.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryMegaMenuBindingInput">
+            <summary>ورودی bind/update مگامنو برای یک رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryMegaMenuBindingInput.#ctor(System.Nullable{System.Guid},System.Int32,System.Boolean,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String)">
+            <summary>ورودی bind/update مگامنو برای یک رده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryMegaMenuConfigurationView">
+            <summary>نمای Admin پیکربندی مگامنو یک رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryMegaMenuConfigurationView.#ctor(System.Guid,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.Int32,System.Boolean,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Boolean,System.Boolean)">
+            <summary>نمای Admin پیکربندی مگامنو یک رده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.MegaMenuPlacementOption">
+            <summary>گزینهٔ والد presentation با مسیر انسانی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.MegaMenuPlacementOption.#ctor(System.Guid,System.Guid,System.String,System.String,System.Int32)">
+            <summary>گزینهٔ والد presentation با مسیر انسانی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.StorefrontMegaMenuItem">
+            <summary>آیتم flat مگامنو برای Storefront.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.StorefrontMegaMenuItem.#ctor(System.Guid,System.Nullable{System.Guid},System.Guid,System.String,System.String,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Int32)">
+            <summary>آیتم flat مگامنو برای Storefront.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryChangeImpact">
+            <summary>
+            گزارش تأثیر تغییر رده؛ حذف خاموش انجام نمی‌شود.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryChangeImpact.#ctor(System.Guid,System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.OrphanProductAttributeValue},System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>
+            گزارش تأثیر تغییر رده؛ حذف خاموش انجام نمی‌شود.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductCategoryAssignmentRole">
+            <summary>نقش پیوند محصول↔رده در لایهٔ Application.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Application.ProductCategoryAssignmentRole.Primary">
+            <summary>دسته اصلی.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Application.ProductCategoryAssignmentRole.Additional">
+            <summary>دسته اضافی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductCategoryAssignmentInfo">
+            <summary>پیوند دستهٔ محصول با مسیر انسانی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductCategoryAssignmentInfo.#ctor(System.Guid,System.String,Tooba.Catalog.Application.ProductCategoryAssignmentRole)">
+            <summary>پیوند دستهٔ محصول با مسیر انسانی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.OrphanProductAttributeValue">
+            <summary>
+            مقدار ویژگی محصول که در schema جدید جایی ندارد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.OrphanProductAttributeValue.#ctor(System.Guid,System.String)">
+            <summary>
+            مقدار ویژگی محصول که در schema جدید جایی ندارد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductAttributeValueInput">
+            <summary>
+            ورودی تنظیم/پاک‌سازی یک مقدار ویژگی محصول.
+            برای Enumeration چندمقداری: RawValue = شناسه‌های گزینه با کاما (N یا D)؛ EnumOptionId برای تک‌گزینه.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductAttributeValueInput.#ctor(System.Guid,System.String,System.Nullable{System.Guid},System.Boolean)">
+            <summary>
+            ورودی تنظیم/پاک‌سازی یک مقدار ویژگی محصول.
+            برای Enumeration چندمقداری: RawValue = شناسه‌های گزینه با کاما (N یا D)؛ EnumOptionId برای تک‌گزینه.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductAttributeEditorOption">
+            <summary>گزینهٔ شمارشی برای ویرایشگر ویژگی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductAttributeEditorOption.#ctor(System.Guid,System.String,System.Boolean)">
+            <summary>گزینهٔ شمارشی برای ویرایشگر ویژگی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductAttributeEditorField">
+            <summary>
+            فیلد ویرایشگر ویژگی محصول؛ محورهای تنوع ورودی ویرایش ندارند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductAttributeEditorField.#ctor(System.Guid,System.String,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductAttributeEditorOption},System.String,System.Nullable{System.Guid},System.String,System.Boolean)">
+            <summary>
+            فیلد ویرایشگر ویژگی محصول؛ محورهای تنوع ورودی ویرایش ندارند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductAttributeEditorState">
+            <summary>حالت کامل ویرایشگر ویژگی محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductAttributeEditorState.#ctor(System.Guid,System.Nullable{System.Guid},System.String,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductAttributeEditorField},Tooba.Catalog.Application.ProductAttributeReadiness)">
+            <summary>حالت کامل ویرایشگر ویژگی محصول.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductAttributeReadiness">
+            <summary>آمادگی مقادیر ویژگی برای انتشار بعدی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductAttributeReadiness.#ctor(System.Boolean,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>آمادگی مقادیر ویژگی برای انتشار بعدی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductMediaAssignment">
+            <summary>انتساب مات رسانه روی محصول؛ باینری ذخیره نمی‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductMediaAssignment.#ctor(System.Guid,System.Boolean,System.Int32,System.String)">
+            <summary>انتساب مات رسانه روی محصول؛ باینری ذخیره نمی‌شود.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductMediaEditorState">
+            <summary>حالت ویرایشگر گالری رسانهٔ محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductMediaEditorState.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductMediaAssignment},Tooba.Catalog.Application.ProductMediaReadiness)">
+            <summary>حالت ویرایشگر گالری رسانهٔ محصول.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductMediaReadiness">
+            <summary>آمادگی گالری رسانه برای انتشار بعدی (T016).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductMediaReadiness.#ctor(System.Boolean,System.Int32,System.Boolean,System.String)">
+            <summary>آمادگی گالری رسانه برای انتشار بعدی (T016).</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductSeoUpdateInput">
+            <summary>ورودی به‌روزرسانی SEO محصول (locale + قفل خوش‌بینانه).</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductSeoUpdateInput.#ctor(System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>ورودی به‌روزرسانی SEO محصول (locale + قفل خوش‌بینانه).</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductSeoReadiness">
+            <summary>آمادگی SEO محصول — جدا از Media و بدون وابستگی تجاری.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductSeoReadiness.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.String)">
+            <summary>آمادگی SEO محصول — جدا از Media و بدون وابستگی تجاری.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductPublishMissingRequirement">
+            <summary>مورد ناقص آمادگی انتشار با هدایت به تب Workspace.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductPublishMissingRequirement.#ctor(System.String,System.String,System.String)">
+            <summary>مورد ناقص آمادگی انتشار با هدایت به تب Workspace.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductPublishReadiness">
+            <summary>
+            آمادگی تجمیعی انتشار Product Master — فقط Catalog.
+            Offer / Pricing / Inventory عمداً خارج‌اند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductPublishReadiness.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductPublishMissingRequirement},System.String)">
+            <summary>
+            آمادگی تجمیعی انتشار Product Master — فقط Catalog.
+            Offer / Pricing / Inventory عمداً خارج‌اند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductHistoryEntryDto">
+            <summary>یک ردیف تاریخچهٔ انسانی محصول برای Admin.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductHistoryEntryDto.#ctor(System.Guid,System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.Nullable{System.Guid},System.String,System.DateTimeOffset)">
+            <summary>یک ردیف تاریخچهٔ انسانی محصول برای Admin.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductHistoryPage">
+            <summary>صفحهٔ تاریخچهٔ محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductHistoryPage.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductHistoryEntryDto},System.Int32,System.Int32,System.Int32)">
+            <summary>صفحهٔ تاریخچهٔ محصول.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductSeoDetail">
+            <summary>جزئیات SEO محصول برای Admin و پیش‌نمایش مسیر عمومی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductSeoDetail.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,Tooba.Catalog.Application.ProductSeoReadiness,System.DateTimeOffset)">
+            <summary>جزئیات SEO محصول برای Admin و پیش‌نمایش مسیر عمومی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryChangeOrphanSummary">
+            <summary>خلاصهٔ یک مقدار یتیم پس از تغییر رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryChangeOrphanSummary.#ctor(System.Guid,System.String,System.String)">
+            <summary>خلاصهٔ یک مقدار یتیم پس از تغییر رده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryChangeImpactReport">
+            <summary>
+            گزارش انسانی تأثیر تغییر رده برای تأیید Admin (T036-P).
+            فیلدهای اختیاری انتهایی برای سازگاری با مصرف‌کنندگان قبلی پیش‌فرض دارند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryChangeImpactReport.#ctor(System.Guid,System.Guid,System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.CategoryChangeOrphanSummary},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.Guid},System.String,System.Int32,System.String,System.Nullable{System.Guid},System.String,System.String,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Boolean,System.Int32,System.Int32,System.Boolean,System.Int32,System.Collections.Generic.IReadOnlyList{System.String})">
+            <summary>
+            گزارش انسانی تأثیر تغییر رده برای تأیید Admin (T036-P).
+            فیلدهای اختیاری انتهایی برای سازگاری با مصرف‌کنندگان قبلی پیش‌فرض دارند.
+            </summary>
+        </member>
+        <member name="P:Tooba.Catalog.Application.CategoryChangeImpactReport.TargetCategoryId">
+            <summary>شناسهٔ دستهٔ هدف؛ همان NewCategoryId.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantAxisOption">
+            <summary>گزینهٔ محور تنوع در ویرایشگر.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantAxisOption.#ctor(System.Guid,System.String,System.String,System.Boolean)">
+            <summary>گزینهٔ محور تنوع در ویرایشگر.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantAxisEditorField">
+            <summary>فیلد محور تنوع برای انتخاب مقادیر محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantAxisEditorField.#ctor(System.Guid,System.String,System.String,Tooba.Catalog.Domain.CatalogAttributeValueKind,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantAxisOption},System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>فیلد محور تنوع برای انتخاب مقادیر محصول.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantAxisLabel">
+            <summary>برچسب خوانا یک مقدار محور.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantAxisLabel.#ctor(System.String,System.String)">
+            <summary>برچسب خوانا یک مقدار محور.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantListItem">
+            <summary>ردیف فهرست تنوع‌ها؛ OfferCount اختیاری توسط Host پر می‌شود.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantListItem.#ctor(System.Guid,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus,System.Int32,System.Boolean,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantAxisLabel},System.Nullable{System.Int32})">
+            <summary>ردیف فهرست تنوع‌ها؛ OfferCount اختیاری توسط Host پر می‌شود.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantEditorState">
+            <summary>حالت کامل ویرایشگر ماتریس تنوع.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantEditorState.#ctor(System.Guid,System.String,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantAxisEditorField},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantListItem},Tooba.Catalog.Application.ProductVariantReadiness,System.Int32,System.String)">
+            <summary>حالت کامل ویرایشگر ماتریس تنوع.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantCombinationAction">
+            <summary>عمل پیش‌نمایش برای یک ترکیب.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Application.ProductVariantCombinationAction.Unchanged">
+            <summary>ترکیب موجود بدون تغییر.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Application.ProductVariantCombinationAction.New">
+            <summary>ترکیب جدید باید ساخته شود.</summary>
+        </member>
+        <member name="F:Tooba.Catalog.Application.ProductVariantCombinationAction.Deactivate">
+            <summary>ترکیب دیگر انتخاب نشده و باید غیرفعال شود.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantCombinationPreview">
+            <summary>یک ترکیب در پیش‌نمایش ماتریس.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantCombinationPreview.#ctor(System.String,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantAxisLabel},System.Nullable{System.Guid},Tooba.Catalog.Application.ProductVariantCombinationAction,System.Nullable{System.Boolean})">
+            <summary>یک ترکیب در پیش‌نمایش ماتریس.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantPreviewResult">
+            <summary>نتیجهٔ پیش‌نمایش ماتریس تنوع.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantPreviewResult.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantCombinationPreview},System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,System.String,System.String)">
+            <summary>نتیجهٔ پیش‌نمایش ماتریس تنوع.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantSelectedAxisInput">
+            <summary>محور انتخاب‌شده با گزینه‌های محصول.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantSelectedAxisInput.#ctor(System.Guid,System.Collections.Generic.IReadOnlyList{System.Guid})">
+            <summary>محور انتخاب‌شده با گزینه‌های محصول.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantPatchInput">
+            <summary>پچ اختیاری روی تنوع موجود هنگام اعمال.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantPatchInput.#ctor(System.Guid,System.Nullable{Tooba.Catalog.Domain.CatalogPublicationStatus},System.String,System.Nullable{System.Int32},System.Nullable{System.Boolean})">
+            <summary>پچ اختیاری روی تنوع موجود هنگام اعمال.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantApplyInput">
+            <summary>ورودی اعمال ماتریس تنوع.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantApplyInput.#ctor(System.String,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantSelectedAxisInput},System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantPatchInput})">
+            <summary>ورودی اعمال ماتریس تنوع.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantApplyResult">
+            <summary>نتیجهٔ اعمال ماتریس تنوع.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantApplyResult.#ctor(System.Int32,System.Int32,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.ProductVariantListItem})">
+            <summary>نتیجهٔ اعمال ماتریس تنوع.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductVariantReadiness">
+            <summary>آمادگی تنوع‌ها برای انتشار بعدی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductVariantReadiness.#ctor(System.Boolean,System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Collections.Generic.IReadOnlyList{System.String},System.Nullable{System.Boolean})">
+            <summary>آمادگی تنوع‌ها برای انتشار بعدی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryTreeNodeDto">
+            <summary>گره درخت Admin Category برای Ant Tree آینده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryTreeNodeDto.#ctor(System.Guid,System.Nullable{System.Guid},System.String,System.String,Tooba.Catalog.Domain.CatalogPublicationStatus,System.Int32,System.Boolean,System.Boolean,System.Nullable{System.Int32})">
+            <summary>گره درخت Admin Category برای Ant Tree آینده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryTranslationDto">
+            <summary>ترجمهٔ رده بدون نشت EF.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryTranslationDto.#ctor(System.Guid,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.DateTimeOffset)">
+            <summary>ترجمهٔ رده بدون نشت EF.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryWorkspaceSummaryDto">
+            <summary>خلاصهٔ workspace رده برای Admin.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryWorkspaceSummaryDto.#ctor(System.Guid,System.Nullable{System.Guid},Tooba.Catalog.Domain.CatalogPublicationStatus,System.Int32,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.DateTimeOffset,System.DateTimeOffset,System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.CategoryTranslationDto})">
+            <summary>خلاصهٔ workspace رده برای Admin.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryRouteResolveResult">
+            <summary>نتیجهٔ resolve مسیر رده.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryRouteResolveResult.#ctor(System.Guid,System.String,System.String,System.Boolean,System.String)">
+            <summary>نتیجهٔ resolve مسیر رده.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryCreateRequest">
+            <summary>درخواست ایجاد رده با ترجمه‌های صریح.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryCreateRequest.#ctor(System.Nullable{System.Guid},System.Int32,System.Boolean,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{Tooba.Catalog.Application.CategoryTranslationUpsertRequest})">
+            <summary>درخواست ایجاد رده با ترجمه‌های صریح.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryCoreUpdateRequest">
+            <summary>به‌روزرسانی هستهٔ غیرمحلی.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryCoreUpdateRequest.#ctor(System.Nullable{Tooba.Catalog.Domain.CatalogPublicationStatus},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Boolean,System.Boolean,System.Boolean,System.Nullable{System.DateTimeOffset})">
+            <summary>به‌روزرسانی هستهٔ غیرمحلی.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.CategoryTranslationUpsertRequest">
+            <summary>درج/به‌روزرسانی ترجمهٔ یک locale.</summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.CategoryTranslationUpsertRequest.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>درج/به‌روزرسانی ترجمهٔ یک locale.</summary>
+        </member>
+        <member name="T:Tooba.Catalog.Application.ProductPublishPrep">
+            <summary>
+            کمک به seed/dev برای تکمیل حداقل SEO قبل از Publish با دروازهٔ آمادگی تجمیعی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Catalog.Application.ProductPublishPrep.EnsureMinimalSeoForPublishAsync(Tooba.Catalog.Application.ICatalogDirectory,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            اگر SEO آماده نیست، توضیح فارسی حداقلی (و حفظ slug/title موجود) می‌نویسد.
+            </summary>
+        </member>
+    </members>
+</doc>

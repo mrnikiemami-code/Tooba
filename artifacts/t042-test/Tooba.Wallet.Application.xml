@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Wallet.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Wallet.Application.WalletSummaryDto">
+            <summary>خلاصهٔ کیف پول با موجودی مشتق‌شده از دفتر.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletSummaryDto.#ctor(System.Guid,System.Guid,System.String,System.String,System.Decimal,System.Decimal,System.Decimal,System.Int32,System.DateTimeOffset)">
+            <summary>خلاصهٔ کیف پول با موجودی مشتق‌شده از دفتر.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletLedgerEntryDto">
+            <summary>سطر دفتر برای تاریخچه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletLedgerEntryDto.#ctor(System.Guid,System.Guid,System.String,System.Decimal,System.String,System.String,System.String,System.Guid,System.DateTimeOffset,System.String)">
+            <summary>سطر دفتر برای تاریخچه.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletLedgerPageDto">
+            <summary>صفحهٔ دفتر.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletLedgerPageDto.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Wallet.Application.WalletLedgerEntryDto},System.Int32,System.Int32,System.Int32,System.Decimal)">
+            <summary>صفحهٔ دفتر.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardRedeemResultDto">
+            <summary>نتیجهٔ بازخرید کارت هدیه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardRedeemResultDto.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.Decimal,System.String,System.Decimal,System.Boolean)">
+            <summary>نتیجهٔ بازخرید کارت هدیه.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.RedeemGiftCardCommand">
+            <summary>ورودی بازخرید مشتری.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.RedeemGiftCardCommand.#ctor(System.String,System.String)">
+            <summary>ورودی بازخرید مشتری.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardSummaryDto">
+            <summary>خلاصهٔ کارت هدیه برای Admin (بدون plaintext).</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardSummaryDto.#ctor(System.Guid,System.String,System.Decimal,System.Decimal,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid},System.Guid,System.Int32)">
+            <summary>خلاصهٔ کارت هدیه برای Admin (بدون plaintext).</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardDetailDto">
+            <summary>جزئیات کارت شامل تاریخچهٔ بازخرید.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardDetailDto.#ctor(System.Guid,System.String,System.Decimal,System.Decimal,System.String,System.DateTimeOffset,System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid},System.Guid,System.Collections.Generic.IReadOnlyList{Tooba.Wallet.Application.GiftCardRedemptionDto})">
+            <summary>جزئیات کارت شامل تاریخچهٔ بازخرید.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardRedemptionDto">
+            <summary>سطر بازخرید.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardRedemptionDto.#ctor(System.Guid,System.Guid,System.Guid,System.Decimal,System.DateTimeOffset)">
+            <summary>سطر بازخرید.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardListPageDto">
+            <summary>صفحهٔ فهرست کارت.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardListPageDto.#ctor(System.Collections.Generic.IReadOnlyList{Tooba.Wallet.Application.GiftCardSummaryDto},System.Int32,System.Int32,System.Int32)">
+            <summary>صفحهٔ فهرست کارت.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.GiftCardIssueResultDto">
+            <summary>نتیجهٔ صدور؛ DisplayCode فقط یک‌بار برمی‌گردد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.GiftCardIssueResultDto.#ctor(Tooba.Wallet.Application.GiftCardSummaryDto,System.String,System.Boolean)">
+            <summary>نتیجهٔ صدور؛ DisplayCode فقط یک‌بار برمی‌گردد.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.IssueGiftCardCommand">
+            <summary>ورودی صدور Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IssueGiftCardCommand.#ctor(System.Decimal,System.String,System.Nullable{System.DateTimeOffset},System.Nullable{System.Guid},System.String)">
+            <summary>ورودی صدور Admin.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.AdminGiftCardListQuery">
+            <summary>فیلتر فهرست Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.AdminGiftCardListQuery.#ctor(System.String,System.String,System.Int32,System.Int32)">
+            <summary>فیلتر فهرست Admin.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.AdminWalletAdjustmentCommand">
+            <summary>ورودی تعدیل Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.AdminWalletAdjustmentCommand.#ctor(System.Decimal,System.String,System.String,System.String)">
+            <summary>ورودی تعدیل Admin.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.AdminWalletAdjustmentResultDto">
+            <summary>نتیجهٔ تعدیل.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.AdminWalletAdjustmentResultDto.#ctor(Tooba.Wallet.Application.WalletLedgerEntryDto,System.Decimal,System.Boolean)">
+            <summary>نتیجهٔ تعدیل.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletSpendResultDto">
+            <summary>نتیجهٔ بدهکار پرداخت سفارش از کیف پول.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletSpendResultDto.#ctor(Tooba.Wallet.Application.WalletLedgerEntryDto,System.Decimal,System.Boolean)">
+            <summary>نتیجهٔ بدهکار پرداخت سفارش از کیف پول.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletCreditResultDto">
+            <summary>نتیجهٔ اعتبار refund به کیف پول.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletCreditResultDto.#ctor(Tooba.Wallet.Application.WalletLedgerEntryDto,System.Decimal,System.Boolean)">
+            <summary>نتیجهٔ اعتبار refund به کیف پول.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletCheckoutQuoteDto">
+            <summary>نقل قول قابل استفاده بودن کیف پول برای مبلغ قابل پرداخت.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletCheckoutQuoteDto.#ctor(System.Decimal,System.Decimal,System.Decimal,System.Boolean,System.String)">
+            <summary>نقل قول قابل استفاده بودن کیف پول برای مبلغ قابل پرداخت.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletDemoPreviewDto">
+            <summary>snapshot پیش‌نمایش توسعه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletDemoPreviewDto.#ctor(System.Guid,System.Guid,System.Decimal,System.Guid,System.String,System.Guid,System.Guid,System.Guid,System.String)">
+            <summary>snapshot پیش‌نمایش توسعه.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.IWalletDirectory">
+            <summary>دایرکتوری کاربردی کیف پول و کارت هدیه.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.GetOrCreateSummaryForCustomerAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>خلاصهٔ کیف پول مالک؛ در صورت نبود حساب، حساب Active می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.ListLedgerForCustomerAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>دفتر صفحه‌بندی‌شدهٔ مالک.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.RedeemGiftCardForCustomerAsync(System.Guid,Tooba.Wallet.Application.RedeemGiftCardCommand,System.Threading.CancellationToken)">
+            <summary>بازخرید کارت هدیه به کیف پول مالک.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.ListGiftCardsForAdminAsync(Tooba.Wallet.Application.AdminGiftCardListQuery,System.Threading.CancellationToken)">
+            <summary>فهرست Admin کارت‌ها.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.GetGiftCardForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>جزئیات Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.IssueGiftCardForAdminAsync(System.Guid,Tooba.Wallet.Application.IssueGiftCardCommand,System.Threading.CancellationToken)">
+            <summary>صدور کارت.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.RevokeGiftCardForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>ابطال کارت.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.GetWalletForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <summary>بازرسی کیف پول مشتری توسط Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.ListLedgerForAdminAsync(System.Guid,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>دفتر Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.AdjustWalletForAdminAsync(System.Guid,System.Guid,Tooba.Wallet.Application.AdminWalletAdjustmentCommand,System.Threading.CancellationToken)">
+            <summary>تعدیل immutable دفتر توسط Admin.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.SpendForOrderPaymentAsync(System.Guid,System.Decimal,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            بدهکار اتمی برای پرداخت سفارش؛ IdempotentReplay امن؛ بدون overdraw.
+            </summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.CreditRefundAsync(System.Guid,System.Decimal,System.String,System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            اعتبار refund به کیف پول؛ یک‌بار برای هر ReturnRequestId.
+            </summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.IWalletDirectory.QuoteForPayableAsync(System.Guid,System.Decimal,System.String,System.Threading.CancellationToken)">
+            <summary>نقل قول موجودی در برابر مبلغ قابل پرداخت سفارش.</summary>
+        </member>
+        <member name="T:Tooba.Wallet.Application.WalletEnumParsing">
+            <summary>پارس enumهای مرز Application.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletEnumParsing.TryParseGiftCardStatus(System.String)">
+            <summary>وضعیت کارت فیلتر.</summary>
+        </member>
+        <member name="M:Tooba.Wallet.Application.WalletEnumParsing.ParseDirection(System.String)">
+            <summary>جهت تعدیل.</summary>
+        </member>
+    </members>
+</doc>

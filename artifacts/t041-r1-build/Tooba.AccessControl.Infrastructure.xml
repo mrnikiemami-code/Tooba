@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AccessControl.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AccessControl.Infrastructure.AccessControlDirectory">
+            <summary>
+            پیاده‌سازی دایرکتوری Access Control با SoT پیکربندی در PG و enforcement در SpiceDB.
+            </summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.#ctor(Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext,Tooba.BuildingBlocks.IAuthorizationTupleWriter,Tooba.AccessControl.Infrastructure.AccessControlInstrumentation,Tooba.Catalog.Application.ICatalogLookupGateway)">
+            <summary>دایرکتوری را با DbContext و writer می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.ListCatalog">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.ListRolesAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.GetRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.CreateRoleAsync(Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.CreateAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.UpdateRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.UpdateAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.CloneRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,Tooba.AccessControl.Application.CloneAccessRoleCommand,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.ArchiveRoleAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.SetRolePermissionsAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Collections.Generic.IReadOnlyList{Tooba.AccessControl.Application.RolePermissionGrant},System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.GetRolePermissionsAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.ListAssignmentsAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Nullable{System.Guid},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.AssignRoleAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.Guid,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.RemoveAssignmentAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.GetSellerCeilingAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.SetSellerCeilingAsync(System.Guid,System.Collections.Generic.IReadOnlyList{System.ValueTuple{System.String,System.Boolean,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid}}},System.Guid,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.GetEffectiveAccessAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.SearchUsersInScopeAsync(Tooba.AccessControl.Application.AccessOwnerScope,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.EnsureBootstrapAsync(System.Nullable{System.Guid},System.Collections.Generic.IReadOnlyList{System.Guid},System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.EnsureRoleHasCatalogPermissionsAsync(System.Guid,System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)">
+            <summary>مجوزهای مفقود کاتالوگ را به نقش سیستمی اضافه می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.SyncUserCapabilityTuplesAsync(System.Guid,Tooba.AccessControl.Application.AccessOwnerScope,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlDirectory.CeilingAllows(System.Collections.Generic.IReadOnlyList{Tooba.AccessControl.Domain.PlatformSellerCeiling},System.String,Tooba.AccessControl.Domain.AccessScopeKind,System.Nullable{System.Guid})">
+            <summary>
+            سقف GlobalWithinOwner برای همان مجوز هر scope را پوشش می‌دهد؛ سقف Category فقط همان منبع (یا دقیق) را اجازه می‌دهد.
+            </summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation">
+            <summary>
+            شمارنده‌های سبک Access Control برای تله‌متری Host.
+            </summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation.RecordRoleMutation">
+            <summary>تغییر نقش.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation.RecordAssignmentMutation">
+            <summary>تغییر تخصیص.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation.RecordCeilingMutation">
+            <summary>تغییر سقف.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation.RecordTupleSync">
+            <summary>همگام‌سازی tuple.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlInstrumentation.Snapshot">
+            <summary>نمونه‌برداری شمارنده‌ها.</summary>
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.AccessControlModule">
+            <summary>
+            ماژول Access Control: نقش/مجوز/سقف در PG و enforcement در SpiceDB.
+            </summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.AccessControlModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration">
+            <summary>
+            ثبت Outbox ماژول AccessControl. فعلاً emit Integration ندارد.
+            </summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.AccessControlOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext">
+            <summary>
+            DbContext مالک schema <c>access_control</c>. جداول سایر ماژول‌ها را JOIN نمی‌کند.
+            </summary>
+        </member>
+        <member name="F:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.Schema">
+            <summary>schema اختصاصی AccessControl.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext})">
+            <summary>DbContext را با گزینه‌های Host می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.Roles">
+            <summary>نقش‌ها.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.RolePermissions">
+            <summary>اعطای مجوز نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.Assignments">
+            <summary>تخصیص کاربر-نقش.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.SellerCeilings">
+            <summary>سقف تفویض فروشنده.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.AuditEvents">
+            <summary>رخدادهای audit.</summary>
+        </member>
+        <member name="P:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.OutboxMessages">
+            <summary>Outbox همین ماژول.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContextFactory">
+            <summary>کارخانهٔ زمان طراحی مهاجرت.</summary>
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.AccessControlDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.Persistence.Migrations.InitialAccessControl">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.Migrations.InitialAccessControl.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.Migrations.InitialAccessControl.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.Migrations.InitialAccessControl.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AccessControl.Infrastructure.Persistence.Migrations.AddSellerCeilingScope">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.Migrations.AddSellerCeilingScope.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AccessControl.Infrastructure.Persistence.Migrations.AddSellerCeilingScope.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

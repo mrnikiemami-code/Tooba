@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.AddressBook.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.AddressBook.Infrastructure.AddressBookDirectory">
+            <summary>پیاده‌سازی دفترچه که فقط schema خود را لمس می‌کند و مالکیت را سرورمحور اعمال می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.#ctor(Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext)">
+            <summary>وابستگی مالک را بدون DbContext خارجی دریافت می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.CreateAsync(System.Guid,Tooba.AddressBook.Application.CustomerAddressWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.ListAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.GetAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.UpdateAsync(System.Guid,System.Guid,Tooba.AddressBook.Application.CustomerAddressWrite,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.DeleteAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.SetDefaultAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookDirectory.CountAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AddressBook.Infrastructure.AddressBookModule">
+            <summary>ماژول مستقل دفترچهٔ آدرس مشتری با schema، قرارداد و Outbox اختصاصی.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.AddressBookModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration">
+            <summary>ثبت Outbox دفترچهٔ آدرس؛ نسخهٔ فعلی رویداد بیرونی تعریف نمی‌کند.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.AddressBookOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AddressBook.Infrastructure.Migrations.InitialAddressBook">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Migrations.InitialAddressBook.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Migrations.InitialAddressBook.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Migrations.InitialAddressBook.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext">
+            <summary>DbContext مالک schema مستقل address_book و Outbox همان ماژول.</summary>
+        </member>
+        <member name="F:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext.Schema">
+            <summary>نام schema اختصاصی دفترچهٔ آدرس.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext})">
+            <summary>DbContext را با گزینه‌های ماژول می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext.Addresses">
+            <summary>ردیف‌های خصوصی نشانی مشتری.</summary>
+        </member>
+        <member name="P:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext.OutboxMessages">
+            <summary>پیام‌های Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت‌های AddressBook.</summary>
+        </member>
+        <member name="M:Tooba.AddressBook.Infrastructure.Persistence.AddressBookDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

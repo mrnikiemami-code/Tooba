@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Support.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Support.Infrastructure.Migrations.InitialSupport">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Migrations.InitialSupport.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Migrations.InitialSupport.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Migrations.InitialSupport.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.Persistence.SupportDbContext">
+            <summary>DbContext مالک schema مستقل support.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.Persistence.SupportDbContext.Schema">
+            <summary>schema اختصاصی Support.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Persistence.SupportDbContext.#ctor(Microsoft.EntityFrameworkCore.DbContextOptions{Tooba.Support.Infrastructure.Persistence.SupportDbContext})">
+            <summary>DbContext را می‌سازد.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.Persistence.SupportDbContext.Tickets">
+            <summary>تیکت‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.Persistence.SupportDbContext.Messages">
+            <summary>پیام‌ها.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.Persistence.SupportDbContext.OutboxMessages">
+            <summary>Outbox ماژول.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Persistence.SupportDbContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.Persistence.SupportDbContextFactory">
+            <summary>کارخانهٔ design-time مهاجرت Support.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.Persistence.SupportDbContextFactory.CreateDbContext(System.String[])">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportDemoIds">
+            <summary>شناسه‌های پایدار دانهٔ توسعه برای demo-preview.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.CustomerOpenTicketId">
+            <summary>تیکت باز مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.CustomerResolvedTicketId">
+            <summary>تیکت حل‌شده مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.SellerWaitingTicketId">
+            <summary>تیکت در انتظار فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.SellerOpenTicketId">
+            <summary>تیکت باز فروشنده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.CustomerOpenFirstMessageId">
+            <summary>پیام اول مشتری روی تیکت باز.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.CustomerOpenAdminReplyId">
+            <summary>پاسخ عمومی Admin روی تیکت باز مشتری.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.CustomerResolvedFirstMessageId">
+            <summary>پیام اول مشتری روی تیکت حل‌شده.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.SellerWaitingFirstMessageId">
+            <summary>پیام اول فروشنده روی تیکت waiting.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.SellerOpenFirstMessageId">
+            <summary>پیام اول فروشنده روی تیکت باز.</summary>
+        </member>
+        <member name="F:Tooba.Support.Infrastructure.SupportDemoIds.DemoRelatedOrderId">
+            <summary>شناسهٔ نمایشی سفارش مرتبط (soft؛ بدون JOIN).</summary>
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportDemoSnapshot">
+            <summary>snapshot شناسه‌های demo برای USER-PREVIEW.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDemoSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.Nullable{System.Guid},System.String)">
+            <summary>snapshot شناسه‌های demo برای USER-PREVIEW.</summary>
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportDemoSnapshotStore">
+            <summary>نگهدارندهٔ snapshot پس از دانهٔ توسعه.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.SupportDemoSnapshotStore.Current">
+            <summary>آخرین snapshot دانه‌شده؛ null اگر هنوز آماده نباشد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDemoSnapshotStore.Publish(Tooba.Support.Infrastructure.SupportDemoSnapshot)">
+            <summary>snapshot را منتشر می‌کند.</summary>
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportDevelopmentSeed">
+            <summary>دانهٔ توسعهٔ idempotent برای تیکت‌های نمایشی.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDevelopmentSeed.ApplyAsync(System.IServiceProvider,System.Guid,System.Guid,System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            حداقل دو تیکت مشتری، دو تیکت فروشنده، یک Related Order soft،
+            و یک پاسخ عمومی Admin (با اعلان) درج می‌کند.
+            </summary>
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportDirectory">
+            <summary>پیاده‌سازی دایرکتوری تیکت در schema support.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.#ctor(Tooba.Support.Infrastructure.Persistence.SupportDbContext,Tooba.Notification.Application.INotificationDirectory)">
+            <summary>دایرکتوری را می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ListForCustomerAsync(System.Guid,Tooba.Support.Application.AudienceTicketListQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.GetForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.CreateForCustomerAsync(System.Guid,Tooba.Support.Application.CreateTicketCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ReplyForCustomerAsync(System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.CloseForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ReopenForCustomerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ListForSellerAsync(System.Guid,Tooba.Support.Application.AudienceTicketListQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.GetForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.CreateForSellerAsync(System.Guid,System.Guid,Tooba.Support.Application.CreateTicketCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ReplyForSellerAsync(System.Guid,System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.CloseForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ReopenForSellerAsync(System.Guid,System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ListForAdminAsync(Tooba.Support.Application.AdminTicketListQuery,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.GetForAdminAsync(System.Guid,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.ReplyForAdminAsync(System.Guid,System.Guid,Tooba.Support.Application.ReplyTicketCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.PatchForAdminAsync(System.Guid,Tooba.Support.Application.AdminTicketPatchCommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportDirectory.SoftCheckRelatedOrder(System.String,System.Nullable{System.Guid})">
+            <summary>
+            اعتبارسنجی soft بدون JOIN: فقط شکل GUID برای RelatedEntityType=Order.
+            در صورت وجود gateway اختصاصی Order در آینده می‌توان سخت‌گیرتر کرد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportModule">
+            <summary>ماژول مستقل Support و schema اختصاصی آن.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.SupportModule.Name">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportModule.AddServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Hosting.IHostEnvironment)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tooba.Support.Infrastructure.SupportOutboxRegistration">
+            <summary>ثبت Outbox Support؛ رویداد بیرونی در این نسخه منتشر نمی‌شود.</summary>
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.SupportOutboxRegistration.Schema">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.SupportOutboxRegistration.TableName">
+            <inheritdoc />
+        </member>
+        <member name="P:Tooba.Support.Infrastructure.SupportOutboxRegistration.DbContextType">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportOutboxRegistration.Translate(Tooba.BuildingBlocks.IDomainEvent,Tooba.BuildingBlocks.EventMetadata)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportOutboxRegistration.GetEventTypeName(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tooba.Support.Infrastructure.SupportOutboxRegistration.ResolveEventClrType(System.String)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

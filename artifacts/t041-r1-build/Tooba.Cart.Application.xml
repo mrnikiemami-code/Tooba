@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Cart.Application</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Cart.Application.CartAccess">
+            <summary>
+            دسترسی به سبد. CartId به‌تنهایی Bearer نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.CartAccess.#ctor(System.Nullable{System.Guid},System.String)">
+            <summary>
+            دسترسی به سبد. CartId به‌تنهایی Bearer نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.CartLineSnapshot">
+            <summary>
+            خط سبد برای خواندن و درز Checkout آینده. موجودیت EF نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.CartLineSnapshot.#ctor(System.Guid,System.Guid,System.Guid,System.Guid,System.Int32,System.Nullable{System.Guid},System.Nullable{System.Decimal},System.String,System.Boolean,System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>
+            خط سبد برای خواندن و درز Checkout آینده. موجودیت EF نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.CartSnapshot">
+            <summary>
+            نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.CartSnapshot.#ctor(System.Guid,Tooba.Cart.Domain.CartStatus,Tooba.Cart.Domain.CartAccessKind,System.Nullable{System.Guid},System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Nullable{System.DateTimeOffset},Tooba.Cart.Domain.CartConversionIntent,System.Int32,System.Collections.Generic.IReadOnlyList{Tooba.Cart.Application.CartLineSnapshot})">
+            <summary>
+            نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.GuestCartCreated">
+            <summary>
+            نتیجهٔ ساخت سبد مهمان؛ راز خام فقط یک‌بار برمی‌گردد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.GuestCartCreated.#ctor(Tooba.Cart.Application.CartSnapshot,System.String)">
+            <summary>
+            نتیجهٔ ساخت سبد مهمان؛ راز خام فقط یک‌بار برمی‌گردد.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.ICartQueryGateway">
+            <summary>
+            درز خواندن سبد برای Checkout آینده بدون نشت EF.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartQueryGateway.GetCartAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Threading.CancellationToken)">
+            <summary>
+            سبد را پس از احراز دسترسی برمی‌گرداند. CartId تنها کافی نیست.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.ICartUseCaseGuard">
+            <summary>
+            درز نگهبان مجوز Cart. ماتریس نهایی هویت اینجا نیست.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartUseCaseGuard.EnsureCanMutateAsync(System.Threading.CancellationToken)">
+            <summary>
+            اجازهٔ نوشتن سبد را بررسی می‌کند. پیاده‌سازی فعلی فقط درز است.
+            </summary>
+        </member>
+        <member name="T:Tooba.Cart.Application.ICartDirectory">
+            <summary>
+            نوشتن foundation سبد. Checkout، Order و Payment اینجا نیستند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.CreateAuthenticatedAsync(System.Guid,System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Threading.CancellationToken)">
+            <summary>
+            سبد واردشده می‌سازد.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.CreateGuestAsync(System.String,System.String,Tooba.Offer.Domain.SalesChannel,System.Threading.CancellationToken)">
+            <summary>
+            سبد مهمان می‌سازد و راز یک‌بارمصرف را برمی‌گرداند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.AddOrIncreaseLineAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            خط Offer اضافه یا با همان Offer ادغام می‌کند پس از رزرو موجودی.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.ChangeLineQuantityAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            تعداد خط را عوض می‌کند. صفر یعنی حذف پس از آزادسازی رزرو.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.RemoveLineAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            خط را حذف می‌کند و رزرو را آزاد می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.AbandonAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            سبد را رها می‌کند و رزروها را آزاد می‌کند.
+            </summary>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.ExpireDueCartsAsync(System.DateTimeOffset,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            سبدهای سررسیدشده را به‌صورت batch با SKIP LOCKED منقضی و رزرو منقضی Inventory را آزاد می‌کند.
+            </summary>
+            <returns>تعداد سبدهای منقضی‌شده.</returns>
+        </member>
+        <member name="M:Tooba.Cart.Application.ICartDirectory.ConvertAsync(System.Guid,Tooba.Cart.Application.CartAccess,System.Int32,Tooba.Cart.Domain.CartConversionIntent,System.Threading.CancellationToken)">
+            <summary>
+            درز تبدیل را بدون ساختن Order ثبت می‌کند.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tooba.Reviews.Domain</name>
+    </assembly>
+    <members>
+        <member name="T:Tooba.Reviews.Domain.ReviewStatus">
+            <summary>وضعیت چرخهٔ بررسی محصول؛ فقط Published برای عموم قابل مشاهده است.</summary>
+        </member>
+        <member name="F:Tooba.Reviews.Domain.ReviewStatus.Pending">
+            <summary>در انتظار تصمیم مدیر.</summary>
+        </member>
+        <member name="F:Tooba.Reviews.Domain.ReviewStatus.Published">
+            <summary>منتشرشده برای نمایش عمومی.</summary>
+        </member>
+        <member name="F:Tooba.Reviews.Domain.ReviewStatus.Rejected">
+            <summary>ردشده و غیرقابل نمایش عمومی.</summary>
+        </member>
+        <member name="T:Tooba.Reviews.Domain.ProductReview">
+            <summary>بررسی محصول متعلق به یک کاربر احرازشده با تصویر ثابت خرید تأییدشده.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.ReviewId">
+            <summary>شناسهٔ پایدار بررسی.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.ProductId">
+            <summary>مرجع opaque محصول در Catalog.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.AuthorUserId">
+            <summary>شناسهٔ داخلی نویسنده که هرگز در DTO عمومی قرار نمی‌گیرد.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.AuthorDisplayName">
+            <summary>نام امن و عمومی نویسنده.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.Rating">
+            <summary>امتیاز صحیح بین یک تا پنج.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.Title">
+            <summary>عنوان اختیاری بررسی.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.Body">
+            <summary>متن بررسی.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.Status">
+            <summary>وضعیت تعدیل محتوا.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.IsVerifiedPurchase">
+            <summary>تصویر ثابت نتیجهٔ اثبات خرید در زمان ثبت.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.VerificationOrderId">
+            <summary>شناسهٔ opaque سفارش اثبات‌کننده، در صورت وجود.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.CreatedAt">
+            <summary>زمان ایجاد UTC.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.UpdatedAt">
+            <summary>زمان آخرین تغییر UTC.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.ModeratedByUserId">
+            <summary>مدیر انجام‌دهندهٔ آخرین تعدیل؛ عمومی نیست.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.ModeratedAt">
+            <summary>زمان تعدیل UTC.</summary>
+        </member>
+        <member name="P:Tooba.Reviews.Domain.ProductReview.ModerationReason">
+            <summary>دلیل داخلی رد؛ عمومی نیست.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Domain.ProductReview.Create(System.Guid,System.Guid,System.String,System.Int32,System.String,System.String,System.Boolean,System.Nullable{System.Guid},System.DateTimeOffset)">
+            <summary>بررسی Pending معتبر می‌سازد.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Domain.ProductReview.Publish(System.Guid,System.DateTimeOffset)">
+            <summary>بررسی Pending را با ثبت ممیزی منتشر می‌کند.</summary>
+        </member>
+        <member name="M:Tooba.Reviews.Domain.ProductReview.Reject(System.Guid,System.String,System.DateTimeOffset)">
+            <summary>بررسی Pending را با دلیل اجباری رد می‌کند.</summary>
+        </member>
+    </members>
+</doc>
