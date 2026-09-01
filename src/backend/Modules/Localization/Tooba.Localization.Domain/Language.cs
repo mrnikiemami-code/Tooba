@@ -110,6 +110,14 @@ public sealed class Language
         UpdatedAt = now;
     }
 
+    public void UpdateIdentityFields(string code, string urlPrefix, DateTimeOffset now)
+    {
+        ValidateIdentity(code, urlPrefix, DisplayName, NativeName, Culture);
+        Code = NormalizeCode(code);
+        UrlPrefix = NormalizeUrlPrefix(urlPrefix);
+        UpdatedAt = now;
+    }
+
     public void SetDefault(bool isDefault, DateTimeOffset now)
     {
         if (isDefault && !IsActive)
@@ -181,6 +189,8 @@ public static class LanguageErrorCodes
     public const string ExactlyOneDefault = "localization.language.exactly_one_default";
     public const string CodeImmutable = "localization.language.code_immutable";
     public const string UrlPrefixImmutable = "localization.language.url_prefix_immutable";
+    public const string CodeInUse = "localization.language.code.in_use";
+    public const string UrlPrefixInUse = "localization.language.url_prefix.in_use";
     public const string Referenced = "localization.language.referenced";
     public const string InvalidCode = "localization.language.invalid_code";
     public const string InvalidUrlPrefix = "localization.language.invalid_url_prefix";

@@ -18,6 +18,13 @@ public sealed record LanguageSnapshot(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+/// <summary>نمای Admin زبان همراه با قابلیت‌های ویرایش هویت.</summary>
+public sealed record LanguageAdminSnapshot(
+    LanguageSnapshot Snapshot,
+    bool IsReferenced,
+    bool CanEditCode,
+    bool CanEditUrlPrefix);
+
 /// <summary>ایجاد زبان.</summary>
 public sealed record CreateLanguageCommand(
     string Code,
@@ -33,6 +40,8 @@ public sealed record CreateLanguageCommand(
 
 /// <summary>به‌روزرسانی زبان — کد و UrlPrefix پس از ارجاع تغییر نمی‌کند.</summary>
 public sealed record UpdateLanguageCommand(
+    string? Code,
+    string? UrlPrefix,
     string DisplayName,
     string NativeName,
     string Direction,
@@ -52,7 +61,9 @@ public sealed record PatchLanguageCommand(
 public interface ILanguageDirectory
 {
     Task<IReadOnlyList<LanguageSnapshot>> ListAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<LanguageAdminSnapshot>> ListAdminAsync(CancellationToken cancellationToken);
     Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken);
+    Task<LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken);
     Task EnsureActiveLanguageCodeAsync(string code, CancellationToken cancellationToken);
     Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken);
     Task<LanguageSnapshot> UpdateAsync(string code, UpdateLanguageCommand command, CancellationToken cancellationToken);
@@ -82,6 +93,12 @@ public static class LanguageMappings
         language.SortOrder,
         language.CreatedAt,
         language.UpdatedAt);
+
+    public static LanguageAdminSnapshot ToAdminSnapshot(LanguageSnapshot snapshot, bool isReferenced) => new(
+        snapshot,
+        isReferenced,
+        CanEditCode: !isReferenced,
+        CanEditUrlPrefix: !isReferenced);
 
     public static LanguageDirection ParseDirection(string? raw)
     {

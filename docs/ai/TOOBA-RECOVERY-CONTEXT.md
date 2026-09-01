@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T001-R1
+TB-P08-T001-R2
 ```
 
 Current Repair Task:
@@ -63,6 +63,7 @@ Implemented Under Review:
 
 ```text
 TB-P08-T001 — under repair (parent; NOT accepted)
+TB-P08-T001-R2 — Language reference integrity (Code/UrlPrefix lock after Content use)
 TB-P08-T001-R1 — Persisted Language registry repair (DB-backed localization.languages)
 TB-P07-T043 — Order Detail visual fidelity polish (accepted baseline)
 ```

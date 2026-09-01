@@ -11,7 +11,12 @@ import {
 } from "../../design-system";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
-import { loadAdminLanguages, patchAdminLanguage } from "./language-api";
+import {
+  codeLockExplanation,
+  isIdentityFieldLocked,
+  urlPrefixLockExplanation,
+} from "../../lib/i18n/language-identity-lock.ts";
+import { loadAdminLanguages, updateAdminLanguage } from "./language-api";
 import { createHostSavedViewStore } from "./saved-view-store";
 
 type AdminLanguageRow = SupportedLocaleDefinition & { id: string };
@@ -128,6 +133,10 @@ export function AdminLanguagesScreen() {
   const [state, setState] = useState<"loading" | "ok" | "error" | "denied">("loading");
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState<AdminLanguageRow | null>(null);
+  const [draftCode, setDraftCode] = useState("");
+  const [draftUrlPrefix, setDraftUrlPrefix] = useState("");
+  const [draftDisplayName, setDraftDisplayName] = useState("");
+  const [draftNativeName, setDraftNativeName] = useState("");
   const [draftActive, setDraftActive] = useState(true);
   const [draftDefault, setDraftDefault] = useState(false);
   const [draftSort, setDraftSort] = useState(0);
@@ -157,6 +166,10 @@ export function AdminLanguagesScreen() {
 
   const openEdit = useCallback((row: AdminLanguageRow) => {
     setEditing(row);
+    setDraftCode(row.code);
+    setDraftUrlPrefix(row.urlPrefix);
+    setDraftDisplayName(row.displayName);
+    setDraftNativeName(row.nativeName);
     setDraftActive(row.active);
     setDraftDefault(row.default);
     setDraftSort(row.sortOrder);
@@ -179,7 +192,14 @@ export function AdminLanguagesScreen() {
   const saveEdit = useCallback(async () => {
     if (!editing) return;
     setSaving(true);
-    const result = await patchAdminLanguage(editing.code, {
+    const result = await updateAdminLanguage(editing.code, {
+      code: draftCode,
+      urlPrefix: draftUrlPrefix as SupportedLocaleDefinition["urlPrefix"],
+      displayName: draftDisplayName,
+      nativeName: draftNativeName,
+      direction: editing.direction,
+      culture: editing.culture,
+      calendarDisplay: editing.calendarDisplay,
       active: draftActive,
       default: draftDefault,
       sortOrder: draftSort,
@@ -191,7 +211,7 @@ export function AdminLanguagesScreen() {
     }
     setEditing(null);
     await refresh();
-  }, [draftActive, draftDefault, draftSort, editing, refresh]);
+  }, [draftActive, draftCode, draftDefault, draftDisplayName, draftNativeName, draftSort, draftUrlPrefix, editing, refresh]);
 
   if (state === "denied") {
     return (
@@ -228,11 +248,64 @@ export function AdminLanguagesScreen() {
       </section>
 
       {editing ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" data-testid="language-edit-modal">
           <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-4 shadow-xl">
             <h2 className="text-lg font-black text-gray-900">ویرایش زبان</h2>
-            <p className="mt-1 text-sm text-gray-500" dir="ltr">{editing.code}</p>
             <div className="mt-4 space-y-3">
+              <label className="block text-sm">
+                <span>کد</span>
+                <input
+                  type="text"
+                  dir="ltr"
+                  readOnly={isIdentityFieldLocked(editing.canEditCode)}
+                  data-testid="language-edit-code"
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm ${isIdentityFieldLocked(editing.canEditCode) ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-600" : "border-gray-200"}`}
+                  value={draftCode}
+                  onChange={(e) => setDraftCode(e.target.value)}
+                />
+                {isIdentityFieldLocked(editing.canEditCode) ? (
+                  <p className="mt-1 text-xs text-amber-700" data-testid="language-code-lock-fa">{codeLockExplanation().fa}</p>
+                ) : null}
+                {isIdentityFieldLocked(editing.canEditCode) ? (
+                  <p className="mt-0.5 text-xs text-gray-500" data-testid="language-code-lock-en">{codeLockExplanation().en}</p>
+                ) : null}
+              </label>
+              <label className="block text-sm">
+                <span>پیشوند مسیر</span>
+                <input
+                  type="text"
+                  dir="ltr"
+                  readOnly={isIdentityFieldLocked(editing.canEditUrlPrefix)}
+                  data-testid="language-edit-url-prefix"
+                  className={`mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm ${isIdentityFieldLocked(editing.canEditUrlPrefix) ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-600" : "border-gray-200"}`}
+                  value={draftUrlPrefix}
+                  onChange={(e) => setDraftUrlPrefix(e.target.value)}
+                />
+                {isIdentityFieldLocked(editing.canEditUrlPrefix) ? (
+                  <p className="mt-1 text-xs text-amber-700" data-testid="language-prefix-lock-fa">{urlPrefixLockExplanation().fa}</p>
+                ) : null}
+                {isIdentityFieldLocked(editing.canEditUrlPrefix) ? (
+                  <p className="mt-0.5 text-xs text-gray-500" data-testid="language-prefix-lock-en">{urlPrefixLockExplanation().en}</p>
+                ) : null}
+              </label>
+              <label className="block text-sm">
+                <span>نام نمایشی</span>
+                <input
+                  type="text"
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                  value={draftDisplayName}
+                  onChange={(e) => setDraftDisplayName(e.target.value)}
+                />
+              </label>
+              <label className="block text-sm">
+                <span>نام بومی</span>
+                <input
+                  type="text"
+                  className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2"
+                  value={draftNativeName}
+                  onChange={(e) => setDraftNativeName(e.target.value)}
+                />
+              </label>
               <label className="flex items-center justify-between gap-3 text-sm">
                 <span>فعال</span>
                 <input type="checkbox" checked={draftActive} onChange={(e) => setDraftActive(e.target.checked)} />

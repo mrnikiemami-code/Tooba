@@ -34,6 +34,44 @@ export async function loadAdminLanguages(): Promise<AdminResult<SupportedLocaleD
   }
 }
 
+export async function updateAdminLanguage(
+  code: string,
+  body: Partial<SupportedLocaleDefinition>,
+): Promise<AdminResult<SupportedLocaleDefinition>> {
+  try {
+    const response = await fetch(`/v1/admin/languages/${encodeURIComponent(code)}`, {
+      method: "PUT",
+      headers: adminHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        code: body.code,
+        urlPrefix: body.urlPrefix,
+        displayName: body.displayName,
+        nativeName: body.nativeName,
+        direction: body.direction,
+        culture: body.culture,
+        calendarDisplay: body.calendarDisplay === "gregorian" ? "Gregorian" : "Jalali",
+        active: body.active,
+        isDefault: body.default,
+        sortOrder: body.sortOrder,
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: "admin.languages.update_failed" };
+    }
+    const mapped = mapSupportedLocale(payload);
+    if (!mapped) {
+      return { state: "error", data: null, status: response.status, message: "admin.languages.invalid_response" };
+    }
+    return { state: "ok", data: mapped, status: response.status };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
 export async function patchAdminLanguage(
   code: string,
   patch: Partial<Pick<SupportedLocaleDefinition, "active" | "default" | "sortOrder">>,

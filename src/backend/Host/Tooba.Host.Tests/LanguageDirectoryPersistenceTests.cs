@@ -70,9 +70,84 @@ public sealed class LanguageDirectoryPersistenceTests : IDisposable
             CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Referenced_language_rejects_code_change()
+    {
+        await _directory.BootstrapAsync(CancellationToken.None);
+        var referenced = new ReferencedLanguageGuard(["fa-IR"]);
+        var directory = new LanguageDirectory(_db, referenced);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => directory.UpdateAsync(
+            "fa-IR",
+            new UpdateLanguageCommand("fa-IR-NEW", "fa", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            CancellationToken.None));
+        Assert.Equal(LanguageErrorCodes.CodeInUse, ex.Message);
+    }
+
+    [Fact]
+    public async Task Referenced_language_rejects_url_prefix_change()
+    {
+        await _directory.BootstrapAsync(CancellationToken.None);
+        var referenced = new ReferencedLanguageGuard(["fa-IR"]);
+        var directory = new LanguageDirectory(_db, referenced);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => directory.UpdateAsync(
+            "fa-IR",
+            new UpdateLanguageCommand("fa-IR", "fa2", "فارسی", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            CancellationToken.None));
+        Assert.Equal(LanguageErrorCodes.UrlPrefixInUse, ex.Message);
+    }
+
+    [Fact]
+    public async Task Unreferenced_language_allows_identity_update()
+    {
+        await _directory.BootstrapAsync(CancellationToken.None);
+        var directory = new LanguageDirectory(_db, new NoLanguageReferences());
+        var updated = await directory.UpdateAsync(
+            "en-US",
+            new UpdateLanguageCommand("en-GB", "gb", "English UK", "English", "ltr", "en-GB", "Gregorian", true, false, 1),
+            CancellationToken.None);
+        Assert.Equal("en-GB", updated.Code);
+        Assert.Equal("gb", updated.UrlPrefix);
+    }
+
+    [Fact]
+    public async Task Referenced_language_allows_safe_field_update()
+    {
+        await _directory.BootstrapAsync(CancellationToken.None);
+        var referenced = new ReferencedLanguageGuard(["fa-IR"]);
+        var directory = new LanguageDirectory(_db, referenced);
+        var updated = await directory.UpdateAsync(
+            "fa-IR",
+            new UpdateLanguageCommand("fa-IR", "fa", "Persian", "فارسی", "rtl", "fa-IR", "Jalali", true, true, 0),
+            CancellationToken.None);
+        Assert.Equal("Persian", updated.DisplayName);
+    }
+
+    [Fact]
+    public async Task ListAdmin_exposes_capability_flags()
+    {
+        await _directory.BootstrapAsync(CancellationToken.None);
+        var referenced = new ReferencedLanguageGuard(["fa-IR"]);
+        var directory = new LanguageDirectory(_db, referenced);
+        var rows = await directory.ListAdminAsync(CancellationToken.None);
+        var fa = rows.Single(x => x.Snapshot.Code == "fa-IR");
+        var en = rows.Single(x => x.Snapshot.Code == "en-US");
+        Assert.True(fa.IsReferenced);
+        Assert.False(fa.CanEditCode);
+        Assert.False(fa.CanEditUrlPrefix);
+        Assert.False(en.IsReferenced);
+        Assert.True(en.CanEditCode);
+        Assert.True(en.CanEditUrlPrefix);
+    }
+
     private sealed class NoLanguageReferences : ILanguageReferenceGuard
     {
         public Task<bool> IsReferencedAsync(string languageCode, CancellationToken cancellationToken) =>
             Task.FromResult(false);
+    }
+
+    private sealed class ReferencedLanguageGuard(IReadOnlyCollection<string> referenced) : ILanguageReferenceGuard
+    {
+        public Task<bool> IsReferencedAsync(string languageCode, CancellationToken cancellationToken) =>
+            Task.FromResult(referenced.Contains(languageCode));
     }
 }

@@ -161,8 +161,14 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         public Task<IReadOnlyList<LanguageSnapshot>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<LanguageSnapshot>>([]);
 
+        public Task<IReadOnlyList<LanguageAdminSnapshot>> ListAdminAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<LanguageAdminSnapshot>>([]);
+
         public Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken) =>
             Task.FromResult<LanguageSnapshot?>(null);
+
+        public Task<LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken) =>
+            Task.FromResult<LanguageAdminSnapshot?>(null);
 
         public Task<LanguageSnapshot> CreateAsync(CreateLanguageCommand command, CancellationToken cancellationToken) =>
             throw new NotSupportedException();

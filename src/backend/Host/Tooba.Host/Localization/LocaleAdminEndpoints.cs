@@ -31,7 +31,7 @@ public static class LocaleAdminEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var rows = await directory.ListAsync(cancellationToken);
+            var rows = await directory.ListAdminAsync(cancellationToken);
             return Results.Json(rows.Select(ToApiModel));
         }
         catch (PlatformHttpException ex)
@@ -65,7 +65,7 @@ public static class LocaleAdminEndpoints
                 body.Active ?? true,
                 body.IsDefault ?? false,
                 body.SortOrder ?? 0), cancellationToken);
-            return Results.Json(ToApiModel(created));
+            return Results.Json(ToApiModel(created, isReferenced: false));
         }
         catch (PlatformHttpException ex)
         {
@@ -93,6 +93,8 @@ public static class LocaleAdminEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             var updated = await directory.UpdateAsync(code, new UpdateLanguageCommand(
+                body.Code,
+                body.UrlPrefix,
                 body.DisplayName ?? "",
                 body.NativeName ?? "",
                 body.Direction ?? "rtl",
@@ -101,7 +103,8 @@ public static class LocaleAdminEndpoints
                 body.Active ?? true,
                 body.IsDefault ?? false,
                 body.SortOrder ?? 0), cancellationToken);
-            return Results.Json(ToApiModel(updated));
+            var admin = await directory.GetAdminByCodeAsync(updated.Code, cancellationToken);
+            return Results.Json(admin is null ? ToApiModel(updated, false) : ToApiModel(admin));
         }
         catch (PlatformHttpException ex)
         {
@@ -129,7 +132,8 @@ public static class LocaleAdminEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             var updated = await directory.PatchAsync(code, new PatchLanguageCommand(body.Active, body.IsDefault, body.SortOrder), cancellationToken);
-            return Results.Json(ToApiModel(updated));
+            var admin = await directory.GetAdminByCodeAsync(updated.Code, cancellationToken);
+            return Results.Json(admin is null ? ToApiModel(updated, false) : ToApiModel(admin));
         }
         catch (PlatformHttpException ex)
         {
@@ -141,7 +145,9 @@ public static class LocaleAdminEndpoints
         }
     }
 
-    private static object ToApiModel(LanguageSnapshot row) => new
+    private static object ToApiModel(LanguageAdminSnapshot row) => ToApiModel(row.Snapshot, row.IsReferenced, row.CanEditCode, row.CanEditUrlPrefix);
+
+    private static object ToApiModel(LanguageSnapshot row, bool isReferenced, bool? canEditCode = null, bool? canEditUrlPrefix = null) => new
     {
         languageId = row.LanguageId,
         code = row.Code,
@@ -156,6 +162,9 @@ public static class LocaleAdminEndpoints
         sortOrder = row.SortOrder,
         createdAt = row.CreatedAt,
         updatedAt = row.UpdatedAt,
+        isReferenced,
+        canEditCode = canEditCode ?? !isReferenced,
+        canEditUrlPrefix = canEditUrlPrefix ?? !isReferenced,
     };
 
     private static IResult LanguageError(InvalidOperationException ex) =>

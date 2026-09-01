@@ -26,6 +26,31 @@ public sealed class LanguageDirectory : ILanguageDirectory
         return rows.Select(LanguageMappings.ToSnapshot).ToList();
     }
 
+    public async Task<IReadOnlyList<LanguageAdminSnapshot>> ListAdminAsync(CancellationToken cancellationToken)
+    {
+        var rows = await ListAsync(cancellationToken);
+        var result = new List<LanguageAdminSnapshot>(rows.Count);
+        foreach (var row in rows)
+        {
+            var referenced = await _referenceGuard.IsReferencedAsync(row.Code, cancellationToken);
+            result.Add(LanguageMappings.ToAdminSnapshot(row, referenced));
+        }
+
+        return result;
+    }
+
+    public async Task<LanguageAdminSnapshot?> GetAdminByCodeAsync(string code, CancellationToken cancellationToken)
+    {
+        var row = await GetByCodeAsync(code, cancellationToken);
+        if (row is null)
+        {
+            return null;
+        }
+
+        var referenced = await _referenceGuard.IsReferencedAsync(row.Code, cancellationToken);
+        return LanguageMappings.ToAdminSnapshot(row, referenced);
+    }
+
     public async Task<LanguageSnapshot?> GetByCodeAsync(string code, CancellationToken cancellationToken)
     {
         var row = await FindByCodeAsync(code, cancellationToken);
@@ -88,10 +113,43 @@ public sealed class LanguageDirectory : ILanguageDirectory
     {
         var language = await FindByCodeTrackedAsync(code, cancellationToken)
             ?? throw new InvalidOperationException(LanguageErrorCodes.NotFound);
-        if (_referenceGuard is not null
-            && await _referenceGuard.IsReferencedAsync(language.Code, cancellationToken))
+        var referenced = await _referenceGuard.IsReferencedAsync(language.Code, cancellationToken);
+        var nextCode = string.IsNullOrWhiteSpace(command.Code)
+            ? language.Code
+            : Language.NormalizeCode(command.Code);
+        var nextUrlPrefix = string.IsNullOrWhiteSpace(command.UrlPrefix)
+            ? language.UrlPrefix
+            : Language.NormalizeUrlPrefix(command.UrlPrefix);
+
+        if (referenced)
         {
-            // code/urlPrefix remain immutable once referenced — UpdateMutableFields never touches them.
+            if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(LanguageErrorCodes.CodeInUse);
+            }
+
+            if (!string.Equals(nextUrlPrefix, language.UrlPrefix, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(LanguageErrorCodes.UrlPrefixInUse);
+            }
+        }
+        else if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal)
+            || !string.Equals(nextUrlPrefix, language.UrlPrefix, StringComparison.Ordinal))
+        {
+            if (!string.Equals(nextCode, language.Code, StringComparison.Ordinal)
+                && await _db.Languages.AnyAsync(x => x.Code == nextCode && x.LanguageId != language.LanguageId, cancellationToken))
+            {
+                throw new InvalidOperationException(LanguageErrorCodes.CodeDuplicate);
+            }
+
+            if (!string.Equals(nextUrlPrefix, language.UrlPrefix, StringComparison.Ordinal)
+                && await _db.Languages.AnyAsync(x => x.UrlPrefix == nextUrlPrefix && x.LanguageId != language.LanguageId, cancellationToken))
+            {
+                throw new InvalidOperationException(LanguageErrorCodes.UrlPrefixDuplicate);
+            }
+
+            var nowIdentity = DateTimeOffset.UtcNow;
+            language.UpdateIdentityFields(nextCode, nextUrlPrefix, nowIdentity);
         }
 
         var now = DateTimeOffset.UtcNow;

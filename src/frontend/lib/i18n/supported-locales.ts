@@ -17,6 +17,9 @@ export interface SupportedLocaleDefinition {
   active: boolean;
   default: boolean;
   sortOrder: number;
+  isReferenced?: boolean;
+  canEditCode?: boolean;
+  canEditUrlPrefix?: boolean;
 }
 
 /** Routing bootstrap fallback only — Admin reads authoritative data from /v1/admin/languages. */
@@ -77,5 +80,12 @@ export function mapSupportedLocale(payload: unknown): SupportedLocaleDefinition 
     active: Boolean(item.active ?? item.Active ?? true),
     default: Boolean(item.default ?? item.isDefault ?? item.IsDefault ?? false),
     sortOrder: Number(item.sortOrder ?? item.SortOrder ?? 0),
+    isReferenced: Boolean(item.isReferenced ?? item.IsReferenced ?? false),
+    canEditCode: item.canEditCode === undefined && item.CanEditCode === undefined
+      ? undefined
+      : Boolean(item.canEditCode ?? item.CanEditCode ?? true),
+    canEditUrlPrefix: item.canEditUrlPrefix === undefined && item.CanEditUrlPrefix === undefined
+      ? undefined
+      : Boolean(item.canEditUrlPrefix ?? item.CanEditUrlPrefix ?? true),
   };
 }
