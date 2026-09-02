@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P08-T007-R1).
+ * Recovery SoT staleness guard (TB-P08-T007-R2).
  * Deterministic, repo-local — does NOT call Bridge API.
  *
  * Authoritative files:
@@ -26,7 +26,7 @@ const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
 /** Active Bridge task under implementation (update when Architect issues next). */
-const CURRENT_TASK_ID = "TB-P08-T007-R1";
+const CURRENT_TASK_ID = "TB-P08-T007-R2";
 
 /** Markers that must appear for the active wave. */
 const REQUIRED_MARKERS = [
@@ -47,6 +47,7 @@ const REQUIRED_MARKERS = [
   "TB-P08-T003",
   "TB-P08-T004",
   "TB-P08-T007-R1",
+  "TB-P08-T007-R2",
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
 ];
@@ -81,10 +82,12 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT current issued/repair points at idle after TB-P08-T007-R1 not stale pointers", () => {
+test("recovery SoT current issued/repair points at idle after TB-P08-T007-R2 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
+  assert.match(recovery, /TB-P08-T007-R2/);
+  assert.match(state, /TB-P08-T007-R2/);
   assert.match(recovery, /TB-P08-T007-R1/);
   assert.match(state, /TB-P08-T007-R1/);
   assert.match(recovery, /TB-P08-T007/);

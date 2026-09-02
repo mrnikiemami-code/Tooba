@@ -219,15 +219,17 @@ export function ContentArticleAdminScreen() {
   const togglePublish = useCallback(async () => {
     if (!article) return;
     setSaving(true);
-    const ok = isPublished(article.status)
-      ? await unpublishAdminArticle(article.articleId)
-      : await publishAdminArticle(article.articleId);
+    const publishing = !isPublished(article.status);
+    const ok = publishing
+      ? await publishAdminArticle(article.articleId)
+      : await unpublishAdminArticle(article.articleId);
     setSaving(false);
     if (!ok) {
       toast.error("عملیات انتشار ناموفق بود");
       return;
     }
-    toast.success(isPublished(article.status) ? "انتشار لغو شد" : "منتشر شد");
+    toast.success(publishing ? "منتشر شد" : "انتشار لغو شد");
+    setDestructiveKind(null);
     await refreshArticle(article.articleId);
   }, [article, refreshArticle]);
 
@@ -640,7 +642,7 @@ export function ContentArticleAdminScreen() {
               className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               disabled={saving || form.mode === "view" || archived}
               data-testid="content-article-publish-toggle"
-              onClick={() => void togglePublish()}
+              onClick={() => setDestructiveKind(isPublished(article.status) ? "unpublish" : "publish")}
             >
               {isPublished(article.status) ? "لغو انتشار" : "انتشار"}
             </button>
@@ -684,6 +686,7 @@ export function ContentArticleAdminScreen() {
         onConfirm={() => {
           if (destructiveKind === "delete") return handleDelete();
           if (destructiveKind === "archive") return handleArchive();
+          if (destructiveKind === "publish" || destructiveKind === "unpublish") return togglePublish();
         }}
       />
       <MediaLibraryDialog

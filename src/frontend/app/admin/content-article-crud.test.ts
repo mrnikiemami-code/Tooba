@@ -7,6 +7,7 @@ const api = readFileSync(join(import.meta.dirname, "../content/content-api.ts"),
 const screen = readFileSync(join(import.meta.dirname, "content-article-admin-screen.tsx"), "utf8");
 const list = readFileSync(join(import.meta.dirname, "content-list.tsx"), "utf8");
 const newScreen = readFileSync(join(import.meta.dirname, "content-article-new-screen.tsx"), "utf8");
+const dialog = readFileSync(join(import.meta.dirname, "content-article-destructive-dialog.tsx"), "utf8");
 
 test("create uses dedicated route not modal", () => {
   assert.match(list, /\/admin\/content\/articles\/new/);
@@ -48,16 +49,25 @@ test("destructive actions labeled delete vs archive", () => {
   assert.match(screen, /بایگانی/);
 });
 
-test("article destructive flows use canonical Dialog not window.confirm", () => {
-  const dialog = readFileSync(join(import.meta.dirname, "content-article-destructive-dialog.tsx"), "utf8");
+test("article action flows use canonical Dialog with zero window.confirm", () => {
   assert.doesNotMatch(screen, /window\.confirm/);
   assert.doesNotMatch(list, /window\.confirm/);
+  assert.doesNotMatch(dialog, /window\.confirm/);
+  assert.doesNotMatch(list, /confirm:\s*\(row\)/);
   assert.match(screen, /ContentArticleDestructiveDialog/);
   assert.match(list, /ContentArticleDestructiveDialog/);
   assert.match(dialog, /from "\.\.\/\.\.\/design-system"/);
   assert.match(dialog, /حذف مقاله/);
   assert.match(dialog, /بایگانی مقاله/);
+  assert.match(dialog, /انتشار مقاله/);
+  assert.match(dialog, /لغو انتشار مقاله/);
+  assert.match(dialog, /Publish article/);
+  assert.match(dialog, /Unpublish article/);
   assert.match(dialog, /Delete article/);
   assert.match(dialog, /Archive article/);
-  assert.match(dialog, /content-article-destructive-confirm-/);
+  assert.match(dialog, /"publish"/);
+  assert.match(dialog, /"unpublish"/);
+  assert.match(list, /onRequestAction\("publish"/);
+  assert.match(list, /onRequestAction\("unpublish"/);
+  assert.match(screen, /setDestructiveKind\(isPublished\(article\.status\) \? "unpublish" : "publish"\)/);
 });

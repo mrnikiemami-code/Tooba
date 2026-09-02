@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { toast } from "react-toastify";
 import { Archive, Eye, Pencil, Trash2, Upload, Undo2 } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import {
@@ -111,9 +112,7 @@ function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
 }
 
 function buildContentRowActions(
-  onPublishToggle: (articleId: string, published: boolean) => Promise<void>,
-  onRequestDelete: (row: AdminContentArticle) => void,
-  onRequestArchive: (row: AdminContentArticle) => void,
+  onRequestAction: (kind: ArticleDestructiveKind, row: AdminContentArticle) => void,
 ): AppGridRowAction<AdminContentArticle>[] {
   return [
     {
@@ -136,7 +135,7 @@ function buildContentRowActions(
       label: "حذف",
       icon: Trash2,
       variant: "destructive",
-      onClick: (row) => onRequestDelete(row),
+      onClick: (row) => onRequestAction("delete", row),
       testId: (row) => `admin-content-delete-${row.articleId}`,
       visible: (row) => canHardDeleteArticle(row.status),
     },
@@ -145,7 +144,7 @@ function buildContentRowActions(
       label: "بایگانی",
       icon: Archive,
       variant: "destructive",
-      onClick: (row) => onRequestArchive(row),
+      onClick: (row) => onRequestAction("archive", row),
       testId: (row) => `admin-content-archive-${row.articleId}`,
       visible: (row) => canArchiveArticle(row.status),
     },
@@ -153,8 +152,7 @@ function buildContentRowActions(
       id: "publish",
       label: "انتشار",
       icon: Upload,
-      confirm: (row) => `انتشار «${row.title}»؟`,
-      onClick: (row) => onPublishToggle(row.articleId, false),
+      onClick: (row) => onRequestAction("publish", row),
       testId: (row) => `admin-content-publish-${row.articleId}`,
       visible: (row) => !isPublished(row.status) && !isArticleArchived(row.status),
     },
@@ -163,8 +161,7 @@ function buildContentRowActions(
       label: "لغو انتشار",
       icon: Undo2,
       variant: "destructive",
-      confirm: (row) => `لغو انتشار «${row.title}»؟`,
-      onClick: (row) => onPublishToggle(row.articleId, true),
+      onClick: (row) => onRequestAction("unpublish", row),
       testId: (row) => `admin-content-unpublish-${row.articleId}`,
       visible: (row) => isPublished(row.status),
     },
@@ -274,22 +271,8 @@ export function AdminContentScreen() {
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
 
-  const onPublishToggle = useCallback(async (articleId: string, published: boolean) => {
-    if (published) {
-      await unpublishAdminArticle(articleId);
-    } else {
-      await publishAdminArticle(articleId);
-    }
-    refresh();
-  }, [refresh]);
-
-  const onRequestDelete = useCallback((row: AdminContentArticle) => {
-    setDestructiveKind("delete");
-    setDestructiveTarget({ articleId: row.articleId, title: row.title, locale: row.locale });
-  }, []);
-
-  const onRequestArchive = useCallback((row: AdminContentArticle) => {
-    setDestructiveKind("archive");
+  const onRequestAction = useCallback((kind: ArticleDestructiveKind, row: AdminContentArticle) => {
+    setDestructiveKind(kind);
     setDestructiveTarget({ articleId: row.articleId, title: row.title, locale: row.locale });
   }, []);
 
@@ -297,11 +280,31 @@ export function AdminContentScreen() {
     if (!destructiveTarget || !destructiveKind) return;
     setDestructivePending(true);
     try {
-      const result =
-        destructiveKind === "delete"
-          ? await deleteAdminArticle(destructiveTarget.articleId)
-          : await archiveAdminArticle(destructiveTarget.articleId);
-      if (!result.ok) throw new Error(result.message ?? "عملیات ناموفق بود");
+      if (destructiveKind === "delete") {
+        const result = await deleteAdminArticle(destructiveTarget.articleId);
+        if (!result.ok) {
+          toast.error(result.message ?? "حذف ناموفق بود");
+          return;
+        }
+      } else if (destructiveKind === "archive") {
+        const result = await archiveAdminArticle(destructiveTarget.articleId);
+        if (!result.ok) {
+          toast.error(result.message ?? "بایگانی ناموفق بود");
+          return;
+        }
+      } else if (destructiveKind === "publish") {
+        const ok = await publishAdminArticle(destructiveTarget.articleId);
+        if (!ok) {
+          toast.error("انتشار ناموفق بود");
+          return;
+        }
+      } else if (destructiveKind === "unpublish") {
+        const ok = await unpublishAdminArticle(destructiveTarget.articleId);
+        if (!ok) {
+          toast.error("لغو انتشار ناموفق بود");
+          return;
+        }
+      }
       setDestructiveKind(null);
       setDestructiveTarget(null);
       refresh();
@@ -310,10 +313,7 @@ export function AdminContentScreen() {
     }
   }, [destructiveKind, destructiveTarget, refresh]);
 
-  const rowActions = useMemo(
-    () => buildContentRowActions(onPublishToggle, onRequestDelete, onRequestArchive),
-    [onPublishToggle, onRequestArchive, onRequestDelete],
-  );
+  const rowActions = useMemo(() => buildContentRowActions(onRequestAction), [onRequestAction]);
   const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
   const queryAdapter = useCallback(

@@ -1,0 +1,64 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T007-R2
+
+Parent-Task:
+TB-P08-T007-R1
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+881c9d1c-fa89-4ad0-a9b7-404c5a892f38
+
+Summary:
+Extended ContentArticleDestructiveDialog for Publish/Unpublish; removed remaining Article Admin grid confirm props that used native window.confirm; workspace publish toggle now opens the same canonical Dialog. Zero window.confirm in Article Admin action files. USER_VISUAL_ACCEPTED=NO.
+
+Native-Confirm-Zero:
+content-list.tsx, content-article-admin-screen.tsx, content-article-destructive-dialog.tsx contain zero window.confirm; publish/unpublish no longer set AppGridRowAction.confirm.
+
+Publish-Dialog:
+Title انتشار مقاله / Publish article; body covers public access and sitemap/indexing; primary tone; انصراف + انتشار مقاله.
+
+Unpublish-Dialog:
+Title لغو انتشار مقاله / Unpublish article; body covers public removal and sitemap exclusion; danger tone; انصراف + لغو انتشار.
+
+Delete-Archive-Preservation:
+R1 delete/archive dialogs and lifecycle policy unchanged.
+
+Accessibility:
+Same Dialog alertdialog pattern; pending disables confirm/cancel double-submit; Escape via Dialog onClose.
+
+Preserved-CRUD:
+Create route, VIEW/EDIT, Save/Cancel, Draft delete, Published archive, public exclusion unchanged; ContentArticleLifecycleTests PASS.
+
+Focused-Validation:
+FE content-article-crud PASS; recovery guard PASS; ContentArticleLifecycleTests PASS; git diff --check clean.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T006; last implementation TB-P08-T007-R2; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=PLACEHOLDER
+origin/main=PLACEHOLDER
+HEAD==origin/main
+
+Architectural-Concerns:
+confirmDiscardIfDirty dirty-discard path still uses design-system default confirmFn outside scoped action dialogs.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
