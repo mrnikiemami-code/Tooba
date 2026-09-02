@@ -25,6 +25,7 @@ export type AdminNavLabels = {
   settlement: string;
   payouts: string;
   content: string;
+  contentCategories: string;
   stories: string;
   pageComposition: string;
   sellers: string;
@@ -64,6 +65,7 @@ const faNav: AdminNavLabels = {
   settlement: "تسویه فروشندگان",
   payouts: "پرداخت به فروشندگان",
   content: "محتوا / بلاگ",
+  contentCategories: "دسته‌بندی مقالات",
   stories: "استوری‌ها",
   pageComposition: "ترکیب صفحهٔ خانه",
   sellers: "فروشندگان",
@@ -103,6 +105,7 @@ const enNav: AdminNavLabels = {
   settlement: "Seller settlement",
   payouts: "Seller payouts",
   content: "Content / blog",
+  contentCategories: "Article categories",
   stories: "Stories",
   pageComposition: "Home page composition",
   sellers: "Sellers",

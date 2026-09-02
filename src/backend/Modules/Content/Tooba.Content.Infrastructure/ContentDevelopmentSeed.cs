@@ -13,6 +13,35 @@ public static class ContentDevelopmentSeed
     {
         var db = services.GetRequiredService<ContentDbContext>();
         var now = new DateTimeOffset(2026, 8, 20, 10, 0, 0, TimeSpan.Zero);
+        var categoryIds = new Dictionary<string, Guid>(StringComparer.Ordinal);
+        foreach (var name in new[] { "راهنما", "موبایل", "لوازم خانگی", "پیشنهاد" })
+        {
+            var slug = ContentCategory.NormalizeSlug(name);
+            var existingCategory = await db.Categories
+                .SingleOrDefaultAsync(c => c.LanguageCode == ContentArticle.DefaultLocale && c.Slug == slug, cancellationToken);
+            if (existingCategory is null)
+            {
+                var created = ContentCategory.Create(
+                    ContentArticle.DefaultLocale,
+                    null,
+                    name,
+                    slug,
+                    null,
+                    null,
+                    categoryIds.Count,
+                    null,
+                    null,
+                    null,
+                    now);
+                db.Categories.Add(created);
+                categoryIds[name] = created.CategoryId;
+            }
+            else
+            {
+                categoryIds[name] = existingCategory.CategoryId;
+            }
+        }
+
         var rows = new[]
         {
             (
@@ -78,7 +107,8 @@ public static class ContentDevelopmentSeed
                     ContentArticle.DefaultLocale,
                     row.Item2,
                     excerpt,
-                    row.Item4);
+                    row.Item4,
+                    categoryIds.GetValueOrDefault(row.Item4));
                 article.Publish(now);
                 db.Articles.Add(article);
                 continue;
@@ -96,6 +126,7 @@ public static class ContentDevelopmentSeed
                     row.Item2,
                     excerpt,
                     row.Item4,
+                    categoryIds.GetValueOrDefault(row.Item4),
                     row.Item5,
                     row.Item6,
                     row.Item7,

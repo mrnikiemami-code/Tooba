@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, Upload, Undo2 } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import {
@@ -26,6 +26,7 @@ import {
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
+import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
 import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
@@ -192,6 +193,7 @@ export function AdminContentScreen() {
   const [reloadToken, setReloadToken] = useState(0);
   const [gridError, setGridError] = useState<string>();
   const [showCreate, setShowCreate] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
   const [draft, setDraft] = useState({
     slug: "",
     title: "",
@@ -199,12 +201,19 @@ export function AdminContentScreen() {
     body: "",
     authorDisplayName: "تحریریه توبا",
     category: "",
+    categoryId: "" as string,
     seoTitle: "",
     seoDescription: "",
   });
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  useEffect(() => {
+    void fetchContentCategoryTree("fa-IR").then((result) => {
+      if (result.state === "ok" && result.data) setCategoryOptions(result.data);
+    });
+  }, []);
 
   const onPublishToggle = useCallback(async (articleId: string, published: boolean) => {
     if (published) {
@@ -301,7 +310,7 @@ export function AdminContentScreen() {
                 ["excerpt", "چکیده"],
                 ["body", "بدنه"],
                 ["authorDisplayName", "نویسنده"],
-                ["category", "دسته"],
+                ["categoryId", "دسته"],
                 ["seoTitle", "عنوان جستجو"],
                 ["seoDescription", "توضیح جستجو"],
               ] as const).map(([key, label]) => (
@@ -311,9 +320,27 @@ export function AdminContentScreen() {
                     <textarea
                       className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
                       rows={key === "body" ? 5 : 2}
-                      value={draft[key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key]: e.target.value }))}
+                      value={draft[key === "categoryId" ? "categoryId" : key]}
+                      onChange={(e) => setDraft((current) => ({ ...current, [key === "categoryId" ? "categoryId" : key]: e.target.value }))}
                     />
+                  ) : key === "categoryId" ? (
+                    <select
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      value={draft.categoryId}
+                      onChange={(e) => {
+                        const selected = categoryOptions.find((row) => row.id === e.target.value);
+                        setDraft((current) => ({
+                          ...current,
+                          categoryId: e.target.value,
+                          category: selected?.name ?? "",
+                        }));
+                      }}
+                    >
+                      <option value="">— بدون دسته —</option>
+                      {categoryOptions.map((row) => (
+                        <option key={row.id} value={row.id}>{row.name}</option>
+                      ))}
+                    </select>
                   ) : (
                     <input
                       className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
@@ -329,7 +356,10 @@ export function AdminContentScreen() {
               <button
                 type="button"
                 className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => void createAdminArticle(draft).then((result) => {
+                onClick={() => void createAdminArticle({
+                  ...draft,
+                  categoryId: draft.categoryId || null,
+                }).then((result) => {
                   if (result.ok) { setShowCreate(false); refresh(); }
                   else setGridError(result.message);
                 })}

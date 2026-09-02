@@ -72,6 +72,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
       { id: "content", labelKey: "content", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
+      { id: "content-categories", labelKey: "contentCategories", href: "/admin/content/categories", icon: FolderTree, live: true, viewPermission: "content.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
     ],

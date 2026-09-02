@@ -20,6 +20,7 @@ public sealed record PublishedArticleItem(
     string? SeoTitle,
     string? SeoDescription,
     string? Category,
+    Guid? CategoryId,
     string Locale);
 
 /// <summary>نمای کامل مدیریتی مقاله.</summary>
@@ -33,6 +34,7 @@ public sealed record AdminArticleSnapshot(
     string? SeoTitle,
     string? SeoDescription,
     string? Category,
+    Guid? CategoryId,
     Guid? CoverMediaAssetId,
     string AuthorDisplayName,
     IReadOnlyList<string> Tags,
@@ -56,7 +58,8 @@ public sealed record CreateArticleCommand(
     string? Locale,
     string? SeoTitle,
     string? SeoDescription,
-    string? Category);
+    string? Category,
+    Guid? CategoryId);
 
 /// <summary>فرمان به‌روزرسانی فیلدهای تحریری مقاله.</summary>
 public sealed record UpdateArticleCommand(
@@ -70,7 +73,8 @@ public sealed record UpdateArticleCommand(
     string? Locale,
     string? SeoTitle,
     string? SeoDescription,
-    string? Category);
+    string? Category,
+    Guid? CategoryId);
 
 /// <summary>قابلیت خواندن و مدیریت مقالات Content.</summary>
 public interface IContentDirectory

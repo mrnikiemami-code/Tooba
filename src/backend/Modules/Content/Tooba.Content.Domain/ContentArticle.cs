@@ -56,8 +56,10 @@ public sealed class ContentArticle
     public string? SeoTitle { get; private set; }
     /// <summary>توضیح SEO اختیاری.</summary>
     public string? SeoDescription { get; private set; }
-    /// <summary>برچسب سادهٔ taxonomy.</summary>
+    /// <summary>برچسب سادهٔ taxonomy (legacy/display).</summary>
     public string? Category { get; private set; }
+    /// <summary>شناسهٔ دسته‌بندی مقالهٔ Content-owned.</summary>
+    public Guid? CategoryId { get; private set; }
     /// <summary>مرجع مات تصویر جلد.</summary>
     public Guid? CoverMediaAssetId { get; private set; }
     /// <summary>نام نمایشی نویسنده.</summary>
@@ -90,7 +92,8 @@ public sealed class ContentArticle
         string? locale = null,
         string? seoTitle = null,
         string? seoDescription = null,
-        string? category = null)
+        string? category = null,
+        Guid? categoryId = null)
     {
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? DefaultLocale : locale.Trim();
         Validate(slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
@@ -105,6 +108,7 @@ public sealed class ContentArticle
             SeoTitle = NormalizeOptional(seoTitle, SeoTitleMaxLength),
             SeoDescription = NormalizeOptional(seoDescription, SeoDescriptionMaxLength),
             Category = NormalizeOptional(category, CategoryMaxLength),
+            CategoryId = categoryId,
             CoverMediaAssetId = coverMediaAssetId,
             AuthorDisplayName = authorDisplayName.Trim(),
             TagsCsv = string.Join(',', tags.Select(tag => tag.Trim()).Where(tag => tag.Length > 0)),
@@ -124,6 +128,7 @@ public sealed class ContentArticle
         string? seoTitle,
         string? seoDescription,
         string? category,
+        Guid? categoryId,
         Guid? coverMediaAssetId,
         string authorDisplayName,
         IReadOnlyList<string> tags,
@@ -140,10 +145,19 @@ public sealed class ContentArticle
         SeoTitle = NormalizeOptional(seoTitle, SeoTitleMaxLength);
         SeoDescription = NormalizeOptional(seoDescription, SeoDescriptionMaxLength);
         Category = NormalizeOptional(category, CategoryMaxLength);
+        CategoryId = categoryId;
         CoverMediaAssetId = coverMediaAssetId;
         AuthorDisplayName = authorDisplayName.Trim();
         TagsCsv = string.Join(',', tags.Select(tag => tag.Trim()).Where(tag => tag.Length > 0));
         IsFeatured = isFeatured;
+        UpdatedAt = now;
+    }
+
+    /// <summary>دستهٔ مقاله را با برچسب نمایشی تنظیم می‌کند.</summary>
+    public void AssignCategory(Guid? categoryId, string? categoryLabel, DateTimeOffset now)
+    {
+        CategoryId = categoryId;
+        Category = NormalizeOptional(categoryLabel, CategoryMaxLength);
         UpdatedAt = now;
     }
 

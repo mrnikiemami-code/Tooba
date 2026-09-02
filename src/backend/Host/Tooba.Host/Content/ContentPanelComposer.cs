@@ -69,7 +69,8 @@ public sealed class ContentPanelComposer
                 body.Locale,
                 body.SeoTitle,
                 body.SeoDescription,
-                body.Category),
+                body.Category,
+                body.CategoryId),
             cancellationToken);
 
     /// <summary>به‌روزرسانی مقاله.</summary>
@@ -87,7 +88,8 @@ public sealed class ContentPanelComposer
                 body.Locale,
                 body.SeoTitle,
                 body.SeoDescription,
-                body.Category),
+                body.Category,
+                body.CategoryId),
             cancellationToken);
 
     /// <summary>انتشار مقاله.</summary>

@@ -356,6 +356,7 @@ app.MapWalletEndpoints();
 app.MapNotificationEndpoints();
 app.MapAccessControlEndpoints();
 app.MapContentEndpoints();
+app.MapContentCategoryEndpoints();
 app.MapLocaleAdminEndpoints();
 app.MapMediaEndpoints();
 app.MapPageCompositionEndpoints();

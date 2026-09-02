@@ -11,12 +11,17 @@ public sealed class ContentDirectory : IContentDirectory
 {
     private readonly ContentDbContext _db;
     private readonly ILanguageDirectory _languages;
+    private readonly IContentCategoryDirectory _categories;
 
     /// <summary>DbContext مالک را تزریق می‌کند.</summary>
-    public ContentDirectory(ContentDbContext db, ILanguageDirectory languages)
+    public ContentDirectory(
+        ContentDbContext db,
+        ILanguageDirectory languages,
+        IContentCategoryDirectory categories)
     {
         _db = db;
         _languages = languages;
+        _categories = categories;
     }
 
     /// <inheritdoc />
@@ -123,6 +128,8 @@ public sealed class ContentDirectory : IContentDirectory
 
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? ContentArticle.DefaultLocale : command.Locale.Trim();
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
+        await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
 
         var article = ContentArticle.Create(
             command.Slug,
@@ -138,7 +145,8 @@ public sealed class ContentDirectory : IContentDirectory
             locale,
             command.SeoTitle,
             command.SeoDescription,
-            command.Category);
+            categoryLabel,
+            command.CategoryId);
         _db.Articles.Add(article);
         await _db.SaveChangesAsync(cancellationToken);
         return MapAdmin(article);
@@ -155,13 +163,16 @@ public sealed class ContentDirectory : IContentDirectory
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
+        await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
         article.Update(
             command.Title,
             command.Excerpt,
             command.Body,
             command.SeoTitle,
             command.SeoDescription,
-            command.Category,
+            categoryLabel,
+            command.CategoryId,
             command.CoverMediaAssetId,
             command.AuthorDisplayName,
             command.Tags ?? [],
@@ -206,6 +217,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.SeoTitle,
         article.SeoDescription,
         article.Category,
+        article.CategoryId,
         article.Locale);
 
     internal static AdminArticleSnapshot MapAdmin(ContentArticle article) => new(
@@ -218,6 +230,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.SeoTitle,
         article.SeoDescription,
         article.Category,
+        article.CategoryId,
         article.CoverMediaAssetId,
         article.AuthorDisplayName,
         ParseTags(article.TagsCsv),
@@ -226,6 +239,20 @@ public sealed class ContentDirectory : IContentDirectory
         article.PublishDate,
         article.CreatedAt,
         article.UpdatedAt);
+
+    private async Task<string?> ResolveCategoryLabelAsync(
+        Guid? categoryId,
+        string? fallbackCategory,
+        CancellationToken cancellationToken)
+    {
+        if (categoryId is null)
+        {
+            return fallbackCategory;
+        }
+
+        var workspace = await _categories.GetWorkspaceAsync(categoryId.Value, cancellationToken);
+        return workspace?.Name ?? fallbackCategory;
+    }
 
     private static IReadOnlyList<string> ParseTags(string tagsCsv) =>
         string.IsNullOrWhiteSpace(tagsCsv)

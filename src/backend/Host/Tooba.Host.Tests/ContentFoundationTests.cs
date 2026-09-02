@@ -65,7 +65,8 @@ public sealed class ContentFoundationTests : IAsyncLifetime
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory());
+        var categories = new ContentCategoryDirectory(db);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories);
         var now = DateTimeOffset.Parse("2026-08-27T00:00:00Z");
 
         var draft = await directory.CreateAsync(
@@ -82,7 +83,8 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                 ContentArticle.DefaultLocale,
                 "SEO پیش‌نویس",
                 "توضیح SEO پیش‌نویس",
-                "راهنما"),
+                "راهنما",
+                null),
             CancellationToken.None);
 
         Assert.Equal(ContentPublicationStatus.Draft, draft.Status);
@@ -125,6 +127,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                 null,
                 null,
                 null,
+                null,
                 null),
             CancellationToken.None);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -139,6 +142,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                     [],
                     false,
                     now,
+                    null,
                     null,
                     null,
                     null,

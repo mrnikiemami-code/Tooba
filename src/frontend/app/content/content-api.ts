@@ -252,6 +252,7 @@ export async function createAdminArticle(input: {
   body: string;
   authorDisplayName: string;
   category?: string;
+  categoryId?: string | null;
   seoTitle?: string;
   seoDescription?: string;
 }): Promise<{ ok: boolean; article?: AdminContentArticle; message?: string }> {
@@ -268,6 +269,7 @@ export async function createAdminArticle(input: {
         tags: [],
         isFeatured: false,
         category: input.category ?? null,
+        categoryId: input.categoryId ?? null,
         seoTitle: input.seoTitle ?? null,
         seoDescription: input.seoDescription ?? null,
         locale: "fa-IR",

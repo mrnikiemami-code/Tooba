@@ -22,6 +22,7 @@ public sealed class ContentModule : IToobaModule
     {
         services.AddSingleton<IOutboxModuleRegistration, ContentOutboxRegistration>();
         services.AddScoped<IContentDirectory, ContentDirectory>();
+        services.AddScoped<IContentCategoryDirectory, ContentCategoryDirectory>();
         services.AddDbContext<ContentDbContext>((sp, options) =>
         {
             var connection = ToobaNpgsql.ResolveForContext(sp.GetRequiredService<ICurrentCommerceContext>(), sp.GetRequiredService<IDatabaseConnectionResolver>());

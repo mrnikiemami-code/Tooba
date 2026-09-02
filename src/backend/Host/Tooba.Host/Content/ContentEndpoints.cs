@@ -214,7 +214,8 @@ public sealed record CreateArticleBody(
     string? Locale,
     string? SeoTitle,
     string? SeoDescription,
-    string? Category);
+    string? Category,
+    Guid? CategoryId);
 
 /// <summary>بدنهٔ به‌روزرسانی مقاله از مرز admin.</summary>
 public sealed record UpdateArticleBody(
@@ -228,4 +229,5 @@ public sealed record UpdateArticleBody(
     string? Locale,
     string? SeoTitle,
     string? SeoDescription,
-    string? Category);
+    string? Category,
+    Guid? CategoryId);
