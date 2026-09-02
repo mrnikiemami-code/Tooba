@@ -114,6 +114,17 @@ public static class AdminListGridPolicies
         defaultSortField: "updated",
         tieBreakerField: "title");
 
+    /// <summary>گرید نویسندگان Admin.</summary>
+    public static readonly AdminListGridQueryPolicy<ContentAuthorGridRowDto> ContentAuthors = new(
+    [
+        new("displayName", x => x.DisplayName, InMemoryGridFieldKind.Text, searchable: true),
+        new("slug", x => x.Slug, InMemoryGridFieldKind.Text, searchable: true),
+        new("isActive", x => x.IsActive, InMemoryGridFieldKind.Enum),
+        new("updated", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
+    ],
+        defaultSortField: "updated",
+        tieBreakerField: "displayName");
+
     /// <summary>گرید نظرات Admin.</summary>
     public static readonly AdminListGridQueryPolicy<AdminReviewItem> Reviews = new(
     [

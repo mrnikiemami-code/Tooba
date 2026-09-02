@@ -60,6 +60,8 @@ public sealed class ContentArticle
     public string? Category { get; private set; }
     /// <summary>شناسهٔ دسته‌بندی مقالهٔ Content-owned.</summary>
     public Guid? CategoryId { get; private set; }
+    /// <summary>شناسهٔ نویسندهٔ Content-owned.</summary>
+    public Guid? AuthorId { get; private set; }
     /// <summary>مرجع مات تصویر جلد.</summary>
     public Guid? CoverMediaAssetId { get; private set; }
     /// <summary>نام نمایشی نویسنده.</summary>
@@ -84,6 +86,7 @@ public sealed class ContentArticle
         string excerpt,
         string body,
         Guid? coverMediaAssetId,
+        Guid? authorId,
         string authorDisplayName,
         IReadOnlyList<string> tags,
         bool isFeatured,
@@ -109,6 +112,7 @@ public sealed class ContentArticle
             SeoDescription = NormalizeOptional(seoDescription, SeoDescriptionMaxLength),
             Category = NormalizeOptional(category, CategoryMaxLength),
             CategoryId = categoryId,
+            AuthorId = authorId,
             CoverMediaAssetId = coverMediaAssetId,
             AuthorDisplayName = authorDisplayName.Trim(),
             TagsCsv = string.Join(',', tags.Select(tag => tag.Trim()).Where(tag => tag.Length > 0)),
@@ -130,6 +134,7 @@ public sealed class ContentArticle
         string? category,
         Guid? categoryId,
         Guid? coverMediaAssetId,
+        Guid? authorId,
         string authorDisplayName,
         IReadOnlyList<string> tags,
         bool isFeatured,
@@ -146,6 +151,7 @@ public sealed class ContentArticle
         SeoDescription = NormalizeOptional(seoDescription, SeoDescriptionMaxLength);
         Category = NormalizeOptional(category, CategoryMaxLength);
         CategoryId = categoryId;
+        AuthorId = authorId;
         CoverMediaAssetId = coverMediaAssetId;
         AuthorDisplayName = authorDisplayName.Trim();
         TagsCsv = string.Join(',', tags.Select(tag => tag.Trim()).Where(tag => tag.Length > 0));
@@ -158,6 +164,19 @@ public sealed class ContentArticle
     {
         CategoryId = categoryId;
         Category = NormalizeOptional(categoryLabel, CategoryMaxLength);
+        UpdatedAt = now;
+    }
+
+    /// <summary>نویسندهٔ مقاله را با نام نمایشی تنظیم می‌کند.</summary>
+    public void AssignAuthor(Guid? authorId, string authorDisplayName, DateTimeOffset now)
+    {
+        if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
+        {
+            throw new InvalidOperationException("نام نمایشی نویسنده معتبر نیست.");
+        }
+
+        AuthorId = authorId;
+        AuthorDisplayName = authorDisplayName.Trim();
         UpdatedAt = now;
     }
 

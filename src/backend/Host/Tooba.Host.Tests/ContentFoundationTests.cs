@@ -66,8 +66,13 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
         var categories = new ContentCategoryDirectory(db);
-        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories);
+        var authors = new ContentAuthorDirectory(db);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors);
         var now = DateTimeOffset.Parse("2026-08-27T00:00:00Z");
+
+        var author = await authors.CreateAsync(
+            new CreateContentAuthorCommand("تحریریه تست", "test-editorial", null, null, null, null, null, null, null, null),
+            CancellationToken.None);
 
         var draft = await directory.CreateAsync(
             new CreateArticleCommand(
@@ -76,7 +81,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                 "چکیدهٔ پیش‌نویس",
                 "بدنهٔ پیش‌نویس برای تست.",
                 null,
-                "تحریریه تست",
+                author.Id,
                 ["تست"],
                 false,
                 now,
@@ -120,7 +125,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                 "چکیده یک",
                 "بدنه یک",
                 null,
-                "نویسنده",
+                author.Id,
                 [],
                 false,
                 now,
@@ -138,7 +143,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                     "چکیده دو",
                     "بدنه دو",
                     null,
-                    "نویسنده",
+                    author.Id,
                     [],
                     false,
                     now,

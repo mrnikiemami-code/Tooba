@@ -20,6 +20,9 @@ public sealed class ContentDbContext : DbContext
     /// <summary>دسته‌بندی‌های مقاله.</summary>
     public DbSet<ContentCategory> Categories => Set<ContentCategory>();
 
+    /// <summary>نویسندگان مقاله.</summary>
+    public DbSet<ContentAuthor> Authors => Set<ContentAuthor>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -41,6 +44,7 @@ public sealed class ContentDbContext : DbContext
             entity.Property(x => x.SeoDescription).HasMaxLength(ContentArticle.SeoDescriptionMaxLength);
             entity.Property(x => x.Category).HasMaxLength(ContentArticle.CategoryMaxLength);
             entity.Property(x => x.CategoryId).HasColumnName("category_id");
+            entity.Property(x => x.AuthorId).HasColumnName("author_id");
             entity.Property(x => x.AuthorDisplayName).HasMaxLength(ContentArticle.AuthorDisplayNameMaxLength).IsRequired();
             entity.Property(x => x.TagsCsv).HasMaxLength(256);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
@@ -48,6 +52,23 @@ public sealed class ContentDbContext : DbContext
             entity.HasIndex(x => new { x.Status, x.PublishDate });
             entity.HasIndex(x => new { x.Status, x.Category, x.PublishDate });
             entity.HasIndex(x => x.CategoryId);
+            entity.HasIndex(x => x.AuthorId);
+        });
+        modelBuilder.Entity<ContentAuthor>(entity =>
+        {
+            entity.ToTable("authors");
+            entity.HasKey(x => x.AuthorId);
+            entity.Property(x => x.AuthorId).ValueGeneratedNever();
+            entity.Property(x => x.DisplayName).HasMaxLength(ContentAuthor.DisplayNameMaxLength).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(ContentAuthor.SlugMaxLength).IsRequired();
+            entity.Property(x => x.ShortBio).HasMaxLength(ContentAuthor.ShortBioMaxLength);
+            entity.Property(x => x.FullBio).HasMaxLength(ContentAuthor.FullBioMaxLength);
+            entity.Property(x => x.WebsiteUrl).HasMaxLength(ContentAuthor.UrlMaxLength);
+            entity.Property(x => x.InstagramUrl).HasMaxLength(ContentAuthor.UrlMaxLength);
+            entity.Property(x => x.TwitterUrl).HasMaxLength(ContentAuthor.UrlMaxLength);
+            entity.Property(x => x.LinkedInUrl).HasMaxLength(ContentAuthor.UrlMaxLength);
+            entity.HasIndex(x => x.Slug).IsUnique();
+            entity.HasIndex(x => new { x.IsActive, x.DisplayName });
         });
         modelBuilder.Entity<ContentCategory>(entity =>
         {

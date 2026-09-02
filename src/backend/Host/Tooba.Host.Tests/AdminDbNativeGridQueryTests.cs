@@ -23,6 +23,7 @@ public sealed class AdminDbNativeGridQueryTests
                 "excerpt",
                 "body",
                 null,
+                null,
                 "author",
                 [],
                 false,
@@ -53,9 +54,9 @@ public sealed class AdminDbNativeGridQueryTests
     {
         await using var db = CreateContentDb();
         var now = DateTimeOffset.UtcNow;
-        db.Articles.Add(ContentArticle.Create("a", "Alpha", "e", "b", null, "a", [], false, now, now, "fa", null, null, "x"));
-        db.Articles.Add(ContentArticle.Create("b", "Beta", "e", "b", null, "a", [], false, now, now, "fa", null, null, "x"));
-        db.Articles.Add(ContentArticle.Create("c", "Gamma", "e", "b", null, "a", [], false, now, now, "fa", null, null, "x"));
+        db.Articles.Add(ContentArticle.Create("a", "Alpha", "e", "b", null, null, "a", [], false, now, now, "fa", null, null, "x"));
+        db.Articles.Add(ContentArticle.Create("b", "Beta", "e", "b", null, null, "a", [], false, now, now, "fa", null, null, "x"));
+        db.Articles.Add(ContentArticle.Create("c", "Gamma", "e", "b", null, null, "a", [], false, now, now, "fa", null, null, "x"));
         await db.SaveChangesAsync();
 
         var engine = new AdminContentGridQueryEngine(db);

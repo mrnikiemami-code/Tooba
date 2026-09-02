@@ -27,6 +27,7 @@ import {
   type AdminContentArticle,
 } from "../content/content-api";
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
+import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
@@ -194,12 +195,14 @@ export function AdminContentScreen() {
   const [gridError, setGridError] = useState<string>();
   const [showCreate, setShowCreate] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
+  const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
   const [draft, setDraft] = useState({
     slug: "",
     title: "",
     excerpt: "",
     body: "",
     authorDisplayName: "تحریریه توبا",
+    authorId: "" as string,
     category: "",
     categoryId: "" as string,
     seoTitle: "",
@@ -212,6 +215,9 @@ export function AdminContentScreen() {
   useEffect(() => {
     void fetchContentCategoryTree("fa-IR").then((result) => {
       if (result.state === "ok" && result.data) setCategoryOptions(result.data);
+    });
+    void fetchActiveContentAuthors().then((result) => {
+      if (result.state === "ok" && result.data) setAuthorOptions(result.data);
     });
   }, []);
 
@@ -309,7 +315,7 @@ export function AdminContentScreen() {
                 ["title", "عنوان"],
                 ["excerpt", "چکیده"],
                 ["body", "بدنه"],
-                ["authorDisplayName", "نویسنده"],
+                ["authorId", "نویسنده"],
                 ["categoryId", "دسته"],
                 ["seoTitle", "عنوان جستجو"],
                 ["seoDescription", "توضیح جستجو"],
@@ -320,8 +326,8 @@ export function AdminContentScreen() {
                     <textarea
                       className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
                       rows={key === "body" ? 5 : 2}
-                      value={draft[key === "categoryId" ? "categoryId" : key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key === "categoryId" ? "categoryId" : key]: e.target.value }))}
+                      value={draft[key === "categoryId" ? "categoryId" : key === "authorId" ? "authorId" : key]}
+                      onChange={(e) => setDraft((current) => ({ ...current, [key === "categoryId" ? "categoryId" : key === "authorId" ? "authorId" : key]: e.target.value }))}
                     />
                   ) : key === "categoryId" ? (
                     <select
@@ -339,6 +345,24 @@ export function AdminContentScreen() {
                       <option value="">— بدون دسته —</option>
                       {categoryOptions.map((row) => (
                         <option key={row.id} value={row.id}>{row.name}</option>
+                      ))}
+                    </select>
+                  ) : key === "authorId" ? (
+                    <select
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      value={draft.authorId}
+                      onChange={(e) => {
+                        const selected = authorOptions.find((row) => row.authorId === e.target.value);
+                        setDraft((current) => ({
+                          ...current,
+                          authorId: e.target.value,
+                          authorDisplayName: selected?.displayName ?? current.authorDisplayName,
+                        }));
+                      }}
+                    >
+                      <option value="">— بدون نویسنده —</option>
+                      {authorOptions.map((row) => (
+                        <option key={row.authorId} value={row.authorId}>{row.displayName}</option>
                       ))}
                     </select>
                   ) : (
@@ -359,6 +383,7 @@ export function AdminContentScreen() {
                 onClick={() => void createAdminArticle({
                   ...draft,
                   categoryId: draft.categoryId || null,
+                  authorId: draft.authorId || null,
                 }).then((result) => {
                   if (result.ok) { setShowCreate(false); refresh(); }
                   else setGridError(result.message);

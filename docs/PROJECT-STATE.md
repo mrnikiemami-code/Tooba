@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T002
+TB-P08-T003
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T003 — Content Author management (public profiles, DAM, Article relation)
 TB-P08-T002 — Article Category Taxonomy (Content-owned, language-aware AppCategoryTree)
 TB-P08-T001 — under repair (parent; NOT accepted)
 TB-P08-T001-R2 — Language reference integrity (Code/UrlPrefix lock after Content use)
@@ -90,7 +91,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P08-T001-R2
+TB-P08-T002
 ```
 
 USER_VISUAL_ACCEPTED:

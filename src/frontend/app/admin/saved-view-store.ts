@@ -15,6 +15,7 @@ export const ADMIN_PROMOTION_GRID_VIEW_KEY = "grid.admin.promotions";
 export const ADMIN_PAYOUT_GRID_VIEW_KEY = "grid.admin.payouts";
 export const ADMIN_RECEIPT_GRID_VIEW_KEY = "grid.admin.receipts";
 export const ADMIN_CONTENT_GRID_VIEW_KEY = "grid.admin.content";
+export const ADMIN_CONTENT_AUTHORS_GRID_VIEW_KEY = "grid.admin.content.authors";
 export const ADMIN_STORY_GRID_VIEW_KEY = "grid.admin.stories";
 export const ADMIN_ATTRIBUTE_DEF_GRID_VIEW_KEY = "grid.admin.catalog.attributes";
 export const ADMIN_CATEGORY_SCHEMA_GRID_VIEW_KEY = "grid.admin.catalog.category-schema";

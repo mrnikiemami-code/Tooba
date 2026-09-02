@@ -42,6 +42,40 @@ public static class ContentDevelopmentSeed
             }
         }
 
+        var authorIds = new Dictionary<string, Guid>(StringComparer.Ordinal);
+        foreach (var (displayName, slug) in new[]
+        {
+            ("تحریریه توبا", "tooba-editorial"),
+            ("مریم احمدی", "maryam-ahmadi"),
+            ("علی رضایی", "ali-rezaei"),
+        })
+        {
+            var normalizedSlug = ContentAuthor.NormalizeSlug(slug);
+            var existingAuthor = await db.Authors
+                .SingleOrDefaultAsync(a => a.Slug == normalizedSlug, cancellationToken);
+            if (existingAuthor is null)
+            {
+                var created = ContentAuthor.Create(
+                    displayName,
+                    slug,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    now);
+                db.Authors.Add(created);
+                authorIds[displayName] = created.AuthorId;
+            }
+            else
+            {
+                authorIds[displayName] = existingAuthor.AuthorId;
+            }
+        }
+
         var rows = new[]
         {
             (
@@ -90,6 +124,7 @@ public static class ContentDevelopmentSeed
         {
             var excerpt = row.Item3;
             var body = $"{excerpt}\n\n{excerpt}\n\nبرای مطالعهٔ بیشتر، این راهنما را تا انتها دنبال کنید.";
+            var authorId = authorIds.GetValueOrDefault(row.Item6);
             var existing = await db.Articles.SingleOrDefaultAsync(article => article.Slug == row.Item1, cancellationToken);
             if (existing is null)
             {
@@ -99,6 +134,7 @@ public static class ContentDevelopmentSeed
                     excerpt,
                     body,
                     row.Item5,
+                    authorId,
                     row.Item6,
                     row.Item7,
                     row.Item8,
@@ -114,10 +150,10 @@ public static class ContentDevelopmentSeed
                 continue;
             }
 
-            // مقالات قبل از گسترش Body/SEO/Category با default خالی مانده‌اند؛ تکمیل idempotent.
             if (string.IsNullOrWhiteSpace(existing.Body)
                 || string.IsNullOrWhiteSpace(existing.Category)
-                || string.IsNullOrWhiteSpace(existing.SeoTitle))
+                || string.IsNullOrWhiteSpace(existing.SeoTitle)
+                || existing.AuthorId is null)
             {
                 existing.Update(
                     row.Item2,
@@ -128,6 +164,7 @@ public static class ContentDevelopmentSeed
                     row.Item4,
                     categoryIds.GetValueOrDefault(row.Item4),
                     row.Item5,
+                    authorId,
                     row.Item6,
                     row.Item7,
                     row.Item8,

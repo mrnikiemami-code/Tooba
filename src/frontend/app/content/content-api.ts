@@ -251,6 +251,7 @@ export async function createAdminArticle(input: {
   excerpt: string;
   body: string;
   authorDisplayName: string;
+  authorId?: string | null;
   category?: string;
   categoryId?: string | null;
   seoTitle?: string;
@@ -266,6 +267,7 @@ export async function createAdminArticle(input: {
         excerpt: input.excerpt,
         body: input.body,
         authorDisplayName: input.authorDisplayName,
+        authorId: input.authorId ?? null,
         tags: [],
         isFeatured: false,
         category: input.category ?? null,

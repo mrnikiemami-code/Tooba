@@ -21,6 +21,7 @@ public sealed record PublishedArticleItem(
     string? SeoDescription,
     string? Category,
     Guid? CategoryId,
+    Guid? AuthorId,
     string Locale);
 
 /// <summary>نمای کامل مدیریتی مقاله.</summary>
@@ -35,6 +36,7 @@ public sealed record AdminArticleSnapshot(
     string? SeoDescription,
     string? Category,
     Guid? CategoryId,
+    Guid? AuthorId,
     Guid? CoverMediaAssetId,
     string AuthorDisplayName,
     IReadOnlyList<string> Tags,
@@ -51,7 +53,7 @@ public sealed record CreateArticleCommand(
     string Excerpt,
     string Body,
     Guid? CoverMediaAssetId,
-    string AuthorDisplayName,
+    Guid? AuthorId,
     IReadOnlyList<string> Tags,
     bool IsFeatured,
     DateTimeOffset? PublishDate,
@@ -67,7 +69,7 @@ public sealed record UpdateArticleCommand(
     string Excerpt,
     string Body,
     Guid? CoverMediaAssetId,
-    string AuthorDisplayName,
+    Guid? AuthorId,
     IReadOnlyList<string> Tags,
     bool IsFeatured,
     string? Locale,

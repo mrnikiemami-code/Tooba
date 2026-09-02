@@ -77,10 +77,29 @@ internal sealed class AdminContentGridQueryEngine
             "title" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Title, filter),
             "slug" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
             "category" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Category, filter),
+            "authorId" => ApplyAuthorIdFilter(source, filter),
             "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
             "updated" => AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
             _ => source,
         };
+
+    private static IQueryable<ContentArticle> ApplyAuthorIdFilter(
+        IQueryable<ContentArticle> source,
+        GridFilterRequest filter)
+    {
+        if (!Guid.TryParse(filter.Value, out var authorId))
+        {
+            return source;
+        }
+
+        return filter.Operator switch
+        {
+            "notEqual" => source.Where(x => x.AuthorId != authorId),
+            "blank" => source.Where(x => x.AuthorId == null),
+            "notBlank" => source.Where(x => x.AuthorId != null),
+            _ => source.Where(x => x.AuthorId == authorId),
+        };
+    }
 
     private static IOrderedQueryable<ContentArticle> Order(IQueryable<ContentArticle> source, GridSortRequest sort)
     {
@@ -116,6 +135,7 @@ internal sealed class AdminContentGridQueryEngine
         article.SeoDescription,
         article.Category,
         article.CategoryId,
+        article.AuthorId,
         article.CoverMediaAssetId,
         article.AuthorDisplayName,
         string.IsNullOrWhiteSpace(article.TagsCsv)

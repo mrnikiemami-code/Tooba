@@ -12,16 +12,19 @@ public sealed class ContentDirectory : IContentDirectory
     private readonly ContentDbContext _db;
     private readonly ILanguageDirectory _languages;
     private readonly IContentCategoryDirectory _categories;
+    private readonly IContentAuthorDirectory _authors;
 
     /// <summary>DbContext مالک را تزریق می‌کند.</summary>
     public ContentDirectory(
         ContentDbContext db,
         ILanguageDirectory languages,
-        IContentCategoryDirectory categories)
+        IContentCategoryDirectory categories,
+        IContentAuthorDirectory authors)
     {
         _db = db;
         _languages = languages;
         _categories = categories;
+        _authors = authors;
     }
 
     /// <inheritdoc />
@@ -129,7 +132,9 @@ public sealed class ContentDirectory : IContentDirectory
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? ContentArticle.DefaultLocale : command.Locale.Trim();
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
         await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAssignment: true, cancellationToken);
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
+        var authorDisplayName = await ResolveAuthorDisplayNameAsync(command.AuthorId, cancellationToken);
 
         var article = ContentArticle.Create(
             command.Slug,
@@ -137,7 +142,8 @@ public sealed class ContentDirectory : IContentDirectory
             command.Excerpt,
             command.Body,
             command.CoverMediaAssetId,
-            command.AuthorDisplayName,
+            command.AuthorId,
+            authorDisplayName,
             command.Tags ?? [],
             command.IsFeatured,
             command.PublishDate ?? now,
@@ -164,7 +170,10 @@ public sealed class ContentDirectory : IContentDirectory
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
         await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        var isNewAuthorAssignment = command.AuthorId != article.AuthorId;
+        await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAuthorAssignment, cancellationToken);
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
+        var authorDisplayName = await ResolveAuthorDisplayNameAsync(command.AuthorId, cancellationToken);
         article.Update(
             command.Title,
             command.Excerpt,
@@ -174,7 +183,8 @@ public sealed class ContentDirectory : IContentDirectory
             categoryLabel,
             command.CategoryId,
             command.CoverMediaAssetId,
-            command.AuthorDisplayName,
+            command.AuthorId,
+            authorDisplayName,
             command.Tags ?? [],
             command.IsFeatured,
             now,
@@ -188,6 +198,7 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        await _authors.EnsurePublishableAuthorAsync(article.AuthorId, cancellationToken);
         article.Publish(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         return MapAdmin(article);
@@ -218,6 +229,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.SeoDescription,
         article.Category,
         article.CategoryId,
+        article.AuthorId,
         article.Locale);
 
     internal static AdminArticleSnapshot MapAdmin(ContentArticle article) => new(
@@ -231,6 +243,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.SeoDescription,
         article.Category,
         article.CategoryId,
+        article.AuthorId,
         article.CoverMediaAssetId,
         article.AuthorDisplayName,
         ParseTags(article.TagsCsv),
@@ -252,6 +265,18 @@ public sealed class ContentDirectory : IContentDirectory
 
         var workspace = await _categories.GetWorkspaceAsync(categoryId.Value, cancellationToken);
         return workspace?.Name ?? fallbackCategory;
+    }
+
+    private async Task<string> ResolveAuthorDisplayNameAsync(Guid? authorId, CancellationToken cancellationToken)
+    {
+        if (authorId is null)
+        {
+            throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+        }
+
+        var workspace = await _authors.GetWorkspaceAsync(authorId.Value, cancellationToken)
+            ?? throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+        return workspace.DisplayName;
     }
 
     private static IReadOnlyList<string> ParseTags(string tagsCsv) =>

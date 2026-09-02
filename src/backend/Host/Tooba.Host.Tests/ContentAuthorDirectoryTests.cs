@@ -9,20 +9,21 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-P08-T002: دسته‌بندی مقاله — زبان، slug، چرخه و archive.</summary>
+/// <summary>TB-P08-T003: نویسندهٔ مقاله — slug، deactivate و انتساب.</summary>
 [Collection("PostgresSerial")]
-public sealed class ContentCategoryDirectoryTests : IAsyncLifetime
+public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
 {
     private PostgreSqlContainer? _container;
     private bool _dockerAvailable;
 
+    /// <inheritdoc />
     public async Task InitializeAsync()
     {
         try
         {
             _container = new PostgreSqlBuilder()
                 .WithImage("postgres:16-alpine")
-                .WithDatabase("tooba_content_categories")
+                .WithDatabase("tooba_content_authors")
                 .WithUsername("tooba")
                 .WithPassword("dev-placeholder")
                 .Build();
@@ -35,6 +36,7 @@ public sealed class ContentCategoryDirectoryTests : IAsyncLifetime
         }
     }
 
+    /// <inheritdoc />
     public async Task DisposeAsync()
     {
         if (_container is not null)
@@ -43,92 +45,114 @@ public sealed class ContentCategoryDirectoryTests : IAsyncLifetime
         }
     }
 
+    /// <summary>slug یکتا، deactivate، انتساب جدید غیرفعال و publish با نویسندهٔ موجود.</summary>
     [SkippableFact]
-    public async Task Category_rules_slug_parent_language_archive_and_article_match()
+    public async Task Author_rules_slug_deactivate_assignment_and_publish()
     {
         Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
 
         await using var db = CreateDb(_container.GetConnectionString());
         await db.Database.MigrateAsync();
-        var categories = new ContentCategoryDirectory(db);
         var authors = new ContentAuthorDirectory(db);
+        var categories = new ContentCategoryDirectory(db);
         var languages = new PermissiveLanguageDirectory();
         var content = new ContentDirectory(db, languages, categories, authors);
 
-        var faRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", null, "راهنما", "guide", null, null, 0),
+        var active = await authors.CreateAsync(
+            new CreateContentAuthorCommand("تحریریه توبا", "tooba-editorial", null, null, null, null, null, null, null, null),
             CancellationToken.None);
-        var faChild = await categories.CreateAsync(
-            new CreateContentCategoryCommand("fa-IR", faRoot.Id, "خرید", "buying", null, null, 1),
-            CancellationToken.None);
-        var enRoot = await categories.CreateAsync(
-            new CreateContentCategoryCommand("en-US", null, "Guides", "guides", null, null, 0),
-            CancellationToken.None);
-        var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("نویسنده", "article-author", null, null, null, null, null, null, null, null),
+        var second = await authors.CreateAsync(
+            new CreateContentAuthorCommand("مریم احمدی", "maryam-ahmadi", null, null, null, null, null, null, null, null),
             CancellationToken.None);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.CreateAsync(
-                new CreateContentCategoryCommand("fa-IR", null, "راهنمای دیگر", "guide", null, null, 2),
-                CancellationToken.None));
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.MoveAsync(
-                faChild.Id,
-                new MoveContentCategoryCommand(enRoot.Id),
-                CancellationToken.None));
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.MoveAsync(
-                faRoot.Id,
-                new MoveContentCategoryCommand(faChild.Id),
+            authors.CreateAsync(
+                new CreateContentAuthorCommand("نام دیگر", "tooba-editorial", null, null, null, null, null, null, null, null),
                 CancellationToken.None));
 
         var article = await content.CreateAsync(
             new CreateArticleCommand(
-                "cat-article",
+                "author-article",
                 "مقاله",
                 "چکیده",
                 "بدنه",
                 null,
-                author.Id,
+                active.Id,
                 [],
                 false,
                 DateTimeOffset.UtcNow,
                 "fa-IR",
                 null,
                 null,
-                faRoot.Name,
-                faRoot.Id),
+                null,
+                null),
             CancellationToken.None);
-        Assert.Equal(faRoot.Id, article.CategoryId);
+        Assert.Equal(active.Id, article.AuthorId);
+        Assert.Equal("تحریریه توبا", article.AuthorDisplayName);
+
+        await authors.DeactivateAsync(active.Id, CancellationToken.None);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.CreateAsync(
                 new CreateArticleCommand(
-                    "wrong-lang",
-                    "Article",
-                    "Excerpt",
-                    "Body",
+                    "inactive-author",
+                    "مقاله",
+                    "چکیده",
+                    "بدنه",
                     null,
-                    author.Id,
+                    active.Id,
                     [],
                     false,
                     DateTimeOffset.UtcNow,
-                    "en-US",
+                    "fa-IR",
                     null,
                     null,
-                    faRoot.Name,
-                    faRoot.Id),
+                    null,
+                    null),
                 CancellationToken.None));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.ArchiveAsync(faRoot.Id, CancellationToken.None));
+        var updated = await content.UpdateAsync(
+            article.ArticleId,
+            new UpdateArticleCommand(
+                "مقالهٔ به‌روز",
+                "چکیده",
+                "بدنه",
+                null,
+                active.Id,
+                [],
+                false,
+                "fa-IR",
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+        Assert.Equal(active.Id, updated.AuthorId);
 
-        await categories.ArchiveAsync(faChild.Id, CancellationToken.None);
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            categories.ArchiveAsync(faRoot.Id, CancellationToken.None));
+        var published = await content.PublishAsync(article.ArticleId, CancellationToken.None);
+        Assert.Equal(ContentPublicationStatus.Published, published.Status);
+
+        var reassigned = await content.UpdateAsync(
+            article.ArticleId,
+            new UpdateArticleCommand(
+                "مقالهٔ به‌روز",
+                "چکیده",
+                "بدنه",
+                null,
+                second.Id,
+                [],
+                false,
+                "fa-IR",
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+        Assert.Equal(second.Id, reassigned.AuthorId);
+
+        var picker = await authors.GetPickerListAsync(null, activeOnly: true, CancellationToken.None);
+        Assert.DoesNotContain(picker, x => x.Id == active.Id);
+        Assert.Contains(picker, x => x.Id == second.Id);
     }
 
     private static ContentDbContext CreateDb(string connectionString)
