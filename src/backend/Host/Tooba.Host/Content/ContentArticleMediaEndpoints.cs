@@ -1,7 +1,6 @@
 using Tooba.BuildingBlocks;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
-using Tooba.Host.Admin;
 
 namespace Tooba.Host.Content;
 
@@ -49,12 +48,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await composer.GetWorkspaceAsync(articleId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -69,12 +70,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.AssignFeaturedAsync(articleId, body.MediaAssetId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -89,12 +92,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.AssignSeoImageAsync(articleId, body.MediaAssetId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -109,12 +114,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.AddGalleryAsync(articleId, body.MediaAssetIds ?? [], cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -129,12 +136,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.RemoveGalleryAsync(articleId, mediaAssetId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -149,12 +158,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.ReorderGalleryAsync(articleId, body.OrderedMediaAssetIds ?? [], cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -170,12 +181,14 @@ public static class ContentArticleMediaEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.PatchGalleryAsync(articleId, mediaAssetId, body.AltText, body.Caption, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }

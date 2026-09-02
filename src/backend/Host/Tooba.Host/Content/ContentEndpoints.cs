@@ -2,7 +2,6 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
-using Tooba.Host.Admin;
 
 namespace Tooba.Host.Content;
 
@@ -100,6 +99,7 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         int page = 1,
         int pageSize = 50,
@@ -107,30 +107,32 @@ public static class ContentEndpoints
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
             return Results.Json(await composer.ListAllAsync(page, pageSize, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }
 
-    private static Task<IResult> AdminQueryGridAsync(
+    private static async Task<IResult> AdminQueryGridAsync(
         GridQueryRequest body,
         ContentPanelComposer composer,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
-        CancellationToken cancellationToken) =>
-        AdminGridQueryEndpoint.ExecuteAsync(
-            body,
-            request,
-            session,
-            tenant,
-            guard,
-            environment,
-            composer.QueryGridAsync,
-            cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+            return Results.Json(await composer.QueryGridAsync(body, cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+    }
 
     private static async Task<IResult> AdminGetAsync(
         Guid id,
@@ -139,12 +141,14 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
             var article = await composer.GetByIdAsync(id, cancellationToken);
             return article is null ? Results.NotFound() : Results.Json(article);
         }
@@ -158,12 +162,14 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Create, cancellationToken);
             var created = await composer.CreateAsync(body, cancellationToken);
             return Results.Json(created, statusCode: StatusCodes.Status201Created);
         }
@@ -185,12 +191,14 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             return Results.Json(await composer.UpdateAsync(id, body, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
@@ -224,9 +232,12 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        await AdminLifecycleAsync(id, composer, request, session, tenant, guard, environment, cancellationToken, composer.PublishAsync);
+        await AdminLifecycleAsync(
+            id, composer, request, session, tenant, guard, authz, environment, cancellationToken,
+            ContentAdminAccess.Publish, composer.PublishAsync);
 
     private static async Task<IResult> AdminUnpublishAsync(
         Guid id,
@@ -235,9 +246,12 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        await AdminLifecycleAsync(id, composer, request, session, tenant, guard, environment, cancellationToken, composer.UnpublishAsync);
+        await AdminLifecycleAsync(
+            id, composer, request, session, tenant, guard, authz, environment, cancellationToken,
+            ContentAdminAccess.Publish, composer.UnpublishAsync);
 
     private static async Task<IResult> AdminArchiveAsync(
         Guid id,
@@ -246,9 +260,12 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken) =>
-        await AdminLifecycleAsync(id, composer, request, session, tenant, guard, environment, cancellationToken, composer.ArchiveAsync);
+        await AdminLifecycleAsync(
+            id, composer, request, session, tenant, guard, authz, environment, cancellationToken,
+            ContentAdminAccess.Edit, composer.ArchiveAsync);
 
     private static async Task<IResult> AdminDeleteAsync(
         Guid id,
@@ -257,12 +274,14 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.Edit, cancellationToken);
             await composer.DeleteDraftAsync(id, cancellationToken);
             return Results.NoContent();
         }
@@ -293,13 +312,16 @@ public static class ContentEndpoints
         CurrentAuthenticatedSession session,
         ICurrentTenant tenant,
         IAuthorizationGuard guard,
+        IAuthorizationService authz,
         IHostEnvironment environment,
         CancellationToken cancellationToken,
+        string permissionId,
         Func<Guid, CancellationToken, Task<AdminArticleSnapshot>> action)
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, permissionId, cancellationToken);
             return Results.Json(await action(id, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
