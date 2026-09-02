@@ -1,0 +1,70 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T004
+
+Parent-Task:
+TB-P08-T003
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+80ba6df3-cfcc-4fe7-bc57-628e2d32a9c7
+
+Summary:
+Implemented Article Editor Workspace with language-first create flow, full tabbed workspace at /admin/content/articles/[articleId], TipTap body editor (RTL/LTR), category/author/media/SEO/publication tabs, grid Edit+locale+author columns, backend locale lock and publishDate update. USER_VISUAL_ACCEPTED=NO.
+
+Article-List:
+Preserved AppDataGrid; added Edit action, Language and Author columns; modal create replaced with /admin/content/articles/new.
+
+Language-First-Create:
+Pick fa-IR or en-US then create draft and navigate to workspace.
+
+Article-Workspace:
+Tabs عمومی/محتوا/دسته‌بندی‌ها/نویسنده/رسانه/SEO/انتشار/تاریخچه with VIEW/EDIT via useAdminFormMode.
+
+Rich-Editor:
+Reused ProductRichTextEditor (TipTap) with articleEditorDirection for RTL/LTR body.
+
+Category-Author-Media:
+Same-language category tree picker; active author picker; DAM featured image via MediaLibraryDialog.
+
+Locale-Lock:
+content.article.locale_locked after publish or author/category references; UI disables locale selector.
+
+Publishing:
+Independent per-article fa/en status; publish/unpublish endpoints; publishDate scheduling on update; Jalali/Gregorian display helpers.
+
+Focused-Validation:
+dotnet build PASS; ContentArticleEditorTests PASS; FE contract tests 8/8; recovery guard 3/3.
+
+Smoke-Check:
+Not run; routes ready at /admin/content/articles/new and /admin/content/articles/{id}.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T003; last implementation TB-P08-T004; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=5769212e
+origin/main=5769212e
+HEAD==origin/main
+
+Architectural-Concerns:
+Slug remains immutable after create; no cross-locale article translation subsystem.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no formal visual evidence.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
