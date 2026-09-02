@@ -47,3 +47,17 @@ test("destructive actions labeled delete vs archive", () => {
   assert.match(screen, /حذف/);
   assert.match(screen, /بایگانی/);
 });
+
+test("article destructive flows use canonical Dialog not window.confirm", () => {
+  const dialog = readFileSync(join(import.meta.dirname, "content-article-destructive-dialog.tsx"), "utf8");
+  assert.doesNotMatch(screen, /window\.confirm/);
+  assert.doesNotMatch(list, /window\.confirm/);
+  assert.match(screen, /ContentArticleDestructiveDialog/);
+  assert.match(list, /ContentArticleDestructiveDialog/);
+  assert.match(dialog, /from "\.\.\/\.\.\/design-system"/);
+  assert.match(dialog, /حذف مقاله/);
+  assert.match(dialog, /بایگانی مقاله/);
+  assert.match(dialog, /Delete article/);
+  assert.match(dialog, /Archive article/);
+  assert.match(dialog, /content-article-destructive-confirm-/);
+});

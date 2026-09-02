@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T007
+TB-P08-T007-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T007-R1 — Article destructive UX repair (canonical Dialog replaces window.confirm)
 TB-P08-T007 — Article CRUD UX hardening (create route, VIEW/EDIT, delete/archive)
 TB-P08-T006 — Content SEO + Publication + Locale Routing (canonical public blog, scheduling, sitemap)
 TB-P08-T005 — Article Media DAM integration (inline/gallery/featured/SEO via existing DAM)

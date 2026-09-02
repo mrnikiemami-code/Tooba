@@ -10,7 +10,7 @@ import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./conte
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
-import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
+import { ContentArticleDestructiveDialog, type ArticleDestructiveKind } from "./content-article-destructive-dialog.tsx";
 import { ProductRichTextEditor } from "./product-rich-text-editor.tsx";
 import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
 import {
@@ -85,6 +85,7 @@ export function ContentArticleAdminScreen() {
   const [seoImageOpen, setSeoImageOpen] = useState(false);
   const [mediaWorkspace, setMediaWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
   const [useFeaturedForSeo, setUseFeaturedForSeo] = useState(true);
+  const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
 
   const [draftTitle, setDraftTitle] = useState("");
   const [draftExcerpt, setDraftExcerpt] = useState("");
@@ -239,8 +240,6 @@ export function ContentArticleAdminScreen() {
 
   const handleDelete = useCallback(async () => {
     if (!article || !canHardDeleteArticle(article.status)) return;
-    const confirmed = window.confirm(`حذف دائمی «${article.title}»؟ این عمل قابل بازگشت نیست.`);
-    if (!confirmed) return;
     setSaving(true);
     const result = await deleteAdminArticle(article.articleId);
     setSaving(false);
@@ -249,15 +248,12 @@ export function ContentArticleAdminScreen() {
       return;
     }
     toast.success("مقاله حذف شد");
+    setDestructiveKind(null);
     router.push("/admin/content");
   }, [article, router]);
 
   const handleArchive = useCallback(async () => {
     if (!article || !canArchiveArticle(article.status)) return;
-    const confirmed = window.confirm(
-      `بایگانی «${article.title}»؟ دیگر به‌صورت عمومی در دسترس نخواهد بود.`,
-    );
-    if (!confirmed) return;
     setSaving(true);
     const result = await archiveAdminArticle(article.articleId);
     setSaving(false);
@@ -266,6 +262,7 @@ export function ContentArticleAdminScreen() {
       return;
     }
     toast.success("مقاله بایگانی شد");
+    setDestructiveKind(null);
     await refreshArticle(article.articleId);
     form.resetToView();
   }, [article, form, refreshArticle]);
@@ -341,7 +338,7 @@ export function ContentArticleAdminScreen() {
               className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
               disabled={saving}
               data-testid="content-article-delete"
-              onClick={() => void handleDelete()}
+              onClick={() => setDestructiveKind("delete")}
             >
               حذف
             </button>
@@ -352,7 +349,7 @@ export function ContentArticleAdminScreen() {
               className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
               disabled={saving}
               data-testid="content-article-archive"
-              onClick={() => void handleArchive()}
+              onClick={() => setDestructiveKind("archive")}
             >
               بایگانی
             </button>
@@ -672,6 +669,23 @@ export function ContentArticleAdminScreen() {
         ) : null}
       </section>
 
+      <ContentArticleDestructiveDialog
+        kind={destructiveKind}
+        target={
+          article
+            ? { articleId: article.articleId, title: article.title, locale: article.locale }
+            : null
+        }
+        open={destructiveKind !== null}
+        pending={saving}
+        onClose={() => {
+          if (!saving) setDestructiveKind(null);
+        }}
+        onConfirm={() => {
+          if (destructiveKind === "delete") return handleDelete();
+          if (destructiveKind === "archive") return handleArchive();
+        }}
+      />
       <MediaLibraryDialog
         open={inlineImageOpen}
         selectionMode="single"

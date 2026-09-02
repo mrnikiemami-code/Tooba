@@ -33,6 +33,11 @@ import {
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
+import {
+  ContentArticleDestructiveDialog,
+  type ArticleDestructiveKind,
+  type ArticleDestructiveTarget,
+} from "./content-article-destructive-dialog.tsx";
 import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
@@ -107,8 +112,8 @@ function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
 
 function buildContentRowActions(
   onPublishToggle: (articleId: string, published: boolean) => Promise<void>,
-  onDelete: (row: AdminContentArticle) => Promise<void>,
-  onArchive: (row: AdminContentArticle) => Promise<void>,
+  onRequestDelete: (row: AdminContentArticle) => void,
+  onRequestArchive: (row: AdminContentArticle) => void,
 ): AppGridRowAction<AdminContentArticle>[] {
   return [
     {
@@ -131,9 +136,7 @@ function buildContentRowActions(
       label: "حذف",
       icon: Trash2,
       variant: "destructive",
-      confirm: (row) =>
-        `حذف دائمی «${row.title}»؟ این عمل قابل بازگشت نیست.`,
-      onClick: (row) => onDelete(row),
+      onClick: (row) => onRequestDelete(row),
       testId: (row) => `admin-content-delete-${row.articleId}`,
       visible: (row) => canHardDeleteArticle(row.status),
     },
@@ -142,9 +145,7 @@ function buildContentRowActions(
       label: "بایگانی",
       icon: Archive,
       variant: "destructive",
-      confirm: (row) =>
-        `بایگانی «${row.title}»؟ دیگر به‌صورت عمومی در دسترس نخواهد بود.`,
-      onClick: (row) => onArchive(row),
+      onClick: (row) => onRequestArchive(row),
       testId: (row) => `admin-content-archive-${row.articleId}`,
       visible: (row) => canArchiveArticle(row.status),
     },
@@ -266,6 +267,9 @@ const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
 export function AdminContentScreen() {
   const [reloadToken, setReloadToken] = useState(0);
   const [gridError, setGridError] = useState<string>();
+  const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
+  const [destructiveTarget, setDestructiveTarget] = useState<ArticleDestructiveTarget | null>(null);
+  const [destructivePending, setDestructivePending] = useState(false);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
@@ -279,21 +283,36 @@ export function AdminContentScreen() {
     refresh();
   }, [refresh]);
 
-  const onDelete = useCallback(async (row: AdminContentArticle) => {
-    const result = await deleteAdminArticle(row.articleId);
-    if (!result.ok) throw new Error(result.message ?? "حذف ناموفق بود");
-    refresh();
-  }, [refresh]);
+  const onRequestDelete = useCallback((row: AdminContentArticle) => {
+    setDestructiveKind("delete");
+    setDestructiveTarget({ articleId: row.articleId, title: row.title, locale: row.locale });
+  }, []);
 
-  const onArchive = useCallback(async (row: AdminContentArticle) => {
-    const result = await archiveAdminArticle(row.articleId);
-    if (!result.ok) throw new Error(result.message ?? "بایگانی ناموفق بود");
-    refresh();
-  }, [refresh]);
+  const onRequestArchive = useCallback((row: AdminContentArticle) => {
+    setDestructiveKind("archive");
+    setDestructiveTarget({ articleId: row.articleId, title: row.title, locale: row.locale });
+  }, []);
+
+  const onConfirmDestructive = useCallback(async () => {
+    if (!destructiveTarget || !destructiveKind) return;
+    setDestructivePending(true);
+    try {
+      const result =
+        destructiveKind === "delete"
+          ? await deleteAdminArticle(destructiveTarget.articleId)
+          : await archiveAdminArticle(destructiveTarget.articleId);
+      if (!result.ok) throw new Error(result.message ?? "عملیات ناموفق بود");
+      setDestructiveKind(null);
+      setDestructiveTarget(null);
+      refresh();
+    } finally {
+      setDestructivePending(false);
+    }
+  }, [destructiveKind, destructiveTarget, refresh]);
 
   const rowActions = useMemo(
-    () => buildContentRowActions(onPublishToggle, onDelete, onArchive),
-    [onArchive, onDelete, onPublishToggle],
+    () => buildContentRowActions(onPublishToggle, onRequestDelete, onRequestArchive),
+    [onPublishToggle, onRequestArchive, onRequestDelete],
   );
   const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
@@ -370,6 +389,20 @@ export function AdminContentScreen() {
           />
         )}
       </section>
+
+      <ContentArticleDestructiveDialog
+        kind={destructiveKind}
+        target={destructiveTarget}
+        open={destructiveKind !== null && destructiveTarget !== null}
+        pending={destructivePending}
+        onClose={() => {
+          if (!destructivePending) {
+            setDestructiveKind(null);
+            setDestructiveTarget(null);
+          }
+        }}
+        onConfirm={onConfirmDestructive}
+      />
     </main>
   );
 }

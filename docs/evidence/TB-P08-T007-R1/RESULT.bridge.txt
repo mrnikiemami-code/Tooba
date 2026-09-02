@@ -1,0 +1,64 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T007-R1
+
+Parent-Task:
+TB-P08-T007
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+60ee78c4-2529-4995-be38-966a2e9741b7
+
+Summary:
+Replaced window.confirm in Article delete/archive flows with canonical design-system Dialog via ContentArticleDestructiveDialog; distinct fa/en copy for delete vs archive; pending state on confirm; list and workspace wired. All T007 CRUD/lifecycle preserved. USER_VISUAL_ACCEPTED=NO.
+
+Dialog-Discovery:
+Reused design-system Dialog + Button (same pattern as product-workspace unsaved dialog); no new modal framework.
+
+Native-Confirm-Removal:
+Zero window.confirm in content-article-admin-screen.tsx and content-list.tsx destructive paths; grid delete/archive no longer use confirm prop.
+
+Delete-Dialog:
+Title حذف مقاله / Delete article; body includes title, irreversible consequence, DAM assets preserved; actions انصراف + حذف مقاله; tone danger.
+
+Archive-Dialog:
+Title بایگانی مقاله / Archive article; explains public/sitemap removal and admin retention; actions انصراف + بایگانی مقاله; not labeled delete.
+
+Accessibility:
+native dialog element via Dialog; role alertdialog; aria-describedby; Escape via dialog onClose; pending disables double submit.
+
+Preserved-CRUD:
+create route, VIEW/EDIT, Save/Cancel, lifecycle policies, public route exclusion unchanged; ContentArticleLifecycleTests PASS.
+
+Focused-Validation:
+ContentArticleLifecycleTests PASS; FE crud+dialog contract 6/6; recovery guard 3/3.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T006; TB-P08-T007 under repair addressed by R1; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=PLACEHOLDER
+origin/main=PLACEHOLDER
+HEAD==origin/main
+
+Architectural-Concerns:
+Publish/unpublish grid actions still use grid window.confirm (out of R1 scope).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

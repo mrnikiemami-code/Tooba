@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T007
+TB-P08-T007-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T007-R1 — Article destructive UX repair (canonical Dialog, no window.confirm)
 TB-P08-T007 — Article CRUD UX (dedicated create route, VIEW/EDIT, safe delete/archive)
 TB-P08-T006 — Content SEO + Publication + Locale Routing (public blog routes, scheduling, sitemap)
 TB-P08-T005 — Article Media DAM (inline editor, gallery, featured, SEO image)
