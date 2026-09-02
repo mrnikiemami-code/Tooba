@@ -78,8 +78,8 @@ Recovery-SoT:
 P08; last accepted TB-P08-T005; last implementation TB-P08-T006; USER_VISUAL_ACCEPTED=NO.
 
 Git:
-HEAD=PLACEHOLDER
-origin/main=PLACEHOLDER
+HEAD=7bcb17f1
+origin/main=7bcb17f1
 HEAD==origin/main
 
 Architectural-Concerns:
