@@ -12,9 +12,11 @@ import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
+import Image from "@tiptap/extension-image";
 import { Extension } from "@tiptap/core";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { sanitizeProductRichHtml } from "./product-rich-html";
+import { articleDamImageSrc } from "./article-rich-html.ts";
 
 /** Controlled font-size marks via inline style (no free-text CSS). */
 const FontSize = Extension.create({
@@ -119,6 +121,8 @@ export function ProductRichTextEditor({
   placeholder = "توضیح کامل محصول را بنویسید…",
   dir = "rtl",
   testId = "product-rich-text-editor",
+  sanitizeHtml = sanitizeProductRichHtml,
+  onPickDamImage,
 }: {
   value: string;
   onChange: (html: string) => void;
@@ -126,11 +130,13 @@ export function ProductRichTextEditor({
   placeholder?: string;
   dir?: "rtl" | "ltr";
   testId?: string;
+  /** تابع sanitize — پیش‌فرض محصول (بدون img). */
+  sanitizeHtml?: (html: string) => string;
+  /** در صورت تنظیم، دکمهٔ درج تصویر از DAM نمایش داده می‌شود. */
+  onPickDamImage?: () => Promise<{ mediaAssetId: string; alt?: string; title?: string } | null>;
 }) {
-  const editor = useEditor({
-    immediatelyRender: false,
-    editable: !disabled,
-    extensions: [
+  const extensions = useMemo(() => {
+    const base = [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
         codeBlock: false,
@@ -150,10 +156,26 @@ export function ProductRichTextEditor({
       TableHeader,
       TableCell,
       Placeholder.configure({ placeholder }),
-    ],
+    ];
+    if (onPickDamImage) {
+      base.push(
+        Image.configure({
+          inline: false,
+          allowBase64: false,
+          HTMLAttributes: { class: "article-dam-image" },
+        }),
+      );
+    }
+    return base;
+  }, [onPickDamImage, placeholder]);
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    editable: !disabled,
+    extensions,
     content: value || "",
     onUpdate: ({ editor: ed }) => {
-      onChange(sanitizeProductRichHtml(ed.getHTML()));
+      onChange(sanitizeHtml(ed.getHTML()));
     },
     editorProps: {
       attributes: {
@@ -172,12 +194,12 @@ export function ProductRichTextEditor({
 
   useEffect(() => {
     if (!editor) return;
-    const current = sanitizeProductRichHtml(editor.getHTML());
-    const next = sanitizeProductRichHtml(value || "");
+    const current = sanitizeHtml(editor.getHTML());
+    const next = sanitizeHtml(value || "");
     if (current !== next) {
       editor.commands.setContent(next || "", { emitUpdate: false });
     }
-  }, [value, editor]);
+  }, [value, editor, sanitizeHtml]);
 
   if (!editor) {
     return (
@@ -294,6 +316,29 @@ export function ProductRichTextEditor({
         >
           جدول
         </ToolbarButton>
+        {onPickDamImage ? (
+          <ToolbarButton
+            disabled={disabled}
+            testId={`${testId}-insert-image`}
+            onClick={() => {
+              void onPickDamImage().then((picked) => {
+                if (!picked) return;
+                const src = articleDamImageSrc(picked.mediaAssetId);
+                const alt = picked.alt ?? "";
+                const title = picked.title ?? "";
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent(
+                    `<img src="${src}" alt="${alt.replace(/"/g, "&quot;")}" data-media-asset-id="${picked.mediaAssetId}"${title ? ` title="${title.replace(/"/g, "&quot;")}"` : ""} />`,
+                  )
+                  .run();
+              });
+            }}
+          >
+            تصویر
+          </ToolbarButton>
+        ) : null}
         <ToolbarButton disabled={disabled} onClick={() => editor.chain().focus().undo().run()}>
           Undo
         </ToolbarButton>

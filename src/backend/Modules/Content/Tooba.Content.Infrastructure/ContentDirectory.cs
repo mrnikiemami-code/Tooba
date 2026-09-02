@@ -254,6 +254,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.CategoryId,
         article.AuthorId,
         article.CoverMediaAssetId,
+        article.SeoImageMediaAssetId,
         article.AuthorDisplayName,
         ParseTags(article.TagsCsv),
         article.IsFeatured,

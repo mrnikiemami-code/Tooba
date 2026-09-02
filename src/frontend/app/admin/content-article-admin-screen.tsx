@@ -9,8 +9,15 @@ import { prepareAdminDevActor } from "./admin-api.ts";
 import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
-import { mediaPreviewUrl, type MediaAssetDto } from "./media-api.ts";
+import { mediaPreviewUrl } from "./media-api.ts";
+import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 import { ProductRichTextEditor } from "./product-rich-text-editor.tsx";
+import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
+import {
+  assignArticleSeoImage,
+  fetchArticleMediaWorkspace,
+  type ArticleMediaWorkspaceDto,
+} from "./content-article-media-api.ts";
 import {
   articleEditorDirection,
   formatArticleDate,
@@ -66,8 +73,10 @@ export function ContentArticleAdminScreen() {
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
   const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
-  const [coverAsset, setCoverAsset] = useState<MediaAssetDto | null>(null);
-  const [mediaOpen, setMediaOpen] = useState(false);
+  const [inlineImageOpen, setInlineImageOpen] = useState(false);
+  const [seoImageOpen, setSeoImageOpen] = useState(false);
+  const [mediaWorkspace, setMediaWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
+  const [useFeaturedForSeo, setUseFeaturedForSeo] = useState(true);
 
   const [draftTitle, setDraftTitle] = useState("");
   const [draftExcerpt, setDraftExcerpt] = useState("");
@@ -100,9 +109,6 @@ export function ContentArticleAdminScreen() {
     setDraftSeoDescription(data.seoDescription ?? "");
     setDraftTags(tagsToString(data.tags));
     setDraftPublishDate(data.publishDate ? data.publishDate.slice(0, 16) : "");
-    setCoverAsset(
-      data.coverMediaAssetId ? ({ mediaAssetId: data.coverMediaAssetId } as MediaAssetDto) : null,
-    );
   }, []);
 
   const refreshArticle = useCallback(async (id: string) => {
@@ -136,15 +142,25 @@ export function ContentArticleAdminScreen() {
     });
   }, [draftLocale]);
 
+  useEffect(() => {
+    if (!articleId) return;
+    void fetchArticleMediaWorkspace(articleId).then((result) => {
+      if (result.state === "ok" && result.data) {
+        setMediaWorkspace(result.data);
+        setUseFeaturedForSeo(!result.data.seoImageMediaAssetId);
+      }
+    });
+  }, [articleId, tab]);
+
   const savePayload = useMemo(
     () => ({
       title: draftTitle,
       excerpt: draftExcerpt,
-      body: draftBody,
+      body: sanitizeArticleRichHtml(draftBody),
       authorId: draftAuthorId || null,
       categoryId: draftCategoryId || null,
       category: draftCategory || null,
-      coverMediaAssetId: coverAsset?.mediaAssetId ?? null,
+      coverMediaAssetId: mediaWorkspace?.featuredMediaAssetId ?? article?.coverMediaAssetId ?? null,
       seoTitle: draftSeoTitle || null,
       seoDescription: draftSeoDescription || null,
       tags: tagsFromString(draftTags),
@@ -153,7 +169,8 @@ export function ContentArticleAdminScreen() {
       publishDate: draftPublishDate ? new Date(draftPublishDate).toISOString() : null,
     }),
     [
-      coverAsset?.mediaAssetId,
+      article?.coverMediaAssetId,
+      mediaWorkspace?.featuredMediaAssetId,
       draftAuthorId,
       draftBody,
       draftCategory,
@@ -348,8 +365,18 @@ export function ContentArticleAdminScreen() {
                 onChange={setDraftBody}
                 disabled={form.mode === "view"}
                 dir={editorDir}
+                sanitizeHtml={sanitizeArticleRichHtml}
                 placeholder={editorDir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…"}
                 testId="content-article-rich-editor"
+                onPickDamImage={
+                  form.mode === "view"
+                    ? undefined
+                    : () =>
+                        new Promise((resolve) => {
+                          setInlineImageOpen(true);
+                          (window as unknown as { __articleDamPickResolve?: typeof resolve }).__articleDamPickResolve = resolve;
+                        })
+                }
               />
             </div>
           </div>
@@ -402,43 +429,65 @@ export function ContentArticleAdminScreen() {
           </div>
         ) : null}
 
-        {tab === "media" ? (
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">تصویر شاخص (DAM)</h3>
-            {coverAsset?.mediaAssetId ? (
-              <img
-                src={mediaPreviewUrl(coverAsset.mediaAssetId) ?? ""}
-                alt=""
-                className="max-h-56 rounded-xl border object-cover"
-              />
-            ) : (
-              <p className="text-sm text-muted">تصویری اختصاص داده نشده است.</p>
-            )}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="rounded-xl border px-3 py-2 text-sm"
-                disabled={form.mode === "view"}
-                onClick={() => setMediaOpen(true)}
-              >
-                انتخاب از کتابخانه
-              </button>
-              {coverAsset ? (
-                <button
-                  type="button"
-                  className="rounded-xl border px-3 py-2 text-sm"
-                  disabled={form.mode === "view"}
-                  onClick={() => setCoverAsset(null)}
-                >
-                  حذف اختصاص
-                </button>
-              ) : null}
-            </div>
-          </div>
+        {tab === "media" && articleId ? (
+          <ContentArticleMediaPanel articleId={articleId} editable={form.mode !== "view"} />
         ) : null}
 
         {tab === "seo" ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <div className="rounded-xl border p-3">
+              <h3 className="mb-2 text-sm font-semibold">تصویر SEO / OpenGraph</h3>
+              <label className="mb-3 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={useFeaturedForSeo}
+                  disabled={form.mode === "view"}
+                  onChange={(e) => {
+                    setUseFeaturedForSeo(e.target.checked);
+                    if (e.target.checked) {
+                      void assignArticleSeoImage(article!.articleId, null).then((result) => {
+                        if (result.state === "ok" && result.data) setMediaWorkspace(result.data);
+                      });
+                    }
+                  }}
+                />
+                <span>استفاده از تصویر شاخص</span>
+              </label>
+              {!useFeaturedForSeo ? (
+                <div className="space-y-2">
+                  {mediaWorkspace?.seoImageMediaAssetId ? (
+                    <img src={mediaPreviewUrl(mediaWorkspace.seoImageMediaAssetId) ?? ""} alt="" className="max-h-40 rounded-xl border object-cover" />
+                  ) : (
+                    <p className="text-sm text-muted">تصویر SEO اختصاصی انتخاب نشده است.</p>
+                  )}
+                  {form.mode !== "view" ? (
+                    <div className="flex gap-2">
+                      <button type="button" className="rounded-xl border px-3 py-2 text-sm" onClick={() => setSeoImageOpen(true)}>
+                        انتخاب از DAM
+                      </button>
+                      {mediaWorkspace?.seoImageMediaAssetId ? (
+                        <button
+                          type="button"
+                          className="rounded-xl border px-3 py-2 text-sm"
+                          onClick={() => void assignArticleSeoImage(article!.articleId, null).then((result) => {
+                            if (result.state === "ok" && result.data) {
+                              setMediaWorkspace(result.data);
+                              setUseFeaturedForSeo(true);
+                            }
+                          })}
+                        >
+                          حذف اختصاص
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-sm text-muted">
+                  مؤثر: {mediaWorkspace?.effectiveSeoImageMediaAssetId ? "تصویر شاخص/SEO" : "—"}
+                </p>
+              )}
+            </div>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">عنوان SEO</span>
               <input
@@ -525,12 +574,43 @@ export function ContentArticleAdminScreen() {
       </section>
 
       <MediaLibraryDialog
-        open={mediaOpen}
+        open={inlineImageOpen}
         selectionMode="single"
-        onClose={() => setMediaOpen(false)}
+        onClose={() => {
+          setInlineImageOpen(false);
+          const resolve = (window as unknown as { __articleDamPickResolve?: (value: null) => void }).__articleDamPickResolve;
+          resolve?.(null);
+          delete (window as unknown as { __articleDamPickResolve?: unknown }).__articleDamPickResolve;
+        }}
         onConfirm={(assets) => {
-          setCoverAsset(assets[0] ?? null);
-          setMediaOpen(false);
+          setInlineImageOpen(false);
+          const picked = assets[0];
+          const resolve = (window as unknown as {
+            __articleDamPickResolve?: (value: { mediaAssetId: string; alt?: string; title?: string } | null) => void;
+          }).__articleDamPickResolve;
+          resolve?.(
+            picked
+              ? {
+                  mediaAssetId: picked.mediaAssetId,
+                  alt: picked.originalFileName,
+                }
+              : null,
+          );
+          delete (window as unknown as { __articleDamPickResolve?: unknown }).__articleDamPickResolve;
+        }}
+      />
+      <MediaLibraryDialog
+        open={seoImageOpen}
+        selectionMode="single"
+        onClose={() => setSeoImageOpen(false)}
+        onConfirm={(assets) => {
+          setSeoImageOpen(false);
+          const picked = assets[0];
+          if (!picked || !article) return;
+          setUseFeaturedForSeo(false);
+          void assignArticleSeoImage(article.articleId, picked.mediaAssetId).then((result) => {
+            if (result.state === "ok" && result.data) setMediaWorkspace(result.data);
+          });
         }}
       />
     </main>

@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T002
+TB-P08-T004
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T004
+TB-P08-T005
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T005 — Article Media DAM integration (inline/gallery/featured/SEO via existing DAM)
 TB-P08-T004 — Article Editor Workspace (language-first create, TipTap, tabs, locale lock)
 TB-P08-T003 — Content Author management (public profiles, DAM, Article relation)
 TB-P08-T002 — Article Category Taxonomy (Content-owned, language-aware AppCategoryTree)

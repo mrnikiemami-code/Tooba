@@ -145,6 +145,7 @@ internal sealed class AdminContentGridQueryEngine
         article.CategoryId,
         article.AuthorId,
         article.CoverMediaAssetId,
+        article.SeoImageMediaAssetId,
         article.AuthorDisplayName,
         string.IsNullOrWhiteSpace(article.TagsCsv)
             ? []

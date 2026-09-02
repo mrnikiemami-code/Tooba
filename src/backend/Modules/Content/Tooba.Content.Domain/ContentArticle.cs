@@ -64,6 +64,8 @@ public sealed class ContentArticle
     public Guid? AuthorId { get; private set; }
     /// <summary>مرجع مات تصویر جلد.</summary>
     public Guid? CoverMediaAssetId { get; private set; }
+    /// <summary>مرجع اختیاری تصویر SEO/OpenGraph.</summary>
+    public Guid? SeoImageMediaAssetId { get; private set; }
     /// <summary>نام نمایشی نویسنده.</summary>
     public string AuthorDisplayName { get; private set; } = string.Empty;
     /// <summary>برچسب‌های CSV ساده.</summary>
@@ -100,6 +102,7 @@ public sealed class ContentArticle
     {
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? DefaultLocale : locale.Trim();
         Validate(slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
+        ContentArticleBodyRules.EnsureNoEmbeddedBinary(body);
         return new ContentArticle
         {
             ArticleId = UuidV7.New(),
@@ -150,6 +153,7 @@ public sealed class ContentArticle
         }
 
         Validate(Slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
+        ContentArticleBodyRules.EnsureNoEmbeddedBinary(body);
         Title = title.Trim();
         Excerpt = excerpt.Trim();
         Body = body.Trim();
@@ -205,6 +209,26 @@ public sealed class ContentArticle
         UpdatedAt = now;
     }
 
+    /// <summary>تصویر شاخص را تنظیم می‌کند (unassign با null).</summary>
+    public void AssignFeaturedImage(Guid? mediaAssetId, DateTimeOffset now)
+    {
+        CoverMediaAssetId = mediaAssetId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>تصویر SEO را تنظیم می‌کند (unassign با null).</summary>
+    public void AssignSeoImage(Guid? mediaAssetId, DateTimeOffset now)
+    {
+        SeoImageMediaAssetId = mediaAssetId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>شناسهٔ مؤثر تصویر SEO — override یا شاخص.</summary>
+    public Guid? ResolveEffectiveSeoImageId() => SeoImageMediaAssetId ?? CoverMediaAssetId;
+
+    /// <summary>زمان به‌روزرسانی را بدون تغییر فیلدهای دیگر لمس می‌کند.</summary>
+    public void Touch(DateTimeOffset now) => UpdatedAt = now;
+
     private static string? NormalizeOptional(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -251,4 +275,8 @@ public static class ContentArticleErrorCodes
 {
     /// <summary>تغییر locale پس از انتشار یا ارجاع ممنوع است.</summary>
     public const string LocaleLocked = "content.article.locale_locked";
+    /// <summary>بدنهٔ مقاله رسانهٔ ناامن دارد.</summary>
+    public const string UnsafeBodyMedia = "content.article.unsafe_body_media";
+    /// <summary>دارایی رسانه یافت نشد.</summary>
+    public const string MediaNotFound = "content.article.media_not_found";
 }

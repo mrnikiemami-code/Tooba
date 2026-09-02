@@ -1,0 +1,70 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T005
+
+Parent-Task:
+TB-P08-T004
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+c2a3a44d-ce94-47b0-902d-09aec30b911c
+
+Summary:
+Implemented Article Media DAM integration: featured/gallery/SEO structured media on articles, admin media workspace tab and API, inline TipTap DAM image insert with storefront URL allowlist, body binary rejection on update. Reused MediaLibraryDialog and existing DAM; no second upload subsystem. USER_VISUAL_ACCEPTED=NO.
+
+Media-Discovery:
+Reused MediaLibraryDialog, media-api.ts, /v1/storefront/media/{id} resolver; Content stores MediaAssetId references only.
+
+DAM-Only-Architecture:
+IContentMediaAssetValidator in Content.Application; ContentMediaAssetValidator in Host wraps IMediaDirectory; ContentArticleMediaDirectory has no Tooba.Media dependency.
+
+Featured-Gallery:
+article_media table + ContentArticleMediaDirectory; endpoints /v1/admin/content/articles/{id}/media/* for featured, gallery CRUD/reorder/patch, unassign preserves DAM assets.
+
+SEO-Media:
+articles.seo_image_media_asset_id optional override; EffectiveSeoImageMediaAssetId falls back to featured; SEO tab checkbox «استفاده از تصویر شاخص».
+
+Inline-Editor-Media:
+ProductRichTextEditor onPickDamImage + TipTap Image extension; inserts /v1/storefront/media/{guid} with data-media-asset-id; sanitizeArticleRichHtml rejects base64/external src.
+
+Security-Sanitization:
+ContentArticleBodyRules.EnsureNoEmbeddedBinary on domain update; FE sanitizeArticleRichHtml allowlists storefront media img src only; product sanitizer unchanged.
+
+Usage-Delete-Safety:
+CountStructuredReferencesAsync for featured/seo/gallery; unassign removes assignment rows only; inline body refs documented out of scope for reference index.
+
+Focused-Validation:
+dotnet build PASS; ContentArticleMediaTests PASS; ContentArticleEditorTests PASS; FE contract tests 3/3; recovery guard 3/3.
+
+Smoke-Check:
+Not run; media tab on /admin/content/articles/{id}; media API under /v1/admin/content/articles/{id}/media/*.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T004; last implementation TB-P08-T005; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=PLACEHOLDER
+origin/main=PLACEHOLDER
+HEAD==origin/main
+
+Architectural-Concerns:
+Inline DAM picker uses window resolve callback (fragile); inline body media refs not in structured reference count yet.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no formal visual evidence.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

@@ -23,6 +23,9 @@ public sealed class ContentDbContext : DbContext
     /// <summary>نویسندگان مقاله.</summary>
     public DbSet<ContentAuthor> Authors => Set<ContentAuthor>();
 
+    /// <summary>گالری رسانهٔ مقالات.</summary>
+    public DbSet<ContentArticleMediaItem> ArticleMedia => Set<ContentArticleMediaItem>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -53,6 +56,19 @@ public sealed class ContentDbContext : DbContext
             entity.HasIndex(x => new { x.Status, x.Category, x.PublishDate });
             entity.HasIndex(x => x.CategoryId);
             entity.HasIndex(x => x.AuthorId);
+            entity.Property(x => x.SeoImageMediaAssetId).HasColumnName("seo_image_media_asset_id");
+        });
+        modelBuilder.Entity<ContentArticleMediaItem>(entity =>
+        {
+            entity.ToTable("article_media");
+            entity.HasKey(x => new { x.ArticleId, x.MediaAssetId });
+            entity.Property(x => x.ArticleId).HasColumnName("article_id");
+            entity.Property(x => x.MediaAssetId).HasColumnName("media_asset_id");
+            entity.Property(x => x.DisplayOrder).HasColumnName("display_order");
+            entity.Property(x => x.AltText).HasMaxLength(ContentArticleMediaItem.AltTextMaxLength).HasColumnName("alt_text");
+            entity.Property(x => x.Caption).HasMaxLength(ContentArticleMediaItem.CaptionMaxLength).HasColumnName("caption");
+            entity.HasIndex(x => x.MediaAssetId);
+            entity.HasIndex(x => new { x.ArticleId, x.DisplayOrder });
         });
         modelBuilder.Entity<ContentAuthor>(entity =>
         {

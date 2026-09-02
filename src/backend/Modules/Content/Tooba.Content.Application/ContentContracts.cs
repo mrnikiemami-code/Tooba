@@ -38,6 +38,7 @@ public sealed record AdminArticleSnapshot(
     Guid? CategoryId,
     Guid? AuthorId,
     Guid? CoverMediaAssetId,
+    Guid? SeoImageMediaAssetId,
     string AuthorDisplayName,
     IReadOnlyList<string> Tags,
     bool IsFeatured,
