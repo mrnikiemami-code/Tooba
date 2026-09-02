@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { Archive, Eye, Pencil, Trash2, Upload, Undo2 } from "lucide-react";
@@ -22,6 +22,11 @@ import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/a
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import {
+  capabilityPermissionIds,
+  createAdminAccessApi,
+  hasCapability,
+} from "../access-control/access-control-api";
+import {
   formatArticleLocaleLabel,
   canArchiveArticle,
   canHardDeleteArticle,
@@ -34,6 +39,7 @@ import {
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
+import { prepareAdminDevActor } from "./admin-api";
 import {
   ContentArticleDestructiveDialog,
   type ArticleDestructiveKind,
@@ -43,7 +49,6 @@ import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-v
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
   title: { field: "title", kind: "text" },
-  slug: { field: "slug", kind: "text" },
   status: { field: "status", kind: "status" },
   category: { field: "category", kind: "text" },
   locale: { field: "locale", kind: "text" },
@@ -76,16 +81,16 @@ function contentStatusLabel(status: string): string {
   return isPublished(status) ? "منتشر" : "پیش‌نویس";
 }
 
+/** caps === null (بارگذاری ناموفق) → همه مجاز؛ مثل AdminShell. */
+function allowedCapability(caps: Set<string> | null, permissionId: string): boolean {
+  if (caps === null) return true;
+  return hasCapability(caps, permissionId);
+}
+
 function TitleCell(params: ICellRendererParams<AdminContentArticle>) {
   const row = params.data;
   if (!row) return null;
   return <AppGridTruncatedCell params={params} text={row.title} className="font-semibold" />;
-}
-
-function SlugCell(params: ICellRendererParams<AdminContentArticle>) {
-  const row = params.data;
-  if (!row) return null;
-  return <span dir="ltr" className="font-mono text-xs text-muted">{row.slug}</span>;
 }
 
 function StatusCell(params: ICellRendererParams<AdminContentArticle>) {
@@ -112,8 +117,12 @@ function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
 }
 
 function buildContentRowActions(
+  caps: Set<string> | null,
   onRequestAction: (kind: ArticleDestructiveKind, row: AdminContentArticle) => void,
 ): AppGridRowAction<AdminContentArticle>[] {
+  const canEdit = allowedCapability(caps, "content.edit");
+  const canPublish = allowedCapability(caps, "content.publish");
+
   return [
     {
       id: "view",
@@ -128,7 +137,7 @@ function buildContentRowActions(
       icon: Pencil,
       href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}?mode=edit`,
       testId: (row) => `admin-content-edit-${row.articleId}`,
-      visible: (row) => !isArticleArchived(row.status),
+      visible: (row) => canEdit && !isArticleArchived(row.status),
     },
     {
       id: "delete",
@@ -137,7 +146,7 @@ function buildContentRowActions(
       variant: "destructive",
       onClick: (row) => onRequestAction("delete", row),
       testId: (row) => `admin-content-delete-${row.articleId}`,
-      visible: (row) => canHardDeleteArticle(row.status),
+      visible: (row) => canEdit && canHardDeleteArticle(row.status),
     },
     {
       id: "archive",
@@ -146,7 +155,7 @@ function buildContentRowActions(
       variant: "destructive",
       onClick: (row) => onRequestAction("archive", row),
       testId: (row) => `admin-content-archive-${row.articleId}`,
-      visible: (row) => canArchiveArticle(row.status),
+      visible: (row) => canEdit && canArchiveArticle(row.status),
     },
     {
       id: "publish",
@@ -154,7 +163,7 @@ function buildContentRowActions(
       icon: Upload,
       onClick: (row) => onRequestAction("publish", row),
       testId: (row) => `admin-content-publish-${row.articleId}`,
-      visible: (row) => !isPublished(row.status) && !isArticleArchived(row.status),
+      visible: (row) => canPublish && !isPublished(row.status) && !isArticleArchived(row.status),
     },
     {
       id: "unpublish",
@@ -163,7 +172,7 @@ function buildContentRowActions(
       variant: "destructive",
       onClick: (row) => onRequestAction("unpublish", row),
       testId: (row) => `admin-content-unpublish-${row.articleId}`,
-      visible: (row) => isPublished(row.status),
+      visible: (row) => canPublish && isPublished(row.status),
     },
   ];
 }
@@ -178,20 +187,6 @@ function buildColumnDefs(
       minWidth: 280,
       flex: 2,
       cellRenderer: TitleCell,
-    }),
-    applyContentGridFilterHeader({
-      field: "slug",
-      headerName: "نشانی صفحه",
-      width: 180,
-      minWidth: 140,
-      maxWidth: 260,
-      cellRenderer: SlugCell,
-    }),
-    applyContentGridFilterHeader({
-      field: "status",
-      headerName: "وضعیت",
-      width: 120,
-      cellRenderer: StatusCell,
     }),
     applyContentGridFilterHeader({
       field: "locale",
@@ -215,6 +210,12 @@ function buildColumnDefs(
       minWidth: 110,
       maxWidth: 200,
       cellRenderer: CategoryCell,
+    }),
+    applyContentGridFilterHeader({
+      field: "status",
+      headerName: "وضعیت",
+      width: 120,
+      cellRenderer: StatusCell,
     }),
     applyContentGridFilterHeader({
       field: "updatedAt",
@@ -243,7 +244,6 @@ const CONTENT_STATUS_FILTER_OPTIONS = [
 
 const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
   { id: "title", header: "عنوان", filterKind: "text" },
-  { id: "slug", header: "نشانی صفحه", filterKind: "text" },
   {
     id: "status",
     header: "وضعیت",
@@ -267,7 +267,23 @@ export function AdminContentScreen() {
   const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
   const [destructiveTarget, setDestructiveTarget] = useState<ArticleDestructiveTarget | null>(null);
   const [destructivePending, setDestructivePending] = useState(false);
+  const [caps, setCaps] = useState<Set<string> | null>(null);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
+
+  useEffect(() => {
+    void prepareAdminDevActor()
+      .then(async () => {
+        try {
+          const effective = await createAdminAccessApi().getMyCapabilities();
+          setCaps(capabilityPermissionIds(effective));
+        } catch {
+          setCaps(null);
+        }
+      })
+      .catch(() => {
+        setCaps(null);
+      });
+  }, []);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
 
@@ -313,7 +329,8 @@ export function AdminContentScreen() {
     }
   }, [destructiveKind, destructiveTarget, refresh]);
 
-  const rowActions = useMemo(() => buildContentRowActions(onRequestAction), [onRequestAction]);
+  const canCreate = allowedCapability(caps, "content.create");
+  const rowActions = useMemo(() => buildContentRowActions(caps, onRequestAction), [caps, onRequestAction]);
   const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
   const queryAdapter = useCallback(
@@ -338,17 +355,19 @@ export function AdminContentScreen() {
     <main className="w-full" data-testid="admin-content">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محتوا / بلاگ</h1>
+          <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">مقالات</h1>
           <p className="mt-1 text-[length:var(--type-body)] text-muted">ایجاد، انتشار و بهینه‌سازی جستجوی مقالات</p>
         </div>
-        <Link
-          href="/admin/content/articles/new"
-          className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95"
-          data-testid="admin-content-new-article"
-        >
-          <span aria-hidden>+</span>
-          مقاله جدید
-        </Link>
+        {canCreate ? (
+          <Link
+            href="/admin/content/articles/new"
+            className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95"
+            data-testid="admin-content-new-article"
+          >
+            <span aria-hidden>+</span>
+            مقاله جدید
+          </Link>
+        ) : null}
       </div>
 
       <section className="rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">
@@ -376,14 +395,13 @@ export function AdminContentScreen() {
             }}
             savedViewStore={savedViewStore}
             exportFilenameBase="admin-content"
-            exportHeaders={["عنوان", "نشانی صفحه", "وضعیت", "زبان", "نویسنده", "دسته", "به‌روزرسانی"]}
+            exportHeaders={["عنوان", "زبان", "نویسنده", "دسته", "وضعیت", "به‌روزرسانی"]}
             getExportRow={(row) => [
               row.title,
-              row.slug,
-              contentStatusLabel(row.status),
               formatArticleLocaleLabel(row.locale),
               row.authorDisplayName ?? "",
               row.category ?? "",
+              contentStatusLabel(row.status),
               formatJalaliDate(row.updatedAt, "fa"),
             ]}
           />

@@ -71,3 +71,25 @@ test("article action flows use canonical Dialog with zero window.confirm", () =>
   assert.match(list, /onRequestAction\("unpublish"/);
   assert.match(screen, /setDestructiveKind\(isPublished\(article\.status\) \? "unpublish" : "publish"\)/);
 });
+
+test("article list drops slug column and uses مقالات heading", () => {
+  assert.match(list, />مقالات</);
+  assert.doesNotMatch(list, /محتوا \/ بلاگ/);
+  assert.doesNotMatch(list, /field:\s*"slug"/);
+  assert.doesNotMatch(list, /id:\s*"slug"/);
+  assert.match(list, /field:\s*"title"/);
+  assert.match(list, /field:\s*"locale"/);
+  assert.match(list, /field:\s*"authorDisplayName"/);
+  assert.match(list, /field:\s*"category"/);
+  assert.match(list, /field:\s*"status"/);
+  assert.match(list, /field:\s*"updatedAt"/);
+});
+
+test("article list gates actions by content capabilities", () => {
+  assert.match(list, /getMyCapabilities/);
+  assert.match(list, /hasCapability/);
+  assert.match(list, /content\.create/);
+  assert.match(list, /content\.edit/);
+  assert.match(list, /content\.publish/);
+  assert.match(list, /caps === null/);
+});

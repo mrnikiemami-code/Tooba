@@ -18,6 +18,14 @@ const catalogSiblings = [
   { id: "catalog-attributes", href: "/admin/catalog/attributes" },
 ];
 
+const contentSiblings = [
+  { id: "content", href: "/admin/content" },
+  { id: "content-categories", href: "/admin/content/categories" },
+  { id: "content-authors", href: "/admin/content/authors" },
+];
+
+const chromeMessages = fs.readFileSync(path.join(root, "app/admin/admin-chrome-messages.ts"), "utf8");
+
 test("admin shell marks settings nav live and clears settings from deferred", () => {
   const settingsIdx = shellSource.indexOf('href: "/admin/settings"');
   assert.ok(settingsIdx >= 0, "settings href missing");
@@ -91,5 +99,65 @@ test("deep category routes keep category leaf active", () => {
   assert.equal(
     isActiveAdminNavItem("/admin/catalog/categories/xyz", "", catalogSiblings[0]!, catalogSiblings),
     true,
+  );
+});
+
+test("content group sits between ops and finance with Articles label", () => {
+  assert.match(chromeMessages, /groupContent:\s*"محتوا"/);
+  assert.match(chromeMessages, /groupContent:\s*"Content"/);
+  assert.match(chromeMessages, /content:\s*"مقالات"/);
+  assert.match(chromeMessages, /content:\s*"Articles"/);
+  assert.doesNotMatch(chromeMessages, /محتوا \/ بلاگ/);
+  assert.doesNotMatch(chromeMessages, /Content \/ blog/);
+
+  const opsIdx = shellSource.indexOf('id: "ops"');
+  const contentGroupIdx = shellSource.indexOf('id: "content"', shellSource.indexOf("labelKey: \"groupContent\"") - 40);
+  const financeIdx = shellSource.indexOf('id: "finance"');
+  assert.ok(opsIdx >= 0 && contentGroupIdx > opsIdx && financeIdx > contentGroupIdx);
+
+  assert.match(shellSource, /labelKey: "groupContent"/);
+  assert.match(shellSource, /icon: BookOpen/);
+  assert.match(shellSource, /icon: FolderTree/);
+  assert.match(shellSource, /icon: PenLine/);
+
+  const opsBlock = shellSource.slice(opsIdx, contentGroupIdx);
+  assert.equal(opsBlock.includes('id: "content-categories"'), false);
+  assert.equal(opsBlock.includes('id: "content-authors"'), false);
+  assert.equal(opsBlock.includes('href: "/admin/content"'), false);
+
+  const systemIdx = shellSource.indexOf('id: "system"');
+  const systemBlock = shellSource.slice(systemIdx, shellSource.indexOf("];", systemIdx));
+  assert.match(systemBlock, /href: "\/admin\/languages"/);
+  assert.equal(shellSource.includes('labelKey: "groupContent"') && systemBlock.includes("groupContent"), false);
+});
+
+test("content articles categories and authors active independently", () => {
+  assert.equal(
+    isActiveAdminNavItem("/admin/content", "", contentSiblings[0]!, contentSiblings),
+    true,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/categories", "", contentSiblings[0]!, contentSiblings),
+    false,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/categories", "", contentSiblings[1]!, contentSiblings),
+    true,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/authors", "", contentSiblings[2]!, contentSiblings),
+    true,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/authors", "", contentSiblings[0]!, contentSiblings),
+    false,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/articles/abc", "", contentSiblings[0]!, contentSiblings),
+    true,
+  );
+  assert.equal(
+    isActiveAdminNavItem("/admin/content/articles/abc", "", contentSiblings[1]!, contentSiblings),
+    false,
   );
 });

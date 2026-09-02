@@ -6,6 +6,7 @@ export type AdminChromeLocale = "fa" | "en";
 
 export type AdminNavLabels = {
   groupOps: string;
+  groupContent: string;
   groupFinance: string;
   groupCatalogCategories: string;
   groupProducts: string;
@@ -47,6 +48,7 @@ export type AdminNavLabels = {
 
 const faNav: AdminNavLabels = {
   groupOps: "عملیات",
+  groupContent: "محتوا",
   groupFinance: "مالی",
   groupCatalogCategories: "کاتالوگ / دسته‌بندی‌ها",
   groupProducts: "محصولات",
@@ -65,7 +67,7 @@ const faNav: AdminNavLabels = {
   receipts: "دریافت‌ها",
   settlement: "تسویه فروشندگان",
   payouts: "پرداخت به فروشندگان",
-  content: "محتوا / بلاگ",
+  content: "مقالات",
   contentCategories: "دسته‌بندی مقالات",
   contentAuthors: "نویسندگان",
   stories: "استوری‌ها",
@@ -88,6 +90,7 @@ const faNav: AdminNavLabels = {
 
 const enNav: AdminNavLabels = {
   groupOps: "Operations",
+  groupContent: "Content",
   groupFinance: "Finance",
   groupCatalogCategories: "Catalog / Categories",
   groupProducts: "Products",
@@ -106,7 +109,7 @@ const enNav: AdminNavLabels = {
   receipts: "Receipts",
   settlement: "Seller settlement",
   payouts: "Seller payouts",
-  content: "Content / blog",
+  content: "Articles",
   contentCategories: "Article categories",
   contentAuthors: "Authors",
   stories: "Stories",

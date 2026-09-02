@@ -388,6 +388,11 @@ export function hasViewCapability(permissionIds: ReadonlySet<string>, viewPermis
   return permissionIds.has(viewPermissionId);
 }
 
+/** آیا مجموعهٔ capabilities شامل مجوز داده‌شده است (بدون hardcode نقش). */
+export function hasCapability(permissionIds: ReadonlySet<string>, permissionId: string): boolean {
+  return permissionIds.has(permissionId);
+}
+
 /** شناسه‌های مجوز فعال از پاسخ me/capabilities. */
 export function capabilityPermissionIds(effective: EffectiveAccess | null): Set<string> {
   if (!effective) return new Set();

@@ -29,6 +29,7 @@ using Tooba.Host.ProductQnA;
 using Tooba.Host.Wishlist;
 using Tooba.Host.AddressBook;
 using Tooba.Host.Content;
+using Tooba.Content.Infrastructure;
 using Tooba.Host.Media;
 using Tooba.Host.PageComposition;
 using Tooba.Host.Story;
@@ -297,6 +298,15 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogInformation(
                 "Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
+            // TB-P08-T009: Content demo بدون Catalog legacy.
+            try
+            {
+                await ContentDevelopmentSeed.ApplyAsync(app.Services);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogError(ex, "ContentDevelopmentSeed failed; Host continues without Content demo snapshot.");
+            }
         }
 
         try

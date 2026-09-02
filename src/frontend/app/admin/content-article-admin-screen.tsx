@@ -6,6 +6,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { formatJalaliDate, useAdminFormMode } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
+import {
+  capabilityPermissionIds,
+  createAdminAccessApi,
+  hasCapability,
+} from "../access-control/access-control-api.ts";
 import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
@@ -100,7 +105,17 @@ export function ContentArticleAdminScreen() {
   const [draftTags, setDraftTags] = useState("");
   const [draftPublishDate, setDraftPublishDate] = useState("");
 
-  const form = useAdminFormMode({ canView: true, canEdit: true });
+  const [canEditContent, setCanEditContent] = useState(true);
+  useEffect(() => {
+    void createAdminAccessApi()
+      .getMyCapabilities()
+      .then((effective) => {
+        const caps = capabilityPermissionIds(effective);
+        setCanEditContent(hasCapability(caps, "content.edit"));
+      })
+      .catch(() => setCanEditContent(true));
+  }, []);
+  const form = useAdminFormMode({ canView: true, canEdit: canEditContent });
   const editorDir = articleEditorDirection(draftLocale);
   const localeLocked = article ? isArticleLocaleLocked(article) : false;
   const archived = article ? isArticleArchived(article.status) : false;

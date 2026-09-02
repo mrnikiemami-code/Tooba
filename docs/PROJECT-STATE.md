@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T007-R2
+TB-P08-T008
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T008
+TB-P08-T009
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T009 — Content Integration Gate (Admin menus, permissions, demo data, UI/public consistency)
 TB-P08-T008 — Public Content Taxonomy + Author routes + storefront home locale consistency
 TB-P08-T007-R2 — Article action dialog completion (publish/unpublish canonical Dialog)
 TB-P08-T007-R1 — Article destructive UX repair (canonical Dialog, no window.confirm)

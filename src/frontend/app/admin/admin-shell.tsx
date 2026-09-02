@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
+  BookOpen,
   ChevronLeft,
   Gift,
   Globe,
@@ -27,7 +28,6 @@ import {
   Wallet,
   WalletCards,
   CreditCard,
-  FileText,
   Tag,
   Tags,
   FolderTree,
@@ -72,11 +72,17 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
       { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
-      { id: "content", labelKey: "content", href: "/admin/content", icon: FileText, live: true, viewPermission: "content.view" },
-      { id: "content-categories", labelKey: "contentCategories", href: "/admin/content/categories", icon: FolderTree, live: true, viewPermission: "content.view" },
-      { id: "content-authors", labelKey: "contentAuthors", href: "/admin/content/authors", icon: PenLine, live: true, viewPermission: "content.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },
+    ],
+  },
+  {
+    id: "content",
+    labelKey: "groupContent",
+    items: [
+      { id: "content", labelKey: "content", href: "/admin/content", icon: BookOpen, live: true, viewPermission: "content.view" },
+      { id: "content-categories", labelKey: "contentCategories", href: "/admin/content/categories", icon: FolderTree, live: true, viewPermission: "content.view" },
+      { id: "content-authors", labelKey: "contentAuthors", href: "/admin/content/authors", icon: PenLine, live: true, viewPermission: "content.view" },
     ],
   },
   {

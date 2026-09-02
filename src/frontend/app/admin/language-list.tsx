@@ -14,6 +14,7 @@ import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales
 import {
   codeLockExplanation,
   isIdentityFieldLocked,
+  storefrontLocalePrefixDeployNote,
   urlPrefixLockExplanation,
 } from "../../lib/i18n/language-identity-lock.ts";
 import { loadAdminLanguages, updateAdminLanguage } from "./language-api";
@@ -229,6 +230,9 @@ export function AdminLanguagesScreen() {
       <header>
         <h1 className="text-xl font-black text-gray-900">زبان‌ها و محلیه‌ها</h1>
         <p className="mt-1 text-sm text-gray-500">رجیستری کانونی زبان برای محتوا و ویترین — هر مقاله یک زبان مستقل دارد.</p>
+        <p className="mt-1 text-sm text-gray-500" data-testid="admin-languages-prefix-deploy-note">
+          {storefrontLocalePrefixDeployNote().fa}
+        </p>
       </header>
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">

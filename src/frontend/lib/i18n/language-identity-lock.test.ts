@@ -4,6 +4,7 @@ import { mapSupportedLocale } from "./supported-locales.ts";
 import {
   codeLockExplanation,
   isIdentityFieldLocked,
+  storefrontLocalePrefixDeployNote,
   urlPrefixLockExplanation,
 } from "./language-identity-lock.ts";
 
@@ -43,4 +44,12 @@ test("lock explanations include required fa and en copy", () => {
   assert.match(code.en, /content/i);
   assert.match(prefix.fa, /پیشوند مسیر/);
   assert.match(prefix.en, /route prefix/i);
+});
+
+test("storefront locale prefix deploy note stays concise", () => {
+  const note = storefrontLocalePrefixDeployNote();
+  assert.match(note.fa, /rebuild\/deploy/);
+  assert.match(note.fa, /fa\/en/);
+  assert.match(note.en, /rebuild\/deploy/i);
+  assert.match(note.en, /fa\/en/);
 });
