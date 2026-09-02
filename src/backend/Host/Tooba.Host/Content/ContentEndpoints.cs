@@ -1,6 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
+using Tooba.Content.Domain;
 using Tooba.Host.Admin;
 
 namespace Tooba.Host.Content;
@@ -148,8 +149,18 @@ public static class ContentEndpoints
         catch (InvalidOperationException ex)
         {
             var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+            var localeLocked = ex.Message.Contains(ContentArticleErrorCodes.LocaleLocked, StringComparison.Ordinal);
             return Results.Json(
-                new { title = missing ? "Not Found" : "Bad Request", errorCode = missing ? "content.article.missing" : "content.update.rejected", detail = ex.Message },
+                new
+                {
+                    title = missing ? "Not Found" : "Bad Request",
+                    errorCode = missing
+                        ? "content.article.missing"
+                        : localeLocked
+                            ? ContentArticleErrorCodes.LocaleLocked
+                            : "content.update.rejected",
+                    detail = ex.Message,
+                },
                 statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
         }
     }
@@ -230,4 +241,5 @@ public sealed record UpdateArticleBody(
     string? SeoTitle,
     string? SeoDescription,
     string? Category,
-    Guid? CategoryId);
+    Guid? CategoryId,
+    DateTimeOffset? PublishDate);

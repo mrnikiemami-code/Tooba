@@ -109,6 +109,8 @@ public static class AdminListGridPolicies
         new("slug", x => x.Slug, InMemoryGridFieldKind.Text, searchable: true),
         new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),
         new("category", x => x.Category, InMemoryGridFieldKind.Text, searchable: true),
+        new("locale", x => x.Locale, InMemoryGridFieldKind.Text, searchable: true),
+        new("authorDisplayName", x => x.AuthorDisplayName, InMemoryGridFieldKind.Text, searchable: true),
         new("updated", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
     ],
         defaultSortField: "updated",

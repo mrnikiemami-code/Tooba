@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T003
+TB-P08-T004
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T004 — Article Editor Workspace (language-first create, TipTap body, tabs, locale lock)
 TB-P08-T003 — Content Author management (public profiles, DAM, Article relation)
 TB-P08-T002 — Article Category Taxonomy (Content-owned, language-aware AppCategoryTree)
 TB-P08-T001 — under repair (parent; NOT accepted)

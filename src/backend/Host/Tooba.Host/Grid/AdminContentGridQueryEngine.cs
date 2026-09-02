@@ -77,6 +77,8 @@ internal sealed class AdminContentGridQueryEngine
             "title" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Title, filter),
             "slug" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Slug, filter),
             "category" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Category, filter),
+            "locale" => AdminEfGridQuery.ApplyTextFilter(source, x => x.Locale, filter),
+            "authorDisplayName" => AdminEfGridQuery.ApplyTextFilter(source, x => x.AuthorDisplayName, filter),
             "authorId" => ApplyAuthorIdFilter(source, filter),
             "status" => AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter),
             "updated" => AdminEfGridQuery.ApplyDateFilter(source, x => x.UpdatedAt, filter),
@@ -118,6 +120,12 @@ internal sealed class AdminContentGridQueryEngine
             "category" => asc
                 ? source.OrderBy(x => x.Category).ThenBy(x => x.Title)
                 : source.OrderByDescending(x => x.Category).ThenBy(x => x.Title),
+            "locale" => asc
+                ? source.OrderBy(x => x.Locale).ThenBy(x => x.Title)
+                : source.OrderByDescending(x => x.Locale).ThenBy(x => x.Title),
+            "authorDisplayName" => asc
+                ? source.OrderBy(x => x.AuthorDisplayName).ThenBy(x => x.Title)
+                : source.OrderByDescending(x => x.AuthorDisplayName).ThenBy(x => x.Title),
             _ => asc
                 ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.Title)
                 : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.Title),

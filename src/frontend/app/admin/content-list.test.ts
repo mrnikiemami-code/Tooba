@@ -9,6 +9,8 @@ test("content list pins actions like product list", () => {
   assert.match(source, /buildPinnedActionsColumnDef/);
   assert.match(source, /direction:\s*"rtl"/);
   assert.match(source, /AppGridRowActionsCell/);
+  assert.match(source, /Pencil/);
+  assert.match(source, /formatArticleLocaleLabel/);
   assert.doesNotMatch(source, /sticky:\s*"start"/);
   assert.doesNotMatch(source, /AgGridReact/);
 });

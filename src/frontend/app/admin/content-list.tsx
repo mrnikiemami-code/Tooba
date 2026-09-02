@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, Upload, Undo2 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
+import { Eye, Pencil, Upload, Undo2 } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import {
   AppDataGrid,
@@ -20,14 +21,12 @@ import { buildPinnedActionsColumnDef } from "../../design-system/app-data-grid/a
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
 import type { GridServerQuery } from "../../design-system/data-grid";
 import {
-  createAdminArticle,
+  formatArticleLocaleLabel,
   publishAdminArticle,
   queryAdminContentArticlesGrid,
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
-import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
-import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
@@ -35,6 +34,8 @@ const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
   slug: { field: "slug", kind: "text" },
   status: { field: "status", kind: "status" },
   category: { field: "category", kind: "text" },
+  locale: { field: "locale", kind: "text" },
+  authorDisplayName: { field: "authorDisplayName", kind: "text" },
   updatedAt: { field: "updatedAt", kind: "jalali-date" },
 };
 
@@ -82,10 +83,29 @@ function CategoryCell(params: ICellRendererParams<AdminContentArticle>) {
   return <AppGridTruncatedCell params={params} text={row.category} />;
 }
 
+function LocaleCell(params: ICellRendererParams<AdminContentArticle>) {
+  const row = params.data;
+  if (!row) return null;
+  return <span className="text-sm">{formatArticleLocaleLabel(row.locale)}</span>;
+}
+
+function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
+  const row = params.data;
+  if (!row?.authorDisplayName?.trim()) return <span className="text-muted">—</span>;
+  return <AppGridTruncatedCell params={params} text={row.authorDisplayName} />;
+}
+
 function buildContentRowActions(
   onPublishToggle: (articleId: string, published: boolean) => Promise<void>,
 ): AppGridRowAction<AdminContentArticle>[] {
   return [
+    {
+      id: "edit",
+      label: "ویرایش",
+      icon: Pencil,
+      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}`,
+      testId: (row) => `admin-content-edit-${row.articleId}`,
+    },
     {
       id: "view",
       label: "مشاهده",
@@ -142,6 +162,21 @@ function buildColumnDefs(
       cellRenderer: StatusCell,
     }),
     applyContentGridFilterHeader({
+      field: "locale",
+      headerName: "زبان",
+      width: 100,
+      minWidth: 90,
+      cellRenderer: LocaleCell,
+    }),
+    applyContentGridFilterHeader({
+      field: "authorDisplayName",
+      headerName: "نویسنده",
+      width: 140,
+      minWidth: 110,
+      maxWidth: 180,
+      cellRenderer: AuthorCell,
+    }),
+    applyContentGridFilterHeader({
       field: "category",
       headerName: "دسته",
       width: 140,
@@ -158,10 +193,10 @@ function buildColumnDefs(
     }),
     buildPinnedActionsColumnDef<AdminContentArticle>({
       direction: "rtl",
-      actionSlots: 3,
-      width: 132,
-      minWidth: 120,
-      maxWidth: 168,
+      actionSlots: 4,
+      width: 168,
+      minWidth: 148,
+      maxWidth: 200,
       cellRenderer: (params: ICellRendererParams<AdminContentArticle>) =>
         params.data ? <AppGridRowActionsCell row={params.data} actions={rowActions} /> : null,
     }),
@@ -185,6 +220,8 @@ const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
       { value: "Draft", label: "پیش‌نویس" },
     ],
   },
+  { id: "locale", header: "زبان", filterKind: "text" },
+  { id: "authorDisplayName", header: "نویسنده", filterKind: "text" },
   { id: "category", header: "دسته", filterKind: "text" },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
 ];
@@ -193,33 +230,9 @@ const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
 export function AdminContentScreen() {
   const [reloadToken, setReloadToken] = useState(0);
   const [gridError, setGridError] = useState<string>();
-  const [showCreate, setShowCreate] = useState(false);
-  const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
-  const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
-  const [draft, setDraft] = useState({
-    slug: "",
-    title: "",
-    excerpt: "",
-    body: "",
-    authorDisplayName: "تحریریه توبا",
-    authorId: "" as string,
-    category: "",
-    categoryId: "" as string,
-    seoTitle: "",
-    seoDescription: "",
-  });
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
-
-  useEffect(() => {
-    void fetchContentCategoryTree("fa-IR").then((result) => {
-      if (result.state === "ok" && result.data) setCategoryOptions(result.data);
-    });
-    void fetchActiveContentAuthors().then((result) => {
-      if (result.state === "ok" && result.data) setAuthorOptions(result.data);
-    });
-  }, []);
 
   const onPublishToggle = useCallback(async (articleId: string, published: boolean) => {
     if (published) {
@@ -258,14 +271,14 @@ export function AdminContentScreen() {
           <h1 className="text-[length:var(--type-title)] font-semibold tracking-tight">محتوا / بلاگ</h1>
           <p className="mt-1 text-[length:var(--type-body)] text-muted">ایجاد، انتشار و بهینه‌سازی جستجوی مقالات</p>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/admin/content/articles/new"
           className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95"
-          onClick={() => setShowCreate(true)}
+          data-testid="admin-content-new-article"
         >
           <span aria-hidden>+</span>
           مقاله جدید
-        </button>
+        </Link>
       </div>
 
       <section className="rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">
@@ -293,108 +306,19 @@ export function AdminContentScreen() {
             }}
             savedViewStore={savedViewStore}
             exportFilenameBase="admin-content"
-            exportHeaders={["عنوان", "نشانی صفحه", "وضعیت", "دسته", "به‌روزرسانی"]}
+            exportHeaders={["عنوان", "نشانی صفحه", "وضعیت", "زبان", "نویسنده", "دسته", "به‌روزرسانی"]}
             getExportRow={(row) => [
               row.title,
               row.slug,
               contentStatusLabel(row.status),
+              formatArticleLocaleLabel(row.locale),
+              row.authorDisplayName ?? "",
               row.category ?? "",
               formatJalaliDate(row.updatedAt, "fa"),
             ]}
           />
         )}
       </section>
-
-      {showCreate ? (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
-            <h2 className="mb-4 text-lg font-bold">ایجاد پیش‌نویس</h2>
-            <div className="space-y-3">
-              {([
-                ["slug", "نشانی صفحه"],
-                ["title", "عنوان"],
-                ["excerpt", "چکیده"],
-                ["body", "بدنه"],
-                ["authorId", "نویسنده"],
-                ["categoryId", "دسته"],
-                ["seoTitle", "عنوان جستجو"],
-                ["seoDescription", "توضیح جستجو"],
-              ] as const).map(([key, label]) => (
-                <label key={key} className="block text-sm">
-                  <span className="mb-1 block text-gray-600">{label}</span>
-                  {key === "body" || key === "excerpt" || key === "seoDescription" ? (
-                    <textarea
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      rows={key === "body" ? 5 : 2}
-                      value={draft[key === "categoryId" ? "categoryId" : key === "authorId" ? "authorId" : key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key === "categoryId" ? "categoryId" : key === "authorId" ? "authorId" : key]: e.target.value }))}
-                    />
-                  ) : key === "categoryId" ? (
-                    <select
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      value={draft.categoryId}
-                      onChange={(e) => {
-                        const selected = categoryOptions.find((row) => row.id === e.target.value);
-                        setDraft((current) => ({
-                          ...current,
-                          categoryId: e.target.value,
-                          category: selected?.name ?? "",
-                        }));
-                      }}
-                    >
-                      <option value="">— بدون دسته —</option>
-                      {categoryOptions.map((row) => (
-                        <option key={row.id} value={row.id}>{row.name}</option>
-                      ))}
-                    </select>
-                  ) : key === "authorId" ? (
-                    <select
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      value={draft.authorId}
-                      onChange={(e) => {
-                        const selected = authorOptions.find((row) => row.authorId === e.target.value);
-                        setDraft((current) => ({
-                          ...current,
-                          authorId: e.target.value,
-                          authorDisplayName: selected?.displayName ?? current.authorDisplayName,
-                        }));
-                      }}
-                    >
-                      <option value="">— بدون نویسنده —</option>
-                      {authorOptions.map((row) => (
-                        <option key={row.authorId} value={row.authorId}>{row.displayName}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                      value={draft[key]}
-                      onChange={(e) => setDraft((current) => ({ ...current, [key]: e.target.value }))}
-                    />
-                  )}
-                </label>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="rounded-xl px-4 py-2 text-sm" onClick={() => setShowCreate(false)}>انصراف</button>
-              <button
-                type="button"
-                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => void createAdminArticle({
-                  ...draft,
-                  categoryId: draft.categoryId || null,
-                  authorId: draft.authorId || null,
-                }).then((result) => {
-                  if (result.ok) { setShowCreate(false); refresh(); }
-                  else setGridError(result.message);
-                })}
-              >
-                ذخیره پیش‌نویس
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }

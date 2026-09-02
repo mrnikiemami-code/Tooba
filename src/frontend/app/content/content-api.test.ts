@@ -33,6 +33,8 @@ test("mapAdminContentArticle includes status", () => {
     excerpt: "e",
     body: "b",
     locale: "fa-IR",
+    authorId: "auth-1",
+    categoryId: "cat-1",
     status: "Draft",
     authorDisplayName: "a",
     tags: [],
@@ -43,6 +45,8 @@ test("mapAdminContentArticle includes status", () => {
   });
   assert.equal(article?.status, "Draft");
   assert.equal(article?.id, "a1");
+  assert.equal(article?.authorId, "auth-1");
+  assert.equal(article?.categoryId, "cat-1");
 });
 
 test("article locale is independent per row — no translation sibling required", () => {

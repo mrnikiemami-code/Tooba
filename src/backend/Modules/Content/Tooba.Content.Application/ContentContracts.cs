@@ -76,7 +76,8 @@ public sealed record UpdateArticleCommand(
     string? SeoTitle,
     string? SeoDescription,
     string? Category,
-    Guid? CategoryId);
+    Guid? CategoryId,
+    DateTimeOffset? PublishDate);
 
 /// <summary>قابلیت خواندن و مدیریت مقالات Content.</summary>
 public interface IContentDirectory

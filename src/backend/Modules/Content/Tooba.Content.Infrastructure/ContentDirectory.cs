@@ -168,6 +168,14 @@ public sealed class ContentDirectory : IContentDirectory
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
+        if (!string.Equals(locale, article.Locale, StringComparison.Ordinal)
+            && (article.Status == ContentPublicationStatus.Published
+                || article.CategoryId is not null
+                || article.AuthorId is not null))
+        {
+            throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+        }
+
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
         await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
         var isNewAuthorAssignment = command.AuthorId != article.AuthorId;
@@ -188,7 +196,8 @@ public sealed class ContentDirectory : IContentDirectory
             command.Tags ?? [],
             command.IsFeatured,
             now,
-            locale);
+            locale,
+            command.PublishDate);
         await _db.SaveChangesAsync(cancellationToken);
         return MapAdmin(article);
     }

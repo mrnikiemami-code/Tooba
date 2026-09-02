@@ -125,6 +125,7 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
                 null,
                 null,
                 null,
+                null,
                 null),
             CancellationToken.None);
         Assert.Equal(active.Id, updated.AuthorId);
@@ -143,6 +144,7 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
                 [],
                 false,
                 "fa-IR",
+                null,
                 null,
                 null,
                 null,

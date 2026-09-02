@@ -40,6 +40,8 @@ export interface AdminContentArticle {
   seoTitle: string | null;
   seoDescription: string | null;
   category: string | null;
+  categoryId: string | null;
+  authorId: string | null;
   coverMediaAssetId: string | null;
   authorDisplayName: string;
   tags: string[];
@@ -104,6 +106,14 @@ export function mapContentArticle(value: unknown): ContentArticleCard | null {
       const cat = prop(item, "category", "Category");
       return cat == null || cat === "" ? null : text(cat);
     })(),
+    categoryId: (() => {
+      const id = prop(item, "categoryId", "CategoryId");
+      return id == null || id === "" ? null : text(id);
+    })(),
+    authorId: (() => {
+      const id = prop(item, "authorId", "AuthorId");
+      return id == null || id === "" ? null : text(id);
+    })(),
     locale: text(prop(item, "locale", "Locale"), "fa-IR"),
   };
 }
@@ -133,6 +143,37 @@ export function formatContentDate(iso: string): string {
   if (!iso) return "—";
   try {
     return new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium" }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+const ARTICLE_LOCALE_LABELS: Record<string, string> = {
+  "fa-IR": "فارسی",
+  "en-US": "English",
+  en: "English",
+};
+
+/** برچسب نمایشی زبان مقاله. */
+export function formatArticleLocaleLabel(locale: string): string {
+  return ARTICLE_LOCALE_LABELS[locale] ?? locale;
+}
+
+/** جهت ویرایشگر بر اساس locale مقاله. */
+export function articleEditorDirection(locale: string): "rtl" | "ltr" {
+  return locale.startsWith("fa") ? "rtl" : "ltr";
+}
+
+/** قالب تاریخ انتشار بر اساس زبان مقاله. */
+export function formatArticleDate(iso: string, locale: string): string {
+  if (!iso) return "—";
+  try {
+    const calendar = locale.startsWith("fa") ? "persian" : "gregory";
+    return new Intl.DateTimeFormat(locale.startsWith("fa") ? "fa-IR" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      calendar,
+    }).format(new Date(iso));
   } catch {
     return iso;
   }
@@ -245,6 +286,88 @@ export async function unpublishAdminArticle(articleId: string): Promise<boolean>
   }
 }
 
+export async function loadAdminArticle(articleId: string): Promise<AdminResult<AdminContentArticle>> {
+  try {
+    const response = await fetch(`/v1/admin/content/articles/${encodeURIComponent(articleId)}`, {
+      headers: adminHeaders(),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (response.status === 404) {
+      return { state: "error", data: null, status: response.status, message: "content.article.missing" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: `admin.http.${response.status}` };
+    }
+    const article = mapAdminContentArticle(await response.json());
+    return article
+      ? { state: "ok", data: article, status: response.status }
+      : { state: "error", data: null, status: response.status, message: "invalid-response" };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+export async function updateAdminArticle(
+  articleId: string,
+  input: {
+    title: string;
+    excerpt: string;
+    body: string;
+    authorId?: string | null;
+    category?: string | null;
+    categoryId?: string | null;
+    coverMediaAssetId?: string | null;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
+    tags?: string[];
+    isFeatured?: boolean;
+    locale?: string;
+    publishDate?: string | null;
+  },
+): Promise<{ ok: boolean; article?: AdminContentArticle; message?: string }> {
+  try {
+    const response = await fetch(`/v1/admin/content/articles/${encodeURIComponent(articleId)}`, {
+      method: "PUT",
+      headers: adminHeaders(true),
+      body: JSON.stringify({
+        title: input.title,
+        excerpt: input.excerpt,
+        body: input.body,
+        authorId: input.authorId ?? null,
+        category: input.category ?? null,
+        categoryId: input.categoryId ?? null,
+        coverMediaAssetId: input.coverMediaAssetId ?? null,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+        tags: input.tags ?? [],
+        isFeatured: input.isFeatured ?? false,
+        locale: input.locale ?? null,
+        publishDate: input.publishDate ?? null,
+      }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const root = recordOf(payload);
+      return {
+        ok: false,
+        message: text(root?.errorCode ?? root?.detail ?? root?.title, `update-http-${response.status}`),
+      };
+    }
+    const article = mapAdminContentArticle(payload);
+    return article ? { ok: true, article } : { ok: false, message: "invalid-response" };
+  } catch {
+    return { ok: false, message: "host-unreachable" };
+  }
+}
+
+/** آیا تغییر locale پس از انتشار یا ارجاع مجاز نیست. */
+export function isArticleLocaleLocked(article: Pick<AdminContentArticle, "status" | "authorId" | "categoryId">): boolean {
+  const published = article.status === "Published" || article.status === "1";
+  return published || Boolean(article.authorId) || Boolean(article.categoryId);
+}
+
 export async function createAdminArticle(input: {
   slug: string;
   title: string;
@@ -256,6 +379,8 @@ export async function createAdminArticle(input: {
   categoryId?: string | null;
   seoTitle?: string;
   seoDescription?: string;
+  locale?: string;
+  publishDate?: string | null;
 }): Promise<{ ok: boolean; article?: AdminContentArticle; message?: string }> {
   try {
     const response = await fetch("/v1/admin/content/articles", {
@@ -274,7 +399,8 @@ export async function createAdminArticle(input: {
         categoryId: input.categoryId ?? null,
         seoTitle: input.seoTitle ?? null,
         seoDescription: input.seoDescription ?? null,
-        locale: "fa-IR",
+        locale: input.locale ?? "fa-IR",
+        publishDate: input.publishDate ?? null,
       }),
     });
     const payload = await response.json().catch(() => null);

@@ -89,7 +89,8 @@ public sealed class ContentPanelComposer
                 body.SeoTitle,
                 body.SeoDescription,
                 body.Category,
-                body.CategoryId),
+                body.CategoryId,
+                body.PublishDate),
             cancellationToken);
 
     /// <summary>انتشار مقاله.</summary>

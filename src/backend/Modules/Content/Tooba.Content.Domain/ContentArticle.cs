@@ -139,14 +139,25 @@ public sealed class ContentArticle
         IReadOnlyList<string> tags,
         bool isFeatured,
         DateTimeOffset now,
-        string? locale = null)
+        string? locale = null,
+        DateTimeOffset? publishDate = null)
     {
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? Locale : locale.Trim();
+        if (!string.Equals(resolvedLocale, Locale, StringComparison.Ordinal)
+            && (Status == ContentPublicationStatus.Published || CategoryId is not null || AuthorId is not null))
+        {
+            throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+        }
+
         Validate(Slug, title, excerpt, body, authorDisplayName, resolvedLocale, seoTitle, seoDescription, category);
         Title = title.Trim();
         Excerpt = excerpt.Trim();
         Body = body.Trim();
         Locale = resolvedLocale;
+        if (publishDate is not null)
+        {
+            PublishDate = publishDate.Value;
+        }
         SeoTitle = NormalizeOptional(seoTitle, SeoTitleMaxLength);
         SeoDescription = NormalizeOptional(seoDescription, SeoDescriptionMaxLength);
         Category = NormalizeOptional(category, CategoryMaxLength);
@@ -233,4 +244,11 @@ public sealed class ContentArticle
         if (category is not null && category.Trim().Length > CategoryMaxLength)
             throw new InvalidOperationException("دستهٔ مقاله معتبر نیست.");
     }
+}
+
+/// <summary>کدهای خطای دامنهٔ مقاله.</summary>
+public static class ContentArticleErrorCodes
+{
+    /// <summary>تغییر locale پس از انتشار یا ارجاع ممنوع است.</summary>
+    public const string LocaleLocked = "content.article.locale_locked";
 }
