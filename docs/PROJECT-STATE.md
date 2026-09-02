@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T009-R1
+TB-P08-T009-R2
 ```
 
 Current Issued Task:
@@ -74,14 +74,15 @@ Current Issued Task:
 Current Repair Task:
 
 ```text
-TB-P08-T009-R1
+TB-P08-T009-R2
 ```
 
 Implemented Under Review:
 
 ```text
+TB-P08-T009-R2 — Content Authorization Fail-Closed Repair
 TB-P08-T009-R1 — Content Permission Enforcement Repair (backend content.* authorization)
-TB-P08-T009 — Content Integration Gate (under repair via R1)
+TB-P08-T009 — Content Integration Gate (under repair via R2)
 TB-P08-T008 — Public Content Taxonomy + Author routes + storefront home locale consistency
 TB-P08-T007-R2 — Article action dialog completion (publish/unpublish canonical Dialog)
 TB-P08-T007-R1 — Article destructive UX repair (canonical Dialog, no window.confirm)

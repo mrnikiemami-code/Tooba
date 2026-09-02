@@ -27,7 +27,7 @@ internal static class ContentAdminAccess
 
     /// <summary>
     /// ابتدا <see cref="AdminPanelAccess.RequireAuthorizedAsync"/> سپس capability روی permissionId.
-    /// Unavailable مثل Support: fail-open پس از عبور tenant#view.
+    /// Unavailable / indeterminate = fail-closed (۵۰۳)؛ Deny = ۴۰۳. هرگز پس از tenant#view اجازهٔ ضمنی نمی‌دهد.
     /// </summary>
     public static async Task<Guid> RequireAsync(
         HttpRequest request,
@@ -63,9 +63,13 @@ internal static class ContentAdminAccess
         if (decision.Kind == AuthorizationDecisionKind.Allow)
             return actorUserId;
 
-        // پنل Admin قبلاً tenant#view را پاس کرده؛ تا tupleهای capability پایدار شوند fail-open (مثل Support).
         if (decision.Kind == AuthorizationDecisionKind.Unavailable)
-            return actorUserId;
+        {
+            throw new PlatformHttpException(
+                503,
+                "سرویس مجوز در دسترس نیست.",
+                "admin.authorization.unavailable");
+        }
 
         throw new PlatformHttpException(403, "دسترسی محتوا مجاز نیست.", "admin.authorization.denied");
     }

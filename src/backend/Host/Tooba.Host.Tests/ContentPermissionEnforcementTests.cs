@@ -173,7 +173,7 @@ public sealed class ContentPermissionEnforcementTests
     }
 
     [Fact]
-    public async Task Unavailable_capability_fail_opens_like_support()
+    public async Task Unavailable_capability_fail_closes_with_503()
     {
         var tenant = CurrentTenant();
         var adapter = new InMemoryAuthorizationAdapter(
@@ -196,16 +196,28 @@ public sealed class ContentPermissionEnforcementTests
             "test-unavailable",
             new AuthorizationInstrumentation());
 
-        var actor = await ContentAdminAccess.RequireAsync(
-            Request(AdminActor),
-            new CurrentAuthenticatedSession(),
-            tenant,
-            new AuthorizationGuard(adapter),
-            new StubEnvironment(),
-            unavailable,
-            ContentAdminAccess.Edit,
-            CancellationToken.None);
-        Assert.Equal(AdminActor, actor);
+        foreach (var permission in new[]
+                 {
+                     ContentAdminAccess.Create,
+                     ContentAdminAccess.Edit,
+                     ContentAdminAccess.Publish,
+                 })
+        {
+            var denied = await Assert.ThrowsAsync<PlatformHttpException>(() =>
+                ContentAdminAccess.RequireAsync(
+                    Request(AdminActor),
+                    new CurrentAuthenticatedSession(),
+                    tenant,
+                    new AuthorizationGuard(adapter),
+                    new StubEnvironment(),
+                    unavailable,
+                    permission,
+                    CancellationToken.None));
+            Assert.Equal(503, denied.StatusCode);
+            Assert.Equal("admin.authorization.unavailable", denied.ErrorCode);
+            Assert.Equal("سرویس مجوز در دسترس نیست.", denied.Title);
+            Assert.DoesNotContain(permission, denied.Title, StringComparison.Ordinal);
+        }
     }
 
     private static async Task<(
