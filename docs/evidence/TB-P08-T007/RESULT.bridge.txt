@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T007
+
+Parent-Task:
+TB-P08-T006
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+52ddf4ce-9087-4d05-9698-e3ae4daf038a
+
+Summary:
+Hardened Article Admin CRUD UX: dedicated /admin/content/articles/new route (no modal), explicit VIEW/EDIT with read-only body in VIEW, Save/Cancel with dirty discard, list View/Edit/Delete/Archive actions, backend delete (Draft only) and archive (Published) with public route exclusion. USER_VISUAL_ACCEPTED=NO.
+
+Create-Route:
+/admin/content/articles/new language-first; CTA navigates via Link; no create modal.
+
+View-Mode:
+useAdminFormMode default view; body rendered read-only HTML; no Save; Edit action when not archived.
+
+Edit-Mode:
+?mode=edit opens edit; Save/Cancel; markDirty; returns to VIEW after save.
+
+Article-List-Actions:
+View -> workspace; Edit -> ?mode=edit; Delete (Draft); Archive (Published); publish/unpublish preserved.
+
+Delete-Archive-Policy:
+ContentArticleLifecycleRules + Archived status; DeleteDraftAsync Draft only; ArchiveAsync Published only; gallery rows removed on delete not DAM assets.
+
+Destructive-UX:
+Confirm dialogs with title and consequence; labels حذف vs بایگانی; destructive styling separated.
+
+Backend-Safety:
+DELETE /v1/admin/content/articles/{id}; POST /archive; error codes content.article.delete_not_allowed etc.
+
+Public-Route-Effect:
+Archived excluded from PubliclyVisibleArticles; lifecycle test verifies slug lookup null after archive.
+
+Permissions:
+AdminPanelAccess on endpoints; UI hides edit/archive/delete by status policy.
+
+Visual-Consistency:
+AppDataGrid layout preserved; RTL/LTR editor direction; destructive buttons in header.
+
+Focused-Validation:
+dotnet build PASS; ContentArticleLifecycleTests PASS; FE crud contract 5/5; recovery guard 3/3.
+
+Smoke-Check:
+Not run.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T006; last implementation TB-P08-T007; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=PLACEHOLDER
+origin/main=PLACEHOLDER
+HEAD==origin/main
+
+Architectural-Concerns:
+window.confirm for destructive flows (matches grid pattern); archived articles remain in admin grid.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

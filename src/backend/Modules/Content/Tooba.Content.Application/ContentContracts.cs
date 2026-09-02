@@ -122,4 +122,10 @@ public interface IContentDirectory
 
     /// <summary>مقاله را از انتشار خارج می‌کند.</summary>
     Task<AdminArticleSnapshot> UnpublishAsync(Guid articleId, CancellationToken cancellationToken);
+
+    /// <summary>مقاله را بایگانی می‌کند.</summary>
+    Task<AdminArticleSnapshot> ArchiveAsync(Guid articleId, CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نویس را حذف دائمی می‌کند (فقط Draft).</summary>
+    Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken);
 }

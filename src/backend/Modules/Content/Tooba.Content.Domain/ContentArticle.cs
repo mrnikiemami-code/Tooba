@@ -9,6 +9,8 @@ public enum ContentPublicationStatus
     Draft = 0,
     /// <summary>منتشرشده برای نمایش عمومی.</summary>
     Published = 1,
+    /// <summary>بایگانی — غیرقابل نمایش عمومی.</summary>
+    Archived = 2,
 }
 
 /// <summary>مقالهٔ تحریری برای ریل خانه و مسیرهای عمومی تجاری.</summary>
@@ -198,6 +200,8 @@ public sealed class ContentArticle
     /// <summary>مقاله را برای نمایش عمومی منتشر می‌کند.</summary>
     public void Publish(DateTimeOffset now)
     {
+        if (Status == ContentPublicationStatus.Archived)
+            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Published;
         UpdatedAt = now;
     }
@@ -205,7 +209,18 @@ public sealed class ContentArticle
     /// <summary>مقاله را از انتشار خارج و به Draft برمی‌گرداند.</summary>
     public void Unpublish(DateTimeOffset now)
     {
+        if (Status == ContentPublicationStatus.Archived)
+            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
         Status = ContentPublicationStatus.Draft;
+        UpdatedAt = now;
+    }
+
+    /// <summary>مقاله را بایگانی می‌کند — دیگر عمومی نیست.</summary>
+    public void Archive(DateTimeOffset now)
+    {
+        if (Status == ContentPublicationStatus.Archived)
+            throw new InvalidOperationException(ContentArticleErrorCodes.AlreadyArchived);
+        Status = ContentPublicationStatus.Archived;
         UpdatedAt = now;
     }
 
@@ -279,4 +294,10 @@ public static class ContentArticleErrorCodes
     public const string UnsafeBodyMedia = "content.article.unsafe_body_media";
     /// <summary>دارایی رسانه یافت نشد.</summary>
     public const string MediaNotFound = "content.article.media_not_found";
+    /// <summary>حذف دائمی برای این مقاله مجاز نیست.</summary>
+    public const string DeleteNotAllowed = "content.article.delete_not_allowed";
+    /// <summary>مقاله قبلاً بایگانی شده است.</summary>
+    public const string AlreadyArchived = "content.article.already_archived";
+    /// <summary>بایگانی برای این مقاله مجاز نیست.</summary>
+    public const string ArchiveNotAllowed = "content.article.archive_not_allowed";
 }

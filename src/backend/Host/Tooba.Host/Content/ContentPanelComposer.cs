@@ -101,4 +101,12 @@ public sealed class ContentPanelComposer
     /// <summary>خارج‌کردن از انتشار.</summary>
     public Task<AdminArticleSnapshot> UnpublishAsync(Guid articleId, CancellationToken cancellationToken) =>
         _content.UnpublishAsync(articleId, cancellationToken);
+
+    /// <summary>بایگانی مقاله.</summary>
+    public Task<AdminArticleSnapshot> ArchiveAsync(Guid articleId, CancellationToken cancellationToken) =>
+        _content.ArchiveAsync(articleId, cancellationToken);
+
+    /// <summary>حذف پیش‌نویس.</summary>
+    public Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken) =>
+        _content.DeleteDraftAsync(articleId, cancellationToken);
 }

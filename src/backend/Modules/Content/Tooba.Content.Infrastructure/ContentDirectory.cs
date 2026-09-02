@@ -242,6 +242,33 @@ public sealed class ContentDirectory : IContentDirectory
         return MapAdmin(article);
     }
 
+    /// <inheritdoc />
+    public async Task<AdminArticleSnapshot> ArchiveAsync(Guid articleId, CancellationToken cancellationToken)
+    {
+        var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
+            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        if (!ContentArticleLifecycleRules.CanArchive(article.Status))
+            throw new InvalidOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
+        article.Archive(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        return MapAdmin(article);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken)
+    {
+        var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
+            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        if (!ContentArticleLifecycleRules.CanHardDelete(article.Status))
+            throw new InvalidOperationException(ContentArticleErrorCodes.DeleteNotAllowed);
+
+        var gallery = await _db.ArticleMedia.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
+        if (gallery.Count > 0)
+            _db.ArticleMedia.RemoveRange(gallery);
+        _db.Articles.Remove(article);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
     internal static PublishedArticleItem MapPublished(ContentArticle article, bool includeBody) => new(
         article.ArticleId,
         article.Slug,

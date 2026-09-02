@@ -302,6 +302,56 @@ export async function unpublishAdminArticle(articleId: string): Promise<boolean>
   }
 }
 
+/** وضعیت منتشرشده. */
+export function isArticlePublished(status: string): boolean {
+  return status === "Published" || status === "1";
+}
+
+/** وضعیت بایگانی. */
+export function isArticleArchived(status: string): boolean {
+  return status === "Archived" || status === "2";
+}
+
+/** حذف دائمی فقط برای پیش‌نویس. */
+export function canHardDeleteArticle(status: string): boolean {
+  return status === "Draft" || status === "0";
+}
+
+/** بایگانی برای مقالهٔ منتشرشده. */
+export function canArchiveArticle(status: string): boolean {
+  return isArticlePublished(status);
+}
+
+export async function deleteAdminArticle(articleId: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(`/v1/admin/content/articles/${encodeURIComponent(articleId)}`, {
+      method: "DELETE",
+      headers: adminHeaders(),
+    });
+    if (response.ok) return { ok: true };
+    const payload = await response.json().catch(() => null);
+    const root = recordOf(payload);
+    return { ok: false, message: text(root?.errorCode ?? root?.detail, `delete-http-${response.status}`) };
+  } catch {
+    return { ok: false, message: "host-unreachable" };
+  }
+}
+
+export async function archiveAdminArticle(articleId: string): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const response = await fetch(`/v1/admin/content/articles/${encodeURIComponent(articleId)}/archive`, {
+      method: "POST",
+      headers: adminHeaders(true),
+    });
+    if (response.ok) return { ok: true };
+    const payload = await response.json().catch(() => null);
+    const root = recordOf(payload);
+    return { ok: false, message: text(root?.errorCode ?? root?.detail, `archive-http-${response.status}`) };
+  } catch {
+    return { ok: false, message: "host-unreachable" };
+  }
+}
+
 export async function loadAdminArticle(articleId: string): Promise<AdminResult<AdminContentArticle>> {
   try {
     const response = await fetch(`/v1/admin/content/articles/${encodeURIComponent(articleId)}`, {

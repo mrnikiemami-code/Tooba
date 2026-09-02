@@ -28,6 +28,7 @@ test("content article admin workspace uses TipTap, tabs, and DAM", () => {
 test("content list links to language-first create and article workspace edit", () => {
   assert.match(list, /\/admin\/content\/articles\/new/);
   assert.match(list, /\/admin\/content\/articles\/\$\{/);
+  assert.match(list, /\?mode=edit/);
   assert.match(list, /formatArticleLocaleLabel/);
   assert.doesNotMatch(list, /showCreate/);
   assert.match(newScreen, /LANGUAGE_OPTIONS/);

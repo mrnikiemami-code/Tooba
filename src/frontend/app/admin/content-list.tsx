@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Pencil, Upload, Undo2 } from "lucide-react";
+import { Archive, Eye, Pencil, Trash2, Upload, Undo2 } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import {
   AppDataGrid,
@@ -22,6 +22,12 @@ import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-syste
 import type { GridServerQuery } from "../../design-system/data-grid";
 import {
   formatArticleLocaleLabel,
+  canArchiveArticle,
+  canHardDeleteArticle,
+  archiveAdminArticle,
+  deleteAdminArticle,
+  isArticleArchived,
+  isArticlePublished,
   publishAdminArticle,
   queryAdminContentArticlesGrid,
   unpublishAdminArticle,
@@ -47,16 +53,20 @@ function applyContentGridFilterHeader<T>(colDef: ColDef<T>): ColDef<T> {
 }
 
 function isPublished(status: string): boolean {
-  return status === "Published" || status === "1";
+  return isArticlePublished(status);
 }
 
 function contentStatusClass(status: string): string {
+  if (isArticleArchived(status)) {
+    return "inline-flex rounded-full bg-muted/20 px-2.5 py-1 text-xs font-medium text-muted";
+  }
   return isPublished(status)
     ? "inline-flex rounded-full bg-success/15 px-2.5 py-1 text-xs font-medium text-success"
     : "inline-flex rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning";
 }
 
 function contentStatusLabel(status: string): string {
+  if (isArticleArchived(status)) return "بایگانی";
   return isPublished(status) ? "منتشر" : "پیش‌نویس";
 }
 
@@ -97,22 +107,46 @@ function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
 
 function buildContentRowActions(
   onPublishToggle: (articleId: string, published: boolean) => Promise<void>,
+  onDelete: (row: AdminContentArticle) => Promise<void>,
+  onArchive: (row: AdminContentArticle) => Promise<void>,
 ): AppGridRowAction<AdminContentArticle>[] {
   return [
-    {
-      id: "edit",
-      label: "ویرایش",
-      icon: Pencil,
-      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}`,
-      testId: (row) => `admin-content-edit-${row.articleId}`,
-    },
     {
       id: "view",
       label: "مشاهده",
       icon: Eye,
-      href: (row) => `/blogs/${encodeURIComponent(row.slug)}`,
+      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}`,
       testId: (row) => `admin-content-view-${row.articleId}`,
-      visible: (row) => isPublished(row.status),
+    },
+    {
+      id: "edit",
+      label: "ویرایش",
+      icon: Pencil,
+      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}?mode=edit`,
+      testId: (row) => `admin-content-edit-${row.articleId}`,
+      visible: (row) => !isArticleArchived(row.status),
+    },
+    {
+      id: "delete",
+      label: "حذف",
+      icon: Trash2,
+      variant: "destructive",
+      confirm: (row) =>
+        `حذف دائمی «${row.title}»؟ این عمل قابل بازگشت نیست.`,
+      onClick: (row) => onDelete(row),
+      testId: (row) => `admin-content-delete-${row.articleId}`,
+      visible: (row) => canHardDeleteArticle(row.status),
+    },
+    {
+      id: "archive",
+      label: "بایگانی",
+      icon: Archive,
+      variant: "destructive",
+      confirm: (row) =>
+        `بایگانی «${row.title}»؟ دیگر به‌صورت عمومی در دسترس نخواهد بود.`,
+      onClick: (row) => onArchive(row),
+      testId: (row) => `admin-content-archive-${row.articleId}`,
+      visible: (row) => canArchiveArticle(row.status),
     },
     {
       id: "publish",
@@ -121,7 +155,7 @@ function buildContentRowActions(
       confirm: (row) => `انتشار «${row.title}»؟`,
       onClick: (row) => onPublishToggle(row.articleId, false),
       testId: (row) => `admin-content-publish-${row.articleId}`,
-      visible: (row) => !isPublished(row.status),
+      visible: (row) => !isPublished(row.status) && !isArticleArchived(row.status),
     },
     {
       id: "unpublish",
@@ -193,9 +227,9 @@ function buildColumnDefs(
     }),
     buildPinnedActionsColumnDef<AdminContentArticle>({
       direction: "rtl",
-      actionSlots: 4,
-      width: 168,
-      minWidth: 148,
+      actionSlots: 5,
+      width: 200,
+      minWidth: 180,
       maxWidth: 200,
       cellRenderer: (params: ICellRendererParams<AdminContentArticle>) =>
         params.data ? <AppGridRowActionsCell row={params.data} actions={rowActions} /> : null,
@@ -206,6 +240,7 @@ function buildColumnDefs(
 const CONTENT_STATUS_FILTER_OPTIONS = [
   { value: "Published", label: "منتشر" },
   { value: "Draft", label: "پیش‌نویس" },
+  { value: "Archived", label: "بایگانی" },
 ] as const;
 
 const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
@@ -218,6 +253,7 @@ const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
     enumOptions: [
       { value: "Published", label: "منتشر" },
       { value: "Draft", label: "پیش‌نویس" },
+      { value: "Archived", label: "بایگانی" },
     ],
   },
   { id: "locale", header: "زبان", filterKind: "text" },
@@ -243,7 +279,22 @@ export function AdminContentScreen() {
     refresh();
   }, [refresh]);
 
-  const rowActions = useMemo(() => buildContentRowActions(onPublishToggle), [onPublishToggle]);
+  const onDelete = useCallback(async (row: AdminContentArticle) => {
+    const result = await deleteAdminArticle(row.articleId);
+    if (!result.ok) throw new Error(result.message ?? "حذف ناموفق بود");
+    refresh();
+  }, [refresh]);
+
+  const onArchive = useCallback(async (row: AdminContentArticle) => {
+    const result = await archiveAdminArticle(row.articleId);
+    if (!result.ok) throw new Error(result.message ?? "بایگانی ناموفق بود");
+    refresh();
+  }, [refresh]);
+
+  const rowActions = useMemo(
+    () => buildContentRowActions(onPublishToggle, onDelete, onArchive),
+    [onArchive, onDelete, onPublishToggle],
+  );
   const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
   const queryAdapter = useCallback(

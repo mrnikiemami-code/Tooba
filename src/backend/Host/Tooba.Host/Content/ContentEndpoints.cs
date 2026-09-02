@@ -23,6 +23,8 @@ public static class ContentEndpoints
         admin.MapPut("/articles/{id:guid}", AdminUpdateAsync);
         admin.MapPost("/articles/{id:guid}/publish", AdminPublishAsync);
         admin.MapPost("/articles/{id:guid}/unpublish", AdminUnpublishAsync);
+        admin.MapPost("/articles/{id:guid}/archive", AdminArchiveAsync);
+        admin.MapDelete("/articles/{id:guid}", AdminDeleteAsync);
     }
 
     private static IResult ToError(PlatformHttpException ex) =>
@@ -151,6 +153,8 @@ public static class ContentEndpoints
         {
             var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
             var localeLocked = ex.Message.Contains(ContentArticleErrorCodes.LocaleLocked, StringComparison.Ordinal);
+            var archived = ex.Message.Contains(ContentArticleErrorCodes.AlreadyArchived, StringComparison.Ordinal)
+                || ex.Message.Contains(ContentArticleErrorCodes.ArchiveNotAllowed, StringComparison.Ordinal);
             return Results.Json(
                 new
                 {
@@ -159,7 +163,9 @@ public static class ContentEndpoints
                         ? "content.article.missing"
                         : localeLocked
                             ? ContentArticleErrorCodes.LocaleLocked
-                            : "content.update.rejected",
+                            : archived
+                                ? ContentArticleErrorCodes.ArchiveNotAllowed
+                                : "content.update.rejected",
                     detail = ex.Message,
                 },
                 statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
@@ -188,6 +194,53 @@ public static class ContentEndpoints
         CancellationToken cancellationToken) =>
         await AdminLifecycleAsync(id, composer, request, session, tenant, guard, environment, cancellationToken, composer.UnpublishAsync);
 
+    private static async Task<IResult> AdminArchiveAsync(
+        Guid id,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        await AdminLifecycleAsync(id, composer, request, session, tenant, guard, environment, cancellationToken, composer.ArchiveAsync);
+
+    private static async Task<IResult> AdminDeleteAsync(
+        Guid id,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(request, session, tenant, guard, environment, cancellationToken);
+            await composer.DeleteDraftAsync(id, cancellationToken);
+            return Results.NoContent();
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            var notFound = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+            var notAllowed = ex.Message.Contains(ContentArticleErrorCodes.DeleteNotAllowed, StringComparison.Ordinal);
+            return Results.Json(
+                new
+                {
+                    title = notFound ? "Not Found" : "Bad Request",
+                    errorCode = notFound
+                        ? "content.article.missing"
+                        : notAllowed
+                            ? ContentArticleErrorCodes.DeleteNotAllowed
+                            : "content.delete.rejected",
+                    detail = ex.Message,
+                },
+                statusCode: notFound ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
+        }
+    }
+
     private static async Task<IResult> AdminLifecycleAsync(
         Guid id,
         ContentPanelComposer composer,
@@ -205,8 +258,18 @@ public static class ContentEndpoints
             return Results.Json(await action(id, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+            if (missing)
+                return Results.Json(new { title = "Not Found", errorCode = "content.article.missing" }, statusCode: StatusCodes.Status404NotFound);
+            if (ex.Message.Contains(ContentArticleErrorCodes.AlreadyArchived, StringComparison.Ordinal)
+                || ex.Message.Contains(ContentArticleErrorCodes.ArchiveNotAllowed, StringComparison.Ordinal))
+            {
+                return Results.Json(
+                    new { title = "Bad Request", errorCode = ContentArticleErrorCodes.ArchiveNotAllowed, detail = ex.Message },
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
             return Results.Json(new { title = "Not Found", errorCode = "content.article.missing" }, statusCode: StatusCodes.Status404NotFound);
         }
     }
