@@ -84,7 +84,7 @@ public sealed class StorefrontComposer
             .Take(12)
             .ToList();
         var featuredReviews = await BuildFeaturedReviewsAsync(cancellationToken);
-        var latestArticles = await BuildLatestArticlesAsync(cancellationToken);
+        var latestArticles = await BuildLatestArticlesAsync("fa-IR", cancellationToken);
         return new StorefrontHomePage(
             categories,
             listing.Products.Take(24).ToList(),
@@ -123,9 +123,11 @@ public sealed class StorefrontComposer
     /// <summary>
     /// مقالات Published اخیر را برای ریل خانه می‌خواند.
     /// </summary>
-    private async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<StorefrontArticleItem>> BuildLatestArticlesAsync(
+        string locale,
+        CancellationToken cancellationToken)
     {
-        var articles = await _content.ListPublishedForHomeAsync(6, cancellationToken);
+        var articles = await _content.ListPublishedForHomeAsync(6, locale, cancellationToken);
         return articles.Select(article => new StorefrontArticleItem(
             article.ArticleId.ToString("N"),
             article.Slug,

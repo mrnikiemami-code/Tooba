@@ -93,9 +93,9 @@ public sealed class ContentFoundationTests : IAsyncLifetime
             CancellationToken.None);
 
         Assert.Equal(ContentPublicationStatus.Draft, draft.Status);
-        Assert.Null(await directory.GetPublishedBySlugAsync("draft-guide", null, CancellationToken.None));
-        Assert.Empty((await directory.ListPublishedAsync(1, 20, null, CancellationToken.None)).Items);
-        Assert.Empty(await directory.ListPublishedForHomeAsync(6, CancellationToken.None));
+        Assert.Null(await directory.GetPublishedBySlugAsync("draft-guide", ContentArticle.DefaultLocale, CancellationToken.None));
+        Assert.Empty((await directory.ListPublishedAsync(1, 20, null, null, CancellationToken.None)).Items);
+        Assert.Empty(await directory.ListPublishedForHomeAsync(6, null, CancellationToken.None));
 
         var published = await directory.PublishAsync(draft.ArticleId, CancellationToken.None);
         Assert.Equal(ContentPublicationStatus.Published, published.Status);
@@ -106,17 +106,17 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         Assert.Equal("SEO پیش‌نویس", bySlug.SeoTitle);
         Assert.Equal("راهنما", bySlug.Category);
 
-        var listed = await directory.ListPublishedAsync(1, 20, "راهنما", CancellationToken.None);
+        var listed = await directory.ListPublishedAsync(1, 20, "راهنما", ContentArticle.DefaultLocale, CancellationToken.None);
         Assert.Single(listed.Items);
         Assert.Null(listed.Items[0].Body);
 
-        var home = await directory.ListPublishedForHomeAsync(6, CancellationToken.None);
+        var home = await directory.ListPublishedForHomeAsync(6, ContentArticle.DefaultLocale, CancellationToken.None);
         Assert.Single(home);
         Assert.Equal("draft-guide", home[0].Slug);
 
         await directory.UnpublishAsync(draft.ArticleId, CancellationToken.None);
-        Assert.Null(await directory.GetPublishedBySlugAsync("draft-guide", null, CancellationToken.None));
-        Assert.Empty(await directory.ListPublishedForHomeAsync(6, CancellationToken.None));
+        Assert.Null(await directory.GetPublishedBySlugAsync("draft-guide", ContentArticle.DefaultLocale, CancellationToken.None));
+        Assert.Empty(await directory.ListPublishedForHomeAsync(6, ContentArticle.DefaultLocale, CancellationToken.None));
 
         await directory.CreateAsync(
             new CreateArticleCommand(
@@ -129,12 +129,30 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                 [],
                 false,
                 now,
-                null,
+                ContentArticle.DefaultLocale,
                 null,
                 null,
                 null,
                 null),
             CancellationToken.None);
+        var enArticle = await directory.CreateAsync(
+            new CreateArticleCommand(
+                "unique-slug",
+                "English title",
+                "English excerpt",
+                "English body",
+                null,
+                author.Id,
+                [],
+                false,
+                now,
+                "en-US",
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+        Assert.Equal("unique-slug", enArticle.Slug);
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             directory.CreateAsync(
                 new CreateArticleCommand(
@@ -147,7 +165,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
                     [],
                     false,
                     now,
-                    null,
+                    ContentArticle.DefaultLocale,
                     null,
                     null,
                     null,

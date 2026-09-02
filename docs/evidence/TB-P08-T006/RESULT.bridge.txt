@@ -1,0 +1,94 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P08-T006
+
+Parent-Task:
+TB-P08-T005
+
+Channel:
+tooba-main
+
+Status:
+PASS
+
+Worker:
+tooba-worker-01
+
+Bridge-UUID:
+a25b7a76-0aec-4718-ba63-759476f8eb49
+
+Summary:
+Implemented locale-scoped public Article routing/SEO: /fa|en/blogs/{slug} with locale+slug lookup, PublishDate scheduling gate, slug uniqueness per locale, canonical paths from backend, sitemap per-locale entries without fake hreflang, FE wired localeToContentApi. No category/author public routes (deferred). USER_VISUAL_ACCEPTED=NO.
+
+Routing-Discovery:
+Reused middleware locale prefixes, /blogs routes, /v1/content/articles API, existing sitemap.ts and metadata helpers; no parallel router.
+
+Article-Route:
+ContentArticleSeoRules.BuildPublicPath; GetPublishedBySlug requires locale+slug; blog detail notFound on mismatch.
+
+Slug-Policy:
+Migration ix_articles_slug_locale unique (slug, locale); same slug allowed fa-IR/en-US; duplicate throws per locale.
+
+Independent-Publication:
+Publish/unpublish unchanged — per ArticleId only; public tests verify fa unpublish does not hide en.
+
+Scheduling:
+ContentArticlePublicRules.IsPubliclyVisible — Published AND PublishDate<=UtcNow; future scheduled hidden while Published.
+
+SEO-Reuse:
+Existing metadata/openGraph on blog pages; seoTitle/seoDescription/effective SEO image from T005 fields on detail.
+
+Canonical:
+PublishedArticleItem.CanonicalPath; generateMetadata self-canonical per active locale prefix.
+
+Alternates-Hreflang:
+No inferred article hreflang; sitemap article entries single-locale only; list page keeps fa/en shell alternates.
+
+Category-Routing:
+Deferred — no public category route exists; admin-only categories unchanged.
+
+Author-Routing:
+Deferred — no public author route; admin-only authors unchanged.
+
+Sitemap:
+Per-locale fetch /v1/content/articles?locale=; emit canonicalPath only; excludes drafts/scheduled-before-time via API filter.
+
+Indexability:
+Draft/unpublished/scheduled-before-time return 404; robots index:false on missing article metadata.
+
+Structured-Data:
+Not added — existing product JSON-LD pattern not extended; documented future enhancement.
+
+Routing-Bootstrap:
+SUPPORTED_LOCALE_DEFINITIONS remains route-shell fallback; API validates DB-backed locale on create; new url prefix still requires deploy.
+
+Query-Performance:
+ix_articles_locale_slug + slug_locale unique; public queries filter status+publishDate+locale in DB.
+
+Focused-Validation:
+dotnet build PASS; ContentArticlePublicRoutingTests PASS; ContentFoundationTests PASS; FE blogs-public-routing 5/5; recovery guard 3/3.
+
+Smoke-Check:
+Not run; routes /fa/blogs/{slug} and /en/blogs/{slug} ready with locale query.
+
+Recovery-SoT:
+P08; last accepted TB-P08-T005; last implementation TB-P08-T006; USER_VISUAL_ACCEPTED=NO.
+
+Git:
+HEAD=PLACEHOLDER
+origin/main=PLACEHOLDER
+HEAD==origin/main
+
+Architectural-Concerns:
+Storefront home articles still default fa-IR; no explicit alternate-content relation for hreflang; category/author public pages deferred.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; blog UI copy still Persian-heavy on listing.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

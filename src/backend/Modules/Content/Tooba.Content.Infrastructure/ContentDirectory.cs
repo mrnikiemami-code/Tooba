@@ -32,12 +32,19 @@ public sealed class ContentDirectory : IContentDirectory
         int page,
         int pageSize,
         string? category,
+        string? locale,
         CancellationToken cancellationToken)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 50);
-        var query = _db.Articles.AsNoTracking()
-            .Where(article => article.Status == ContentPublicationStatus.Published);
+        var utcNow = DateTimeOffset.UtcNow;
+        var query = PubliclyVisibleArticles(utcNow);
+        if (!string.IsNullOrWhiteSpace(locale))
+        {
+            var normalizedLocale = locale.Trim();
+            query = query.Where(article => article.Locale == normalizedLocale);
+        }
+
         if (!string.IsNullOrWhiteSpace(category))
         {
             var normalized = category.Trim();
@@ -64,28 +71,36 @@ public sealed class ContentDirectory : IContentDirectory
         string? locale,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(slug)) return null;
+        if (string.IsNullOrWhiteSpace(slug) || string.IsNullOrWhiteSpace(locale))
+        {
+            return null;
+        }
+
         var normalizedSlug = slug.Trim().ToLowerInvariant();
-        var query = _db.Articles.AsNoTracking()
-            .Where(article =>
-                article.Status == ContentPublicationStatus.Published
-                && article.Slug == normalizedSlug);
+        var normalizedLocale = locale.Trim();
+        var utcNow = DateTimeOffset.UtcNow;
+        var article = await PubliclyVisibleArticles(utcNow)
+            .Where(row => row.Slug == normalizedSlug && row.Locale == normalizedLocale)
+            .FirstOrDefaultAsync(cancellationToken);
+        return article is null ? null : MapPublished(article, includeBody: true);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PublishedArticleItem>> ListPublishedForHomeAsync(
+        int limit,
+        string? locale,
+        CancellationToken cancellationToken)
+    {
+        limit = Math.Clamp(limit, 1, 12);
+        var utcNow = DateTimeOffset.UtcNow;
+        var query = PubliclyVisibleArticles(utcNow);
         if (!string.IsNullOrWhiteSpace(locale))
         {
             var normalizedLocale = locale.Trim();
             query = query.Where(article => article.Locale == normalizedLocale);
         }
 
-        var article = await query.FirstOrDefaultAsync(cancellationToken);
-        return article is null ? null : MapPublished(article, includeBody: true);
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<PublishedArticleItem>> ListPublishedForHomeAsync(int limit, CancellationToken cancellationToken)
-    {
-        limit = Math.Clamp(limit, 1, 12);
-        var rows = await _db.Articles.AsNoTracking()
-            .Where(article => article.Status == ContentPublicationStatus.Published)
+        var rows = await query
             .OrderByDescending(article => article.PublishDate)
             .ThenBy(article => article.ArticleId)
             .Take(limit)
@@ -126,10 +141,14 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var now = DateTimeOffset.UtcNow;
         var slug = command.Slug.Trim().ToLowerInvariant();
-        if (await _db.Articles.AnyAsync(article => article.Slug == slug, cancellationToken))
-            throw new InvalidOperationException("slug مقاله تکراری است.");
-
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? ContentArticle.DefaultLocale : command.Locale.Trim();
+        if (await _db.Articles.AnyAsync(
+                article => article.Slug == slug && article.Locale == locale,
+                cancellationToken))
+        {
+            throw new InvalidOperationException("slug مقاله تکراری است.");
+        }
+
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
         await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
         await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAssignment: true, cancellationToken);
@@ -239,7 +258,9 @@ public sealed class ContentDirectory : IContentDirectory
         article.Category,
         article.CategoryId,
         article.AuthorId,
-        article.Locale);
+        article.Locale,
+        article.ResolveEffectiveSeoImageId(),
+        ContentArticleSeoRules.BuildPublicPath(article.Locale, article.Slug));
 
     internal static AdminArticleSnapshot MapAdmin(ContentArticle article) => new(
         article.ArticleId,
@@ -262,6 +283,12 @@ public sealed class ContentDirectory : IContentDirectory
         article.PublishDate,
         article.CreatedAt,
         article.UpdatedAt);
+
+    private IQueryable<ContentArticle> PubliclyVisibleArticles(DateTimeOffset utcNow) =>
+        _db.Articles.AsNoTracking()
+            .Where(article =>
+                article.Status == ContentPublicationStatus.Published
+                && article.PublishDate <= utcNow);
 
     private async Task<string?> ResolveCategoryLabelAsync(
         Guid? categoryId,

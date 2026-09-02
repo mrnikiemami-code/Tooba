@@ -10,10 +10,12 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import {
   contentCoverUrl,
-  formatContentDate,
+  formatArticleDate,
   loadPublishedArticles,
   type ContentArticleCard,
 } from "../content/content-api";
+import { useLocale } from "../../lib/i18n/locale-context.tsx";
+import { localeToContentApi } from "../../lib/i18n/routing.ts";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 
 const ACCENT = "#2563EB";
@@ -68,7 +70,7 @@ function BlogSlider({ posts }: { posts: ContentArticleCard[] }) {
   );
 }
 
-function PostCard({ post }: { post: ContentArticleCard }) {
+function PostCard({ post, contentLocale }: { post: ContentArticleCard; contentLocale: string }) {
   return (
     <Link href={`/blogs/${post.slug}`} className="group block h-full">
       <article className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
@@ -92,7 +94,7 @@ function PostCard({ post }: { post: ContentArticleCard }) {
             <span className="line-clamp-1">{post.authorDisplayName}</span>
             <span>•</span>
             <Calendar className="w-2.5 h-2.5" />
-            <span>{formatContentDate(post.publishDate)}</span>
+            <span>{formatArticleDate(post.publishDate, contentLocale)}</span>
           </div>
           <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-[#2563EB] transition-colors">{post.title}</h3>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2 flex-1">{post.excerpt}</p>
@@ -107,6 +109,8 @@ function PostCard({ post }: { post: ContentArticleCard }) {
 
 /** فهرست زندهٔ بلاگ — ساختار Shopeiva blogsUi با داده Host. */
 export function BlogsListingClient() {
+  const locale = useLocale();
+  const contentLocale = localeToContentApi(locale);
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<ContentArticleCard[]>([]);
   const [total, setTotal] = useState(0);
@@ -115,12 +119,12 @@ export function BlogsListingClient() {
 
   useEffect(() => {
     setLoading(true);
-    void loadPublishedArticles(page, 12, category || undefined).then((result) => {
+    void loadPublishedArticles(page, 12, category || undefined, contentLocale).then((result) => {
       setItems(result.items);
       setTotal(result.totalCount);
       setLoading(false);
     });
-  }, [page, category]);
+  }, [page, category, contentLocale]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -150,7 +154,7 @@ export function BlogsListingClient() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((post) => <PostCard key={post.articleId} post={post} />)}
+          {items.map((post) => <PostCard key={post.articleId} post={post} contentLocale={contentLocale} />)}
         </div>
       )}
       {total > 12 ? (

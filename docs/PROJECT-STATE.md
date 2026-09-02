@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T004
+TB-P08-T005
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T005
+TB-P08-T006
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T006 — Content SEO + Publication + Locale Routing (public blog routes, scheduling, sitemap)
 TB-P08-T005 — Article Media DAM (inline editor, gallery, featured, SEO image)
 TB-P08-T004 — Article Editor Workspace (language-first create, TipTap body, tabs, locale lock)
 TB-P08-T003 — Content Author management (public profiles, DAM, Article relation)

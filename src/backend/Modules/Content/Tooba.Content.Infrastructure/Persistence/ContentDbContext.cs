@@ -51,7 +51,8 @@ public sealed class ContentDbContext : DbContext
             entity.Property(x => x.AuthorDisplayName).HasMaxLength(ContentArticle.AuthorDisplayNameMaxLength).IsRequired();
             entity.Property(x => x.TagsCsv).HasMaxLength(256);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
-            entity.HasIndex(x => x.Slug).IsUnique();
+            entity.HasIndex(x => new { x.Slug, x.Locale }).IsUnique();
+            entity.HasIndex(x => new { x.Locale, x.Slug });
             entity.HasIndex(x => new { x.Status, x.PublishDate });
             entity.HasIndex(x => new { x.Status, x.Category, x.PublishDate });
             entity.HasIndex(x => x.CategoryId);

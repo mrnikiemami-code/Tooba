@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "../lib/i18n/locale.ts";
-import { localePath } from "../lib/i18n/routing.ts";
+import { localePath, localeToContentApi } from "../lib/i18n/routing.ts";
 import { storefrontHostOrigin } from "./storefront/storefront-api.ts";
 
 const STATIC_INTERNAL_PATHS = [
@@ -27,7 +27,7 @@ async function fetchJson(path: string): Promise<unknown> {
   }
 }
 
-/** sitemap با URLهای locale-prefixed و hreflang واقعی fa/en. */
+/** sitemap — URLهای locale-prefixed؛ مقالات فقط در locale واقعی خود. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "http://127.0.0.1:3000";
   const entries: MetadataRoute.Sitemap = [];
@@ -64,21 +64,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  const articlesPayload = await fetchJson("/v1/content/articles?page=1&pageSize=50");
-  const articles = (articlesPayload as { items?: { slug?: string }[] } | null)?.items ?? [];
-  for (const article of articles) {
-    const slug = article?.slug;
-    if (!slug) continue;
-    const internal = `/blogs/${slug}`;
-    for (const locale of LOCALES) {
-      entries.push({
-        url: `${base}${localePath(locale, internal)}`,
-        alternates: {
-          languages: Object.fromEntries(
-            LOCALES.map((alt) => [alt === "fa" ? "fa-IR" : "en", `${base}${localePath(alt, internal)}`]),
-          ),
-        },
-      });
+  for (const locale of LOCALES) {
+    const contentLocale = localeToContentApi(locale);
+    const articlesPayload = await fetchJson(
+      `/v1/content/articles?page=1&pageSize=50&locale=${encodeURIComponent(contentLocale)}`,
+    );
+    const articles = (articlesPayload as { items?: { slug?: string; canonicalPath?: string }[] } | null)?.items ?? [];
+    for (const article of articles) {
+      const slug = article?.slug;
+      if (!slug) continue;
+      const path = article.canonicalPath ?? localePath(locale, `/blogs/${slug}`);
+      entries.push({ url: `${base}${path}` });
     }
   }
 

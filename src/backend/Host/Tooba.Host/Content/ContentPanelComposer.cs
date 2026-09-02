@@ -23,8 +23,9 @@ public sealed class ContentPanelComposer
         int page,
         int pageSize,
         string? category,
+        string? locale,
         CancellationToken cancellationToken) =>
-        _content.ListPublishedAsync(page, pageSize, category, cancellationToken);
+        _content.ListPublishedAsync(page, pageSize, category, locale, cancellationToken);
 
     /// <summary>جزئیات Published با slug.</summary>
     public Task<PublishedArticleItem?> GetPublishedBySlugAsync(

@@ -33,8 +33,9 @@ public static class ContentEndpoints
         int page = 1,
         int pageSize = 20,
         string? category = null,
+        string? locale = null,
         CancellationToken cancellationToken = default) =>
-        Results.Json(await composer.ListPublishedAsync(page, pageSize, category, cancellationToken));
+        Results.Json(await composer.ListPublishedAsync(page, pageSize, category, locale, cancellationToken));
 
     private static async Task<IResult> GetPublishedBySlugAsync(
         string slug,

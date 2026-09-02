@@ -22,7 +22,9 @@ public sealed record PublishedArticleItem(
     string? Category,
     Guid? CategoryId,
     Guid? AuthorId,
-    string Locale);
+    string Locale,
+    Guid? SeoImageMediaAssetId,
+    string? CanonicalPath);
 
 /// <summary>نمای کامل مدیریتی مقاله.</summary>
 public sealed record AdminArticleSnapshot(
@@ -83,11 +85,12 @@ public sealed record UpdateArticleCommand(
 /// <summary>قابلیت خواندن و مدیریت مقالات Content.</summary>
 public interface IContentDirectory
 {
-    /// <summary>صفحهٔ مقالات Published را با فیلتر اختیاری دسته برمی‌گرداند.</summary>
+    /// <summary>صفحهٔ مقالات Published را با فیلتر اختیاری دسته و locale برمی‌گرداند.</summary>
     Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
         int page,
         int pageSize,
         string? category,
+        string? locale,
         CancellationToken cancellationToken);
 
     /// <summary>جزئیات مقالهٔ Published را با slug و locale اختیاری برمی‌گرداند.</summary>
@@ -97,7 +100,10 @@ public interface IContentDirectory
         CancellationToken cancellationToken);
 
     /// <summary>جدیدترین مقالات Published را برای ریل خانه برمی‌گرداند.</summary>
-    Task<IReadOnlyList<PublishedArticleItem>> ListPublishedForHomeAsync(int limit, CancellationToken cancellationToken);
+    Task<IReadOnlyList<PublishedArticleItem>> ListPublishedForHomeAsync(
+        int limit,
+        string? locale,
+        CancellationToken cancellationToken);
 
     /// <summary>صفحهٔ همهٔ مقالات (admin) را برمی‌گرداند.</summary>
     Task<PagedResult<AdminArticleSnapshot>> ListAllAsync(int page, int pageSize, CancellationToken cancellationToken);

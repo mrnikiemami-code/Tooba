@@ -5,24 +5,24 @@ import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Calendar, User } from "lucide-react";
 import {
   contentCoverUrl,
-  formatContentDate,
+  formatArticleDate,
   loadPublishedArticleBySlug,
   type ContentArticleCard,
 } from "../../content/content-api";
 import { storefrontMediaUrl } from "../../storefront/storefront-api";
 
-/** جزئیات مقالهٔ زنده — ساختار سادهٔ Shopeiva detail با داده Host. */
-export function BlogDetailClient({ slug }: { slug: string }) {
+/** جزئیات مقالهٔ زنده — locale-aware lookup بدون fallback. */
+export function BlogDetailClient({ slug, contentLocale }: { slug: string; contentLocale: string }) {
   const [article, setArticle] = useState<ContentArticleCard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    void loadPublishedArticleBySlug(slug).then((row) => {
+    void loadPublishedArticleBySlug(slug, contentLocale).then((row) => {
       setArticle(row);
       setLoading(false);
     });
-  }, [slug]);
+  }, [slug, contentLocale]);
 
   if (loading) return <p className="p-6 text-sm text-gray-500">در حال بارگذاری مقاله…</p>;
   if (!article) {
@@ -51,7 +51,7 @@ export function BlogDetailClient({ slug }: { slug: string }) {
         <div className="space-y-4 p-5 md:p-8">
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
             <span className="inline-flex items-center gap-1"><User className="size-3.5" />{article.authorDisplayName}</span>
-            <span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{formatContentDate(article.publishDate)}</span>
+            <span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{formatArticleDate(article.publishDate, contentLocale)}</span>
             {article.category ? <span className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]">{article.category}</span> : null}
           </div>
           <h1 className="text-2xl font-black text-gray-900 md:text-3xl">{article.title}</h1>

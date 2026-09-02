@@ -20,6 +20,8 @@ export interface ContentArticleCard {
   seoTitle: string | null;
   seoDescription: string | null;
   category: string | null;
+  seoImageMediaAssetId: string | null;
+  canonicalPath: string | null;
   locale: string;
 }
 
@@ -115,6 +117,14 @@ export function mapContentArticle(value: unknown): ContentArticleCard | null {
       return id == null || id === "" ? null : text(id);
     })(),
     locale: text(prop(item, "locale", "Locale"), "fa-IR"),
+    seoImageMediaAssetId: (() => {
+      const id = prop(item, "seoImageMediaAssetId", "SeoImageMediaAssetId");
+      return id == null || id === "" ? null : text(id);
+    })(),
+    canonicalPath: (() => {
+      const path = prop(item, "canonicalPath", "CanonicalPath");
+      return path == null || path === "" ? null : text(path);
+    })(),
   };
 }
 
@@ -186,9 +196,15 @@ function contentBase(): string {
   return "";
 }
 
-export async function loadPublishedArticles(page = 1, pageSize = 12, category?: string): Promise<ContentArticlePage> {
+export async function loadPublishedArticles(
+  page = 1,
+  pageSize = 12,
+  category?: string,
+  locale?: string,
+): Promise<ContentArticlePage> {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (category) params.set("category", category);
+  if (locale) params.set("locale", locale);
   try {
     const response = await fetch(`${contentBase()}/v1/content/articles?${params}`, {
       headers: { Accept: "application/json" },
@@ -212,8 +228,8 @@ export async function loadPublishedArticles(page = 1, pageSize = 12, category?: 
   }
 }
 
-export async function loadPublishedArticleBySlug(slug: string, locale?: string): Promise<ContentArticleCard | null> {
-  const params = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+export async function loadPublishedArticleBySlug(slug: string, locale: string): Promise<ContentArticleCard | null> {
+  const params = `?locale=${encodeURIComponent(locale)}`;
   try {
     const response = await fetch(`${contentBase()}/v1/content/articles/${encodeURIComponent(slug)}${params}`, {
       headers: { Accept: "application/json" },
