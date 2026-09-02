@@ -24,7 +24,9 @@ public sealed record PublishedArticleItem(
     Guid? AuthorId,
     string Locale,
     Guid? SeoImageMediaAssetId,
-    string? CanonicalPath);
+    string? CanonicalPath,
+    string? CategorySlug = null,
+    string? AuthorSlug = null);
 
 /// <summary>نمای کامل مدیریتی مقاله.</summary>
 public sealed record AdminArticleSnapshot(
@@ -85,12 +87,14 @@ public sealed record UpdateArticleCommand(
 /// <summary>قابلیت خواندن و مدیریت مقالات Content.</summary>
 public interface IContentDirectory
 {
-    /// <summary>صفحهٔ مقالات Published را با فیلتر اختیاری دسته و locale برمی‌گرداند.</summary>
+    /// <summary>صفحهٔ مقالات Published را با فیلتر اختیاری دسته/نویسنده/locale برمی‌گرداند.</summary>
     Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
         int page,
         int pageSize,
         string? category,
         string? locale,
+        Guid? categoryId,
+        Guid? authorId,
         CancellationToken cancellationToken);
 
     /// <summary>جزئیات مقالهٔ Published را با slug و locale اختیاری برمی‌گرداند.</summary>

@@ -10,9 +10,13 @@ import {
   type ContentArticleCard,
 } from "../../content/content-api";
 import { storefrontMediaUrl } from "../../storefront/storefront-api";
+import { useLocale } from "../../../lib/i18n/locale-context.tsx";
+import { blogsAuthorPath, blogsCategoryPath, blogsCopy } from "../blogs-copy.ts";
 
 /** جزئیات مقالهٔ زنده — locale-aware lookup بدون fallback. */
 export function BlogDetailClient({ slug, contentLocale }: { slug: string; contentLocale: string }) {
+  const locale = useLocale();
+  const copy = blogsCopy(locale);
   const [article, setArticle] = useState<ContentArticleCard | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,12 +28,14 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
     });
   }, [slug, contentLocale]);
 
-  if (loading) return <p className="p-6 text-sm text-gray-500">در حال بارگذاری مقاله…</p>;
+  if (loading) return <p className="p-6 text-sm text-gray-500">{copy.loading}</p>;
   if (!article) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h1 className="text-xl font-bold">مقاله پیدا نشد</h1>
-        <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-[#2563EB]">بازگشت به مجله <ArrowRight className="size-4" /></Link>
+        <h1 className="text-xl font-bold">{copy.notFound}</h1>
+        <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-[#2563EB]">
+          {copy.backToMagazine} <ArrowRight className="size-4" />
+        </Link>
       </main>
     );
   }
@@ -41,7 +47,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-6" data-testid="blog-detail">
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-[#2563EB]">
-        <ArrowRight className="size-4" /> مجله توبا
+        <ArrowRight className="size-4" /> {copy.title}
       </Link>
       <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="relative aspect-[16/9] bg-gray-100">
@@ -50,9 +56,33 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
         </div>
         <div className="space-y-4 p-5 md:p-8">
           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-            <span className="inline-flex items-center gap-1"><User className="size-3.5" />{article.authorDisplayName}</span>
-            <span className="inline-flex items-center gap-1"><Calendar className="size-3.5" />{formatArticleDate(article.publishDate, contentLocale)}</span>
-            {article.category ? <span className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]">{article.category}</span> : null}
+            {article.authorSlug ? (
+              <Link href={blogsAuthorPath(article.authorSlug)} className="inline-flex items-center gap-1 hover:text-[#2563EB]">
+                <User className="size-3.5" />
+                {article.authorDisplayName}
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <User className="size-3.5" />
+                {article.authorDisplayName}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="size-3.5" />
+              {formatArticleDate(article.publishDate, contentLocale)}
+            </span>
+            {article.category ? (
+              article.categorySlug ? (
+                <Link
+                  href={blogsCategoryPath(article.categorySlug)}
+                  className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]"
+                >
+                  {article.category}
+                </Link>
+              ) : (
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 font-bold text-[#2563EB]">{article.category}</span>
+              )
+            ) : null}
           </div>
           <h1 className="text-2xl font-black text-gray-900 md:text-3xl">{article.title}</h1>
           <p className="text-base text-gray-600 leading-8">{article.excerpt}</p>
@@ -62,7 +92,9 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
           {article.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
               {article.tags.map((tag) => (
-                <span key={tag} className="rounded-lg bg-gray-50 px-2 py-1 text-[11px] text-gray-600">#{tag}</span>
+                <span key={tag} className="rounded-lg bg-gray-50 px-2 py-1 text-[11px] text-gray-600">
+                  #{tag}
+                </span>
               ))}
             </div>
           ) : null}
@@ -70,7 +102,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
       </article>
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <BookOpen className="size-4 text-[#2563EB]" />
-        محتوای منتشرشده از ماژول Content
+        {copy.magazineFooter}
       </div>
     </main>
   );

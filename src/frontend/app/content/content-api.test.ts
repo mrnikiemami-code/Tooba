@@ -17,11 +17,15 @@ test("mapContentArticle maps host PascalCase published payload", () => {
     SeoTitle: "SEO",
     SeoDescription: "desc",
     Category: "خرید",
+    CategorySlug: "shopping",
+    AuthorSlug: "editorial",
     Locale: "fa-IR",
   });
   assert.ok(article);
   assert.equal(article?.slug, "guide");
   assert.equal(article?.category, "خرید");
+  assert.equal(article?.categorySlug, "shopping");
+  assert.equal(article?.authorSlug, "editorial");
   assert.equal(article?.body, "بدنه");
 });
 

@@ -684,8 +684,9 @@ async function readJson(path: string): Promise<unknown | null> {
 /**
  * خانه را از Host می‌خواند. در خطا null برمی‌گردد تا UI فیکسچر نسازد.
  */
-export async function loadStorefrontHome(): Promise<StorefrontHomePage | null> {
-  return mapStorefrontHome(await readJson("/v1/storefront/home"));
+export async function loadStorefrontHome(locale?: string): Promise<StorefrontHomePage | null> {
+  const suffix = locale ? `?locale=${encodeURIComponent(locale)}` : "";
+  return mapStorefrontHome(await readJson(`/v1/storefront/home${suffix}`));
 }
 
 /**

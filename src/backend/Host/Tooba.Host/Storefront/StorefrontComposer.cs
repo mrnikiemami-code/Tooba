@@ -14,6 +14,7 @@ using Tooba.Promotion.Application;
 using Tooba.Tax.Infrastructure.Persistence;
 using Tooba.Reviews.Application;
 using Tooba.Content.Application;
+using Tooba.Content.Domain;
 
 namespace Tooba.Host.Storefront;
 
@@ -70,7 +71,7 @@ public sealed class StorefrontComposer
     /// <summary>
     /// خانهٔ فروشگاه را با رده‌ها و محصولات منتشرشده می‌سازد.
     /// </summary>
-    public async Task<StorefrontHomePage> GetHomeAsync(CancellationToken cancellationToken)
+    public async Task<StorefrontHomePage> GetHomeAsync(string? locale, CancellationToken cancellationToken)
     {
         var categories = await ListCategoriesAsync(cancellationToken);
         var listing = await GetListingAsync(null, null, null, null, "newest", 1, 48, cancellationToken);
@@ -84,7 +85,8 @@ public sealed class StorefrontComposer
             .Take(12)
             .ToList();
         var featuredReviews = await BuildFeaturedReviewsAsync(cancellationToken);
-        var latestArticles = await BuildLatestArticlesAsync("fa-IR", cancellationToken);
+        var contentLocale = ContentTaxonomySeoRules.ResolveContentLocale(locale);
+        var latestArticles = await BuildLatestArticlesAsync(contentLocale, cancellationToken);
         return new StorefrontHomePage(
             categories,
             listing.Products.Take(24).ToList(),

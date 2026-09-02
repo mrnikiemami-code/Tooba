@@ -1,5 +1,6 @@
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Content.Application;
+using Tooba.Content.Domain;
 using Tooba.Content.Infrastructure.Persistence;
 using Tooba.Host.Grid;
 
@@ -9,23 +10,115 @@ namespace Tooba.Host.Content;
 public sealed class ContentPanelComposer
 {
     private readonly IContentDirectory _content;
+    private readonly IContentCategoryDirectory _categories;
+    private readonly IContentAuthorDirectory _authors;
     private readonly AdminContentGridQueryEngine _grid;
 
-    /// <summary>دایرکتوری Content و DbContext را تزریق می‌کند.</summary>
-    public ContentPanelComposer(IContentDirectory content, ContentDbContext db)
+    /// <summary>دایرکتوری Content و taxonomy را تزریق می‌کند.</summary>
+    public ContentPanelComposer(
+        IContentDirectory content,
+        IContentCategoryDirectory categories,
+        IContentAuthorDirectory authors,
+        ContentDbContext db)
     {
         _content = content;
+        _categories = categories;
+        _authors = authors;
         _grid = new AdminContentGridQueryEngine(db);
     }
 
-    /// <summary>صفحهٔ مقالات Published.</summary>
-    public Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
+    /// <summary>صفحهٔ مقالات Published با فیلتر اختیاری دسته/نویسنده.</summary>
+    public async Task<PagedResult<PublishedArticleItem>> ListPublishedAsync(
         int page,
         int pageSize,
         string? category,
         string? locale,
+        string? categorySlug,
+        string? authorSlug,
+        CancellationToken cancellationToken)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var filterLocale = string.IsNullOrWhiteSpace(locale)
+            ? null
+            : ContentTaxonomySeoRules.ResolveContentLocale(locale);
+        var taxonomyLocale = ContentTaxonomySeoRules.ResolveContentLocale(locale);
+
+        Guid? categoryId = null;
+        if (!string.IsNullOrWhiteSpace(categorySlug))
+        {
+            var publicCategory = await _categories.GetPublicBySlugAsync(
+                taxonomyLocale,
+                categorySlug,
+                cancellationToken);
+            if (publicCategory is null)
+            {
+                return new PagedResult<PublishedArticleItem>([], page, pageSize, 0);
+            }
+
+            categoryId = publicCategory.CategoryId;
+        }
+
+        Guid? authorId = null;
+        if (!string.IsNullOrWhiteSpace(authorSlug))
+        {
+            var publicAuthor = await _authors.GetPublicBySlugAsync(
+                authorSlug,
+                taxonomyLocale,
+                cancellationToken);
+            if (publicAuthor is null)
+            {
+                return new PagedResult<PublishedArticleItem>([], page, pageSize, 0);
+            }
+
+            authorId = publicAuthor.AuthorId;
+        }
+
+        return await _content.ListPublishedAsync(
+            page,
+            pageSize,
+            category,
+            filterLocale,
+            categoryId,
+            authorId,
+            cancellationToken);
+    }
+
+    /// <summary>دستهٔ Active عمومی با slug.</summary>
+    public Task<PublishedContentCategoryItem?> GetPublicCategoryBySlugAsync(
+        string? locale,
+        string slug,
         CancellationToken cancellationToken) =>
-        _content.ListPublishedAsync(page, pageSize, category, locale, cancellationToken);
+        _categories.GetPublicBySlugAsync(
+            ContentTaxonomySeoRules.ResolveContentLocale(locale),
+            slug,
+            cancellationToken);
+
+    /// <summary>فهرست دسته‌های Active برای sitemap.</summary>
+    public Task<IReadOnlyList<PublishedContentCategoryItem>> ListPublicCategoriesAsync(
+        string? locale,
+        CancellationToken cancellationToken) =>
+        _categories.ListPublicAsync(
+            ContentTaxonomySeoRules.ResolveContentLocale(locale),
+            cancellationToken);
+
+    /// <summary>نویسندهٔ Active عمومی با slug.</summary>
+    public Task<PublishedContentAuthorItem?> GetPublicAuthorBySlugAsync(
+        string slug,
+        string? locale,
+        CancellationToken cancellationToken) =>
+        _authors.GetPublicBySlugAsync(
+            slug,
+            ContentTaxonomySeoRules.ResolveContentLocale(locale),
+            cancellationToken);
+
+    /// <summary>فهرست نویسندگان Active برای sitemap.</summary>
+    public Task<IReadOnlyList<PublishedContentAuthorItem>> ListPublicAuthorsAsync(
+        string? locale,
+        CancellationToken cancellationToken) =>
+        _authors.ListPublicAsync(
+            ContentTaxonomySeoRules.ResolveContentLocale(locale),
+            cancellationToken);
 
     /// <summary>جزئیات Published با slug.</summary>
     public Task<PublishedArticleItem?> GetPublishedBySlugAsync(

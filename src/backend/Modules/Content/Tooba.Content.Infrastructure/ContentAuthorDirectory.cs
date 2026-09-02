@@ -14,6 +14,35 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
     public ContentAuthorDirectory(ContentDbContext db) => _db = db;
 
     /// <inheritdoc />
+    public async Task<PublishedContentAuthorItem?> GetPublicBySlugAsync(
+        string slug,
+        string routeLocale,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return null;
+        }
+
+        var normalizedSlug = ContentAuthor.NormalizeSlug(slug);
+        var row = await _db.Authors.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Slug == normalizedSlug && x.IsActive, cancellationToken);
+        return row is null ? null : MapPublic(row, routeLocale);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PublishedContentAuthorItem>> ListPublicAsync(
+        string routeLocale,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _db.Authors.AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.DisplayName)
+            .ToListAsync(cancellationToken);
+        return rows.Select(row => MapPublic(row, routeLocale)).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task<ContentAuthorWorkspaceDto?> GetWorkspaceAsync(
         Guid authorId,
         CancellationToken cancellationToken)
@@ -176,4 +205,14 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
             row.CreatedAt,
             row.UpdatedAt);
     }
+
+    private static PublishedContentAuthorItem MapPublic(ContentAuthor row, string routeLocale) => new(
+        row.AuthorId,
+        row.DisplayName,
+        row.Slug,
+        row.ShortBio,
+        row.FullBio,
+        row.ProfileImageMediaAssetId,
+        row.CoverImageMediaAssetId,
+        ContentTaxonomySeoRules.BuildAuthorPublicPath(routeLocale, row.Slug));
 }

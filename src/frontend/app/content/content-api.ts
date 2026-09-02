@@ -20,9 +20,39 @@ export interface ContentArticleCard {
   seoTitle: string | null;
   seoDescription: string | null;
   category: string | null;
+  categoryId: string | null;
+  authorId: string | null;
+  categorySlug: string | null;
+  authorSlug: string | null;
   seoImageMediaAssetId: string | null;
   canonicalPath: string | null;
   locale: string;
+}
+
+/** نمای عمومی دستهٔ مقاله. */
+export interface ContentCategoryPublic {
+  categoryId: string;
+  languageCode: string;
+  name: string;
+  slug: string;
+  shortDescription: string | null;
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  imageMediaAssetId: string | null;
+  canonicalPath: string | null;
+}
+
+/** نمای عمومی نویسندهٔ مقاله. */
+export interface ContentAuthorPublic {
+  authorId: string;
+  displayName: string;
+  slug: string;
+  shortBio: string | null;
+  fullBio: string | null;
+  profileImageMediaAssetId: string | null;
+  coverImageMediaAssetId: string | null;
+  canonicalPath: string | null;
 }
 
 export interface ContentArticlePage {
@@ -116,6 +146,14 @@ export function mapContentArticle(value: unknown): ContentArticleCard | null {
       const id = prop(item, "authorId", "AuthorId");
       return id == null || id === "" ? null : text(id);
     })(),
+    categorySlug: (() => {
+      const slug = prop(item, "categorySlug", "CategorySlug");
+      return slug == null || slug === "" ? null : text(slug);
+    })(),
+    authorSlug: (() => {
+      const slug = prop(item, "authorSlug", "AuthorSlug");
+      return slug == null || slug === "" ? null : text(slug);
+    })(),
     locale: text(prop(item, "locale", "Locale"), "fa-IR"),
     seoImageMediaAssetId: (() => {
       const id = prop(item, "seoImageMediaAssetId", "SeoImageMediaAssetId");
@@ -126,6 +164,59 @@ export function mapContentArticle(value: unknown): ContentArticleCard | null {
       return path == null || path === "" ? null : text(path);
     })(),
   };
+}
+
+function nullableText(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  return text(value);
+}
+
+export function mapContentCategoryPublic(value: unknown): ContentCategoryPublic | null {
+  const item = recordOf(value);
+  if (!item) return null;
+  const id = text(prop(item, "categoryId", "CategoryId"));
+  const slug = text(prop(item, "slug", "Slug"));
+  if (!id || !slug) return null;
+  return {
+    categoryId: id,
+    languageCode: text(prop(item, "languageCode", "LanguageCode")),
+    name: text(prop(item, "name", "Name")),
+    slug,
+    shortDescription: nullableText(prop(item, "shortDescription", "ShortDescription")),
+    description: nullableText(prop(item, "description", "Description")),
+    seoTitle: nullableText(prop(item, "seoTitle", "SeoTitle")),
+    seoDescription: nullableText(prop(item, "seoDescription", "SeoDescription")),
+    imageMediaAssetId: nullableText(prop(item, "imageMediaAssetId", "ImageMediaAssetId")),
+    canonicalPath: nullableText(prop(item, "canonicalPath", "CanonicalPath")),
+  };
+}
+
+export function mapContentAuthorPublic(value: unknown): ContentAuthorPublic | null {
+  const item = recordOf(value);
+  if (!item) return null;
+  const id = text(prop(item, "authorId", "AuthorId"));
+  const slug = text(prop(item, "slug", "Slug"));
+  if (!id || !slug) return null;
+  return {
+    authorId: id,
+    displayName: text(prop(item, "displayName", "DisplayName")),
+    slug,
+    shortBio: nullableText(prop(item, "shortBio", "ShortBio")),
+    fullBio: nullableText(prop(item, "fullBio", "FullBio")),
+    profileImageMediaAssetId: nullableText(prop(item, "profileImageMediaAssetId", "ProfileImageMediaAssetId")),
+    coverImageMediaAssetId: nullableText(prop(item, "coverImageMediaAssetId", "CoverImageMediaAssetId")),
+    canonicalPath: nullableText(prop(item, "canonicalPath", "CanonicalPath")),
+  };
+}
+
+function mapPublicList<T>(payload: unknown, mapOne: (value: unknown) => T | null): T[] {
+  if (Array.isArray(payload)) {
+    return payload.map(mapOne).filter((row): row is T => row !== null);
+  }
+  const root = recordOf(payload);
+  const itemsRaw = root ? prop(root, "items", "Items") : null;
+  if (!Array.isArray(itemsRaw)) return [];
+  return itemsRaw.map(mapOne).filter((row): row is T => row !== null);
 }
 
 export function mapAdminContentArticle(value: unknown): AdminContentArticle | null {
@@ -201,10 +292,14 @@ export async function loadPublishedArticles(
   pageSize = 12,
   category?: string,
   locale?: string,
+  categorySlug?: string,
+  authorSlug?: string,
 ): Promise<ContentArticlePage> {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (category) params.set("category", category);
   if (locale) params.set("locale", locale);
+  if (categorySlug) params.set("categorySlug", categorySlug);
+  if (authorSlug) params.set("authorSlug", authorSlug);
   try {
     const response = await fetch(`${contentBase()}/v1/content/articles?${params}`, {
       headers: { Accept: "application/json" },
@@ -239,6 +334,64 @@ export async function loadPublishedArticleBySlug(slug: string, locale: string): 
     return mapContentArticle(await response.json());
   } catch {
     return null;
+  }
+}
+
+export async function loadPublicCategory(slug: string, locale: string): Promise<ContentCategoryPublic | null> {
+  const params = `?locale=${encodeURIComponent(locale)}`;
+  try {
+    const response = await fetch(
+      `${contentBase()}/v1/content/categories/${encodeURIComponent(slug)}${params}`,
+      { headers: { Accept: "application/json" }, cache: "no-store" },
+    );
+    if (!response.ok) return null;
+    return mapContentCategoryPublic(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function loadPublicAuthor(slug: string, locale: string): Promise<ContentAuthorPublic | null> {
+  const params = `?locale=${encodeURIComponent(locale)}`;
+  try {
+    const response = await fetch(
+      `${contentBase()}/v1/content/authors/${encodeURIComponent(slug)}${params}`,
+      { headers: { Accept: "application/json" }, cache: "no-store" },
+    );
+    if (!response.ok) return null;
+    return mapContentAuthorPublic(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+/** فهرست دسته‌های فعال برای sitemap و ناوبری. */
+export async function loadPublicCategories(locale: string): Promise<ContentCategoryPublic[]> {
+  const params = `?locale=${encodeURIComponent(locale)}`;
+  try {
+    const response = await fetch(`${contentBase()}/v1/content/categories${params}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return [];
+    return mapPublicList(await response.json(), mapContentCategoryPublic);
+  } catch {
+    return [];
+  }
+}
+
+/** فهرست نویسندگان فعال برای sitemap. */
+export async function loadPublicAuthors(locale: string): Promise<ContentAuthorPublic[]> {
+  const params = `?locale=${encodeURIComponent(locale)}`;
+  try {
+    const response = await fetch(`${contentBase()}/v1/content/authors${params}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return [];
+    return mapPublicList(await response.json(), mapContentAuthorPublic);
+  } catch {
+    return [];
   }
 }
 

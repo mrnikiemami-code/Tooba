@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "../lib/i18n/locale.ts";
 import { localePath, localeToContentApi } from "../lib/i18n/routing.ts";
+import { loadPublicAuthors, loadPublicCategories } from "./content/content-api.ts";
 import { storefrontHostOrigin } from "./storefront/storefront-api.ts";
 
 const STATIC_INTERNAL_PATHS = [
@@ -74,6 +75,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const slug = article?.slug;
       if (!slug) continue;
       const path = article.canonicalPath ?? localePath(locale, `/blogs/${slug}`);
+      entries.push({ url: `${base}${path}` });
+    }
+  }
+
+  // دسته‌ها زبان‌وابسته‌اند؛ نویسندگان با مسیر locale جدا — بدون hreflang ساختگی.
+  for (const locale of LOCALES) {
+    const contentLocale = localeToContentApi(locale);
+    const [categories, authors] = await Promise.all([
+      loadPublicCategories(contentLocale),
+      loadPublicAuthors(contentLocale),
+    ]);
+    for (const category of categories) {
+      const path = category.canonicalPath ?? localePath(locale, `/blogs/category/${category.slug}`);
+      entries.push({ url: `${base}${path}` });
+    }
+    for (const author of authors) {
+      const path = author.canonicalPath ?? localePath(locale, `/blogs/author/${author.slug}`);
       entries.push({ url: `${base}${path}` });
     }
   }

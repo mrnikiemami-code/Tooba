@@ -63,6 +63,17 @@ public sealed record UpdateContentAuthorCommand(
 /// <summary>دایرکتوری نویسندهٔ مقاله.</summary>
 public interface IContentAuthorDirectory
 {
+    /// <summary>نویسندهٔ Active عمومی را با slug برمی‌گرداند.</summary>
+    Task<PublishedContentAuthorItem?> GetPublicBySlugAsync(
+        string slug,
+        string routeLocale,
+        CancellationToken cancellationToken);
+
+    /// <summary>فهرست نویسندگان Active برای sitemap.</summary>
+    Task<IReadOnlyList<PublishedContentAuthorItem>> ListPublicAsync(
+        string routeLocale,
+        CancellationToken cancellationToken);
+
     /// <summary>workspace یک نویسنده را برمی‌گرداند.</summary>
     Task<ContentAuthorWorkspaceDto?> GetWorkspaceAsync(Guid authorId, CancellationToken cancellationToken);
 

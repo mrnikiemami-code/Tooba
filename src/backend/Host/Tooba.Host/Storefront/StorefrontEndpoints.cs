@@ -41,8 +41,11 @@ public static class StorefrontEndpoints
         }
     }
 
-    private static async Task<IResult> GetHomeAsync(StorefrontComposer composer, CancellationToken cancellationToken)
-        => Results.Json(await composer.GetHomeAsync(cancellationToken));
+    private static async Task<IResult> GetHomeAsync(
+        StorefrontComposer composer,
+        string? locale = null,
+        CancellationToken cancellationToken = default)
+        => Results.Json(await composer.GetHomeAsync(locale, cancellationToken));
 
     private static async Task<IResult> GetCategoriesAsync(StorefrontComposer composer, CancellationToken cancellationToken)
         => Results.Json(await composer.ListCategoriesAsync(cancellationToken));

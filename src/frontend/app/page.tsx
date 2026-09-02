@@ -34,7 +34,7 @@ export default async function HomePage() {
   const locale = await resolveRequestLocale();
   const contentLocale = localeToContentApi(locale);
   const [home, composition] = await Promise.all([
-    loadStorefrontHome(),
+    loadStorefrontHome(contentLocale),
     loadHomeComposition(contentLocale),
   ]);
   if (!home) {

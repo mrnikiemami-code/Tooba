@@ -211,6 +211,42 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
     }
 
     /// <inheritdoc />
+    public async Task<PublishedContentCategoryItem?> GetPublicBySlugAsync(
+        string languageCode,
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode) || string.IsNullOrWhiteSpace(slug))
+        {
+            return null;
+        }
+
+        var language = ContentCategory.NormalizeLanguageCode(languageCode);
+        var normalizedSlug = ContentCategory.NormalizeSlug(slug);
+        var row = await _db.Categories.AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.LanguageCode == language
+                    && x.Slug == normalizedSlug
+                    && x.Status == ContentCategoryStatus.Active,
+                cancellationToken);
+        return row is null ? null : MapPublic(row);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PublishedContentCategoryItem>> ListPublicAsync(
+        string languageCode,
+        CancellationToken cancellationToken)
+    {
+        var language = ContentCategory.NormalizeLanguageCode(languageCode);
+        var rows = await _db.Categories.AsNoTracking()
+            .Where(x => x.LanguageCode == language && x.Status == ContentCategoryStatus.Active)
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+        return rows.Select(MapPublic).ToList();
+    }
+
+    /// <inheritdoc />
     public async Task EnsureArticleCategoryLanguageMatchAsync(
         string articleLocale,
         Guid? categoryId,
@@ -287,4 +323,16 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
             row.CreatedAt,
             row.UpdatedAt);
     }
+
+    private static PublishedContentCategoryItem MapPublic(ContentCategory row) => new(
+        row.CategoryId,
+        row.LanguageCode,
+        row.Name,
+        row.Slug,
+        row.ShortDescription,
+        row.Description,
+        row.SeoTitle,
+        row.SeoDescription,
+        row.ImageMediaAssetId,
+        ContentTaxonomySeoRules.BuildCategoryPublicPath(row.LanguageCode, row.Slug));
 }

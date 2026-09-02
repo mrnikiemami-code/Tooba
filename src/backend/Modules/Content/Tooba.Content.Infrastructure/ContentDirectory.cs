@@ -33,6 +33,8 @@ public sealed class ContentDirectory : IContentDirectory
         int pageSize,
         string? category,
         string? locale,
+        Guid? categoryId,
+        Guid? authorId,
         CancellationToken cancellationToken)
     {
         page = Math.Max(1, page);
@@ -51,6 +53,16 @@ public sealed class ContentDirectory : IContentDirectory
             query = query.Where(article => article.Category == normalized);
         }
 
+        if (categoryId is Guid selectedCategoryId)
+        {
+            query = query.Where(article => article.CategoryId == selectedCategoryId);
+        }
+
+        if (authorId is Guid selectedAuthorId)
+        {
+            query = query.Where(article => article.AuthorId == selectedAuthorId);
+        }
+
         var total = await query.LongCountAsync(cancellationToken);
         var rows = await query
             .OrderByDescending(article => article.PublishDate)
@@ -59,7 +71,7 @@ public sealed class ContentDirectory : IContentDirectory
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         return new PagedResult<PublishedArticleItem>(
-            rows.Select(article => MapPublished(article, includeBody: false)).ToList(),
+            await MapPublishedBatchAsync(rows, includeBody: false, cancellationToken),
             page,
             pageSize,
             total);
@@ -82,7 +94,13 @@ public sealed class ContentDirectory : IContentDirectory
         var article = await PubliclyVisibleArticles(utcNow)
             .Where(row => row.Slug == normalizedSlug && row.Locale == normalizedLocale)
             .FirstOrDefaultAsync(cancellationToken);
-        return article is null ? null : MapPublished(article, includeBody: true);
+        if (article is null)
+        {
+            return null;
+        }
+
+        var mapped = await MapPublishedBatchAsync([article], includeBody: true, cancellationToken);
+        return mapped[0];
     }
 
     /// <inheritdoc />
@@ -105,7 +123,7 @@ public sealed class ContentDirectory : IContentDirectory
             .ThenBy(article => article.ArticleId)
             .Take(limit)
             .ToListAsync(cancellationToken);
-        return rows.Select(article => MapPublished(article, includeBody: false)).ToList();
+        return await MapPublishedBatchAsync(rows, includeBody: false, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -269,7 +287,11 @@ public sealed class ContentDirectory : IContentDirectory
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    internal static PublishedArticleItem MapPublished(ContentArticle article, bool includeBody) => new(
+    internal static PublishedArticleItem MapPublished(
+        ContentArticle article,
+        bool includeBody,
+        string? categorySlug = null,
+        string? authorSlug = null) => new(
         article.ArticleId,
         article.Slug,
         article.Title,
@@ -287,7 +309,52 @@ public sealed class ContentDirectory : IContentDirectory
         article.AuthorId,
         article.Locale,
         article.ResolveEffectiveSeoImageId(),
-        ContentArticleSeoRules.BuildPublicPath(article.Locale, article.Slug));
+        ContentArticleSeoRules.BuildPublicPath(article.Locale, article.Slug),
+        categorySlug,
+        authorSlug);
+
+    private async Task<IReadOnlyList<PublishedArticleItem>> MapPublishedBatchAsync(
+        IReadOnlyList<ContentArticle> rows,
+        bool includeBody,
+        CancellationToken cancellationToken)
+    {
+        if (rows.Count == 0)
+        {
+            return [];
+        }
+
+        var categoryIds = rows
+            .Where(article => article.CategoryId is not null)
+            .Select(article => article.CategoryId!.Value)
+            .Distinct()
+            .ToList();
+        var authorIds = rows
+            .Where(article => article.AuthorId is not null)
+            .Select(article => article.AuthorId!.Value)
+            .Distinct()
+            .ToList();
+
+        var categorySlugs = categoryIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await _db.Categories.AsNoTracking()
+                .Where(category => categoryIds.Contains(category.CategoryId))
+                .ToDictionaryAsync(category => category.CategoryId, category => category.Slug, cancellationToken);
+        var authorSlugs = authorIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await _db.Authors.AsNoTracking()
+                .Where(author => authorIds.Contains(author.AuthorId))
+                .ToDictionaryAsync(author => author.AuthorId, author => author.Slug, cancellationToken);
+
+        return rows.Select(article => MapPublished(
+            article,
+            includeBody,
+            article.CategoryId is Guid categoryId && categorySlugs.TryGetValue(categoryId, out var categorySlug)
+                ? categorySlug
+                : null,
+            article.AuthorId is Guid authorId && authorSlugs.TryGetValue(authorId, out var authorSlug)
+                ? authorSlug
+                : null)).ToList();
+    }
 
     internal static AdminArticleSnapshot MapAdmin(ContentArticle article) => new(
         article.ArticleId,

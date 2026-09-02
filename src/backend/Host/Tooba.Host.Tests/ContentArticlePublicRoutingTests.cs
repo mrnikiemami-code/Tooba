@@ -137,7 +137,7 @@ public sealed class ContentArticlePublicRoutingTests : IAsyncLifetime
         Assert.Null(await directory.GetPublishedBySlugAsync("shared-topic", "fa-IR", CancellationToken.None));
         Assert.NotNull(await directory.GetPublishedBySlugAsync("shared-topic", "en-US", CancellationToken.None));
 
-        var faListed = await directory.ListPublishedAsync(1, 20, null, "fa-IR", CancellationToken.None);
+        var faListed = await directory.ListPublishedAsync(1, 20, null, "fa-IR", null, null, CancellationToken.None);
         Assert.DoesNotContain(faListed.Items, item => item.Slug == "shared-topic");
         Assert.DoesNotContain(faListed.Items, item => item.Slug == "future-post");
     }

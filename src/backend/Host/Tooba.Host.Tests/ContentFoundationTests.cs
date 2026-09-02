@@ -94,7 +94,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
 
         Assert.Equal(ContentPublicationStatus.Draft, draft.Status);
         Assert.Null(await directory.GetPublishedBySlugAsync("draft-guide", ContentArticle.DefaultLocale, CancellationToken.None));
-        Assert.Empty((await directory.ListPublishedAsync(1, 20, null, null, CancellationToken.None)).Items);
+        Assert.Empty((await directory.ListPublishedAsync(1, 20, null, null, null, null, CancellationToken.None)).Items);
         Assert.Empty(await directory.ListPublishedForHomeAsync(6, null, CancellationToken.None));
 
         var published = await directory.PublishAsync(draft.ArticleId, CancellationToken.None);
@@ -106,7 +106,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         Assert.Equal("SEO پیش‌نویس", bySlug.SeoTitle);
         Assert.Equal("راهنما", bySlug.Category);
 
-        var listed = await directory.ListPublishedAsync(1, 20, "راهنما", ContentArticle.DefaultLocale, CancellationToken.None);
+        var listed = await directory.ListPublishedAsync(1, 20, "راهنما", ContentArticle.DefaultLocale, null, null, CancellationToken.None);
         Assert.Single(listed.Items);
         Assert.Null(listed.Items[0].Body);
 
