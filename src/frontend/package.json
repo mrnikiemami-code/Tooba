@@ -20,7 +20,7 @@
     "test:content": "node --experimental-strip-types --test app/content/content-api.test.ts app/blogs/blogs-public-routing.test.ts app/blogs/blogs-copy.test.ts",
     "test:stories": "node --experimental-strip-types --test app/stories/story-api.test.ts app/stories/management/story-capabilities.test.ts",
     "test:composition": "node --experimental-strip-types --test app/composition/composition-api.test.ts",
-    "test:i18n": "node --experimental-strip-types --test lib/i18n/locale.test.ts lib/i18n/routing.test.ts",
+    "test:i18n": "node --experimental-strip-types --test lib/i18n/locale.test.ts lib/i18n/routing.test.ts lib/i18n/middleware-locale.test.ts",
     "test:customer": "node --experimental-strip-types --test app/customer-panel/customer-api.test.ts app/customer-panel/customer-address-api.test.ts app/customer-panel/customer-profile-api.test.ts app/customer-panel/customer-preferences-api.test.ts app/customer-panel/panel-nav-integrity.test.ts app/wallet/wallet-api.test.ts lib/auth/csrf.test.ts",
     "test:wallet": "node --experimental-strip-types --test app/wallet/wallet-api.test.ts",
     "test:profile": "node --experimental-strip-types --test app/customer-panel/customer-profile-api.test.ts",

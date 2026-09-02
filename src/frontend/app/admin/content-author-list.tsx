@@ -101,7 +101,7 @@ function buildAuthorRowActions(
       id: "edit",
       label: "ویرایش",
       icon: Pencil,
-      href: (row) => `/admin/content/authors/${row.authorId}`,
+      href: (row) => `/admin/content/authors/${row.authorId}?mode=edit`,
       testId: (row) => `admin-content-author-edit-${row.authorId}`,
     },
     {

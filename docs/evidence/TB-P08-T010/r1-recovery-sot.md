@@ -1,0 +1,1 @@
+P08; Last Architect-accepted TB-P08-T009-R2; TB-P08-T010 under repair via TB-P08-T010-R1; Last implementation TB-P08-T010-R1; Current Issued (none); Current Repair TB-P08-T010-R1; USER_VISUAL_ACCEPTED=NO; Worker IDLE; do not invent T011.

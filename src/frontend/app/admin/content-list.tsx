@@ -40,12 +40,19 @@ import {
   type AdminContentArticle,
 } from "../content/content-api";
 import { prepareAdminDevActor } from "./admin-api";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
 import {
   ContentArticleDestructiveDialog,
   type ArticleDestructiveKind,
   type ArticleDestructiveTarget,
 } from "./content-article-destructive-dialog.tsx";
 import { ADMIN_CONTENT_GRID_VIEW_KEY, createHostSavedViewStore } from "./saved-view-store";
+
+/** نگاشت کلید خطای گرید به جزئیات فارسی قابل‌نمایش. */
+export function contentListGridErrorDetail(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  return mapAdminErrorMessage(raw, "fa");
+}
 
 const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
   title: { field: "title", kind: "text" },
@@ -374,7 +381,7 @@ export function AdminContentScreen() {
         {gridError ? (
           <ErrorState
             title="مقالات خوانده نشد"
-            detail={gridError}
+            detail={contentListGridErrorDetail(gridError)}
             onRetry={refresh}
             retryLabel={faWorkspaceMessages.retry}
           />

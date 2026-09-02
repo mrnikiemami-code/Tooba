@@ -33,3 +33,16 @@ test("article workspace uses media panel and dam insert image", () => {
   assert.match(editor, /onPickDamImage/);
   assert.match(editor, /insert-image/);
 });
+
+test("article media panel and SEO picker use Persian library labels without DAM jargon", () => {
+  assert.match(panel, /متن جایگزین/);
+  assert.match(panel, /توضیح تصویر/);
+  assert.match(panel, /انتخاب از کتابخانه/);
+  assert.match(panel, /کتابخانه رسانه/);
+  assert.doesNotMatch(panel, /انتخاب از کتابخانه DAM/);
+  assert.doesNotMatch(panel, /افزودن از DAM/);
+  assert.match(screen, /انتخاب از کتابخانه/);
+  assert.doesNotMatch(screen, /انتخاب از DAM/);
+  assert.match(screen, /در حال بارگذاری…/);
+  assert.doesNotMatch(screen, /در حال بارگذاری workspace/);
+});

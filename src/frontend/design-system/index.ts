@@ -53,6 +53,7 @@ export {
   collectAncestorIds,
   countDirectChildren,
   filterCategoryForest,
+  isSelfOrDescendant,
   isValidCategoryDrop,
   resolveCategoryDropPlan,
   resolveTranslationReadiness,

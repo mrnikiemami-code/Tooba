@@ -126,7 +126,7 @@ export function ContentArticleMediaPanel({
         )}
         <div className="flex flex-wrap gap-2">
           <button type="button" className="rounded-xl border px-3 py-2 text-sm" disabled={!editable || busy} onClick={() => openPicker("featured")}>
-            انتخاب از کتابخانه DAM
+            انتخاب از کتابخانه
           </button>
           {workspace?.featuredMediaAssetId ? (
             <button
@@ -147,7 +147,7 @@ export function ContentArticleMediaPanel({
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">گالری مقاله</h3>
           <button type="button" className="rounded-xl border px-3 py-2 text-sm" disabled={!editable || busy} onClick={() => openPicker("gallery")}>
-            افزودن از DAM
+            کتابخانه رسانه
           </button>
         </div>
         {gallery.length === 0 ? (
@@ -160,11 +160,11 @@ export function ContentArticleMediaPanel({
                   <img src={mediaPreviewUrl(row.mediaAssetId) ?? ""} alt="" className="h-20 w-20 rounded-lg border object-cover" />
                   <div className="min-w-[12rem] flex-1 space-y-2">
                     <label className="block text-xs">
-                      <span className="text-muted">Alt (سطح مقاله)</span>
+                      <span className="text-muted">متن جایگزین (سطح مقاله)</span>
                       <input className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" disabled={!editable} value={altDrafts[row.mediaAssetId] ?? ""} onChange={(e) => setAltDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))} />
                     </label>
                     <label className="block text-xs">
-                      <span className="text-muted">Caption</span>
+                      <span className="text-muted">توضیح تصویر</span>
                       <input className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" disabled={!editable} value={captionDrafts[row.mediaAssetId] ?? ""} onChange={(e) => setCaptionDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))} />
                     </label>
                   </div>

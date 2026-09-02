@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P08-T009-R2).
+ * Recovery SoT staleness guard (TB-P08-T010-R1).
  * Deterministic, repo-local — does NOT call Bridge API.
  */
 import assert from "node:assert/strict";
@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
-const CURRENT_TASK_ID = "TB-P08-T009-R2";
+const CURRENT_TASK_ID = "TB-P08-T010-R1";
 
 const REQUIRED_MARKERS = [
   "P08",
@@ -37,6 +37,8 @@ const REQUIRED_MARKERS = [
   "TB-P08-T009",
   "TB-P08-T009-R1",
   "TB-P08-T009-R2",
+  "TB-P08-T010",
+  "TB-P08-T010-R1",
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
 ];
@@ -51,6 +53,8 @@ const STALE_CURRENT_POINTERS = [
   "TB-P07-T042",
   "TB-P07-T043",
   "TB-P08-T009-R1",
+  "TB-P08-T009-R2",
+  "TB-P08-T010",
 ];
 
 function read(p) {
@@ -71,10 +75,14 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT points Current Repair at TB-P08-T009-R2 not stale pointers", () => {
+test("recovery SoT points Current Repair at TB-P08-T010-R1 not stale pointers", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
+  assert.match(recovery, /TB-P08-T010-R1/);
+  assert.match(state, /TB-P08-T010-R1/);
+  assert.match(recovery, /TB-P08-T010/);
+  assert.match(state, /TB-P08-T010/);
   assert.match(recovery, /TB-P08-T009-R2/);
   assert.match(state, /TB-P08-T009-R2/);
   assert.match(recovery, /TB-P08-T009-R1/);
@@ -89,13 +97,13 @@ test("recovery SoT points Current Repair at TB-P08-T009-R2 not stale pointers", 
   );
   assert.match(
     state,
-    /Current Repair Task:\s*```text\s*TB-P08-T009-R2\s*```/,
-    "PROJECT-STATE Current Repair Task must be TB-P08-T009-R2",
+    /Current Repair Task:\s*```text\s*TB-P08-T010-R1\s*```/,
+    "PROJECT-STATE Current Repair Task must be TB-P08-T010-R1",
   );
   assert.match(
     recovery,
-    /Current Repair Task:\s*```text\s*TB-P08-T009-R2\s*```/,
-    "recovery Current Repair Task must be TB-P08-T009-R2",
+    /Current Repair Task:\s*```text\s*TB-P08-T010-R1\s*```/,
+    "recovery Current Repair Task must be TB-P08-T010-R1",
   );
 
   for (const stale of STALE_CURRENT_POINTERS) {

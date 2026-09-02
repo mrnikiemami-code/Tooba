@@ -2,7 +2,7 @@
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Calendar, ChevronLeft, Flame, Image as ImageIcon, User } from "lucide-react";
+import { BookOpen, Calendar, ChevronLeft, ChevronRight, Flame, Image as ImageIcon, User } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -95,11 +95,14 @@ function PostCard({
   post,
   contentLocale,
   copy,
+  locale,
 }: {
   post: ContentArticleCard;
   contentLocale: string;
   copy: ReturnType<typeof blogsCopy>;
+  locale: string;
 }) {
+  const ReadMoreChevron = locale === "en" ? ChevronRight : ChevronLeft;
   return (
     <article className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
       <div className="relative overflow-hidden aspect-[16/10] bg-gray-100">
@@ -146,7 +149,7 @@ function PostCard({
           <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-[#2563EB] transition-colors">{post.title}</h3>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2 flex-1">{post.excerpt}</p>
           <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold" style={{ color: ACCENT }}>
-            {copy.readMore} <ChevronLeft className="w-3.5 h-3.5" />
+            {copy.readMore} <ReadMoreChevron className="w-3.5 h-3.5" />
           </span>
         </Link>
       </div>
@@ -202,7 +205,7 @@ export function BlogsListingClient() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((post) => <PostCard key={post.articleId} post={post} contentLocale={contentLocale} copy={copy} />)}
+          {items.map((post) => <PostCard key={post.articleId} post={post} contentLocale={contentLocale} copy={copy} locale={locale} />)}
         </div>
       )}
       {total > 12 ? (

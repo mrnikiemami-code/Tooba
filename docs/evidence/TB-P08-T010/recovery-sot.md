@@ -1,0 +1,1 @@
+P08 Content Visual Final Gate; Last Architect-accepted TB-P08-T008 (SoT); Last implementation TB-P08-T010; Current Issued (none); Current Repair TB-P08-T010; USER_VISUAL_ACCEPTED=NO; Worker IDLE; do not invent T011.

@@ -295,7 +295,7 @@ export function ContentArticleAdminScreen() {
   if (loading) {
     return (
       <main className="p-4" data-testid="content-article-admin-loading">
-        <p className="text-muted">در حال بارگذاری workspace…</p>
+        <p className="text-muted">در حال بارگذاری…</p>
       </main>
     );
   }
@@ -570,7 +570,7 @@ export function ContentArticleAdminScreen() {
                   {form.mode !== "view" ? (
                     <div className="flex gap-2">
                       <button type="button" className="rounded-xl border px-3 py-2 text-sm" onClick={() => setSeoImageOpen(true)}>
-                        انتخاب از DAM
+                        انتخاب از کتابخانه
                       </button>
                       {mediaWorkspace?.seoImageMediaAssetId ? (
                         <button

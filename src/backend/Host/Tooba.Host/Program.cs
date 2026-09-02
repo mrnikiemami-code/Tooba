@@ -301,7 +301,7 @@ if (app.Environment.IsDevelopment())
             // TB-P08-T009: Content demo بدون Catalog legacy.
             try
             {
-                await ContentDevelopmentSeed.ApplyAsync(app.Services);
+                await ContentDevelopmentSeedHost.ApplyAsync(app.Services);
             }
             catch (Exception ex)
             {

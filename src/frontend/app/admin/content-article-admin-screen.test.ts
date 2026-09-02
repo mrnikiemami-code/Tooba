@@ -34,3 +34,8 @@ test("content list links to language-first create and article workspace edit", (
   assert.match(newScreen, /LANGUAGE_OPTIONS/);
   assert.match(newScreen, /createAdminArticle/);
 });
+
+test("content list maps grid error keys to Persian friendly detail", () => {
+  assert.match(list, /contentListGridErrorDetail/);
+  assert.match(list, /mapAdminErrorMessage/);
+});

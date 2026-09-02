@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { mapSupportedLocale } from "./supported-locales.ts";
 import {
@@ -52,4 +53,11 @@ test("storefront locale prefix deploy note stays concise", () => {
   assert.match(note.fa, /fa\/en/);
   assert.match(note.en, /rebuild\/deploy/i);
   assert.match(note.en, /fa\/en/);
+});
+
+test("language list banner uses Persian human copy without jargon", () => {
+  const list = readFileSync(new URL("../../app/admin/language-list.tsx", import.meta.url), "utf8");
+  assert.match(list, /فهرست محدود زبان‌های فعال/);
+  assert.doesNotMatch(list, /SMALL_BOUNDED_CLIENT_SAFE/);
+  assert.match(list, /storefrontLocalePrefixDeployNote\(\)\.fa/);
 });

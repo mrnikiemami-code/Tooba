@@ -4,6 +4,7 @@ using Tooba.BulkInquiry.Infrastructure.Persistence;
 using Tooba.Cart.Infrastructure.Persistence;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Content.Infrastructure.Persistence;
+using Tooba.Localization.Infrastructure.Persistence;
 using Tooba.Media.Infrastructure.Persistence;
 using Tooba.PageComposition.Infrastructure.Persistence;
 using global::Tooba.Story.Infrastructure.Persistence;
@@ -79,6 +80,7 @@ internal static class ModuleMigrationRegistry
         Descriptor<CustomerProfileDbContext>("CustomerProfile", CustomerProfileDbContext.Schema),
         Descriptor<UserPreferenceDbContext>("UserPreference", UserPreferenceDbContext.Schema),
         Descriptor<OperatorProfileDbContext>("OperatorProfile", OperatorProfileDbContext.Schema),
+        Descriptor<LocalizationDbContext>("Localization", LocalizationDbContext.Schema),
         Descriptor<ContentDbContext>("Content", ContentDbContext.Schema),
         Descriptor<MediaDbContext>("Media", MediaDbContext.Schema),
         Descriptor<PageCompositionDbContext>("PageComposition", PageCompositionDbContext.Schema),

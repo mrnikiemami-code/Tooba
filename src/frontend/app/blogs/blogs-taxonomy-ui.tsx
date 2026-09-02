@@ -2,7 +2,7 @@
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Calendar, ChevronLeft, Flame, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Calendar, ChevronLeft, ChevronRight, Flame, User } from "lucide-react";
 import {
   contentCoverUrl,
   formatArticleDate,
@@ -27,11 +27,14 @@ function TaxonomyPostCard({
   post,
   contentLocale,
   copy,
+  locale,
 }: {
   post: ContentArticleCard;
   contentLocale: string;
   copy: ReturnType<typeof blogsCopy>;
+  locale: string;
 }) {
+  const ReadMoreChevron = locale === "en" ? ChevronRight : ChevronLeft;
   return (
     <article className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
       <div className="relative overflow-hidden aspect-[16/10] bg-gray-100">
@@ -84,7 +87,7 @@ function TaxonomyPostCard({
           </h3>
           <p className="mt-1 text-xs text-gray-500 line-clamp-2 flex-1">{post.excerpt}</p>
           <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold" style={{ color: ACCENT }}>
-            {copy.readMore} <ChevronLeft className="w-3.5 h-3.5" />
+            {copy.readMore} <ReadMoreChevron className="w-3.5 h-3.5" />
           </span>
         </Link>
       </div>
@@ -113,6 +116,7 @@ export function BlogsTaxonomyListingClient({
   const [items, setItems] = useState<ContentArticleCard[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const BackArrow = locale === "en" ? ArrowLeft : ArrowRight;
 
   useEffect(() => {
     setLoading(true);
@@ -130,7 +134,7 @@ export function BlogsTaxonomyListingClient({
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-3 py-6 md:px-4" data-testid={`blogs-${kind}-listing`}>
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-[#2563EB]">
-        <ArrowRight className="size-4" /> {copy.backToMagazine}
+        <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
@@ -148,7 +152,7 @@ export function BlogsTaxonomyListingClient({
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((post) => (
-            <TaxonomyPostCard key={post.articleId} post={post} contentLocale={contentLocale} copy={copy} />
+            <TaxonomyPostCard key={post.articleId} post={post} contentLocale={contentLocale} copy={copy} locale={locale} />
           ))}
         </div>
       )}

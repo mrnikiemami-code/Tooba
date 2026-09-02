@@ -1,4 +1,4 @@
-import { ContentArticleAdminScreen } from "../../content-article-admin-screen";
+import { ContentArticleAdminScreen } from "../../../content-article-admin-screen";
 
 /** workspace ویرایش مقاله. */
 export default function AdminContentArticleWorkspacePage() {

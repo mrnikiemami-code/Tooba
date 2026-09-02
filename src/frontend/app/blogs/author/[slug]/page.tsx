@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { loadPublicAuthor } from "../../content/content-api";
-import { BlogsTaxonomyListingClient } from "../blogs-taxonomy-ui";
-import { blogsAuthorPath, blogsCopy } from "../blogs-copy.ts";
-import { blogOpenGraphLocale, resolveRequestLocale } from "../../../lib/i18n/resolve-request-locale";
-import { canonicalForLocale, localeToContentApi } from "../../../lib/i18n/routing.ts";
-import { storefrontMediaUrl } from "../../storefront/storefront-api";
+import { loadPublicAuthor } from "../../../content/content-api";
+import { BlogsTaxonomyListingClient } from "../../blogs-taxonomy-ui";
+import { blogsAuthorPath, blogsCopy } from "../../blogs-copy.ts";
+import { blogOpenGraphLocale, resolveRequestLocale } from "../../../../lib/i18n/resolve-request-locale";
+import { canonicalForLocale, localeToContentApi } from "../../../../lib/i18n/routing.ts";
+import { storefrontMediaUrl } from "../../../storefront/storefront-api";
 
 type Props = {
   params: Promise<{ slug: string }>;

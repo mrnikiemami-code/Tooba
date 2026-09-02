@@ -1,0 +1,1 @@
+Canonical migrate on Development Content seed host: LocalizationDbContext, ContentDbContext, MediaDbContext via EF MigrateAsync (no manual SQL). Localization added to ModuleMigrationRegistry before Content. No local DB reset.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { formatJalaliDate, useAdminFormMode } from "../../design-system";
@@ -34,6 +34,7 @@ type MediaTarget = "profile" | "cover" | null;
 export function ContentAuthorAdminScreen() {
   const params = useParams<{ authorId?: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const authorId = typeof params.authorId === "string" ? params.authorId : null;
   const [workspace, setWorkspace] = useState<ContentAuthorWorkspaceDto | null>(null);
   const [tab, setTab] = useState<TabId>("general");
@@ -54,6 +55,12 @@ export function ContentAuthorAdminScreen() {
   const [mediaTarget, setMediaTarget] = useState<MediaTarget>(null);
 
   const form = useAdminFormMode({ canView: true, canEdit: true });
+
+  useEffect(() => {
+    if (searchParams.get("mode") === "edit") {
+      form.onEdit();
+    }
+  }, [searchParams, form]);
 
   const applyWorkspace = useCallback((data: ContentAuthorWorkspaceDto) => {
     setWorkspace(data);

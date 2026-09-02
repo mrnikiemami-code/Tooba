@@ -2,7 +2,7 @@
 
 import { LocalizedLink as Link } from "../../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Calendar, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Calendar, User } from "lucide-react";
 import {
   contentCoverUrl,
   formatArticleDate,
@@ -19,6 +19,7 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
   const copy = blogsCopy(locale);
   const [article, setArticle] = useState<ContentArticleCard | null>(null);
   const [loading, setLoading] = useState(true);
+  const BackArrow = locale === "en" ? ArrowLeft : ArrowRight;
 
   useEffect(() => {
     setLoading(true);
@@ -31,10 +32,10 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
   if (loading) return <p className="p-6 text-sm text-gray-500">{copy.loading}</p>;
   if (!article) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-10 text-center">
+      <main className="mx-auto max-w-3xl px-3 py-10 text-center md:px-4">
         <h1 className="text-xl font-bold">{copy.notFound}</h1>
         <Link href="/blogs" className="mt-4 inline-flex items-center gap-1 text-sm text-[#2563EB]">
-          {copy.backToMagazine} <ArrowRight className="size-4" />
+          <BackArrow className="size-4" /> {copy.backToMagazine}
         </Link>
       </main>
     );
@@ -45,9 +46,9 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
     : contentCoverUrl(null);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-6" data-testid="blog-detail">
+    <main className="mx-auto max-w-3xl space-y-6 px-3 py-6 md:px-4" data-testid="blog-detail">
       <Link href="/blogs" className="inline-flex items-center gap-1 text-sm text-[#2563EB]">
-        <ArrowRight className="size-4" /> {copy.title}
+        <BackArrow className="size-4" /> {copy.backToMagazine}
       </Link>
       <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="relative aspect-[16/9] bg-gray-100">

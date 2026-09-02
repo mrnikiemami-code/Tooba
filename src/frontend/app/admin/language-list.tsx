@@ -237,7 +237,7 @@ export function AdminLanguagesScreen() {
 
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
-          <span className="text-sm text-muted">SMALL_BOUNDED_CLIENT_SAFE — canonical locale registry (fa-IR, en-US)</span>
+          <span className="text-sm text-muted">فهرست محدود زبان‌های فعال — فارسی و انگلیسی</span>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs">{rows.length.toLocaleString("fa-IR")} مورد</span>
         </div>
         <div className="p-2 md:p-4">

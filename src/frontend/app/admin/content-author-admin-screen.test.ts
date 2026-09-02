@@ -29,3 +29,10 @@ test("content author list uses AppDataGrid without AgGridReact", () => {
   assert.match(list, /buildPinnedActionsColumnDef/);
   assert.doesNotMatch(list, /AgGridReact/);
 });
+
+test("content author edit href and screen honor mode=edit", () => {
+  assert.match(list, /\?mode=edit/);
+  assert.match(screen, /useSearchParams/);
+  assert.match(screen, /searchParams\.get\("mode"\) === "edit"/);
+  assert.match(screen, /form\.onEdit\(\)/);
+});

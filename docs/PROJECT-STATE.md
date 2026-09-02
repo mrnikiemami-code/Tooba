@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T008
+TB-P08-T009-R2
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T009-R2
+TB-P08-T010-R1
 ```
 
 Current Issued Task:
@@ -74,12 +74,14 @@ Current Issued Task:
 Current Repair Task:
 
 ```text
-TB-P08-T009-R2
+TB-P08-T010-R1
 ```
 
 Implemented Under Review:
 
 ```text
+TB-P08-T010-R1 — P08 Final Gate Repair (seed scope, public Content APIs, locale 308)
+TB-P08-T010 — Content Visual Final Gate (USER_VISUAL_ACCEPTED=NO)
 TB-P08-T009-R2 — Content Authorization Fail-Closed Repair
 TB-P08-T009-R1 — Content Permission Enforcement Repair (backend content.* authorization)
 TB-P08-T009 — Content Integration Gate (under repair via R2)
