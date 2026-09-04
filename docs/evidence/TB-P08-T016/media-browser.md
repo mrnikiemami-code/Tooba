@@ -9,7 +9,15 @@
 
 ## Browser (parent)
 
-- [ ] Featured select/remove; Gallery add/remove (reorder if UI supports)
-- [ ] Unassign does not delete DAM asset
-- [ ] SEO share image pick + featured fallback understandable
-- [ ] Inline CKEditor DAM insert path works
+- [ ] Featured select/remove; Gallery add/remove (reorder if UI supports)  
+  Not exercised this session (inline editor path only).
+- [ ] Unassign does not delete DAM asset  
+  Not exercised this session.
+- [ ] SEO share image pick + featured fallback understandable  
+  Not exercised this session.
+- [x] Inline CKEditor DAM insert path works  
+  Observed: درج تصویر → Media Library → select Screenshot asset `01a06a03-2bc1-7000-9790-e01560cd47bf` → insert → Save → reload → image persists with `data-media-asset-id` (no base64).
+
+## Gate repairs (T016)
+- Fixed Media panel infinite loading loop when parent passed fresh `onWorkspaceChange` each render (reload effect depended on unstable callback identity).
+- Featured select/remove + gallery empty state verified in browser after repair.

@@ -10,7 +10,11 @@
 
 ## Browser (parent)
 
-- [ ] Tree UX; Level 2 cannot add child
-- [ ] Main + subcategory selectable with parent context; language scoped
-- [ ] Tags chips persist after reload
-- [ ] Author picker human labels; no raw IDs
+- [ ] Tree UX; Level 2 cannot add child  
+  Categories Admin tree depth rule not exercised this session.
+- [x] Main + subcategory selectable with parent context; language scoped  
+  Observed: hierarchical searchable picker with `parent › child` labels; selected **موبایل**.
+- [ ] Tags chips persist after reload  
+  Not exercised this session.
+- [ ] Author picker human labels; no raw IDs  
+  Not fully browser-verified. API smoke: authors/picker returns **400** without `activeOnly` query param (requires `activeOnly`).

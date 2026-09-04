@@ -9,7 +9,15 @@
 
 ## Browser (parent)
 
-- [ ] Status filter + moderation persists across reload
-- [ ] Empty state polished
-- [ ] Help page loads all required topics
-- [ ] Contextual Help near confusing fields
+- [ ] Status filter + moderation persists across reload  
+  Not exercised this session.
+- [ ] Empty state polished  
+  Not exercised this session.
+- [ ] Help page loads all required topics  
+  Not exercised this session.
+- [ ] Contextual Help near confusing fields  
+  Not exercised this session.
+
+## Gate repairs (T016)
+- Fixed comments API client missing `X-Tooba-Dev-Actor-User-Id` (showed «دسترسی مجاز نیست» while Host returned 200 with actor).
+- API create+approve comment smoke: PASS after repair.

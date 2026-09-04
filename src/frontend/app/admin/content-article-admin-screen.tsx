@@ -80,7 +80,9 @@ type TabId = (typeof TABS)[number]["id"];
 type DamPickResult = { mediaAssetId: string; alt?: string; title?: string } | null;
 
 function languageOptionLabel(lang: SupportedLocaleDefinition): string {
-  return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
+  const native = lang.nativeName?.trim() ?? "";
+  if (native && !/^\?+$/.test(native)) return native;
+  return lang.displayName?.trim() || lang.code;
 }
 
 const LOCALE_LOCKED_MESSAGE =
@@ -236,6 +238,11 @@ export function ContentArticleAdminScreen() {
       setMediaWorkspace(result.data);
       setUseFeaturedForSeo(!result.data.seoImageMediaAssetId);
     }
+  }, []);
+
+  const handleMediaWorkspaceChange = useCallback((workspace: ArticleMediaWorkspaceDto) => {
+    setMediaWorkspace(workspace);
+    setUseFeaturedForSeo(!workspace.seoImageMediaAssetId);
   }, []);
 
   useEffect(() => {
@@ -872,10 +879,7 @@ export function ContentArticleAdminScreen() {
           <ContentArticleMediaPanel
             articleId={articleId}
             editable={form.mode !== "view"}
-            onWorkspaceChange={(workspace) => {
-              setMediaWorkspace(workspace);
-              setUseFeaturedForSeo(!workspace.seoImageMediaAssetId);
-            }}
+            onWorkspaceChange={handleMediaWorkspaceChange}
           />
         ) : null}
 

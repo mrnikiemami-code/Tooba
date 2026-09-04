@@ -6,7 +6,13 @@
 - Normal UI must not expose Bad Request / content.* / localization.* / raw JSON / stacks
 - FE asserts: list grid error mapping; comment moderation human messages
 
-## Browser (parent)
+## Browser / API (parent)
 
-- [ ] Force known failure (e.g. publish not ready) → human FA/EN message
-- [ ] No raw HTTP/status jargon in toast/panel
+- [ ] Force known failure (e.g. publish not ready) → human FA/EN message  
+  Not exercised this session.
+- [ ] No raw HTTP/status jargon in toast/panel  
+  Not exercised this session.
+
+## Related API observation (not toast UX)
+
+- Authors picker: **400** without required `activeOnly` query param (shell agent).

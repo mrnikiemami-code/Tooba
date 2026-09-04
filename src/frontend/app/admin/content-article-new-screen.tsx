@@ -11,7 +11,9 @@ import { createAdminArticle } from "../content/content-api.ts";
 import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 
 function languageLabel(lang: SupportedLocaleDefinition): string {
-  return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
+  const native = lang.nativeName?.trim() ?? "";
+  if (native && !/^\?+$/.test(native)) return native;
+  return lang.displayName?.trim() || lang.code;
 }
 
 function draftDefaults(code: string): { title: string; excerpt: string } {

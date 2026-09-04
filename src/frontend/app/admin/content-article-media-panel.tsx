@@ -72,9 +72,12 @@ export function ContentArticleMediaPanel({
     applyWorkspace(result.data);
   }, [applyWorkspace, articleId]);
 
+  // Reload only when articleId changes. Depending on `reload` identity causes an
+  // infinite load loop when parent passes a fresh onWorkspaceChange each render.
   useEffect(() => {
     void reload();
-  }, [reload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional articleId-only
+  }, [articleId]);
 
   const openPicker = (target: PickerTarget) => {
     if (!editable) return;

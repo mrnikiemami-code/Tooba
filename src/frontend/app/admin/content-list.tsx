@@ -97,7 +97,10 @@ function allowedCapability(caps: Set<string> | null, permissionId: string): bool
 }
 
 function languageTabLabel(lang: SupportedLocaleDefinition): string {
-  return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
+  const native = lang.nativeName?.trim() ?? "";
+  // Prefer displayName when nativeName is mojibake/question-marks from encoding corruption.
+  if (native && !/^\?+$/.test(native)) return native;
+  return lang.displayName?.trim() || lang.code;
 }
 
 function TitleCell(params: ICellRendererParams<AdminContentArticle>) {

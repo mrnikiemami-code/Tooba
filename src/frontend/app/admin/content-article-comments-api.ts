@@ -2,7 +2,11 @@
  * کلاینت Admin برای نظرات مقاله و تعدیل.
  */
 import { parseAdminProblemErrorCode } from "./admin-error-map.ts";
-import { prepareAdminDevActor } from "./admin-api.ts";
+import {
+  ADMIN_ACTOR_STORAGE_KEY,
+  ADMIN_DEV_ACTOR_HEADER,
+  prepareAdminDevActor,
+} from "./admin-api.ts";
 
 export type ArticleCommentStatus = "Pending" | "Approved" | "Rejected" | "Hidden";
 
@@ -32,10 +36,16 @@ type AdminResult<T> =
   | { state: "ok"; data: T; status: number }
   | { state: "denied" | "error"; data: null; status: number; message: string };
 
-function adminHeaders(json = false): HeadersInit {
-  prepareAdminDevActor();
+function actorId(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(ADMIN_ACTOR_STORAGE_KEY) ?? "";
+}
+
+async function adminHeaders(json = false): Promise<HeadersInit> {
+  await prepareAdminDevActor();
   const headers: Record<string, string> = {
     Accept: "application/json",
+    [ADMIN_DEV_ACTOR_HEADER]: actorId(),
   };
   if (json) headers["Content-Type"] = "application/json";
   return headers;
@@ -137,7 +147,7 @@ export async function loadArticleComments(
     if (opts.search?.trim()) qs.set("search", opts.search.trim());
     const response = await fetch(
       `/v1/admin/content/articles/${encodeURIComponent(articleId)}/comments?${qs}`,
-      { headers: adminHeaders() },
+      { headers: await adminHeaders() },
     );
     return await readResult(response, mapPage);
   } catch {
@@ -155,7 +165,7 @@ export async function createArticleComment(
       `/v1/admin/content/articles/${encodeURIComponent(articleId)}/comments`,
       {
         method: "POST",
-        headers: adminHeaders(true),
+        headers: await adminHeaders(true),
         body: JSON.stringify({
           displayName: input.displayName,
           body: input.body,
@@ -181,7 +191,7 @@ async function moderate(
       `/v1/admin/content/articles/${encodeURIComponent(articleId)}/comments/${encodeURIComponent(commentId)}/${action}`,
       {
         method: "POST",
-        headers: adminHeaders(true),
+        headers: await adminHeaders(true),
         body: JSON.stringify({ note: note ?? null }),
       },
     );
