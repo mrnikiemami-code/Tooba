@@ -384,7 +384,7 @@ export function parseAdminProblemErrorCode(payload: unknown, status: number): st
     const code = textProp(item, "errorCode", "ErrorCode", "code", "Code");
     const detail = textProp(item, "detail", "Detail", "message", "Message");
     // وقتی Host کد عمومی برمی‌گرداند، detail اغلب کد دامنهٔ واقعی است.
-    if (code === "content.update.rejected" || code === "content.article.media.rejected") {
+    if (code === "content.update.rejected" || code === "content.create.rejected" || code === "content.article.media.rejected") {
       const fromDetail = extractAdminErrorCode(detail);
       if (fromDetail && fromDetail !== code) return fromDetail;
     }
