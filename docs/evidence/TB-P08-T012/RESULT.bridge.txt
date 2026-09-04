@@ -1,0 +1,84 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Channel: tooba-main
+TaskId: TB-P08-T012
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Repo: D:\Users\User\source\repos\SarvNewVer (github.com/mrznamami-code/Tooba)
+HEAD: 9774cdb5440dfc25f3457ed299cbabe5ca86cd2e
+HEAD==origin/main: YES
+USER_VISUAL_ACCEPTED=NO
+
+## Summary
+TB-P08-T012 Article Workspace Core Repair delivered: Content TipTap editor composition, workspace header save/dirty context, Media/SEO Content-Type + error-code promotion repairs, category/locale stale-state fix, and human SEO wording. Runtime smoke after Host restart: fa/en Draft create+update + media workspace + FE pages 200. Worker IDLE. No T013 invented.
+
+## Workspace-Hierarchy
+Article EDIT header shows title, status, Language, dirty/save state, primary Save; VIEW/EDIT explicit; Archive/Delete visually separated; no fake Preview.
+
+## Editor-Discovery
+Inspected ProductRichTextEditor/TipTap/DAM seam. Reused TipTap; created Content-specific ContentArticleRichTextEditor. Replaced fragile window DAM resolve with component callback/ref where applicable.
+
+## Professional-Content-Editor
+H2–H4, paragraph, bold/italic/underline/strike, lists, blockquote, alignment, links, tables, undo/redo, DAM image insert, RTL/LTR by Article Language, grouped wrapping toolbar, larger canvas, sanitizeArticleRichHtml + safe paste. No CKEditor.
+
+## Inline-Media
+Insert Image → Media Library → insert storefront media URL with data-media-asset-id; article sanitizer allowlist retained.
+
+## Media-Root-Cause
+adminHeaders(true) omitted Content-Type application/json on media mutations → body binding failures. Featured could be wiped by stale parent coverMediaAssetId on Save.
+
+## Media-Repair
+JSON Content-Type on media API writes; Media panel sync avoids overwriting Featured on Save; gallery mutations preserved; DAM assets not deleted on unassign; mapped localized media errors.
+
+## SEO-Image-Root-Cause
+Same Content-Type/binding issue + ambiguous SEO copy; Host errors sometimes wrapped as generic rejected codes.
+
+## SEO-UX
+Human labels: تصویر اشتراک‌گذاری و شبکه‌های اجتماعی; استفاده از تصویر شاخص مقاله vs انتخاب جداگانه; effective preview path retained without jargon.
+
+## Category-Save-Root-Cause
+content.update.rejected with detail localization.language.inactive / category language mismatch from inactive Languages or stale draftCategoryId after locale change; FE ignored detail when errorCode was generic.
+
+## Category-Save-Repair
+Clear incompatible category on locale change; Host ResolveArticleUpdateErrorCode promotes domain codes; FE parseAdminProblemErrorCode reads detail for update/create/media rejected wrappers; valid Article↔Category saves work when languages active.
+
+## Save-Reliability
+General/Content/Category/Author/Media/SEO paths audited; Save persists and reload applies; no silent success on failure.
+
+## Error-UX
+admin-error-map covers locale_locked, language inactive, category mismatch, author inactive/not_found, update/create rejected fallbacks. No raw Bad Request/JSON in normal UI.
+
+## RTL-LTR
+Editor/content canvas direction follows Article Language (fa RTL / en LTR).
+
+## Focused-Validation
+FE source-assert + error-map + recovery guard: 17/17 pass (per implementation). git diff --check clean. Host compile green after unlock.
+
+## Runtime-Smoke
+Host restarted on T012 bits. Seeded empty Language registry (fa-IR/en-US). Create+Update fa/en Drafts 200; media workspace 200; FE list + EDIT pages 200. Full Media Library click UI left for visual accept (USER_VISUAL_ACCEPTED=NO).
+
+## Recovery-SoT
+Phase P08
+Last Architect-accepted: TB-P08-T011
+Last Implementation: TB-P08-T012
+Current Issued: (none)
+Current Repair: (none)
+USER_VISUAL_ACCEPTED=NO
+Worker Next State: IDLE
+Evidence: docs/evidence/TB-P08-T012/
+No T013 invented.
+
+## Git
+16ea601b feat(content): TB-P08-T012 article workspace editor, media/SEO/category save repairs
+c82bc3f0 fix(content): TB-P08-T012 promote create domain error codes; record runtime smoke
+(+ follow-up admin-error-map create.rejected detail mapping on HEAD)
+HEAD==origin/main. App_Data untracked.
+
+## Architectural-Concerns
+Empty Language registry on fresh/alternate Postgres volumes causes inactive-language rejects until Languages seeded — Host LanguageBootstrap should remain fail-safe; Admin Languages is SoT.
+
+## Visual-Concerns
+USER_VISUAL_ACCEPTED=NO — Architect/user visual acceptance not claimed. Reference image used as capability inspiration only.
+
+## Blockers
+None for PASS criteria; browser DAM click-path not fully automated (documented).
