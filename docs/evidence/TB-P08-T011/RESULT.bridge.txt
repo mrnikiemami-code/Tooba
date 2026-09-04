@@ -1,0 +1,81 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Channel: tooba-main
+TaskId: TB-P08-T011
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Repo: D:\Users\User\source\repos\SarvNewVer (github.com/mrznamami-code/Tooba)
+HEAD: 4e85dcaef5acb99a3aab01290de7ff42ca429d79
+HEAD==origin/main: YES
+USER_VISUAL_ACCEPTED=NO
+
+## Summary
+TB-P08-T011 Content Workflow Foundation delivered: dynamic Article List language tabs (active Languages from Admin API), draft-first Create without Author/Category/Media/SEO, Author picker path repair, and pristine-Draft locale mutability with backend enforcement. Prior admin edit-mode loop fix included on same push. Worker returns IDLE. No T012 invented.
+
+## Language-Tabs
+Admin Content list loads active languages via loadAdminLanguages (SortOrder, NativeName). Tabs above AppDataGrid; URL synced as ?language=<code>; invalid/inactive falls back to default active Language. Locale column removed from grid/advanced filters because tab provides context.
+
+## Initial-Lazy-Loading
+Initial and tab-switch fetches inject server-side locale text equals filter into Grid query. No all-language Article preload; AppDataGrid empty state when selected language has zero Articles.
+
+## Create-Language-Context
+/admin/content/articles/new inherits ?language= from list Create link; direct open defaults to canonical default active Language. Language radios/options are dynamic from persisted active Languages (no hard-coded fa/en list on create).
+
+## Draft-First-Create
+Create persists minimal Draft with authorId null and empty authorDisplayName, then navigates to Article workspace. Author/Category/Media/SEO not required for Draft creation. Publish readiness still enforces Author via EnsurePublishableAuthorAsync.
+
+## Author-Availability-Root-Cause
+FE called non-existent GET /v1/admin/content/authors/active while Host exposes GET /v1/admin/content/authors/picker. Fixed client to picker?activeOnly=true. Authors are global (not Article-language filtered).
+
+## Author-Picker
+Workspace Author tab uses searchable active Author picker (displayName/slug), no raw ID UX for selection. Inactive Authors excluded from new assignment; historical references remain loadable.
+
+## Language-Mutability-Rule
+Language change allowed only for pristine Draft. Locked when Published/Archived or any of Author, Category, featured/SEO media, gallery media, non-empty body, SEO fields, tags, featured flag, or category label.
+
+## Backend-Enforcement
+ContentArticle.CanChangeLocale(); ContentDirectory.UpdateAsync rejects locked changes (+ gallery Any); EnsureArticleAuthorAssignmentAsync allows null; Validate allows empty authorDisplayName; EnsurePublishableAuthorAsync still requires Author on publish.
+
+## Admin-Language-UX
+VIEW: Language readable. EDIT: editable selector only when unlocked; locked shows: «زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست.»
+
+## Error-UX
+admin-error-map includes content.article.locale_locked, content.author.* (incl. required_for_publish), and related content/language codes. Touched flows use mapped Persian messages (no raw Bad Request / content.* dumps).
+
+## Query-Performance
+Tab switch = one server Grid query with locale equals filter; retained DB-native paging/filter/sort. Author picker bounded list/search via picker endpoint.
+
+## Focused-Validation
+- FE source-assert content tests: 19 pass
+- ContentArticleEditorTests + ContentAuthorDirectoryTests: 2 pass
+- docs/ai/recovery-staleness.guard.test.mjs: 3 pass
+- git diff --check: clean
+- Full repo suites / long browser campaign: not run (task-scoped)
+
+## Runtime-Smoke
+Host was briefly stopped to unlock DLLs for focused BE tests. Smoke of live UI after restart was not fully re-run in this worker pass; validation covered by focused FE/BE tests + evidence. Restart Host/FE as needed for human visual review.
+
+## Recovery-SoT
+Phase: P08
+Last Architect-accepted: TB-P08-T010-R1
+Last Implementation: TB-P08-T011
+Current Issued: (none)
+Current Repair: (none)
+USER_VISUAL_ACCEPTED=NO
+Worker Next State: IDLE — waits for Architect (no T012)
+Evidence: docs/evidence/TB-P08-T011/
+
+## Git
+Commits on origin/main:
+- bd0f0b63 fix(admin): stop edit-mode render loop and restore article HTML sanitizer
+- 4e85dcae feat(content): TB-P08-T011 language tabs, draft-first create, author picker, locale policy
+HEAD==origin/main. App_Data untracked (runtime) not committed.
+
+## Architectural-Concerns
+None new beyond pre-existing Host ContentDevelopmentSeed scoped-DbContext boot noise if still present.
+
+## Visual-Concerns
+USER_VISUAL_ACCEPTED=NO — Architect/user visual acceptance not claimed.
+
+## Blockers
+None.
