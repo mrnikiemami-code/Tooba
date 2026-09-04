@@ -33,6 +33,7 @@
     "test": "npm run test:grid && npm run test:workspace && npm run test:category-tree && npm run test:product-workspace && npm run test:admin && npm run test:seller && npm run test:fulfillment && npm run test:returns && npm run test:settlement && npm run test:content && npm run test:stories && npm run test:composition && npm run test:i18n && npm run test:customer && npm run test:storefront && npm run test:critical-storefront"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.2.0",
     "@hookform/resolvers": "^5.9.1",
     "@tiptap/extension-font-family": "^3.30.5",
     "@tiptap/extension-image": "^3.30.5",
@@ -51,6 +52,7 @@
     "ag-grid-community": "^36.1.0",
     "ag-grid-react": "^36.1.0",
     "antd": "^5.27.6",
+    "ckeditor5": "^48.5.0",
     "dayjs": "^1.11.23",
     "exceljs": "^4.4.0",
     "isomorphic-dompurify": "^3.23.0",

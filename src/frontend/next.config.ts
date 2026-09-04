@@ -7,7 +7,16 @@ const hostOrigin = process.env.TOOBA_HOST_ORIGIN ?? "http://127.0.0.1:5088";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["antd", "@ant-design/icons", "rc-util", "rc-pagination", "rc-picker", "rc-tree"],
+  transpilePackages: [
+    "antd",
+    "@ant-design/icons",
+    "rc-util",
+    "rc-pagination",
+    "rc-picker",
+    "rc-tree",
+    "ckeditor5",
+    "@ckeditor/ckeditor5-react",
+  ],
   async rewrites() {
     return [
       { source: "/v1/:path*", destination: `${hostOrigin}/v1/:path*` },

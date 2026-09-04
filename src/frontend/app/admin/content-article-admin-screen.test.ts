@@ -7,7 +7,8 @@ const api = readFileSync(join(import.meta.dirname, "../content/content-api.ts"),
 const screen = readFileSync(join(import.meta.dirname, "content-article-admin-screen.tsx"), "utf8");
 const list = readFileSync(join(import.meta.dirname, "content-list.tsx"), "utf8");
 const newScreen = readFileSync(join(import.meta.dirname, "content-article-new-screen.tsx"), "utf8");
-const editor = readFileSync(join(import.meta.dirname, "content-article-rich-text-editor.tsx"), "utf8");
+const editor = readFileSync(join(import.meta.dirname, "content-article-editor.tsx"), "utf8");
+const ck = readFileSync(join(import.meta.dirname, "content-article-ckeditor.tsx"), "utf8");
 
 test("content article api exposes workspace load/update and locale helpers", () => {
   assert.match(api, /loadAdminArticle/);
@@ -19,9 +20,11 @@ test("content article api exposes workspace load/update and locale helpers", () 
   assert.match(api, /coverMediaAssetId/);
 });
 
-test("content article admin workspace uses TipTap content editor, tabs, and DAM", () => {
-  assert.match(screen, /ContentArticleRichTextEditor/);
+test("content article admin workspace uses CKEditor content editor, tabs, and DAM", () => {
+  assert.match(screen, /ContentArticleEditor/);
+  assert.doesNotMatch(screen, /ContentArticleRichTextEditor/);
   assert.doesNotMatch(screen, /ProductRichTextEditor/);
+  assert.doesNotMatch(screen, /@tiptap/);
   assert.match(screen, /MediaLibraryDialog/);
   assert.match(screen, /useAdminFormMode/);
   assert.match(screen, /content-article-tab-/);
@@ -39,16 +42,24 @@ test("content article admin workspace uses TipTap content editor, tabs, and DAM"
   assert.match(screen, /setDraftCategoryId\(""\)/);
 });
 
-test("content article rich text editor has professional toolbar contract", () => {
-  assert.match(editor, /data-content-editor="article"/);
-  assert.match(editor, /toggleStrike/);
-  assert.match(editor, /toggleHeading\(\{ level: 4 \}\)/);
-  assert.match(editor, /block-style/);
-  assert.match(editor, /transformPastedHTML/);
-  assert.match(editor, /sanitizeArticleRichHtml/);
-  assert.match(editor, /insert-image/);
-  assert.match(editor, /min-h-\[22rem\]/);
-  assert.doesNotMatch(editor, /ckeditor/i);
+test("content article editor is CKEditor 5 with professional toolbar contract", () => {
+  assert.match(editor, /ContentArticleEditor/);
+  assert.match(editor, /dynamic\(/);
+  assert.match(editor, /ssr:\s*false/);
+  assert.match(ck, /data-content-editor="article"/);
+  assert.match(ck, /data-editor="ckeditor5"/);
+  assert.match(ck, /ClassicEditor/);
+  assert.match(ck, /@ckeditor\/ckeditor5-react/);
+  assert.match(ck, /strikethrough/i);
+  assert.match(ck, /heading4|heading2/);
+  assert.match(ck, /FindAndReplace/);
+  assert.match(ck, /damImage/);
+  assert.match(ck, /onPickDamImage/);
+  assert.match(ck, /sanitizeArticleRichHtml/);
+  assert.match(ck, /min-h-\[22rem\]|min-height:\s*22rem/);
+  assert.doesNotMatch(ck, /@tiptap/);
+  assert.doesNotMatch(ck, /CKBox|CloudServices|EasyImage|Base64UploadAdapter/);
+  assert.doesNotMatch(editor, /ProductRichTextEditor/);
 });
 
 test("content list links to language-first create and article workspace edit", () => {

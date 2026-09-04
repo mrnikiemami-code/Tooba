@@ -17,7 +17,7 @@ import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
 import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 import { ContentArticleDestructiveDialog, type ArticleDestructiveKind } from "./content-article-destructive-dialog.tsx";
-import { ContentArticleRichTextEditor } from "./content-article-rich-text-editor.tsx";
+import { ContentArticleEditor } from "./content-article-editor.tsx";
 import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
 import {
   assignArticleSeoImage,
@@ -652,7 +652,7 @@ export function ContentArticleAdminScreen() {
                   }}
                 />
               ) : (
-                <ContentArticleRichTextEditor
+                <ContentArticleEditor
                   value={draftBody}
                   onChange={(value) => {
                     setDraftBody(value);

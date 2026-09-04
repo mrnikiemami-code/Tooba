@@ -1,0 +1,31 @@
+/* Shell-only Tooba tokens around CKEditor; keep editor UX mostly stock. */
+
+.content-article-ckeditor .ck.ck-editor {
+  width: 100%;
+}
+
+.content-article-ckeditor .ck.ck-toolbar {
+  flex-wrap: wrap !important;
+  border: none !important;
+  background: #f8fafc !important;
+}
+
+.content-article-ckeditor .ck.ck-editor__main > .ck-editor__editable {
+  min-height: 22rem;
+  max-height: 40rem;
+  overflow-y: auto;
+  font-size: 1rem;
+  line-height: 2;
+  padding: 1rem 1.1rem !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.content-article-ckeditor .ck.ck-editor__editable:not(.ck-editor__nested-editable).ck-focused {
+  border: none !important;
+  box-shadow: inset 0 0 0 2px rgb(37 99 235 / 0.25) !important;
+}
+
+.content-article-ckeditor .ck-dam-image-button {
+  font-weight: 600;
+}
