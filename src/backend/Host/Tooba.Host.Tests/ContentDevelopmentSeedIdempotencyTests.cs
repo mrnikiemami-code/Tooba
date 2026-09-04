@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Tooba.Content.Application;
@@ -83,7 +83,7 @@ public sealed class ContentDevelopmentSeedIdempotencyTests : IAsyncLifetime
 
         var categories = new ContentCategoryDirectory(db);
         var authors = new ContentAuthorDirectory(db);
-        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors, new ContentTagDirectory(db));
         Assert.Null(await directory.GetPublishedBySlugAsync(
             "scheduled-fa-festival-guide",
             ContentArticle.DefaultLocale,

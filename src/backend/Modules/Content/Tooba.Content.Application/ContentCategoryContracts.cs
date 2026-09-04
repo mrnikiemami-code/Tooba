@@ -123,5 +123,6 @@ public interface IContentCategoryDirectory
     Task EnsureArticleCategoryLanguageMatchAsync(
         string articleLocale,
         Guid? categoryId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        bool isNewAssignment = true);
 }

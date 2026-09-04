@@ -56,7 +56,8 @@ public sealed class ContentArticlePublicRoutingTests : IAsyncLifetime
             db,
             new PermissiveLanguageDirectory(),
             new ContentCategoryDirectory(db),
-            new ContentAuthorDirectory(db));
+            new ContentAuthorDirectory(db),
+            new ContentTagDirectory(db));
 
         var author = await new ContentAuthorDirectory(db).CreateAsync(
             new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),

@@ -3,7 +3,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>قواعد درخت دسته‌بندی مقاله — بدون وابستگی DB.</summary>
+/// <summary>قواعد درخت دسته‌بندی مقاله — حداکثر عمق ۲.</summary>
 public sealed class ContentCategoryTreeRulesTests
 {
     [Fact]
@@ -47,6 +47,45 @@ public sealed class ContentCategoryTreeRulesTests
         var maps = Maps((root, null, "fa-IR"), (child, root, "fa-IR"), (grand, child, "fa-IR"));
         Assert.True(ContentCategoryTreeRules.IsDescendant(root, grand, maps.ParentById));
         Assert.False(ContentCategoryTreeRules.IsDescendant(child, root, maps.ParentById));
+    }
+
+    [Fact]
+    public void Create_rejects_level3_under_level2_parent()
+    {
+        var root = Guid.NewGuid();
+        var child = Guid.NewGuid();
+        var maps = Maps((root, null, "fa-IR"), (child, root, "fa-IR"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ContentCategoryTreeRules.ValidateCreateUnderParent(child, maps.ParentById));
+        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, ex.Message);
+    }
+
+    [Fact]
+    public void Move_rejects_level1_with_child_under_level2()
+    {
+        var root = Guid.NewGuid();
+        var child = Guid.NewGuid();
+        var otherRoot = Guid.NewGuid();
+        var otherChild = Guid.NewGuid();
+        var maps = Maps(
+            (root, null, "fa-IR"),
+            (child, root, "fa-IR"),
+            (otherRoot, null, "fa-IR"),
+            (otherChild, otherRoot, "fa-IR"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            ContentCategoryTreeRules.ValidateMove(root, otherChild, maps.ParentById, maps.LanguageById));
+        Assert.Equal(ContentCategoryErrorCodes.MaxDepthExceeded, ex.Message);
+    }
+
+    [Fact]
+    public void ComputeDepth_root_is_one_child_is_two()
+    {
+        var root = Guid.NewGuid();
+        var child = Guid.NewGuid();
+        var maps = Maps((root, null, "fa-IR"), (child, root, "fa-IR"));
+        Assert.Equal(1, ContentCategoryTreeRules.ComputeDepth(root, maps.ParentById));
+        Assert.Equal(2, ContentCategoryTreeRules.ComputeDepth(child, maps.ParentById));
+        Assert.Equal(2, ContentCategoryTreeRules.MaxDepth);
     }
 
     private static (Dictionary<Guid, Guid?> ParentById, Dictionary<Guid, string> LanguageById) Maps(

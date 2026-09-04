@@ -37,6 +37,7 @@ import {
   collectExpandableParentIds,
   filterCategoryForest,
   isValidCategoryDrop,
+  MAX_CATEGORY_DEPTH,
   splitHighlight,
   type AppCategoryTreeNode,
   type CategoryDropPosition,
@@ -77,6 +78,8 @@ export interface AppCategoryTreeProps {
   emptyCtaLabel?: string;
   noSearchResultsLabel?: string;
   uiLocale?: "fa" | "en";
+  /** حداکثر عمق مجاز برای افزودن فرزند (Catalog پیش‌فرض ۳؛ Content مقاله ۲). */
+  maxDepth?: number;
   /** بستن پنل درخت (مثلاً برای آزاد کردن فضای workspace). */
   onCollapsePane?: () => void;
   collapsePaneLabel?: string;
@@ -253,6 +256,7 @@ export function AppCategoryTree({
   emptyCtaLabel = "اولین دسته‌بندی را ایجاد کنید",
   noSearchResultsLabel = "نتیجه‌ای برای این جستجو پیدا نشد",
   uiLocale = "fa",
+  maxDepth = MAX_CATEGORY_DEPTH,
   onCollapsePane,
   collapsePaneLabel = "بستن درخت",
 }: AppCategoryTreeProps) {
@@ -330,7 +334,7 @@ export function AppCategoryTree({
             searchQuery={query}
             allowDrag={allowDrag && Boolean(onDropRequest)}
             uiLocale={uiLocale}
-            canCreateChild={canAddCategoryChild(nodes, node.id)}
+            canCreateChild={canAddCategoryChild(nodes, node.id, maxDepth)}
             onToggleExpand={toggleExpand}
             onSelect={onSelect}
             onCreateChild={onCreateChild}
@@ -342,6 +346,7 @@ export function AppCategoryTree({
     [
       allowDrag,
       expandedSet,
+      maxDepth,
       nodes,
       onCreateChild,
       onDropRequest,
@@ -382,7 +387,7 @@ export function AppCategoryTree({
       position = "after";
     }
     const request: CategoryDropRequest = { dragId, dropId, position };
-    if (!isValidCategoryDrop(nodes, request)) {
+    if (!isValidCategoryDrop(nodes, request, maxDepth)) {
       return;
     }
     await onDropRequest(request);
@@ -562,7 +567,7 @@ export function AppCategoryTree({
                   dragId: String(dragNode.key),
                   dropId: String(dropNode.key),
                   position,
-                });
+                }, maxDepth);
               }}
               onDrop={(info) => {
                 void handleDrop(info);
@@ -583,7 +588,7 @@ export function AppCategoryTree({
           data-testid="category-tree-actions-menu"
           onClick={(e) => e.stopPropagation()}
         >
-          {onCreateChild && canAddCategoryChild(nodes, menu.id) ? (
+          {onCreateChild && canAddCategoryChild(nodes, menu.id, maxDepth) ? (
             <button
               type="button"
               role="menuitem"
@@ -593,7 +598,7 @@ export function AppCategoryTree({
                 setMenu(null);
               }}
             >
-              افزودن زیرمجموعه
+              {uiLocale === "en" ? "Add subcategory" : "افزودن زیردسته"}
             </button>
           ) : null}
           <button

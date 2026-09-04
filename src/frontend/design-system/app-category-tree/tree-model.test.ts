@@ -68,6 +68,16 @@ function sampleFlat(): AppCategoryTreeNode[] {
   ];
 }
 
+test("canAddCategoryChild respects custom maxDepth for content taxonomy", () => {
+  const flat = sampleFlat();
+  assert.equal(canAddCategoryChild(flat, "root-a", 2), true);
+  assert.equal(canAddCategoryChild(flat, "child-a1", 2), false);
+  assert.equal(
+    isValidCategoryDrop(flat, { dragId: "root-b", dropId: "child-a1", position: "inside" }, 2),
+    false,
+  );
+});
+
 test("canAddCategoryChild blocks level-3 parents", () => {
   const flat = sampleFlat();
   assert.equal(canAddCategoryChild(flat, null), true);

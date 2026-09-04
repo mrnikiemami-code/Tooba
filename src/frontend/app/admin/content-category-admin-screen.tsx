@@ -7,9 +7,11 @@ import { toast } from "react-toastify";
 import {
   AppCategoryTree,
   buildParentMap,
+  canAddCategoryChild,
   collectAncestorIds,
   formatJalaliDate,
   isSelfOrDescendant,
+  MAX_CONTENT_CATEGORY_DEPTH,
   useAdminFormMode,
   type AppCategoryTreeNode,
 } from "../../design-system";
@@ -64,11 +66,13 @@ function parentOptions(
   selectedId: string | null,
   languageCode: string,
 ): { id: string; label: string }[] {
-  const parentMap = buildParentMap(toTreeNodes(rows));
+  const tree = toTreeNodes(rows);
+  const parentMap = buildParentMap(tree);
   return rows
     .filter((row) => row.languageCode === languageCode)
+    .filter((row) => !row.parentId) // فقط دسته اصلی می‌تواند والد باشد (عمق ۲)
     .filter((row) => !selectedId || (row.id !== selectedId && !isSelfOrDescendant(parentMap, selectedId, row.id)))
-    .map((row) => ({ id: row.id, label: row.name }));
+    .map((row) => ({ id: row.id, label: `${row.name} (دسته اصلی)` }));
 }
 
 export function ContentCategoryAdminScreen() {
@@ -162,12 +166,16 @@ export function ContentCategoryAdminScreen() {
   }, [router]);
 
   const openCreate = useCallback((parentId: string | null) => {
+    if (parentId && !canAddCategoryChild(treeNodes, parentId, MAX_CONTENT_CATEGORY_DEPTH)) {
+      toast.error("دسته‌بندی مقاله حداکثر می‌تواند دو سطح داشته باشد.");
+      return;
+    }
     setCreateParentId(parentId);
     setCreateName("");
     setCreateSlug("");
     setCreateSlugTouched(false);
     setShowCreate(true);
-  }, []);
+  }, [treeNodes]);
 
   const saveCreate = useCallback(async () => {
     setSaving(true);
@@ -284,7 +292,7 @@ export function ContentCategoryAdminScreen() {
             onClick={() => openCreate(null)}
             data-testid="content-category-create-root"
           >
-            دسته جدید
+            دسته اصلی
           </button>
         </div>
       </div>
@@ -313,6 +321,10 @@ export function ContentCategoryAdminScreen() {
               onSearchQueryChange={setSearch}
               direction={languageCode === "fa-IR" ? "rtl" : "ltr"}
               uiLocale={languageCode === "fa-IR" ? "fa" : "en"}
+              maxDepth={MAX_CONTENT_CATEGORY_DEPTH}
+              createLabel={languageCode === "fa-IR" ? "دسته اصلی" : "Main category"}
+              title={languageCode === "fa-IR" ? "دسته‌بندی مقالات" : "Article categories"}
+              allowDrag={false}
             />
           )}
         </section>
@@ -467,7 +479,9 @@ export function ContentCategoryAdminScreen() {
       {showCreate ? (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-bold">دستهٔ جدید</h3>
+            <h3 className="text-lg font-bold">
+              {createParentId ? "زیردستهٔ جدید" : "دستهٔ اصلی جدید"}
+            </h3>
             <label className="mt-3 block text-sm">
               نام
               <input

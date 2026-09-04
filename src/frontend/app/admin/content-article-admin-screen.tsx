@@ -13,6 +13,11 @@ import {
 } from "../access-control/access-control-api.ts";
 import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
+import {
+  buildContentArticleCategoryOptions,
+  ContentArticleCategoryPicker,
+} from "./content-article-category-picker.tsx";
+import { ContentArticleTagsPanel } from "./content-article-tags-panel.tsx";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
 import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
@@ -72,17 +77,6 @@ function isPublished(status: string): boolean {
   return isArticlePublished(status);
 }
 
-function tagsToString(tags: string[]): string {
-  return tags.join(", ");
-}
-
-function tagsFromString(value: string): string[] {
-  return value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
 function statusLabel(status: string): string {
   if (isArticleArchived(status)) return "بایگانی";
   if (isPublished(status)) return "منتشر";
@@ -120,8 +114,8 @@ export function ContentArticleAdminScreen() {
   const [draftAuthorId, setDraftAuthorId] = useState("");
   const [draftSeoTitle, setDraftSeoTitle] = useState("");
   const [draftSeoDescription, setDraftSeoDescription] = useState("");
-  const [draftTags, setDraftTags] = useState("");
   const [draftPublishDate, setDraftPublishDate] = useState("");
+  const [tagsEpoch, setTagsEpoch] = useState(0);
 
   const [canEditContent, setCanEditContent] = useState(true);
   useEffect(() => {
@@ -185,8 +179,8 @@ export function ContentArticleAdminScreen() {
     setDraftAuthorId(data.authorId ?? "");
     setDraftSeoTitle(data.seoTitle ?? "");
     setDraftSeoDescription(data.seoDescription ?? "");
-    setDraftTags(tagsToString(data.tags));
     setDraftPublishDate(data.publishDate ? data.publishDate.slice(0, 16) : "");
+    setTagsEpoch((n) => n + 1);
   }, []);
 
   const refreshArticle = useCallback(
@@ -272,7 +266,7 @@ export function ContentArticleAdminScreen() {
         mediaWorkspace?.featuredMediaAssetId ?? article?.coverMediaAssetId ?? null,
       seoTitle: draftSeoTitle || null,
       seoDescription: draftSeoDescription || null,
-      tags: tagsFromString(draftTags),
+      tags: [],
       isFeatured: draftIsFeatured,
       locale: draftLocale,
       publishDate: draftPublishDate ? new Date(draftPublishDate).toISOString() : null,
@@ -290,7 +284,6 @@ export function ContentArticleAdminScreen() {
       draftPublishDate,
       draftSeoDescription,
       draftSeoTitle,
-      draftTags,
       draftTitle,
     ],
   );
@@ -593,6 +586,7 @@ export function ContentArticleAdminScreen() {
                     setDraftLocale(next);
                     setDraftCategoryId("");
                     setDraftCategory("");
+                    setTagsEpoch((n) => n + 1);
                     form.markDirty();
                   }}
                 >
@@ -673,25 +667,16 @@ export function ContentArticleAdminScreen() {
           <div className="space-y-3">
             <label className="block text-sm">
               <span className="mb-1 block text-muted">دسته (همان زبان مقاله)</span>
-              <select
-                className="w-full rounded-xl border px-3 py-2"
+              <ContentArticleCategoryPicker
+                options={buildContentArticleCategoryOptions(categoryOptions)}
                 value={draftCategoryId}
                 disabled={form.mode === "view"}
-                data-testid="content-article-category-select"
-                onChange={(e) => {
-                  const selected = categoryOptions.find((row) => row.id === e.target.value);
-                  setDraftCategoryId(e.target.value);
-                  setDraftCategory(selected?.name ?? "");
+                onChange={(id, name) => {
+                  setDraftCategoryId(id);
+                  setDraftCategory(name);
                   form.markDirty();
                 }}
-              >
-                <option value="">— بدون دسته —</option>
-                {categoryOptions.map((row) => (
-                  <option key={row.id} value={row.id}>
-                    {row.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
           </div>
         ) : null}
@@ -852,18 +837,15 @@ export function ContentArticleAdminScreen() {
                 }}
               />
             </label>
-            <label className="block text-sm">
-              <span className="mb-1 block text-muted">برچسب‌ها (با ویرگول)</span>
-              <input
-                className="w-full rounded-xl border px-3 py-2"
-                value={draftTags}
-                disabled={form.mode === "view"}
-                onChange={(e) => {
-                  setDraftTags(e.target.value);
-                  form.markDirty();
-                }}
+            {articleId ? (
+              <ContentArticleTagsPanel
+                key={`${articleId}-${draftLocale}-${tagsEpoch}`}
+                articleId={articleId}
+                languageCode={draftLocale}
+                canEdit={form.mode !== "view" && canEditContent}
+                onChanged={() => form.markDirty()}
               />
-            </label>
+            ) : null}
           </div>
         ) : null}
 

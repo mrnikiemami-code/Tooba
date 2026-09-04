@@ -263,8 +263,8 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "The article could not be saved. Please review the fields and try again.",
   },
   "content.category.language_mismatch": {
-    fa: "دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.",
-    en: "The selected category does not match the article language.",
+    fa: "زبان دسته‌بندی باید با زبان مقاله یکسان باشد.",
+    en: "The category language must match the article language.",
   },
   "content.category.not_found": {
     fa: "دستهٔ مقاله یافت نشد.",
@@ -273,6 +273,54 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
   "content.category.invalid_language": {
     fa: "زبان دسته نامعتبر است.",
     en: "The category language is not valid.",
+  },
+  "content.category.max_depth_exceeded": {
+    fa: "دسته‌بندی مقاله حداکثر می‌تواند دو سطح داشته باشد.",
+    en: "Article categories can have at most two levels.",
+  },
+  "content.category.invalid_parent": {
+    fa: "والد انتخاب‌شده برای دسته معتبر نیست.",
+    en: "The selected parent category is not valid.",
+  },
+  "content.category.inactive": {
+    fa: "دستهٔ بایگانی‌شده برای انتساب جدید مجاز نیست.",
+    en: "An archived category cannot be newly assigned.",
+  },
+  "content.category.cross_language_parent": {
+    fa: "والد باید همان زبان دسته باشد.",
+    en: "The parent category must use the same language.",
+  },
+  "content.category.slug_duplicate": {
+    fa: "این نامک برای یک دستهٔ دیگر در همین زبان استفاده شده است.",
+    en: "This slug is already used by another category in the same language.",
+  },
+  "content.tag.duplicate_name": {
+    fa: "این برچسب قبلاً ثبت شده است.",
+    en: "This tag already exists.",
+  },
+  "content.tag.language_mismatch": {
+    fa: "زبان برچسب باید با زبان مقاله یکسان باشد.",
+    en: "The tag language must match the article language.",
+  },
+  "content.tag.inactive": {
+    fa: "برچسب غیرفعال برای انتساب جدید مجاز نیست.",
+    en: "An inactive tag cannot be newly assigned.",
+  },
+  "content.tag.not_found": {
+    fa: "برچسب یافت نشد.",
+    en: "The tag was not found.",
+  },
+  "content.tag.invalid_name": {
+    fa: "نام برچسب معتبر نیست.",
+    en: "The tag name is not valid.",
+  },
+  "content.tag.invalid_language": {
+    fa: "زبان برچسب نامعتبر است.",
+    en: "The tag language is not valid.",
+  },
+  "content.tag.article_not_found": {
+    fa: "مقاله برای انتساب برچسب یافت نشد.",
+    en: "The article for tag assignment was not found.",
   },
   "content.article.media_not_found": {
     fa: "رسانهٔ انتخاب‌شده در دسترس نیست یا یافت نشد.",

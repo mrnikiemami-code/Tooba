@@ -33,11 +33,19 @@ export interface LocaleTranslationStatus {
   readiness: TranslationReadiness;
 }
 
-/** حداکثر عمق درخت دسته (ریشه = ۱)؛ افزودن زیرمجموعه زیر سطح ۳ ممنوع است. */
+/** حداکثر عمق درخت دسته Catalog (ریشه = ۱)؛ افزودن زیرمجموعه زیر سطح ۳ ممنوع است. */
 export const MAX_CATEGORY_DEPTH = 3;
+
+/** حداکثر عمق درخت دسته‌بندی مقاله Content (ریشه=۱، زیردسته=۲). */
+export const MAX_CONTENT_CATEGORY_DEPTH = 2;
 
 export const MAX_CATEGORY_DEPTH_MESSAGE_FA =
   "عمیق‌تر از سطح سوم برای دسته‌بندی مجاز نیست.";
+
+export const MAX_CONTENT_CATEGORY_DEPTH_MESSAGE_FA =
+  "دسته‌بندی مقاله حداکثر می‌تواند دو سطح داشته باشد.";
+export const MAX_CONTENT_CATEGORY_DEPTH_MESSAGE_EN =
+  "Article categories can have at most two levels.";
 
 const LOCALE_LABELS: Record<string, string> = {
   "fa-IR": "فارسی",
@@ -155,14 +163,15 @@ export function getCategoryTreeLevel(
   return 1 + ancestors;
 }
 
-/** آیا می‌توان زیر این رده فرزند ساخت؟ (سطح والد < Max) */
+/** آیا می‌توان زیر این رده فرزند ساخت؟ (سطح والد < maxDepth) */
 export function canAddCategoryChild(
   flat: readonly AppCategoryTreeNode[],
   parentId: string | null | undefined,
+  maxDepth: number = MAX_CATEGORY_DEPTH,
 ): boolean {
   if (!parentId) return true;
   const level = getCategoryTreeLevel(flat, parentId);
-  return level != null && level < MAX_CATEGORY_DEPTH;
+  return level != null && level < maxDepth;
 }
 
 /** آیا candidate نسل drag است (یا خودش). */
@@ -287,10 +296,11 @@ export function filterCategoryForest(
   };
 }
 
-/** آیا drop معتبر است (خود/نسل ممنوع؛ داخل سطح ۳ ممنوع). */
+/** آیا drop معتبر است (خود/نسل ممنوع؛ داخل سطح maxDepth ممنوع). */
 export function isValidCategoryDrop(
   flat: readonly AppCategoryTreeNode[],
   request: CategoryDropRequest,
+  maxDepth: number = MAX_CATEGORY_DEPTH,
 ): boolean {
   if (!request.dragId || !request.dropId) return false;
   if (request.dragId === request.dropId) return false;
@@ -302,7 +312,7 @@ export function isValidCategoryDrop(
   if (request.position !== "inside" && isSelfOrDescendant(parentMap, request.dragId, request.dropId)) {
     return false;
   }
-  if (request.position === "inside" && !canAddCategoryChild(flat, request.dropId)) {
+  if (request.position === "inside" && !canAddCategoryChild(flat, request.dropId, maxDepth)) {
     return false;
   }
   return true;
@@ -321,8 +331,9 @@ export interface ResolvedCategoryDrop {
 export function resolveCategoryDropPlan(
   flat: readonly AppCategoryTreeNode[],
   request: CategoryDropRequest,
+  maxDepth: number = MAX_CATEGORY_DEPTH,
 ): ResolvedCategoryDrop | null {
-  if (!isValidCategoryDrop(flat, request)) return null;
+  if (!isValidCategoryDrop(flat, request, maxDepth)) return null;
 
   const byId = new Map(flat.map((n) => [n.id, n]));
   const drag = byId.get(request.dragId);

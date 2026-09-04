@@ -70,7 +70,7 @@ public sealed class ContentArticle
     public Guid? SeoImageMediaAssetId { get; private set; }
     /// <summary>نام نمایشی نویسنده.</summary>
     public string AuthorDisplayName { get; private set; } = string.Empty;
-    /// <summary>برچسب‌های CSV ساده.</summary>
+    /// <summary>برچسب‌های CSV ساده (projection سازگاری؛ انتساب canonical در ArticleTag است).</summary>
     public string TagsCsv { get; private set; } = string.Empty;
     /// <summary>آیا در ریل خانه به‌عنوان ویژه نشان داده شود.</summary>
     public bool IsFeatured { get; private set; }
@@ -234,6 +234,16 @@ public sealed class ContentArticle
     public void AssignSeoImage(Guid? mediaAssetId, DateTimeOffset now)
     {
         SeoImageMediaAssetId = mediaAssetId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// projection سازگاری TagsCsv را از نام برچسب‌های نرمال‌شده همگام می‌کند.
+    /// </summary>
+    public void SetTagsProjection(IReadOnlyList<string> tagNames, DateTimeOffset now)
+    {
+        TagsCsv = string.Join(',',
+            tagNames.Select(tag => tag.Trim()).Where(tag => tag.Length > 0).Distinct(StringComparer.Ordinal));
         UpdatedAt = now;
     }
 

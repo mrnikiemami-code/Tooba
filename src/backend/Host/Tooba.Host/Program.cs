@@ -371,6 +371,7 @@ app.MapAccessControlEndpoints();
 app.MapContentEndpoints();
 app.MapContentCategoryEndpoints();
 app.MapContentAuthorEndpoints();
+app.MapContentTagEndpoints();
 app.MapContentArticleMediaEndpoints();
 app.MapLocaleAdminEndpoints();
 app.MapMediaEndpoints();

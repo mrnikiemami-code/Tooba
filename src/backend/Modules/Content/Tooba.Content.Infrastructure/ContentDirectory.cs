@@ -13,18 +13,21 @@ public sealed class ContentDirectory : IContentDirectory
     private readonly ILanguageDirectory _languages;
     private readonly IContentCategoryDirectory _categories;
     private readonly IContentAuthorDirectory _authors;
+    private readonly IContentTagDirectory _tags;
 
     /// <summary>DbContext مالک را تزریق می‌کند.</summary>
     public ContentDirectory(
         ContentDbContext db,
         ILanguageDirectory languages,
         IContentCategoryDirectory categories,
-        IContentAuthorDirectory authors)
+        IContentAuthorDirectory authors,
+        IContentTagDirectory tags)
     {
         _db = db;
         _languages = languages;
         _categories = categories;
         _authors = authors;
+        _tags = tags;
     }
 
     /// <inheritdoc />
@@ -139,11 +142,13 @@ public sealed class ContentDirectory : IContentDirectory
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-        return new PagedResult<AdminArticleSnapshot>(
-            rows.Select(MapAdmin).ToList(),
-            page,
-            pageSize,
-            total);
+        var snapshots = new List<AdminArticleSnapshot>(rows.Count);
+        foreach (var row in rows)
+        {
+            snapshots.Add(await MapAdminAsync(row, cancellationToken));
+        }
+
+        return new PagedResult<AdminArticleSnapshot>(snapshots, page, pageSize, total);
     }
 
     /// <inheritdoc />
@@ -151,7 +156,7 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.AsNoTracking()
             .FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken);
-        return article is null ? null : MapAdmin(article);
+        return article is null ? null : await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -168,11 +173,12 @@ public sealed class ContentDirectory : IContentDirectory
         }
 
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
-        await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken, isNewAssignment: true);
         await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAssignment: true, cancellationToken);
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
         var authorDisplayName = await ResolveAuthorDisplayNameAsync(command.AuthorId, cancellationToken);
 
+        // TagsCsv دیگر canonical نیست؛ انتساب از IContentTagDirectory انجام می‌شود.
         var article = ContentArticle.Create(
             command.Slug,
             command.Title,
@@ -181,7 +187,7 @@ public sealed class ContentDirectory : IContentDirectory
             command.CoverMediaAssetId,
             command.AuthorId,
             authorDisplayName,
-            command.Tags ?? [],
+            [],
             command.IsFeatured,
             command.PublishDate ?? now,
             now,
@@ -192,7 +198,7 @@ public sealed class ContentDirectory : IContentDirectory
             command.CategoryId);
         _db.Articles.Add(article);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(article);
+        return await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -216,14 +222,25 @@ public sealed class ContentDirectory : IContentDirectory
             {
                 throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
             }
+
+            if (await _db.ArticleTags.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
+            {
+                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+            }
         }
 
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
-        await _categories.EnsureArticleCategoryLanguageMatchAsync(locale, command.CategoryId, cancellationToken);
+        var isNewCategoryAssignment = command.CategoryId != article.CategoryId;
+        await _categories.EnsureArticleCategoryLanguageMatchAsync(
+            locale,
+            command.CategoryId,
+            cancellationToken,
+            isNewAssignment: isNewCategoryAssignment);
         var isNewAuthorAssignment = command.AuthorId != article.AuthorId;
         await _authors.EnsureArticleAuthorAssignmentAsync(command.AuthorId, isNewAuthorAssignment, cancellationToken);
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
         var authorDisplayName = await ResolveAuthorDisplayNameAsync(command.AuthorId, cancellationToken);
+        var existingTagNames = await ResolveTagNamesAsync(article, cancellationToken);
         article.Update(
             command.Title,
             command.Excerpt,
@@ -235,13 +252,13 @@ public sealed class ContentDirectory : IContentDirectory
             command.CoverMediaAssetId,
             command.AuthorId,
             authorDisplayName,
-            command.Tags ?? [],
+            existingTagNames,
             command.IsFeatured,
             now,
             locale,
             command.PublishDate);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(article);
+        return await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -252,7 +269,7 @@ public sealed class ContentDirectory : IContentDirectory
         await _authors.EnsurePublishableAuthorAsync(article.AuthorId, cancellationToken);
         article.Publish(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(article);
+        return await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -262,7 +279,7 @@ public sealed class ContentDirectory : IContentDirectory
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
         article.Unpublish(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(article);
+        return await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -274,7 +291,7 @@ public sealed class ContentDirectory : IContentDirectory
             throw new InvalidOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
         article.Archive(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
-        return MapAdmin(article);
+        return await MapAdminAsync(article, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -296,7 +313,8 @@ public sealed class ContentDirectory : IContentDirectory
         ContentArticle article,
         bool includeBody,
         string? categorySlug = null,
-        string? authorSlug = null) => new(
+        string? authorSlug = null,
+        IReadOnlyList<string>? tags = null) => new(
         article.ArticleId,
         article.Slug,
         article.Title,
@@ -304,7 +322,7 @@ public sealed class ContentDirectory : IContentDirectory
         article.CoverMediaAssetId,
         article.PublishDate,
         article.AuthorDisplayName,
-        ParseTags(article.TagsCsv),
+        tags ?? ParseTags(article.TagsCsv),
         article.IsFeatured,
         includeBody ? article.Body : null,
         article.SeoTitle,
@@ -338,6 +356,7 @@ public sealed class ContentDirectory : IContentDirectory
             .Select(article => article.AuthorId!.Value)
             .Distinct()
             .ToList();
+        var articleIds = rows.Select(article => article.ArticleId).ToList();
 
         var categorySlugs = categoryIds.Count == 0
             ? new Dictionary<Guid, string>()
@@ -349,6 +368,7 @@ public sealed class ContentDirectory : IContentDirectory
             : await _db.Authors.AsNoTracking()
                 .Where(author => authorIds.Contains(author.AuthorId))
                 .ToDictionaryAsync(author => author.AuthorId, author => author.Slug, cancellationToken);
+        var tagNamesByArticle = await _tags.GetArticleTagNamesAsync(articleIds, cancellationToken);
 
         return rows.Select(article => MapPublished(
             article,
@@ -358,7 +378,10 @@ public sealed class ContentDirectory : IContentDirectory
                 : null,
             article.AuthorId is Guid authorId && authorSlugs.TryGetValue(authorId, out var authorSlug)
                 ? authorSlug
-                : null)).ToList();
+                : null,
+            tagNamesByArticle.TryGetValue(article.ArticleId, out var tagNames) && tagNames.Count > 0
+                ? tagNames
+                : ParseTags(article.TagsCsv))).ToList();
     }
 
     internal static AdminArticleSnapshot MapAdmin(ContentArticle article) => new(
@@ -382,6 +405,45 @@ public sealed class ContentDirectory : IContentDirectory
         article.PublishDate,
         article.CreatedAt,
         article.UpdatedAt);
+
+    private async Task<AdminArticleSnapshot> MapAdminAsync(ContentArticle article, CancellationToken cancellationToken)
+    {
+        var tags = await ResolveTagNamesAsync(article, cancellationToken);
+        return new AdminArticleSnapshot(
+            article.ArticleId,
+            article.Slug,
+            article.Title,
+            article.Excerpt,
+            article.Body,
+            article.Locale,
+            article.SeoTitle,
+            article.SeoDescription,
+            article.Category,
+            article.CategoryId,
+            article.AuthorId,
+            article.CoverMediaAssetId,
+            article.SeoImageMediaAssetId,
+            article.AuthorDisplayName,
+            tags,
+            article.IsFeatured,
+            article.Status,
+            article.PublishDate,
+            article.CreatedAt,
+            article.UpdatedAt);
+    }
+
+    private async Task<IReadOnlyList<string>> ResolveTagNamesAsync(
+        ContentArticle article,
+        CancellationToken cancellationToken)
+    {
+        var map = await _tags.GetArticleTagNamesAsync([article.ArticleId], cancellationToken);
+        if (map.TryGetValue(article.ArticleId, out var names) && names.Count > 0)
+        {
+            return names;
+        }
+
+        return ParseTags(article.TagsCsv);
+    }
 
     private IQueryable<ContentArticle> PubliclyVisibleArticles(DateTimeOffset utcNow) =>
         _db.Articles.AsNoTracking()

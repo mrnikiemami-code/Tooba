@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
@@ -67,7 +67,7 @@ public sealed class ContentFoundationTests : IAsyncLifetime
         await db.Database.MigrateAsync();
         var categories = new ContentCategoryDirectory(db);
         var authors = new ContentAuthorDirectory(db);
-        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors, new ContentTagDirectory(db));
         var now = DateTimeOffset.Parse("2026-08-27T00:00:00Z");
 
         var author = await authors.CreateAsync(

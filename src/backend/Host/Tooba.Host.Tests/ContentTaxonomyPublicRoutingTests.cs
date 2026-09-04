@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
@@ -66,7 +66,7 @@ public sealed class ContentTaxonomyPublicRoutingTests : IAsyncLifetime
         await db.Database.MigrateAsync();
         var categories = new ContentCategoryDirectory(db);
         var authors = new ContentAuthorDirectory(db);
-        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors);
+        var directory = new ContentDirectory(db, new PermissiveLanguageDirectory(), categories, authors, new ContentTagDirectory(db));
 
         var faCategory = await categories.CreateAsync(
             new CreateContentCategoryCommand("fa-IR", null, "راهنما", "guide", "کوتاه", null, 0),

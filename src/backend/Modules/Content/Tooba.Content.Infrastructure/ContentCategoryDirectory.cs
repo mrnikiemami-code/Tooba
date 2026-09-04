@@ -71,6 +71,8 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
         if (command.ParentCategoryId is Guid parentId)
         {
             await ValidateParentAsync(Guid.Empty, parentId, language, cancellationToken);
+            var maps = await BuildMapsAsync(cancellationToken);
+            ContentCategoryTreeRules.ValidateCreateUnderParent(parentId, maps.ParentById);
         }
 
         var slug = ContentCategory.NormalizeSlug(command.Slug);
@@ -250,7 +252,8 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
     public async Task EnsureArticleCategoryLanguageMatchAsync(
         string articleLocale,
         Guid? categoryId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool isNewAssignment = true)
     {
         if (categoryId is null)
         {
@@ -263,6 +266,11 @@ public sealed class ContentCategoryDirectory : IContentCategoryDirectory
         if (!string.Equals(category.LanguageCode, articleLocale.Trim(), StringComparison.Ordinal))
         {
             throw new InvalidOperationException(ContentCategoryErrorCodes.LanguageMismatch);
+        }
+
+        if (isNewAssignment && category.Status != ContentCategoryStatus.Active)
+        {
+            throw new InvalidOperationException(ContentCategoryErrorCodes.Inactive);
         }
     }
 

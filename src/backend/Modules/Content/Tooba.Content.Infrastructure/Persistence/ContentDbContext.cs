@@ -23,6 +23,12 @@ public sealed class ContentDbContext : DbContext
     /// <summary>نویسندگان مقاله.</summary>
     public DbSet<ContentAuthor> Authors => Set<ContentAuthor>();
 
+    /// <summary>برچسب‌های محتوا.</summary>
+    public DbSet<ContentTag> Tags => Set<ContentTag>();
+
+    /// <summary>انتساب برچسب به مقاله.</summary>
+    public DbSet<ArticleTag> ArticleTags => Set<ArticleTag>();
+
     /// <summary>گالری رسانهٔ مقالات.</summary>
     public DbSet<ContentArticleMediaItem> ArticleMedia => Set<ContentArticleMediaItem>();
 
@@ -102,6 +108,29 @@ public sealed class ContentDbContext : DbContext
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             entity.HasIndex(x => new { x.LanguageCode, x.Slug }).IsUnique();
             entity.HasIndex(x => new { x.LanguageCode, x.ParentCategoryId, x.SortOrder });
+        });
+        modelBuilder.Entity<ContentTag>(entity =>
+        {
+            entity.ToTable("tags");
+            entity.HasKey(x => x.TagId);
+            entity.Property(x => x.TagId).ValueGeneratedNever();
+            entity.Property(x => x.LanguageCode).HasMaxLength(ContentTag.LanguageCodeMaxLength).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(ContentTag.NameMaxLength).IsRequired();
+            entity.Property(x => x.NormalizedName).HasMaxLength(ContentTag.NormalizedNameMaxLength).IsRequired();
+            entity.Property(x => x.Slug).HasMaxLength(ContentTag.SlugMaxLength);
+            entity.HasIndex(x => new { x.LanguageCode, x.NormalizedName }).IsUnique();
+            entity.HasIndex(x => new { x.LanguageCode, x.IsActive, x.Name });
+        });
+        modelBuilder.Entity<ArticleTag>(entity =>
+        {
+            entity.ToTable("article_tags");
+            entity.HasKey(x => new { x.ArticleId, x.TagId });
+            entity.Property(x => x.ArticleId).HasColumnName("article_id");
+            entity.Property(x => x.TagId).HasColumnName("tag_id");
+            entity.Property(x => x.AssignedAt).HasColumnName("assigned_at");
+            entity.HasIndex(x => x.TagId);
+            entity.HasOne<ContentArticle>().WithMany().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ContentTag>().WithMany().HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Restrict);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

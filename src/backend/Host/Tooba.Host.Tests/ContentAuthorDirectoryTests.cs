@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
@@ -56,7 +56,7 @@ public sealed class ContentAuthorDirectoryTests : IAsyncLifetime
         var authors = new ContentAuthorDirectory(db);
         var categories = new ContentCategoryDirectory(db);
         var languages = new PermissiveLanguageDirectory();
-        var content = new ContentDirectory(db, languages, categories, authors);
+        var content = new ContentDirectory(db, languages, categories, authors, new ContentTagDirectory(db));
 
         var active = await authors.CreateAsync(
             new CreateContentAuthorCommand("تحریریه توبا", "tooba-editorial", null, null, null, null, null, null, null, null),

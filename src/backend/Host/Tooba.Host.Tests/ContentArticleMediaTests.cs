@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Tooba.Content.Application;
 using Tooba.Content.Domain;
@@ -56,7 +56,7 @@ public sealed class ContentArticleMediaTests : IAsyncLifetime
         var categories = new ContentCategoryDirectory(db);
         var authors = new ContentAuthorDirectory(db);
         var languages = new PermissiveLanguageDirectory();
-        var content = new ContentDirectory(db, languages, categories, authors);
+        var content = new ContentDirectory(db, languages, categories, authors, new ContentTagDirectory(db));
         var articleMedia = new ContentArticleMediaDirectory(db, media);
 
         var author = await authors.CreateAsync(

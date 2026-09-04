@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T011
+TB-P08-T012-R1
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T012-R1
+TB-P08-T013
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P08-T012-R1 — Article TipTap → CKEditor 5 + DAM (repair of T012 editor)
+TB-P08-T013 — Content taxonomy two-level categories + ContentTags (awaiting Architect)
+TB-P08-T012-R1 — Article TipTap → CKEditor 5 + DAM (repair of T012 editor) — Architect-accepted
 TB-P08-T012 — Article workspace editor, media/SEO/category save repairs (under repair via R1; editor replaced)
 TB-P08-T011 — Article language tabs, draft-first create, author picker, locale policy — Architect-accepted
 TB-P08-T010-R1 — P08 Final Gate Repair (seed scope, public Content APIs, locale 308) — Architect-accepted
@@ -106,7 +107,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P08-T011
+TB-P08-T012-R1
 ```
 
 USER_VISUAL_ACCEPTED:
