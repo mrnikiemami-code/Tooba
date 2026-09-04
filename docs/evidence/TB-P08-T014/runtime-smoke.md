@@ -1,12 +1,22 @@
 ﻿# TB-P08-T014 — Runtime smoke
 
-## Attempted
+## Status
 
-- Focused BE unit readiness tests (no Docker).
-- Integration workflow test (Docker/Testcontainers when available).
-- FE source asserts for readiness/preview/history/CKEditor/category/tags.
+**PASS (API + pages)** after Host restart on T014 bits.
 
-## Blockers (honest)
+## Checks
 
-- Full interactive fa/en browser smoke against live Host may be blocked if Host process locks binaries or Docker unavailable in CI/agent environment.
-- When Docker available: workflow test covers readiness gate, publish/unpublish/republish history, scheduled visibility, draft preview flags.
+| Check | Result |
+|-------|--------|
+| Incomplete Draft readiness | `canPublish=false`, requiredMissing>0 |
+| Publish incomplete | rejected `content.publish.not_ready` |
+| Admin preview API | 200 |
+| History list | 200 |
+| FE EDIT + Preview pages | 200 |
+| Ready Draft (author+body) readiness | `canPublish=true` |
+| Publish → Unpublish → Republish | all 200 |
+| History event types | `article.published`, `article.unpublished`, `article.republished` (+ draft_created) |
+
+## Notes
+
+Interactive Jalali picker UI not browser-automated; API schedule/readiness covered by focused tests. `USER_VISUAL_ACCEPTED=NO`.

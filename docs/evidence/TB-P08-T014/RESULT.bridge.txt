@@ -1,0 +1,89 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Channel: tooba-main
+TaskId: TB-P08-T014
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Repo: D:\Users\User\source\repos\SarvNewVer (github.com/mrznamami-code/Tooba)
+HEAD: a9136e6ada686bc9bac7f200c79076736ba86c79
+HEAD==origin/main: YES
+USER_VISUAL_ACCEPTED=NO
+
+## Summary
+TB-P08-T014 delivers backend-authoritative Article publication readiness (shared with Publish gate), Admin Draft Preview (Save-required, permission-aware, noindex), Publish/Unpublish/Republish lifecycle with distinct history events, and fa Jalali / en Gregorian schedule UX with UTC persistence. CKEditor/DAM/Category/Tags preserved. Worker IDLE. No T015 invented.
+
+## Readiness-Contract
+Domain evaluator ArticlePublicationReadinessRules used by GetPublishReadinessAsync and PublishAsync. Structured checks with required vs recommended. Mandatory: title, excerpt, body, author, active language, slug, schedule validity, not archived. Recommended: category, featured, SEO title/description, SEO image or featured fallback.
+
+## Readiness-UX
+ContentArticleReadinessSummary in workspace: آماده انتشار / نیازمند تکمیل, mandatory missing count, expandable checklist; missing items navigate to tabs. No fake decorative scores replacing checks.
+
+## Publish-Gate
+Publish dialog shows readiness blockers before mutation; backend rejects content.publish.not_ready when incomplete. Same rule source as readiness endpoint.
+
+## Preview-Architecture
+Authenticated Admin preview: GET /v1/admin/content/articles/{id}/preview + FE route /admin/content/articles/{id}/preview. Storefront-like render from current saved Article aggregate.
+
+## Preview-Security
+Requires content.view; not public predictable bypass; robots noindex; not sitemap; Draft not made Published. No ?preview=true public bypass.
+
+## Preview-UX
+Explicit require Save before Preview (no silent stale preview). Opens new tab. Includes title/summary/body/author/category/tags/featured/metadata.
+
+## Lifecycle
+Draft→Publish; Published→Unpublish; Unpublished→Republish; Archive remains existing constrained path. Unpublish ≠ Delete; history preserved.
+
+## Scheduling
+Publish now vs future schedule; UTC DateTimeOffset storage; public visibility respects schedule (existing + tests). Invalid/past schedule rejected per readiness/rules.
+
+## Jalali-Gregorian-UX
+fa Admin Jalali date/time display/input; en Gregorian. No Jalali components in DB.
+
+## History-Model
+content.article_history append-only: draft_created, published, unpublished, republished, scheduled/archive/update summaries as implemented. Event type, actor, timestamp, previous/new state, bilingual human labels.
+
+## History-UX
+ContentArticleHistoryTimeline newest-first; fa Jalali / human Persian labels; en Gregorian. Publish/Unpublish/Republish visible as distinct events (runtime smoke confirmed).
+
+## Error-UX
+admin-error-map covers content.publish.not_ready, content.preview.unavailable, schedule/lifecycle codes. No raw Bad Request/JSON in normal UI.
+
+## Authorization
+Preview/readiness/publish preserve Content fail-closed + content.view/publish capabilities.
+
+## Performance
+Readiness one aggregate evaluation; history bounded; preview one Article fetch; no all-language preload.
+
+## Focused-Validation
+BE readiness/workflow tests 5/5; FE publication source asserts 5/5; recovery guard 3/3; git push HEAD==origin/main.
+
+## Runtime-Smoke
+Host restarted; incomplete readiness false + publish reject; preview/history 200; FE edit/preview 200; ready article Publish/Unpublish/Republish 200 with distinct history types.
+
+## Regression-Lock
+CKEditor Article editor, DAM MediaLibrary, T013 category picker + tags chips, T011 language/draft-first retained in source asserts/wiring.
+
+## Recovery-SoT
+Phase P08
+Last Architect-accepted: TB-P08-T013
+Last Implementation: TB-P08-T014
+Current Issued: (none)
+Current Repair: (none)
+USER_VISUAL_ACCEPTED=NO
+Worker Next State: IDLE
+Evidence: docs/evidence/TB-P08-T014/
+No T015 invented.
+
+## Git
+a9136e6a feat(content): TB-P08-T014 publication readiness, preview, history, jalali schedule
+(+ docs result commit if any)
+HEAD==origin/main. App_Data untracked.
+
+## Architectural-Concerns
+Preview requires Save — unsaved CKEditor buffer not included until Save (explicit UX).
+
+## Visual-Concerns
+USER_VISUAL_ACCEPTED=NO.
+
+## Blockers
+None for PASS criteria; full interactive Jalali browser UI not automated.
