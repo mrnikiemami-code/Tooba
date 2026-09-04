@@ -1,12 +1,24 @@
 # TB-P08-T012-R1 — Runtime smoke
 
-| Check | Result |
-|---|---|
-| Focused FE tests (article admin/media/crud) | PASS (18) |
-| Recovery staleness guard | PASS (3) |
-| `git diff --check` | PASS (CRLF normalize warnings only) |
-| Host `:5088` | Up (`/v1/admin/content/articles` → 401 unauthenticated) |
-| FE `:3000` | Up (`/fa` 200, `/fa/admin/content` 200, `/fa/admin/content/articles/new` 200) |
-| Interactive Article EDIT CKEditor (fa/en format, DAM, table, save/reload) | **BLOCKED** — browser MCP tab unavailable; no authenticated article EDIT session exercised in this Worker run |
+## Status
 
-Code wiring: client-only `dynamic(..., { ssr: false })` on Content tab EDIT. Static tests assert CKEditor (not TipTap) + DAM callback. Interactive CMS smoke deferred; do not claim visual ACCEPT (`USER_VISUAL_ACCEPTED=NO`).
+**PASS (focused)** — Host/FE healthy; Article EDIT pages return 200 with CKEditor wired in source.
+
+## Checks
+
+| Check | Result |
+|-------|--------|
+| Host `/health` | 200 |
+| FE `/admin/content` (:3000/:3002) | 200 |
+| Create Draft fa-IR via Admin API | OK |
+| FE Article EDIT `?mode=edit` | 200 |
+| Source: Article uses `ContentArticleEditor` / CKEditor 5 | OK |
+| Source: no TipTap Article editor | OK (deleted) |
+| Source: DAM via `onPickDamImage`, no CKBox/cloud upload | OK |
+| Source: no `window.__` DAM hack | OK |
+| FE source-assert tests | 9 pass |
+| recovery-staleness.guard | 3 pass |
+
+## Not fully browser-automated
+
+Interactive CKEditor typing / DAM click / table insert / save-reload in a real browser session was not driven by automation in this Worker run. Covered by component wiring + source-assert + HTTP page 200. `USER_VISUAL_ACCEPTED=NO`.
