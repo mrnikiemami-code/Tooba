@@ -90,6 +90,11 @@ public sealed class MediaDamTests : IAsyncLifetime
             directory.UploadAsync(plain, "notes.txt", "text/plain", null, CancellationToken.None));
         Assert.Equal("media.type.unsupported", unsupported.ErrorCode);
 
+        await using var pdf = new MemoryStream("%PDF-1.4 minimal"u8.ToArray());
+        var pdfUploaded = await directory.UploadAsync(pdf, "doc.pdf", "application/pdf", null, CancellationToken.None);
+        Assert.Equal("application/pdf", pdfUploaded.ContentType);
+        Assert.True(pdfUploaded.ByteSize > 0);
+
         await using var oversized = new MemoryStream(new byte[5001]);
         var tooLarge = await Assert.ThrowsAsync<PlatformHttpException>(() =>
             directory.UploadAsync(oversized, "big.jpg", "image/jpeg", null, CancellationToken.None));
@@ -100,7 +105,7 @@ public sealed class MediaDamTests : IAsyncLifetime
 
         var page1 = await directory.QueryAsync(null, page: 1, pageSize: 1, CancellationToken.None);
         Assert.Single(page1.Items);
-        Assert.Equal(2, page1.TotalCount);
+        Assert.Equal(3, page1.TotalCount);
         var page2 = await directory.QueryAsync(null, page: 2, pageSize: 1, CancellationToken.None);
         Assert.Single(page2.Items);
         Assert.NotEqual(page1.Items[0].MediaAssetId, page2.Items[0].MediaAssetId);

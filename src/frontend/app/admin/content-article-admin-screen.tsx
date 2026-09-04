@@ -13,10 +13,7 @@ import {
 } from "../access-control/access-control-api.ts";
 import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./content-author-api.ts";
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
-import {
-  buildContentArticleCategoryOptions,
-  ContentArticleCategoryPicker,
-} from "./content-article-category-picker.tsx";
+import { ContentArticleCategoryPicker } from "./content-article-category-picker.tsx";
 import { ContentArticleTagsPanel } from "./content-article-tags-panel.tsx";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
@@ -30,6 +27,7 @@ import { ContentArticlePublishDateField } from "./content-article-publish-date-f
 import { ContentArticleCommentsPanel } from "./content-article-comments-panel.tsx";
 import { ContentHelpAffordance } from "./content-help-affordance.tsx";
 import { CONTENT_HELP_PAGE_HREF } from "./content-help-content.ts";
+import { AdminSearchableCombobox } from "./admin-searchable-combobox.tsx";
 import type {
   ArticleHistoryEntry,
   ArticlePublicationReadiness,
@@ -64,6 +62,7 @@ import {
 } from "../content/content-api.ts";
 
 const TABS = [
+  { id: "full", label: "ویرایش کامل" },
   { id: "general", label: "عمومی" },
   { id: "content", label: "محتوا" },
   { id: "categories", label: "دسته‌بندی‌ها" },
@@ -77,7 +76,13 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-type DamPickResult = { mediaAssetId: string; alt?: string; title?: string } | null;
+type DamPickKind = "image" | "file" | "video";
+type DamPickResult = {
+  mediaAssetId: string;
+  alt?: string;
+  title?: string;
+  fileName?: string;
+} | null;
 
 function languageOptionLabel(lang: SupportedLocaleDefinition): string {
   const native = lang.nativeName?.trim() ?? "";
@@ -105,14 +110,13 @@ export function ContentArticleAdminScreen() {
   const searchParams = useSearchParams();
   const articleId = typeof params.articleId === "string" ? params.articleId : null;
   const [article, setArticle] = useState<AdminContentArticle | null>(null);
-  const [tab, setTab] = useState<TabId>("general");
+  const [tab, setTab] = useState<TabId>("full");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
   const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
-  const [authorFilter, setAuthorFilter] = useState("");
   const [languageOptions, setLanguageOptions] = useState<SupportedLocaleDefinition[]>([]);
-  const [inlineImageOpen, setInlineImageOpen] = useState(false);
+  const [damPickKind, setDamPickKind] = useState<DamPickKind | null>(null);
   const [seoImageOpen, setSeoImageOpen] = useState(false);
   const [mediaWorkspace, setMediaWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
   const [useFeaturedForSeo, setUseFeaturedForSeo] = useState(true);
@@ -155,17 +159,26 @@ export function ContentArticleAdminScreen() {
       })
     : false;
   const archived = article ? isArticleArchived(article.status) : false;
-  const filteredAuthors = useMemo(() => {
-    const q = authorFilter.trim().toLowerCase();
-    if (!q) return authorOptions;
-    return authorOptions.filter(
-      (row) =>
-        row.displayName.toLowerCase().includes(q) ||
-        row.slug.toLowerCase().includes(q),
-    );
-  }, [authorFilter, authorOptions]);
+  const authorComboboxOptions = useMemo(() => {
+    const options = authorOptions.map((row) => ({
+      value: row.authorId,
+      label: row.slug?.trim() ? `${row.displayName} · ${row.slug}` : row.displayName,
+    }));
+    if (
+      draftAuthorId &&
+      !options.some((row) => row.value === draftAuthorId) &&
+      (article?.authorDisplayName || article?.authorId === draftAuthorId)
+    ) {
+      const inactiveName = article?.authorDisplayName?.trim() || draftAuthorId;
+      options.push({
+        value: draftAuthorId,
+        label: `${inactiveName} · غیرفعال`,
+      });
+    }
+    return options;
+  }, [article?.authorDisplayName, article?.authorId, authorOptions, draftAuthorId]);
   const selectedAuthorLabel =
-    authorOptions.find((row) => row.authorId === draftAuthorId)?.displayName ||
+    authorComboboxOptions.find((row) => row.value === draftAuthorId)?.label ||
     article?.authorDisplayName ||
     "—";
   const selectedLanguageLabel = (() => {
@@ -291,7 +304,21 @@ export function ContentArticleAdminScreen() {
   const pickDamImage = useCallback(() => {
     return new Promise<DamPickResult>((resolve) => {
       damPickResolveRef.current = resolve;
-      setInlineImageOpen(true);
+      setDamPickKind("image");
+    });
+  }, []);
+
+  const pickDamFile = useCallback(() => {
+    return new Promise<DamPickResult>((resolve) => {
+      damPickResolveRef.current = resolve;
+      setDamPickKind("file");
+    });
+  }, []);
+
+  const pickDamVideo = useCallback(() => {
+    return new Promise<DamPickResult>((resolve) => {
+      damPickResolveRef.current = resolve;
+      setDamPickKind("video");
     });
   }, []);
 
@@ -658,6 +685,191 @@ export function ContentArticleAdminScreen() {
       </div>
 
       <section className="rounded-2xl border bg-surface-elevated p-4">
+        {tab === "full" ? (
+          <div
+            className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,22rem)]"
+            data-testid="content-article-full-edit"
+          >
+            <div className="space-y-4">
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">عنوان</span>
+                <input
+                  className="w-full rounded-xl border px-3 py-2"
+                  value={draftTitle}
+                  disabled={form.mode === "view"}
+                  onChange={(e) => {
+                    setDraftTitle(e.target.value);
+                    form.markDirty();
+                  }}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">چکیده</span>
+                <textarea
+                  className="w-full rounded-xl border px-3 py-2"
+                  rows={3}
+                  dir={editorDir}
+                  value={draftExcerpt}
+                  disabled={form.mode === "view"}
+                  onChange={(e) => {
+                    setDraftExcerpt(e.target.value);
+                    form.markDirty();
+                  }}
+                />
+              </label>
+              <div>
+                <span className="mb-1 flex items-center gap-2 text-sm text-muted">
+                  بدنه
+                  <ContentHelpAffordance helpKey="inlineImage" />
+                </span>
+                {form.mode === "view" ? (
+                  <div
+                    className="prose prose-neutral max-w-none rounded-xl border bg-slate-50 p-4 text-sm leading-8"
+                    dir={editorDir}
+                    data-testid="content-article-body-view-full"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeArticleRichHtml(draftBody) || `<p>${draftExcerpt}</p>`,
+                    }}
+                  />
+                ) : (
+                  <ContentArticleEditor
+                    value={draftBody}
+                    onChange={(value) => {
+                      setDraftBody(value);
+                      form.markDirty();
+                    }}
+                    disabled={false}
+                    dir={editorDir}
+                    placeholder={editorDir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…"}
+                    testId="content-article-rich-editor-full"
+                    onPickDamImage={pickDamImage}
+                    onPickDamFile={pickDamFile}
+                    onPickDamVideo={pickDamVideo}
+                  />
+                )}
+              </div>
+              {articleId ? (
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-sm text-muted">
+                    برچسب‌ها
+                    <ContentHelpAffordance helpKey="tags" />
+                  </div>
+                  <ContentArticleTagsPanel
+                    key={`full-${articleId}-${draftLocale}-${tagsEpoch}`}
+                    articleId={articleId}
+                    languageCode={draftLocale}
+                    canEdit={form.mode !== "view" && canEditContent}
+                    onChanged={() => form.markDirty()}
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <aside className="space-y-4">
+              <div>
+                <div className="mb-1 flex items-center gap-2 text-sm text-muted">
+                  نویسنده
+                  <ContentHelpAffordance helpKey="author" />
+                </div>
+                {form.mode === "view" ? (
+                  <p className="text-sm" data-testid="content-article-author-readonly-full">
+                    {selectedAuthorLabel}
+                  </p>
+                ) : (
+                  <AdminSearchableCombobox
+                    value={draftAuthorId || null}
+                    options={authorComboboxOptions}
+                    noneOption={{ value: "", label: "— انتخاب نویسنده —" }}
+                    placeholder="جستجو و انتخاب نویسنده…"
+                    testId="content-article-author-combobox"
+                    emptyLabel="نویسنده‌ای یافت نشد"
+                    onChange={(next) => {
+                      setDraftAuthorId(next ?? "");
+                      form.markDirty();
+                    }}
+                  />
+                )}
+              </div>
+
+              <label className="block text-sm">
+                <span className="mb-1 flex items-center gap-2 text-muted">
+                  دسته
+                  <ContentHelpAffordance helpKey="category" />
+                </span>
+                <ContentArticleCategoryPicker
+                  rows={categoryOptions}
+                  value={draftCategoryId}
+                  disabled={form.mode === "view"}
+                  onChange={(id, name) => {
+                    setDraftCategoryId(id);
+                    setDraftCategory(name);
+                    form.markDirty();
+                  }}
+                />
+              </label>
+
+              <div className="rounded-xl border p-3" data-testid="content-article-home-feature-full">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={draftIsFeatured}
+                    disabled={form.mode === "view"}
+                    onChange={(e) => {
+                      setDraftIsFeatured(e.target.checked);
+                      form.markDirty();
+                    }}
+                  />
+                  <span className="space-y-1">
+                    <span className="flex items-center gap-2 font-medium">
+                      نمایش در بخش مقالات صفحه اصلی
+                      <ContentHelpAffordance helpKey="homeFeature" />
+                    </span>
+                    <span className="block text-xs text-muted">
+                      اگر فعال باشد، این مقاله می‌تواند در بخش مقالات صفحه اصلی دیده شود.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              <div className="rounded-xl border p-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span>
+                    وضعیت: <strong>{statusLabel(article.status)}</strong>
+                  </span>
+                  <ContentArticleReadinessSummary
+                    readiness={readiness}
+                    locale={draftLocale || article.locale}
+                    onNavigate={(target) => setTab(target as TabId)}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border p-3 space-y-2" data-testid="content-article-full-featured-summary">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">تصویر شاخص</h3>
+                  <button
+                    type="button"
+                    className="text-xs text-[#2563EB] underline"
+                    onClick={() => setTab("media")}
+                  >
+                    فضای رسانه
+                  </button>
+                </div>
+                {mediaWorkspace?.featuredMediaAssetId ? (
+                  <img
+                    src={mediaPreviewUrl(mediaWorkspace.featuredMediaAssetId) ?? ""}
+                    alt=""
+                    className="max-h-36 w-full rounded-xl border object-cover"
+                  />
+                ) : (
+                  <p className="text-sm text-muted">تصویر شاخص اختصاص داده نشده است.</p>
+                )}
+              </div>
+            </aside>
+          </div>
+        ) : null}
+
         {tab === "general" ? (
           <div className="space-y-3">
             <label className="block text-sm">
@@ -791,6 +1003,8 @@ export function ContentArticleAdminScreen() {
                   placeholder={editorDir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…"}
                   testId="content-article-rich-editor"
                   onPickDamImage={pickDamImage}
+                  onPickDamFile={pickDamFile}
+                  onPickDamVideo={pickDamVideo}
                 />
               )}
             </div>
@@ -805,7 +1019,7 @@ export function ContentArticleAdminScreen() {
                 <ContentHelpAffordance helpKey="category" />
               </span>
               <ContentArticleCategoryPicker
-                options={buildContentArticleCategoryOptions(categoryOptions)}
+                rows={categoryOptions}
                 value={draftCategoryId}
                 disabled={form.mode === "view"}
                 onChange={(id, name) => {
@@ -834,37 +1048,18 @@ export function ContentArticleAdminScreen() {
                 {selectedAuthorLabel}
               </p>
             ) : (
-              <>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-muted">جستجوی نویسنده</span>
-                  <input
-                    className="w-full rounded-xl border px-3 py-2"
-                    value={authorFilter}
-                    placeholder="نام نویسنده…"
-                    data-testid="content-article-author-filter"
-                    onChange={(e) => setAuthorFilter(e.target.value)}
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-muted">نویسندهٔ فعال</span>
-                  <select
-                    className="w-full rounded-xl border px-3 py-2"
-                    value={draftAuthorId}
-                    data-testid="content-article-author-select"
-                    onChange={(e) => {
-                      setDraftAuthorId(e.target.value);
-                      form.markDirty();
-                    }}
-                  >
-                    <option value="">— انتخاب نویسنده —</option>
-                    {filteredAuthors.map((row) => (
-                      <option key={row.authorId} value={row.authorId}>
-                        {row.displayName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </>
+              <AdminSearchableCombobox
+                value={draftAuthorId || null}
+                options={authorComboboxOptions}
+                noneOption={{ value: "", label: "— انتخاب نویسنده —" }}
+                placeholder="جستجو و انتخاب نویسنده…"
+                testId="content-article-author-combobox"
+                emptyLabel="نویسنده‌ای یافت نشد"
+                onChange={(next) => {
+                  setDraftAuthorId(next ?? "");
+                  form.markDirty();
+                }}
+              />
             )}
             {!draftAuthorId ? (
               <p className="text-sm text-muted" data-testid="content-article-author-empty">
@@ -1106,27 +1301,53 @@ export function ContentArticleAdminScreen() {
         }}
       />
       <MediaLibraryDialog
-        open={inlineImageOpen}
+        open={damPickKind !== null}
+        title={
+          damPickKind === "file"
+            ? "انتخاب فایل از کتابخانه"
+            : damPickKind === "video"
+              ? "انتخاب ویدیو از کتابخانه"
+              : "انتخاب تصویر از کتابخانه"
+        }
+        assetKind={damPickKind ?? "image"}
         selectionMode="single"
         onClose={() => {
-          setInlineImageOpen(false);
+          setDamPickKind(null);
           resolveDamPick(null);
         }}
         onConfirm={(assets) => {
-          setInlineImageOpen(false);
+          const kind = damPickKind;
+          setDamPickKind(null);
           const picked = assets[0];
-          resolveDamPick(
-            picked
-              ? {
-                  mediaAssetId: picked.mediaAssetId,
-                  alt: picked.originalFileName,
-                }
-              : null,
-          );
+          if (!picked) {
+            resolveDamPick(null);
+            return;
+          }
+          if (kind === "file") {
+            resolveDamPick({
+              mediaAssetId: picked.mediaAssetId,
+              fileName: picked.originalFileName,
+              title: picked.originalFileName,
+            });
+            return;
+          }
+          if (kind === "video") {
+            resolveDamPick({
+              mediaAssetId: picked.mediaAssetId,
+              fileName: picked.originalFileName,
+              title: picked.originalFileName,
+            });
+            return;
+          }
+          resolveDamPick({
+            mediaAssetId: picked.mediaAssetId,
+            alt: picked.originalFileName,
+          });
         }}
       />
       <MediaLibraryDialog
         open={seoImageOpen}
+        assetKind="image"
         selectionMode="single"
         onClose={() => setSeoImageOpen(false)}
         onConfirm={async (assets) => {

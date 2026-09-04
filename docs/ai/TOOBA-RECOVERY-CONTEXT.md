@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T016-R1
+TB-P08-T016-R2
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T016-R2 — P08 final visual repair (Full Edit, author combobox, AppCategoryTree picker, CKEditor CMS toolbar, history wording; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R1 — Content demo mojibake/???? label cleanup (repair of T016 visual cleanliness; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016 — P08 Content Final Gate (technical/worker gate; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T015 — Article comments moderation, contextual help, wording cleanup, workspace polish — Architect-accepted

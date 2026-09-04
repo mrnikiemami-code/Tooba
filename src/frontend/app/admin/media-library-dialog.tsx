@@ -13,11 +13,17 @@ import {
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
 
 export type MediaLibrarySelectionMode = "single" | "multi";
+export type MediaLibraryAssetKind = "image" | "file" | "video" | "any";
 
 export interface MediaLibraryDialogProps {
   open: boolean;
   title?: string;
   selectionMode: MediaLibrarySelectionMode;
+  /**
+   * نوع دارایی قابل انتخاب/آپلود.
+   * پیش‌فرض `image` برای سازگاری با جریان‌های محصول/SEO؛ پیکرهای مقاله صریحاً kind می‌فرستند.
+   */
+  assetKind?: MediaLibraryAssetKind;
   /** دارایی‌هایی که از قبل به موجودیت وصل‌اند (برای غیرفعال‌کردن دوباره انتخاب در محصول). */
   alreadyAssignedIds?: ReadonlySet<string> | string[];
   onClose: () => void;
@@ -25,6 +31,47 @@ export interface MediaLibraryDialogProps {
 }
 
 const PAGE_SIZE = 24;
+
+const ACCEPT_BY_KIND: Record<MediaLibraryAssetKind, string> = {
+  image: "image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif",
+  file: "application/pdf,.pdf",
+  video: "video/mp4,video/webm,.mp4,.webm",
+  any: "image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif,application/pdf,.pdf,video/mp4,video/webm,.mp4,.webm",
+};
+
+function matchesAssetKind(contentType: string, kind: MediaLibraryAssetKind): boolean {
+  const type = (contentType || "").toLowerCase();
+  if (kind === "any") {
+    return (
+      type.startsWith("image/") ||
+      type === "application/pdf" ||
+      type.startsWith("video/")
+    );
+  }
+  if (kind === "image") return type.startsWith("image/");
+  if (kind === "file") return type === "application/pdf";
+  if (kind === "video") return type.startsWith("video/");
+  return false;
+}
+
+function uploadHintForKind(kind: MediaLibraryAssetKind): { title: string; detail: string } {
+  if (kind === "file") {
+    return { title: "انتخاب فایل PDF", detail: "فقط PDF — حداکثر حدود ۵۰ مگابایت برای هر فایل" };
+  }
+  if (kind === "video") {
+    return { title: "انتخاب فایل ویدیو", detail: "MP4 یا WebM — حداکثر حدود ۵۰ مگابایت برای هر فایل" };
+  }
+  if (kind === "any") {
+    return {
+      title: "انتخاب فایل رسانه",
+      detail: "تصویر، PDF یا ویدیو — حداکثر حدود ۵۰ مگابایت برای هر فایل",
+    };
+  }
+  return {
+    title: "انتخاب فایل تصویر",
+    detail: "JPEG، PNG، WebP یا GIF — حداکثر حدود ۵۰ مگابایت برای هر فایل",
+  };
+}
 
 /**
  * دیالوگ کتابخانهٔ رسانه — تب کتابخانه / آپلود، جستجو، صفحه‌بندی، انتخاب تکی یا چندتایی.
@@ -34,6 +81,7 @@ export function MediaLibraryDialog({
   open,
   title = "کتابخانه رسانه",
   selectionMode,
+  assetKind = "image",
   alreadyAssignedIds,
   onClose,
   onConfirm,
@@ -58,6 +106,13 @@ export function MediaLibraryDialog({
   const [uploadRows, setUploadRows] = useState<MediaUploadRow[]>([]);
   const uploading = uploadRows.some((row) => row.state === "queued" || row.state === "uploading");
   const dialogBusy = busy || uploading;
+  const uploadHint = uploadHintForKind(assetKind);
+  const acceptAttr = ACCEPT_BY_KIND[assetKind];
+
+  const filteredItems = useMemo(
+    () => items.filter((asset) => matchesAssetKind(asset.contentType, assetKind)),
+    [items, assetKind],
+  );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -289,7 +344,7 @@ export function MediaLibraryDialog({
               {title}
             </h3>
             <p className="mt-1 text-xs text-slate-500">
-              از کتابخانه انتخاب کنید یا فایل تصویر بارگذاری کنید. حذف از موجودیت، فایل را از کتابخانه پاک نمی‌کند.
+              از کتابخانه انتخاب کنید یا فایل بارگذاری کنید. حذف از موجودیت، فایل را از کتابخانه پاک نمی‌کند.
             </p>
           </div>
           <button
@@ -351,20 +406,19 @@ export function MediaLibraryDialog({
                     : "flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 bg-slate-50 px-4 text-center hover:border-blue-400 hover:bg-blue-50/40"
                 }
               >
-                <span className="text-sm font-medium text-slate-800">انتخاب فایل تصویر</span>
-                <span className="text-xs text-slate-500">
-                  JPEG، PNG، WebP یا GIF — حداکثر حدود ۵ مگابایت برای هر فایل
-                </span>
+                <span className="text-sm font-medium text-slate-800">{uploadHint.title}</span>
+                <span className="text-xs text-slate-500">{uploadHint.detail}</span>
                 <span className="text-[11px] text-slate-400">
                   وضعیت بارگذاری در زیر نمایش داده می‌شود (در صف / در حال بارگذاری / موفق / ناموفق)
                 </span>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+                  accept={acceptAttr}
                   multiple
                   className="sr-only"
                   disabled={dialogBusy}
                   data-testid="admin-media-upload-input"
+                  data-asset-kind={assetKind}
                   onChange={(e) => {
                     void handleUpload(e.target.files);
                     e.target.value = "";
@@ -481,7 +535,7 @@ export function MediaLibraryDialog({
 
               {loading ? (
                 <p className="py-8 text-center text-sm text-slate-500">در حال بارگذاری کتابخانه…</p>
-              ) : items.length === 0 ? (
+              ) : filteredItems.length === 0 ? (
                 <div
                   className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-200 bg-slate-50 text-sm text-slate-600"
                   data-testid="admin-media-library-empty"
@@ -499,11 +553,13 @@ export function MediaLibraryDialog({
                 <ul
                   className="grid grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4"
                   data-testid="admin-media-library-grid"
+                  data-asset-kind={assetKind}
                 >
-                  {items.map((asset) => {
+                  {filteredItems.map((asset) => {
                     const isAssigned = assigned.has(asset.mediaAssetId);
                     const isSelected = selected.has(asset.mediaAssetId);
                     const preview = mediaPreviewUrl(asset.mediaAssetId);
+                    const isImage = (asset.contentType || "").toLowerCase().startsWith("image/");
                     return (
                       <li key={asset.mediaAssetId}>
                         <button
@@ -524,12 +580,21 @@ export function MediaLibraryDialog({
                           data-testid={`admin-media-asset-${asset.mediaAssetId}`}
                         >
                           <div className="aspect-square overflow-hidden rounded-lg bg-slate-100">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={preview ?? undefined}
-                              alt={asset.originalFileName}
-                              className="h-full w-full object-contain p-2"
-                            />
+                            {isImage ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={preview ?? undefined}
+                                alt={asset.originalFileName}
+                                className="h-full w-full object-contain p-2"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-2 text-center text-[11px] text-slate-600">
+                                <span className="font-semibold uppercase tracking-wide">
+                                  {(asset.contentType || "file").split("/").pop()}
+                                </span>
+                                <span className="truncate max-w-full">{asset.originalFileName}</span>
+                              </div>
+                            )}
                           </div>
                           <p className="mt-1 truncate text-xs font-medium text-slate-800">
                             {asset.originalFileName || "بدون نام"}

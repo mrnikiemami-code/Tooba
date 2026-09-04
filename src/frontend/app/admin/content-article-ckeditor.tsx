@@ -2,7 +2,8 @@
 
 /**
  * CKEditor 5 Article body editor (client-only; loaded via dynamic import).
- * Self-hosted open-source plugins only — DAM image insert via parent callback.
+ * Self-hosted open-source plugins only — DAM image/file/video insert via parent callbacks.
+ * Cloud media adapters and base64 upload adapters are intentionally unused.
  */
 
 import { useEffect, useMemo, useRef } from "react";
@@ -14,8 +15,11 @@ import {
   ClassicEditor,
   Essentials,
   FindAndReplace,
+  Font,
   GeneralHtmlSupport,
   Heading,
+  Highlight,
+  HorizontalLine,
   Image,
   ImageCaption,
   ImageResize,
@@ -30,6 +34,9 @@ import {
   Paragraph,
   Plugin,
   ButtonView,
+  RemoveFormat,
+  SpecialCharacters,
+  SpecialCharactersEssentials,
   Strikethrough,
   Table,
   TableCaption,
@@ -44,11 +51,23 @@ import {
 import translationsFa from "ckeditor5/translations/fa.js";
 import "ckeditor5/ckeditor5.css";
 import "./content-article-ckeditor.css";
-import { articleDamImageSrc, sanitizeArticleRichHtml } from "./article-rich-html.ts";
+import { articleDamMediaSrc, sanitizeArticleRichHtml } from "./article-rich-html.ts";
 
 export type DamImagePick = {
   mediaAssetId: string;
   alt?: string;
+  title?: string;
+} | null;
+
+export type DamFilePick = {
+  mediaAssetId: string;
+  fileName?: string;
+  title?: string;
+} | null;
+
+export type DamVideoPick = {
+  mediaAssetId: string;
+  fileName?: string;
   title?: string;
 } | null;
 
@@ -60,13 +79,19 @@ export type ContentArticleCkEditorProps = {
   dir?: "rtl" | "ltr";
   testId?: string;
   onPickDamImage?: () => Promise<DamImagePick>;
+  onPickDamFile?: () => Promise<DamFilePick>;
+  onPickDamVideo?: () => Promise<DamVideoPick>;
 };
 
-type DamPickerConfig = () => Promise<DamImagePick>;
+type DamImagePickerConfig = () => Promise<DamImagePick>;
+type DamFilePickerConfig = () => Promise<DamFilePick>;
+type DamVideoPickerConfig = () => Promise<DamVideoPick>;
 
 declare module "ckeditor5" {
   interface EditorConfig {
-    damImagePicker?: DamPickerConfig;
+    damImagePicker?: DamImagePickerConfig;
+    damFilePicker?: DamFilePickerConfig;
+    damVideoPicker?: DamVideoPickerConfig;
   }
 }
 
@@ -74,11 +99,32 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
+function escapeHtmlText(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function insertDamImageHtml(editor: Editor, picked: NonNullable<DamImagePick>): void {
-  const src = articleDamImageSrc(picked.mediaAssetId);
+  const src = articleDamMediaSrc(picked.mediaAssetId);
   const alt = escapeAttr(picked.alt ?? "");
   const titleAttr = picked.title ? ` title="${escapeAttr(picked.title)}"` : "";
   const html = `<figure class="image"><img class="article-dam-image" src="${src}" alt="${alt}" data-media-asset-id="${picked.mediaAssetId}"${titleAttr} /></figure>`;
+  const viewFragment = editor.data.processor.toView(html);
+  const modelFragment = editor.data.toModel(viewFragment);
+  editor.model.insertContent(modelFragment);
+}
+
+function insertDamFileHtml(editor: Editor, picked: NonNullable<DamFilePick>): void {
+  const src = articleDamMediaSrc(picked.mediaAssetId);
+  const name = escapeHtmlText(picked.fileName || picked.title || "file");
+  const html = `<p><a class="article-dam-file" href="${src}" data-media-asset-id="${picked.mediaAssetId}" target="_blank" rel="noopener noreferrer">${name}</a></p>`;
+  const viewFragment = editor.data.processor.toView(html);
+  const modelFragment = editor.data.toModel(viewFragment);
+  editor.model.insertContent(modelFragment);
+}
+
+function insertDamVideoHtml(editor: Editor, picked: NonNullable<DamVideoPick>): void {
+  const src = articleDamMediaSrc(picked.mediaAssetId);
+  const html = `<figure class="article-dam-video"><video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${picked.mediaAssetId}"></video></figure>`;
   const viewFragment = editor.data.processor.toView(html);
   const modelFragment = editor.data.toModel(viewFragment);
   editor.model.insertContent(modelFragment);
@@ -103,7 +149,7 @@ class DamImageInsert extends Plugin {
       });
 
       view.on("execute", () => {
-        const picker = editor.config.get("damImagePicker") as DamPickerConfig | undefined;
+        const picker = editor.config.get("damImagePicker") as DamImagePickerConfig | undefined;
         if (!picker) return;
         void picker().then((picked) => {
           if (!picked?.mediaAssetId) return;
@@ -117,10 +163,76 @@ class DamImageInsert extends Plugin {
   }
 }
 
+class DamFileInsert extends Plugin {
+  public static get pluginName() {
+    return "DamFileInsert" as const;
+  }
+
+  public init(): void {
+    const editor = this.editor;
+    editor.ui.componentFactory.add("damFile", (locale) => {
+      const view = new ButtonView(locale);
+      const isRtl = locale.uiLanguageDirection === "rtl";
+      view.set({
+        label: isRtl ? "افزودن فایل" : "Insert file",
+        tooltip: true,
+        withText: true,
+        class: "ck-dam-file-button",
+      });
+
+      view.on("execute", () => {
+        const picker = editor.config.get("damFilePicker") as DamFilePickerConfig | undefined;
+        if (!picker) return;
+        void picker().then((picked) => {
+          if (!picked?.mediaAssetId) return;
+          insertDamFileHtml(editor, picked);
+          editor.editing.view.focus();
+        });
+      });
+
+      return view;
+    });
+  }
+}
+
+class DamVideoInsert extends Plugin {
+  public static get pluginName() {
+    return "DamVideoInsert" as const;
+  }
+
+  public init(): void {
+    const editor = this.editor;
+    editor.ui.componentFactory.add("damVideo", (locale) => {
+      const view = new ButtonView(locale);
+      const isRtl = locale.uiLanguageDirection === "rtl";
+      view.set({
+        label: isRtl ? "افزودن ویدیو" : "Insert video",
+        tooltip: true,
+        withText: true,
+        class: "ck-dam-video-button",
+      });
+
+      view.on("execute", () => {
+        const picker = editor.config.get("damVideoPicker") as DamVideoPickerConfig | undefined;
+        if (!picker) return;
+        void picker().then((picked) => {
+          if (!picked?.mediaAssetId) return;
+          insertDamVideoHtml(editor, picked);
+          editor.editing.view.focus();
+        });
+      });
+
+      return view;
+    });
+  }
+}
+
 function buildConfig(options: {
   dir: "rtl" | "ltr";
   placeholder: string;
   onPickDamImage?: () => Promise<DamImagePick>;
+  onPickDamFile?: () => Promise<DamFilePick>;
+  onPickDamVideo?: () => Promise<DamVideoPick>;
 }): EditorConfig {
   const isRtl = options.dir === "rtl";
   return {
@@ -133,11 +245,15 @@ function buildConfig(options: {
       Italic,
       Underline,
       Strikethrough,
+      RemoveFormat,
+      Font,
+      Highlight,
       List,
       Indent,
       IndentBlock,
       BlockQuote,
       Alignment,
+      HorizontalLine,
       Link,
       Table,
       TableToolbar,
@@ -151,9 +267,13 @@ function buildConfig(options: {
       ImageResize,
       ImageTextAlternative,
       FindAndReplace,
+      SpecialCharacters,
+      SpecialCharactersEssentials,
       Undo,
       GeneralHtmlSupport,
       DamImageInsert,
+      DamFileInsert,
+      DamVideoInsert,
     ],
     toolbar: {
       items: [
@@ -163,6 +283,13 @@ function buildConfig(options: {
         "italic",
         "underline",
         "strikethrough",
+        "removeFormat",
+        "|",
+        "fontFamily",
+        "fontSize",
+        "fontColor",
+        "fontBackgroundColor",
+        "highlight",
         "|",
         "bulletedList",
         "numberedList",
@@ -171,16 +298,23 @@ function buildConfig(options: {
         "|",
         "blockQuote",
         "alignment",
+        "horizontalLine",
         "|",
         "link",
         "insertTable",
+        "|",
         "damImage",
+        "damFile",
+        "damVideo",
+        "|",
         "findAndReplace",
+        "specialCharacters",
         "|",
         "undo",
         "redo",
       ],
-      shouldNotGroupWhenFull: true,
+      // Group overflow on narrow widths so the full toolbar remains usable.
+      shouldNotGroupWhenFull: false,
     },
     heading: {
       options: [
@@ -240,10 +374,35 @@ function buildConfig(options: {
           },
         },
         {
+          name: "video",
+          attributes: {
+            "data-media-asset-id": true,
+            src: true,
+            class: true,
+            controls: true,
+            preload: true,
+          },
+          classes: true,
+        },
+        {
+          name: "source",
+          attributes: {
+            src: true,
+          },
+        },
+        {
+          name: "hr",
+          classes: true,
+        },
+        {
           name: /^(figure|figcaption|table|thead|tbody|tr|th|td|p|h2|h3|h4|ul|ol|li|blockquote|a|span|strong|em|u|s|i|b|br)$/,
           classes: true,
           styles: {
             "text-align": true,
+            "font-family": true,
+            "font-size": true,
+            color: true,
+            "background-color": true,
             width: true,
             height: true,
             "margin-left": true,
@@ -256,11 +415,16 @@ function buildConfig(options: {
             rel: true,
             colspan: true,
             rowspan: true,
+            "data-media-asset-id": true,
+            class: true,
+            title: true,
           },
         },
       ],
     },
     damImagePicker: options.onPickDamImage,
+    damFilePicker: options.onPickDamFile,
+    damVideoPicker: options.onPickDamVideo,
   };
 }
 
@@ -272,25 +436,55 @@ export default function ContentArticleCkEditor({
   dir = "rtl",
   testId = "content-article-rich-editor",
   onPickDamImage,
+  onPickDamFile,
+  onPickDamVideo,
 }: ContentArticleCkEditorProps) {
   const resolvedPlaceholder =
     placeholder ?? (dir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…");
   const lastEmittedRef = useRef(sanitizeArticleRichHtml(value || ""));
   const editorRef = useRef<ClassicEditor | null>(null);
   const onChangeRef = useRef(onChange);
-  const onPickRef = useRef(onPickDamImage);
+  const onPickImageRef = useRef(onPickDamImage);
+  const onPickFileRef = useRef(onPickDamFile);
+  const onPickVideoRef = useRef(onPickDamVideo);
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
   useEffect(() => {
-    onPickRef.current = onPickDamImage;
+    onPickImageRef.current = onPickDamImage;
   }, [onPickDamImage]);
 
-  const stablePicker = useMemo(
+  useEffect(() => {
+    onPickFileRef.current = onPickDamFile;
+  }, [onPickDamFile]);
+
+  useEffect(() => {
+    onPickVideoRef.current = onPickDamVideo;
+  }, [onPickDamVideo]);
+
+  const stableImagePicker = useMemo(
     () => () => {
-      const picker = onPickRef.current;
+      const picker = onPickImageRef.current;
+      if (!picker) return Promise.resolve(null);
+      return picker();
+    },
+    [],
+  );
+
+  const stableFilePicker = useMemo(
+    () => () => {
+      const picker = onPickFileRef.current;
+      if (!picker) return Promise.resolve(null);
+      return picker();
+    },
+    [],
+  );
+
+  const stableVideoPicker = useMemo(
+    () => () => {
+      const picker = onPickVideoRef.current;
       if (!picker) return Promise.resolve(null);
       return picker();
     },
@@ -302,9 +496,20 @@ export default function ContentArticleCkEditor({
       buildConfig({
         dir,
         placeholder: resolvedPlaceholder,
-        onPickDamImage: onPickDamImage ? stablePicker : undefined,
+        onPickDamImage: onPickDamImage ? stableImagePicker : undefined,
+        onPickDamFile: onPickDamFile ? stableFilePicker : undefined,
+        onPickDamVideo: onPickDamVideo ? stableVideoPicker : undefined,
       }),
-    [dir, resolvedPlaceholder, onPickDamImage, stablePicker],
+    [
+      dir,
+      resolvedPlaceholder,
+      onPickDamImage,
+      onPickDamFile,
+      onPickDamVideo,
+      stableImagePicker,
+      stableFilePicker,
+      stableVideoPicker,
+    ],
   );
 
   useEffect(() => {

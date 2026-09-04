@@ -24,7 +24,7 @@ const ContentArticleCkEditor = dynamic(() => import("./content-article-ckeditor.
 
 export type ContentArticleEditorProps = ContentArticleCkEditorProps;
 
-/** Article CMS body editor (CKEditor 5 + Tooba DAM image insert). */
+/** Article CMS body editor (CKEditor 5 + Tooba DAM image/file/video insert). */
 export function ContentArticleEditor(props: ContentArticleEditorProps) {
   return <ContentArticleCkEditor {...props} />;
 }

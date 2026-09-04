@@ -17,6 +17,9 @@ public sealed class MediaDirectory : IMediaDirectory
         "image/png",
         "image/webp",
         "image/gif",
+        "application/pdf",
+        "video/mp4",
+        "video/webm",
     };
 
     private static readonly Dictionary<string, string> ExtensionByContentType = new(StringComparer.OrdinalIgnoreCase)
@@ -25,6 +28,9 @@ public sealed class MediaDirectory : IMediaDirectory
         ["image/png"] = ".png",
         ["image/webp"] = ".webp",
         ["image/gif"] = ".gif",
+        ["application/pdf"] = ".pdf",
+        ["video/mp4"] = ".mp4",
+        ["video/webm"] = ".webm",
     };
 
     private readonly MediaDbContext _db;
@@ -36,8 +42,9 @@ public sealed class MediaDirectory : IMediaDirectory
     {
         _db = db;
         _store = store;
+        // Default 50MB so video/pdf can upload; tests override via Tooba:Media:MaxUploadBytes.
         var configured = configuration["Tooba:Media:MaxUploadBytes"];
-        _maxUploadBytes = long.TryParse(configured, out var max) && max > 0 ? max : 5_000_000;
+        _maxUploadBytes = long.TryParse(configured, out var max) && max > 0 ? max : 50_000_000;
     }
 
     /// <inheritdoc />

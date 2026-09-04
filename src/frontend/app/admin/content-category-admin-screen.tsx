@@ -297,8 +297,8 @@ export function ContentCategoryAdminScreen() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <section className="rounded-2xl border border-border bg-surface-elevated p-3 shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-[minmax(280px,42%)_minmax(0,1fr)]">
+        <section className="min-w-[280px] max-w-full resize-x overflow-auto rounded-2xl border border-border bg-surface-elevated p-3 shadow-sm">
           <input
             className="mb-3 w-full rounded-xl border border-border px-3 py-2 text-sm"
             placeholder="جستجو…"

@@ -163,6 +163,7 @@ function CategoryNodeRow({
       <button
         type="button"
         className="app-category-tree-node__title"
+        title={node.name}
         onClick={onTitle}
         data-testid={`category-tree-title-${node.id}`}
       >

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AppCategoryTree,
   buildCategoryPath,
+  collectAncestorIds,
+  buildParentMap,
   getCategoryTreeLevel,
   type AppCategoryTreeNode,
 } from "../../design-system";
@@ -30,7 +33,7 @@ export type ContentArticleCategoryOption = {
   name: string;
 };
 
-/** گزینه‌های سلسله‌مراتبی قابل انتخاب برای مقاله (L1 و L2). */
+/** گزینه‌های سلسله‌مراتبی قابل انتخاب برای مقاله (L1 و L2) — نگه داشته برای تست/سازگاری. */
 export function buildContentArticleCategoryOptions(
   rows: ContentCategoryTreeNodeDto[],
 ): ContentArticleCategoryOption[] {
@@ -54,10 +57,10 @@ export function buildContentArticleCategoryOptions(
 }
 
 /**
- * انتخابگر سلسله‌مراتبی/جستجوپذیر دستهٔ مقاله — بدون شناسهٔ خام و بدون select تخت.
+ * انتخابگر سلسله‌مراتبی دستهٔ مقاله با AppCategoryTree — بدون CRUD و بدون شناسهٔ خام.
  */
 export function ContentArticleCategoryPicker({
-  options,
+  rows,
   value,
   disabled,
   onChange,
@@ -65,7 +68,7 @@ export function ContentArticleCategoryPicker({
   placeholder = "جستجوی دسته…",
   testId = "content-article-category-picker",
 }: {
-  options: ContentArticleCategoryOption[];
+  rows: ContentCategoryTreeNodeDto[];
   value: string;
   disabled?: boolean;
   onChange: (id: string, name: string) => void;
@@ -73,10 +76,10 @@ export function ContentArticleCategoryPicker({
   placeholder?: string;
   testId?: string;
 }) {
-  const listId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -90,17 +93,43 @@ export function ContentArticleCategoryPicker({
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
 
-  const selected = options.find((row) => row.id === value) ?? null;
-  const assignable = useMemo(
+  const assignableRows = useMemo(
     () =>
-      options.filter((row) => {
-        if (!row.active && row.id !== value) return false;
-        const q = query.trim().toLowerCase();
-        if (!q) return true;
-        return row.label.toLowerCase().includes(q) || row.name.toLowerCase().includes(q);
+      rows.filter((row) => {
+        if (row.status === "Archived" && row.id !== value) return false;
+        return true;
       }),
-    [options, query, value],
+    [rows, value],
   );
+
+  const treeNodes = useMemo(() => toFlatNodes(assignableRows), [assignableRows]);
+
+  const selectedPath = useMemo(() => {
+    if (!value) return null;
+    const path = buildCategoryPath(treeNodes, value);
+    return path.length > 0 ? path.join(" › ") : null;
+  }, [treeNodes, value]);
+
+  const selectedLevel = useMemo(() => {
+    if (!value) return null;
+    return getCategoryTreeLevel(treeNodes, value);
+  }, [treeNodes, value]);
+
+  const selectedName = useMemo(() => {
+    if (!value) return "";
+    return treeNodes.find((n) => n.id === value)?.name ?? rows.find((r) => r.id === value)?.name ?? "";
+  }, [rows, treeNodes, value]);
+
+  useEffect(() => {
+    if (!open || !value) return;
+    const parentMap = buildParentMap(treeNodes);
+    const ancestors = collectAncestorIds(parentMap, value);
+    if (ancestors.length === 0) return;
+    setExpandedKeys((prev) => {
+      const merged = new Set([...prev, ...ancestors]);
+      return [...merged];
+    });
+  }, [open, treeNodes, value]);
 
   return (
     <div ref={rootRef} className="relative" data-testid={testId}>
@@ -111,35 +140,35 @@ export function ContentArticleCategoryPicker({
         data-testid={`${testId}-trigger`}
         onClick={() => !disabled && setOpen((v) => !v)}
       >
-        <span className={selected ? "" : "text-muted"}>
-          {selected ? selected.label : "— بدون دسته —"}
+        <span className={selectedPath ? "" : "text-muted"}>
+          {selectedPath ?? "— بدون دسته —"}
         </span>
-        <span className="text-xs text-muted">{selected?.level === 2 ? "زیردسته" : selected ? "دسته اصلی" : ""}</span>
+        <span className="text-xs text-muted">
+          {selectedLevel === 2 ? "زیردسته" : selectedLevel === 1 ? "دسته اصلی" : ""}
+        </span>
       </button>
+
+      {selectedPath ? (
+        <p className="mt-1 text-xs text-muted" data-testid={`${testId}-path`}>
+          {selectedPath}
+        </p>
+      ) : null}
 
       {open ? (
         <div
-          className="absolute z-20 mt-1 w-full rounded-xl border bg-white p-2 shadow-lg"
+          className="absolute z-30 mt-1 min-w-[28rem] w-[min(100vw-2rem,36rem)] rounded-xl border bg-white p-3 shadow-lg"
           data-testid={`${testId}-panel`}
         >
-          <input
-            className="mb-2 w-full rounded-lg border px-3 py-2 text-sm"
-            value={query}
-            placeholder={placeholder}
-            data-testid={`${testId}-search`}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-          />
-          {options.length === 0 ? (
+          {assignableRows.length === 0 ? (
             <p className="px-2 py-3 text-sm text-muted" data-testid={`${testId}-empty`}>
               {emptyLabel}
             </p>
           ) : (
-            <ul id={listId} className="max-h-64 overflow-auto" data-testid={`${testId}-list`}>
-              <li>
+            <>
+              <div className="mb-2 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  className="w-full rounded-lg px-2 py-2 text-start text-sm hover:bg-slate-50"
+                  className="rounded-lg border px-2 py-1.5 text-xs hover:bg-slate-50"
                   data-testid={`${testId}-clear`}
                   onClick={() => {
                     onChange("", "");
@@ -149,34 +178,39 @@ export function ContentArticleCategoryPicker({
                 >
                   — بدون دسته —
                 </button>
-              </li>
-              {assignable.map((row) => (
-                <li key={row.id}>
-                  <button
-                    type="button"
-                    className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-start text-sm hover:bg-slate-50 ${
-                      row.id === value ? "bg-slate-100 font-medium" : ""
-                    }`}
-                    data-testid={`${testId}-option-${row.id}`}
-                    onClick={() => {
-                      if (!row.active && row.id !== value) return;
-                      onChange(row.id, row.name);
-                      setOpen(false);
-                      setQuery("");
-                    }}
-                  >
-                    <span className={row.level === 2 ? "ps-3" : ""}>{row.label}</span>
-                    <span className="shrink-0 text-[11px] text-muted">
-                      {row.level === 2 ? "زیردسته" : "دسته اصلی"}
-                      {!row.active ? " · بایگانی" : ""}
-                    </span>
-                  </button>
-                </li>
-              ))}
-              {assignable.length === 0 ? (
-                <li className="px-2 py-3 text-sm text-muted">نتیجه‌ای یافت نشد.</li>
-              ) : null}
-            </ul>
+                {value && selectedName ? (
+                  <span className="truncate text-xs text-muted" title={selectedPath ?? selectedName}>
+                    انتخاب‌شده: {selectedPath ?? selectedName}
+                  </span>
+                ) : null}
+              </div>
+              <AppCategoryTree
+                nodes={treeNodes}
+                expandedKeys={expandedKeys}
+                selectedKeys={value ? [value] : []}
+                onExpandedKeysChange={setExpandedKeys}
+                onSelect={(id) => {
+                  const level = getCategoryTreeLevel(treeNodes, id);
+                  if (level !== 1 && level !== 2) return;
+                  const node = treeNodes.find((n) => n.id === id);
+                  if (!node) return;
+                  if (node.status === "Archived" && node.id !== value) return;
+                  onChange(id, node.name);
+                  setOpen(false);
+                  setQuery("");
+                }}
+                searchQuery={query}
+                onSearchQueryChange={setQuery}
+                allowDrag={false}
+                maxDepth={2}
+                direction="rtl"
+                uiLocale="fa"
+                title="انتخاب دسته"
+                searchPlaceholder={placeholder}
+                virtualHeight={280}
+                className="border-0 shadow-none"
+              />
+            </>
           )}
         </div>
       ) : null}

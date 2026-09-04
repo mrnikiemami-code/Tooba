@@ -28,14 +28,21 @@ test("content article admin workspace uses CKEditor content editor, tabs, and DA
   assert.match(screen, /MediaLibraryDialog/);
   assert.match(screen, /useAdminFormMode/);
   assert.match(screen, /content-article-tab-/);
+  assert.match(screen, /ویرایش کامل/);
   assert.match(screen, /دسته‌بندی‌ها/);
   assert.match(screen, /loadAdminArticle/);
   assert.match(screen, /loadAdminLanguages/);
-  assert.match(screen, /content-article-author-filter/);
+  assert.match(screen, /AdminSearchableCombobox/);
+  assert.match(screen, /content-article-author-combobox/);
+  assert.doesNotMatch(screen, /content-article-author-filter/);
   assert.match(screen, /زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست/);
   assert.doesNotMatch(screen, /LANGUAGE_OPTIONS/);
   assert.doesNotMatch(screen, /__articleDamPickResolve/);
   assert.match(screen, /damPickResolveRef/);
+  assert.match(screen, /damPickKind/);
+  assert.match(screen, /pickDamFile/);
+  assert.match(screen, /pickDamVideo/);
+  assert.match(screen, /assetKind/);
   assert.match(screen, /content-article-workspace-header/);
   assert.match(screen, /تصویر اشتراک‌گذاری/);
   assert.match(screen, /استفاده از تصویر شاخص مقاله/);
@@ -44,6 +51,7 @@ test("content article admin workspace uses CKEditor content editor, tabs, and DA
   assert.doesNotMatch(screen, /ویژه در ریل خانه/);
   assert.match(screen, /ContentArticleCommentsPanel/);
   assert.match(screen, /ContentHelpAffordance/);
+  assert.match(screen, /useState<TabId>\("full"\)/);
 });
 
 test("content article editor is CKEditor 5 with professional toolbar contract", () => {
@@ -58,7 +66,14 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /heading4|heading2/);
   assert.match(ck, /FindAndReplace/);
   assert.match(ck, /damImage/);
+  assert.match(ck, /damFile/);
+  assert.match(ck, /damVideo/);
   assert.match(ck, /onPickDamImage/);
+  assert.match(ck, /onPickDamFile/);
+  assert.match(ck, /onPickDamVideo/);
+  assert.match(ck, /fontFamily/);
+  assert.match(ck, /RemoveFormat/);
+  assert.match(ck, /HorizontalLine/);
   assert.match(ck, /sanitizeArticleRichHtml/);
   assert.match(ck, /min-h-\[22rem\]|min-height:\s*22rem/);
   assert.doesNotMatch(ck, /@tiptap/);

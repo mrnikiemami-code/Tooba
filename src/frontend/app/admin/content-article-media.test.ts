@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { articleDamImageSrc, sanitizeArticleRichHtml } from "./article-rich-html.ts";
+import { articleDamImageSrc, articleDamMediaSrc, sanitizeArticleRichHtml } from "./article-rich-html.ts";
 
 const api = readFileSync(join(import.meta.dirname, "content-article-media-api.ts"), "utf8");
 const panel = readFileSync(join(import.meta.dirname, "content-article-media-panel.tsx"), "utf8");
@@ -21,11 +21,14 @@ test("article media api targets content media endpoints with JSON content-type",
 test("article rich html allows only storefront dam src and safe CKEditor attrs", () => {
   const id = "aaaaaaaa-aaaa-4aaa-8aaa-000000000001";
   const src = articleDamImageSrc(id);
+  assert.equal(articleDamMediaSrc(id), src);
   const html = sanitizeArticleRichHtml(
-    `<p style="text-align:center">x</p><figure class="image"><img class="article-dam-image image-style-side" src="${src}" alt="a" data-media-asset-id="${id}" width="50%" /></figure>`,
+    `<p style="text-align:center;color:#112233;background-color:rgb(255, 240, 0)">x</p><figure class="image"><img class="article-dam-image image-style-side" src="${src}" alt="a" data-media-asset-id="${id}" width="50%" /></figure>`,
   );
   assert.match(html, /data-media-asset-id/);
   assert.match(html, /text-align:\s*center/);
+  assert.match(html, /color:\s*#112233/);
+  assert.match(html, /background-color:\s*rgb\(255, 240, 0\)/);
   assert.match(html, /article-dam-image|image-style-side/);
   assert.doesNotMatch(sanitizeArticleRichHtml('<img src="data:image/png;base64,abc" />'), /img/);
   assert.equal(sanitizeArticleRichHtml('<img src="https://evil.test/x.png" />'), "");
@@ -34,6 +37,30 @@ test("article rich html allows only storefront dam src and safe CKEditor attrs",
     /script|onclick/i,
   );
   assert.doesNotMatch(sanitizeArticleRichHtml('<iframe src="https://evil.test"></iframe>'), /iframe/i);
+
+  const fileHtml = sanitizeArticleRichHtml(
+    `<p><a class="article-dam-file" href="${src}" data-media-asset-id="${id}" target="_blank" rel="noopener noreferrer">doc.pdf</a></p>`,
+  );
+  assert.match(fileHtml, /article-dam-file/);
+  assert.match(fileHtml, /data-media-asset-id/);
+  assert.doesNotMatch(
+    sanitizeArticleRichHtml(
+      `<a class="article-dam-file" href="https://evil.test/x.pdf" data-media-asset-id="${id}">bad</a>`,
+    ),
+    /article-dam-file|evil\.test/,
+  );
+
+  const videoHtml = sanitizeArticleRichHtml(
+    `<figure class="article-dam-video"><video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${id}"></video></figure><hr />`,
+  );
+  assert.match(videoHtml, /<video[^>]*data-media-asset-id/);
+  assert.match(videoHtml, /article-dam-video/);
+  assert.match(videoHtml, /<hr\b/i);
+  assert.doesNotMatch(
+    sanitizeArticleRichHtml(`<video src="https://evil.test/x.mp4" data-media-asset-id="${id}"></video>`),
+    /video/i,
+  );
+  assert.doesNotMatch(sanitizeArticleRichHtml('<embed src="/v1/storefront/media/x"></embed>'), /embed/i);
 });
 
 test("article workspace uses media panel and CKEditor dam insert image", () => {
@@ -44,7 +71,11 @@ test("article workspace uses media panel and CKEditor dam insert image", () => {
   assert.match(panel, /MediaLibraryDialog/);
   assert.match(panel, /onWorkspaceChange/);
   assert.match(editor, /onPickDamImage/);
+  assert.match(editor, /onPickDamFile/);
+  assert.match(editor, /onPickDamVideo/);
   assert.match(editor, /damImage/);
+  assert.match(editor, /damFile/);
+  assert.match(editor, /damVideo/);
   assert.match(editor, /data-media-asset-id/);
   assert.doesNotMatch(editor, /@tiptap/);
 });

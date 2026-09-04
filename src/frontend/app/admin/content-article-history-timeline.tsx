@@ -46,7 +46,7 @@ export function ContentArticleHistoryTimeline({
             <p className="mt-1 text-muted">{summary}</p>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted">
               <span>
-                {fa ? "بازیگر:" : "Actor:"} {actor}
+                {fa ? `توسط ${actor}` : `By ${actor}`}
               </span>
               {transition ? <span>{transition}</span> : null}
             </div>

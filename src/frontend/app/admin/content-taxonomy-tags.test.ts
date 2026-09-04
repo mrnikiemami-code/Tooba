@@ -13,12 +13,16 @@ const ck = readFileSync(join(import.meta.dirname, "content-article-ckeditor.tsx"
 test("article category picker is hierarchical searchable without flat select/raw ids", () => {
   assert.match(screen, /ContentArticleCategoryPicker/);
   assert.match(picker, /buildContentArticleCategoryOptions/);
+  assert.match(picker, /AppCategoryTree/);
   assert.match(picker, /›/);
   assert.match(picker, /دسته اصلی/);
   assert.match(picker, /زیردسته/);
   assert.match(picker, /content-article-category-picker/);
+  assert.match(picker, /allowDrag=\{false\}/);
+  assert.match(picker, /maxDepth=\{2\}/);
   assert.doesNotMatch(screen, /content-article-category-select/);
   assert.doesNotMatch(picker, /option value=\{row\.id\}/);
+  assert.doesNotMatch(picker, /options\.map/);
 });
 
 test("article tags use searchable chips without CSV input", () => {
