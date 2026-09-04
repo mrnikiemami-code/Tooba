@@ -6,7 +6,7 @@
  * Cloud media adapters and base64 upload adapters are intentionally unused.
  */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   Alignment,
@@ -15,7 +15,10 @@ import {
   ClassicEditor,
   Essentials,
   FindAndReplace,
-  Font,
+  FontBackgroundColor,
+  FontColor,
+  FontFamily,
+  FontSize,
   GeneralHtmlSupport,
   Heading,
   Highlight,
@@ -51,7 +54,7 @@ import {
 import translationsFa from "ckeditor5/translations/fa.js";
 import "ckeditor5/ckeditor5.css";
 import "./content-article-ckeditor.css";
-import { articleDamMediaSrc, sanitizeArticleRichHtml } from "./article-rich-html.ts";
+import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 
 export type DamImagePick = {
   mediaAssetId: string;
@@ -78,6 +81,7 @@ export type ContentArticleCkEditorProps = {
   placeholder?: string;
   dir?: "rtl" | "ltr";
   testId?: string;
+  className?: string;
   onPickDamImage?: () => Promise<DamImagePick>;
   onPickDamFile?: () => Promise<DamFilePick>;
   onPickDamVideo?: () => Promise<DamVideoPick>;
@@ -95,6 +99,11 @@ declare module "ckeditor5" {
   }
 }
 
+function damStorefrontSrc(mediaAssetId: string): string {
+  const id = mediaAssetId.trim();
+  return `/v1/storefront/media/${id}`;
+}
+
 function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
@@ -104,7 +113,7 @@ function escapeHtmlText(value: string): string {
 }
 
 function insertDamImageHtml(editor: Editor, picked: NonNullable<DamImagePick>): void {
-  const src = articleDamMediaSrc(picked.mediaAssetId);
+  const src = damStorefrontSrc(picked.mediaAssetId);
   const alt = escapeAttr(picked.alt ?? "");
   const titleAttr = picked.title ? ` title="${escapeAttr(picked.title)}"` : "";
   const html = `<figure class="image"><img class="article-dam-image" src="${src}" alt="${alt}" data-media-asset-id="${picked.mediaAssetId}"${titleAttr} /></figure>`;
@@ -114,7 +123,7 @@ function insertDamImageHtml(editor: Editor, picked: NonNullable<DamImagePick>): 
 }
 
 function insertDamFileHtml(editor: Editor, picked: NonNullable<DamFilePick>): void {
-  const src = articleDamMediaSrc(picked.mediaAssetId);
+  const src = damStorefrontSrc(picked.mediaAssetId);
   const name = escapeHtmlText(picked.fileName || picked.title || "file");
   const html = `<p><a class="article-dam-file" href="${src}" data-media-asset-id="${picked.mediaAssetId}" target="_blank" rel="noopener noreferrer">${name}</a></p>`;
   const viewFragment = editor.data.processor.toView(html);
@@ -123,7 +132,7 @@ function insertDamFileHtml(editor: Editor, picked: NonNullable<DamFilePick>): vo
 }
 
 function insertDamVideoHtml(editor: Editor, picked: NonNullable<DamVideoPick>): void {
-  const src = articleDamMediaSrc(picked.mediaAssetId);
+  const src = damStorefrontSrc(picked.mediaAssetId);
   const html = `<figure class="article-dam-video"><video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${picked.mediaAssetId}"></video></figure>`;
   const viewFragment = editor.data.processor.toView(html);
   const modelFragment = editor.data.toModel(viewFragment);
@@ -230,9 +239,9 @@ class DamVideoInsert extends Plugin {
 function buildConfig(options: {
   dir: "rtl" | "ltr";
   placeholder: string;
-  onPickDamImage?: () => Promise<DamImagePick>;
-  onPickDamFile?: () => Promise<DamFilePick>;
-  onPickDamVideo?: () => Promise<DamVideoPick>;
+  onPickDamImage: () => Promise<DamImagePick>;
+  onPickDamFile: () => Promise<DamFilePick>;
+  onPickDamVideo: () => Promise<DamVideoPick>;
 }): EditorConfig {
   const isRtl = options.dir === "rtl";
   return {
@@ -246,7 +255,10 @@ function buildConfig(options: {
       Underline,
       Strikethrough,
       RemoveFormat,
-      Font,
+      FontFamily,
+      FontSize,
+      FontColor,
+      FontBackgroundColor,
       Highlight,
       List,
       Indent,
@@ -323,6 +335,19 @@ function buildConfig(options: {
         { model: "heading3", view: "h3", title: "H3", class: "ck-heading_heading3" },
         { model: "heading4", view: "h4", title: "H4", class: "ck-heading_heading4" },
       ],
+    },
+    fontFamily: {
+      options: [
+        "default",
+        "Tahoma, Geneva, sans-serif",
+        "Arial, Helvetica, sans-serif",
+        "Times New Roman, Times, serif",
+        "Courier New, Courier, monospace",
+        "Vazirmatn, system-ui, sans-serif",
+      ],
+    },
+    fontSize: {
+      options: ["tiny", "small", "default", "big", "huge"],
     },
     placeholder: options.placeholder,
     language: {
@@ -435,10 +460,12 @@ export default function ContentArticleCkEditor({
   placeholder,
   dir = "rtl",
   testId = "content-article-rich-editor",
+  className,
   onPickDamImage,
   onPickDamFile,
   onPickDamVideo,
 }: ContentArticleCkEditorProps) {
+  const [initError, setInitError] = useState<string | null>(null);
   const resolvedPlaceholder =
     placeholder ?? (dir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…");
   const lastEmittedRef = useRef(sanitizeArticleRichHtml(value || ""));
@@ -496,20 +523,11 @@ export default function ContentArticleCkEditor({
       buildConfig({
         dir,
         placeholder: resolvedPlaceholder,
-        onPickDamImage: onPickDamImage ? stableImagePicker : undefined,
-        onPickDamFile: onPickDamFile ? stableFilePicker : undefined,
-        onPickDamVideo: onPickDamVideo ? stableVideoPicker : undefined,
+        onPickDamImage: stableImagePicker,
+        onPickDamFile: stableFilePicker,
+        onPickDamVideo: stableVideoPicker,
       }),
-    [
-      dir,
-      resolvedPlaceholder,
-      onPickDamImage,
-      onPickDamFile,
-      onPickDamVideo,
-      stableImagePicker,
-      stableFilePicker,
-      stableVideoPicker,
-    ],
+    [dir, resolvedPlaceholder, stableImagePicker, stableFilePicker, stableVideoPicker],
   );
 
   useEffect(() => {
@@ -535,7 +553,19 @@ export default function ContentArticleCkEditor({
       <div className="border-b border-gray-100 bg-slate-50 px-2 py-1 text-xs text-slate-500" data-testid={`${testId}-toolbar-shell`}>
         {dir === "rtl" ? "ویرایشگر بدنه مقاله" : "Article body editor"}
       </div>
-      <div className="content-article-ckeditor-canvas min-h-[22rem]" data-testid={`${testId}-content`}>
+      <div
+        className={
+          className
+            ? `content-article-ckeditor-canvas ${className}`
+            : "content-article-ckeditor-canvas min-h-[22rem]"
+        }
+        data-testid={`${testId}-content`}
+      >
+        {initError ? (
+          <p className="border-b border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700" data-testid={`${testId}-init-error`} role="alert">
+            {dir === "rtl" ? `ویرایشگر آماده نشد: ${initError}` : `Editor failed to start: ${initError}`}
+          </p>
+        ) : null}
         <CKEditor
           key={dir}
           editor={ClassicEditor}
@@ -543,6 +573,7 @@ export default function ContentArticleCkEditor({
           disabled={disabled}
           config={config}
           onReady={(editor) => {
+            setInitError(null);
             editorRef.current = editor as ClassicEditor;
             lastEmittedRef.current = sanitizeArticleRichHtml(editor.getData());
             const editable = editor.ui.view.editable.element;
@@ -550,6 +581,15 @@ export default function ContentArticleCkEditor({
               editable.setAttribute("dir", dir);
               editable.setAttribute("data-testid", `${testId}-editable`);
             }
+          }}
+          onError={(error) => {
+            const message =
+              error instanceof Error
+                ? error.message
+                : typeof error === "string"
+                  ? error
+                  : "unknown editor error";
+            setInitError(message);
           }}
           onChange={(_event, editor) => {
             const html = sanitizeArticleRichHtml(editor.getData());

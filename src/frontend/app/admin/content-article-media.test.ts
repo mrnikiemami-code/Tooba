@@ -77,6 +77,9 @@ test("article workspace uses media panel and CKEditor dam insert image", () => {
   assert.match(editor, /damFile/);
   assert.match(editor, /damVideo/);
   assert.match(editor, /data-media-asset-id/);
+  assert.match(editor, /damStorefrontSrc/);
+  assert.match(editor, /\/v1\/storefront\/media\//);
+  assert.doesNotMatch(editor, /articleDamMediaSrc/);
   assert.doesNotMatch(editor, /@tiptap/);
 });
 

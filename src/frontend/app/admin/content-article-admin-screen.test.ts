@@ -72,6 +72,10 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /onPickDamFile/);
   assert.match(ck, /onPickDamVideo/);
   assert.match(ck, /fontFamily/);
+  assert.match(ck, /fontFamily:\s*\{/);
+  assert.match(ck, /fontSize:\s*\{/);
+  assert.match(ck, /damStorefrontSrc/);
+  assert.doesNotMatch(ck, /articleDamMediaSrc/);
   assert.match(ck, /RemoveFormat/);
   assert.match(ck, /HorizontalLine/);
   assert.match(ck, /sanitizeArticleRichHtml/);
@@ -79,6 +83,16 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.doesNotMatch(ck, /@tiptap/);
   assert.doesNotMatch(ck, /CKBox|CloudServices|EasyImage|Base64UploadAdapter/);
   assert.doesNotMatch(editor, /ProductRichTextEditor/);
+});
+
+test("content article save refreshes readiness and full-edit polish", () => {
+  assert.match(screen, /await refreshReadiness\(article\.articleId\)/);
+  assert.match(screen, /refreshReadiness,/);
+  assert.match(screen, /نویسنده انتخاب شده — پس از ذخیره در آمادگی لحاظ می‌شود/);
+  assert.match(screen, /lg:grid-cols-\[minmax\(0,1\.6fr\)_minmax\(240px,20rem\)\]/);
+  assert.match(screen, /lg:sticky lg:top-4/);
+  assert.match(screen, /min-h-\[28rem\]/);
+  assert.match(screen, /در حال ذخیره…/);
 });
 
 test("content list links to language-first create and article workspace edit", () => {

@@ -25,3 +25,15 @@ test("content list uses language tabs and server locale filter", () => {
   assert.doesNotMatch(source, /field:\s*"locale"/);
   assert.doesNotMatch(source, /id:\s*"locale"/);
 });
+
+test("content list language load is race-safe and normalizes codes without bounce", () => {
+  assert.match(source, /let cancelled = false/);
+  assert.match(source, /cancelled = true/);
+  assert.match(source, /selectedLanguageRef|selectionGenRef/);
+  assert.match(source, /resolveAdminContentLanguageCode|startsWith\(`\$\{lower\}-`\)/);
+  assert.match(source, /languageSwitching/);
+  assert.match(source, /loadAdminLanguages/);
+  // Languages load once on mount — effect deps must be empty (not searchParams).
+  assert.match(source, /loadAdminLanguages\(\)[\s\S]*?},\s*\[\s*\]\s*\);/);
+  assert.doesNotMatch(source, /useEffect\(\(\)\s*=>\s*\{[\s\S]*loadAdminLanguages[\s\S]*\},\s*\[router,\s*searchParams\]\s*\)/);
+});

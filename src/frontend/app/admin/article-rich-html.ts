@@ -11,7 +11,7 @@
  */
 
 import DOMPurify from "isomorphic-dompurify";
-import { mediaPreviewUrl } from "../admin/media-api.ts";
+import { mediaPreviewUrl } from "./media-api.ts";
 
 const ALLOWED_TAGS = [
   "p",

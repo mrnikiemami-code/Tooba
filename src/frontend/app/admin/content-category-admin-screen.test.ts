@@ -17,4 +17,7 @@ test("content category admin uses canonical AppCategoryTree and route selection"
   assert.match(screen, /\/admin\/content\/categories\//);
   assert.match(screen, /content-category-tree/);
   assert.match(screen, /parentOptions/);
+  assert.match(screen, /loadAdminLanguages/);
+  assert.doesNotMatch(screen, /LANGUAGE_OPTIONS/);
+  assert.match(screen, /در حال بارگذاری…/);
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
@@ -11,6 +11,7 @@ import {
   ErrorState,
   faWorkspaceMessages,
   formatJalaliDate,
+  Spinner,
 } from "../../design-system";
 import {
   applyAppGridFilterHeader,
@@ -101,6 +102,25 @@ function languageTabLabel(lang: SupportedLocaleDefinition): string {
   // Prefer displayName when nativeName is mojibake/question-marks from encoding corruption.
   if (native && !/^\?+$/.test(native)) return native;
   return lang.displayName?.trim() || lang.code;
+}
+
+/** Resolve URL/param language against DB codes — exact match, then en→en-US / fa→fa-IR style prefix. */
+export function resolveAdminContentLanguageCode(
+  active: SupportedLocaleDefinition[],
+  param: string,
+): string {
+  const defaultLang = active.find((row) => row.default) ?? active[0]!;
+  const raw = param.trim();
+  if (!raw) return defaultLang.code;
+  const exact = active.find((row) => row.code === raw);
+  if (exact) return exact.code;
+  const lower = raw.toLowerCase();
+  const byPrefix = active.find((row) => {
+    const code = row.code.toLowerCase();
+    const urlPrefix = String(row.urlPrefix ?? "").toLowerCase();
+    return code === lower || code.startsWith(`${lower}-`) || urlPrefix === lower;
+  });
+  return byPrefix?.code ?? defaultLang.code;
 }
 
 function TitleCell(params: ICellRendererParams<AdminContentArticle>) {
@@ -270,11 +290,18 @@ export function AdminContentScreen() {
   const [gridError, setGridError] = useState<string>();
   const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [languageSwitching, setLanguageSwitching] = useState(false);
   const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
   const [destructiveTarget, setDestructiveTarget] = useState<ArticleDestructiveTarget | null>(null);
   const [destructivePending, setDestructivePending] = useState(false);
   const [caps, setCaps] = useState<Set<string> | null>(null);
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_CONTENT_GRID_VIEW_KEY), []);
+  const selectedLanguageRef = useRef<string | null>(null);
+  const selectionGenRef = useRef(0);
+
+  useEffect(() => {
+    selectedLanguageRef.current = selectedLanguage;
+  }, [selectedLanguage]);
 
   useEffect(() => {
     void prepareAdminDevActor()
@@ -291,9 +318,12 @@ export function AdminContentScreen() {
       });
   }, []);
 
+  // Load languages once on mount — do not re-fetch when searchParams change (avoids race overwrite).
   useEffect(() => {
+    let cancelled = false;
     void prepareAdminDevActor().then(() =>
       loadAdminLanguages().then((result) => {
+        if (cancelled) return;
         if (result.state !== "ok" || !result.data?.length) {
           setLanguages([]);
           setSelectedLanguage(null);
@@ -304,25 +334,56 @@ export function AdminContentScreen() {
           .slice()
           .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
         setLanguages(active);
-        const param = searchParams.get("language")?.trim() ?? "";
-        const defaultLang = active.find((row) => row.default) ?? active[0]!;
-        const matched = active.find((row) => row.code === param);
-        const resolved = matched?.code ?? defaultLang.code;
-        setSelectedLanguage(resolved);
-        if (param !== resolved) {
-          const next = new URLSearchParams(searchParams.toString());
-          next.set("language", resolved);
-          router.replace(`/admin/content?${next.toString()}`);
-        }
       }),
     );
-  }, [router, searchParams]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync selection from URL when languages are ready — without restarting language fetch.
+  useEffect(() => {
+    if (!languages.length) return;
+    const genAtStart = selectionGenRef.current;
+    const param = searchParams.get("language")?.trim() ?? "";
+    const resolved = resolveAdminContentLanguageCode(languages, param);
+    const current = selectedLanguageRef.current;
+
+    // Prefer a newer user selection over a stale URL resolve (router.replace in flight).
+    if (current && current !== resolved && selectionGenRef.current > 0) {
+      if (param !== current) {
+        const next = new URLSearchParams(searchParams.toString());
+        next.set("language", current);
+        router.replace(`/admin/content?${next.toString()}`);
+      }
+      return;
+    }
+
+    if (genAtStart !== selectionGenRef.current) return;
+
+    if (current !== resolved) {
+      setSelectedLanguage(resolved);
+    }
+    if (param !== resolved) {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("language", resolved);
+      router.replace(`/admin/content?${next.toString()}`);
+    }
+  }, [languages, router, searchParams]);
+
+  useEffect(() => {
+    if (!languageSwitching) return;
+    setLanguageSwitching(false);
+  }, [selectedLanguage, reloadToken, languageSwitching]);
 
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
 
   const onSelectLanguage = useCallback(
     (code: string) => {
       if (code === selectedLanguage) return;
+      selectionGenRef.current += 1;
+      selectedLanguageRef.current = code;
+      setLanguageSwitching(true);
       setSelectedLanguage(code);
       const next = new URLSearchParams(searchParams.toString());
       next.set("language", code);
@@ -438,14 +499,17 @@ export function AdminContentScreen() {
                 type="button"
                 role="tab"
                 aria-selected={active}
+                aria-busy={languageSwitching && active}
+                disabled={languageSwitching}
                 data-testid={`admin-content-lang-${lang.code}`}
                 className={
                   active
-                    ? "rounded-lg bg-[#2563EB] px-3 py-1.5 text-sm font-semibold text-white"
-                    : "rounded-lg border border-border px-3 py-1.5 text-sm"
+                    ? "inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-80"
+                    : "rounded-lg border border-border px-3 py-1.5 text-sm disabled:opacity-60"
                 }
                 onClick={() => onSelectLanguage(lang.code)}
               >
+                {languageSwitching && active ? <Spinner /> : null}
                 {languageTabLabel(lang)}
               </button>
             );

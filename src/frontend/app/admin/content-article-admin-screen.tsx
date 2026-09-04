@@ -382,6 +382,7 @@ export function ContentArticleAdminScreen() {
     form.onSaved();
     applyArticle(result.article);
     await refreshMediaWorkspace(article.articleId);
+    await refreshReadiness(article.articleId);
   }, [
     applyArticle,
     article,
@@ -391,6 +392,7 @@ export function ContentArticleAdminScreen() {
     form,
     languageOptions,
     refreshMediaWorkspace,
+    refreshReadiness,
     savePayload,
   ]);
 
@@ -585,7 +587,7 @@ export function ContentArticleAdminScreen() {
                 data-testid="content-article-save"
                 onClick={() => void save()}
               >
-                ذخیره
+                {saving ? "در حال ذخیره…" : "ذخیره"}
               </button>
             ) : null}
             <button
@@ -687,10 +689,10 @@ export function ContentArticleAdminScreen() {
       <section className="rounded-2xl border bg-surface-elevated p-4">
         {tab === "full" ? (
           <div
-            className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(260px,22rem)]"
+            className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(240px,20rem)]"
             data-testid="content-article-full-edit"
           >
-            <div className="space-y-4">
+            <div className="space-y-3">
               <label className="block text-sm">
                 <span className="mb-1 block text-muted">عنوان</span>
                 <input
@@ -707,7 +709,7 @@ export function ContentArticleAdminScreen() {
                 <span className="mb-1 block text-muted">چکیده</span>
                 <textarea
                   className="w-full rounded-xl border px-3 py-2"
-                  rows={3}
+                  rows={2}
                   dir={editorDir}
                   value={draftExcerpt}
                   disabled={form.mode === "view"}
@@ -724,7 +726,7 @@ export function ContentArticleAdminScreen() {
                 </span>
                 {form.mode === "view" ? (
                   <div
-                    className="prose prose-neutral max-w-none rounded-xl border bg-slate-50 p-4 text-sm leading-8"
+                    className="prose prose-neutral max-w-none rounded-xl border bg-slate-50 p-4 text-sm leading-8 min-h-[28rem]"
                     dir={editorDir}
                     data-testid="content-article-body-view-full"
                     dangerouslySetInnerHTML={{
@@ -742,6 +744,7 @@ export function ContentArticleAdminScreen() {
                     dir={editorDir}
                     placeholder={editorDir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…"}
                     testId="content-article-rich-editor-full"
+                    className="min-h-[28rem]"
                     onPickDamImage={pickDamImage}
                     onPickDamFile={pickDamFile}
                     onPickDamVideo={pickDamVideo}
@@ -765,9 +768,9 @@ export function ContentArticleAdminScreen() {
               ) : null}
             </div>
 
-            <aside className="space-y-4">
-              <div>
-                <div className="mb-1 flex items-center gap-2 text-sm text-muted">
+            <aside className="space-y-3 lg:sticky lg:top-4">
+              <div className="rounded-xl border p-2.5">
+                <div className="mb-1 flex items-center gap-2 text-xs text-muted">
                   نویسنده
                   <ContentHelpAffordance helpKey="author" />
                 </div>
@@ -791,8 +794,8 @@ export function ContentArticleAdminScreen() {
                 )}
               </div>
 
-              <label className="block text-sm">
-                <span className="mb-1 flex items-center gap-2 text-muted">
+              <div className="rounded-xl border p-2.5">
+                <span className="mb-1 flex items-center gap-2 text-xs text-muted">
                   دسته
                   <ContentHelpAffordance helpKey="category" />
                 </span>
@@ -806,9 +809,9 @@ export function ContentArticleAdminScreen() {
                     form.markDirty();
                   }}
                 />
-              </label>
+              </div>
 
-              <div className="rounded-xl border p-3" data-testid="content-article-home-feature-full">
+              <div className="rounded-xl border p-2.5" data-testid="content-article-home-feature-full">
                 <label className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -820,8 +823,8 @@ export function ContentArticleAdminScreen() {
                       form.markDirty();
                     }}
                   />
-                  <span className="space-y-1">
-                    <span className="flex items-center gap-2 font-medium">
+                  <span className="space-y-0.5">
+                    <span className="flex items-center gap-2 text-sm font-medium">
                       نمایش در بخش مقالات صفحه اصلی
                       <ContentHelpAffordance helpKey="homeFeature" />
                     </span>
@@ -832,7 +835,7 @@ export function ContentArticleAdminScreen() {
                 </label>
               </div>
 
-              <div className="rounded-xl border p-3 space-y-2">
+              <div className="rounded-xl border p-2.5 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <span>
                     وضعیت: <strong>{statusLabel(article.status)}</strong>
@@ -843,11 +846,24 @@ export function ContentArticleAdminScreen() {
                     onNavigate={(target) => setTab(target as TabId)}
                   />
                 </div>
+                {draftAuthorId &&
+                dirty &&
+                readiness?.checks.some(
+                  (check) =>
+                    !check.satisfied &&
+                    (check.key === "content.publish.author" ||
+                      check.labelKey === "content.publish.check.author" ||
+                      check.actionTarget === "author"),
+                ) ? (
+                  <p className="text-xs text-muted" data-testid="content-article-author-pending-readiness">
+                    نویسنده انتخاب شده — پس از ذخیره در آمادگی لحاظ می‌شود
+                  </p>
+                ) : null}
               </div>
 
-              <div className="rounded-xl border p-3 space-y-2" data-testid="content-article-full-featured-summary">
+              <div className="rounded-xl border p-2.5 space-y-1.5" data-testid="content-article-full-featured-summary">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold">تصویر شاخص</h3>
+                  <h3 className="text-xs font-semibold">تصویر شاخص</h3>
                   <button
                     type="button"
                     className="text-xs text-[#2563EB] underline"
@@ -860,10 +876,10 @@ export function ContentArticleAdminScreen() {
                   <img
                     src={mediaPreviewUrl(mediaWorkspace.featuredMediaAssetId) ?? ""}
                     alt=""
-                    className="max-h-36 w-full rounded-xl border object-cover"
+                    className="max-h-28 w-full rounded-lg border object-cover"
                   />
                 ) : (
-                  <p className="text-sm text-muted">تصویر شاخص اختصاص داده نشده است.</p>
+                  <p className="text-xs text-muted">تصویر شاخص اختصاص داده نشده است.</p>
                 )}
               </div>
             </aside>

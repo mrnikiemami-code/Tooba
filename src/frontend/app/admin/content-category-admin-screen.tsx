@@ -12,6 +12,7 @@ import {
   formatJalaliDate,
   isSelfOrDescendant,
   MAX_CONTENT_CATEGORY_DEPTH,
+  Spinner,
   useAdminFormMode,
   type AppCategoryTreeNode,
 } from "../../design-system";
@@ -29,13 +30,10 @@ import {
   type ContentCategoryTreeNodeDto,
   type ContentCategoryWorkspaceDto,
 } from "./content-category-api.ts";
+import { loadAdminLanguages } from "./language-api.ts";
+import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl, type MediaAssetDto } from "./media-api.ts";
-
-const LANGUAGE_OPTIONS = [
-  { code: "fa-IR", label: "فارسی" },
-  { code: "en-US", label: "English" },
-] as const;
 
 const TABS = [
   { id: "general", label: "عمومی" },
@@ -46,6 +44,12 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
+
+function languageTabLabel(lang: SupportedLocaleDefinition): string {
+  const native = lang.nativeName?.trim() ?? "";
+  if (native && !/^\?+$/.test(native)) return native;
+  return lang.displayName?.trim() || lang.code;
+}
 
 function toTreeNodes(rows: ContentCategoryTreeNodeDto[]): AppCategoryTreeNode[] {
   return rows.map((row) => ({
@@ -79,13 +83,15 @@ export function ContentCategoryAdminScreen() {
   const params = useParams<{ categoryId?: string }>();
   const router = useRouter();
   const selectedId = typeof params.categoryId === "string" ? params.categoryId : null;
-  const [languageCode, setLanguageCode] = useState<(typeof LANGUAGE_OPTIONS)[number]["code"]>("fa-IR");
+  const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
+  const [languageCode, setLanguageCode] = useState<string>("fa-IR");
   const [search, setSearch] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [treeRows, setTreeRows] = useState<ContentCategoryTreeNodeDto[]>([]);
   const [workspace, setWorkspace] = useState<ContentCategoryWorkspaceDto | null>(null);
   const [tab, setTab] = useState<TabId>("general");
   const [loading, setLoading] = useState(true);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createParentId, setCreateParentId] = useState<string | null>(null);
@@ -106,6 +112,31 @@ export function ContentCategoryAdminScreen() {
 
   const form = useAdminFormMode({ canView: true, canEdit: true });
 
+  useEffect(() => {
+    let cancelled = false;
+    void prepareAdminDevActor().then(() =>
+      loadAdminLanguages().then((result) => {
+        if (cancelled) return;
+        if (result.state !== "ok" || !result.data?.length) {
+          setLanguages([]);
+          return;
+        }
+        const active = result.data
+          .filter((row) => row.active)
+          .slice()
+          .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
+        setLanguages(active);
+        const defaultLang = active.find((row) => row.default) ?? active[0];
+        if (defaultLang) {
+          setLanguageCode((prev) => (active.some((row) => row.code === prev) ? prev : defaultLang.code));
+        }
+      }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const refreshTree = useCallback(async () => {
     await prepareAdminDevActor();
     const result = await fetchContentCategoryTree(languageCode, search);
@@ -113,26 +144,31 @@ export function ContentCategoryAdminScreen() {
   }, [languageCode, search]);
 
   const refreshWorkspace = useCallback(async (categoryId: string) => {
-    const result = await fetchContentCategoryWorkspace(categoryId);
-    if (result.state !== "ok" || !result.data) {
-      setWorkspace(null);
-      return;
-    }
-    const data = result.data;
-    setWorkspace(data);
-    setDraftName(data.name);
-    setDraftSlug(data.slug);
-    setDraftShortDescription(data.shortDescription ?? "");
-    setDraftDescription(data.description ?? "");
-    setDraftSortOrder(data.sortOrder);
-    setDraftStatus(data.status);
-    setDraftParentId(data.parentId);
-    setDraftSeoTitle(data.seoTitle ?? "");
-    setDraftSeoDescription(data.seoDescription ?? "");
-    if (data.imageMediaAssetId) {
-      setMediaAsset({ mediaAssetId: data.imageMediaAssetId } as MediaAssetDto);
-    } else {
-      setMediaAsset(null);
+    setWorkspaceLoading(true);
+    try {
+      const result = await fetchContentCategoryWorkspace(categoryId);
+      if (result.state !== "ok" || !result.data) {
+        setWorkspace(null);
+        return;
+      }
+      const data = result.data;
+      setWorkspace(data);
+      setDraftName(data.name);
+      setDraftSlug(data.slug);
+      setDraftShortDescription(data.shortDescription ?? "");
+      setDraftDescription(data.description ?? "");
+      setDraftSortOrder(data.sortOrder);
+      setDraftStatus(data.status);
+      setDraftParentId(data.parentId);
+      setDraftSeoTitle(data.seoTitle ?? "");
+      setDraftSeoDescription(data.seoDescription ?? "");
+      if (data.imageMediaAssetId) {
+        setMediaAsset({ mediaAssetId: data.imageMediaAssetId } as MediaAssetDto);
+      } else {
+        setMediaAsset(null);
+      }
+    } finally {
+      setWorkspaceLoading(false);
     }
   }, []);
 
@@ -144,6 +180,7 @@ export function ContentCategoryAdminScreen() {
   useEffect(() => {
     if (!selectedId) {
       setWorkspace(null);
+      setWorkspaceLoading(false);
       return;
     }
     void refreshWorkspace(selectedId);
@@ -264,6 +301,8 @@ export function ContentCategoryAdminScreen() {
     await refreshTree();
   }, [refreshTree, router, workspace]);
 
+  const isRtl = languageCode.toLowerCase().startsWith("fa");
+
   return (
     <main className="w-full" data-testid="admin-content-categories">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -272,7 +311,7 @@ export function ContentCategoryAdminScreen() {
           <p className="mt-1 text-sm text-muted">درخت زبان‌محور مقالات — مستقل از دسته‌بندی محصولات</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {LANGUAGE_OPTIONS.map((opt) => (
+          {languages.map((opt) => (
             <button
               key={opt.code}
               type="button"
@@ -283,7 +322,7 @@ export function ContentCategoryAdminScreen() {
               }}
               data-testid={`content-category-lang-${opt.code}`}
             >
-              {opt.label}
+              {languageTabLabel(opt)}
             </button>
           ))}
           <button
@@ -307,7 +346,10 @@ export function ContentCategoryAdminScreen() {
             data-testid="content-category-tree-search"
           />
           {loading ? (
-            <p className="p-3 text-sm text-muted">در حال بارگذاری…</p>
+            <div className="flex items-center gap-2 p-3 text-sm text-muted">
+              <Spinner />
+              <span>در حال بارگذاری…</span>
+            </div>
           ) : (
             <AppCategoryTree
               nodes={treeNodes}
@@ -319,18 +361,23 @@ export function ContentCategoryAdminScreen() {
               onCreateChild={(id) => openCreate(id)}
               searchQuery={search}
               onSearchQueryChange={setSearch}
-              direction={languageCode === "fa-IR" ? "rtl" : "ltr"}
-              uiLocale={languageCode === "fa-IR" ? "fa" : "en"}
+              direction={isRtl ? "rtl" : "ltr"}
+              uiLocale={isRtl ? "fa" : "en"}
               maxDepth={MAX_CONTENT_CATEGORY_DEPTH}
-              createLabel={languageCode === "fa-IR" ? "دسته اصلی" : "Main category"}
-              title={languageCode === "fa-IR" ? "دسته‌بندی مقالات" : "Article categories"}
+              createLabel={isRtl ? "دسته اصلی" : "Main category"}
+              title={isRtl ? "دسته‌بندی مقالات" : "Article categories"}
               allowDrag={false}
             />
           )}
         </section>
 
         <section className="rounded-2xl border border-border bg-surface-elevated p-4 shadow-sm">
-          {!workspace ? (
+          {workspaceLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted" data-testid="content-category-workspace-loading">
+              <Spinner />
+              <span>در حال بارگذاری…</span>
+            </div>
+          ) : !workspace ? (
             <p className="text-sm text-muted">یک دسته را از درخت انتخاب کنید یا دستهٔ جدید بسازید.</p>
           ) : (
             <>
