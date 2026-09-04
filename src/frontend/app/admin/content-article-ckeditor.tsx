@@ -133,7 +133,8 @@ function insertDamFileHtml(editor: Editor, picked: NonNullable<DamFilePick>): vo
 
 function insertDamVideoHtml(editor: Editor, picked: NonNullable<DamVideoPick>): void {
   const src = damStorefrontSrc(picked.mediaAssetId);
-  const html = `<figure class="article-dam-video"><video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${picked.mediaAssetId}"></video></figure>`;
+  // Prefer bare <video> (no figure/p wrap). GHS allowlist keeps video attributes; sanitizer unwraps figure>p>video on reload.
+  const html = `<video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${picked.mediaAssetId}"></video>`;
   const viewFragment = editor.data.processor.toView(html);
   const modelFragment = editor.data.toModel(viewFragment);
   editor.model.insertContent(modelFragment);
@@ -291,14 +292,16 @@ function buildConfig(options: {
       items: [
         "heading",
         "|",
+        // Font controls early so they stay reachable before overflow-prone items.
+        "fontFamily",
+        "fontSize",
+        "|",
         "bold",
         "italic",
         "underline",
         "strikethrough",
         "removeFormat",
         "|",
-        "fontFamily",
-        "fontSize",
         "fontColor",
         "fontBackgroundColor",
         "highlight",
@@ -325,8 +328,8 @@ function buildConfig(options: {
         "undo",
         "redo",
       ],
-      // Group overflow on narrow widths so the full toolbar remains usable.
-      shouldNotGroupWhenFull: false,
+      // Keep fontFamily/fontSize visible instead of collapsing into overflow menu.
+      shouldNotGroupWhenFull: true,
     },
     heading: {
       options: [
@@ -428,6 +431,13 @@ function buildConfig(options: {
           classes: true,
         },
         {
+          name: "figure",
+          classes: true,
+          attributes: {
+            class: true,
+          },
+        },
+        {
           name: "source",
           attributes: {
             src: true,
@@ -438,7 +448,7 @@ function buildConfig(options: {
           classes: true,
         },
         {
-          name: /^(figure|figcaption|table|thead|tbody|tr|th|td|p|h2|h3|h4|ul|ol|li|blockquote|a|span|strong|em|u|s|i|b|br)$/,
+          name: /^(figcaption|table|thead|tbody|tr|th|td|p|h2|h3|h4|ul|ol|li|blockquote|a|span|strong|em|u|s|i|b|br)$/,
           classes: true,
           styles: {
             "text-align": true,

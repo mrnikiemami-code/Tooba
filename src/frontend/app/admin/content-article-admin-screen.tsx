@@ -145,6 +145,7 @@ export function ContentArticleAdminScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
   const [languageOptions, setLanguageOptions] = useState<SupportedLocaleDefinition[]>([]);
   const [damPickKind, setDamPickKind] = useState<DamPickKind | null>(null);
@@ -362,9 +363,17 @@ export function ContentArticleAdminScreen() {
 
   useEffect(() => {
     if (!draftLocale) return;
+    let cancelled = false;
+    setCategoriesLoading(true);
     void fetchContentCategoryTree(draftLocale).then((result) => {
+      if (cancelled) return;
       if (result.state === "ok" && result.data) setCategoryOptions(result.data);
+      else setCategoryOptions([]);
+      setCategoriesLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [draftLocale]);
 
   useEffect(() => {
@@ -545,8 +554,13 @@ export function ContentArticleAdminScreen() {
     }
     toast.success("مقاله حذف شد");
     setDestructiveKind(null);
-    router.push("/admin/content");
-  }, [article, router]);
+    const listLocale = draftLocale || article.locale;
+    router.push(
+      listLocale
+        ? `/admin/content?language=${encodeURIComponent(listLocale)}`
+        : "/admin/content",
+    );
+  }, [article, draftLocale, router]);
 
   const handleArchive = useCallback(async () => {
     if (!article || !canArchiveArticle(article.status)) return;
@@ -579,7 +593,10 @@ export function ContentArticleAdminScreen() {
   if (loading) {
     return (
       <main className="p-4" data-testid="content-article-admin-loading">
-        <p className="text-muted">در حال بارگذاری…</p>
+        <div className="flex items-center gap-2 text-sm text-muted">
+          <Spinner />
+          <span>در حال بارگذاری…</span>
+        </div>
       </main>
     );
   }
@@ -595,6 +612,11 @@ export function ContentArticleAdminScreen() {
     );
   }
 
+  const listBackLocale = draftLocale || article.locale;
+  const listBackHref = listBackLocale
+    ? `/admin/content?language=${encodeURIComponent(listBackLocale)}`
+    : "/admin/content";
+
   const dirty = form.mode === "edit" && form.isDirty;
   const saveStateLabel =
     form.mode === "view" ? "فقط مشاهده" : saving ? "در حال ذخیره…" : dirty ? "تغییرات ذخیره‌نشده" : "ذخیره‌شده";
@@ -608,7 +630,7 @@ export function ContentArticleAdminScreen() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
-              <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
+              <Link href={listBackHref} className="text-sm text-[#2563EB] underline" data-testid="content-article-back-link">
                 بازگشت به فهرست مقالات
               </Link>
               <Link
@@ -886,6 +908,8 @@ export function ContentArticleAdminScreen() {
                 <ContentArticleCategoryPicker
                   rows={categoryOptions}
                   value={draftCategoryId}
+                  languageCode={draftLocale || article.locale}
+                  loading={categoriesLoading}
                   disabled={form.mode === "view"}
                   onChange={(id, name) => {
                     setDraftCategoryId(id);
@@ -1122,6 +1146,8 @@ export function ContentArticleAdminScreen() {
               <ContentArticleCategoryPicker
                 rows={categoryOptions}
                 value={draftCategoryId}
+                languageCode={draftLocale || article.locale}
+                loading={categoriesLoading}
                 disabled={form.mode === "view"}
                 onChange={(id, name) => {
                   setDraftCategoryId(id);
@@ -1130,7 +1156,13 @@ export function ContentArticleAdminScreen() {
                 }}
               />
             </label>
-            {!draftCategoryId ? (
+            {categoriesLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted" data-testid="content-article-categories-loading">
+                <Spinner />
+                <span>در حال بارگذاری دسته‌ها…</span>
+              </div>
+            ) : null}
+            {!draftCategoryId && !categoriesLoading ? (
               <p className="text-sm text-muted" data-testid="content-article-category-empty">
                 هنوز دسته‌ای انتخاب نشده است.
               </p>
@@ -1386,8 +1418,8 @@ export function ContentArticleAdminScreen() {
               </button>
               <span className="text-sm text-muted" data-testid="content-article-history-page-label">
                 {historyPagerFa
-                  ? `صفحه ${historyPage} از ${historyTotalPages}`
-                  : `Page ${historyPage} of ${historyTotalPages}`}
+                  ? `صفحه ${historyPage} از ${historyTotalPages} · ${historyTotal} رویداد`
+                  : `Page ${historyPage} of ${historyTotalPages} · ${historyTotal} events`}
               </span>
               <button
                 type="button"

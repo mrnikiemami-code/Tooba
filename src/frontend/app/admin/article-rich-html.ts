@@ -1,7 +1,7 @@
 /**
  * Sanitizer for Article rich HTML — controlled tags including DAM images/files/videos only.
  *
- * Allowlist notes (TB-P08-T012-R1 / TB-P08-T016-R2 / TB-P08-T016-R4 / CKEditor 5):
+ * Allowlist notes (TB-P08-T012-R1 / TB-P08-T016-R2 / TB-P08-T016-R4 / TB-P08-T016-R5 / CKEditor 5):
  * - Tags: paragraph/headings/lists/quote/link/table/figure/img/video/source/hr/span — CKEditor emits these.
  * - Attrs: href/target/rel/style/colspan/rowspan/src/alt/title/class/data-media-asset-id/width/height/controls/preload.
  * - Styles kept: text-align, font-family, font-size, color, background-color, width, height, margin-left/right, float
@@ -328,6 +328,15 @@ export function sanitizeArticleRichHtml(html: string): string {
   for (let i = 0; i < videoHolders.length; i += 1) {
     processed = processed.replace(`<!--TOOBA_DAM_VIDEO_${i}-->`, videoHolders[i]!);
   }
+
+  // Unwrap accidental paragraph wrappers around DAM video (CKEditor figure>p>video / p>video).
+  processed = processed
+    .replace(
+      /<figure([^>]*class="[^"]*article-dam-video[^"]*"[^>]*)>\s*<p>\s*(<video\b[\s\S]*?<\/video>)\s*<\/p>\s*<\/figure>/gi,
+      "<figure$1>$2</figure>",
+    )
+    .replace(/<p>\s*(<video\b[\s\S]*?<\/video>)\s*<\/p>/gi, "$1");
+
   return processed;
 }
 

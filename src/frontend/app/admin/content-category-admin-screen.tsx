@@ -336,39 +336,27 @@ export function ContentCategoryAdminScreen() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(280px,42%)_minmax(0,1fr)]">
-        <section className="min-w-[280px] max-w-full resize-x overflow-auto rounded-2xl border border-border bg-surface-elevated p-3 shadow-sm">
-          <input
-            className="mb-3 w-full rounded-xl border border-border px-3 py-2 text-sm"
-            placeholder="جستجو…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            data-testid="content-category-tree-search"
+      <div className="grid gap-4 lg:grid-cols-[minmax(320px,48%)_minmax(0,1fr)]">
+        <section className="min-w-[320px] max-w-full resize-x overflow-auto rounded-2xl border border-border bg-surface-elevated p-3 shadow-sm">
+          <AppCategoryTree
+            nodes={treeNodes}
+            expandedKeys={expandedKeys}
+            selectedKeys={selectedId ? [selectedId] : []}
+            onExpandedKeysChange={setExpandedKeys}
+            onSelect={selectNode}
+            onCreateRoot={() => openCreate(null)}
+            onCreateChild={(id) => openCreate(id)}
+            searchQuery={search}
+            onSearchQueryChange={setSearch}
+            loading={loading}
+            direction={isRtl ? "rtl" : "ltr"}
+            uiLocale={isRtl ? "fa" : "en"}
+            maxDepth={MAX_CONTENT_CATEGORY_DEPTH}
+            createLabel={isRtl ? "دسته اصلی" : "Main category"}
+            title={isRtl ? "دسته‌بندی مقالات" : "Article categories"}
+            searchPlaceholder={isRtl ? "جستجو…" : "Search…"}
+            allowDrag={false}
           />
-          {loading ? (
-            <div className="flex items-center gap-2 p-3 text-sm text-muted">
-              <Spinner />
-              <span>در حال بارگذاری…</span>
-            </div>
-          ) : (
-            <AppCategoryTree
-              nodes={treeNodes}
-              expandedKeys={expandedKeys}
-              selectedKeys={selectedId ? [selectedId] : []}
-              onExpandedKeysChange={setExpandedKeys}
-              onSelect={selectNode}
-              onCreateRoot={() => openCreate(null)}
-              onCreateChild={(id) => openCreate(id)}
-              searchQuery={search}
-              onSearchQueryChange={setSearch}
-              direction={isRtl ? "rtl" : "ltr"}
-              uiLocale={isRtl ? "fa" : "en"}
-              maxDepth={MAX_CONTENT_CATEGORY_DEPTH}
-              createLabel={isRtl ? "دسته اصلی" : "Main category"}
-              title={isRtl ? "دسته‌بندی مقالات" : "Article categories"}
-              allowDrag={false}
-            />
-          )}
         </section>
 
         <section className="rounded-2xl border border-border bg-surface-elevated p-4 shadow-sm">

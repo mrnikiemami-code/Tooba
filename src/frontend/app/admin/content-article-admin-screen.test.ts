@@ -66,16 +66,33 @@ test("existing article workspace locale identity comes from applyArticle, not Ad
   assert.match(screen, /draftLocale \|\| article\?\.locale/);
 });
 
-test("history tab uses paged Previous\/Next UI with Persian page label", () => {
+test("back link preserves article list language query when locale known", () => {
+  assert.match(screen, /content-article-back-link/);
+  assert.match(screen, /\/admin\/content\?language=\$\{encodeURIComponent\(listBackLocale\)\}/);
+  assert.match(newScreen, /content-article-new-back-link/);
+  assert.match(newScreen, /\/admin\/content\?language=\$\{encodeURIComponent\(locale\)\}/);
+  assert.match(list, /language=\$\{encodeURIComponent\(listLanguage\)\}/);
+});
+
+test("history tab uses paged Previous\/Next UI with totalCount in label", () => {
   assert.match(screen, /historyPage/);
   assert.match(screen, /HISTORY_PAGE_SIZE/);
   assert.match(screen, /historyLoading/);
   assert.match(screen, /content-article-history-pager/);
-  assert.match(screen, /صفحه \$\{historyPage\} از \$\{historyTotalPages\}/);
+  assert.match(screen, /صفحه \$\{historyPage\} از \$\{historyTotalPages\} · \$\{historyTotal\} رویداد/);
+  assert.match(screen, /Page \$\{historyPage\} of \$\{historyTotalPages\} · \$\{historyTotal\} events/);
   assert.match(screen, /قبلی/);
   assert.match(screen, /بعدی/);
   assert.match(screen, /refreshPriorPublication/);
   assert.match(screen, /loadArticleHistory\(id, skip, HISTORY_PAGE_SIZE\)/);
+});
+
+test("category picker uses article languageCode and loading state", () => {
+  assert.match(screen, /categoriesLoading/);
+  assert.match(screen, /languageCode=\{draftLocale \|\| article\.locale\}/);
+  assert.match(screen, /loading=\{categoriesLoading\}/);
+  assert.match(screen, /content-article-admin-loading/);
+  assert.match(screen, /<Spinner \/>/);
 });
 
 test("content article editor is CKEditor 5 with professional toolbar contract", () => {
@@ -103,6 +120,7 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /Vazirmatn, Tahoma/);
   assert.match(ck, /"12px"/);
   assert.match(ck, /"28px"/);
+  assert.match(ck, /shouldNotGroupWhenFull:\s*true/);
   assert.match(ck, /translations:\s*isRtl\s*\?\s*\[translationsFa\]\s*:\s*undefined/);
   assert.match(ck, /damStorefrontSrc/);
   assert.doesNotMatch(ck, /articleDamMediaSrc/);
@@ -110,6 +128,7 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /HorizontalLine/);
   assert.match(ck, /sanitizeArticleRichHtml/);
   assert.match(ck, /min-h-\[22rem\]|min-height:\s*22rem/);
+  assert.match(ck, /<video class="article-dam-video"/);
   assert.doesNotMatch(ck, /@tiptap/);
   assert.doesNotMatch(ck, /CKBox|CloudServices|EasyImage|Base64UploadAdapter/);
   assert.doesNotMatch(editor, /ProductRichTextEditor/);

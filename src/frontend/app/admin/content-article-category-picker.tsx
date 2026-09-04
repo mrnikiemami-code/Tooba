@@ -25,6 +25,14 @@ function toFlatNodes(rows: ContentCategoryTreeNodeDto[]): AppCategoryTreeNode[] 
   }));
 }
 
+function articleCategoryTreeDirection(languageCode: string): "rtl" | "ltr" {
+  return languageCode.toLowerCase().startsWith("fa") ? "rtl" : "ltr";
+}
+
+function articleCategoryTreeUiLocale(languageCode: string): "fa" | "en" {
+  return languageCode.toLowerCase().startsWith("fa") ? "fa" : "en";
+}
+
 export type ContentArticleCategoryOption = {
   id: string;
   label: string;
@@ -62,6 +70,8 @@ export function buildContentArticleCategoryOptions(
 export function ContentArticleCategoryPicker({
   rows,
   value,
+  languageCode = "",
+  loading = false,
   disabled,
   onChange,
   emptyLabel = "دسته‌ای برای این زبان ثبت نشده است.",
@@ -70,6 +80,8 @@ export function ContentArticleCategoryPicker({
 }: {
   rows: ContentCategoryTreeNodeDto[];
   value: string;
+  languageCode?: string;
+  loading?: boolean;
   disabled?: boolean;
   onChange: (id: string, name: string) => void;
   emptyLabel?: string;
@@ -80,6 +92,9 @@ export function ContentArticleCategoryPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const direction = articleCategoryTreeDirection(languageCode);
+  const uiLocale = articleCategoryTreeUiLocale(languageCode);
+  const isRtl = direction === "rtl";
 
   useEffect(() => {
     if (!open) return;
@@ -132,7 +147,7 @@ export function ContentArticleCategoryPicker({
   }, [open, treeNodes, value]);
 
   return (
-    <div ref={rootRef} className="relative" data-testid={testId}>
+    <div ref={rootRef} className="relative" data-testid={testId} data-language-code={languageCode || undefined}>
       <button
         type="button"
         className="flex w-full items-center justify-between rounded-xl border px-3 py-2 text-start text-sm disabled:opacity-60"
@@ -158,8 +173,13 @@ export function ContentArticleCategoryPicker({
         <div
           className="absolute z-30 mt-1 min-w-[28rem] w-[min(100vw-2rem,36rem)] rounded-xl border bg-white p-3 shadow-lg"
           data-testid={`${testId}-panel`}
+          dir={direction}
         >
-          {assignableRows.length === 0 ? (
+          {loading ? (
+            <p className="px-2 py-3 text-sm text-muted" data-testid={`${testId}-loading`}>
+              {isRtl ? "در حال بارگذاری…" : "Loading…"}
+            </p>
+          ) : assignableRows.length === 0 ? (
             <p className="px-2 py-3 text-sm text-muted" data-testid={`${testId}-empty`}>
               {emptyLabel}
             </p>
@@ -203,9 +223,10 @@ export function ContentArticleCategoryPicker({
                 onSearchQueryChange={setQuery}
                 allowDrag={false}
                 maxDepth={2}
-                direction="rtl"
-                uiLocale="fa"
-                title="انتخاب دسته"
+                loading={loading}
+                direction={direction}
+                uiLocale={uiLocale}
+                title={isRtl ? "انتخاب دسته" : "Select category"}
                 searchPlaceholder={placeholder}
                 virtualHeight={280}
                 className="border-0 shadow-none"

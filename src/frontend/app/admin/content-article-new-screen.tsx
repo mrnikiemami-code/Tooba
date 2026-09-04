@@ -89,9 +89,13 @@ export function ContentArticleNewScreen() {
     router.push(`/admin/content/articles/${result.article.articleId}`);
   }, [router, selected]);
 
+  const listBackHref = locale
+    ? `/admin/content?language=${encodeURIComponent(locale)}`
+    : "/admin/content";
+
   return (
     <main className="mx-auto w-full max-w-lg p-4" data-testid="content-article-new">
-      <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
+      <Link href={listBackHref} className="text-sm text-[#2563EB] underline" data-testid="content-article-new-back-link">
         بازگشت به فهرست مقالات
       </Link>
       <h1 className="mt-4 text-xl font-bold">مقالهٔ جدید</h1>

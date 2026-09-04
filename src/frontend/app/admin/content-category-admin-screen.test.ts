@@ -15,9 +15,11 @@ test("content category api targets content-owned endpoints", () => {
 test("content category admin uses canonical AppCategoryTree and route selection", () => {
   assert.match(screen, /AppCategoryTree/);
   assert.match(screen, /\/admin\/content\/categories\//);
-  assert.match(screen, /content-category-tree/);
+  assert.match(screen, /loading=\{loading\}/);
+  assert.match(screen, /minmax\(320px,48%\)/);
   assert.match(screen, /parentOptions/);
   assert.match(screen, /loadAdminLanguages/);
   assert.doesNotMatch(screen, /LANGUAGE_OPTIONS/);
+  assert.doesNotMatch(screen, /content-category-tree-search/);
   assert.match(screen, /در حال بارگذاری…/);
 });

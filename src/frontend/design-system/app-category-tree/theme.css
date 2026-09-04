@@ -8,7 +8,7 @@
   --act-surface: #ffffff;
   --act-muted: #6b7280;
   --act-hover: #f8fafc;
-  --act-selected: #eff6ff;
+  --act-selected: #dbeafe;
   --act-danger: #dc2626;
   --act-radius: 10px;
   display: flex;
@@ -250,6 +250,12 @@
 
 .app-category-tree .ant-tree .ant-tree-treenode-selected {
   background: var(--act-selected);
+  box-shadow: inset 3px 0 0 var(--act-primary);
+}
+
+.app-category-tree .ant-tree .ant-tree-treenode-selected .app-category-tree-node__name {
+  font-weight: 600;
+  color: #1e3a8a;
 }
 
 .app-category-tree .ant-tree .ant-tree-node-content-wrapper {

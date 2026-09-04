@@ -149,23 +149,33 @@ function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
 function buildContentRowActions(
   caps: Set<string> | null,
   onRequestAction: (kind: ArticleDestructiveKind, row: AdminContentArticle) => void,
+  listLanguage?: string | null,
 ): AppGridRowAction<AdminContentArticle>[] {
   const canEdit = allowedCapability(caps, "content.edit");
   const canPublish = allowedCapability(caps, "content.publish");
+  const languageQuery = listLanguage ? `language=${encodeURIComponent(listLanguage)}` : "";
+  const viewHref = (articleId: string) =>
+    languageQuery
+      ? `/admin/content/articles/${encodeURIComponent(articleId)}?${languageQuery}`
+      : `/admin/content/articles/${encodeURIComponent(articleId)}`;
+  const editHref = (articleId: string) =>
+    languageQuery
+      ? `/admin/content/articles/${encodeURIComponent(articleId)}?mode=edit&${languageQuery}`
+      : `/admin/content/articles/${encodeURIComponent(articleId)}?mode=edit`;
 
   return [
     {
       id: "view",
       label: "مشاهده",
       icon: Eye,
-      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}`,
+      href: (row) => viewHref(row.articleId),
       testId: (row) => `admin-content-view-${row.articleId}`,
     },
     {
       id: "edit",
       label: "ویرایش",
       icon: Pencil,
-      href: (row) => `/admin/content/articles/${encodeURIComponent(row.articleId)}?mode=edit`,
+      href: (row) => editHref(row.articleId),
       testId: (row) => `admin-content-edit-${row.articleId}`,
       visible: (row) => canEdit && !isArticleArchived(row.status),
     },
@@ -436,7 +446,10 @@ export function AdminContentScreen() {
   }, [destructiveKind, destructiveTarget, refresh]);
 
   const canCreate = allowedCapability(caps, "content.create");
-  const rowActions = useMemo(() => buildContentRowActions(caps, onRequestAction), [caps, onRequestAction]);
+  const rowActions = useMemo(
+    () => buildContentRowActions(caps, onRequestAction, selectedLanguage),
+    [caps, onRequestAction, selectedLanguage],
+  );
   const columnDefs = useMemo(() => buildColumnDefs(rowActions), [rowActions]);
 
   const queryAdapter = useCallback(

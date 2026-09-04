@@ -56,6 +56,14 @@ test("article rich html allows only storefront dam src and safe CKEditor attrs",
   assert.match(videoHtml, /<video[^>]*data-media-asset-id/);
   assert.match(videoHtml, /article-dam-video/);
   assert.match(videoHtml, /<hr\b/i);
+
+  const wrappedVideo = sanitizeArticleRichHtml(
+    `<figure class="article-dam-video"><p><video class="article-dam-video" controls preload="metadata" src="${src}" data-media-asset-id="${id}"></video></p></figure>`,
+  );
+  assert.match(wrappedVideo, /<video[^>]*data-media-asset-id/);
+  assert.doesNotMatch(wrappedVideo, /<figure[^>]*>\s*<p>\s*<video/i);
+  assert.doesNotMatch(wrappedVideo, /<p>\s*<video/i);
+
   assert.doesNotMatch(
     sanitizeArticleRichHtml(`<video src="https://evil.test/x.mp4" data-media-asset-id="${id}"></video>`),
     /video/i,
