@@ -151,9 +151,10 @@ public sealed class ContentAuthorDirectory : IContentAuthorDirectory
         bool isNewAssignment,
         CancellationToken cancellationToken)
     {
+        // Draft-first: ایجاد/ذخیره بدون نویسنده مجاز است.
         if (authorId is null)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+            return;
         }
 
         var author = await _db.Authors.AsNoTracking()

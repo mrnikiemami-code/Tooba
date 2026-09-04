@@ -14,3 +14,14 @@ test("content list pins actions like product list", () => {
   assert.doesNotMatch(source, /sticky:\s*"start"/);
   assert.doesNotMatch(source, /AgGridReact/);
 });
+
+test("content list uses language tabs and server locale filter", () => {
+  assert.match(source, /loadAdminLanguages/);
+  assert.match(source, /useSearchParams/);
+  assert.match(source, /admin-content-language-tabs/);
+  assert.match(source, /kind:\s*"text"/);
+  assert.match(source, /operator:\s*"equals"/);
+  assert.match(source, /language=\$\{/);
+  assert.doesNotMatch(source, /field:\s*"locale"/);
+  assert.doesNotMatch(source, /id:\s*"locale"/);
+});

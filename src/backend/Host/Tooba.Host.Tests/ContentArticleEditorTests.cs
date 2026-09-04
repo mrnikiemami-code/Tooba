@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Tooba.Host.Tests;
 
-/// <summary>TB-P08-T004: workspace مقاله — قفل locale و زمان‌بندی انتشار.</summary>
+/// <summary>TB-P08-T011: draft-first create، CanChangeLocale، قفل پس از نویسنده/انتشار.</summary>
 [Collection("PostgresSerial")]
 public sealed class ContentArticleEditorTests : IAsyncLifetime
 {
@@ -46,9 +46,9 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         }
     }
 
-    /// <summary>locale پس از انتساب نویسنده قفل می‌شود؛ publishDate قابل به‌روزرسانی است.</summary>
+    /// <summary>ایجاد بدون نویسنده اجازهٔ تغییر locale می‌دهد؛ انتساب نویسنده و انتشار قفل می‌کند.</summary>
     [SkippableFact]
-    public async Task Locale_lock_after_author_assignment_and_publish_date_update()
+    public async Task Locale_change_allowed_for_pristine_draft_then_locks_with_author_or_publish()
     {
         Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
 
@@ -59,18 +59,14 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
         var languages = new PermissiveLanguageDirectory();
         var content = new ContentDirectory(db, languages, categories, authors);
 
-        var author = await authors.CreateAsync(
-            new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
-            CancellationToken.None);
-
         var draft = await content.CreateAsync(
             new CreateArticleCommand(
                 "editor-draft",
                 "پیش‌نویس",
                 "چکیده",
-                "بدنه",
+                "",
                 null,
-                author.Id,
+                null,
                 [],
                 false,
                 DateTimeOffset.Parse("2026-09-01T08:00:00Z"),
@@ -80,6 +76,51 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                 null,
                 null),
             CancellationToken.None);
+        Assert.Null(draft.AuthorId);
+        Assert.Equal(string.Empty, draft.AuthorDisplayName);
+
+        var switched = await content.UpdateAsync(
+            draft.ArticleId,
+            new UpdateArticleCommand(
+                "پیش‌نویس",
+                "چکیده",
+                "",
+                null,
+                null,
+                [],
+                false,
+                "en-US",
+                null,
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+        Assert.Equal("en-US", switched.Locale);
+
+        var author = await authors.CreateAsync(
+            new CreateContentAuthorCommand("تحریریه", "editorial", null, null, null, null, null, null, null, null),
+            CancellationToken.None);
+
+        // انتساب نویسنده با همان locale — سپس تغییر locale باید قفل شود.
+        var withAuthor = await content.UpdateAsync(
+            draft.ArticleId,
+            new UpdateArticleCommand(
+                "پیش‌نویس",
+                "چکیده",
+                "",
+                null,
+                author.Id,
+                [],
+                false,
+                "en-US",
+                null,
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+        Assert.Equal(author.Id, withAuthor.AuthorId);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             content.UpdateAsync(
@@ -87,12 +128,12 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                 new UpdateArticleCommand(
                     "پیش‌نویس",
                     "چکیده",
-                    "بدنه",
+                    "",
                     null,
                     author.Id,
                     [],
                     false,
-                    "en-US",
+                    "fa-IR",
                     null,
                     null,
                     null,
@@ -106,12 +147,12 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
             new UpdateArticleCommand(
                 "پیش‌نویس زمان‌بندی‌شده",
                 "چکیده",
-                "بدنه",
+                "",
                 null,
                 author.Id,
                 [],
                 false,
-                "fa-IR",
+                "en-US",
                 null,
                 null,
                 null,
@@ -134,7 +175,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                     author.Id,
                     [],
                     false,
-                    "en-US",
+                    "fa-IR",
                     null,
                     null,
                     null,

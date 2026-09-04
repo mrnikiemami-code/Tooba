@@ -72,17 +72,30 @@ test("article action flows use canonical Dialog with zero window.confirm", () =>
   assert.match(screen, /setDestructiveKind\(isPublished\(article\.status\) \? "unpublish" : "publish"\)/);
 });
 
-test("article list drops slug column and uses مقالات heading", () => {
+test("article list drops slug and locale columns and uses مقالات heading", () => {
   assert.match(list, />مقالات</);
   assert.doesNotMatch(list, /محتوا \/ بلاگ/);
   assert.doesNotMatch(list, /field:\s*"slug"/);
   assert.doesNotMatch(list, /id:\s*"slug"/);
+  assert.doesNotMatch(list, /field:\s*"locale"/);
+  assert.doesNotMatch(list, /id:\s*"locale"/);
   assert.match(list, /field:\s*"title"/);
-  assert.match(list, /field:\s*"locale"/);
   assert.match(list, /field:\s*"authorDisplayName"/);
   assert.match(list, /field:\s*"category"/);
   assert.match(list, /field:\s*"status"/);
   assert.match(list, /field:\s*"updatedAt"/);
+  assert.match(list, /admin-content-language-tabs/);
+  assert.match(list, /loadAdminLanguages/);
+});
+
+test("draft-first create has no author gate and uses dynamic languages", () => {
+  assert.doesNotMatch(newScreen, /LANGUAGE_OPTIONS/);
+  assert.doesNotMatch(newScreen, /نویسندهٔ فعالی یافت نشد/);
+  assert.match(newScreen, /authorId:\s*null/);
+  assert.match(newScreen, /authorDisplayName:\s*""/);
+  assert.match(newScreen, /loadAdminLanguages/);
+  assert.match(newScreen, /mapAdminErrorMessage/);
+  assert.match(newScreen, /normalizeAdminClientError/);
 });
 
 test("article list gates actions by content capabilities", () => {

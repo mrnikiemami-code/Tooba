@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { Archive, Eye, Pencil, Trash2, Upload, Undo2 } from "lucide-react";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
@@ -39,8 +40,10 @@ import {
   unpublishAdminArticle,
   type AdminContentArticle,
 } from "../content/content-api";
+import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import { prepareAdminDevActor } from "./admin-api";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { loadAdminLanguages } from "./language-api.ts";
 import {
   ContentArticleDestructiveDialog,
   type ArticleDestructiveKind,
@@ -58,7 +61,6 @@ const CONTENT_GRID_FILTER_MATRIX: Record<string, AppGridFilterSpec> = {
   title: { field: "title", kind: "text" },
   status: { field: "status", kind: "status" },
   category: { field: "category", kind: "text" },
-  locale: { field: "locale", kind: "text" },
   authorDisplayName: { field: "authorDisplayName", kind: "text" },
   updatedAt: { field: "updatedAt", kind: "jalali-date" },
 };
@@ -94,6 +96,10 @@ function allowedCapability(caps: Set<string> | null, permissionId: string): bool
   return hasCapability(caps, permissionId);
 }
 
+function languageTabLabel(lang: SupportedLocaleDefinition): string {
+  return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
+}
+
 function TitleCell(params: ICellRendererParams<AdminContentArticle>) {
   const row = params.data;
   if (!row) return null;
@@ -109,12 +115,6 @@ function CategoryCell(params: ICellRendererParams<AdminContentArticle>) {
   const row = params.data;
   if (!row?.category?.trim()) return <span className="text-muted">—</span>;
   return <AppGridTruncatedCell params={params} text={row.category} />;
-}
-
-function LocaleCell(params: ICellRendererParams<AdminContentArticle>) {
-  const row = params.data;
-  if (!row) return null;
-  return <span className="text-sm">{formatArticleLocaleLabel(row.locale)}</span>;
 }
 
 function AuthorCell(params: ICellRendererParams<AdminContentArticle>) {
@@ -196,13 +196,6 @@ function buildColumnDefs(
       cellRenderer: TitleCell,
     }),
     applyContentGridFilterHeader({
-      field: "locale",
-      headerName: "زبان",
-      width: 100,
-      minWidth: 90,
-      cellRenderer: LocaleCell,
-    }),
-    applyContentGridFilterHeader({
       field: "authorDisplayName",
       headerName: "نویسنده",
       width: 140,
@@ -261,16 +254,19 @@ const CONTENT_ADVANCED_FILTERS: AppGridFilterColumnDef[] = [
       { value: "Archived", label: "بایگانی" },
     ],
   },
-  { id: "locale", header: "زبان", filterKind: "text" },
   { id: "authorDisplayName", header: "نویسنده", filterKind: "text" },
   { id: "category", header: "دسته", filterKind: "text" },
   { id: "updatedAt", header: "به‌روزرسانی", filterKind: "date" },
 ];
 
-/** فهرست مقالات Admin — الگوی canonical AppDataGrid مثل محصولات. */
+/** فهرست مقالات Admin — تب زبان + الگوی canonical AppDataGrid. */
 export function AdminContentScreen() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [reloadToken, setReloadToken] = useState(0);
   const [gridError, setGridError] = useState<string>();
+  const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
   const [destructiveTarget, setDestructiveTarget] = useState<ArticleDestructiveTarget | null>(null);
   const [destructivePending, setDestructivePending] = useState(false);
@@ -292,7 +288,46 @@ export function AdminContentScreen() {
       });
   }, []);
 
+  useEffect(() => {
+    void prepareAdminDevActor().then(() =>
+      loadAdminLanguages().then((result) => {
+        if (result.state !== "ok" || !result.data?.length) {
+          setLanguages([]);
+          setSelectedLanguage(null);
+          return;
+        }
+        const active = result.data
+          .filter((row) => row.active)
+          .slice()
+          .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
+        setLanguages(active);
+        const param = searchParams.get("language")?.trim() ?? "";
+        const defaultLang = active.find((row) => row.default) ?? active[0]!;
+        const matched = active.find((row) => row.code === param);
+        const resolved = matched?.code ?? defaultLang.code;
+        setSelectedLanguage(resolved);
+        if (param !== resolved) {
+          const next = new URLSearchParams(searchParams.toString());
+          next.set("language", resolved);
+          router.replace(`/admin/content?${next.toString()}`);
+        }
+      }),
+    );
+  }, [router, searchParams]);
+
   const refresh = useCallback(() => setReloadToken((value) => value + 1), []);
+
+  const onSelectLanguage = useCallback(
+    (code: string) => {
+      if (code === selectedLanguage) return;
+      setSelectedLanguage(code);
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("language", code);
+      router.replace(`/admin/content?${next.toString()}`);
+      setReloadToken((value) => value + 1);
+    },
+    [router, searchParams, selectedLanguage],
+  );
 
   const onRequestAction = useCallback((kind: ArticleDestructiveKind, row: AdminContentArticle) => {
     setDestructiveKind(kind);
@@ -343,7 +378,16 @@ export function AdminContentScreen() {
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
       void reloadToken;
-      const result = await queryAdminContentArticlesGrid(query);
+      if (!selectedLanguage) {
+        return { rows: [], total: 0 };
+      }
+      const result = await queryAdminContentArticlesGrid({
+        ...query,
+        filters: {
+          ...query.filters,
+          locale: { kind: "text", operator: "equals", query: selectedLanguage },
+        },
+      });
       if (result.denied) {
         setGridError("admin.authorization.denied");
         throw new Error(result.message);
@@ -355,8 +399,12 @@ export function AdminContentScreen() {
       setGridError(undefined);
       return result.page;
     },
-    [reloadToken],
+    [reloadToken, selectedLanguage],
   );
+
+  const createHref = selectedLanguage
+    ? `/admin/content/articles/new?language=${encodeURIComponent(selectedLanguage)}`
+    : "/admin/content/articles/new";
 
   return (
     <main className="w-full" data-testid="admin-content">
@@ -367,7 +415,7 @@ export function AdminContentScreen() {
         </div>
         {canCreate ? (
           <Link
-            href="/admin/content/articles/new"
+            href={createHref}
             className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white hover:brightness-95"
             data-testid="admin-content-new-article"
           >
@@ -377,6 +425,31 @@ export function AdminContentScreen() {
         ) : null}
       </div>
 
+      {languages.length > 0 ? (
+        <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="زبان مقالات" data-testid="admin-content-language-tabs">
+          {languages.map((lang) => {
+            const active = lang.code === selectedLanguage;
+            return (
+              <button
+                key={lang.code}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                data-testid={`admin-content-lang-${lang.code}`}
+                className={
+                  active
+                    ? "rounded-lg bg-[#2563EB] px-3 py-1.5 text-sm font-semibold text-white"
+                    : "rounded-lg border border-border px-3 py-1.5 text-sm"
+                }
+                onClick={() => onSelectLanguage(lang.code)}
+              >
+                {languageTabLabel(lang)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       <section className="rounded-2xl border border-border bg-surface-elevated p-2 shadow-sm md:p-4">
         {gridError ? (
           <ErrorState
@@ -385,8 +458,9 @@ export function AdminContentScreen() {
             onRetry={refresh}
             retryLabel={faWorkspaceMessages.retry}
           />
-        ) : (
+        ) : selectedLanguage ? (
           <AppDataGrid<AdminContentArticle>
+            key={`admin-content-grid-${selectedLanguage}-${reloadToken}`}
             gridId={ADMIN_CONTENT_GRID_VIEW_KEY}
             columnDefs={columnDefs}
             queryAdapter={queryAdapter}
@@ -412,6 +486,8 @@ export function AdminContentScreen() {
               formatJalaliDate(row.updatedAt, "fa"),
             ]}
           />
+        ) : (
+          <p className="p-4 text-sm text-muted">در حال بارگذاری زبان‌ها…</p>
         )}
       </section>
 

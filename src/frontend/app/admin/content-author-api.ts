@@ -193,8 +193,13 @@ export function queryAdminContentAuthorsGrid(
   );
 }
 
-export async function fetchActiveContentAuthors(): Promise<AdminResult<ContentAuthorPickerItem[]>> {
-  const response = await adminRead("/v1/admin/content/authors/active");
+export async function fetchActiveContentAuthors(
+  search?: string,
+): Promise<AdminResult<ContentAuthorPickerItem[]>> {
+  // picker?activeOnly=true — canonical Host endpoint (not /authors/active)
+  const response = await adminRead(`/v1/admin/content/authors/picker?activeOnly=true${
+    search?.trim() ? `&search=${encodeURIComponent(search.trim())}` : ""
+  }`);
   if (response.state !== "ok") return { ...response, data: null };
   const rows = Array.isArray(response.data) ? response.data : [];
   return {

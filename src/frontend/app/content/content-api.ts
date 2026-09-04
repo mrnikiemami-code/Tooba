@@ -3,6 +3,7 @@
  */
 
 import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts";
+import { parseAdminProblemErrorCode } from "../admin/admin-error-map.ts";
 import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 
@@ -75,6 +76,7 @@ export interface AdminContentArticle {
   categoryId: string | null;
   authorId: string | null;
   coverMediaAssetId: string | null;
+  seoImageMediaAssetId: string | null;
   authorDisplayName: string;
   tags: string[];
   isFeatured: boolean;
@@ -226,6 +228,7 @@ export function mapAdminContentArticle(value: unknown): AdminContentArticle | nu
   return {
     ...mapped,
     body: mapped.body ?? "",
+    seoImageMediaAssetId: mapped.seoImageMediaAssetId,
     status: text(prop(item, "status", "Status")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
@@ -568,10 +571,9 @@ export async function updateAdminArticle(
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      const root = recordOf(payload);
       return {
         ok: false,
-        message: text(root?.errorCode ?? root?.detail ?? root?.title, `update-http-${response.status}`),
+        message: parseAdminProblemErrorCode(payload, response.status),
       };
     }
     const article = mapAdminContentArticle(payload);
@@ -581,10 +583,42 @@ export async function updateAdminArticle(
   }
 }
 
-/** آیا تغییر locale پس از انتشار یا ارجاع مجاز نیست. */
-export function isArticleLocaleLocked(article: Pick<AdminContentArticle, "status" | "authorId" | "categoryId">): boolean {
-  const published = article.status === "Published" || article.status === "1";
-  return published || Boolean(article.authorId) || Boolean(article.categoryId);
+/** آیا تغییر locale برای پیش‌نویس بکر مجاز نیست (آینهٔ CanChangeLocale دامنه). */
+export function isArticleLocaleLocked(
+  article: Pick<
+    AdminContentArticle,
+    | "status"
+    | "authorId"
+    | "categoryId"
+    | "coverMediaAssetId"
+    | "body"
+    | "seoTitle"
+    | "seoDescription"
+    | "tags"
+    | "isFeatured"
+    | "category"
+  > & { seoImageMediaAssetId?: string | null },
+): boolean {
+  const status = String(article.status ?? "");
+  if (
+    status === "Published" ||
+    status === "1" ||
+    status === "Archived" ||
+    status === "2"
+  ) {
+    return true;
+  }
+  if (article.authorId) return true;
+  if (article.categoryId) return true;
+  if (article.coverMediaAssetId) return true;
+  if (article.seoImageMediaAssetId) return true;
+  if (article.body?.trim()) return true;
+  if (article.seoTitle?.trim()) return true;
+  if (article.seoDescription?.trim()) return true;
+  if (Array.isArray(article.tags) && article.tags.some((tag) => Boolean(tag?.trim()))) return true;
+  if (article.isFeatured) return true;
+  if (article.category?.trim()) return true;
+  return false;
 }
 
 export async function createAdminArticle(input: {
@@ -624,7 +658,7 @@ export async function createAdminArticle(input: {
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      return { ok: false, message: recordOf(payload)?.title as string ?? `create-http-${response.status}` };
+      return { ok: false, message: parseAdminProblemErrorCode(payload, response.status) };
     }
     const article = mapAdminContentArticle(payload);
     return article ? { ok: true, article } : { ok: false, message: "invalid-response" };

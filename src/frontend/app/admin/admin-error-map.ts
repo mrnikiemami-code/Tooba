@@ -234,6 +234,30 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "ذخیره‌سازی رسانه در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.",
     en: "Media storage is unavailable. Please try again later.",
   },
+  "content.article.locale_locked": {
+    fa: "زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست.",
+    en: "This article's language cannot be changed because content or dependencies are already set.",
+  },
+  "content.article.create_failed": {
+    fa: "ایجاد پیش‌نویس مقاله ناموفق بود.",
+    en: "Could not create the article draft.",
+  },
+  "content.author.not_found": {
+    fa: "نویسنده یافت نشد.",
+    en: "Author was not found.",
+  },
+  "content.author.inactive": {
+    fa: "نویسندهٔ غیرفعال برای انتساب جدید مجاز نیست.",
+    en: "An inactive author cannot be newly assigned.",
+  },
+  "content.author.required_for_publish": {
+    fa: "برای انتشار مقاله باید یک نویسنده انتخاب شود.",
+    en: "An author is required before publishing the article.",
+  },
+  "localization.language.inactive": {
+    fa: "زبان انتخاب‌شده فعال نیست.",
+    en: "The selected language is not active.",
+  },
 };
 
 const TECHNICAL_UI_PATTERNS = [

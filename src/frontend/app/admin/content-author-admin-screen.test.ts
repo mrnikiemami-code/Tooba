@@ -9,8 +9,10 @@ const list = readFileSync(join(import.meta.dirname, "content-author-list.tsx"), 
 
 test("content author api targets content-owned endpoints", () => {
   assert.match(api, /\/v1\/admin\/content\/authors\/query/);
-  assert.match(api, /\/v1\/admin\/content\/authors\/active/);
+  assert.match(api, /\/v1\/admin\/content\/authors\/picker/);
+  assert.match(api, /activeOnly=true/);
   assert.match(api, /fetchActiveContentAuthors/);
+  assert.doesNotMatch(api, /\/v1\/admin\/content\/authors\/active/);
   assert.doesNotMatch(api, /\/v1\/admin\/catalog\//);
 });
 
@@ -33,6 +35,6 @@ test("content author list uses AppDataGrid without AgGridReact", () => {
 test("content author edit href and screen honor mode=edit", () => {
   assert.match(list, /\?mode=edit/);
   assert.match(screen, /useSearchParams/);
-  assert.match(screen, /searchParams\.get\("mode"\) === "edit"/);
+  assert.match(screen, /requestedMode === "edit"/);
   assert.match(screen, /form\.onEdit\(\)/);
 });

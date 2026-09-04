@@ -148,8 +148,7 @@ public sealed class ContentArticle
         DateTimeOffset? publishDate = null)
     {
         var resolvedLocale = string.IsNullOrWhiteSpace(locale) ? Locale : locale.Trim();
-        if (!string.Equals(resolvedLocale, Locale, StringComparison.Ordinal)
-            && (Status == ContentPublicationStatus.Published || CategoryId is not null || AuthorId is not null))
+        if (!string.Equals(resolvedLocale, Locale, StringComparison.Ordinal) && !CanChangeLocale())
         {
             throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
         }
@@ -244,6 +243,25 @@ public sealed class ContentArticle
     /// <summary>زمان به‌روزرسانی را بدون تغییر فیلدهای دیگر لمس می‌کند.</summary>
     public void Touch(DateTimeOffset now) => UpdatedAt = now;
 
+    /// <summary>
+    /// آیا locale هنوز قابل تغییر است — فقط Draft بکر بدون نویسنده/دسته/رسانه/بدنه/SEO/برچسب/ویژه.
+    /// </summary>
+    public bool CanChangeLocale()
+    {
+        if (Status != ContentPublicationStatus.Draft) return false;
+        if (AuthorId is not null) return false;
+        if (CategoryId is not null) return false;
+        if (CoverMediaAssetId is not null) return false;
+        if (SeoImageMediaAssetId is not null) return false;
+        if (!string.IsNullOrWhiteSpace(Body)) return false;
+        if (!string.IsNullOrWhiteSpace(SeoTitle)) return false;
+        if (!string.IsNullOrWhiteSpace(SeoDescription)) return false;
+        if (!string.IsNullOrWhiteSpace(TagsCsv)) return false;
+        if (!string.IsNullOrWhiteSpace(Category)) return false;
+        if (IsFeatured) return false;
+        return true;
+    }
+
     private static string? NormalizeOptional(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -272,7 +290,7 @@ public sealed class ContentArticle
             throw new InvalidOperationException("چکیدهٔ مقاله معتبر نیست.");
         if (body is null || body.Trim().Length > BodyMaxLength)
             throw new InvalidOperationException("بدنهٔ مقاله معتبر نیست.");
-        if (string.IsNullOrWhiteSpace(authorDisplayName) || authorDisplayName.Trim().Length > AuthorDisplayNameMaxLength)
+        if ((authorDisplayName ?? string.Empty).Trim().Length > AuthorDisplayNameMaxLength)
             throw new InvalidOperationException("نام نمایشی نویسنده معتبر نیست.");
         if (string.IsNullOrWhiteSpace(locale) || locale.Trim().Length > LocaleMaxLength)
             throw new InvalidOperationException("locale مقاله معتبر نیست.");

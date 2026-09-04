@@ -205,12 +205,17 @@ public sealed class ContentDirectory : IContentDirectory
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
         var now = DateTimeOffset.UtcNow;
         var locale = string.IsNullOrWhiteSpace(command.Locale) ? article.Locale : command.Locale.Trim();
-        if (!string.Equals(locale, article.Locale, StringComparison.Ordinal)
-            && (article.Status == ContentPublicationStatus.Published
-                || article.CategoryId is not null
-                || article.AuthorId is not null))
+        if (!string.Equals(locale, article.Locale, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+            if (!article.CanChangeLocale())
+            {
+                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+            }
+
+            if (await _db.ArticleMedia.AnyAsync(row => row.ArticleId == articleId, cancellationToken))
+            {
+                throw new InvalidOperationException(ContentArticleErrorCodes.LocaleLocked);
+            }
         }
 
         await _languages.EnsureActiveLanguageCodeAsync(locale, cancellationToken);
@@ -402,7 +407,7 @@ public sealed class ContentDirectory : IContentDirectory
     {
         if (authorId is null)
         {
-            throw new InvalidOperationException(ContentAuthorErrorCodes.NotFound);
+            return string.Empty;
         }
 
         var workspace = await _authors.GetWorkspaceAsync(authorId.Value, cancellationToken)

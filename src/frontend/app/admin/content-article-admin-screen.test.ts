@@ -14,6 +14,8 @@ test("content article api exposes workspace load/update and locale helpers", () 
   assert.match(api, /isArticleLocaleLocked/);
   assert.match(api, /articleEditorDirection/);
   assert.match(api, /\/v1\/admin\/content\/articles\//);
+  assert.match(api, /seoImageMediaAssetId/);
+  assert.match(api, /coverMediaAssetId/);
 });
 
 test("content article admin workspace uses TipTap, tabs, and DAM", () => {
@@ -23,6 +25,10 @@ test("content article admin workspace uses TipTap, tabs, and DAM", () => {
   assert.match(screen, /content-article-tab-/);
   assert.match(screen, /دسته‌بندی‌ها/);
   assert.match(screen, /loadAdminArticle/);
+  assert.match(screen, /loadAdminLanguages/);
+  assert.match(screen, /content-article-author-filter/);
+  assert.match(screen, /زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست/);
+  assert.doesNotMatch(screen, /LANGUAGE_OPTIONS/);
 });
 
 test("content list links to language-first create and article workspace edit", () => {
@@ -30,9 +36,13 @@ test("content list links to language-first create and article workspace edit", (
   assert.match(list, /\/admin\/content\/articles\/\$\{/);
   assert.match(list, /\?mode=edit/);
   assert.match(list, /formatArticleLocaleLabel/);
+  assert.match(list, /\?language=/);
   assert.doesNotMatch(list, /showCreate/);
-  assert.match(newScreen, /LANGUAGE_OPTIONS/);
+  assert.doesNotMatch(newScreen, /LANGUAGE_OPTIONS/);
+  assert.match(newScreen, /loadAdminLanguages/);
   assert.match(newScreen, /createAdminArticle/);
+  assert.match(newScreen, /authorId:\s*null/);
+  assert.match(newScreen, /mapAdminErrorMessage/);
 });
 
 test("content list maps grid error keys to Persian friendly detail", () => {

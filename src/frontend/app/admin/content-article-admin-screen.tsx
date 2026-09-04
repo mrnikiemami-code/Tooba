@@ -24,6 +24,9 @@ import {
   fetchArticleMediaWorkspace,
   type ArticleMediaWorkspaceDto,
 } from "./content-article-media-api.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
+import { loadAdminLanguages } from "./language-api.ts";
+import type { SupportedLocaleDefinition } from "../../lib/i18n/supported-locales.ts";
 import {
   articleEditorDirection,
   archiveAdminArticle,
@@ -55,10 +58,12 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-const LANGUAGE_OPTIONS = [
-  { code: "fa-IR", label: "فارسی" },
-  { code: "en-US", label: "English" },
-] as const;
+function languageOptionLabel(lang: SupportedLocaleDefinition): string {
+  return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
+}
+
+const LOCALE_LOCKED_MESSAGE =
+  "زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست.";
 
 function isPublished(status: string): boolean {
   return isArticlePublished(status);
@@ -87,6 +92,8 @@ export function ContentArticleAdminScreen() {
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<ContentCategoryTreeNodeDto[]>([]);
   const [authorOptions, setAuthorOptions] = useState<ContentAuthorPickerItem[]>([]);
+  const [authorFilter, setAuthorFilter] = useState("");
+  const [languageOptions, setLanguageOptions] = useState<SupportedLocaleDefinition[]>([]);
   const [inlineImageOpen, setInlineImageOpen] = useState(false);
   const [seoImageOpen, setSeoImageOpen] = useState(false);
   const [mediaWorkspace, setMediaWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
@@ -118,8 +125,30 @@ export function ContentArticleAdminScreen() {
   }, []);
   const form = useAdminFormMode({ canView: true, canEdit: canEditContent });
   const editorDir = articleEditorDirection(draftLocale);
-  const localeLocked = article ? isArticleLocaleLocked(article) : false;
+  const localeLocked = article
+    ? isArticleLocaleLocked({
+        ...article,
+        seoImageMediaAssetId: mediaWorkspace?.seoImageMediaAssetId ?? article.seoImageMediaAssetId,
+      })
+    : false;
   const archived = article ? isArticleArchived(article.status) : false;
+  const filteredAuthors = useMemo(() => {
+    const q = authorFilter.trim().toLowerCase();
+    if (!q) return authorOptions;
+    return authorOptions.filter(
+      (row) =>
+        row.displayName.toLowerCase().includes(q) ||
+        row.slug.toLowerCase().includes(q),
+    );
+  }, [authorFilter, authorOptions]);
+  const selectedAuthorLabel =
+    authorOptions.find((row) => row.authorId === draftAuthorId)?.displayName ||
+    article?.authorDisplayName ||
+    "—";
+  const selectedLanguageLabel = (() => {
+    const row = languageOptions.find((item) => item.code === draftLocale);
+    return row ? languageOptionLabel(row) : formatArticleLocaleLabel(draftLocale);
+  })();
 
   const requestedMode = searchParams.get("mode");
   useEffect(() => {
@@ -161,9 +190,19 @@ export function ContentArticleAdminScreen() {
     }
     setLoading(true);
     void prepareAdminDevActor()
-      .then(() => Promise.all([refreshArticle(articleId), fetchActiveContentAuthors()]))
-      .then(([, authors]) => {
+      .then(() =>
+        Promise.all([refreshArticle(articleId), fetchActiveContentAuthors(), loadAdminLanguages()]),
+      )
+      .then(([, authors, languages]) => {
         if (authors.state === "ok" && authors.data) setAuthorOptions(authors.data);
+        if (languages.state === "ok" && languages.data) {
+          setLanguageOptions(
+            languages.data
+              .filter((row) => row.active)
+              .slice()
+              .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code)),
+          );
+        }
       })
       .finally(() => setLoading(false));
   }, [articleId, refreshArticle]);
@@ -225,7 +264,7 @@ export function ContentArticleAdminScreen() {
     const result = await updateAdminArticle(article.articleId, savePayload);
     setSaving(false);
     if (!result.ok || !result.article) {
-      toast.error(result.message ?? "ذخیره ناموفق بود");
+      toast.error(mapAdminErrorMessage(result.message ?? "admin.error.generic", "fa"));
       return;
     }
     toast.success("ذخیره شد");
@@ -415,20 +454,34 @@ export function ContentArticleAdminScreen() {
             </label>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">زبان</span>
-              <select
-                className="w-full rounded-xl border px-3 py-2"
-                value={draftLocale}
-                disabled={form.mode === "view" || localeLocked}
-                onChange={(e) => setDraftLocale(e.target.value)}
-              >
-                {LANGUAGE_OPTIONS.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {form.mode === "view" || localeLocked ? (
+                <input
+                  className="w-full rounded-xl border bg-slate-50 px-3 py-2"
+                  value={selectedLanguageLabel}
+                  readOnly
+                  data-testid="content-article-locale-readonly"
+                />
+              ) : (
+                <select
+                  className="w-full rounded-xl border px-3 py-2"
+                  value={draftLocale}
+                  data-testid="content-article-locale-select"
+                  onChange={(e) => {
+                    setDraftLocale(e.target.value);
+                    form.markDirty();
+                  }}
+                >
+                  {languageOptions.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {languageOptionLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              )}
               {localeLocked ? (
-                <p className="mt-1 text-xs text-muted">پس از انتساب نویسنده/دسته یا انتشار، تغییر زبان مجاز نیست.</p>
+                <p className="mt-1 text-xs text-muted" data-testid="content-article-locale-locked-message">
+                  {LOCALE_LOCKED_MESSAGE}
+                </p>
               ) : null}
             </label>
             <label className="flex items-center gap-2 text-sm">
@@ -518,22 +571,44 @@ export function ContentArticleAdminScreen() {
 
         {tab === "author" ? (
           <div className="space-y-3">
-            <label className="block text-sm">
-              <span className="mb-1 block text-muted">نویسندهٔ فعال</span>
-              <select
-                className="w-full rounded-xl border px-3 py-2"
-                value={draftAuthorId}
-                disabled={form.mode === "view"}
-                onChange={(e) => setDraftAuthorId(e.target.value)}
-              >
-                <option value="">— انتخاب نویسنده —</option>
-                {authorOptions.map((row) => (
-                  <option key={row.authorId} value={row.authorId}>
-                    {row.displayName}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {form.mode === "view" ? (
+              <p className="text-sm" data-testid="content-article-author-readonly">
+                <span className="mb-1 block text-muted">نویسنده</span>
+                {selectedAuthorLabel}
+              </p>
+            ) : (
+              <>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-muted">جستجوی نویسنده</span>
+                  <input
+                    className="w-full rounded-xl border px-3 py-2"
+                    value={authorFilter}
+                    placeholder="نام نویسنده…"
+                    data-testid="content-article-author-filter"
+                    onChange={(e) => setAuthorFilter(e.target.value)}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-muted">نویسندهٔ فعال</span>
+                  <select
+                    className="w-full rounded-xl border px-3 py-2"
+                    value={draftAuthorId}
+                    data-testid="content-article-author-select"
+                    onChange={(e) => {
+                      setDraftAuthorId(e.target.value);
+                      form.markDirty();
+                    }}
+                  >
+                    <option value="">— انتخاب نویسنده —</option>
+                    {filteredAuthors.map((row) => (
+                      <option key={row.authorId} value={row.authorId}>
+                        {row.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
             <p className="text-sm text-muted">نام نمایشی از پروفایل نویسنده هنگام ذخیره همگام می‌شود.</p>
           </div>
         ) : null}
