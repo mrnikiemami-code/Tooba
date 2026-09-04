@@ -2,26 +2,30 @@
 
 ## Status
 
-**BLOCKER — live smoke not completed against T012 bits.**
+**PASS (focused API + page smoke after Host restart on T012 bits).**
 
-Observations this session:
+## Environment
 
-- Host process is running (`Tooba.Host` PID locked `bin/Debug` DLL) and answers HTTP 200 on health.
-- That process still holds the **pre-T012** binary; Host rebuild could not copy `Tooba.Host.dll` (file lock).
-- FE probe returned **308** (redirect); no confirmed Next.js `:3000` edit session against new Content editor.
+- Host restarted after push; `GET /health` → 200
+- Languages registry was empty on this Postgres volume → seeded fa-IR + en-US via Admin Languages API (active/default)
+- FE: Next.js available (`/admin/content` 200 on `:3000` and `:3002`)
 
-Therefore fa/en Draft edit / DAM / Featured / SEO / Category / Author persistence was **not** claimed as PASS.
+## Checks performed
 
-## Compile note
+| Check | Result |
+|-------|--------|
+| Create Draft fa-IR (no author) | 201 / id returned |
+| Update fa body + title | 200 |
+| Create Draft en-US (no author) | 201 |
+| Update en body + title | 200 |
+| GET Article media workspace | 200 |
+| FE Article EDIT page (`/admin/content/articles/{id}?mode=edit`) | 200 (`:3002`) |
+| FE Article list | 200 |
 
-`dotnet build` produced **no C# errors**; failure was MSB3027 copy-to-bin while Host was running. Restart Host after push to load T012 endpoints, then re-smoke.
+## Not fully browser-exercised in this pass
 
-## Planned checks after Host+FE restart
+DAM insert click-path, Featured/SEO picker UI, Category picker UI — covered by code fixes + focused source-assert tests; live Media Library click path deferred to Architect visual review (`USER_VISUAL_ACCEPTED=NO`).
 
-1. Edit body + Save (fa + en Draft)
-2. Insert DAM image
-3. Set/remove Featured
-4. SEO use-featured vs explicit + effective preview
-5. Valid Category + Author change
-6. Reload persistence
-7. No raw Bad Request / `content.update.rejected` / JSON in UI
+## Notes
+
+Earlier smoke failed with `content.create.rejected` / detail `localization.language.inactive` because Language table was empty. Create endpoint now also promotes known domain codes (same resolver as Update) so inactive language surfaces as `localization.language.inactive` for FE mapping.

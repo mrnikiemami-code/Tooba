@@ -177,8 +177,16 @@ public static class ContentEndpoints
         catch (InvalidOperationException ex)
         {
             var conflict = ex.Message.Contains("تکراری", StringComparison.Ordinal);
+            var errorCode = conflict
+                ? "content.slug.duplicate"
+                : ResolveArticleUpdateErrorCode(ex.Message, missing: false);
+            if (errorCode == "content.update.rejected")
+            {
+                errorCode = "content.create.rejected";
+            }
+
             return Results.Json(
-                new { title = conflict ? "Conflict" : "Bad Request", errorCode = conflict ? "content.slug.duplicate" : "content.create.rejected", detail = ex.Message },
+                new { title = conflict ? "Conflict" : "Bad Request", errorCode, detail = ex.Message },
                 statusCode: conflict ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest);
         }
     }
