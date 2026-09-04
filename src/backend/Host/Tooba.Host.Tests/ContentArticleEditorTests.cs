@@ -147,7 +147,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
             new UpdateArticleCommand(
                 "پیش‌نویس زمان‌بندی‌شده",
                 "چکیده",
-                "",
+                "<p>بدنه آماده انتشار</p>",
                 null,
                 author.Id,
                 [],
@@ -160,6 +160,7 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                 scheduled),
             CancellationToken.None);
         Assert.Equal(scheduled, updated.PublishDate);
+        Assert.False(string.IsNullOrWhiteSpace(updated.Body));
 
         var published = await content.PublishAsync(draft.ArticleId, CancellationToken.None);
         Assert.Equal(ContentPublicationStatus.Published, published.Status);

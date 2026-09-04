@@ -69,7 +69,9 @@ test("article action flows use canonical Dialog with zero window.confirm", () =>
   assert.match(dialog, /"unpublish"/);
   assert.match(list, /onRequestAction\("publish"/);
   assert.match(list, /onRequestAction\("unpublish"/);
-  assert.match(screen, /setDestructiveKind\(isPublished\(article\.status\) \? "unpublish" : "publish"\)/);
+  assert.match(screen, /openPublishDialog/);
+  assert.match(screen, /setDestructiveKind\("unpublish"\)/);
+  assert.match(screen, /setDestructiveKind\(hasPriorPublication \? "republish" : "publish"\)/);
 });
 
 test("article list drops slug and locale columns and uses مقالات heading", () => {

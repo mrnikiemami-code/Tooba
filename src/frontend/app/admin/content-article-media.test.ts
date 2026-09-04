@@ -60,6 +60,7 @@ test("article media panel and SEO picker use Persian library labels without DAM 
   assert.doesNotMatch(screen, /انتخاب از DAM/);
   assert.match(screen, /در حال بارگذاری…/);
   assert.doesNotMatch(screen, /در حال بارگذاری workspace/);
-  assert.match(screen, /تصویر اشتراک‌گذاری و شبکه‌های اجتماعی/);
+  assert.match(screen, /تصویر اشتراک‌گذاری/);
+  assert.doesNotMatch(screen, /OpenGraph/);
   assert.doesNotMatch(screen, /مؤثر: تصویر شاخص/);
 });
