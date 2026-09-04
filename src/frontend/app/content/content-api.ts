@@ -6,6 +6,16 @@ import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts"
 import { parseAdminProblemErrorCode } from "../admin/admin-error-map.ts";
 import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
+import {
+  mapArticleHistoryPage,
+  mapArticlePreviewSnapshot,
+  mapArticlePublicationReadiness,
+  type ArticleHistoryPage,
+  type ArticlePreviewSnapshot,
+  type ArticlePublicationReadiness,
+} from "../admin/content-article-publication-model.ts";
+
+export type { ArticleHistoryPage, ArticlePreviewSnapshot, ArticlePublicationReadiness };
 
 export interface ContentArticleCard {
   articleId: string;
@@ -434,27 +444,39 @@ export function queryAdminContentArticlesGrid(
   );
 }
 
-export async function publishAdminArticle(articleId: string): Promise<boolean> {
+export async function publishAdminArticle(articleId: string): Promise<{ ok: boolean; message?: string }> {
   try {
     const response = await fetch(`/v1/admin/content/articles/${articleId}/publish`, {
       method: "POST",
       headers: adminHeaders(true),
     });
-    return response.ok;
+    if (response.ok) return { ok: true };
+    const payload = await response.json().catch(() => null);
+    const root = recordOf(payload);
+    return {
+      ok: false,
+      message: text(root?.errorCode ?? root?.detail, `publish-http-${response.status}`),
+    };
   } catch {
-    return false;
+    return { ok: false, message: "host-unreachable" };
   }
 }
 
-export async function unpublishAdminArticle(articleId: string): Promise<boolean> {
+export async function unpublishAdminArticle(articleId: string): Promise<{ ok: boolean; message?: string }> {
   try {
     const response = await fetch(`/v1/admin/content/articles/${articleId}/unpublish`, {
       method: "POST",
       headers: adminHeaders(true),
     });
-    return response.ok;
+    if (response.ok) return { ok: true };
+    const payload = await response.json().catch(() => null);
+    const root = recordOf(payload);
+    return {
+      ok: false,
+      message: text(root?.errorCode ?? root?.detail, `unpublish-http-${response.status}`),
+    };
   } catch {
-    return false;
+    return { ok: false, message: "host-unreachable" };
   }
 }
 
@@ -664,5 +686,98 @@ export async function createAdminArticle(input: {
     return article ? { ok: true, article } : { ok: false, message: "invalid-response" };
   } catch {
     return { ok: false, message: "host-unreachable" };
+  }
+}
+
+/** آمادگی انتشار — منبع واحد با دروازهٔ Publish. */
+export async function loadArticlePublishReadiness(
+  articleId: string,
+): Promise<AdminResult<ArticlePublicationReadiness>> {
+  try {
+    const response = await fetch(
+      `/v1/admin/content/articles/${encodeURIComponent(articleId)}/publish/readiness`,
+      { headers: adminHeaders() },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return {
+        state: "error",
+        data: null,
+        status: response.status,
+        message: parseAdminProblemErrorCode(payload, response.status),
+      };
+    }
+    const readiness = mapArticlePublicationReadiness(await response.json());
+    return readiness
+      ? { state: "ok", data: readiness, status: response.status }
+      : { state: "error", data: null, status: response.status, message: "invalid-response" };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+/** پیش‌نمایش Admin — نیاز به content.view؛ بدون عمومی‌سازی. */
+export async function loadArticleAdminPreview(
+  articleId: string,
+): Promise<AdminResult<ArticlePreviewSnapshot>> {
+  try {
+    const response = await fetch(
+      `/v1/admin/content/articles/${encodeURIComponent(articleId)}/preview`,
+      { headers: adminHeaders() },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return {
+        state: "error",
+        data: null,
+        status: response.status,
+        message: parseAdminProblemErrorCode(payload, response.status) || "content.preview.unavailable",
+      };
+    }
+    const preview = mapArticlePreviewSnapshot(await response.json());
+    return preview
+      ? { state: "ok", data: preview, status: response.status }
+      : { state: "error", data: null, status: response.status, message: "invalid-response" };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
+}
+
+/** تاریخچهٔ چرخهٔ عمر مقاله. */
+export async function loadArticleHistory(
+  articleId: string,
+  skip = 0,
+  take = 50,
+): Promise<AdminResult<ArticleHistoryPage>> {
+  try {
+    const qs = new URLSearchParams({ skip: String(skip), take: String(take) });
+    const response = await fetch(
+      `/v1/admin/content/articles/${encodeURIComponent(articleId)}/history?${qs}`,
+      { headers: adminHeaders() },
+    );
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      return {
+        state: "error",
+        data: null,
+        status: response.status,
+        message: parseAdminProblemErrorCode(payload, response.status),
+      };
+    }
+    const page = mapArticleHistoryPage(await response.json());
+    return page
+      ? { state: "ok", data: page, status: response.status }
+      : { state: "error", data: null, status: response.status, message: "invalid-response" };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
   }
 }

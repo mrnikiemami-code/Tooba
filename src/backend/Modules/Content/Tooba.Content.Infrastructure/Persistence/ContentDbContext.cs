@@ -32,6 +32,9 @@ public sealed class ContentDbContext : DbContext
     /// <summary>گالری رسانهٔ مقالات.</summary>
     public DbSet<ContentArticleMediaItem> ArticleMedia => Set<ContentArticleMediaItem>();
 
+    /// <summary>تاریخچهٔ چرخهٔ عمر مقالات.</summary>
+    public DbSet<ContentArticleHistoryEntry> ArticleHistory => Set<ContentArticleHistoryEntry>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -131,6 +134,23 @@ public sealed class ContentDbContext : DbContext
             entity.HasIndex(x => x.TagId);
             entity.HasOne<ContentArticle>().WithMany().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne<ContentTag>().WithMany().HasForeignKey(x => x.TagId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ContentArticleHistoryEntry>(entity =>
+        {
+            entity.ToTable("article_history");
+            entity.HasKey(x => x.HistoryId);
+            entity.Property(x => x.HistoryId).ValueGeneratedNever().HasColumnName("history_id");
+            entity.Property(x => x.ArticleId).HasColumnName("article_id");
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired().HasColumnName("event_type");
+            entity.Property(x => x.SummaryFa).HasMaxLength(512).IsRequired().HasColumnName("summary_fa");
+            entity.Property(x => x.SummaryEn).HasMaxLength(512).IsRequired().HasColumnName("summary_en");
+            entity.Property(x => x.PreviousState).HasMaxLength(64).HasColumnName("previous_state");
+            entity.Property(x => x.NewState).HasMaxLength(64).HasColumnName("new_state");
+            entity.Property(x => x.ActorUserId).HasColumnName("actor_user_id");
+            entity.Property(x => x.ActorDisplayName).HasMaxLength(120).HasColumnName("actor_display_name");
+            entity.Property(x => x.OccurredAt).HasColumnName("occurred_at");
+            entity.HasIndex(x => new { x.ArticleId, x.OccurredAt });
+            entity.HasOne<ContentArticle>().WithMany().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

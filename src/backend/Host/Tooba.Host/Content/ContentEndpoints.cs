@@ -22,6 +22,9 @@ public static class ContentEndpoints
         admin.MapGet("/articles", AdminListAsync);
         admin.MapPost("/articles/query", AdminQueryGridAsync);
         admin.MapGet("/articles/{id:guid}", AdminGetAsync);
+        admin.MapGet("/articles/{id:guid}/publish/readiness", AdminGetPublishReadinessAsync);
+        admin.MapGet("/articles/{id:guid}/preview", AdminGetPreviewAsync);
+        admin.MapGet("/articles/{id:guid}/history", AdminListHistoryAsync);
         admin.MapPost("/articles", AdminCreateAsync);
         admin.MapPut("/articles/{id:guid}", AdminUpdateAsync);
         admin.MapPost("/articles/{id:guid}/publish", AdminPublishAsync);
@@ -153,6 +156,95 @@ public static class ContentEndpoints
             return article is null ? Results.NotFound() : Results.Json(article);
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
+    }
+
+    private static async Task<IResult> AdminGetPublishReadinessAsync(
+        Guid id,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IAuthorizationService authz,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+            return Results.Json(await composer.GetPublishReadinessAsync(id, cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+            return Results.Json(
+                new
+                {
+                    title = missing ? "Not Found" : "Bad Request",
+                    errorCode = missing ? "content.article.missing" : ResolveArticleUpdateErrorCode(ex.Message, false),
+                    detail = ex.Message,
+                },
+                statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
+        }
+    }
+
+    private static async Task<IResult> AdminGetPreviewAsync(
+        Guid id,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IAuthorizationService authz,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+            var preview = await composer.GetPreviewAsync(id, cancellationToken);
+            if (preview is null)
+            {
+                return Results.Json(
+                    new { title = "Not Found", errorCode = ArticlePublicationCodes.PreviewUnavailable },
+                    statusCode: StatusCodes.Status404NotFound);
+            }
+
+            return Results.Json(preview);
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+    }
+
+    private static async Task<IResult> AdminListHistoryAsync(
+        Guid id,
+        ContentPanelComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IAuthorizationService authz,
+        IHostEnvironment environment,
+        int skip = 0,
+        int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await ContentAdminAccess.RequireAsync(
+                request, session, tenant, guard, environment, authz, ContentAdminAccess.View, cancellationToken);
+            return Results.Json(await composer.ListHistoryAsync(id, skip, take, cancellationToken));
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
+            return Results.Json(
+                new { title = missing ? "Not Found" : "Bad Request", errorCode = "content.article.missing" },
+                statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
+        }
     }
 
     private static async Task<IResult> AdminCreateAsync(
@@ -330,14 +422,11 @@ public static class ContentEndpoints
             var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
             if (missing)
                 return Results.Json(new { title = "Not Found", errorCode = "content.article.missing" }, statusCode: StatusCodes.Status404NotFound);
-            if (ex.Message.Contains(ContentArticleErrorCodes.AlreadyArchived, StringComparison.Ordinal)
-                || ex.Message.Contains(ContentArticleErrorCodes.ArchiveNotAllowed, StringComparison.Ordinal))
-            {
-                return Results.Json(
-                    new { title = "Bad Request", errorCode = ContentArticleErrorCodes.ArchiveNotAllowed, detail = ex.Message },
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-            return Results.Json(new { title = "Not Found", errorCode = "content.article.missing" }, statusCode: StatusCodes.Status404NotFound);
+
+            var errorCode = ResolveArticleUpdateErrorCode(ex.Message, false);
+            return Results.Json(
+                new { title = "Bad Request", errorCode, detail = ex.Message },
+                statusCode: StatusCodes.Status400BadRequest);
         }
     }
 
@@ -349,6 +438,9 @@ public static class ContentEndpoints
         if (missing) return "content.article.missing";
         if (string.IsNullOrWhiteSpace(message)) return "content.update.rejected";
 
+        if (message.StartsWith(ArticlePublicationCodes.NotReady, StringComparison.Ordinal))
+            return ArticlePublicationCodes.NotReady;
+
         string[] known =
         [
             ContentArticleErrorCodes.LocaleLocked,
@@ -356,12 +448,18 @@ public static class ContentEndpoints
             ContentArticleErrorCodes.ArchiveNotAllowed,
             ContentArticleErrorCodes.UnsafeBodyMedia,
             ContentArticleErrorCodes.MediaNotFound,
+            ContentArticleErrorCodes.DeleteNotAllowed,
             ContentCategoryErrorCodes.LanguageMismatch,
             ContentCategoryErrorCodes.NotFound,
             ContentCategoryErrorCodes.InvalidLanguage,
             ContentAuthorErrorCodes.Inactive,
             ContentAuthorErrorCodes.NotFound,
             ContentAuthorErrorCodes.RequiredForPublish,
+            ArticlePublicationCodes.NotReady,
+            ArticlePublicationCodes.InvalidSchedule,
+            ArticlePublicationCodes.PublishForbidden,
+            ArticlePublicationCodes.UnpublishInvalid,
+            ArticlePublicationCodes.PreviewUnavailable,
             "localization.language.inactive",
             "localization.language.not_found",
         ];

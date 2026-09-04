@@ -426,6 +426,66 @@ namespace Tooba.Content.Infrastructure.Migrations
                     b.ToTable("article_tags", "content");
                 });
 
+            modelBuilder.Entity("Tooba.Content.Domain.ContentArticleHistoryEntry", b =>
+                {
+                    b.Property<Guid>("HistoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("history_id");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("article_id");
+
+                    b.Property<string>("ActorDisplayName")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("actor_display_name");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("NewState")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("new_state");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("PreviousState")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("previous_state");
+
+                    b.Property<string>("SummaryEn")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("summary_en");
+
+                    b.Property<string>("SummaryFa")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("summary_fa");
+
+                    b.HasKey("HistoryId")
+                        .HasName("pk_article_history");
+
+                    b.HasIndex("ArticleId", "OccurredAt")
+                        .HasDatabaseName("ix_article_history_article_id_occurred_at");
+
+                    b.ToTable("article_history", "content");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

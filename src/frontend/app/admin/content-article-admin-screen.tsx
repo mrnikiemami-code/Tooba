@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { formatJalaliDate, useAdminFormMode } from "../../design-system";
+import { useAdminFormMode } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
 import {
   capabilityPermissionIds,
@@ -24,6 +24,13 @@ import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 import { ContentArticleDestructiveDialog, type ArticleDestructiveKind } from "./content-article-destructive-dialog.tsx";
 import { ContentArticleEditor } from "./content-article-editor.tsx";
 import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
+import { ContentArticleReadinessSummary } from "./content-article-readiness-summary.tsx";
+import { ContentArticleHistoryTimeline } from "./content-article-history-timeline.tsx";
+import { ContentArticlePublishDateField } from "./content-article-publish-date-field.tsx";
+import type {
+  ArticleHistoryEntry,
+  ArticlePublicationReadiness,
+} from "./content-article-publication-model.ts";
 import {
   assignArticleSeoImage,
   fetchArticleMediaWorkspace,
@@ -45,6 +52,8 @@ import {
   isArticleLocaleLocked,
   isArticlePublished,
   loadAdminArticle,
+  loadArticleHistory,
+  loadArticlePublishReadiness,
   publishAdminArticle,
   unpublishAdminArticle,
   updateAdminArticle,
@@ -116,6 +125,9 @@ export function ContentArticleAdminScreen() {
   const [draftSeoDescription, setDraftSeoDescription] = useState("");
   const [draftPublishDate, setDraftPublishDate] = useState("");
   const [tagsEpoch, setTagsEpoch] = useState(0);
+  const [readiness, setReadiness] = useState<ArticlePublicationReadiness | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<ArticleHistoryEntry[]>([]);
+  const [hasPriorPublication, setHasPriorPublication] = useState(false);
 
   const [canEditContent, setCanEditContent] = useState(true);
   useEffect(() => {
@@ -179,8 +191,25 @@ export function ContentArticleAdminScreen() {
     setDraftAuthorId(data.authorId ?? "");
     setDraftSeoTitle(data.seoTitle ?? "");
     setDraftSeoDescription(data.seoDescription ?? "");
-    setDraftPublishDate(data.publishDate ? data.publishDate.slice(0, 16) : "");
+    setDraftPublishDate(data.publishDate || "");
     setTagsEpoch((n) => n + 1);
+  }, []);
+
+  const refreshReadiness = useCallback(async (id: string) => {
+    const result = await loadArticlePublishReadiness(id);
+    if (result.state === "ok" && result.data) setReadiness(result.data);
+  }, []);
+
+  const refreshHistory = useCallback(async (id: string) => {
+    const result = await loadArticleHistory(id, 0, 50);
+    if (result.state === "ok" && result.data) {
+      setHistoryEntries(result.data.items);
+      setHasPriorPublication(
+        result.data.items.some((e) =>
+          ["article.published", "article.republished", "article.scheduled"].includes(e.eventType),
+        ),
+      );
+    }
   }, []);
 
   const refreshArticle = useCallback(
@@ -191,8 +220,9 @@ export function ContentArticleAdminScreen() {
         return;
       }
       applyArticle(result.data);
+      await Promise.all([refreshReadiness(id), refreshHistory(id)]);
     },
-    [applyArticle],
+    [applyArticle, refreshHistory, refreshReadiness],
   );
 
   const refreshMediaWorkspace = useCallback(async (id: string) => {
@@ -329,18 +359,48 @@ export function ContentArticleAdminScreen() {
     if (!article) return;
     setSaving(true);
     const publishing = !isPublished(article.status);
-    const ok = publishing
+    const result = publishing
       ? await publishAdminArticle(article.articleId)
       : await unpublishAdminArticle(article.articleId);
     setSaving(false);
-    if (!ok) {
-      toast.error("عملیات انتشار ناموفق بود");
+    if (!result.ok) {
+      toast.error(mapAdminErrorMessage(result.message ?? "content.publish.not_ready", article.locale.startsWith("fa") ? "fa" : "en"));
       return;
     }
-    toast.success(publishing ? "منتشر شد" : "انتشار لغو شد");
+    toast.success(
+      publishing
+        ? hasPriorPublication
+          ? "منتشر مجدد شد"
+          : "منتشر شد"
+        : "انتشار لغو شد",
+    );
     setDestructiveKind(null);
     await refreshArticle(article.articleId);
-  }, [article, refreshArticle]);
+  }, [article, hasPriorPublication, refreshArticle]);
+
+  const handlePreview = useCallback(() => {
+    if (!article) return;
+    if (form.mode === "edit" && form.isDirty) {
+      toast.info("برای پیش‌نمایش ابتدا تغییرات را ذخیره کنید.");
+      return;
+    }
+    window.open(`/admin/content/articles/${article.articleId}/preview`, "_blank", "noopener,noreferrer");
+  }, [article, form.isDirty, form.mode]);
+
+  const openPublishDialog = useCallback(() => {
+    if (!article || archived) return;
+    if (isPublished(article.status)) {
+      setDestructiveKind("unpublish");
+      return;
+    }
+    setDestructiveKind(hasPriorPublication ? "republish" : "publish");
+  }, [article, archived, hasPriorPublication]);
+
+  const publishDateIsFuture = useMemo(() => {
+    if (!draftPublishDate) return false;
+    const t = new Date(draftPublishDate).getTime();
+    return Number.isFinite(t) && t > Date.now();
+  }, [draftPublishDate]);
 
   const handleCancel = useCallback(() => {
     if (!article) return;
@@ -460,10 +520,38 @@ export function ContentArticleAdminScreen() {
               >
                 {form.mode === "view" ? "VIEW" : "EDIT"}
               </span>
+              <ContentArticleReadinessSummary
+                readiness={readiness}
+                locale={draftLocale || article.locale}
+                onNavigate={(target) => setTab(target as TabId)}
+              />
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="rounded-xl border px-4 py-2 text-sm"
+              data-testid="content-article-preview"
+              onClick={handlePreview}
+            >
+              پیش‌نمایش
+            </button>
+            {!archived ? (
+              <button
+                type="button"
+                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={saving || form.mode === "view"}
+                data-testid="content-article-publish-header"
+                onClick={openPublishDialog}
+              >
+                {isPublished(article.status)
+                  ? "لغو انتشار"
+                  : hasPriorPublication
+                    ? "انتشار مجدد"
+                    : "انتشار"}
+              </button>
+            ) : null}
             {form.mode === "view" ? (
               !archived ? (
                 <button
@@ -854,54 +942,41 @@ export function ContentArticleAdminScreen() {
             <p className="text-sm">
               وضعیت: <strong>{statusLabel(article.status)}</strong>
             </p>
-            <label className="block text-sm">
-              <span className="mb-1 block text-muted">زمان انتشار (برنامه‌ریزی)</span>
-              <input
-                type="datetime-local"
-                className="w-full rounded-xl border px-3 py-2"
-                dir="ltr"
-                value={draftPublishDate}
-                disabled={form.mode === "view"}
-                onChange={(e) => {
-                  setDraftPublishDate(e.target.value);
-                  form.markDirty();
-                }}
-              />
-            </label>
+            <ContentArticlePublishDateField
+              locale={draftLocale || article.locale}
+              valueIso={draftPublishDate || article.publishDate}
+              disabled={form.mode === "view"}
+              onChangeIso={(iso) => {
+                setDraftPublishDate(iso);
+                form.markDirty();
+              }}
+            />
             <p className="text-sm text-muted">
-              نمایش: {formatArticleDate(article.publishDate, article.locale)}
+              {publishDateIsFuture
+                ? "زمان در آینده است: پس از انتشار، تا موعد در مسیر عمومی دیده نمی‌شود."
+                : "زمان گذشته/اکنون: انتشار فوری در مسیر عمومی."}
             </p>
             <button
               type="button"
               className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               disabled={saving || form.mode === "view" || archived}
               data-testid="content-article-publish-toggle"
-              onClick={() => setDestructiveKind(isPublished(article.status) ? "unpublish" : "publish")}
+              onClick={openPublishDialog}
             >
-              {isPublished(article.status) ? "لغو انتشار" : "انتشار"}
+              {isPublished(article.status)
+                ? "لغو انتشار"
+                : hasPriorPublication
+                  ? "انتشار مجدد"
+                  : "انتشار"}
             </button>
           </div>
         ) : null}
 
         {tab === "history" ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border p-3 text-sm">
-              <div className="text-muted">ایجاد</div>
-              <div>{formatArticleDate(article.createdAt, article.locale)}</div>
-            </div>
-            <div className="rounded-xl border p-3 text-sm">
-              <div className="text-muted">آخرین به‌روزرسانی</div>
-              <div>{formatArticleDate(article.updatedAt, article.locale)}</div>
-            </div>
-            <div className="rounded-xl border p-3 text-sm">
-              <div className="text-muted">زمان انتشار</div>
-              <div>{formatArticleDate(article.publishDate, article.locale)}</div>
-            </div>
-            <div className="rounded-xl border p-3 text-sm">
-              <div className="text-muted">تقویم Admin</div>
-              <div>{formatJalaliDate(article.updatedAt, "fa")}</div>
-            </div>
-          </div>
+          <ContentArticleHistoryTimeline
+            entries={historyEntries}
+            locale={draftLocale || article.locale}
+          />
         ) : null}
       </section>
 
@@ -914,13 +989,22 @@ export function ContentArticleAdminScreen() {
         }
         open={destructiveKind !== null}
         pending={saving}
+        readiness={readiness}
+        scheduled={publishDateIsFuture}
+        onNavigate={(target) => setTab(target as TabId)}
         onClose={() => {
           if (!saving) setDestructiveKind(null);
         }}
         onConfirm={() => {
           if (destructiveKind === "delete") return handleDelete();
           if (destructiveKind === "archive") return handleArchive();
-          if (destructiveKind === "publish" || destructiveKind === "unpublish") return togglePublish();
+          if (
+            destructiveKind === "publish" ||
+            destructiveKind === "unpublish" ||
+            destructiveKind === "republish"
+          ) {
+            return togglePublish();
+          }
         }}
       />
       <MediaLibraryDialog

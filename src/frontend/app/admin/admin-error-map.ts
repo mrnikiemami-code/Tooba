@@ -254,6 +254,38 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "برای انتشار مقاله باید یک نویسنده انتخاب شود.",
     en: "An author is required before publishing the article.",
   },
+  "content.publish.not_ready": {
+    fa: "مقاله هنوز برای انتشار آماده نیست. موارد الزامی را تکمیل کنید.",
+    en: "The article is not ready to publish. Complete the required items.",
+  },
+  "content.publish.invalid_schedule": {
+    fa: "زمان انتشار معتبر نیست.",
+    en: "The publish schedule is invalid.",
+  },
+  "content.publish.forbidden": {
+    fa: "انتشار برای این وضعیت مجاز نیست.",
+    en: "Publishing is not allowed for this article state.",
+  },
+  "content.unpublish.invalid_state": {
+    fa: "لغو انتشار فقط برای مقالهٔ منتشرشده مجاز است.",
+    en: "Unpublish is only allowed for a published article.",
+  },
+  "content.preview.unavailable": {
+    fa: "پیش‌نمایش در دسترس نیست.",
+    en: "Preview is unavailable.",
+  },
+  "content.article.missing": {
+    fa: "مقاله یافت نشد.",
+    en: "Article was not found.",
+  },
+  "content.article.already_archived": {
+    fa: "مقاله قبلاً بایگانی شده است.",
+    en: "The article is already archived.",
+  },
+  "content.article.archive_not_allowed": {
+    fa: "بایگانی برای این مقاله مجاز نیست.",
+    en: "Archive is not allowed for this article.",
+  },
   "localization.language.inactive": {
     fa: "زبان انتخاب‌شده فعال نیست.",
     en: "The selected language is not active.",

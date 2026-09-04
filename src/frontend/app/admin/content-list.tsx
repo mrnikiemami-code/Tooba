@@ -351,15 +351,15 @@ export function AdminContentScreen() {
           return;
         }
       } else if (destructiveKind === "publish") {
-        const ok = await publishAdminArticle(destructiveTarget.articleId);
-        if (!ok) {
-          toast.error("انتشار ناموفق بود");
+        const result = await publishAdminArticle(destructiveTarget.articleId);
+        if (!result.ok) {
+          toast.error(result.message ?? "انتشار ناموفق بود");
           return;
         }
       } else if (destructiveKind === "unpublish") {
-        const ok = await unpublishAdminArticle(destructiveTarget.articleId);
-        if (!ok) {
-          toast.error("لغو انتشار ناموفق بود");
+        const result = await unpublishAdminArticle(destructiveTarget.articleId);
+        if (!result.ok) {
+          toast.error(result.message ?? "لغو انتشار ناموفق بود");
           return;
         }
       }

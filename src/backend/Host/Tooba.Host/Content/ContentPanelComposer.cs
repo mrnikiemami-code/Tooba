@@ -202,4 +202,22 @@ public sealed class ContentPanelComposer
     /// <summary>حذف پیش‌نویس.</summary>
     public Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken) =>
         _content.DeleteDraftAsync(articleId, cancellationToken);
+
+    /// <summary>آمادگی انتشار مقاله.</summary>
+    public Task<ArticlePublicationReadiness> GetPublishReadinessAsync(
+        Guid articleId,
+        CancellationToken cancellationToken) =>
+        _content.GetPublishReadinessAsync(articleId, cancellationToken);
+
+    /// <summary>پیش‌نمایش Admin مقاله.</summary>
+    public Task<ArticlePreviewSnapshot?> GetPreviewAsync(Guid articleId, CancellationToken cancellationToken) =>
+        _content.GetPreviewAsync(articleId, cancellationToken);
+
+    /// <summary>تاریخچهٔ چرخهٔ عمر مقاله.</summary>
+    public Task<ArticleHistoryPage> ListHistoryAsync(
+        Guid articleId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken) =>
+        _content.ListHistoryAsync(articleId, skip, take, cancellationToken);
 }

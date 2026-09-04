@@ -3,6 +3,7 @@
 import { LocalizedLink as Link } from "../../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, Calendar, User } from "lucide-react";
+import { ArticleBodyHtml } from "../../content/article-body-html.tsx";
 import {
   contentCoverUrl,
   formatArticleDate,
@@ -87,8 +88,8 @@ export function BlogDetailClient({ slug, contentLocale }: { slug: string; conten
           </div>
           <h1 className="text-2xl font-black text-gray-900 md:text-3xl">{article.title}</h1>
           <p className="text-base text-gray-600 leading-8">{article.excerpt}</p>
-          <div className="prose prose-neutral max-w-none whitespace-pre-wrap text-sm leading-8 text-gray-800 md:text-base">
-            {article.body || article.excerpt}
+          <div className="prose prose-neutral max-w-none text-sm leading-8 text-gray-800 md:text-base">
+            <ArticleBodyHtml html={article.body || article.excerpt || ""} />
           </div>
           {article.tags.length > 0 ? (
             <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">

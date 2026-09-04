@@ -197,6 +197,14 @@ public sealed class ContentDirectory : IContentDirectory
             categoryLabel,
             command.CategoryId);
         _db.Articles.Add(article);
+        QueueHistory(
+            article.ArticleId,
+            ArticleHistoryRules.EventDraftCreated,
+            ArticleHistoryRules.SummaryDraftCreatedFa,
+            ArticleHistoryRules.SummaryDraftCreatedEn,
+            now,
+            previousState: null,
+            newState: ArticleHistoryRules.StatusLabelFa(ContentPublicationStatus.Draft));
         await _db.SaveChangesAsync(cancellationToken);
         return await MapAdminAsync(article, cancellationToken);
     }
@@ -241,6 +249,7 @@ public sealed class ContentDirectory : IContentDirectory
         var categoryLabel = await ResolveCategoryLabelAsync(command.CategoryId, command.Category, cancellationToken);
         var authorDisplayName = await ResolveAuthorDisplayNameAsync(command.AuthorId, cancellationToken);
         var existingTagNames = await ResolveTagNamesAsync(article, cancellationToken);
+        var changeSummary = BuildUpdateSummary(article, command);
         article.Update(
             command.Title,
             command.Excerpt,
@@ -257,6 +266,18 @@ public sealed class ContentDirectory : IContentDirectory
             now,
             locale,
             command.PublishDate);
+        if (changeSummary is not null)
+        {
+            QueueHistory(
+                article.ArticleId,
+                ArticleHistoryRules.EventUpdated,
+                $"{ArticleHistoryRules.SummaryUpdatedFa}: {changeSummary.Value.Fa}",
+                $"{ArticleHistoryRules.SummaryUpdatedEn}: {changeSummary.Value.En}",
+                now,
+                previousState: null,
+                newState: null);
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
         return await MapAdminAsync(article, cancellationToken);
     }
@@ -266,8 +287,54 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
-        await _authors.EnsurePublishableAuthorAsync(article.AuthorId, cancellationToken);
-        article.Publish(DateTimeOffset.UtcNow);
+        if (article.Status == ContentPublicationStatus.Archived)
+        {
+            throw new InvalidOperationException(ArticlePublicationCodes.PublishForbidden);
+        }
+
+        var readiness = await EvaluateReadinessAsync(article, cancellationToken);
+        if (!readiness.CanPublish)
+        {
+            var codes = string.Join(",", readiness.RequiredMissing.Select(c => c.Key));
+            throw new InvalidOperationException($"{ArticlePublicationCodes.NotReady}:{codes}");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var previous = article.Status;
+        var hadPriorPublication = await HasPriorPublicationEventAsync(articleId, cancellationToken);
+        article.Publish(now);
+
+        var isScheduled = article.PublishDate > now;
+        string eventType;
+        string summaryFa;
+        string summaryEn;
+        if (isScheduled)
+        {
+            eventType = ArticleHistoryRules.EventScheduled;
+            summaryFa = ArticleHistoryRules.SummaryScheduledFa;
+            summaryEn = ArticleHistoryRules.SummaryScheduledEn;
+        }
+        else if (hadPriorPublication)
+        {
+            eventType = ArticleHistoryRules.EventRepublished;
+            summaryFa = ArticleHistoryRules.SummaryRepublishedFa;
+            summaryEn = ArticleHistoryRules.SummaryRepublishedEn;
+        }
+        else
+        {
+            eventType = ArticleHistoryRules.EventPublished;
+            summaryFa = ArticleHistoryRules.SummaryPublishedFa;
+            summaryEn = ArticleHistoryRules.SummaryPublishedEn;
+        }
+
+        QueueHistory(
+            article.ArticleId,
+            eventType,
+            summaryFa,
+            summaryEn,
+            now,
+            ArticleHistoryRules.StatusLabelFa(previous),
+            ArticleHistoryRules.StatusLabelFa(ContentPublicationStatus.Published));
         await _db.SaveChangesAsync(cancellationToken);
         return await MapAdminAsync(article, cancellationToken);
     }
@@ -277,7 +344,22 @@ public sealed class ContentDirectory : IContentDirectory
     {
         var article = await _db.Articles.FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
-        article.Unpublish(DateTimeOffset.UtcNow);
+        if (article.Status != ContentPublicationStatus.Published)
+        {
+            throw new InvalidOperationException(ArticlePublicationCodes.UnpublishInvalid);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var previous = article.Status;
+        article.Unpublish(now);
+        QueueHistory(
+            article.ArticleId,
+            ArticleHistoryRules.EventUnpublished,
+            ArticleHistoryRules.SummaryUnpublishedFa,
+            ArticleHistoryRules.SummaryUnpublishedEn,
+            now,
+            ArticleHistoryRules.StatusLabelFa(previous),
+            ArticleHistoryRules.StatusLabelFa(ContentPublicationStatus.Draft));
         await _db.SaveChangesAsync(cancellationToken);
         return await MapAdminAsync(article, cancellationToken);
     }
@@ -289,7 +371,17 @@ public sealed class ContentDirectory : IContentDirectory
             ?? throw new InvalidOperationException("مقاله یافت نشد.");
         if (!ContentArticleLifecycleRules.CanArchive(article.Status))
             throw new InvalidOperationException(ContentArticleErrorCodes.ArchiveNotAllowed);
-        article.Archive(DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var previous = article.Status;
+        article.Archive(now);
+        QueueHistory(
+            article.ArticleId,
+            ArticleHistoryRules.EventArchived,
+            ArticleHistoryRules.SummaryArchivedFa,
+            ArticleHistoryRules.SummaryArchivedEn,
+            now,
+            ArticleHistoryRules.StatusLabelFa(previous),
+            ArticleHistoryRules.StatusLabelFa(ContentPublicationStatus.Archived));
         await _db.SaveChangesAsync(cancellationToken);
         return await MapAdminAsync(article, cancellationToken);
     }
@@ -305,8 +397,211 @@ public sealed class ContentDirectory : IContentDirectory
         var gallery = await _db.ArticleMedia.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
         if (gallery.Count > 0)
             _db.ArticleMedia.RemoveRange(gallery);
+        var history = await _db.ArticleHistory.Where(row => row.ArticleId == articleId).ToListAsync(cancellationToken);
+        if (history.Count > 0)
+            _db.ArticleHistory.RemoveRange(history);
         _db.Articles.Remove(article);
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ArticlePublicationReadiness> GetPublishReadinessAsync(
+        Guid articleId,
+        CancellationToken cancellationToken)
+    {
+        var article = await _db.Articles.AsNoTracking()
+            .FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken)
+            ?? throw new InvalidOperationException("مقاله یافت نشد.");
+        return await EvaluateReadinessAsync(article, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ArticlePreviewSnapshot?> GetPreviewAsync(Guid articleId, CancellationToken cancellationToken)
+    {
+        var article = await _db.Articles.AsNoTracking()
+            .FirstOrDefaultAsync(row => row.ArticleId == articleId, cancellationToken);
+        if (article is null)
+        {
+            return null;
+        }
+
+        string? categorySlug = null;
+        if (article.CategoryId is Guid categoryId)
+        {
+            var category = await _db.Categories.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.CategoryId == categoryId, cancellationToken);
+            categorySlug = category?.Slug;
+        }
+
+        string? authorSlug = null;
+        if (article.AuthorId is Guid authorId)
+        {
+            var author = await _db.Authors.AsNoTracking()
+                .FirstOrDefaultAsync(row => row.AuthorId == authorId, cancellationToken);
+            authorSlug = author?.Slug;
+        }
+
+        var tags = await ResolveTagNamesAsync(article, cancellationToken);
+        return new ArticlePreviewSnapshot(
+            article.ArticleId,
+            article.Slug,
+            article.Title,
+            article.Excerpt,
+            article.Body,
+            article.Locale,
+            article.SeoTitle,
+            article.SeoDescription,
+            article.Category,
+            article.CategoryId,
+            article.AuthorId,
+            article.CoverMediaAssetId,
+            article.ResolveEffectiveSeoImageId(),
+            article.AuthorDisplayName,
+            tags,
+            article.IsFeatured,
+            article.Status,
+            article.PublishDate,
+            categorySlug,
+            authorSlug,
+            ContentArticleSeoRules.BuildPublicPath(article.Locale, article.Slug),
+            IsPreview: true,
+            RobotsNoIndex: true);
+    }
+
+    /// <inheritdoc />
+    public async Task<ArticleHistoryPage> ListHistoryAsync(
+        Guid articleId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        skip = Math.Max(0, skip);
+        take = Math.Clamp(take, 1, 100);
+        var exists = await _db.Articles.AsNoTracking().AnyAsync(row => row.ArticleId == articleId, cancellationToken);
+        if (!exists)
+        {
+            throw new InvalidOperationException("مقاله یافت نشد.");
+        }
+
+        var query = _db.ArticleHistory.AsNoTracking().Where(row => row.ArticleId == articleId);
+        var total = await query.LongCountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(row => row.OccurredAt)
+            .ThenByDescending(row => row.HistoryId)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        var items = rows.Select(row => new ArticleHistoryEntryDto(
+            row.HistoryId,
+            row.ArticleId,
+            row.EventType,
+            ArticleHistoryRules.EventLabelFa(row.EventType),
+            ArticleHistoryRules.EventLabelEn(row.EventType),
+            row.SummaryFa,
+            row.SummaryEn,
+            row.PreviousState,
+            row.NewState,
+            row.ActorUserId,
+            string.IsNullOrWhiteSpace(row.ActorDisplayName)
+                ? ArticleHistoryRules.ActorSystemFa
+                : row.ActorDisplayName!,
+            row.OccurredAt)).ToList();
+
+        return new ArticleHistoryPage(items, (int)total, skip, take);
+    }
+
+    private async Task<ArticlePublicationReadiness> EvaluateReadinessAsync(
+        ContentArticle article,
+        CancellationToken cancellationToken)
+    {
+        var language = await _languages.GetByCodeAsync(article.Locale, cancellationToken);
+        var languageActive = language is not null && language.IsActive;
+        // Permissive test doubles may return null for every language — treat as active when Ensure is no-op in tests.
+        // Production LanguageDirectory returns rows for known codes; missing code = inactive.
+        if (language is null)
+        {
+            try
+            {
+                await _languages.EnsureActiveLanguageCodeAsync(article.Locale, cancellationToken);
+                languageActive = true;
+            }
+            catch (InvalidOperationException)
+            {
+                languageActive = false;
+            }
+        }
+
+        return ArticlePublicationReadinessRules.Evaluate(new ArticlePublicationReadinessInput(
+            article.Title,
+            article.Excerpt,
+            article.Body,
+            article.Slug,
+            article.Locale,
+            article.AuthorId,
+            article.CategoryId,
+            article.CoverMediaAssetId,
+            article.SeoImageMediaAssetId,
+            article.SeoTitle,
+            article.SeoDescription,
+            article.Status,
+            article.PublishDate,
+            languageActive,
+            DateTimeOffset.UtcNow));
+    }
+
+    private async Task<bool> HasPriorPublicationEventAsync(Guid articleId, CancellationToken cancellationToken) =>
+        await _db.ArticleHistory.AsNoTracking().AnyAsync(
+            row => row.ArticleId == articleId
+                && (row.EventType == ArticleHistoryRules.EventPublished
+                    || row.EventType == ArticleHistoryRules.EventRepublished
+                    || row.EventType == ArticleHistoryRules.EventScheduled),
+            cancellationToken);
+
+    private void QueueHistory(
+        Guid articleId,
+        string eventType,
+        string summaryFa,
+        string summaryEn,
+        DateTimeOffset occurredAt,
+        string? previousState,
+        string? newState) =>
+        _db.ArticleHistory.Add(ContentArticleHistoryEntry.Create(
+            articleId,
+            eventType,
+            summaryFa,
+            summaryEn,
+            occurredAt,
+            previousState,
+            newState));
+
+    private static (string Fa, string En)? BuildUpdateSummary(ContentArticle before, UpdateArticleCommand command)
+    {
+        var fa = new List<string>();
+        var en = new List<string>();
+        void Note(bool changed, string faLabel, string enLabel)
+        {
+            if (!changed) return;
+            fa.Add(faLabel);
+            en.Add(enLabel);
+        }
+
+        Note(!string.Equals(before.Title, command.Title?.Trim(), StringComparison.Ordinal), "عنوان", "title");
+        Note(!string.Equals(before.Excerpt, command.Excerpt?.Trim(), StringComparison.Ordinal), "چکیده", "excerpt");
+        Note(!string.Equals(before.Body, command.Body?.Trim(), StringComparison.Ordinal), "متن", "body");
+        Note(before.AuthorId != command.AuthorId, "نویسنده", "author");
+        Note(before.CategoryId != command.CategoryId, "دسته", "category");
+        Note(before.CoverMediaAssetId != command.CoverMediaAssetId, "تصویر شاخص", "featured image");
+        Note(!string.Equals(before.SeoTitle ?? "", command.SeoTitle?.Trim() ?? "", StringComparison.Ordinal)
+            || !string.Equals(before.SeoDescription ?? "", command.SeoDescription?.Trim() ?? "", StringComparison.Ordinal),
+            "سئو",
+            "SEO");
+        Note(command.PublishDate is DateTimeOffset pd && pd != before.PublishDate, "زمان انتشار", "publish date");
+        Note(!string.Equals(before.Locale, string.IsNullOrWhiteSpace(command.Locale) ? before.Locale : command.Locale.Trim(), StringComparison.Ordinal),
+            "زبان",
+            "language");
+        if (fa.Count == 0) return null;
+        return (string.Join("، ", fa), string.Join(", ", en));
     }
 
     internal static PublishedArticleItem MapPublished(

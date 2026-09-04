@@ -2,8 +2,12 @@
 
 import { useCallback } from "react";
 import { Button, Dialog } from "../../design-system";
+import {
+  articleReadinessCheckLabel,
+  type ArticlePublicationReadiness,
+} from "./content-article-publication-model.ts";
 
-export type ArticleActionKind = "delete" | "archive" | "publish" | "unpublish";
+export type ArticleActionKind = "delete" | "archive" | "publish" | "unpublish" | "republish";
 
 /** @deprecated Use ArticleActionKind */
 export type ArticleDestructiveKind = ArticleActionKind;
@@ -26,7 +30,7 @@ function isFaLocale(locale: string): boolean {
   return locale.trim().toLowerCase().startsWith("fa");
 }
 
-function copyFor(kind: ArticleActionKind, locale: string): CopyBundle {
+function copyFor(kind: ArticleActionKind, locale: string, scheduled: boolean): CopyBundle {
   const fa = isFaLocale(locale);
   switch (kind) {
     case "delete":
@@ -66,21 +70,26 @@ function copyFor(kind: ArticleActionKind, locale: string): CopyBundle {
             tone: "danger",
           };
     case "publish":
+    case "republish":
       return fa
         ? {
-            title: "انتشار مقاله",
+            title: kind === "republish" ? "انتشار مجدد مقاله" : "انتشار مقاله",
             body: (articleTitle) =>
-              `آیا «${articleTitle}» منتشر شود؟\n\nمقاله به‌صورت عمومی در دسترس قرار می‌گیرد و ممکن است طبق سیاست SEO وارد sitemap و ایندکس شود.`,
+              scheduled
+                ? `آیا «${articleTitle}» برای آینده زمان‌بندی شود؟\n\nوضعیت منتشر می‌شود اما تا رسیدن زمان انتشار در مسیر عمومی دیده نمی‌شود.`
+                : `آیا «${articleTitle}» همین حالا منتشر شود؟\n\nمقاله بلافاصله در مسیر عمومی در دسترس قرار می‌گیرد و ممکن است طبق سیاست SEO وارد sitemap شود.`,
             cancel: "انصراف",
-            confirm: "انتشار مقاله",
+            confirm: kind === "republish" ? "انتشار مجدد" : "انتشار",
             tone: "primary",
           }
         : {
-            title: "Publish article",
+            title: kind === "republish" ? "Republish article" : "Publish article",
             body: (articleTitle) =>
-              `Publish “${articleTitle}”?\n\nThe article becomes publicly accessible and may enter the sitemap/indexing according to SEO policy.`,
+              scheduled
+                ? `Schedule “${articleTitle}” for the future?\n\nIt becomes Published but stays hidden from the public route until the publish time.`
+                : `Publish “${articleTitle}” now?\n\nIt becomes publicly accessible immediately and may enter the sitemap per SEO policy.`,
             cancel: "Cancel",
-            confirm: "Publish article",
+            confirm: kind === "republish" ? "Republish" : "Publish",
             tone: "primary",
           };
     case "unpublish":
@@ -104,21 +113,27 @@ function copyFor(kind: ArticleActionKind, locale: string): CopyBundle {
   }
 }
 
-/** گفتگوی تأیید کنش مقاله (انتشار/لغو/حذف/بایگانی) — Dialog کاننیکال design-system. */
+/** گفتگوی تأیید کنش مقاله — با چک‌لیست مسدودکنندهٔ آمادگی برای Publish. */
 export function ContentArticleDestructiveDialog({
   kind,
   target,
   open,
   pending,
+  readiness,
+  scheduled,
   onClose,
   onConfirm,
+  onNavigate,
 }: {
   kind: ArticleActionKind | null;
   target: ArticleDestructiveTarget | null;
   open: boolean;
   pending?: boolean;
+  readiness?: ArticlePublicationReadiness | null;
+  scheduled?: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
+  onNavigate?: (tab: string) => void;
 }) {
   const handleConfirm = useCallback(() => {
     if (pending) return;
@@ -127,8 +142,12 @@ export function ContentArticleDestructiveDialog({
 
   if (!kind || !target) return null;
 
-  const copy = copyFor(kind, target.locale);
+  const isPublishKind = kind === "publish" || kind === "republish";
+  const blockers = isPublishKind ? (readiness?.requiredMissing ?? []) : [];
+  const blocked = isPublishKind && blockers.length > 0;
+  const copy = copyFor(kind, target.locale, Boolean(scheduled));
   const dir = isFaLocale(target.locale) ? "rtl" : "ltr";
+  const fa = isFaLocale(target.locale);
 
   return (
     <Dialog title={copy.title} open={open} onClose={onClose} showCloseButton={false}>
@@ -141,6 +160,32 @@ export function ContentArticleDestructiveDialog({
         <p id="content-article-action-dialog-body" className="whitespace-pre-line text-sm leading-7 text-muted">
           {copy.body(target.title)}
         </p>
+        {blocked ? (
+          <div
+            className="mt-3 rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm"
+            data-testid="content-article-publish-blockers"
+          >
+            <p className="mb-2 font-semibold text-danger">
+              {fa ? "موارد الزامی ناقص — انتشار انجام نمی‌شود:" : "Required blockers — publish will not run:"}
+            </p>
+            <ul className="space-y-1">
+              {blockers.map((check) => (
+                <li key={check.key}>
+                  <button
+                    type="button"
+                    className="text-danger underline"
+                    onClick={() => {
+                      if (check.actionTarget && onNavigate) onNavigate(check.actionTarget);
+                      onClose();
+                    }}
+                  >
+                    {articleReadinessCheckLabel(check, target.locale)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button
             type="button"
@@ -154,7 +199,7 @@ export function ContentArticleDestructiveDialog({
           <Button
             type="button"
             tone={copy.tone}
-            disabled={pending}
+            disabled={pending || blocked}
             data-testid={`content-article-action-confirm-${kind}`}
             onClick={handleConfirm}
           >

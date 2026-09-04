@@ -132,4 +132,61 @@ public interface IContentDirectory
 
     /// <summary>پیش‌نویس را حذف دائمی می‌کند (فقط Draft).</summary>
     Task DeleteDraftAsync(Guid articleId, CancellationToken cancellationToken);
+
+    /// <summary>آمادگی انتشار — همان قوانین دروازهٔ Publish.</summary>
+    Task<ArticlePublicationReadiness> GetPublishReadinessAsync(Guid articleId, CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نمایش Admin برای Draft/منتشرنشده — بدون عمومی‌سازی.</summary>
+    Task<ArticlePreviewSnapshot?> GetPreviewAsync(Guid articleId, CancellationToken cancellationToken);
+
+    /// <summary>تاریخچهٔ چرخهٔ عمر مقاله (جدیدترین اول).</summary>
+    Task<ArticleHistoryPage> ListHistoryAsync(Guid articleId, int skip, int take, CancellationToken cancellationToken);
 }
+
+/// <summary>پیش‌نمایش Admin مقاله — همان فیلدهای عمومی + پرچم پیش‌نمایش.</summary>
+public sealed record ArticlePreviewSnapshot(
+    Guid ArticleId,
+    string Slug,
+    string Title,
+    string Excerpt,
+    string Body,
+    string Locale,
+    string? SeoTitle,
+    string? SeoDescription,
+    string? Category,
+    Guid? CategoryId,
+    Guid? AuthorId,
+    Guid? CoverMediaAssetId,
+    Guid? SeoImageMediaAssetId,
+    string AuthorDisplayName,
+    IReadOnlyList<string> Tags,
+    bool IsFeatured,
+    ContentPublicationStatus Status,
+    DateTimeOffset PublishDate,
+    string? CategorySlug,
+    string? AuthorSlug,
+    string? CanonicalPath,
+    bool IsPreview,
+    bool RobotsNoIndex);
+
+/// <summary>یک ردیف تاریخچهٔ انسانی مقاله.</summary>
+public sealed record ArticleHistoryEntryDto(
+    Guid HistoryId,
+    Guid ArticleId,
+    string EventType,
+    string EventLabelFa,
+    string EventLabelEn,
+    string SummaryFa,
+    string SummaryEn,
+    string? PreviousState,
+    string? NewState,
+    Guid? ActorUserId,
+    string ActorDisplayName,
+    DateTimeOffset OccurredAt);
+
+/// <summary>صفحهٔ تاریخچهٔ مقاله.</summary>
+public sealed record ArticleHistoryPage(
+    IReadOnlyList<ArticleHistoryEntryDto> Items,
+    int TotalCount,
+    int Skip,
+    int Take);
