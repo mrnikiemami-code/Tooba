@@ -101,7 +101,9 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /B Nazanin/);
   assert.match(ck, /Times New Roman/);
   assert.match(ck, /Vazirmatn, Tahoma/);
-  assert.match(ck, /options:\s*\["default",\s*12,\s*14/);
+  assert.match(ck, /"12px"/);
+  assert.match(ck, /"28px"/);
+  assert.match(ck, /translations:\s*isRtl\s*\?\s*\[translationsFa\]\s*:\s*undefined/);
   assert.match(ck, /damStorefrontSrc/);
   assert.doesNotMatch(ck, /articleDamMediaSrc/);
   assert.match(ck, /RemoveFormat/);

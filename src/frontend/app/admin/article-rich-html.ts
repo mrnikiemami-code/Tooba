@@ -266,7 +266,8 @@ export function sanitizeArticleRichHtml(html: string): string {
   const videoHolders: string[] = [];
   const holdVideo = (markup: string): string => {
     if (!markup) return "";
-    const token = `\u0000DAMVIDEO${videoHolders.length}\u0000`;
+    // HTML comment tokens survive DOMParser; NUL-delimited tokens were stripped and leaked as "DAMVIDEO0".
+    const token = `<!--TOOBA_DAM_VIDEO_${videoHolders.length}-->`;
     videoHolders.push(markup);
     return token;
   };
@@ -325,7 +326,7 @@ export function sanitizeArticleRichHtml(html: string): string {
   processed = filterStylesViaDom(processed);
 
   for (let i = 0; i < videoHolders.length; i += 1) {
-    processed = processed.replace(`\u0000DAMVIDEO${i}\u0000`, videoHolders[i]);
+    processed = processed.replace(`<!--TOOBA_DAM_VIDEO_${i}-->`, videoHolders[i]!);
   }
   return processed;
 }

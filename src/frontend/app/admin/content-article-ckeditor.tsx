@@ -350,14 +350,29 @@ function buildConfig(options: {
       ],
     },
     fontSize: {
-      options: ["default", 12, 14, 16, 18, 20, 24, 28],
+      // Named + px strings (bare numeric options are unsupported and crash FontSize UI).
+      options: [
+        "tiny",
+        "small",
+        "default",
+        "big",
+        "huge",
+        "12px",
+        "14px",
+        "16px",
+        "18px",
+        "20px",
+        "24px",
+        "28px",
+      ],
     },
     placeholder: options.placeholder,
     language: {
       ui: isRtl ? "fa" : "en",
       content: isRtl ? "fa" : "en",
     },
-    translations: isRtl ? [translationsFa] : [],
+    // Empty translations array crashes CKEditor 5 (Reduce of empty array) for English/LTR.
+    translations: isRtl ? [translationsFa] : undefined,
     link: {
       defaultProtocol: "https://",
       decorators: {

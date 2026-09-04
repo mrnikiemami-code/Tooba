@@ -1,28 +1,31 @@
 # Browser validation (TB-P08-T016-R4)
 
-Host: `http://127.0.0.1:5088` health `{"status":"ok"}`  
-FE: `http://127.0.0.1:3000` (dev; root returns 308, admin routes 200)
+Host: `http://127.0.0.1:5088` health ok  
+FE: `http://127.0.0.1:3000`
 
-## API (admin `X-Tooba-Dev-Actor-User-Id` from `/v1/admin/dev-context`)
+Article: `01a06ac1-135f-7000-b45f-7089ee3d1add` (persisted `en-US`)
 
-| Check | Result |
-|-------|--------|
-| English article | Found `01a06ac1-135f-7000-b45f-7089ee3d1add` |
-| GET article locale | `en-US` |
-| History `skip=0&take=10` | 1 item (`article.draft_created`); `totalCount=1` |
-| History `skip=10&take=10` | `items=[]`, `skip=10`, `take=10`, `totalCount=1` (paging OK) |
-| Media `?contentTypePrefix=video/` | empty before upload (`totalCount=0`) |
-| Media `?kind=video` | empty before upload |
-| Upload tiny `video/webm` | OK → `mediaAssetId=01a06b5b-9d4a-7000-a1bc-219ab95d8e8b` |
-| Video filter after upload | `totalCount=1` (filter shows uploaded webm) |
+## Locale identity
+- Badge: `زبان: English`
+- Editor `data-dir=ltr`
+- CKEditor English toolbar labels (Font Family, Insert video)
+- Admin shell remains Persian; Article identity stays English
 
-## Browser UI
+## History pager
+- Tab History → English labels `Previous` / `Next` / `Page 1 of 1`
+- Buttons disabled correctly when only one page (`totalCount=1`)
 
-- Interactive `cursor-ide-browser` MCP: **unavailable** in this session (tabs create then vanish; `browser_navigate` fails with “No browser tab available”).
-- HTTP probe: `GET http://127.0.0.1:3000/admin/content/articles/01a06ac1-135f-7000-b45f-7089ee3d1add?mode=edit` → **200**; SSR/shell HTML includes `en-US` / `content-article` markers.
-- Locale identity, history pager Previous/Next, CKEditor fontFamily, DAM video filter: covered by FE unit tests + live API above (not visually clicked in MCP).
+## Font Family / Size
+- Font Family dropdown lists: Default, Arial, Tahoma, Verdana, Times New Roman, Georgia, Courier New, B Nazanin, Vazirmatn
+- Font Size named + px sizes configured (`tiny`…`huge`, `12px`…`28px`)
+- English LTR editor starts only when `translations` is not an empty array (fixed: `undefined` for EN)
 
-## Fonts / video UI note
+## Video DAM
+- Insert video → Media Library «انتخاب ویدیو از کتابخانه»
+- Server-filtered video list shows uploaded `t016-r4-tiny.webm`
+- Confirm inserts `<video … data-media-asset-id="01a06b5b-…">`
+- Save persists video HTML (GET article body contains video + media id)
+- Sanitizer hold tokens use HTML comments (NUL tokens leaked as `DAMVIDEO0` before fix)
 
-- Fonts: unit tests assert CKEditor `fontFamily` config + sanitizer allowlist (Times New Roman, B Nazanin).
-- Video: live upload + `contentTypePrefix=video/` list confirmed; CKEditor DAM picker not interactively opened (MCP blocker).
+## Image/File
+- Insert image / Insert file toolbar buttons present (no regression smoke of full upload in this pass beyond prior green unit tests)
