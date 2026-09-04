@@ -1,0 +1,86 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+Channel: tooba-main
+TaskId: TB-P08-T013
+WorkerId: tooba-worker-01
+AgentType: cursor
+Status: PASS
+Repo: D:\Users\User\source\repos\SarvNewVer (github.com/mrznamami-code/Tooba)
+HEAD: 961ae91c74bf71940ded389598aa2d92a15ce4fd
+HEAD==origin/main: YES
+USER_VISUAL_ACCEPTED=NO
+
+## Summary
+TB-P08-T013 delivers Content Article Category max-depth=2 (backend authoritative), AppCategoryTree UX for main/subcategory, hierarchical searchable Article Category picker, and Content-owned normalized Tags (ContentTag/ArticleTag) replacing TagsCsv as canonical editing model with migration/projection. CKEditor/DAM/T012 repairs preserved. Worker IDLE. No T014 invented.
+
+## Category-Current-State
+Content-owned categories with parent + language already existed; depth was previously unlimited. No observed existing depth>2 data; enforcement applied directly without silent delete/reparent.
+
+## Two-Level-Enforcement
+ContentCategoryTreeRules MaxDepth=2. Root=L1, child=L2. Create/move producing L3+ → content.category.max_depth_exceeded. Cross-language parent rejected. Article may assign L1 or L2. Language mismatch → content.category.language_mismatch. Inactive/archived not newly assignable.
+
+## Existing-Data-Safety
+No destructive migration for categories. TagsCsv migrated into ContentTag + ArticleTag (trim/dedupe); TagsCsv retained as synced projection only.
+
+## Category-Admin-UX
+AppCategoryTree maxDepth=2; L2 hides add-child. Human labels دسته اصلی / زیردسته (EN equivalents). Impossible actions disabled/hidden.
+
+## Article-Category-Picker
+ContentArticleCategoryPicker: language-scoped, hierarchical searchable, L1/L2 distinguishable with parent › child context, no raw IDs, empty state.
+
+## Tag-Current-State
+Pre-task: TagsCsv comma UI only; no ContentTag entity.
+
+## Tag-Domain
+ContentTag (UUID v7, Language, Name, NormalizedName, Slug optional, active, audit) + ArticleTag M2M. Unique normalized name per Language. Article/Tag language must match.
+
+## Tag-Migration
+EF migration AddContentTags + TagsCsv backfill. Canonical editing via tag APIs; CSV projection for compatibility/public list rendering.
+
+## Tag-Picker
+ContentArticleTagsPanel: searchable chips, assign existing, inline create (content.edit), remove; language-scoped; no CSV text box.
+
+## Language-Rules
+Category and Tag language must equal Article Language; pristine Draft locale change clears incompatible category/tags per T011/T012 patterns.
+
+## Public-Compatibility
+Public blog/category routes preserved; public tag strings rendered from normalized relationships with CSV fallback. No new public tag archive routes invented.
+
+## Error-UX
+admin-error-map covers max_depth_exceeded, language_mismatch, inactive category, tag duplicate/language mismatch (FA/EN). No raw Bad Request/JSON in normal UI.
+
+## Performance
+Category tree/picker language-filtered; tag search bounded server-side; no all-language preload; no N+1 design in directories.
+
+## Focused-Validation
+BE focused tests 9/9; FE source-assert + recovery guard green per implementation; git push HEAD==origin/main.
+
+## Runtime-Smoke
+Host restarted; L1/L2 create OK; L3 rejected max_depth_exceeded; Tag create/assign/list OK; FE content list 200. Interactive picker UI not browser-automated.
+
+## CKEditor-Media-Regression
+Article remains ContentArticleEditor/CKEditor 5; TipTap not restored for Article; DAM MediaLibrary path preserved; T012 Media/SEO/error repairs retained in source.
+
+## Recovery-SoT
+Phase P08
+Last Architect-accepted: TB-P08-T012-R1
+Last Implementation: TB-P08-T013
+Current Issued: (none)
+Current Repair: (none)
+USER_VISUAL_ACCEPTED=NO
+Worker Next State: IDLE
+Evidence: docs/evidence/TB-P08-T013/
+No T014 invented.
+
+## Git
+961ae91c feat(content): TB-P08-T013 two-level categories and content tags
+(+ docs runtime-smoke/result commits if any)
+HEAD==origin/main. App_Data untracked.
+
+## Architectural-Concerns
+TagsCsv projection temporary compatibility — do not reintroduce CSV as edit SoT.
+
+## Visual-Concerns
+USER_VISUAL_ACCEPTED=NO.
+
+## Blockers
+None for PASS criteria; interactive browser UX smoke limited (API/source covered).
