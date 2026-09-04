@@ -24,6 +24,7 @@ public static class ContentDevelopmentSeed
         var categoryIds = new Dictionary<string, Guid>(StringComparer.Ordinal);
         await EnsureCategoriesAsync(db, categoryIds, now, cancellationToken);
         var authorIds = await EnsureAuthorsAsync(db, now, cancellationToken);
+        await SanitizeCorruptedLabelsAsync(db, now, cancellationToken);
 
         var cover1 = Guid.Parse("d0d0d0d0-0001-4000-8000-000000000001");
         var cover2 = Guid.Parse("d0d0d0d0-0002-4000-8000-000000000002");
@@ -317,6 +318,148 @@ public static class ContentDevelopmentSeed
         }
 
         return authorIds;
+    }
+
+    /// <summary>
+    /// برچسب‌های نمایشی خراب (عمدتاً ?) را در دادهٔ توسعه اصلاح می‌کند.
+    /// منبع seed سالم است؛ این برای ردیف‌های قدیمی/دودویی خراب‌شده است.
+    /// </summary>
+    private static async Task SanitizeCorruptedLabelsAsync(
+        ContentDbContext db,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var categories = await db.Categories.ToListAsync(cancellationToken);
+        var catIndex = 0;
+        foreach (var category in categories)
+        {
+            if (!LooksLikeMojibake(category.Name))
+            {
+                continue;
+            }
+
+            catIndex++;
+            var slug = $"archived-seed-fix-{category.CategoryId.ToString("N")[..8]}-{catIndex}";
+            category.UpdateCore(
+                $"Archived seed {catIndex}",
+                slug,
+                category.ShortDescription,
+                category.Description,
+                category.SortOrder,
+                ContentCategoryStatus.Archived,
+                now);
+        }
+
+        var authors = await db.Authors.ToListAsync(cancellationToken);
+        var authorIndex = 0;
+        foreach (var author in authors)
+        {
+            if (!LooksLikeMojibake(author.DisplayName))
+            {
+                continue;
+            }
+
+            authorIndex++;
+            var slug = $"sample-author-fix-{author.AuthorId.ToString("N")[..8]}-{authorIndex}";
+            author.Update(
+                $"Sample author {authorIndex}",
+                slug,
+                author.ShortBio,
+                author.FullBio,
+                author.ProfileImageMediaAssetId,
+                author.CoverImageMediaAssetId,
+                author.WebsiteUrl,
+                author.InstagramUrl,
+                author.TwitterUrl,
+                author.LinkedInUrl,
+                now);
+            author.Deactivate(now);
+        }
+
+        var articles = await db.Articles.ToListAsync(cancellationToken);
+        foreach (var article in articles)
+        {
+            var titleCorrupt = LooksLikeMojibake(article.Title);
+            var excerptCorrupt = LooksLikeMojibake(article.Excerpt);
+            var authorCorrupt = LooksLikeMojibake(article.AuthorDisplayName);
+            if (!titleCorrupt && !excerptCorrupt && !authorCorrupt)
+            {
+                continue;
+            }
+
+            var title = titleCorrupt
+                ? (article.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
+                    ? "پیش‌نویس اصلاح‌شده"
+                    : "Repaired draft title")
+                : article.Title;
+            var excerpt = excerptCorrupt
+                ? (article.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
+                    ? "چکیده اصلاح‌شده"
+                    : "Repaired excerpt")
+                : article.Excerpt;
+            var authorDisplay = authorCorrupt
+                ? (article.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
+                    ? "نویسنده نمونه"
+                    : "Sample author")
+                : (string.IsNullOrWhiteSpace(article.AuthorDisplayName)
+                    ? (article.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase)
+                        ? "نویسنده نمونه"
+                        : "Sample author")
+                    : article.AuthorDisplayName);
+            article.Update(
+                title,
+                excerpt,
+                string.IsNullOrWhiteSpace(article.Body) ? excerpt : article.Body,
+                article.SeoTitle,
+                article.SeoDescription,
+                article.Category,
+                article.CategoryId,
+                article.CoverMediaAssetId,
+                article.AuthorId,
+                authorDisplay,
+                article.TagsCsv?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    ?? Array.Empty<string>(),
+                article.IsFeatured,
+                now,
+                article.Locale,
+                article.PublishDate);
+        }
+
+        var tags = await db.Tags.ToListAsync(cancellationToken);
+        foreach (var tag in tags)
+        {
+            if (!LooksLikeMojibake(tag.Name))
+            {
+                continue;
+            }
+
+            // ContentTag has no rename API — remove unused corrupt tags.
+            var inUse = await db.ArticleTags
+                .AnyAsync(x => x.TagId == tag.TagId, cancellationToken);
+            if (!inUse)
+            {
+                db.Tags.Remove(tag);
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static bool LooksLikeMojibake(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var text = value.Trim();
+        var questionMarks = text.Count(ch => ch == '?' || ch == '？' || ch == '\uFFFD');
+        if (questionMarks < 2)
+        {
+            return false;
+        }
+
+        return questionMarks >= text.Length * 0.3;
     }
 
     private static async Task UpsertArticleAsync(

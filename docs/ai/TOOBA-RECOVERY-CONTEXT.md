@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T016
+TB-P08-T016-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T016-R1 — Content demo mojibake/???? label cleanup (repair of T016 visual cleanliness; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016 — P08 Content Final Gate (technical/worker gate; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T015 — Article comments moderation, contextual help, wording cleanup, workspace polish — Architect-accepted
 TB-P08-T014 — Article publication readiness, draft preview, publish lifecycle, history, Jalali schedule — Architect-accepted

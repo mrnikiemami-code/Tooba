@@ -106,6 +106,102 @@ public sealed class ContentDevelopmentSeedIdempotencyTests : IAsyncLifetime
             CancellationToken.None));
     }
 
+    /// <summary>TB-P08-T016-R1: برچسب‌های mojibake/? در Apply به برچسب تمیز + Archived/Inactive تبدیل می‌شوند.</summary>
+    [SkippableFact]
+    public async Task Apply_sanitizes_corrupted_category_author_and_article_labels()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        await using var db = CreateDb(_container.GetConnectionString());
+        await db.Database.MigrateAsync();
+
+        var now = DateTimeOffset.UtcNow;
+        var corruptCategory = ContentCategory.Create(
+            ContentArticle.DefaultLocale,
+            null,
+            "??????",
+            "corrupt-cat-r1",
+            null,
+            null,
+            99,
+            null,
+            null,
+            null,
+            now);
+        db.Categories.Add(corruptCategory);
+
+        var corruptAuthor = ContentAuthor.Create(
+            "??????? b39688",
+            "corrupt-author-r1",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            now);
+        db.Authors.Add(corruptAuthor);
+
+        var corruptArticle = ContentArticle.Create(
+            "corrupt-article-r1",
+            "?????? title",
+            "?????? excerpt",
+            "body text for repair",
+            null,
+            null,
+            "Author Ok",
+            Array.Empty<string>(),
+            false,
+            now,
+            now,
+            ContentArticle.DefaultLocale);
+        db.Articles.Add(corruptArticle);
+        await db.SaveChangesAsync();
+
+        var services = new ServiceCollection();
+        services.AddSingleton(db);
+        await using var provider = services.BuildServiceProvider();
+        await ContentDevelopmentSeed.ApplyAsync(provider);
+
+        await db.Entry(corruptCategory).ReloadAsync();
+        await db.Entry(corruptAuthor).ReloadAsync();
+        await db.Entry(corruptArticle).ReloadAsync();
+
+        Assert.Equal(ContentCategoryStatus.Archived, corruptCategory.Status);
+        Assert.DoesNotContain("?", corruptCategory.Name);
+        Assert.StartsWith("Archived seed", corruptCategory.Name, StringComparison.Ordinal);
+
+        Assert.False(corruptAuthor.IsActive);
+        Assert.DoesNotContain("?", corruptAuthor.DisplayName);
+        Assert.StartsWith("Sample author", corruptAuthor.DisplayName, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("?", corruptArticle.Title);
+        Assert.DoesNotContain("?", corruptArticle.Excerpt);
+        Assert.Equal("پیش‌نویس اصلاح‌شده", corruptArticle.Title);
+
+        var authorOnlyArticle = ContentArticle.Create(
+            "corrupt-author-label-r1",
+            "Clean title",
+            "Clean excerpt",
+            "body text for repair",
+            null,
+            null,
+            "??????? leftover",
+            Array.Empty<string>(),
+            false,
+            now,
+            now,
+            ContentArticle.DefaultLocale);
+        db.Articles.Add(authorOnlyArticle);
+        await db.SaveChangesAsync();
+        await ContentDevelopmentSeed.ApplyAsync(provider);
+        await db.Entry(authorOnlyArticle).ReloadAsync();
+        Assert.Equal("Clean title", authorOnlyArticle.Title);
+        Assert.Equal("نویسنده نمونه", authorOnlyArticle.AuthorDisplayName);
+    }
+
     private static ContentDbContext CreateDb(string connectionString)
     {
         var options = new DbContextOptionsBuilder<ContentDbContext>();
