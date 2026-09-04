@@ -26,16 +26,31 @@ public static class ContentArticleMediaEndpoints
     private static IResult MapInvalid(InvalidOperationException ex)
     {
         var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
-        var mediaMissing = ex.Message.Contains(ContentArticleErrorCodes.MediaNotFound, StringComparison.Ordinal);
+        string[] known =
+        [
+            ContentArticleErrorCodes.MediaNotFound,
+            ContentArticleErrorCodes.UnsafeBodyMedia,
+            "content.article.missing",
+        ];
+        var errorCode = "content.article.media.rejected";
+        if (missing) errorCode = "content.article.missing";
+        else
+        {
+            foreach (var code in known)
+            {
+                if (ex.Message.Contains(code, StringComparison.Ordinal))
+                {
+                    errorCode = code;
+                    break;
+                }
+            }
+        }
+
         return Results.Json(
             new
             {
                 title = missing ? "Not Found" : "Bad Request",
-                errorCode = missing
-                    ? "content.article.missing"
-                    : mediaMissing
-                        ? ContentArticleErrorCodes.MediaNotFound
-                        : "content.article.media.rejected",
+                errorCode,
                 detail = ex.Message,
             },
             statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);

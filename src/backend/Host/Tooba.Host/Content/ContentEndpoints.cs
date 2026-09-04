@@ -205,20 +205,12 @@ public static class ContentEndpoints
         catch (InvalidOperationException ex)
         {
             var missing = ex.Message.Contains("یافت نشد", StringComparison.Ordinal);
-            var localeLocked = ex.Message.Contains(ContentArticleErrorCodes.LocaleLocked, StringComparison.Ordinal);
-            var archived = ex.Message.Contains(ContentArticleErrorCodes.AlreadyArchived, StringComparison.Ordinal)
-                || ex.Message.Contains(ContentArticleErrorCodes.ArchiveNotAllowed, StringComparison.Ordinal);
+            var errorCode = ResolveArticleUpdateErrorCode(ex.Message, missing);
             return Results.Json(
                 new
                 {
                     title = missing ? "Not Found" : "Bad Request",
-                    errorCode = missing
-                        ? "content.article.missing"
-                        : localeLocked
-                            ? ContentArticleErrorCodes.LocaleLocked
-                            : archived
-                                ? ContentArticleErrorCodes.ArchiveNotAllowed
-                                : "content.update.rejected",
+                    errorCode,
                     detail = ex.Message,
                 },
                 statusCode: missing ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
@@ -339,6 +331,48 @@ public static class ContentEndpoints
             }
             return Results.Json(new { title = "Not Found", errorCode = "content.article.missing" }, statusCode: StatusCodes.Status404NotFound);
         }
+    }
+
+    /// <summary>
+    /// ارتقای کد دامنه از Message استثناء به errorCode پایدار — نه فقط content.update.rejected.
+    /// </summary>
+    private static string ResolveArticleUpdateErrorCode(string message, bool missing)
+    {
+        if (missing) return "content.article.missing";
+        if (string.IsNullOrWhiteSpace(message)) return "content.update.rejected";
+
+        string[] known =
+        [
+            ContentArticleErrorCodes.LocaleLocked,
+            ContentArticleErrorCodes.AlreadyArchived,
+            ContentArticleErrorCodes.ArchiveNotAllowed,
+            ContentArticleErrorCodes.UnsafeBodyMedia,
+            ContentArticleErrorCodes.MediaNotFound,
+            ContentCategoryErrorCodes.LanguageMismatch,
+            ContentCategoryErrorCodes.NotFound,
+            ContentCategoryErrorCodes.InvalidLanguage,
+            ContentAuthorErrorCodes.Inactive,
+            ContentAuthorErrorCodes.NotFound,
+            ContentAuthorErrorCodes.RequiredForPublish,
+            "localization.language.inactive",
+            "localization.language.not_found",
+        ];
+
+        foreach (var code in known)
+        {
+            if (message.Contains(code, StringComparison.Ordinal))
+                return code;
+        }
+
+        // Message خود ممکن است دقیقاً کد نقطه‌دار باشد.
+        if (message.Contains('.', StringComparison.Ordinal)
+            && !message.Contains(' ', StringComparison.Ordinal)
+            && message.Length < 120)
+        {
+            return message.Trim();
+        }
+
+        return "content.update.rejected";
     }
 }
 

@@ -258,6 +258,34 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "زبان انتخاب‌شده فعال نیست.",
     en: "The selected language is not active.",
   },
+  "content.update.rejected": {
+    fa: "ذخیرهٔ مقاله انجام نشد. لطفاً ورودی‌ها را بررسی کنید.",
+    en: "The article could not be saved. Please review the fields and try again.",
+  },
+  "content.category.language_mismatch": {
+    fa: "دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.",
+    en: "The selected category does not match the article language.",
+  },
+  "content.category.not_found": {
+    fa: "دستهٔ مقاله یافت نشد.",
+    en: "The article category was not found.",
+  },
+  "content.category.invalid_language": {
+    fa: "زبان دسته نامعتبر است.",
+    en: "The category language is not valid.",
+  },
+  "content.article.media_not_found": {
+    fa: "رسانهٔ انتخاب‌شده در دسترس نیست یا یافت نشد.",
+    en: "The selected media asset is unavailable or was not found.",
+  },
+  "content.article.media.rejected": {
+    fa: "اختصاص رسانه به مقاله ناموفق بود.",
+    en: "Could not assign media to the article.",
+  },
+  "content.article.unsafe_body_media": {
+    fa: "بدنه شامل رسانهٔ ناامن است. فقط تصاویر کتابخانه مجازند.",
+    en: "The body contains unsafe media. Only library images are allowed.",
+  },
 };
 
 const TECHNICAL_UI_PATTERNS = [
@@ -354,7 +382,15 @@ export function parseAdminProblemErrorCode(payload: unknown, status: number): st
   const item = recordOf(payload);
   if (item) {
     const code = textProp(item, "errorCode", "ErrorCode", "code", "Code");
+    const detail = textProp(item, "detail", "Detail", "message", "Message");
+    // وقتی Host کد عمومی برمی‌گرداند، detail اغلب کد دامنهٔ واقعی است.
+    if (code === "content.update.rejected" || code === "content.article.media.rejected") {
+      const fromDetail = extractAdminErrorCode(detail);
+      if (fromDetail && fromDetail !== code) return fromDetail;
+    }
     if (code) return code;
+    const fromDetailOnly = extractAdminErrorCode(detail);
+    if (fromDetailOnly) return fromDetailOnly;
     const extensions = recordOf(item.extensions ?? item.Extensions);
     if (extensions) {
       const nested = textProp(extensions, "errorCode", "ErrorCode", "code", "Code");

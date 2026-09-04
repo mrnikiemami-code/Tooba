@@ -7,13 +7,15 @@ import { articleDamImageSrc, sanitizeArticleRichHtml } from "./article-rich-html
 const api = readFileSync(join(import.meta.dirname, "content-article-media-api.ts"), "utf8");
 const panel = readFileSync(join(import.meta.dirname, "content-article-media-panel.tsx"), "utf8");
 const screen = readFileSync(join(import.meta.dirname, "content-article-admin-screen.tsx"), "utf8");
-const editor = readFileSync(join(import.meta.dirname, "product-rich-text-editor.tsx"), "utf8");
+const editor = readFileSync(join(import.meta.dirname, "content-article-rich-text-editor.tsx"), "utf8");
 
-test("article media api targets content media endpoints", () => {
+test("article media api targets content media endpoints with JSON content-type", () => {
   assert.match(api, /\/v1\/admin\/content\/articles\/.+\/media/);
   assert.match(api, /\/media\/featured/);
   assert.match(api, /\/media\/seo-image/);
   assert.match(api, /\/media\/gallery/);
+  assert.match(api, /Content-Type["']:\s*["']application\/json["']/);
+  assert.doesNotMatch(api, /adminHeaders\(body !== undefined\)/);
 });
 
 test("article rich html allows only storefront dam src", () => {
@@ -28,8 +30,9 @@ test("article rich html allows only storefront dam src", () => {
 test("article workspace uses media panel and dam insert image", () => {
   assert.match(screen, /ContentArticleMediaPanel/);
   assert.match(screen, /assignArticleSeoImage/);
-  assert.match(screen, /استفاده از تصویر شاخص/);
+  assert.match(screen, /استفاده از تصویر شاخص مقاله/);
   assert.match(panel, /MediaLibraryDialog/);
+  assert.match(panel, /onWorkspaceChange/);
   assert.match(editor, /onPickDamImage/);
   assert.match(editor, /insert-image/);
 });
@@ -45,4 +48,6 @@ test("article media panel and SEO picker use Persian library labels without DAM 
   assert.doesNotMatch(screen, /انتخاب از DAM/);
   assert.match(screen, /در حال بارگذاری…/);
   assert.doesNotMatch(screen, /در حال بارگذاری workspace/);
+  assert.match(screen, /تصویر اشتراک‌گذاری و شبکه‌های اجتماعی/);
+  assert.doesNotMatch(screen, /مؤثر: تصویر شاخص/);
 });

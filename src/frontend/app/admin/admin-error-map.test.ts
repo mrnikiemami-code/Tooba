@@ -88,3 +88,39 @@ test("parseAdminProblemErrorCode prefers stable errorCode never title", () => {
   );
   assert.ok(!normalizeAdminClientError({ title: "Bad Request" }, 400, "fa").includes("Bad Request"));
 });
+
+test("content article update and media errors are humanized", () => {
+  assert.equal(
+    mapAdminErrorMessage("localization.language.inactive", "fa"),
+    "زبان انتخاب‌شده فعال نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("content.category.language_mismatch", "fa"),
+    "دستهٔ انتخاب‌شده با زبان مقاله هم‌خوان نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("content.article.media_not_found", "en"),
+    "The selected media asset is unavailable or was not found.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("content.update.rejected", "fa"),
+    "ذخیرهٔ مقاله انجام نشد. لطفاً ورودی‌ها را بررسی کنید.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("content.author.inactive", "fa"),
+    "نویسندهٔ غیرفعال برای انتساب جدید مجاز نیست.",
+  );
+  assert.equal(
+    parseAdminProblemErrorCode(
+      {
+        title: "Bad Request",
+        errorCode: "content.update.rejected",
+        detail: "localization.language.inactive",
+      },
+      400,
+    ),
+    "localization.language.inactive",
+  );
+  assert.ok(!mapAdminErrorMessage("content.update.rejected", "fa").includes("content.update"));
+  assert.ok(!mapAdminErrorMessage("Bad Request", "fa").includes("Bad Request"));
+});

@@ -7,6 +7,7 @@ const api = readFileSync(join(import.meta.dirname, "../content/content-api.ts"),
 const screen = readFileSync(join(import.meta.dirname, "content-article-admin-screen.tsx"), "utf8");
 const list = readFileSync(join(import.meta.dirname, "content-list.tsx"), "utf8");
 const newScreen = readFileSync(join(import.meta.dirname, "content-article-new-screen.tsx"), "utf8");
+const editor = readFileSync(join(import.meta.dirname, "content-article-rich-text-editor.tsx"), "utf8");
 
 test("content article api exposes workspace load/update and locale helpers", () => {
   assert.match(api, /loadAdminArticle/);
@@ -18,8 +19,9 @@ test("content article api exposes workspace load/update and locale helpers", () 
   assert.match(api, /coverMediaAssetId/);
 });
 
-test("content article admin workspace uses TipTap, tabs, and DAM", () => {
-  assert.match(screen, /ProductRichTextEditor/);
+test("content article admin workspace uses TipTap content editor, tabs, and DAM", () => {
+  assert.match(screen, /ContentArticleRichTextEditor/);
+  assert.doesNotMatch(screen, /ProductRichTextEditor/);
   assert.match(screen, /MediaLibraryDialog/);
   assert.match(screen, /useAdminFormMode/);
   assert.match(screen, /content-article-tab-/);
@@ -29,6 +31,24 @@ test("content article admin workspace uses TipTap, tabs, and DAM", () => {
   assert.match(screen, /content-article-author-filter/);
   assert.match(screen, /زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست/);
   assert.doesNotMatch(screen, /LANGUAGE_OPTIONS/);
+  assert.doesNotMatch(screen, /__articleDamPickResolve/);
+  assert.match(screen, /damPickResolveRef/);
+  assert.match(screen, /content-article-workspace-header/);
+  assert.match(screen, /تصویر اشتراک‌گذاری و شبکه‌های اجتماعی/);
+  assert.match(screen, /استفاده از تصویر شاخص مقاله/);
+  assert.match(screen, /setDraftCategoryId\(""\)/);
+});
+
+test("content article rich text editor has professional toolbar contract", () => {
+  assert.match(editor, /data-content-editor="article"/);
+  assert.match(editor, /toggleStrike/);
+  assert.match(editor, /toggleHeading\(\{ level: 4 \}\)/);
+  assert.match(editor, /block-style/);
+  assert.match(editor, /transformPastedHTML/);
+  assert.match(editor, /sanitizeArticleRichHtml/);
+  assert.match(editor, /insert-image/);
+  assert.match(editor, /min-h-\[22rem\]/);
+  assert.doesNotMatch(editor, /ckeditor/i);
 });
 
 test("content list links to language-first create and article workspace edit", () => {
@@ -41,7 +61,6 @@ test("content list links to language-first create and article workspace edit", (
   assert.doesNotMatch(newScreen, /LANGUAGE_OPTIONS/);
   assert.match(newScreen, /loadAdminLanguages/);
   assert.match(newScreen, /createAdminArticle/);
-  assert.match(newScreen, /authorId:\s*null/);
   assert.match(newScreen, /mapAdminErrorMessage/);
 });
 

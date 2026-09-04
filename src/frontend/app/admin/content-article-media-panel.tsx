@@ -26,9 +26,12 @@ function sortGallery(rows: ArticleGalleryItemDto[]): ArticleGalleryItemDto[] {
 export function ContentArticleMediaPanel({
   articleId,
   editable,
+  onWorkspaceChange,
 }: {
   articleId: string;
   editable: boolean;
+  /** همگام‌سازی workspace با والد تا Save عمومی cover را خراب نکند. */
+  onWorkspaceChange?: (workspace: ArticleMediaWorkspaceDto) => void;
 }) {
   const [workspace, setWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,17 +44,21 @@ export function ContentArticleMediaPanel({
   const gallery = useMemo(() => sortGallery(workspace?.gallery ?? []), [workspace?.gallery]);
   const assignedIds = useMemo(() => new Set(gallery.map((row) => row.mediaAssetId)), [gallery]);
 
-  const applyWorkspace = useCallback((data: ArticleMediaWorkspaceDto) => {
-    setWorkspace(data);
-    const nextAlt: Record<string, string> = {};
-    const nextCap: Record<string, string> = {};
-    for (const row of data.gallery) {
-      nextAlt[row.mediaAssetId] = row.altText ?? "";
-      nextCap[row.mediaAssetId] = row.caption ?? "";
-    }
-    setAltDrafts(nextAlt);
-    setCaptionDrafts(nextCap);
-  }, []);
+  const applyWorkspace = useCallback(
+    (data: ArticleMediaWorkspaceDto) => {
+      setWorkspace(data);
+      const nextAlt: Record<string, string> = {};
+      const nextCap: Record<string, string> = {};
+      for (const row of data.gallery) {
+        nextAlt[row.mediaAssetId] = row.altText ?? "";
+        nextCap[row.mediaAssetId] = row.caption ?? "";
+      }
+      setAltDrafts(nextAlt);
+      setCaptionDrafts(nextCap);
+      onWorkspaceChange?.(data);
+    },
+    [onWorkspaceChange],
+  );
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -125,7 +132,13 @@ export function ContentArticleMediaPanel({
           <p className="text-sm text-muted">تصویر شاخص اختصاص داده نشده است.</p>
         )}
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded-xl border px-3 py-2 text-sm" disabled={!editable || busy} onClick={() => openPicker("featured")}>
+          <button
+            type="button"
+            className="rounded-xl border px-3 py-2 text-sm"
+            disabled={!editable || busy}
+            data-testid="content-article-featured-pick"
+            onClick={() => openPicker("featured")}
+          >
             انتخاب از کتابخانه
           </button>
           {workspace?.featuredMediaAssetId ? (
@@ -133,20 +146,31 @@ export function ContentArticleMediaPanel({
               type="button"
               className="rounded-xl border px-3 py-2 text-sm"
               disabled={!editable || busy}
-              onClick={() => void assignArticleFeaturedImage(articleId, null).then((result) => {
-                if (result.state === "ok" && result.data) applyWorkspace(result.data);
-              })}
+              data-testid="content-article-featured-remove"
+              onClick={() =>
+                void assignArticleFeaturedImage(articleId, null).then((result) => {
+                  if (result.state === "ok" && result.data) applyWorkspace(result.data);
+                  else toast.error(mapArticleMediaMutationError(result));
+                })
+              }
             >
               حذف اختصاص
             </button>
           ) : null}
         </div>
+        <p className="text-xs text-muted">حذف اختصاص، فایل را از کتابخانه رسانه پاک نمی‌کند.</p>
       </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">گالری مقاله</h3>
-          <button type="button" className="rounded-xl border px-3 py-2 text-sm" disabled={!editable || busy} onClick={() => openPicker("gallery")}>
+          <button
+            type="button"
+            className="rounded-xl border px-3 py-2 text-sm"
+            disabled={!editable || busy}
+            data-testid="content-article-gallery-pick"
+            onClick={() => openPicker("gallery")}
+          >
             کتابخانه رسانه
           </button>
         </div>
@@ -157,23 +181,70 @@ export function ContentArticleMediaPanel({
             {gallery.map((row, index) => (
               <li key={row.mediaAssetId} className="rounded-xl border p-3">
                 <div className="flex flex-wrap items-start gap-3">
-                  <img src={mediaPreviewUrl(row.mediaAssetId) ?? ""} alt="" className="h-20 w-20 rounded-lg border object-cover" />
+                  <img
+                    src={mediaPreviewUrl(row.mediaAssetId) ?? ""}
+                    alt=""
+                    className="h-20 w-20 rounded-lg border object-cover"
+                  />
                   <div className="min-w-[12rem] flex-1 space-y-2">
                     <label className="block text-xs">
                       <span className="text-muted">متن جایگزین (سطح مقاله)</span>
-                      <input className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" disabled={!editable} value={altDrafts[row.mediaAssetId] ?? ""} onChange={(e) => setAltDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))} />
+                      <input
+                        className="mt-1 w-full rounded-lg border px-2 py-1 text-sm"
+                        disabled={!editable}
+                        value={altDrafts[row.mediaAssetId] ?? ""}
+                        onChange={(e) => setAltDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))}
+                      />
                     </label>
                     <label className="block text-xs">
                       <span className="text-muted">توضیح تصویر</span>
-                      <input className="mt-1 w-full rounded-lg border px-2 py-1 text-sm" disabled={!editable} value={captionDrafts[row.mediaAssetId] ?? ""} onChange={(e) => setCaptionDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))} />
+                      <input
+                        className="mt-1 w-full rounded-lg border px-2 py-1 text-sm"
+                        disabled={!editable}
+                        value={captionDrafts[row.mediaAssetId] ?? ""}
+                        onChange={(e) => setCaptionDrafts((c) => ({ ...c, [row.mediaAssetId]: e.target.value }))}
+                      />
                     </label>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <button type="button" className="rounded border px-2 py-1 text-xs" disabled={!editable || busy || index === 0} onClick={() => void moveGallery(row.mediaAssetId, -1)}>↑</button>
-                    <button type="button" className="rounded border px-2 py-1 text-xs" disabled={!editable || busy || index === gallery.length - 1} onClick={() => void moveGallery(row.mediaAssetId, 1)}>↓</button>
-                    <button type="button" className="rounded border px-2 py-1 text-xs text-danger" disabled={!editable || busy} onClick={() => void removeArticleGalleryItem(articleId, row.mediaAssetId).then((result) => { if (result.state === "ok" && result.data) applyWorkspace(result.data); })}>حذف</button>
+                    <button
+                      type="button"
+                      className="rounded border px-2 py-1 text-xs"
+                      disabled={!editable || busy || index === 0}
+                      onClick={() => void moveGallery(row.mediaAssetId, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border px-2 py-1 text-xs"
+                      disabled={!editable || busy || index === gallery.length - 1}
+                      onClick={() => void moveGallery(row.mediaAssetId, 1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border px-2 py-1 text-xs text-danger"
+                      disabled={!editable || busy}
+                      onClick={() =>
+                        void removeArticleGalleryItem(articleId, row.mediaAssetId).then((result) => {
+                          if (result.state === "ok" && result.data) applyWorkspace(result.data);
+                          else toast.error(mapArticleMediaMutationError(result));
+                        })
+                      }
+                    >
+                      حذف
+                    </button>
                     {editable ? (
-                      <button type="button" className="rounded border px-2 py-1 text-xs" disabled={busy} onClick={() => void saveGalleryMeta(row.mediaAssetId)}>ذخیره</button>
+                      <button
+                        type="button"
+                        className="rounded border px-2 py-1 text-xs"
+                        disabled={busy}
+                        onClick={() => void saveGalleryMeta(row.mediaAssetId)}
+                      >
+                        ذخیره
+                      </button>
                     ) : null}
                   </div>
                 </div>
@@ -191,25 +262,26 @@ export function ContentArticleMediaPanel({
           setPickerOpen(false);
           setPickerTarget(null);
         }}
-        onConfirm={(assets) => {
-          setPickerOpen(false);
+        onConfirm={async (assets) => {
           const target = pickerTarget;
+          setPickerOpen(false);
           setPickerTarget(null);
           if (!assets.length || !target) return;
           setBusy(true);
-          void (async () => {
-            if (target === "featured") {
-              const result = await assignArticleFeaturedImage(articleId, assets[0]!.mediaAssetId);
-              setBusy(false);
-              if (result.state === "ok" && result.data) applyWorkspace(result.data);
-              else toast.error(mapArticleMediaMutationError(result));
-              return;
-            }
-            const result = await addArticleGalleryItems(articleId, assets.map((a) => a.mediaAssetId));
+          if (target === "featured") {
+            const result = await assignArticleFeaturedImage(articleId, assets[0]!.mediaAssetId);
             setBusy(false);
             if (result.state === "ok" && result.data) applyWorkspace(result.data);
             else toast.error(mapArticleMediaMutationError(result));
-          })();
+            return;
+          }
+          const result = await addArticleGalleryItems(
+            articleId,
+            assets.map((a) => a.mediaAssetId),
+          );
+          setBusy(false);
+          if (result.state === "ok" && result.data) applyWorkspace(result.data);
+          else toast.error(mapArticleMediaMutationError(result));
         }}
       />
     </div>

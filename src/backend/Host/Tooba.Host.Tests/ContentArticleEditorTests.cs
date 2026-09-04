@@ -184,6 +184,84 @@ public sealed class ContentArticleEditorTests : IAsyncLifetime
                 CancellationToken.None));
     }
 
+    /// <summary>دسته با زبان ناسازگار باید language_mismatch بدهد؛ دسته هم‌زبان ذخیره می‌شود.</summary>
+    [SkippableFact]
+    public async Task Category_assign_requires_matching_language_and_succeeds_when_aligned()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        await using var db = CreateDb(_container.GetConnectionString());
+        await db.Database.MigrateAsync();
+        var categories = new ContentCategoryDirectory(db);
+        var authors = new ContentAuthorDirectory(db);
+        var languages = new PermissiveLanguageDirectory();
+        var content = new ContentDirectory(db, languages, categories, authors);
+
+        var faCategory = await categories.CreateAsync(
+            new CreateContentCategoryCommand("fa-IR", null, "اخبار", "akhbar", null, null, 10),
+            CancellationToken.None);
+        var enCategory = await categories.CreateAsync(
+            new CreateContentCategoryCommand("en-US", null, "News", "news", null, null, 10),
+            CancellationToken.None);
+
+        var draft = await content.CreateAsync(
+            new CreateArticleCommand(
+                "cat-align",
+                "مقاله دسته",
+                "چکیده",
+                "",
+                null,
+                null,
+                [],
+                false,
+                DateTimeOffset.Parse("2026-09-01T08:00:00Z"),
+                "fa-IR",
+                null,
+                null,
+                null,
+                null),
+            CancellationToken.None);
+
+        var mismatch = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            content.UpdateAsync(
+                draft.ArticleId,
+                new UpdateArticleCommand(
+                    "مقاله دسته",
+                    "چکیده",
+                    "",
+                    null,
+                    null,
+                    [],
+                    false,
+                    "fa-IR",
+                    null,
+                    null,
+                    null,
+                    enCategory.Id,
+                    null),
+                CancellationToken.None));
+        Assert.Equal(ContentCategoryErrorCodes.LanguageMismatch, mismatch.Message);
+
+        var aligned = await content.UpdateAsync(
+            draft.ArticleId,
+            new UpdateArticleCommand(
+                "مقاله دسته",
+                "چکیده",
+                "",
+                null,
+                null,
+                [],
+                false,
+                "fa-IR",
+                null,
+                null,
+                "اخبار",
+                faCategory.Id,
+                null),
+            CancellationToken.None);
+        Assert.Equal(faCategory.Id, aligned.CategoryId);
+    }
+
     private static ContentDbContext CreateDb(string connectionString)
     {
         var options = new DbContextOptionsBuilder<ContentDbContext>();

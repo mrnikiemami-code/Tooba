@@ -88,7 +88,9 @@ async function mediaWrite<T>(
   try {
     const response = await fetch(path, {
       method,
-      headers: adminHeaders(body !== undefined),
+      headers: adminHeaders(
+        body === undefined ? undefined : { "Content-Type": "application/json" },
+      ),
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const payload = await response.json().catch(() => null);

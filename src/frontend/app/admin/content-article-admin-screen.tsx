@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { formatJalaliDate, useAdminFormMode } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
@@ -17,11 +17,12 @@ import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
 import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 import { ContentArticleDestructiveDialog, type ArticleDestructiveKind } from "./content-article-destructive-dialog.tsx";
-import { ProductRichTextEditor } from "./product-rich-text-editor.tsx";
+import { ContentArticleRichTextEditor } from "./content-article-rich-text-editor.tsx";
 import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
 import {
   assignArticleSeoImage,
   fetchArticleMediaWorkspace,
+  mapArticleMediaMutationError,
   type ArticleMediaWorkspaceDto,
 } from "./content-article-media-api.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
@@ -58,6 +59,8 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+type DamPickResult = { mediaAssetId: string; alt?: string; title?: string } | null;
+
 function languageOptionLabel(lang: SupportedLocaleDefinition): string {
   return lang.nativeName?.trim() || lang.displayName?.trim() || lang.code;
 }
@@ -80,6 +83,12 @@ function tagsFromString(value: string): string[] {
     .filter(Boolean);
 }
 
+function statusLabel(status: string): string {
+  if (isArticleArchived(status)) return "بایگانی";
+  if (isPublished(status)) return "منتشر";
+  return "پیش‌نویس";
+}
+
 /** workspace ویرایش مقاله — تب‌های عمومی/محتوا/دسته/نویسنده/رسانه/SEO/انتشار/تاریخچه. */
 export function ContentArticleAdminScreen() {
   const params = useParams<{ articleId?: string }>();
@@ -99,6 +108,7 @@ export function ContentArticleAdminScreen() {
   const [mediaWorkspace, setMediaWorkspace] = useState<ArticleMediaWorkspaceDto | null>(null);
   const [useFeaturedForSeo, setUseFeaturedForSeo] = useState(true);
   const [destructiveKind, setDestructiveKind] = useState<ArticleDestructiveKind | null>(null);
+  const damPickResolveRef = useRef<((value: DamPickResult) => void) | null>(null);
 
   const [draftTitle, setDraftTitle] = useState("");
   const [draftExcerpt, setDraftExcerpt] = useState("");
@@ -150,6 +160,12 @@ export function ContentArticleAdminScreen() {
     return row ? languageOptionLabel(row) : formatArticleLocaleLabel(draftLocale);
   })();
 
+  const effectiveSeoAssetId =
+    mediaWorkspace?.effectiveSeoImageMediaAssetId ??
+    mediaWorkspace?.seoImageMediaAssetId ??
+    mediaWorkspace?.featuredMediaAssetId ??
+    null;
+
   const requestedMode = searchParams.get("mode");
   useEffect(() => {
     if (requestedMode === "edit" && !archived && form.mode !== "edit") {
@@ -173,14 +189,25 @@ export function ContentArticleAdminScreen() {
     setDraftPublishDate(data.publishDate ? data.publishDate.slice(0, 16) : "");
   }, []);
 
-  const refreshArticle = useCallback(async (id: string) => {
-    const result = await loadAdminArticle(id);
-    if (result.state !== "ok" || !result.data) {
-      setArticle(null);
-      return;
+  const refreshArticle = useCallback(
+    async (id: string) => {
+      const result = await loadAdminArticle(id);
+      if (result.state !== "ok" || !result.data) {
+        setArticle(null);
+        return;
+      }
+      applyArticle(result.data);
+    },
+    [applyArticle],
+  );
+
+  const refreshMediaWorkspace = useCallback(async (id: string) => {
+    const result = await fetchArticleMediaWorkspace(id);
+    if (result.state === "ok" && result.data) {
+      setMediaWorkspace(result.data);
+      setUseFeaturedForSeo(!result.data.seoImageMediaAssetId);
     }
-    applyArticle(result.data);
-  }, [applyArticle]);
+  }, []);
 
   useEffect(() => {
     if (!articleId) {
@@ -191,9 +218,14 @@ export function ContentArticleAdminScreen() {
     setLoading(true);
     void prepareAdminDevActor()
       .then(() =>
-        Promise.all([refreshArticle(articleId), fetchActiveContentAuthors(), loadAdminLanguages()]),
+        Promise.all([
+          refreshArticle(articleId),
+          refreshMediaWorkspace(articleId),
+          fetchActiveContentAuthors(),
+          loadAdminLanguages(),
+        ]),
       )
-      .then(([, authors, languages]) => {
+      .then(([, , authors, languages]) => {
         if (authors.state === "ok" && authors.data) setAuthorOptions(authors.data);
         if (languages.state === "ok" && languages.data) {
           setLanguageOptions(
@@ -205,7 +237,7 @@ export function ContentArticleAdminScreen() {
         }
       })
       .finally(() => setLoading(false));
-  }, [articleId, refreshArticle]);
+  }, [articleId, refreshArticle, refreshMediaWorkspace]);
 
   useEffect(() => {
     if (!draftLocale) return;
@@ -214,15 +246,18 @@ export function ContentArticleAdminScreen() {
     });
   }, [draftLocale]);
 
-  useEffect(() => {
-    if (!articleId) return;
-    void fetchArticleMediaWorkspace(articleId).then((result) => {
-      if (result.state === "ok" && result.data) {
-        setMediaWorkspace(result.data);
-        setUseFeaturedForSeo(!result.data.seoImageMediaAssetId);
-      }
+  const resolveDamPick = useCallback((value: DamPickResult) => {
+    const resolve = damPickResolveRef.current;
+    damPickResolveRef.current = null;
+    resolve?.(value);
+  }, []);
+
+  const pickDamImage = useCallback(() => {
+    return new Promise<DamPickResult>((resolve) => {
+      damPickResolveRef.current = resolve;
+      setInlineImageOpen(true);
     });
-  }, [articleId, tab]);
+  }, []);
 
   const savePayload = useMemo(
     () => ({
@@ -232,7 +267,9 @@ export function ContentArticleAdminScreen() {
       authorId: draftAuthorId || null,
       categoryId: draftCategoryId || null,
       category: draftCategory || null,
-      coverMediaAssetId: mediaWorkspace?.featuredMediaAssetId ?? article?.coverMediaAssetId ?? null,
+      // از workspace رسانهٔ همگام‌شده — نه مقدار کهنهٔ قبل از اختصاص شاخص
+      coverMediaAssetId:
+        mediaWorkspace?.featuredMediaAssetId ?? article?.coverMediaAssetId ?? null,
       seoTitle: draftSeoTitle || null,
       seoDescription: draftSeoDescription || null,
       tags: tagsFromString(draftTags),
@@ -260,17 +297,40 @@ export function ContentArticleAdminScreen() {
 
   const save = useCallback(async () => {
     if (!article) return;
+    const languageActive = languageOptions.some((row) => row.code === draftLocale && row.active);
+    if (languageOptions.length > 0 && !languageActive) {
+      toast.error(mapAdminErrorMessage("localization.language.inactive", "fa"));
+      return;
+    }
+    if (draftCategoryId) {
+      const selected = categoryOptions.find((row) => row.id === draftCategoryId);
+      if (!selected || selected.languageCode !== draftLocale) {
+        toast.error(mapAdminErrorMessage("content.category.language_mismatch", "fa"));
+        return;
+      }
+    }
     setSaving(true);
     const result = await updateAdminArticle(article.articleId, savePayload);
     setSaving(false);
     if (!result.ok || !result.article) {
-      toast.error(mapAdminErrorMessage(result.message ?? "admin.error.generic", "fa"));
+      toast.error(mapAdminErrorMessage(result.message ?? "content.update.rejected", "fa"));
       return;
     }
     toast.success("ذخیره شد");
     form.onSaved();
     applyArticle(result.article);
-  }, [applyArticle, article, form, savePayload]);
+    await refreshMediaWorkspace(article.articleId);
+  }, [
+    applyArticle,
+    article,
+    categoryOptions,
+    draftCategoryId,
+    draftLocale,
+    form,
+    languageOptions,
+    refreshMediaWorkspace,
+    savePayload,
+  ]);
 
   const togglePublish = useCallback(async () => {
     if (!article) return;
@@ -302,7 +362,7 @@ export function ContentArticleAdminScreen() {
     const result = await deleteAdminArticle(article.articleId);
     setSaving(false);
     if (!result.ok) {
-      toast.error(result.message ?? "حذف ناموفق بود");
+      toast.error(mapAdminErrorMessage(result.message ?? "admin.error.generic", "fa"));
       return;
     }
     toast.success("مقاله حذف شد");
@@ -316,7 +376,7 @@ export function ContentArticleAdminScreen() {
     const result = await archiveAdminArticle(article.articleId);
     setSaving(false);
     if (!result.ok) {
-      toast.error(result.message ?? "بایگانی ناموفق بود");
+      toast.error(mapAdminErrorMessage(result.message ?? "admin.error.generic", "fa"));
       return;
     }
     toast.success("مقاله بایگانی شد");
@@ -324,6 +384,11 @@ export function ContentArticleAdminScreen() {
     await refreshArticle(article.articleId);
     form.resetToView();
   }, [article, form, refreshArticle]);
+
+  const applySeoWorkspace = useCallback((data: ArticleMediaWorkspaceDto) => {
+    setMediaWorkspace(data);
+    setUseFeaturedForSeo(!data.seoImageMediaAssetId);
+  }, []);
 
   if (!articleId) {
     return (
@@ -352,67 +417,119 @@ export function ContentArticleAdminScreen() {
     );
   }
 
+  const dirty = form.mode === "edit" && form.isDirty;
+  const saveStateLabel =
+    form.mode === "view" ? "فقط مشاهده" : saving ? "در حال ذخیره…" : dirty ? "تغییرات ذخیره‌نشده" : "ذخیره‌شده";
+
   return (
     <main className="w-full p-4" data-testid="content-article-admin">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
-            بازگشت به فهرست مقالات
-          </Link>
-          <h1 className="mt-2 text-xl font-bold">{article.title || "بدون عنوان"}</h1>
-          <p className="text-sm text-muted">
-            {formatArticleLocaleLabel(article.locale)} ·{" "}
-            <span dir="ltr" className="font-mono text-xs">
-              {article.slug}
-            </span>
-          </p>
+      <div
+        className="mb-4 rounded-2xl border bg-surface-elevated p-4"
+        data-testid="content-article-workspace-header"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
+              بازگشت به فهرست مقالات
+            </Link>
+            <h1 className="truncate text-xl font-bold" data-testid="content-article-workspace-title">
+              {draftTitle || article.title || "بدون عنوان"}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span
+                className="rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                data-testid="content-article-workspace-status"
+              >
+                {statusLabel(article.status)}
+              </span>
+              <span
+                className="rounded-full border px-2.5 py-0.5 text-xs"
+                data-testid="content-article-workspace-language"
+              >
+                زبان: {selectedLanguageLabel}
+              </span>
+              <span
+                className={
+                  dirty
+                    ? "rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs text-amber-900"
+                    : "rounded-full border px-2.5 py-0.5 text-xs text-muted"
+                }
+                data-testid="content-article-workspace-save-state"
+              >
+                {saveStateLabel}
+              </span>
+              <span className="text-xs text-muted" dir="ltr">
+                {article.slug}
+              </span>
+              <span
+                className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                data-testid="content-article-workspace-mode"
+              >
+                {form.mode === "view" ? "VIEW" : "EDIT"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {form.mode === "view" ? (
+              !archived ? (
+                <button
+                  type="button"
+                  className="rounded-xl border px-4 py-2 text-sm"
+                  data-testid="content-article-enter-edit"
+                  onClick={() => form.onEdit()}
+                >
+                  ویرایش
+                </button>
+              ) : null
+            ) : (
+              <>
+                <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={handleCancel}>
+                  انصراف
+                </button>
+                <button
+                  type="button"
+                  className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white"
+                  disabled={saving}
+                  data-testid="content-article-save"
+                  onClick={() => void save()}
+                >
+                  ذخیره
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {form.mode === "view" ? (
-            !archived ? (
-              <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={() => form.onEdit()}>
-                ویرایش
-              </button>
-            ) : null
-          ) : (
-            <>
-              <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={handleCancel}>
-                انصراف
-              </button>
+
+        {(article && canArchiveArticle(article.status)) || (article && canHardDeleteArticle(article.status)) ? (
+          <div
+            className="mt-3 flex flex-wrap gap-2 border-t border-dashed border-danger/30 pt-3"
+            data-testid="content-article-destructive-actions"
+          >
+            {article && canArchiveArticle(article.status) ? (
               <button
                 type="button"
-                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white"
+                className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
                 disabled={saving}
-                data-testid="content-article-save"
-                onClick={() => void save()}
+                data-testid="content-article-archive"
+                onClick={() => setDestructiveKind("archive")}
               >
-                ذخیره
+                بایگانی
               </button>
-            </>
-          )}
-          {article && canHardDeleteArticle(article.status) ? (
-            <button
-              type="button"
-              className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
-              disabled={saving}
-              data-testid="content-article-delete"
-              onClick={() => setDestructiveKind("delete")}
-            >
-              حذف
-            </button>
-          ) : null}
-          {article && canArchiveArticle(article.status) ? (
-            <button
-              type="button"
-              className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
-              disabled={saving}
-              data-testid="content-article-archive"
-              onClick={() => setDestructiveKind("archive")}
-            >
-              بایگانی
-            </button>
-          ) : null}
-        </div>
+            ) : null}
+            {article && canHardDeleteArticle(article.status) ? (
+              <button
+                type="button"
+                className="rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger"
+                disabled={saving}
+                data-testid="content-article-delete"
+                onClick={() => setDestructiveKind("delete")}
+              >
+                حذف
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2 border-b pb-2">
@@ -450,7 +567,12 @@ export function ContentArticleAdminScreen() {
             </label>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">نشانی صفحه (slug)</span>
-              <input className="w-full rounded-xl border bg-slate-50 px-3 py-2 font-mono text-sm" dir="ltr" value={article.slug} readOnly />
+              <input
+                className="w-full rounded-xl border bg-slate-50 px-3 py-2 font-mono text-sm"
+                dir="ltr"
+                value={article.slug}
+                readOnly
+              />
             </label>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">زبان</span>
@@ -467,7 +589,10 @@ export function ContentArticleAdminScreen() {
                   value={draftLocale}
                   data-testid="content-article-locale-select"
                   onChange={(e) => {
-                    setDraftLocale(e.target.value);
+                    const next = e.target.value;
+                    setDraftLocale(next);
+                    setDraftCategoryId("");
+                    setDraftCategory("");
                     form.markDirty();
                   }}
                 >
@@ -489,7 +614,10 @@ export function ContentArticleAdminScreen() {
                 type="checkbox"
                 checked={draftIsFeatured}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftIsFeatured(e.target.checked)}
+                onChange={(e) => {
+                  setDraftIsFeatured(e.target.checked);
+                  form.markDirty();
+                }}
               />
               <span>ویژه در ریل خانه</span>
             </label>
@@ -506,7 +634,10 @@ export function ContentArticleAdminScreen() {
                 dir={editorDir}
                 value={draftExcerpt}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftExcerpt(e.target.value)}
+                onChange={(e) => {
+                  setDraftExcerpt(e.target.value);
+                  form.markDirty();
+                }}
               />
             </label>
             <div>
@@ -521,7 +652,7 @@ export function ContentArticleAdminScreen() {
                   }}
                 />
               ) : (
-                <ProductRichTextEditor
+                <ContentArticleRichTextEditor
                   value={draftBody}
                   onChange={(value) => {
                     setDraftBody(value);
@@ -529,15 +660,9 @@ export function ContentArticleAdminScreen() {
                   }}
                   disabled={false}
                   dir={editorDir}
-                  sanitizeHtml={sanitizeArticleRichHtml}
                   placeholder={editorDir === "rtl" ? "متن مقاله را بنویسید…" : "Write article body…"}
                   testId="content-article-rich-editor"
-                  onPickDamImage={() =>
-                    new Promise((resolve) => {
-                      setInlineImageOpen(true);
-                      (window as unknown as { __articleDamPickResolve?: typeof resolve }).__articleDamPickResolve = resolve;
-                    })
-                  }
+                  onPickDamImage={pickDamImage}
                 />
               )}
             </div>
@@ -552,10 +677,12 @@ export function ContentArticleAdminScreen() {
                 className="w-full rounded-xl border px-3 py-2"
                 value={draftCategoryId}
                 disabled={form.mode === "view"}
+                data-testid="content-article-category-select"
                 onChange={(e) => {
                   const selected = categoryOptions.find((row) => row.id === e.target.value);
                   setDraftCategoryId(e.target.value);
                   setDraftCategory(selected?.name ?? "");
+                  form.markDirty();
                 }}
               >
                 <option value="">— بدون دسته —</option>
@@ -614,51 +741,71 @@ export function ContentArticleAdminScreen() {
         ) : null}
 
         {tab === "media" && articleId ? (
-          <ContentArticleMediaPanel articleId={articleId} editable={form.mode !== "view"} />
+          <ContentArticleMediaPanel
+            articleId={articleId}
+            editable={form.mode !== "view"}
+            onWorkspaceChange={(workspace) => {
+              setMediaWorkspace(workspace);
+              setUseFeaturedForSeo(!workspace.seoImageMediaAssetId);
+            }}
+          />
         ) : null}
 
         {tab === "seo" ? (
           <div className="space-y-4">
-            <div className="rounded-xl border p-3">
-              <h3 className="mb-2 text-sm font-semibold">تصویر SEO / OpenGraph</h3>
+            <div className="rounded-xl border p-3" data-testid="content-article-seo-image-panel">
+              <h3 className="mb-2 text-sm font-semibold">تصویر اشتراک‌گذاری و شبکه‌های اجتماعی</h3>
               <label className="mb-3 flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={useFeaturedForSeo}
                   disabled={form.mode === "view"}
+                  data-testid="content-article-seo-use-featured"
                   onChange={(e) => {
-                    setUseFeaturedForSeo(e.target.checked);
-                    if (e.target.checked) {
-                      void assignArticleSeoImage(article!.articleId, null).then((result) => {
-                        if (result.state === "ok" && result.data) setMediaWorkspace(result.data);
+                    const checked = e.target.checked;
+                    setUseFeaturedForSeo(checked);
+                    if (checked) {
+                      void assignArticleSeoImage(article.articleId, null).then((result) => {
+                        if (result.state === "ok" && result.data) applySeoWorkspace(result.data);
+                        else toast.error(mapArticleMediaMutationError(result));
                       });
                     }
                   }}
                 />
-                <span>استفاده از تصویر شاخص</span>
+                <span>استفاده از تصویر شاخص مقاله</span>
               </label>
               {!useFeaturedForSeo ? (
                 <div className="space-y-2">
+                  <p className="text-sm text-muted">انتخاب تصویر جداگانه برای اشتراک‌گذاری</p>
                   {mediaWorkspace?.seoImageMediaAssetId ? (
-                    <img src={mediaPreviewUrl(mediaWorkspace.seoImageMediaAssetId) ?? ""} alt="" className="max-h-40 rounded-xl border object-cover" />
+                    <img
+                      src={mediaPreviewUrl(mediaWorkspace.seoImageMediaAssetId) ?? ""}
+                      alt=""
+                      className="max-h-40 rounded-xl border object-cover"
+                    />
                   ) : (
-                    <p className="text-sm text-muted">تصویر SEO اختصاصی انتخاب نشده است.</p>
+                    <p className="text-sm text-muted">تصویر جداگانه انتخاب نشده است.</p>
                   )}
                   {form.mode !== "view" ? (
                     <div className="flex gap-2">
-                      <button type="button" className="rounded-xl border px-3 py-2 text-sm" onClick={() => setSeoImageOpen(true)}>
+                      <button
+                        type="button"
+                        className="rounded-xl border px-3 py-2 text-sm"
+                        data-testid="content-article-seo-pick"
+                        onClick={() => setSeoImageOpen(true)}
+                      >
                         انتخاب از کتابخانه
                       </button>
                       {mediaWorkspace?.seoImageMediaAssetId ? (
                         <button
                           type="button"
                           className="rounded-xl border px-3 py-2 text-sm"
-                          onClick={() => void assignArticleSeoImage(article!.articleId, null).then((result) => {
-                            if (result.state === "ok" && result.data) {
-                              setMediaWorkspace(result.data);
-                              setUseFeaturedForSeo(true);
-                            }
-                          })}
+                          onClick={() =>
+                            void assignArticleSeoImage(article.articleId, null).then((result) => {
+                              if (result.state === "ok" && result.data) applySeoWorkspace(result.data);
+                              else toast.error(mapArticleMediaMutationError(result));
+                            })
+                          }
                         >
                           حذف اختصاص
                         </button>
@@ -666,11 +813,19 @@ export function ContentArticleAdminScreen() {
                     </div>
                   ) : null}
                 </div>
-              ) : (
-                <p className="text-sm text-muted">
-                  مؤثر: {mediaWorkspace?.effectiveSeoImageMediaAssetId ? "تصویر شاخص/SEO" : "—"}
-                </p>
-              )}
+              ) : null}
+              <div className="mt-3 rounded-lg bg-slate-50 p-3" data-testid="content-article-seo-effective-preview">
+                <p className="mb-2 text-xs text-muted">پیش‌نمایش تصویر فعلی اشتراک‌گذاری</p>
+                {effectiveSeoAssetId ? (
+                  <img
+                    src={mediaPreviewUrl(effectiveSeoAssetId) ?? ""}
+                    alt=""
+                    className="max-h-36 rounded-xl border object-cover"
+                  />
+                ) : (
+                  <p className="text-sm text-muted">هنوز تصویری برای اشتراک‌گذاری تنظیم نشده است.</p>
+                )}
+              </div>
             </div>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">عنوان SEO</span>
@@ -678,7 +833,10 @@ export function ContentArticleAdminScreen() {
                 className="w-full rounded-xl border px-3 py-2"
                 value={draftSeoTitle}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftSeoTitle(e.target.value)}
+                onChange={(e) => {
+                  setDraftSeoTitle(e.target.value);
+                  form.markDirty();
+                }}
               />
             </label>
             <label className="block text-sm">
@@ -688,7 +846,10 @@ export function ContentArticleAdminScreen() {
                 rows={3}
                 value={draftSeoDescription}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftSeoDescription(e.target.value)}
+                onChange={(e) => {
+                  setDraftSeoDescription(e.target.value);
+                  form.markDirty();
+                }}
               />
             </label>
             <label className="block text-sm">
@@ -697,7 +858,10 @@ export function ContentArticleAdminScreen() {
                 className="w-full rounded-xl border px-3 py-2"
                 value={draftTags}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftTags(e.target.value)}
+                onChange={(e) => {
+                  setDraftTags(e.target.value);
+                  form.markDirty();
+                }}
               />
             </label>
           </div>
@@ -706,14 +870,7 @@ export function ContentArticleAdminScreen() {
         {tab === "publication" ? (
           <div className="space-y-4">
             <p className="text-sm">
-              وضعیت:{" "}
-              <strong>
-                {isArticleArchived(article.status)
-                  ? "بایگانی"
-                  : isPublished(article.status)
-                    ? "منتشر"
-                    : "پیش‌نویس"}
-              </strong>
+              وضعیت: <strong>{statusLabel(article.status)}</strong>
             </p>
             <label className="block text-sm">
               <span className="mb-1 block text-muted">زمان انتشار (برنامه‌ریزی)</span>
@@ -723,7 +880,10 @@ export function ContentArticleAdminScreen() {
                 dir="ltr"
                 value={draftPublishDate}
                 disabled={form.mode === "view"}
-                onChange={(e) => setDraftPublishDate(e.target.value)}
+                onChange={(e) => {
+                  setDraftPublishDate(e.target.value);
+                  form.markDirty();
+                }}
               />
             </label>
             <p className="text-sm text-muted">
@@ -786,17 +946,12 @@ export function ContentArticleAdminScreen() {
         selectionMode="single"
         onClose={() => {
           setInlineImageOpen(false);
-          const resolve = (window as unknown as { __articleDamPickResolve?: (value: null) => void }).__articleDamPickResolve;
-          resolve?.(null);
-          delete (window as unknown as { __articleDamPickResolve?: unknown }).__articleDamPickResolve;
+          resolveDamPick(null);
         }}
         onConfirm={(assets) => {
           setInlineImageOpen(false);
           const picked = assets[0];
-          const resolve = (window as unknown as {
-            __articleDamPickResolve?: (value: { mediaAssetId: string; alt?: string; title?: string } | null) => void;
-          }).__articleDamPickResolve;
-          resolve?.(
+          resolveDamPick(
             picked
               ? {
                   mediaAssetId: picked.mediaAssetId,
@@ -804,21 +959,20 @@ export function ContentArticleAdminScreen() {
                 }
               : null,
           );
-          delete (window as unknown as { __articleDamPickResolve?: unknown }).__articleDamPickResolve;
         }}
       />
       <MediaLibraryDialog
         open={seoImageOpen}
         selectionMode="single"
         onClose={() => setSeoImageOpen(false)}
-        onConfirm={(assets) => {
+        onConfirm={async (assets) => {
           setSeoImageOpen(false);
           const picked = assets[0];
           if (!picked || !article) return;
           setUseFeaturedForSeo(false);
-          void assignArticleSeoImage(article.articleId, picked.mediaAssetId).then((result) => {
-            if (result.state === "ok" && result.data) setMediaWorkspace(result.data);
-          });
+          const result = await assignArticleSeoImage(article.articleId, picked.mediaAssetId);
+          if (result.state === "ok" && result.data) applySeoWorkspace(result.data);
+          else toast.error(mapArticleMediaMutationError(result));
         }}
       />
     </main>
