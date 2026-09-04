@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
@@ -79,12 +79,24 @@ function parentOptions(
     .map((row) => ({ id: row.id, label: `${row.name} (دسته اصلی)` }));
 }
 
+/** Keep language tab across /categories ↔ /categories/[id] remounts (separate Next pages). */
+function categoriesHref(languageCode: string, categoryId?: string | null): string {
+  const lang = languageCode.trim();
+  const base = categoryId
+    ? `/admin/content/categories/${categoryId}`
+    : "/admin/content/categories";
+  return lang ? `${base}?language=${encodeURIComponent(lang)}` : base;
+}
+
 export function ContentCategoryAdminScreen() {
   const params = useParams<{ categoryId?: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const selectedId = typeof params.categoryId === "string" ? params.categoryId : null;
+  const languageFromQuery = (searchParams.get("language") ?? "").trim();
   const [languages, setLanguages] = useState<SupportedLocaleDefinition[]>([]);
-  const [languageCode, setLanguageCode] = useState<string>("fa-IR");
+  // Never seed fa-IR blindly — URL / selected category language must win after remount.
+  const [languageCode, setLanguageCode] = useState<string>(languageFromQuery);
   const [search, setSearch] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [treeRows, setTreeRows] = useState<ContentCategoryTreeNodeDto[]>([]);
@@ -113,6 +125,10 @@ export function ContentCategoryAdminScreen() {
   const form = useAdminFormMode({ canView: true, canEdit: true });
 
   useEffect(() => {
+    if (languageFromQuery) setLanguageCode(languageFromQuery);
+  }, [languageFromQuery]);
+
+  useEffect(() => {
     let cancelled = false;
     void prepareAdminDevActor().then(() =>
       loadAdminLanguages().then((result) => {
@@ -127,17 +143,23 @@ export function ContentCategoryAdminScreen() {
           .sort((a, b) => a.sortOrder - b.sortOrder || a.code.localeCompare(b.code));
         setLanguages(active);
         const defaultLang = active.find((row) => row.default) ?? active[0];
-        if (defaultLang) {
-          setLanguageCode((prev) => (active.some((row) => row.code === prev) ? prev : defaultLang.code));
-        }
+        if (!defaultLang) return;
+        setLanguageCode((prev) => {
+          if (prev && active.some((row) => row.code === prev)) return prev;
+          if (languageFromQuery && active.some((row) => row.code === languageFromQuery)) {
+            return languageFromQuery;
+          }
+          return defaultLang.code;
+        });
       }),
     );
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [languageFromQuery]);
 
   const refreshTree = useCallback(async () => {
+    if (!languageCode) return;
     await prepareAdminDevActor();
     const result = await fetchContentCategoryTree(languageCode, search);
     if (result.state === "ok" && result.data) setTreeRows(result.data);
@@ -153,6 +175,17 @@ export function ContentCategoryAdminScreen() {
       }
       const data = result.data;
       setWorkspace(data);
+      // Selected category language is authoritative — keep language tab aligned after remount.
+      if (data.languageCode) {
+        setLanguageCode(data.languageCode);
+        const expected = categoriesHref(data.languageCode, categoryId);
+        const currentPath = typeof window !== "undefined"
+          ? `${window.location.pathname}${window.location.search}`
+          : "";
+        if (currentPath && currentPath !== expected) {
+          router.replace(expected, { scroll: false });
+        }
+      }
       setDraftName(data.name);
       setDraftSlug(data.slug);
       setDraftShortDescription(data.shortDescription ?? "");
@@ -170,12 +203,13 @@ export function ContentCategoryAdminScreen() {
     } finally {
       setWorkspaceLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
+    if (!languageCode) return;
     setLoading(true);
     void refreshTree().finally(() => setLoading(false));
-  }, [refreshTree]);
+  }, [refreshTree, languageCode]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -199,8 +233,8 @@ export function ContentCategoryAdminScreen() {
   );
 
   const selectNode = useCallback((id: string) => {
-    router.push(`/admin/content/categories/${id}`);
-  }, [router]);
+    router.push(categoriesHref(languageCode, id));
+  }, [languageCode, router]);
 
   const openCreate = useCallback((parentId: string | null) => {
     if (parentId && !canAddCategoryChild(treeNodes, parentId, MAX_CONTENT_CATEGORY_DEPTH)) {
@@ -297,9 +331,9 @@ export function ContentCategoryAdminScreen() {
       return;
     }
     toast.success("بایگانی شد");
-    router.push("/admin/content/categories");
+    router.push(categoriesHref(languageCode));
     await refreshTree();
-  }, [refreshTree, router, workspace]);
+  }, [languageCode, refreshTree, router, workspace]);
 
   const isRtl = languageCode.toLowerCase().startsWith("fa");
 
@@ -318,7 +352,7 @@ export function ContentCategoryAdminScreen() {
               className={`rounded-xl px-3 py-2 text-sm font-semibold ${languageCode === opt.code ? "bg-[#2563EB] text-white" : "border border-border bg-white"}`}
               onClick={() => {
                 setLanguageCode(opt.code);
-                router.push("/admin/content/categories");
+                router.push(categoriesHref(opt.code));
               }}
               data-testid={`content-category-lang-${opt.code}`}
             >

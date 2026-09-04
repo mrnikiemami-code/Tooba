@@ -23,3 +23,14 @@ test("content category admin uses canonical AppCategoryTree and route selection"
   assert.doesNotMatch(screen, /content-category-tree-search/);
   assert.match(screen, /در حال بارگذاری…/);
 });
+
+test("content category language tab survives node selection via query and workspace locale", () => {
+  assert.match(screen, /useSearchParams/);
+  assert.match(screen, /categoriesHref/);
+  assert.match(screen, /language=\$\{encodeURIComponent/);
+  assert.match(screen, /setLanguageCode\(data\.languageCode\)/);
+  assert.match(screen, /router\.push\(categoriesHref\(languageCode, id\)\)/);
+  assert.match(screen, /router\.push\(categoriesHref\(opt\.code\)\)/);
+  // Must not hard-seed fa-IR as the only initial language (remount would wipe EN tab).
+  assert.doesNotMatch(screen, /useState<string>\("fa-IR"\)/);
+});
