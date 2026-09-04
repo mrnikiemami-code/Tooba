@@ -28,6 +28,7 @@ export type AdminNavLabels = {
   content: string;
   contentCategories: string;
   contentAuthors: string;
+  contentHelp: string;
   stories: string;
   pageComposition: string;
   sellers: string;
@@ -70,6 +71,7 @@ const faNav: AdminNavLabels = {
   content: "مقالات",
   contentCategories: "دسته‌بندی مقالات",
   contentAuthors: "نویسندگان",
+  contentHelp: "راهنمای محتوا",
   stories: "استوری‌ها",
   pageComposition: "ترکیب صفحهٔ خانه",
   sellers: "فروشندگان",
@@ -112,6 +114,7 @@ const enNav: AdminNavLabels = {
   content: "Articles",
   contentCategories: "Article categories",
   contentAuthors: "Authors",
+  contentHelp: "Content help",
   stories: "Stories",
   pageComposition: "Home page composition",
   sellers: "Sellers",

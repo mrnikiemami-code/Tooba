@@ -38,7 +38,7 @@ function copyFor(kind: ArticleActionKind, locale: string, scheduled: boolean): C
         ? {
             title: "حذف مقاله",
             body: (articleTitle) =>
-              `آیا از حذف دائمی «${articleTitle}» مطمئن هستید؟\n\nاین عمل قابل بازگشت نیست. دارایی‌های مشترک Media DAM حذف نمی‌شوند.`,
+              `آیا از حذف دائمی «${articleTitle}» مطمئن هستید؟\n\nاین عمل قابل بازگشت نیست. فایل‌های مشترک کتابخانهٔ رسانه حذف نمی‌شوند.`,
             cancel: "انصراف",
             confirm: "حذف مقاله",
             tone: "danger",
@@ -46,7 +46,7 @@ function copyFor(kind: ArticleActionKind, locale: string, scheduled: boolean): C
         : {
             title: "Delete article",
             body: (articleTitle) =>
-              `Are you sure you want to permanently delete “${articleTitle}”?\n\nThis cannot be undone. Shared Media DAM assets are not deleted.`,
+              `Are you sure you want to permanently delete “${articleTitle}”?\n\nThis cannot be undone. Shared Media Library files are not deleted.`,
             cancel: "Cancel",
             confirm: "Delete article",
             tone: "danger",

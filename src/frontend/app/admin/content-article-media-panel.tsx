@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
+import { ContentHelpAffordance } from "./content-help-affordance.tsx";
 import {
   addArticleGalleryItems,
   assignArticleFeaturedImage,
@@ -22,7 +23,7 @@ function sortGallery(rows: ArticleGalleryItemDto[]): ArticleGalleryItemDto[] {
   return [...rows].sort((a, b) => a.displayOrder - b.displayOrder || a.mediaAssetId.localeCompare(b.mediaAssetId));
 }
 
-/** پنل رسانهٔ workspace مقاله — شاخص، گالری DAM، بدون آپلود موازی. */
+/** پنل رسانهٔ workspace مقاله — شاخص، گالری، کتابخانهٔ مشترک؛ بدون آپلود موازی. */
 export function ContentArticleMediaPanel({
   articleId,
   editable,
@@ -120,8 +121,15 @@ export function ContentArticleMediaPanel({
 
   return (
     <div className="space-y-6" data-testid="content-article-media-panel">
+      <p className="text-xs text-muted">
+        تصویر شاخص، گالری مقاله، تصویر داخل متن و تصویر اشتراک‌گذاری همگی از همان کتابخانهٔ رسانهٔ توبا می‌آیند.
+        حذف از مقاله فایل اصلی را پاک نمی‌کند.
+      </p>
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold">تصویر شاخص</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          تصویر شاخص
+          <ContentHelpAffordance helpKey="featuredImage" />
+        </h3>
         {workspace?.featuredMediaAssetId ? (
           <img
             src={mediaPreviewUrl(workspace.featuredMediaAssetId) ?? ""}
@@ -163,7 +171,10 @@ export function ContentArticleMediaPanel({
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">گالری مقاله</h3>
+          <h3 className="flex items-center gap-2 text-sm font-semibold">
+            گالری مقاله
+            <ContentHelpAffordance helpKey="galleryMedia" />
+          </h3>
           <button
             type="button"
             className="rounded-xl border px-3 py-2 text-sm"

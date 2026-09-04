@@ -37,9 +37,13 @@ test("content article admin workspace uses CKEditor content editor, tabs, and DA
   assert.doesNotMatch(screen, /__articleDamPickResolve/);
   assert.match(screen, /damPickResolveRef/);
   assert.match(screen, /content-article-workspace-header/);
-  assert.match(screen, /تصویر اشتراک‌گذاری و شبکه‌های اجتماعی/);
+  assert.match(screen, /تصویر اشتراک‌گذاری/);
   assert.match(screen, /استفاده از تصویر شاخص مقاله/);
   assert.match(screen, /setDraftCategoryId\(""\)/);
+  assert.match(screen, /نمایش در بخش مقالات صفحه اصلی/);
+  assert.doesNotMatch(screen, /ویژه در ریل خانه/);
+  assert.match(screen, /ContentArticleCommentsPanel/);
+  assert.match(screen, /ContentHelpAffordance/);
 });
 
 test("content article editor is CKEditor 5 with professional toolbar contract", () => {

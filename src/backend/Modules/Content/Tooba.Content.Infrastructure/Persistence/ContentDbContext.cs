@@ -35,6 +35,9 @@ public sealed class ContentDbContext : DbContext
     /// <summary>تاریخچهٔ چرخهٔ عمر مقالات.</summary>
     public DbSet<ContentArticleHistoryEntry> ArticleHistory => Set<ContentArticleHistoryEntry>();
 
+    /// <summary>نظرات مقالات.</summary>
+    public DbSet<ArticleComment> ArticleComments => Set<ArticleComment>();
+
     /// <summary>Outbox ماژول.</summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -150,6 +153,24 @@ public sealed class ContentDbContext : DbContext
             entity.Property(x => x.ActorDisplayName).HasMaxLength(120).HasColumnName("actor_display_name");
             entity.Property(x => x.OccurredAt).HasColumnName("occurred_at");
             entity.HasIndex(x => new { x.ArticleId, x.OccurredAt });
+            entity.HasOne<ContentArticle>().WithMany().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<ArticleComment>(entity =>
+        {
+            entity.ToTable("article_comments");
+            entity.HasKey(x => x.CommentId);
+            entity.Property(x => x.CommentId).ValueGeneratedNever().HasColumnName("comment_id");
+            entity.Property(x => x.ArticleId).HasColumnName("article_id");
+            entity.Property(x => x.AuthorPartyId).HasColumnName("author_party_id");
+            entity.Property(x => x.DisplayName).HasMaxLength(ArticleComment.DisplayNameMaxLength).IsRequired().HasColumnName("display_name");
+            entity.Property(x => x.Body).HasMaxLength(ArticleComment.BodyMaxLength).IsRequired().HasColumnName("body");
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).HasColumnName("status");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.ModeratedAt).HasColumnName("moderated_at");
+            entity.Property(x => x.ModeratedByUserId).HasColumnName("moderated_by_user_id");
+            entity.Property(x => x.ModerationNote).HasMaxLength(ArticleComment.NoteMaxLength).HasColumnName("moderation_note");
+            entity.HasIndex(x => new { x.ArticleId, x.CreatedAt });
+            entity.HasIndex(x => new { x.ArticleId, x.Status, x.CreatedAt });
             entity.HasOne<ContentArticle>().WithMany().HasForeignKey(x => x.ArticleId).OnDelete(DeleteBehavior.Cascade);
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);

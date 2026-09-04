@@ -278,6 +278,34 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "مقاله یافت نشد.",
     en: "Article was not found.",
   },
+  "content.comment.not_found": {
+    fa: "نظر یافت نشد.",
+    en: "Comment was not found.",
+  },
+  "content.comment.article_not_found": {
+    fa: "مقالهٔ این نظر در دسترس نیست.",
+    en: "The article for this comment is unavailable.",
+  },
+  "content.comment.invalid_transition": {
+    fa: "این تغییر وضعیت برای نظر مجاز نیست.",
+    en: "That comment status change is not allowed.",
+  },
+  "content.comment.invalid_payload": {
+    fa: "اطلاعات نظر معتبر نیست.",
+    en: "The comment details are not valid.",
+  },
+  "content.comment.forbidden": {
+    fa: "اجازهٔ تعدیل این نظر را ندارید.",
+    en: "You are not allowed to moderate this comment.",
+  },
+  "content.comment.rejected": {
+    fa: "درخواست تعدیل نظر انجام نشد.",
+    en: "The comment moderation request could not be completed.",
+  },
+  "content.help.unavailable": {
+    fa: "راهنما در دسترس نیست.",
+    en: "Help content is temporarily unavailable.",
+  },
   "content.article.already_archived": {
     fa: "مقاله قبلاً بایگانی شده است.",
     en: "The article is already archived.",

@@ -373,6 +373,7 @@ app.MapContentCategoryEndpoints();
 app.MapContentAuthorEndpoints();
 app.MapContentTagEndpoints();
 app.MapContentArticleMediaEndpoints();
+app.MapContentArticleCommentEndpoints();
 app.MapLocaleAdminEndpoints();
 app.MapMediaEndpoints();
 app.MapPageCompositionEndpoints();

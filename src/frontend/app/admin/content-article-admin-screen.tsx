@@ -27,6 +27,9 @@ import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
 import { ContentArticleReadinessSummary } from "./content-article-readiness-summary.tsx";
 import { ContentArticleHistoryTimeline } from "./content-article-history-timeline.tsx";
 import { ContentArticlePublishDateField } from "./content-article-publish-date-field.tsx";
+import { ContentArticleCommentsPanel } from "./content-article-comments-panel.tsx";
+import { ContentHelpAffordance } from "./content-help-affordance.tsx";
+import { CONTENT_HELP_PAGE_HREF } from "./content-help-content.ts";
 import type {
   ArticleHistoryEntry,
   ArticlePublicationReadiness,
@@ -66,8 +69,9 @@ const TABS = [
   { id: "categories", label: "دسته‌بندی‌ها" },
   { id: "author", label: "نویسنده" },
   { id: "media", label: "رسانه" },
-  { id: "seo", label: "SEO" },
+  { id: "seo", label: "جستجو و اشتراک" },
   { id: "publication", label: "انتشار" },
+  { id: "comments", label: "نظرات" },
   { id: "history", label: "تاریخچه" },
 ] as const;
 
@@ -128,6 +132,7 @@ export function ContentArticleAdminScreen() {
   const [readiness, setReadiness] = useState<ArticlePublicationReadiness | null>(null);
   const [historyEntries, setHistoryEntries] = useState<ArticleHistoryEntry[]>([]);
   const [hasPriorPublication, setHasPriorPublication] = useState(false);
+  const [commentsPendingCount, setCommentsPendingCount] = useState(0);
 
   const [canEditContent, setCanEditContent] = useState(true);
   useEffect(() => {
@@ -482,9 +487,18 @@ export function ContentArticleAdminScreen() {
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-2">
-            <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
-              بازگشت به فهرست مقالات
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/admin/content" className="text-sm text-[#2563EB] underline">
+                بازگشت به فهرست مقالات
+              </Link>
+              <Link
+                href={CONTENT_HELP_PAGE_HREF}
+                className="text-sm text-muted underline"
+                data-testid="content-article-help-link"
+              >
+                راهنمای محتوا
+              </Link>
+            </div>
             <h1 className="truncate text-xl font-bold" data-testid="content-article-workspace-title">
               {draftTitle || article.title || "بدون عنوان"}
             </h1>
@@ -528,7 +542,18 @@ export function ContentArticleAdminScreen() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2" data-testid="content-article-primary-actions">
+            {form.mode === "edit" ? (
+              <button
+                type="button"
+                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white"
+                disabled={saving}
+                data-testid="content-article-save"
+                onClick={() => void save()}
+              >
+                ذخیره
+              </button>
+            ) : null}
             <button
               type="button"
               className="rounded-xl border px-4 py-2 text-sm"
@@ -540,7 +565,7 @@ export function ContentArticleAdminScreen() {
             {!archived ? (
               <button
                 type="button"
-                className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-xl border border-[#2563EB] px-4 py-2 text-sm font-semibold text-[#2563EB] disabled:opacity-50"
                 disabled={saving || form.mode === "view"}
                 data-testid="content-article-publish-header"
                 onClick={openPublishDialog}
@@ -564,20 +589,9 @@ export function ContentArticleAdminScreen() {
                 </button>
               ) : null
             ) : (
-              <>
-                <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={handleCancel}>
-                  انصراف
-                </button>
-                <button
-                  type="button"
-                  className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white"
-                  disabled={saving}
-                  data-testid="content-article-save"
-                  onClick={() => void save()}
-                >
-                  ذخیره
-                </button>
-              </>
+              <button type="button" className="rounded-xl border px-4 py-2 text-sm" onClick={handleCancel}>
+                انصراف
+              </button>
             )}
           </div>
         </div>
@@ -613,7 +627,7 @@ export function ContentArticleAdminScreen() {
         ) : null}
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2 border-b pb-2">
+      <div className="mb-4 flex flex-wrap gap-2 border-b pb-2" data-testid="content-article-tabs">
         {TABS.map((item) => (
           <button
             key={item.id}
@@ -627,6 +641,11 @@ export function ContentArticleAdminScreen() {
             onClick={() => setTab(item.id)}
           >
             {item.label}
+            {item.id === "comments" && commentsPendingCount > 0 ? (
+              <span className="ms-1 inline-flex min-w-[1.25rem] justify-center rounded-full bg-amber-100 px-1.5 text-[10px] font-bold text-amber-900">
+                {commentsPendingCount}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -656,7 +675,10 @@ export function ContentArticleAdminScreen() {
               />
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">زبان</span>
+              <span className="mb-1 flex items-center gap-2 text-muted">
+                زبان
+                <ContentHelpAffordance helpKey="language" />
+              </span>
               {form.mode === "view" || localeLocked ? (
                 <input
                   className="w-full rounded-xl border bg-slate-50 px-3 py-2"
@@ -691,18 +713,29 @@ export function ContentArticleAdminScreen() {
                 </p>
               ) : null}
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={draftIsFeatured}
-                disabled={form.mode === "view"}
-                onChange={(e) => {
-                  setDraftIsFeatured(e.target.checked);
-                  form.markDirty();
-                }}
-              />
-              <span>ویژه در ریل خانه</span>
-            </label>
+            <div className="rounded-xl border p-3" data-testid="content-article-home-feature">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={draftIsFeatured}
+                  disabled={form.mode === "view"}
+                  onChange={(e) => {
+                    setDraftIsFeatured(e.target.checked);
+                    form.markDirty();
+                  }}
+                />
+                <span className="space-y-1">
+                  <span className="flex items-center gap-2 font-medium">
+                    نمایش در بخش مقالات صفحه اصلی
+                    <ContentHelpAffordance helpKey="homeFeature" />
+                  </span>
+                  <span className="block text-xs text-muted">
+                    اگر فعال باشد، این مقاله می‌تواند در بخش مقالات صفحه اصلی دیده شود. ترتیب دقیق نمایش طبق قوانین فعلی فروشگاه است و با این گزینه عوض نمی‌شود.
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         ) : null}
 
@@ -723,7 +756,13 @@ export function ContentArticleAdminScreen() {
               />
             </label>
             <div>
-              <span className="mb-1 block text-sm text-muted">بدنه</span>
+              <span className="mb-1 flex items-center gap-2 text-sm text-muted">
+                بدنه
+                <ContentHelpAffordance helpKey="inlineImage" />
+              </span>
+              <p className="mb-2 text-xs text-muted">
+                تصویر داخل متن از کتابخانهٔ رسانهٔ توبا درج می‌شود؛ فایل اصلی با حذف از مقاله پاک نمی‌شود.
+              </p>
               {form.mode === "view" ? (
                 <div
                   className="prose prose-neutral max-w-none rounded-xl border bg-slate-50 p-4 text-sm leading-8"
@@ -754,7 +793,10 @@ export function ContentArticleAdminScreen() {
         {tab === "categories" ? (
           <div className="space-y-3">
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">دسته (همان زبان مقاله)</span>
+              <span className="mb-1 flex items-center gap-2 text-muted">
+                دسته (همان زبان مقاله)
+                <ContentHelpAffordance helpKey="category" />
+              </span>
               <ContentArticleCategoryPicker
                 options={buildContentArticleCategoryOptions(categoryOptions)}
                 value={draftCategoryId}
@@ -766,14 +808,22 @@ export function ContentArticleAdminScreen() {
                 }}
               />
             </label>
+            {!draftCategoryId ? (
+              <p className="text-sm text-muted" data-testid="content-article-category-empty">
+                هنوز دسته‌ای انتخاب نشده است.
+              </p>
+            ) : null}
           </div>
         ) : null}
 
         {tab === "author" ? (
           <div className="space-y-3">
+            <div className="mb-1 flex items-center gap-2 text-sm text-muted">
+              نویسنده
+              <ContentHelpAffordance helpKey="author" />
+            </div>
             {form.mode === "view" ? (
               <p className="text-sm" data-testid="content-article-author-readonly">
-                <span className="mb-1 block text-muted">نویسنده</span>
                 {selectedAuthorLabel}
               </p>
             ) : (
@@ -809,6 +859,11 @@ export function ContentArticleAdminScreen() {
                 </label>
               </>
             )}
+            {!draftAuthorId ? (
+              <p className="text-sm text-muted" data-testid="content-article-author-empty">
+                هنوز نویسنده‌ای انتخاب نشده است.
+              </p>
+            ) : null}
             <p className="text-sm text-muted">نام نمایشی از پروفایل نویسنده هنگام ذخیره همگام می‌شود.</p>
           </div>
         ) : null}
@@ -826,8 +881,18 @@ export function ContentArticleAdminScreen() {
 
         {tab === "seo" ? (
           <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">جستجو و اشتراک‌گذاری</h3>
+              <ContentHelpAffordance helpKey="seoSocial" />
+            </div>
+            <p className="text-xs text-muted">
+              عنوان و توضیح کوتاه کمک می‌کند مطلب در نتایج جستجو و پیش‌نمایش لینک بهتر فهمیده شود. رفتار دقیق هر موتور یا شبکه تضمین نمی‌شود.
+            </p>
             <div className="rounded-xl border p-3" data-testid="content-article-seo-image-panel">
-              <h3 className="mb-2 text-sm font-semibold">تصویر اشتراک‌گذاری و شبکه‌های اجتماعی</h3>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                تصویر اشتراک‌گذاری
+                <ContentHelpAffordance helpKey="shareImage" />
+              </h3>
               <label className="mb-3 flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -901,7 +966,7 @@ export function ContentArticleAdminScreen() {
               </div>
             </div>
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">عنوان SEO</span>
+              <span className="mb-1 block text-muted">عنوان نمایش در نتایج جستجو</span>
               <input
                 className="w-full rounded-xl border px-3 py-2"
                 value={draftSeoTitle}
@@ -911,9 +976,10 @@ export function ContentArticleAdminScreen() {
                   form.markDirty();
                 }}
               />
+              <span className="mt-1 block text-xs text-muted">اگر خالی باشد معمولاً از عنوان مقاله استفاده می‌شود.</span>
             </label>
             <label className="block text-sm">
-              <span className="mb-1 block text-muted">توضیح SEO</span>
+              <span className="mb-1 block text-muted">توضیح کوتاه برای نتایج جستجو</span>
               <textarea
                 className="w-full rounded-xl border px-3 py-2"
                 rows={3}
@@ -924,24 +990,38 @@ export function ContentArticleAdminScreen() {
                   form.markDirty();
                 }}
               />
+              <span className="mt-1 block text-xs text-muted">یک یا دو جمله دربارهٔ موضوع مطلب بنویسید.</span>
             </label>
             {articleId ? (
-              <ContentArticleTagsPanel
-                key={`${articleId}-${draftLocale}-${tagsEpoch}`}
-                articleId={articleId}
-                languageCode={draftLocale}
-                canEdit={form.mode !== "view" && canEditContent}
-                onChanged={() => form.markDirty()}
-              />
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-sm text-muted">
+                  برچسب‌ها
+                  <ContentHelpAffordance helpKey="tags" />
+                </div>
+                <ContentArticleTagsPanel
+                  key={`${articleId}-${draftLocale}-${tagsEpoch}`}
+                  articleId={articleId}
+                  languageCode={draftLocale}
+                  canEdit={form.mode !== "view" && canEditContent}
+                  onChanged={() => form.markDirty()}
+                />
+              </div>
             ) : null}
           </div>
         ) : null}
 
         {tab === "publication" ? (
           <div className="space-y-4">
-            <p className="text-sm">
-              وضعیت: <strong>{statusLabel(article.status)}</strong>
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm">
+                وضعیت: <strong>{statusLabel(article.status)}</strong>
+              </p>
+              <ContentHelpAffordance helpKey="draftPublished" />
+              <ContentHelpAffordance helpKey="publishSchedule" />
+              <ContentHelpAffordance helpKey="unpublishRepublish" />
+              <ContentHelpAffordance helpKey="readiness" />
+              <ContentHelpAffordance helpKey="preview" />
+            </div>
             <ContentArticlePublishDateField
               locale={draftLocale || article.locale}
               valueIso={draftPublishDate || article.publishDate}
@@ -972,11 +1052,25 @@ export function ContentArticleAdminScreen() {
           </div>
         ) : null}
 
-        {tab === "history" ? (
-          <ContentArticleHistoryTimeline
-            entries={historyEntries}
-            locale={draftLocale || article.locale}
+        {tab === "comments" && articleId ? (
+          <ContentArticleCommentsPanel
+            articleId={articleId}
+            canModerate={canEditContent}
+            onPendingCountChange={setCommentsPendingCount}
           />
+        ) : null}
+
+        {tab === "history" ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">تاریخچه</h3>
+              <ContentHelpAffordance helpKey="history" />
+            </div>
+            <ContentArticleHistoryTimeline
+              entries={historyEntries}
+              locale={draftLocale || article.locale}
+            />
+          </div>
         ) : null}
       </section>
 

@@ -83,6 +83,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "content", labelKey: "content", href: "/admin/content", icon: BookOpen, live: true, viewPermission: "content.view" },
       { id: "content-categories", labelKey: "contentCategories", href: "/admin/content/categories", icon: FolderTree, live: true, viewPermission: "content.view" },
       { id: "content-authors", labelKey: "contentAuthors", href: "/admin/content/authors", icon: PenLine, live: true, viewPermission: "content.view" },
+      { id: "content-help", labelKey: "contentHelp", href: "/admin/content/help", icon: BookOpen, live: true, viewPermission: "content.view" },
     ],
   },
   {

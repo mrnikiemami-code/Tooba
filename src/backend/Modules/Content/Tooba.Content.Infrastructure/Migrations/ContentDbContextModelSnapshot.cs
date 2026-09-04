@@ -486,6 +486,67 @@ namespace Tooba.Content.Infrastructure.Migrations
                     b.ToTable("article_history", "content");
                 });
 
+            modelBuilder.Entity("Tooba.Content.Domain.ArticleComment", b =>
+                {
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("comment_id");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("article_id");
+
+                    b.Property<Guid?>("AuthorPartyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_party_id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("body");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("display_name");
+
+                    b.Property<DateTimeOffset?>("ModeratedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("moderated_at");
+
+                    b.Property<Guid?>("ModeratedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("moderated_by_user_id");
+
+                    b.Property<string>("ModerationNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("moderation_note");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("CommentId")
+                        .HasName("pk_article_comments");
+
+                    b.HasIndex("ArticleId", "CreatedAt")
+                        .HasDatabaseName("ix_article_comments_article_id_created_at");
+
+                    b.HasIndex("ArticleId", "Status", "CreatedAt")
+                        .HasDatabaseName("ix_article_comments_article_id_status_created_at");
+
+                    b.ToTable("article_comments", "content");
+                });
+
             modelBuilder.Entity("Tooba.Persistence.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")

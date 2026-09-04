@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T013
+TB-P08-T014
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P08-T014
+TB-P08-T015
 ```
 
 Current Issued Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P08-T014 — Article publication readiness, draft preview, publish lifecycle, history, Jalali schedule (awaiting Architect)
+TB-P08-T015 — Article comments moderation, contextual help, wording cleanup, workspace polish (awaiting Architect)
+TB-P08-T014 — Article publication readiness, draft preview, publish lifecycle, history, Jalali schedule — Architect-accepted
 TB-P08-T013 — Content taxonomy two-level categories + ContentTags — Architect-accepted
 TB-P08-T012-R1 — Article TipTap → CKEditor 5 + DAM (repair of T012 editor) — Architect-accepted
 TB-P08-T012 — Article workspace editor, media/SEO/category save repairs (under repair via R1; editor replaced)
