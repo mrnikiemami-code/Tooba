@@ -339,15 +339,18 @@ function buildConfig(options: {
     fontFamily: {
       options: [
         "default",
-        "Tahoma, Geneva, sans-serif",
         "Arial, Helvetica, sans-serif",
+        "Tahoma, Geneva, sans-serif",
+        "Verdana, Geneva, sans-serif",
         "Times New Roman, Times, serif",
+        "Georgia, serif",
         "Courier New, Courier, monospace",
-        "Vazirmatn, system-ui, sans-serif",
+        "B Nazanin, Tahoma, Arial, sans-serif",
+        "Vazirmatn, Tahoma, Arial, sans-serif",
       ],
     },
     fontSize: {
-      options: ["tiny", "small", "default", "big", "huge"],
+      options: ["default", 12, 14, 16, 18, 20, 24, 28],
     },
     placeholder: options.placeholder,
     language: {

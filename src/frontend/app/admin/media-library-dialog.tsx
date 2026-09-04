@@ -54,6 +54,13 @@ function matchesAssetKind(contentType: string, kind: MediaLibraryAssetKind): boo
   return false;
 }
 
+function contentTypePrefixForKind(kind: MediaLibraryAssetKind): string | null {
+  if (kind === "image") return "image/";
+  if (kind === "video") return "video/";
+  if (kind === "file") return "application/pdf";
+  return null;
+}
+
 function uploadHintForKind(kind: MediaLibraryAssetKind): { title: string; detail: string } {
   if (kind === "file") {
     return { title: "انتخاب فایل PDF", detail: "فقط PDF — حداکثر حدود ۵۰ مگابایت برای هر فایل" };
@@ -123,6 +130,7 @@ export function MediaLibraryDialog({
       search: searchApplied || null,
       page,
       pageSize: PAGE_SIZE,
+      contentTypePrefix: contentTypePrefixForKind(assetKind),
     });
     setLoading(false);
     if (result.state !== "ok" || !result.data) {
@@ -133,7 +141,7 @@ export function MediaLibraryDialog({
     }
     setItems(result.data.items);
     setTotalCount(result.data.totalCount);
-  }, [page, searchApplied]);
+  }, [assetKind, page, searchApplied]);
 
   useEffect(() => {
     if (!open) return;
@@ -144,7 +152,7 @@ export function MediaLibraryDialog({
     setSelected(new Map());
     setUploadRows([]);
     setError(null);
-  }, [open]);
+  }, [open, assetKind]);
 
   useEffect(() => {
     if (!open) return;

@@ -54,6 +54,30 @@ test("content article admin workspace uses CKEditor content editor, tabs, and DA
   assert.match(screen, /useState<TabId>\("full"\)/);
 });
 
+test("existing article workspace locale identity comes from applyArticle, not Admin UI or URL", () => {
+  assert.match(screen, /const \[draftLocale, setDraftLocale\] = useState\(""\)/);
+  assert.doesNotMatch(screen, /const \[draftLocale, setDraftLocale\] = useState\("fa-IR"\)/);
+  assert.match(screen, /setDraftLocale\(data\.locale\)/);
+  assert.match(screen, /Article identity is the persisted locale/);
+  assert.match(screen, /localeSelectOptions/);
+  assert.match(screen, /inactiveLocaleOption/);
+  assert.doesNotMatch(screen, /searchParams\.get\(["']language["']\)/);
+  assert.match(screen, /content-article-workspace-language/);
+  assert.match(screen, /draftLocale \|\| article\?\.locale/);
+});
+
+test("history tab uses paged Previous\/Next UI with Persian page label", () => {
+  assert.match(screen, /historyPage/);
+  assert.match(screen, /HISTORY_PAGE_SIZE/);
+  assert.match(screen, /historyLoading/);
+  assert.match(screen, /content-article-history-pager/);
+  assert.match(screen, /صفحه \$\{historyPage\} از \$\{historyTotalPages\}/);
+  assert.match(screen, /قبلی/);
+  assert.match(screen, /بعدی/);
+  assert.match(screen, /refreshPriorPublication/);
+  assert.match(screen, /loadArticleHistory\(id, skip, HISTORY_PAGE_SIZE\)/);
+});
+
 test("content article editor is CKEditor 5 with professional toolbar contract", () => {
   assert.match(editor, /ContentArticleEditor/);
   assert.match(editor, /dynamic\(/);
@@ -74,6 +98,10 @@ test("content article editor is CKEditor 5 with professional toolbar contract", 
   assert.match(ck, /fontFamily/);
   assert.match(ck, /fontFamily:\s*\{/);
   assert.match(ck, /fontSize:\s*\{/);
+  assert.match(ck, /B Nazanin/);
+  assert.match(ck, /Times New Roman/);
+  assert.match(ck, /Vazirmatn, Tahoma/);
+  assert.match(ck, /options:\s*\["default",\s*12,\s*14/);
   assert.match(ck, /damStorefrontSrc/);
   assert.doesNotMatch(ck, /articleDamMediaSrc/);
   assert.match(ck, /RemoveFormat/);

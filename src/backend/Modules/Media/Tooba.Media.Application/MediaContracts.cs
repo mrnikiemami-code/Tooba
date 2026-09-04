@@ -41,12 +41,13 @@ public interface IMediaDirectory
         Guid? actorUserId,
         CancellationToken cancellationToken);
 
-    /// <summary>کتابخانهٔ دارایی‌ها را با جستجوی اختیاری صفحه می‌کند.</summary>
+    /// <summary>کتابخانهٔ دارایی‌ها را با جستجوی اختیاری و فیلتر ContentType صفحه می‌کند.</summary>
     Task<MediaPagedResult<MediaAssetInfo>> QueryAsync(
         string? search,
         int page,
         int pageSize,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? contentTypePrefix = null);
 
     /// <summary>فرادادهٔ یک دارایی Ready را برمی‌گرداند.</summary>
     Task<MediaAssetInfo?> GetAsync(Guid mediaAssetId, CancellationToken cancellationToken);

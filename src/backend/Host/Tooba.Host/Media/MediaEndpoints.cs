@@ -96,6 +96,8 @@ public static class MediaEndpoints
         IAuthorizationGuard guard,
         IHostEnvironment environment,
         string? search = null,
+        string? contentTypePrefix = null,
+        string? kind = null,
         int page = 1,
         int pageSize = 24,
         CancellationToken cancellationToken = default)
@@ -104,12 +106,27 @@ public static class MediaEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await directory.QueryAsync(search, page, pageSize, cancellationToken));
+            var prefix = ResolveContentTypePrefix(contentTypePrefix, kind);
+            return Results.Json(await directory.QueryAsync(search, page, pageSize, cancellationToken, prefix));
         }
         catch (PlatformHttpException ex)
         {
             return ToError(ex);
         }
+    }
+
+    /// <summary>نگاشت contentTypePrefix یا kind=image|video|file به پیشوند ContentType.</summary>
+    private static string? ResolveContentTypePrefix(string? contentTypePrefix, string? kind)
+    {
+        if (!string.IsNullOrWhiteSpace(contentTypePrefix))
+            return contentTypePrefix.Trim();
+        return kind?.Trim().ToLowerInvariant() switch
+        {
+            "image" => "image/",
+            "video" => "video/",
+            "file" => "application/pdf",
+            _ => null,
+        };
     }
 
     private static async Task<IResult> GetAsync(

@@ -77,6 +77,7 @@ test("T014 workspace keeps CKEditor, category picker, tags chips", () => {
   assert.match(screen, /ContentArticleTagsPanel/);
   assert.match(screen, /ContentArticleReadinessSummary/);
   assert.match(screen, /ContentArticleHistoryTimeline/);
+  assert.match(screen, /content-article-history-pager/);
   assert.match(screen, /ContentArticlePublishDateField/);
   assert.match(screen, /content-article-preview/);
   assert.match(screen, /برای پیش‌نمایش ابتدا تغییرات را ذخیره کنید/);

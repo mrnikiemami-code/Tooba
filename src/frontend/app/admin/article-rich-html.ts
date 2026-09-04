@@ -1,11 +1,12 @@
 /**
  * Sanitizer for Article rich HTML — controlled tags including DAM images/files/videos only.
  *
- * Allowlist notes (TB-P08-T012-R1 / TB-P08-T016-R2 / CKEditor 5):
+ * Allowlist notes (TB-P08-T012-R1 / TB-P08-T016-R2 / TB-P08-T016-R4 / CKEditor 5):
  * - Tags: paragraph/headings/lists/quote/link/table/figure/img/video/source/hr/span — CKEditor emits these.
  * - Attrs: href/target/rel/style/colspan/rowspan/src/alt/title/class/data-media-asset-id/width/height/controls/preload.
  * - Styles kept: text-align, font-family, font-size, color, background-color, width, height, margin-left/right, float
  *   (alignment, indent, table/image resize, font color/highlight). Reject other style injection.
+ * - font-family must match ALLOWED_FONT_FAMILIES (CKEditor stacks); font-size px 10–48 or known named sizes.
  * - img/video/a[data-media-asset-id] src/href must be `/v1/storefront/media/{guid}` only — no base64, no external hosts.
  * - Scripts, event handlers, javascript:, iframe/object/embed remain forbidden.
  */
@@ -69,8 +70,32 @@ const SAFE_CLASS_RE =
 
 const MEDIA_SRC_RE = /^\/v1\/storefront\/media\/[0-9a-f-]{36}$/i;
 
-const SAFE_STYLE_RE =
-  /^(font-family|font-size|color|background-color|text-align|width|height|margin-left|margin-right|float)\s*:/i;
+const SAFE_STYLE_PROPS = new Set([
+  "font-family",
+  "font-size",
+  "color",
+  "background-color",
+  "text-align",
+  "width",
+  "height",
+  "margin-left",
+  "margin-right",
+  "float",
+]);
+
+/** Normalized (lowercase, collapsed spaces, no quotes) CKEditor font stacks. */
+const ALLOWED_FONT_FAMILIES = new Set([
+  "arial, helvetica, sans-serif",
+  "tahoma, geneva, sans-serif",
+  "verdana, geneva, sans-serif",
+  "times new roman, times, serif",
+  "georgia, serif",
+  "courier new, courier, monospace",
+  "b nazanin, tahoma, arial, sans-serif",
+  "vazirmatn, tahoma, arial, sans-serif",
+]);
+
+const NAMED_FONT_SIZES = new Set(["tiny", "small", "default", "big", "huge"]);
 
 function isAllowedMediaSrc(src: string): boolean {
   const trimmed = src.trim();
@@ -88,6 +113,124 @@ function filterClasses(classValue: string): string {
 
 function escapeAttrValue(value: string): string {
   return value.replace(/"/g, "&quot;");
+}
+
+function decodeStyleEntities(value: string): string {
+  return value
+    .replace(/&quot;/gi, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&amp;/gi, "&");
+}
+
+function normalizeFontFamily(value: string): string {
+  return value
+    .replace(/['"]/g, "")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function isAllowedFontFamily(value: string): boolean {
+  const normalized = normalizeFontFamily(value);
+  if (!normalized || normalized === "inherit" || normalized === "default") return false;
+  return ALLOWED_FONT_FAMILIES.has(normalized);
+}
+
+function isAllowedFontSize(value: string): boolean {
+  const trimmed = value.trim().toLowerCase();
+  if (NAMED_FONT_SIZES.has(trimmed)) return true;
+  const px = /^(\d+(?:\.\d+)?)px$/.exec(trimmed);
+  if (!px) return false;
+  const n = Number(px[1]);
+  return Number.isFinite(n) && n >= 10 && n <= 48;
+}
+
+/** Split CSS declarations without breaking on `;` inside quoted font-family values. */
+function splitCssDeclarations(styleValue: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | null = null;
+  for (let i = 0; i < styleValue.length; i += 1) {
+    const ch = styleValue[i]!;
+    if (quote) {
+      current += ch;
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === ";") {
+      const trimmed = current.trim();
+      if (trimmed) parts.push(trimmed);
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  const tail = current.trim();
+  if (tail) parts.push(tail);
+  return parts;
+}
+
+function filterInlineStyle(styleValue: string): string {
+  const decoded = decodeStyleEntities(styleValue);
+  const kept: string[] = [];
+  for (const part of splitCssDeclarations(decoded)) {
+    const colon = part.indexOf(":");
+    if (colon <= 0) continue;
+    const prop = part.slice(0, colon).trim().toLowerCase();
+    const rawValue = part.slice(colon + 1).trim();
+    if (!SAFE_STYLE_PROPS.has(prop) || !rawValue) continue;
+    if (prop === "font-family") {
+      if (!isAllowedFontFamily(rawValue)) continue;
+      const normalized = normalizeFontFamily(rawValue);
+      // Re-emit with quotes around multi-word family names for valid CSS.
+      const families = normalized.split(", ").map((family) =>
+        /\s/.test(family) ? `"${family.replace(/"/g, "")}"` : family,
+      );
+      kept.push(`font-family:${families.join(", ")}`);
+      continue;
+    }
+    if (prop === "font-size") {
+      if (!isAllowedFontSize(rawValue)) continue;
+      kept.push(`font-size:${rawValue.trim()}`);
+      continue;
+    }
+    kept.push(`${prop}:${rawValue}`);
+  }
+  return kept.join("; ");
+}
+
+/**
+ * Walk sanitized markup via DOM so quoted font-family values with spaces survive
+ * (avoids brittle style="..." regex that breaks on embedded quotes).
+ */
+function filterStylesViaDom(html: string): string {
+  if (!html) return "";
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div id="tooba-sanitize-root">${html}</div>`, "text/html");
+    const root = doc.getElementById("tooba-sanitize-root");
+    if (!root) return html;
+    root.querySelectorAll("[style]").forEach((el) => {
+      const filtered = filterInlineStyle(el.getAttribute("style") || "");
+      if (filtered) el.setAttribute("style", filtered);
+      else el.removeAttribute("style");
+    });
+    return root.innerHTML;
+  } catch {
+    // Fallback if DOMParser is unavailable — still allowlist props without quote-aware split.
+    return html.replace(/\sstyle="([^"]*)"/gi, (_full, styleValue: string) => {
+      const kept = filterInlineStyle(String(styleValue));
+      return kept ? ` style="${kept.replace(/"/g, "&quot;")}"` : "";
+    });
+  }
 }
 
 function rebuildDamVideoTag(attrs: string): string {
@@ -177,15 +320,9 @@ export function sanitizeArticleRichHtml(html: string): string {
     .replace(/\sclass="([^"]*)"/gi, (_full, classValue: string) => {
       const kept = filterClasses(classValue);
       return kept ? ` class="${kept}"` : "";
-    })
-    .replace(/\sstyle="([^"]*)"/gi, (_full, styleValue: string) => {
-      const kept = String(styleValue)
-        .split(";")
-        .map((part) => part.trim())
-        .filter((part) => SAFE_STYLE_RE.test(part))
-        .join("; ");
-      return kept ? ` style="${kept}"` : "";
     });
+
+  processed = filterStylesViaDom(processed);
 
   for (let i = 0; i < videoHolders.length; i += 1) {
     processed = processed.replace(`\u0000DAMVIDEO${i}\u0000`, videoHolders[i]);

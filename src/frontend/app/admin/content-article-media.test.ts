@@ -63,6 +63,33 @@ test("article rich html allows only storefront dam src and safe CKEditor attrs",
   assert.doesNotMatch(sanitizeArticleRichHtml('<embed src="/v1/storefront/media/x"></embed>'), /embed/i);
 });
 
+test("article rich html keeps allowlisted font-family stacks including Times New Roman and B Nazanin", () => {
+  const times = sanitizeArticleRichHtml(
+    `<p style="font-family:&quot;Times New Roman&quot;, Times, serif;font-size:18px">Hello</p>`,
+  );
+  assert.match(times, /font-family/i);
+  assert.match(times, /Times New Roman/i);
+  assert.match(times, /font-size:\s*18px/i);
+
+  const nazanin = sanitizeArticleRichHtml(
+    `<span style="font-family:B Nazanin, Tahoma, Arial, sans-serif;font-size:16px">متن</span>`,
+  );
+  assert.match(nazanin, /font-family/i);
+  assert.match(nazanin, /B Nazanin/i);
+  assert.match(nazanin, /font-size:\s*16px/i);
+
+  const quoted = sanitizeArticleRichHtml(
+    `<p style='font-family:"Times New Roman", Times, serif'>x</p>`,
+  );
+  assert.match(quoted, /Times New Roman/i);
+
+  const rejected = sanitizeArticleRichHtml(
+    `<p style="font-family:Comic Sans MS, cursive;font-size:99px">bad</p>`,
+  );
+  assert.doesNotMatch(rejected, /Comic Sans/i);
+  assert.doesNotMatch(rejected, /99px/);
+});
+
 test("article workspace uses media panel and CKEditor dam insert image", () => {
   assert.match(screen, /ContentArticleMediaPanel/);
   assert.match(screen, /ContentArticleEditor/);

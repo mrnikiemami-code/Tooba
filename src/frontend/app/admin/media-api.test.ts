@@ -28,6 +28,7 @@ test("mapMediaAsset accepts camel and Pascal payloads", () => {
 
 test("media library dialog has library/upload tabs, search, paging, selection modes", () => {
   const src = fs.readFileSync(path.join(root, "media-library-dialog.tsx"), "utf8");
+  const api = fs.readFileSync(path.join(root, "media-api.ts"), "utf8");
   assert.match(src, /admin-media-library-dialog/);
   assert.match(src, /کتابخانه/);
   assert.match(src, /آپلود فایل/);
@@ -41,6 +42,10 @@ test("media library dialog has library/upload tabs, search, paging, selection mo
   assert.match(src, /type=\"file\"/);
   assert.match(src, /تلاش مجدد/);
   assert.match(src, /بارگذاری در جریان است/);
+  assert.match(src, /contentTypePrefixForKind/);
+  assert.match(src, /contentTypePrefix:\s*contentTypePrefixForKind\(assetKind\)/);
+  assert.match(api, /contentTypePrefix/);
+  assert.match(api, /params\.set\("contentTypePrefix"/);
   assert.doesNotMatch(src, /شناسه دارایی/);
   assert.doesNotMatch(src, /lang=["']en["']/);
   assert.doesNotMatch(src, />\s*Retry\s*</);

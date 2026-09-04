@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T016-R3
+TB-P08-T016-R4
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P08-T016-R4 — P08 repair (article locale identity, history pager, CKEditor fonts, DAM contentTypePrefix video; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R3 — P08 final visual/functional repair (DB languages, loading feedback, Full Edit density, author readiness, CKEditor font/DAM; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R2 — P08 final visual repair (Full Edit, author combobox, AppCategoryTree picker, CKEditor CMS toolbar, history wording; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R1 — Content demo mojibake/???? label cleanup (repair of T016 visual cleanliness; USER_VISUAL_ACCEPTED=NO)

@@ -60,6 +60,9 @@ public sealed class MediaDamTests : IAsyncLifetime
         Assert.NotNull(typeof(IMediaDirectory).GetMethod(nameof(IMediaDirectory.UploadAsync)));
         Assert.NotNull(typeof(IMediaDirectory).GetMethod(nameof(IMediaDirectory.QueryAsync)));
         Assert.NotNull(typeof(IMediaObjectStore).GetMethod(nameof(IMediaObjectStore.SaveAsync)));
+        var query = typeof(IMediaDirectory).GetMethod(nameof(IMediaDirectory.QueryAsync));
+        Assert.NotNull(query);
+        Assert.Contains(query!.GetParameters(), p => p.Name == "contentTypePrefix");
     }
 
     [SkippableFact]

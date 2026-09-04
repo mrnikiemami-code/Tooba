@@ -109,15 +109,19 @@ function mapPage(payload: unknown): MediaLibraryPage | null {
   };
 }
 
-/** فهرست صفحه‌بندی‌شدهٔ کتابخانه (جستجو اختیاری). */
+/** فهرست صفحه‌بندی‌شدهٔ کتابخانه (جستجو و فیلتر ContentType اختیاری). */
 export async function queryAdminMediaLibrary(input?: {
   search?: string | null;
   page?: number;
   pageSize?: number;
+  /** e.g. `image/`, `video/`, `application/pdf` — server-filtered totalCount. */
+  contentTypePrefix?: string | null;
 }): Promise<AdminResult<MediaLibraryPage>> {
   const params = new URLSearchParams();
   const search = input?.search?.trim();
   if (search) params.set("search", search);
+  const prefix = input?.contentTypePrefix?.trim();
+  if (prefix) params.set("contentTypePrefix", prefix);
   params.set("page", String(input?.page && input.page > 0 ? input.page : 1));
   params.set("pageSize", String(input?.pageSize && input.pageSize > 0 ? input.pageSize : 24));
   try {

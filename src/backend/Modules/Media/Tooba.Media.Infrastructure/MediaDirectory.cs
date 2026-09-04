@@ -124,7 +124,8 @@ public sealed class MediaDirectory : IMediaDirectory
         string? search,
         int page,
         int pageSize,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? contentTypePrefix = null)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -136,6 +137,12 @@ public sealed class MediaDirectory : IMediaDirectory
             query = query.Where(asset =>
                 EF.Functions.ILike(asset.OriginalFileName, $"%{EscapeLike(term)}%")
                 || EF.Functions.ILike(asset.ContentType, $"%{EscapeLike(term)}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(contentTypePrefix))
+        {
+            var prefix = contentTypePrefix.Trim().ToLowerInvariant();
+            query = query.Where(asset => asset.ContentType.StartsWith(prefix));
         }
 
         var total = await query.LongCountAsync(cancellationToken);

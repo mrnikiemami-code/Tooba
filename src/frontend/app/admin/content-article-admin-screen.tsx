@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { useAdminFormMode } from "../../design-system";
+import { Spinner, useAdminFormMode } from "../../design-system";
 import { prepareAdminDevActor } from "./admin-api.ts";
 import {
   capabilityPermissionIds,
@@ -93,8 +93,39 @@ function languageOptionLabel(lang: SupportedLocaleDefinition): string {
 const LOCALE_LOCKED_MESSAGE =
   "زبان این مقاله به‌دلیل وجود محتوا یا وابستگی‌های ثبت‌شده قابل تغییر نیست.";
 
+const HISTORY_PAGE_SIZE = 10;
+const PRIOR_PUBLICATION_EVENT_TYPES = [
+  "article.published",
+  "article.republished",
+  "article.scheduled",
+] as const;
+
 function isPublished(status: string): boolean {
   return isArticlePublished(status);
+}
+
+function historyHasPriorPublication(entries: ArticleHistoryEntry[]): boolean {
+  return entries.some((e) =>
+    (PRIOR_PUBLICATION_EVENT_TYPES as readonly string[]).includes(e.eventType),
+  );
+}
+
+/** Fallback option so inactive/persisted article locale remains selectable in the dropdown. */
+function inactiveLocaleOption(code: string): SupportedLocaleDefinition {
+  const fa = code.trim().toLowerCase().startsWith("fa");
+  const label = formatArticleLocaleLabel(code);
+  return {
+    code,
+    urlPrefix: fa ? "fa" : "en",
+    displayName: label,
+    nativeName: label,
+    direction: articleEditorDirection(code),
+    culture: code,
+    calendarDisplay: fa ? "jalali" : "gregorian",
+    active: false,
+    default: false,
+    sortOrder: 9999,
+  };
 }
 
 function statusLabel(status: string): string {
@@ -126,7 +157,9 @@ export function ContentArticleAdminScreen() {
   const [draftTitle, setDraftTitle] = useState("");
   const [draftExcerpt, setDraftExcerpt] = useState("");
   const [draftBody, setDraftBody] = useState("");
-  const [draftLocale, setDraftLocale] = useState("fa-IR");
+  // Article identity locale — empty until applyArticle; never seed fa-IR / Admin UI locale.
+  // Admin UI shell may stay Persian; Article identity is the persisted locale from Host.
+  const [draftLocale, setDraftLocale] = useState("");
   const [draftIsFeatured, setDraftIsFeatured] = useState(false);
   const [draftCategoryId, setDraftCategoryId] = useState("");
   const [draftCategory, setDraftCategory] = useState("");
@@ -137,6 +170,9 @@ export function ContentArticleAdminScreen() {
   const [tagsEpoch, setTagsEpoch] = useState(0);
   const [readiness, setReadiness] = useState<ArticlePublicationReadiness | null>(null);
   const [historyEntries, setHistoryEntries] = useState<ArticleHistoryEntry[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [hasPriorPublication, setHasPriorPublication] = useState(false);
   const [commentsPendingCount, setCommentsPendingCount] = useState(0);
 
@@ -181,10 +217,25 @@ export function ContentArticleAdminScreen() {
     authorComboboxOptions.find((row) => row.value === draftAuthorId)?.label ||
     article?.authorDisplayName ||
     "—";
+  // Language badge/header: Article locale only (draftLocale after apply / article.locale) — never Admin UI locale.
+  // Do NOT apply searchParams.language to overwrite existing article locale identity.
   const selectedLanguageLabel = (() => {
-    const row = languageOptions.find((item) => item.code === draftLocale);
-    return row ? languageOptionLabel(row) : formatArticleLocaleLabel(draftLocale);
+    const identityLocale = draftLocale || article?.locale || "";
+    if (!identityLocale) return "—";
+    const row = languageOptions.find((item) => item.code === identityLocale);
+    return row ? languageOptionLabel(row) : formatArticleLocaleLabel(identityLocale);
   })();
+
+  const localeSelectOptions = useMemo(() => {
+    const options = languageOptions.slice();
+    if (draftLocale && !options.some((row) => row.code === draftLocale)) {
+      options.push(inactiveLocaleOption(draftLocale));
+    }
+    return options;
+  }, [draftLocale, languageOptions]);
+
+  const historyTotalPages = Math.max(1, Math.ceil(historyTotal / HISTORY_PAGE_SIZE) || 1);
+  const historyPagerFa = !(draftLocale || article?.locale || "").toLowerCase().startsWith("en");
 
   const effectiveSeoAssetId =
     mediaWorkspace?.effectiveSeoImageMediaAssetId ??
@@ -204,6 +255,7 @@ export function ContentArticleAdminScreen() {
     setDraftTitle(data.title);
     setDraftExcerpt(data.excerpt);
     setDraftBody(data.body);
+    // Always take persisted article locale — ignore URL language query mismatches.
     setDraftLocale(data.locale);
     setDraftIsFeatured(data.isFeatured);
     setDraftCategoryId(data.categoryId ?? "");
@@ -220,15 +272,32 @@ export function ContentArticleAdminScreen() {
     if (result.state === "ok" && result.data) setReadiness(result.data);
   }, []);
 
-  const refreshHistory = useCallback(async (id: string) => {
-    const result = await loadArticleHistory(id, 0, 50);
+  const refreshPriorPublication = useCallback(async (id: string, status: string) => {
+    if (isArticlePublished(status) || isArticleArchived(status)) {
+      setHasPriorPublication(true);
+      return;
+    }
+    const result = await loadArticleHistory(id, 0, 20);
     if (result.state === "ok" && result.data) {
-      setHistoryEntries(result.data.items);
-      setHasPriorPublication(
-        result.data.items.some((e) =>
-          ["article.published", "article.republished", "article.scheduled"].includes(e.eventType),
-        ),
-      );
+      setHasPriorPublication(historyHasPriorPublication(result.data.items));
+    }
+  }, []);
+
+  const refreshHistory = useCallback(async (id: string, page = 1) => {
+    setHistoryLoading(true);
+    try {
+      const skip = (Math.max(1, page) - 1) * HISTORY_PAGE_SIZE;
+      const result = await loadArticleHistory(id, skip, HISTORY_PAGE_SIZE);
+      if (result.state === "ok" && result.data) {
+        setHistoryEntries(result.data.items);
+        setHistoryTotal(result.data.totalCount);
+        setHistoryPage(Math.max(1, page));
+        if (historyHasPriorPublication(result.data.items)) {
+          setHasPriorPublication(true);
+        }
+      }
+    } finally {
+      setHistoryLoading(false);
     }
   }, []);
 
@@ -240,9 +309,12 @@ export function ContentArticleAdminScreen() {
         return;
       }
       applyArticle(result.data);
-      await Promise.all([refreshReadiness(id), refreshHistory(id)]);
+      await Promise.all([
+        refreshReadiness(id),
+        refreshPriorPublication(id, result.data.status),
+      ]);
     },
-    [applyArticle, refreshHistory, refreshReadiness],
+    [applyArticle, refreshPriorPublication, refreshReadiness],
   );
 
   const refreshMediaWorkspace = useCallback(async (id: string) => {
@@ -294,6 +366,18 @@ export function ContentArticleAdminScreen() {
       if (result.state === "ok" && result.data) setCategoryOptions(result.data);
     });
   }, [draftLocale]);
+
+  useEffect(() => {
+    if (!articleId) return;
+    setHistoryPage(1);
+    setHistoryEntries([]);
+    setHistoryTotal(0);
+  }, [articleId]);
+
+  useEffect(() => {
+    if (!articleId || tab !== "history") return;
+    void refreshHistory(articleId, historyPage);
+  }, [articleId, tab, historyPage, refreshHistory]);
 
   const resolveDamPick = useCallback((value: DamPickResult) => {
     const resolve = damPickResolveRef.current;
@@ -935,9 +1019,10 @@ export function ContentArticleAdminScreen() {
                     form.markDirty();
                   }}
                 >
-                  {languageOptions.map((option) => (
+                  {localeSelectOptions.map((option) => (
                     <option key={option.code} value={option.code}>
                       {languageOptionLabel(option)}
+                      {!option.active ? " · غیرفعال" : ""}
                     </option>
                   ))}
                 </select>
@@ -1280,11 +1365,40 @@ export function ContentArticleAdminScreen() {
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold">تاریخچه</h3>
               <ContentHelpAffordance helpKey="history" />
+              {historyLoading ? <Spinner /> : null}
             </div>
             <ContentArticleHistoryTimeline
               entries={historyEntries}
               locale={draftLocale || article.locale}
             />
+            <div
+              className="flex flex-wrap items-center justify-between gap-2 border-t pt-3"
+              data-testid="content-article-history-pager"
+            >
+              <button
+                type="button"
+                className="min-h-10 rounded-xl border px-3 text-sm disabled:opacity-50"
+                disabled={historyLoading || historyPage <= 1}
+                data-testid="content-article-history-prev"
+                onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+              >
+                {historyPagerFa ? "قبلی" : "Previous"}
+              </button>
+              <span className="text-sm text-muted" data-testid="content-article-history-page-label">
+                {historyPagerFa
+                  ? `صفحه ${historyPage} از ${historyTotalPages}`
+                  : `Page ${historyPage} of ${historyTotalPages}`}
+              </span>
+              <button
+                type="button"
+                className="min-h-10 rounded-xl border px-3 text-sm disabled:opacity-50"
+                disabled={historyLoading || historyPage >= historyTotalPages}
+                data-testid="content-article-history-next"
+                onClick={() => setHistoryPage((p) => p + 1)}
+              >
+                {historyPagerFa ? "بعدی" : "Next"}
+              </button>
+            </div>
           </div>
         ) : null}
       </section>
