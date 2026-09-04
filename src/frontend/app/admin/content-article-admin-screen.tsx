@@ -15,6 +15,7 @@ import { fetchActiveContentAuthors, type ContentAuthorPickerItem } from "./conte
 import { fetchContentCategoryTree, type ContentCategoryTreeNodeDto } from "./content-category-api.ts";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl } from "./media-api.ts";
+import { sanitizeArticleRichHtml } from "./article-rich-html.ts";
 import { ContentArticleDestructiveDialog, type ArticleDestructiveKind } from "./content-article-destructive-dialog.tsx";
 import { ProductRichTextEditor } from "./product-rich-text-editor.tsx";
 import { ContentArticleMediaPanel } from "./content-article-media-panel.tsx";
@@ -120,11 +121,12 @@ export function ContentArticleAdminScreen() {
   const localeLocked = article ? isArticleLocaleLocked(article) : false;
   const archived = article ? isArticleArchived(article.status) : false;
 
+  const requestedMode = searchParams.get("mode");
   useEffect(() => {
-    if (searchParams.get("mode") === "edit" && !archived) {
+    if (requestedMode === "edit" && !archived && form.mode !== "edit") {
       form.onEdit();
     }
-  }, [searchParams, archived, form]);
+  }, [requestedMode, archived, form.mode, form.onEdit]);
 
   const applyArticle = useCallback((data: AdminContentArticle) => {
     setArticle(data);

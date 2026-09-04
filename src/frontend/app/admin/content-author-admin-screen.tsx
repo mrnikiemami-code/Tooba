@@ -56,11 +56,12 @@ export function ContentAuthorAdminScreen() {
 
   const form = useAdminFormMode({ canView: true, canEdit: true });
 
+  const requestedMode = searchParams.get("mode");
   useEffect(() => {
-    if (searchParams.get("mode") === "edit") {
+    if (requestedMode === "edit" && form.mode !== "edit") {
       form.onEdit();
     }
-  }, [searchParams, form]);
+  }, [requestedMode, form.mode, form.onEdit]);
 
   const applyWorkspace = useCallback((data: ContentAuthorWorkspaceDto) => {
     setWorkspace(data);
