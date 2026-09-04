@@ -257,7 +257,7 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
         : asString(readProp(publicationRaw, "statusUpdatedAt", "StatusUpdatedAt")),
       aggregateReadiness: mapPublishReadiness(readProp(publicationRaw, "aggregateReadiness", "AggregateReadiness")),
     },
-    activity: asRecordArray(readProp(item, "activity", "Activity")).map((row) => ({
+    activity: asRecordArray(readProp(item, "activity", "Activity")).map((row, index) => ({
       kind: asString(readProp(row, "kind", "Kind")),
       summary: asString(readProp(row, "summary", "Summary")),
       at: asString(readProp(row, "at", "At")),
@@ -271,8 +271,12 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
         readProp(row, "afterSummary", "AfterSummary") == null
           ? undefined
           : asString(readProp(row, "afterSummary", "AfterSummary")),
+      historyId:
+        readProp(row, "historyId", "HistoryId") == null
+          ? `activity-${index}-${asString(readProp(row, "at", "At"))}`
+          : asString(readProp(row, "historyId", "HistoryId")),
     })),
-    audit: asRecordArray(readProp(item, "audit", "Audit")).map((row) => ({
+    audit: asRecordArray(readProp(item, "audit", "Audit")).map((row, index) => ({
       kind: asString(readProp(row, "kind", "Kind")),
       summary: asString(readProp(row, "summary", "Summary")),
       at: asString(readProp(row, "at", "At")),
@@ -286,6 +290,10 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
         readProp(row, "afterSummary", "AfterSummary") == null
           ? undefined
           : asString(readProp(row, "afterSummary", "AfterSummary")),
+      historyId:
+        readProp(row, "historyId", "HistoryId") == null
+          ? `audit-${index}-${asString(readProp(row, "at", "At"))}`
+          : asString(readProp(row, "historyId", "HistoryId")),
     })),
     permissions: {
       canView: asBoolean(readProp(permissionsRaw, "canView", "CanView"), true),

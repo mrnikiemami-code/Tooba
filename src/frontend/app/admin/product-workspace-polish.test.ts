@@ -124,6 +124,14 @@ test("VIEW description renders sanitized HTML; readiness codes are humanized", (
   assert.equal(screen.includes('value={resolveTranslation(view, "fa-IR")?.description || "—"}'), false);
 });
 
+test("workspace activity/audit Feed keys are unique (not summary text)", () => {
+  const screen = fs.readFileSync(workspacePath, "utf8");
+  const shell = fs.readFileSync(shellPath, "utf8");
+  assert.doesNotMatch(screen, /id:\s*item\.summary/);
+  assert.match(screen, /historyId/);
+  assert.match(shell, /key=\{`\$\{item\.id\}::\$\{index\}`\}/);
+});
+
 test("WorkspaceShell does not show permission-denied under intentional readOnly title", () => {
   const shell = fs.readFileSync(shellPath, "utf8");
   assert.equal(shell.includes("{readOnly ? <p className=\"text-sm text-warning\">{messages.permissionDenied}</p> : null}"), false);

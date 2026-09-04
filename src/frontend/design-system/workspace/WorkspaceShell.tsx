@@ -361,8 +361,8 @@ function Feed({ title, items }: { title: string; items: Array<{ id: string; body
     <section className="rounded-ds border border-border p-3 text-sm">
       <h3 className="font-medium">{title}</h3>
       <ol className="mt-2 space-y-2">
-        {items.map((item) => (
-          <li key={item.id}>
+        {items.map((item, index) => (
+          <li key={`${item.id}::${index}`}>
             <p>{item.body}</p>
             <p className="text-xs text-muted">{item.meta}</p>
           </li>

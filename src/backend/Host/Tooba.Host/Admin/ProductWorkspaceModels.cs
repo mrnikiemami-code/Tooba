@@ -214,7 +214,8 @@ public sealed record ProductHistoryItem(
     string Actor = "سیستم",
     string? Section = null,
     string? BeforeSummary = null,
-    string? AfterSummary = null);
+    string? AfterSummary = null,
+    Guid? HistoryId = null);
 
 /// <summary>صفحهٔ تاریخچهٔ محصول برای تب تاریخچه.</summary>
 public sealed record ProductHistoryPageView(

@@ -832,14 +832,14 @@ function ProductWorkspaceScreenInner({
             </div>
           </div>
         }
-        activity={view.activity.map((item) => ({
-          id: item.summary,
+        activity={view.activity.map((item, index) => ({
+          id: item.historyId?.trim() || `activity-${index}-${item.at}-${item.summary}`,
           at: formatHistoryTimestamp(item.at),
           actor: item.actor?.trim() || "سیستم",
           summary: item.summary,
         }))}
-        audit={view.audit.map((item) => ({
-          id: item.summary,
+        audit={view.audit.map((item, index) => ({
+          id: item.historyId?.trim() || `audit-${index}-${item.at}-${item.summary}`,
           at: formatHistoryTimestamp(item.at),
           actor: item.actor?.trim() || "سیستم",
           event: item.summary,

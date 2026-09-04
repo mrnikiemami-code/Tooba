@@ -107,6 +107,7 @@ export interface ProductWorkspaceView {
     section?: string | null;
     beforeSummary?: string | null;
     afterSummary?: string | null;
+    historyId?: string | null;
   }[];
   audit: {
     kind: string;
@@ -116,6 +117,7 @@ export interface ProductWorkspaceView {
     section?: string | null;
     beforeSummary?: string | null;
     afterSummary?: string | null;
+    historyId?: string | null;
   }[];
   permissions: ProductWorkspacePermissions;
   catalogUpdatedAt: string;

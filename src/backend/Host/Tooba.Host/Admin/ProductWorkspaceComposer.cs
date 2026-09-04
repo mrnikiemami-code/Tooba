@@ -531,7 +531,8 @@ public sealed class ProductWorkspaceComposer
                 x.ActorDisplayName,
                 x.SectionLabelFa,
                 x.BeforeSummary,
-                x.AfterSummary)).ToList();
+                x.AfterSummary,
+                x.HistoryId)).ToList();
         }
         catch (InvalidOperationException)
         {
