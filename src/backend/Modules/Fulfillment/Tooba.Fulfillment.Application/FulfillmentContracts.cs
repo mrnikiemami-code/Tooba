@@ -37,7 +37,9 @@ public sealed record FulfillmentSnapshot(
     string ShippingMethodCode,
     string ShippingMethodLabel,
     IReadOnlyList<FulfillmentItemSnapshot> Items,
-    IReadOnlyList<ShipmentSnapshot> Shipments);
+    IReadOnlyList<ShipmentSnapshot> Shipments,
+    DateTimeOffset CreatedAt = default,
+    DateTimeOffset UpdatedAt = default);
 
 /// <summary>
 /// snapshot خط fulfillment.
@@ -59,7 +61,8 @@ public sealed record ShipmentSnapshot(
     string? TrackingReference,
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? DeliveredAt,
-    IReadOnlyList<ShipmentLineSnapshot> Items);
+    IReadOnlyList<ShipmentLineSnapshot> Items,
+    DateTimeOffset CreatedAt = default);
 
 /// <summary>
 /// snapshot خط محموله.

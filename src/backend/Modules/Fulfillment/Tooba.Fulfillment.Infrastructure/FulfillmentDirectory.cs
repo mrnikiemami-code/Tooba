@@ -333,7 +333,8 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 shipment.TrackingReference,
                 shipment.DispatchedAt,
                 shipment.DeliveredAt,
-                shipmentItems.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray()));
+                shipmentItems.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
+                shipment.CreatedAt));
         }
 
         return new FulfillmentSnapshot(
@@ -356,6 +357,8 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 x.QuantityOrdered,
                 x.QuantityShipped,
                 x.ReservationId)).ToArray(),
-            shipmentSnapshots);
+            shipmentSnapshots,
+            unit.CreatedAt,
+            unit.UpdatedAt);
     }
 }

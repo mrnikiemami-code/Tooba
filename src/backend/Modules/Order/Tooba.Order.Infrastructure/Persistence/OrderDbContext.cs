@@ -48,6 +48,11 @@ public sealed class OrderDbContext : DbContext
     /// </summary>
     public DbSet<OrderPaymentInboxRecord> PaymentInbox => Set<OrderPaymentInboxRecord>();
 
+    /// <summary>
+    /// یادداشت‌های عملیاتی داخلی checkout (append-only).
+    /// </summary>
+    public DbSet<CheckoutOperationalNote> OperationalNotes => Set<CheckoutOperationalNote>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -118,6 +123,16 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.EventId).ValueGeneratedNever();
             entity.Property(x => x.PaymentId).IsRequired();
             entity.Property(x => x.ProcessedAt).IsRequired();
+        });
+        modelBuilder.Entity<CheckoutOperationalNote>(entity =>
+        {
+            entity.ToTable("checkout_operational_notes");
+            entity.HasKey(x => x.NoteId);
+            entity.Property(x => x.NoteId).ValueGeneratedNever();
+            entity.Property(x => x.Body).HasMaxLength(CheckoutOperationalNote.MaxBodyLength).IsRequired();
+            entity.Property(x => x.CreatedByUserId).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.CheckoutId, x.CreatedAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

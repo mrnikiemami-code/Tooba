@@ -141,6 +141,39 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                     b.ToTable("checkouts", "order");
                 });
 
+            modelBuilder.Entity("Tooba.Order.Domain.CheckoutOperationalNote", b =>
+                {
+                    b.Property<Guid>("NoteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("note_id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("body");
+
+                    b.Property<Guid>("CheckoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.HasKey("NoteId")
+                        .HasName("pk_checkout_operational_notes");
+
+                    b.HasIndex("CheckoutId", "CreatedAt")
+                        .HasDatabaseName("ix_checkout_operational_notes_checkout_id_created_at");
+
+                    b.ToTable("checkout_operational_notes", "order");
+                });
+
             modelBuilder.Entity("Tooba.Order.Domain.OrderLine", b =>
                 {
                     b.Property<Guid>("LineId")

@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T016-R5
+TB-P09-T001
 ```
 
 Prior accepted catalog wave:
@@ -50,13 +50,13 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P09-T001-R2
+TB-P09-T002
 ```
 
 Current Issued Task:
 
 ```text
-TB-P09-T001
+TB-P09-T002
 ```
 
 Current Repair Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T002 — Order Detail Operational Completeness (notes, operational history, invoice/receipt; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001-R2 — Marketplace settlement event-path proof (MassTransit/outbox handlers; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001-R1 — Order Operations Foundation Repair (domain cancel guard + real post-settlement return runtime; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001 — Order Operations Foundation (contextual admin actions, return eligibility SoT, settlement-safe returns; USER_VISUAL_ACCEPTED=NO)

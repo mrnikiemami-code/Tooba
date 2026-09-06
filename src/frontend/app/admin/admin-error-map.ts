@@ -214,6 +214,22 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "انجام عملیات سفارش ناموفق بود.",
     en: "The order operation could not be completed.",
   },
+  "order.note.invalid": {
+    fa: "متن یادداشت معتبر نیست.",
+    en: "The note text is not valid.",
+  },
+  "order.invoice.unavailable": {
+    fa: "فاکتور در دسترس نیست.",
+    en: "Invoice is unavailable.",
+  },
+  "order.receipt.unavailable": {
+    fa: "رسید پرداخت در دسترس نیست.",
+    en: "Payment receipt is unavailable.",
+  },
+  "order.history.failed": {
+    fa: "بارگذاری تاریخچه عملیات انجام نشد.",
+    en: "Operational history could not be loaded.",
+  },
   "host-unreachable": {
     fa: "اتصال به سرویس برقرار نیست. لطفاً دوباره تلاش کنید.",
     en: "Could not reach the service. Please try again.",

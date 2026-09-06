@@ -189,7 +189,8 @@ internal sealed class AdminFulfillmentGridQueryEngine
                     shipment.TrackingReference,
                     shipment.DispatchedAt,
                     shipment.DeliveredAt,
-                    lines.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray());
+                    lines.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
+                    shipment.CreatedAt);
             }).ToArray();
             return new FulfillmentSnapshot(
                 unit.FulfillmentId,
@@ -211,7 +212,9 @@ internal sealed class AdminFulfillmentGridQueryEngine
                     x.QuantityOrdered,
                     x.QuantityShipped,
                     x.ReservationId)).ToArray(),
-                shipmentSnapshots);
+                shipmentSnapshots,
+                unit.CreatedAt,
+                unit.UpdatedAt);
         }).ToList();
     }
 }

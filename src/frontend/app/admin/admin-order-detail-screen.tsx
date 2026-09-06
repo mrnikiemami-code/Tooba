@@ -17,6 +17,7 @@ import {
   ErrorState,
   createClientGridQueryAdapter,
   faWorkspaceMessages,
+  formatJalaliDateTime,
   useLegacyAdminGridDirectProps,
 } from "../../design-system";
 import type { GridColumnDef, GridServerQuery } from "../../design-system/data-grid";
@@ -36,6 +37,17 @@ import {
 } from "./admin-api";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
+import {
+  addAdminOrderNote,
+  adminOrderInvoiceUrl,
+  adminOrderReceiptUrl,
+  loadAdminOrderNotes,
+  loadAdminOrderOperationalHistory,
+  openAdminOrderHtmlDocument,
+  type AdminOperationalHistoryEntry,
+  type AdminOrderNote,
+} from "./admin-order-completeness";
+import { mapAdminErrorMessage } from "./admin-error-map";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -303,12 +315,112 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+function OperationalHistoryTimeline({
+  entries,
+  empty,
+}: {
+  entries: AdminOperationalHistoryEntry[];
+  empty: string;
+}) {
+  if (entries.length === 0) {
+    return (
+      <p className="text-sm text-gray-500" data-testid="admin-order-history-empty">
+        {empty}
+      </p>
+    );
+  }
+
+  return (
+    <ol className="space-y-3" data-testid="admin-order-operational-history">
+      {entries.map((entry, index) => (
+        <li
+          key={`${entry.kind}-${entry.occurredAt}-${index}`}
+          className="rounded-xl border border-gray-100 p-3 text-sm"
+          data-testid={`admin-order-history-${entry.kind}`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-semibold text-gray-900">{entry.labelFa}</span>
+            <span className="text-xs text-gray-500" dir="ltr">
+              {formatJalaliDateTime(entry.occurredAt, "fa")}
+            </span>
+          </div>
+          {entry.summaryFa ? <p className="mt-1 text-gray-600">{entry.summaryFa}</p> : null}
+          <p className="mt-2 text-xs text-gray-500">{entry.actorDisplayFa}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 /** جزئیات سفارش Admin با UX مالی بازارگاه مطابق مرجع T042. */
 export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
   const [result, setResult] = useState<AdminResult<AdminOrderDetail>>({ state: "ok", data: null, status: 0 });
   const [tab, setTab] = useState<"summary" | "sellers" | "payments">("summary");
-  const refresh = () => void loadAdminOrderDetail(checkoutId).then(setResult);
-  useEffect(refresh, [checkoutId]);
+  const [notes, setNotes] = useState<AdminOrderNote[]>([]);
+  const [noteBody, setNoteBody] = useState("");
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [historyEntries, setHistoryEntries] = useState<AdminOperationalHistoryEntry[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [docError, setDocError] = useState<string | null>(null);
+  const historyPageSize = 20;
+
+  const refreshNotes = useCallback(() => {
+    void loadAdminOrderNotes(checkoutId).then((res) => {
+      if (res.state === "ok" && res.data) setNotes(res.data);
+    });
+  }, [checkoutId]);
+
+  const refreshHistory = useCallback(
+    (page: number, append: boolean) => {
+      void loadAdminOrderOperationalHistory(checkoutId, page, historyPageSize).then((res) => {
+        if (res.state !== "ok" || !res.data) {
+          setHistoryError(res.message || mapAdminErrorMessage("order.history.failed", "fa"));
+          return;
+        }
+        setHistoryError(null);
+        setHistoryPage(res.data.page);
+        setHistoryTotal(res.data.totalCount);
+        setHistoryEntries((prev) => (append ? [...prev, ...res.data!.items] : res.data!.items));
+      });
+    },
+    [checkoutId],
+  );
+
+  const refresh = () => {
+    void loadAdminOrderDetail(checkoutId).then(setResult);
+    refreshNotes();
+    refreshHistory(1, false);
+  };
+  useEffect(refresh, [checkoutId, refreshNotes, refreshHistory]);
+
+  const openInvoice = async () => {
+    setDocError(null);
+    const res = await openAdminOrderHtmlDocument(adminOrderInvoiceUrl(checkoutId), "order.invoice.unavailable");
+    if (res.state !== "ok") setDocError(res.message || mapAdminErrorMessage("order.invoice.unavailable", "fa"));
+  };
+
+  const openReceipt = async () => {
+    setDocError(null);
+    const res = await openAdminOrderHtmlDocument(adminOrderReceiptUrl(checkoutId), "order.receipt.unavailable");
+    if (res.state !== "ok") setDocError(res.message || mapAdminErrorMessage("order.receipt.unavailable", "fa"));
+  };
+
+  const submitNote = async () => {
+    setNoteBusy(true);
+    setNoteError(null);
+    const res = await addAdminOrderNote(checkoutId, noteBody);
+    setNoteBusy(false);
+    if (res.state !== "ok") {
+      setNoteError(res.message || mapAdminErrorMessage("order.note.invalid", "fa"));
+      return;
+    }
+    setNoteBody("");
+    refreshNotes();
+    refreshHistory(1, false);
+  };
 
   const historyRows = useMemo(
     () => (result.data?.financialEvents ?? []).map((row, index) => ({ ...row, id: `${row.reference}-${index}` })),
@@ -350,15 +462,32 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
             onCompleted={refresh}
             testId={`admin-order-detail-ops-${checkoutId}`}
           />
-          <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">
+          <button
+            type="button"
+            data-testid="admin-order-print-invoice"
+            onClick={() => void openInvoice()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50"
+          >
             <Printer className="size-3.5" />
             چاپ فاکتور
           </button>
+          {detail?.payment ? (
+            <button
+              type="button"
+              data-testid="admin-order-print-receipt"
+              onClick={() => void openReceipt()}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50"
+            >
+              <Printer className="size-3.5" />
+              چاپ رسید پرداخت
+            </button>
+          ) : null}
           <button type="button" className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
             ایجاد سند تسویه
           </button>
         </div>
       </header>
+      {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}
 
       {result.state === "error" ? (
         <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
@@ -460,6 +589,70 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
 
               {tab === "payments" ? (
                 <SellerFinancialTable rows={detail.sellerFinancials} currency={detail.currency} />
+              ) : null}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-testid="admin-order-internal-notes">
+            <div className="border-b border-gray-200 px-3 py-2.5">
+              <h2 className="text-sm font-black text-gray-900">یادداشت داخلی</h2>
+              <p className="text-xs text-gray-500">فقط برای اپراتور؛ در ویترین نمایش داده نمی‌شود</p>
+            </div>
+            <div className="space-y-3 p-3">
+              {notes.length === 0 ? (
+                <p className="text-sm text-gray-500">هنوز یادداشتی ثبت نشده است.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {notes.map((note) => (
+                    <li key={note.noteId} className="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-sm">
+                      <p className="whitespace-pre-wrap text-gray-900">{note.body}</p>
+                      <div className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-gray-500">
+                        <span>{note.actorDisplayFa}</span>
+                        <span dir="ltr">{formatJalaliDateTime(note.createdAt, "fa")}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <textarea
+                value={noteBody}
+                onChange={(e) => setNoteBody(e.target.value)}
+                maxLength={2000}
+                rows={3}
+                placeholder="یادداشت عملیاتی…"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                data-testid="admin-order-note-input"
+              />
+              {noteError ? <p className="text-sm text-red-600">{noteError}</p> : null}
+              <button
+                type="button"
+                disabled={noteBusy || noteBody.trim().length === 0}
+                onClick={() => void submitNote()}
+                className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                data-testid="admin-order-note-submit"
+              >
+                ثبت یادداشت
+              </button>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-testid="admin-order-history-section">
+            <div className="border-b border-gray-200 px-3 py-2.5">
+              <h2 className="text-sm font-black text-gray-900">تاریخچه عملیات</h2>
+              <p className="text-xs text-gray-500">ترکیب رویدادهای موجود سفارش / پرداخت / ارسال / مرجوعی</p>
+            </div>
+            <div className="space-y-3 p-3">
+              {historyError ? <p className="text-sm text-red-600">{historyError}</p> : null}
+              <OperationalHistoryTimeline entries={historyEntries} empty="هنوز رویدادی ثبت نشده است." />
+              {historyEntries.length < historyTotal ? (
+                <button
+                  type="button"
+                  data-testid="admin-order-history-load-more"
+                  onClick={() => refreshHistory(historyPage + 1, true)}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50"
+                >
+                  مشاهده بیشتر
+                </button>
               ) : null}
             </div>
           </section>

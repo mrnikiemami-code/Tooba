@@ -275,6 +275,60 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(
+        Guid checkoutId,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var bound = Math.Clamp(take <= 0 ? 50 : take, 1, 50);
+        var exists = await _db.Checkouts.AsNoTracking()
+            .AnyAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+        if (!exists)
+        {
+            return Array.Empty<CheckoutOperationalNoteSnapshot>();
+        }
+
+        return await _db.OperationalNotes.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.NoteId)
+            .Take(bound)
+            .Select(x => new CheckoutOperationalNoteSnapshot(
+                x.NoteId,
+                x.CheckoutId,
+                x.Body,
+                x.CreatedByUserId,
+                x.CreatedAt))
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<CheckoutOperationalNoteSnapshot> AddNoteAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        string body,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var exists = await _db.Checkouts.AsNoTracking()
+            .AnyAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+        if (!exists)
+        {
+            throw new InvalidOperationException("سفارش پیدا نشد.");
+        }
+
+        var note = CheckoutOperationalNote.Create(checkoutId, actorUserId, body, DateTimeOffset.UtcNow);
+        _db.OperationalNotes.Add(note);
+        await _db.SaveChangesAsync(cancellationToken);
+        return new CheckoutOperationalNoteSnapshot(
+            note.NoteId,
+            note.CheckoutId,
+            note.Body,
+            note.CreatedByUserId,
+            note.CreatedAt);
+    }
+
     /// <summary>
     /// قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.
     /// </summary>

@@ -139,7 +139,32 @@ public interface ICheckoutDirectory
     /// سفارش فروشنده را در صورت ایمن بودن لغو می‌کند و رزرو را از قرارداد Inventory آزاد می‌کند.
     /// </summary>
     Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یادداشت‌های عملیاتی داخلی checkout را از جدید به قدیم برمی‌گرداند (محدود).
+    /// </summary>
+    Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(
+        Guid checkoutId,
+        int take,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یادداشت عملیاتی داخلی را به صورت append-only ثبت می‌کند.
+    /// </summary>
+    Task<CheckoutOperationalNoteSnapshot> AddNoteAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        string body,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>snapshot خواندنی یادداشت عملیاتی داخلی checkout.</summary>
+public sealed record CheckoutOperationalNoteSnapshot(
+    Guid NoteId,
+    Guid CheckoutId,
+    string Body,
+    Guid CreatedByUserId,
+    DateTimeOffset CreatedAt);
 
 /// <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
 public sealed record OrderPurchaseVerification(bool IsVerified, Guid? SellerOrderId)

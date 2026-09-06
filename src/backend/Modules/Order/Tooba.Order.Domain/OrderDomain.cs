@@ -713,3 +713,70 @@ public sealed class SellerOrderCreatedDomainEvent : IDomainEvent
     /// </summary>
     public OrderMode Mode { get; }
 }
+
+/// <summary>
+/// یادداشت عملیاتی داخلی روی checkout. فقط برای اپراتور؛ append-only.
+/// </summary>
+public sealed class CheckoutOperationalNote
+{
+    /// <summary>سازندهٔ EF.</summary>
+    private CheckoutOperationalNote()
+    {
+    }
+
+    /// <summary>شناسهٔ یادداشت.</summary>
+    public Guid NoteId { get; init; }
+
+    /// <summary>checkout مالک.</summary>
+    public Guid CheckoutId { get; init; }
+
+    /// <summary>متن یادداشت (حداکثر ۲۰۰۰ نویسه).</summary>
+    public string Body { get; init; } = string.Empty;
+
+    /// <summary>کاربر ثبت‌کننده.</summary>
+    public Guid CreatedByUserId { get; init; }
+
+    /// <summary>زمان ثبت UTC.</summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>حداکثر طول مجاز متن.</summary>
+    public const int MaxBodyLength = 2000;
+
+    /// <summary>یادداشت append-only می‌سازد.</summary>
+    public static CheckoutOperationalNote Create(
+        Guid checkoutId,
+        Guid createdByUserId,
+        string body,
+        DateTimeOffset now)
+    {
+        if (checkoutId == Guid.Empty)
+        {
+            throw new InvalidOperationException("شناسهٔ checkout نامعتبر است.");
+        }
+
+        if (createdByUserId == Guid.Empty)
+        {
+            throw new InvalidOperationException("شناسهٔ کاربر ثبت‌کننده نامعتبر است.");
+        }
+
+        var trimmed = (body ?? string.Empty).Trim();
+        if (trimmed.Length == 0)
+        {
+            throw new InvalidOperationException("متن یادداشت خالی است.");
+        }
+
+        if (trimmed.Length > MaxBodyLength)
+        {
+            throw new InvalidOperationException($"متن یادداشت حداکثر {MaxBodyLength} نویسه است.");
+        }
+
+        return new CheckoutOperationalNote
+        {
+            NoteId = UuidV7.New(),
+            CheckoutId = checkoutId,
+            Body = trimmed,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = now,
+        };
+    }
+}
