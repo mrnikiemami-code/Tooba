@@ -24,11 +24,45 @@ public sealed class EfIdentityContactLookup : IIdentityContactLookup
             return new IdentityContactSnapshot(null, null);
         }
 
+        var map = await GetContactsAsync(new[] { userId }, cancellationToken);
+        return map.TryGetValue(userId, out var snapshot)
+            ? snapshot
+            : new IdentityContactSnapshot(null, null);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, IdentityContactSnapshot>> GetContactsAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = userIds
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, IdentityContactSnapshot>();
+        }
+
         var identifiers = await _db.Identifiers.AsNoTracking()
-            .Where(x => x.UserId == userId && (x.Kind == LoginIdentifierKind.Email || x.Kind == LoginIdentifierKind.Phone))
+            .Where(x => ids.Contains(x.UserId)
+                && (x.Kind == LoginIdentifierKind.Email || x.Kind == LoginIdentifierKind.Phone))
             .ToListAsync(cancellationToken);
-        var email = identifiers.FirstOrDefault(x => x.Kind == LoginIdentifierKind.Email)?.DisplayValue;
-        var mobile = identifiers.FirstOrDefault(x => x.Kind == LoginIdentifierKind.Phone)?.DisplayValue;
-        return new IdentityContactSnapshot(email, mobile);
+
+        var result = new Dictionary<Guid, IdentityContactSnapshot>(ids.Length);
+        foreach (var id in ids)
+        {
+            var forUser = identifiers.Where(x => x.UserId == id).ToList();
+            if (forUser.Count == 0)
+            {
+                continue;
+            }
+
+            var email = forUser.FirstOrDefault(x => x.Kind == LoginIdentifierKind.Email)?.DisplayValue;
+            var mobile = forUser.FirstOrDefault(x => x.Kind == LoginIdentifierKind.Phone)?.DisplayValue;
+            result[id] = new IdentityContactSnapshot(email, mobile);
+        }
+
+        return result;
     }
 }

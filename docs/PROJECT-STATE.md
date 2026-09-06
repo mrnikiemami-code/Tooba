@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T002
+TB-P09-T002-R1
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T002 — Order Detail Operational Completeness (notes, operational history, invoice/receipt; USER_VISUAL_ACCEPTED=NO)
+TB-P09-T002-R1 — Order Operational History Repair (human actor resolution; USER_VISUAL_ACCEPTED=NO)
+TB-P09-T002 — Order Detail Operational Completeness (notes, operational history, invoice/receipt; under repair via R1; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001-R2 — Marketplace settlement event-path proof (MassTransit/outbox handlers; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001-R1 — Order Operations Foundation Repair (domain cancel guard + real post-settlement return runtime; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001 — Order Operations Foundation (contextual admin actions, return eligibility SoT, settlement-safe returns; USER_VISUAL_ACCEPTED=NO)

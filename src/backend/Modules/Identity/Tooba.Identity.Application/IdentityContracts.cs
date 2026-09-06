@@ -482,6 +482,14 @@ public interface IIdentityContactLookup
 {
     /// <summary>ایمیل و موبایل تأیید‌شدهٔ نمایشی User را برمی‌گرداند.</summary>
     Task<IdentityContactSnapshot> GetContactAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تماس چند User را در یک query محدود برمی‌گرداند (بدون N+1).
+    /// User بدون شناسهٔ تماس با snapshot خالی در دیکشنری می‌ماند اگر شناسه‌ای نداشته باشد حذف می‌شود.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, IdentityContactSnapshot>> GetContactsAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

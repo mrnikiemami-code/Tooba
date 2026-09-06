@@ -10,6 +10,8 @@ export interface AdminOrderNote {
   body: string;
   createdByUserId: string;
   createdAt: string;
+  actorKind: string;
+  actorDisplayName: string;
   actorDisplayFa: string;
   actorDisplayEn: string;
 }
@@ -19,6 +21,8 @@ export interface AdminOperationalHistoryEntry {
   kind: string;
   labelFa: string;
   labelEn: string;
+  actorKind: string;
+  actorDisplayName: string;
   actorDisplayFa: string;
   actorDisplayEn: string;
   summaryFa?: string | null;
@@ -61,13 +65,17 @@ function mapNote(value: unknown): AdminOrderNote | null {
   if (!item) return null;
   const noteId = text(prop(item, "noteId", "NoteId"));
   if (!noteId) return null;
+  const actorDisplayName = text(prop(item, "actorDisplayName", "ActorDisplayName"), "سیستم");
+  const actorDisplayFa = text(prop(item, "actorDisplayFa", "ActorDisplayFa"), `توسط ${actorDisplayName}`);
   return {
     noteId,
     checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
     body: text(prop(item, "body", "Body")),
     createdByUserId: text(prop(item, "createdByUserId", "CreatedByUserId")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
-    actorDisplayFa: text(prop(item, "actorDisplayFa", "ActorDisplayFa"), "توسط سیستم"),
+    actorKind: text(prop(item, "actorKind", "ActorKind"), "system"),
+    actorDisplayName,
+    actorDisplayFa,
     actorDisplayEn: text(prop(item, "actorDisplayEn", "ActorDisplayEn"), "By system"),
   };
 }
@@ -78,12 +86,15 @@ function mapHistoryEntry(value: unknown): AdminOperationalHistoryEntry | null {
   const occurredAt = text(prop(item, "occurredAt", "OccurredAt"));
   const kind = text(prop(item, "kind", "Kind"));
   if (!occurredAt || !kind) return null;
+  const actorDisplayName = text(prop(item, "actorDisplayName", "ActorDisplayName"), "سیستم");
   return {
     occurredAt,
     kind,
     labelFa: text(prop(item, "labelFa", "LabelFa")),
     labelEn: text(prop(item, "labelEn", "LabelEn")),
-    actorDisplayFa: text(prop(item, "actorDisplayFa", "ActorDisplayFa"), "توسط سیستم"),
+    actorKind: text(prop(item, "actorKind", "ActorKind"), "system"),
+    actorDisplayName,
+    actorDisplayFa: text(prop(item, "actorDisplayFa", "ActorDisplayFa"), `توسط ${actorDisplayName}`),
     actorDisplayEn: text(prop(item, "actorDisplayEn", "ActorDisplayEn"), "By system"),
     summaryFa: text(prop(item, "summaryFa", "SummaryFa")) || null,
     summaryEn: text(prop(item, "summaryEn", "SummaryEn")) || null,

@@ -7,6 +7,8 @@ using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Domain;
+using Tooba.Identity.Application;
+using Tooba.OperatorProfile.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
@@ -31,6 +33,8 @@ public sealed class AdminOrderCompletenessComposer
     private readonly IPaymentAdminDirectory _payments;
     private readonly ISettlementDirectory _settlement;
     private readonly IAccessControlDirectory _access;
+    private readonly IOperatorProfileDirectory _profiles;
+    private readonly IIdentityContactLookup _contacts;
     private readonly ICurrentTenant _tenant;
 
     /// <summary>ترکیب‌گر را به ماژول‌های موجود وصل می‌کند.</summary>
@@ -42,6 +46,8 @@ public sealed class AdminOrderCompletenessComposer
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
         IAccessControlDirectory access,
+        IOperatorProfileDirectory profiles,
+        IIdentityContactLookup contacts,
         ICurrentTenant tenant)
     {
         _orders = orders;
@@ -51,6 +57,8 @@ public sealed class AdminOrderCompletenessComposer
         _payments = payments;
         _settlement = settlement;
         _access = access;
+        _profiles = profiles;
+        _contacts = contacts;
         _tenant = tenant;
     }
 
@@ -63,7 +71,8 @@ public sealed class AdminOrderCompletenessComposer
         await EnsurePermissionAsync(actorUserId, "order.view", cancellationToken);
         await EnsureCheckoutExistsAsync(checkoutId, cancellationToken);
         var notes = await _checkout.ListNotesAsync(checkoutId, 50, cancellationToken);
-        return notes.Select(MapNote).ToList();
+        var labels = await ResolveActorLabelsAsync(notes.Select(x => (Guid?)x.CreatedByUserId), cancellationToken);
+        return notes.Select(n => MapNote(n, labels)).ToList();
     }
 
     /// <summary>یادداشت داخلی append-only می‌افزاید (order.handle).</summary>
@@ -78,7 +87,8 @@ public sealed class AdminOrderCompletenessComposer
         try
         {
             var note = await _checkout.AddNoteAsync(checkoutId, actorUserId, body ?? string.Empty, cancellationToken);
-            return MapNote(note);
+            var labels = await ResolveActorLabelsAsync(new Guid?[] { note.CreatedByUserId }, cancellationToken);
+            return MapNote(note, labels);
         }
         catch (InvalidOperationException ex)
         {
@@ -98,14 +108,16 @@ public sealed class AdminOrderCompletenessComposer
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
 
-        var entries = await ComposeHistoryAsync(group, cancellationToken);
+        var drafts = await ComposeHistoryDraftsAsync(group, cancellationToken);
         var safePage = Math.Max(1, page);
         var safeSize = Math.Clamp(pageSize <= 0 ? 20 : pageSize, 1, 50);
-        var total = entries.Count;
-        var items = entries
+        var total = drafts.Count;
+        var pageDrafts = drafts
             .Skip((safePage - 1) * safeSize)
             .Take(safeSize)
             .ToList();
+        var labels = await ResolveActorLabelsAsync(pageDrafts.Select(x => x.ActorUserId), cancellationToken);
+        var items = pageDrafts.Select(d => ToEntry(d, labels)).ToList();
         return new AdminOperationalHistoryPage(checkoutId, safePage, safeSize, total, items);
     }
 
@@ -136,30 +148,30 @@ public sealed class AdminOrderCompletenessComposer
         return RenderReceiptHtml(group, payment);
     }
 
-    private async Task<IReadOnlyList<AdminOperationalHistoryEntry>> ComposeHistoryAsync(
+    private async Task<IReadOnlyList<HistoryDraft>> ComposeHistoryDraftsAsync(
         CheckoutGroup group,
         CancellationToken cancellationToken)
     {
-        var entries = new List<AdminOperationalHistoryEntry>
+        var entries = new List<HistoryDraft>
         {
-            Entry(
+            Draft(
                 group.SubmittedAt,
                 "order_created",
                 "ثبت سفارش",
                 "Order created",
-                SystemActor(),
+                actorUserId: null,
                 $"Checkout {group.CheckoutId:N}"[..20],
                 $"Checkout {group.CheckoutId:N}"[..20]),
         };
 
         foreach (var order in group.SellerOrders.Where(x => x.Status == SellerOrderStatus.Cancelled))
         {
-            entries.Add(Entry(
+            entries.Add(Draft(
                 group.SubmittedAt,
                 "order_cancelled",
                 "لغو سفارش",
                 "Order cancelled",
-                SystemActor(),
+                null,
                 $"سفارش {order.OrderNumber}",
                 $"Order {order.OrderNumber}"));
         }
@@ -167,60 +179,60 @@ public sealed class AdminOrderCompletenessComposer
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (payment is not null)
         {
-            entries.Add(Entry(
+            entries.Add(Draft(
                 payment.CreatedAt,
                 "payment_created",
                 "ایجاد پرداخت",
                 "Payment created",
-                SystemActor(),
+                null,
                 $"{payment.Amount:0} {payment.Currency}",
                 $"{payment.Amount:0} {payment.Currency}"));
 
             switch (payment.Status)
             {
                 case PaymentStatus.Pending:
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         payment.UpdatedAt == default ? payment.CreatedAt : payment.UpdatedAt,
                         "payment_pending",
                         "پرداخت در انتظار",
                         "Payment pending",
-                        SystemActor()));
+                        null));
                     break;
                 case PaymentStatus.Succeeded:
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         payment.CompletedAt ?? payment.UpdatedAt,
                         "payment_succeeded",
                         "پرداخت موفق",
                         "Payment succeeded",
-                        SystemActor(),
+                        null,
                         $"{payment.Amount:0} {payment.Currency}",
                         $"{payment.Amount:0} {payment.Currency}"));
                     break;
                 case PaymentStatus.Failed:
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_failed",
                         "پرداخت ناموفق",
                         "Payment failed",
-                        SystemActor(),
+                        null,
                         payment.LastFailureCode,
                         payment.LastFailureCode));
                     break;
                 case PaymentStatus.Cancelled:
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_cancelled",
                         "لغو پرداخت",
                         "Payment cancelled",
-                        SystemActor()));
+                        null));
                     break;
                 case PaymentStatus.Expired:
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_expired",
                         "انقضای پرداخت",
                         "Payment expired",
-                        SystemActor()));
+                        null));
                     break;
             }
         }
@@ -231,66 +243,66 @@ public sealed class AdminOrderCompletenessComposer
             if (f.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
                 or FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
             {
-                entries.Add(Entry(
+                entries.Add(Draft(
                     f.CreatedAt == default ? f.UpdatedAt : f.CreatedAt,
                     "fulfillment_processing",
                     "آماده‌سازی",
                     "Processing",
-                    SystemActor()));
+                    null));
             }
 
             if (f.Status is FulfillmentStatus.Packed or FulfillmentStatus.Dispatched
                 or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
             {
-                entries.Add(Entry(
+                entries.Add(Draft(
                     f.UpdatedAt == default ? f.CreatedAt : f.UpdatedAt,
                     "fulfillment_packed",
                     "بسته‌بندی",
                     "Packed",
-                    SystemActor()));
+                    null));
             }
 
             foreach (var shipment in f.Shipments)
             {
                 var created = shipment.CreatedAt == default ? f.UpdatedAt : shipment.CreatedAt;
-                entries.Add(Entry(
+                entries.Add(Draft(
                     created == default ? f.CreatedAt : created,
                     "shipment_created",
                     "ایجاد محموله",
                     "Shipment created",
-                    SystemActor(),
+                    null,
                     shipment.CarrierDisplayName,
                     shipment.CarrierDisplayName));
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference))
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         shipment.DispatchedAt ?? created,
                         "tracking_assigned",
                         "ثبت رهگیری",
                         "Tracking assigned",
-                        SystemActor(),
+                        null,
                         shipment.TrackingReference,
                         shipment.TrackingReference));
                 }
 
                 if (shipment.DispatchedAt is { } dispatched)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         dispatched,
                         "shipment_dispatched",
                         "ارسال محموله",
                         "Shipment dispatched",
-                        SystemActor()));
+                        null));
                 }
 
                 if (shipment.DeliveredAt is { } delivered)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         delivered,
                         "shipment_delivered",
                         "تحویل محموله",
                         "Shipment delivered",
-                        SystemActor()));
+                        null));
                 }
             }
         }
@@ -312,33 +324,33 @@ public sealed class AdminOrderCompletenessComposer
 
         foreach (var ret in returns)
         {
-            entries.Add(Entry(
+            entries.Add(Draft(
                 ret.CreatedAt,
                 "return_requested",
                 "درخواست مرجوعی",
                 "Return requested",
-                ActorFromUser(ret.RequestedByUserId),
+                ret.RequestedByUserId == Guid.Empty ? null : ret.RequestedByUserId,
                 ret.Reason,
                 ret.Reason));
             if (ret.Status is ReturnRequestStatus.Approved or ReturnRequestStatus.RefundProcessing
                 or ReturnRequestStatus.Completed or ReturnRequestStatus.RefundFailed)
             {
-                entries.Add(Entry(
+                entries.Add(Draft(
                     ret.UpdatedAt,
                     "return_approved",
                     "تأیید مرجوعی",
                     "Return approved",
-                    SystemActor()));
+                    null));
             }
 
             if (ret.Status == ReturnRequestStatus.Rejected)
             {
-                entries.Add(Entry(
+                entries.Add(Draft(
                     ret.UpdatedAt,
                     "return_rejected",
                     "رد مرجوعی",
                     "Return rejected",
-                    SystemActor()));
+                    null));
             }
 
             if (!attemptsByReturn.TryGetValue(ret.ReturnRequestId, out var attempts))
@@ -350,33 +362,33 @@ public sealed class AdminOrderCompletenessComposer
             {
                 if (attempt.Status == RefundAttemptStatus.Succeeded)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         attempt.CompletedAt ?? attempt.CreatedAt,
                         "refund_completed",
                         "بازگشت وجه",
                         "Refund completed",
-                        SystemActor(),
+                        null,
                         $"{attempt.Amount:0} {attempt.Currency}",
                         $"{attempt.Amount:0} {attempt.Currency}"));
                 }
                 else if (attempt.Status == RefundAttemptStatus.Failed)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         attempt.CompletedAt ?? attempt.CreatedAt,
                         "refund_failed",
                         "شکست بازگشت وجه",
                         "Refund failed",
-                        SystemActor()));
+                        null));
                 }
                 else if (attempt.Status == RefundAttemptStatus.Pending
                          && ret.Status == ReturnRequestStatus.RefundFailed)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         attempt.CreatedAt,
                         "refund_retried",
                         "تلاش مجدد بازگشت وجه",
                         "Refund retried",
-                        SystemActor()));
+                        null));
                 }
             }
         }
@@ -391,23 +403,23 @@ public sealed class AdminOrderCompletenessComposer
                 if (string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
                     || entry.EntryType == EntryType.Debit)
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         entry.PostedAt,
                         "settlement_adjustment",
                         "تعدیل تسویه (مرجوعی)",
                         "Seller refund adjustment",
-                        SystemActor(),
+                        null,
                         $"سفارش {orderNumber}",
                         $"Order {orderNumber}"));
                 }
                 else
                 {
-                    entries.Add(Entry(
+                    entries.Add(Draft(
                         entry.PostedAt,
                         "settlement_accrual",
                         "ثبت تسویه فروشنده",
                         "Seller settlement accrual",
-                        SystemActor(),
+                        null,
                         $"سفارش {orderNumber}",
                         $"Order {orderNumber}"));
                 }
@@ -417,12 +429,12 @@ public sealed class AdminOrderCompletenessComposer
         var notes = await _checkout.ListNotesAsync(group.CheckoutId, 50, cancellationToken);
         foreach (var note in notes)
         {
-            entries.Add(Entry(
+            entries.Add(Draft(
                 note.CreatedAt,
                 "operational_note",
                 "یادداشت داخلی",
                 "Internal note",
-                ActorFromUser(note.CreatedByUserId),
+                note.CreatedByUserId == Guid.Empty ? null : note.CreatedByUserId,
                 Truncate(note.Body, 120),
                 Truncate(note.Body, 120)));
         }
@@ -433,43 +445,158 @@ public sealed class AdminOrderCompletenessComposer
             .ToList();
     }
 
-    private static AdminOrderNoteView MapNote(CheckoutOperationalNoteSnapshot note)
+    private async Task<IReadOnlyDictionary<Guid, ActorLabel>> ResolveActorLabelsAsync(
+        IEnumerable<Guid?> actorUserIds,
+        CancellationToken cancellationToken)
     {
-        var actor = ActorFromUser(note.CreatedByUserId);
+        var ids = actorUserIds
+            .Where(x => x is Guid g && g != Guid.Empty)
+            .Select(x => x!.Value)
+            .Distinct()
+            .ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, ActorLabel>();
+        }
+
+        var profiles = await _profiles.GetManyAsync(ids, cancellationToken);
+        var contacts = await _contacts.GetContactsAsync(ids, cancellationToken);
+        var map = new Dictionary<Guid, ActorLabel>(ids.Length);
+        foreach (var id in ids)
+        {
+            profiles.TryGetValue(id, out var profile);
+            contacts.TryGetValue(id, out var contact);
+            var display = FirstNonEmpty(
+                Usable(profile?.DisplayName),
+                Usable(JoinName(profile?.FirstName, profile?.LastName)),
+                Usable(contact?.Email),
+                Usable(contact?.Mobile));
+            map[id] = display is null
+                ? ActorLabel.MissingUser()
+                : ActorLabel.User(display);
+        }
+
+        return map;
+    }
+
+    private static AdminOrderNoteView MapNote(
+        CheckoutOperationalNoteSnapshot note,
+        IReadOnlyDictionary<Guid, ActorLabel> labels)
+    {
+        var label = ResolveLabel(note.CreatedByUserId, labels);
         return new AdminOrderNoteView(
             note.NoteId,
             note.CheckoutId,
             note.Body,
             note.CreatedByUserId,
             note.CreatedAt,
-            actor.Fa,
-            actor.En);
+            label.Kind,
+            label.DisplayName,
+            label.DisplayFa,
+            label.DisplayEn);
     }
 
-    private static (string Fa, string En) SystemActor() => ("توسط سیستم", "By system");
+    private static AdminOperationalHistoryEntry ToEntry(
+        HistoryDraft draft,
+        IReadOnlyDictionary<Guid, ActorLabel> labels)
+    {
+        var label = ResolveLabel(draft.ActorUserId, labels);
+        return new AdminOperationalHistoryEntry(
+            draft.OccurredAt,
+            draft.Kind,
+            draft.LabelFa,
+            draft.LabelEn,
+            label.Kind,
+            label.DisplayName,
+            label.DisplayFa,
+            label.DisplayEn,
+            string.IsNullOrWhiteSpace(draft.SummaryFa) ? null : draft.SummaryFa,
+            string.IsNullOrWhiteSpace(draft.SummaryEn) ? null : draft.SummaryEn);
+    }
 
-    private static (string Fa, string En) ActorFromUser(Guid userId) =>
-        userId == Guid.Empty
-            ? SystemActor()
-            : ($"توسط اپراتور {userId.ToString("N")[..8]}", $"By operator {userId.ToString("N")[..8]}");
+    /// <summary>برچسب نمایشی Actor برای تست و ترکیب Host.</summary>
+    internal static ActorLabel ResolveLabel(Guid? actorUserId, IReadOnlyDictionary<Guid, ActorLabel> labels)
+    {
+        if (actorUserId is null || actorUserId == Guid.Empty)
+        {
+            return ActorLabel.System();
+        }
 
-    private static AdminOperationalHistoryEntry Entry(
+        return labels.TryGetValue(actorUserId.Value, out var found)
+            ? found
+            : ActorLabel.MissingUser();
+    }
+
+    private static HistoryDraft Draft(
         DateTimeOffset occurredAt,
         string kind,
         string labelFa,
         string labelEn,
-        (string Fa, string En) actor,
+        Guid? actorUserId,
         string? summaryFa = null,
         string? summaryEn = null) =>
-        new(
-            occurredAt,
-            kind,
-            labelFa,
-            labelEn,
-            actor.Fa,
-            actor.En,
-            string.IsNullOrWhiteSpace(summaryFa) ? null : summaryFa,
-            string.IsNullOrWhiteSpace(summaryEn) ? null : summaryEn);
+        new(occurredAt, kind, labelFa, labelEn, actorUserId, summaryFa, summaryEn);
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return null;
+    }
+
+    private static string? Usable(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        // رد کردن نام‌های خراب‌شدهٔ encoding که فقط '?' هستند
+        if (trimmed.All(ch => ch == '?' || char.IsWhiteSpace(ch)))
+        {
+            return null;
+        }
+
+        return trimmed;
+    }
+
+    private static string? JoinName(string? first, string? last)
+    {
+        var parts = new[] { first, last }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!.Trim())
+            .ToArray();
+        return parts.Length == 0 ? null : string.Join(' ', parts);
+    }
+
+    private sealed record HistoryDraft(
+        DateTimeOffset OccurredAt,
+        string Kind,
+        string LabelFa,
+        string LabelEn,
+        Guid? ActorUserId,
+        string? SummaryFa,
+        string? SummaryEn);
+
+    /// <summary>برچسب انسانی Actor بدون شناسهٔ فنی در متن اصلی UI.</summary>
+    internal readonly record struct ActorLabel(string Kind, string DisplayName, string DisplayFa, string DisplayEn)
+    {
+        public static ActorLabel System() =>
+            new("system", "سیستم", "توسط سیستم", "By system");
+
+        public static ActorLabel User(string displayName) =>
+            new("user", displayName, $"توسط {displayName}", $"By {displayName}");
+
+        public static ActorLabel MissingUser() =>
+            new("user", "کاربر نامشخص", "توسط کاربر نامشخص", "By unknown user");
+    }
 
     private static string Truncate(string value, int max) =>
         value.Length <= max ? value : value[..(max - 1)] + "…";

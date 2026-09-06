@@ -25,6 +25,26 @@ public sealed class OperatorProfileDirectory : IOperatorProfileDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, OperatorProfileSnapshot>> GetManyAsync(
+        IReadOnlyCollection<Guid> actorUserIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = actorUserIds
+            .Where(x => x != Guid.Empty)
+            .Distinct()
+            .ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, OperatorProfileSnapshot>();
+        }
+
+        var profiles = await _db.Profiles.AsNoTracking()
+            .Where(x => ids.Contains(x.OwnerUserId))
+            .ToListAsync(cancellationToken);
+        return profiles.ToDictionary(x => x.OwnerUserId, Map);
+    }
+
+    /// <inheritdoc />
     public async Task<OperatorProfileSnapshot> UpsertAsync(
         Guid actorUserId,
         OperatorProfileWrite input,

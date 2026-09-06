@@ -98,6 +98,8 @@ public sealed class AdminOrderCompletenessTests
             "order_created",
             "ثبت سفارش",
             "Order created",
+            "system",
+            "سیستم",
             "توسط سیستم",
             "By system");
         var newer = new AdminOperationalHistoryEntry(
@@ -105,6 +107,8 @@ public sealed class AdminOrderCompletenessTests
             "payment_succeeded",
             "پرداخت موفق",
             "Payment succeeded",
+            "system",
+            "سیستم",
             "توسط سیستم",
             "By system");
         var ordered = new[] { older, newer }
@@ -113,6 +117,52 @@ public sealed class AdminOrderCompletenessTests
             .ToList();
         Assert.Equal("payment_succeeded", ordered[0].Kind);
         Assert.Equal("order_created", ordered[1].Kind);
+    }
+
+    [Fact]
+    public void Actor_labels_are_human_readable_without_technical_ids()
+    {
+        var empty = new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>();
+        var system = AdminOrderCompletenessComposer.ResolveLabel(null, empty);
+        Assert.Equal("system", system.Kind);
+        Assert.Equal("توسط سیستم", system.DisplayFa);
+        Assert.DoesNotContain("اپراتور", system.DisplayFa, StringComparison.Ordinal);
+
+        var userId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+        var resolved = AdminOrderCompletenessComposer.ResolveLabel(
+            userId,
+            new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>
+            {
+                [userId] = AdminOrderCompletenessComposer.ActorLabel.User("اپراتور آلفا"),
+            });
+        Assert.Equal("user", resolved.Kind);
+        Assert.Equal("اپراتور آلفا", resolved.DisplayName);
+        Assert.Equal("توسط اپراتور آلفا", resolved.DisplayFa);
+        Assert.DoesNotContain("aaaaaaaa", resolved.DisplayFa, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(userId.ToString("N")[..8], resolved.DisplayFa, StringComparison.OrdinalIgnoreCase);
+
+        var missing = AdminOrderCompletenessComposer.ResolveLabel(userId, empty);
+        Assert.Equal("user", missing.Kind);
+        Assert.Equal("توسط کاربر نامشخص", missing.DisplayFa);
+        Assert.DoesNotContain(userId.ToString("N"), missing.DisplayFa, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(userId.ToString("D"), missing.DisplayFa, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Actor_label_map_reuses_one_entry_for_repeated_actors()
+    {
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var map = new Dictionary<Guid, AdminOrderCompletenessComposer.ActorLabel>
+        {
+            [a] = AdminOrderCompletenessComposer.ActorLabel.User("A"),
+            [b] = AdminOrderCompletenessComposer.ActorLabel.User("B"),
+        };
+        var labels = new[] { a, a, b, a }
+            .Select(id => AdminOrderCompletenessComposer.ResolveLabel(id, map).DisplayName)
+            .ToArray();
+        Assert.Equal(new[] { "A", "A", "B", "A" }, labels);
+        Assert.Equal(2, map.Count);
     }
 
     [Fact]

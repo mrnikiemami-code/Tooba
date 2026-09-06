@@ -10,6 +10,8 @@ public sealed record AdminOrderNoteView(
     string Body,
     Guid CreatedByUserId,
     DateTimeOffset CreatedAt,
+    string ActorKind,
+    string ActorDisplayName,
     string ActorDisplayFa,
     string ActorDisplayEn);
 
@@ -19,6 +21,8 @@ public sealed record AdminOperationalHistoryEntry(
     string Kind,
     string LabelFa,
     string LabelEn,
+    string ActorKind,
+    string ActorDisplayName,
     string ActorDisplayFa,
     string ActorDisplayEn,
     string? SummaryFa = null,
