@@ -247,7 +247,7 @@ public sealed class AdminOrderOperationsComposer
             }
 
             if (fulfillment.Status is FulfillmentStatus.Packed or FulfillmentStatus.Processing or FulfillmentStatus.ReadyToFulfill
-                && fulfillment.Items.Any(i => i.QuantityOrdered > i.QuantityShipped)
+                && HasUnallocatedShipmentQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -630,6 +630,27 @@ public sealed class AdminOrderOperationsComposer
     private static Guid RequireReturnRequestId(AdminOrderOperationRequest request) =>
         request.ReturnRequestId
         ?? throw new PlatformHttpException(400, "شناسه درخواست مرجوعی الزامی است.", "order.operation.invalid");
+
+    /// <summary>
+    /// آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده (با احتساب محمولهٔ Created باز).
+    /// </summary>
+    private static bool HasUnallocatedShipmentQuantity(FulfillmentSnapshot fulfillment)
+    {
+        foreach (var item in fulfillment.Items)
+        {
+            var openAllocated = fulfillment.Shipments
+                .Where(s => s.Status == ShipmentStatus.Created)
+                .SelectMany(s => s.Items)
+                .Where(line => line.OrderLineId == item.OrderLineId)
+                .Sum(line => line.Quantity);
+            if (item.QuantityOrdered > item.QuantityShipped + openAllocated)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static AdminOrderOperationAction Action(
         string code,

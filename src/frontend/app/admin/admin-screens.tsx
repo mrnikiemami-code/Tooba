@@ -338,17 +338,7 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     id: "reference",
     header: "سفارش",
     accessor: (row) => row.reference,
-    cell: (row) => (
-      <div className="app-grid-cell-content min-w-0">
-        <Link
-          className="block truncate font-semibold text-primary hover:underline"
-          href={`/admin/orders/${row.checkoutId}`}
-          title={row.reference}
-        >
-          {row.reference}
-        </Link>
-      </div>
-    ),
+    cell: (row) => truncatedCell(row.reference, row.reference),
     width: 220,
     minWidth: 160,
     maxWidth: 280,

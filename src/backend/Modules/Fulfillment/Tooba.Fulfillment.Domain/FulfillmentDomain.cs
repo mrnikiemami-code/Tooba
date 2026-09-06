@@ -286,7 +286,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             throw new InvalidOperationException("ایجاد محموله در وضعیت پایانی مجاز نیست.");
         }
 
-        var shipment = Shipment.Create(FulfillmentId, carrierDisplayName, items, _items, now);
+        var shipment = Shipment.Create(FulfillmentId, carrierDisplayName, items, _items, _shipments, now);
         _shipments.Add(shipment);
         UpdatedAt = now;
         return shipment;
@@ -387,6 +387,7 @@ public sealed class Shipment
         string carrierDisplayName,
         IReadOnlyList<(Guid OrderLineId, int Quantity)> items,
         IReadOnlyList<FulfillmentItem> fulfillmentItems,
+        IReadOnlyList<Shipment> existingShipments,
         DateTimeOffset now)
     {
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
@@ -405,9 +406,13 @@ public sealed class Shipment
         foreach (var item in items)
         {
             var remaining = fulfillmentItems.Single(x => x.OrderLineId == item.OrderLineId);
-            var already = remaining.QuantityShipped;
+            var openAllocated = existingShipments
+                .Where(s => s.Status == ShipmentStatus.Created)
+                .SelectMany(s => s.Items)
+                .Where(x => x.OrderLineId == item.OrderLineId)
+                .Sum(x => x.Quantity);
             var pendingShipmentQty = shipment._items.Where(x => x.OrderLineId == item.OrderLineId).Sum(x => x.Quantity);
-            if (already + pendingShipmentQty + item.Quantity > remaining.QuantityOrdered)
+            if (remaining.QuantityShipped + openAllocated + pendingShipmentQty + item.Quantity > remaining.QuantityOrdered)
             {
                 throw new InvalidOperationException("تعداد محموله از باقیمانده سفارش بیشتر است.");
             }

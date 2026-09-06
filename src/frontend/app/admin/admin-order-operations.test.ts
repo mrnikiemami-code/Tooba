@@ -17,6 +17,19 @@ test("orders grid keeps View and adds one operations menu", () => {
   assert.doesNotMatch(screens, /mark_processing|لغو سفارش/);
 });
 
+test("orders grid order reference is non-navigation text; View is canonical", () => {
+  const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+  const orderColumnsBlock = screens.slice(
+    screens.indexOf("const orderColumns"),
+    screens.indexOf("const sellerColumns"),
+  );
+  assert.match(orderColumnsBlock, /id:\s*"reference"/);
+  assert.match(orderColumnsBlock, /truncatedCell\(row\.reference/);
+  assert.doesNotMatch(orderColumnsBlock, /href=\{`\/admin\/orders\/\$\{row\.checkoutId\}`\}/);
+  assert.doesNotMatch(orderColumnsBlock, /<Link[\s\S]*row\.reference/);
+  assert.match(screens, /orderRowActions[\s\S]*id:\s*"view"[\s\S]*href:\s*\(row\)\s*=>\s*`\/admin\/orders\/\$\{row\.checkoutId\}`/);
+});
+
 test("order detail header exposes عملیات سفارش menu", () => {
   const detail = readFileSync(join(dir, "admin-order-detail-screen.tsx"), "utf8");
   assert.match(detail, /AdminOrderOperationsMenu/);

@@ -234,7 +234,15 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
         unit.AssignTracking(shipmentId, trackingReference, DateTimeOffset.UtcNow);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("این کد پیگیری قبلاً ثبت شده است.");
+        }
+
         _telemetry.RecordTrackingAssigned();
         return await MapSnapshotAsync(unit, cancellationToken);
     }
