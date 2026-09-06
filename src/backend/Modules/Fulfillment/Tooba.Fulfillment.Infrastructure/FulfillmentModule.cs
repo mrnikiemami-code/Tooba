@@ -7,6 +7,7 @@ using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
 using Tooba.ModuleContracts;
+using Tooba.Order.Application;
 using Tooba.Payment.Application;
 using Tooba.Persistence;
 
@@ -34,6 +35,7 @@ public sealed class FulfillmentModule : IToobaModule
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());
         services.AddScoped<IFulfillmentInventoryGateway, FulfillmentInventoryGateway>();
         services.AddScoped<IFulfillmentReturnReader, FulfillmentReturnBridge>();
+        services.AddScoped<ISellerOrderCancelFulfillmentGate, FulfillmentSellerOrderCancelGate>();
         services.AddScoped<IIntegrationEventHandler<PaymentSucceededIntegrationEvent>, FulfillmentPaymentSucceededHandler>();
         services.AddDbContext<FulfillmentDbContext>((sp, options) =>
         {

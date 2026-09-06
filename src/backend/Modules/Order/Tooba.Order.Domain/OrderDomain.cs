@@ -370,13 +370,41 @@ public sealed class SellerOrder
     }
 
     /// <summary>
-    /// لغو سفارش فروشنده.
+    /// لغو سفارش باز (قبل از Paid). مسیر authoritative؛ caller نباید فقط به UI تکیه کند.
     /// </summary>
     public void Cancel()
     {
         if (Status == SellerOrderStatus.Cancelled)
         {
             return;
+        }
+
+        if (Status is SellerOrderStatus.PendingPayment
+            or SellerOrderStatus.Submitted
+            or SellerOrderStatus.ReservationRequested)
+        {
+            Status = SellerOrderStatus.Cancelled;
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "order.cancel.forbidden: لغو از این وضعیت سفارش مجاز نیست.");
+    }
+
+    /// <summary>
+    /// لغو سفارش Paid فقط وقتی application ثابت کرده هنوز محموله/ارسال مسدودکننده ندارد.
+    /// </summary>
+    public void CancelPaidBeforeShipment()
+    {
+        if (Status == SellerOrderStatus.Cancelled)
+        {
+            return;
+        }
+
+        if (Status != SellerOrderStatus.Paid)
+        {
+            throw new InvalidOperationException(
+                "order.cancel.forbidden: لغو پیش از ارسال فقط برای سفارش Paid مجاز است.");
         }
 
         Status = SellerOrderStatus.Cancelled;

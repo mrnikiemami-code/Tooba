@@ -43,6 +43,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly ITaxCalculator _taxes;
     private readonly IPromotionEvaluator _promotions;
     private readonly ICatalogLookupGateway _catalog;
+    private readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -57,7 +58,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IInventoryDirectory inventory,
         ITaxCalculator taxes,
         IPromotionEvaluator promotions,
-        ICatalogLookupGateway catalog)
+        ICatalogLookupGateway catalog,
+        ISellerOrderCancelFulfillmentGate cancelFulfillmentGate)
     {
         _db = db;
         _guard = guard;
@@ -69,6 +71,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _taxes = taxes;
         _promotions = promotions;
         _catalog = catalog;
+        _cancelFulfillmentGate = cancelFulfillmentGate;
     }
 
     /// <inheritdoc />
@@ -244,6 +247,14 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             ?? throw new InvalidOperationException("سفارش فروشنده پیدا نشد.");
         var group = await _db.Checkouts.SingleAsync(x => x.CheckoutId == order.CheckoutId, cancellationToken);
         EnsureAccess(group, access);
+
+        var fulfillment = await _cancelFulfillmentGate.GetAsync(sellerOrderId, cancellationToken);
+        if (!SellerOrderCancellationPolicy.CanCancel(order.Status, fulfillment))
+        {
+            throw new InvalidOperationException(
+                "order.cancel.forbidden: لغو از این وضعیت سفارش/ارسال مجاز نیست.");
+        }
+
         foreach (var line in order.Lines)
         {
             if (line.ReservationId is { } reservationId)
@@ -252,7 +263,15 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             }
         }
 
-        order.Cancel();
+        if (SellerOrderCancellationPolicy.IsOpenCancellable(order.Status))
+        {
+            order.Cancel();
+        }
+        else
+        {
+            order.CancelPaidBeforeShipment();
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
     }
 

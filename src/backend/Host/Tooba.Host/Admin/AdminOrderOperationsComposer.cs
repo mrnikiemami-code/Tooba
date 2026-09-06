@@ -118,6 +118,36 @@ public sealed class AdminOrderOperationsComposer
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
+        var code = request.Code.Trim().ToLowerInvariant();
+
+        // cancel: projection may hide the action, but mutation still goes through CancelSellerOrderAsync
+        // so domain/application remains authoritative (order.cancel.forbidden).
+        if (code == "cancel")
+        {
+            if (!Has(effective, "order.cancel"))
+            {
+                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            }
+
+            try
+            {
+                return await CancelAsync(group, request, cancellationToken);
+            }
+            catch (PlatformHttpException)
+            {
+                throw;
+            }
+            catch (InvalidOperationException ex) when (
+                ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal))
+            {
+                throw new PlatformHttpException(400, ex.Message, "order.cancel.forbidden");
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new PlatformHttpException(400, ex.Message, "order.operation.failed");
+            }
+        }
+
         var page = await ListAsync(checkoutId, actorUserId, cancellationToken);
         var projected = page.Actions.FirstOrDefault(a =>
             string.Equals(a.Code, request.Code, StringComparison.OrdinalIgnoreCase)
@@ -134,9 +164,8 @@ public sealed class AdminOrderOperationsComposer
 
         try
         {
-            return request.Code.Trim().ToLowerInvariant() switch
+            return code switch
             {
-                "cancel" => await CancelAsync(group, request, cancellationToken),
                 "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
                 "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken),
                 "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
@@ -576,22 +605,12 @@ public sealed class AdminOrderOperationsComposer
 
     internal static bool CanCancel(SellerOrder order, FulfillmentSnapshot? fulfillment)
     {
-        if (order.Status is SellerOrderStatus.PendingPayment
-            or SellerOrderStatus.Submitted
-            or SellerOrderStatus.ReservationRequested)
-        {
-            return true;
-        }
-
-        if (order.Status == SellerOrderStatus.Paid
-            && fulfillment is not null
-            && fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing
-            && fulfillment.Shipments.Count == 0)
-        {
-            return true;
-        }
-
-        return false;
+        SellerOrderCancelFulfillmentSnapshot? gate = fulfillment is null
+            ? null
+            : new SellerOrderCancelFulfillmentSnapshot(
+                fulfillment.Status.ToString(),
+                fulfillment.Shipments.Count);
+        return SellerOrderCancellationPolicy.CanCancel(order.Status, gate);
     }
 
     private static bool MatchesIds(AdminOrderOperationAction action, AdminOrderOperationRequest request) =>
