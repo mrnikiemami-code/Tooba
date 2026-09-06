@@ -102,12 +102,12 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT points Last Implementation at TB-P09-T001-R1; Architect T016-R5; Issued T001; Repair none", () => {
+test("recovery SoT points Last Implementation at TB-P09-T001-R2; Architect T016-R5; Issued T001; Repair none", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
-  assert.match(recovery, /TB-P09-T001-R1/);
-  assert.match(state, /TB-P09-T001-R1/);
+  assert.match(recovery, /TB-P09-T001-R2/);
+  assert.match(state, /TB-P09-T001-R2/);
   assert.match(recovery, /TB-P08-T016-R5/);
   assert.match(state, /TB-P08-T016-R5/);
   assert.match(recovery, /P09/);
@@ -130,13 +130,13 @@ test("recovery SoT points Last Implementation at TB-P09-T001-R1; Architect T016-
   );
   assert.match(
     state,
-    /Last Implementation Task:\s*```text\s*TB-P09-T001-R1\s*```/,
-    "PROJECT-STATE Last Implementation Task must be TB-P09-T001-R1",
+    /Last Implementation Task:\s*```text\s*TB-P09-T001-R2\s*```/,
+    "PROJECT-STATE Last Implementation Task must be TB-P09-T001-R2",
   );
   assert.match(
     recovery,
-    /Last Implementation Task:\s*```text\s*TB-P09-T001-R1\s*```/,
-    "recovery Last Implementation Task must be TB-P09-T001-R1",
+    /Last Implementation Task:\s*```text\s*TB-P09-T001-R2\s*```/,
+    "recovery Last Implementation Task must be TB-P09-T001-R2",
   );
   assert.match(
     state,
@@ -175,8 +175,8 @@ test("recovery SoT does not leave stale tasks as Last Implementation", () => {
   };
   const implRecovery = implBlock(recovery);
   const implState = implBlock(state);
-  assert.equal(implRecovery, "TB-P09-T001-R1");
-  assert.equal(implState, "TB-P09-T001-R1");
+  assert.equal(implRecovery, "TB-P09-T001-R2");
+  assert.equal(implState, "TB-P09-T001-R2");
   for (const stale of STALE_CURRENT_POINTERS) {
     assert.notEqual(implRecovery, stale, `recovery Last Implementation must not be stale ${stale}`);
     assert.notEqual(implState, stale, `PROJECT-STATE Last Implementation must not be stale ${stale}`);

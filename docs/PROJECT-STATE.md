@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T001-R1
+TB-P09-T001-R2
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T001-R2 — Marketplace settlement event-path proof (MassTransit/outbox handlers; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001-R1 — Order Operations Foundation Repair (domain cancel guard + real post-settlement return runtime; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T001 — Order Operations Foundation (contextual admin actions, return eligibility SoT, settlement-safe returns; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R5 — P08 repair (locale backlink, history clarity, fonts/video/category UX; USER_VISUAL_ACCEPTED=NO)
