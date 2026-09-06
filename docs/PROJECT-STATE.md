@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P08 — Content / i18n Foundation
+P09 — Order Operations / Returns
 ```
 
 Pipeline Mode:
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P08-T015
+TB-P08-T016-R5
 ```
 
 Prior accepted catalog wave:
@@ -62,13 +62,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P08-T016-R5
+TB-P09-T001
 ```
 
 Current Issued Task:
 
 ```text
-(none)
+TB-P09-T001
 ```
 
 Current Repair Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T001 — Order Operations Foundation (contextual admin actions, return eligibility SoT, settlement-safe returns; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R5 — P08 repair (locale backlink, history clarity, fonts/video/category UX; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R4 — P08 repair (article locale identity, history pager, CKEditor fonts, DAM contentTypePrefix video; USER_VISUAL_ACCEPTED=NO)
 TB-P08-T016-R3 — P08 final visual/functional repair (DB languages, loading feedback, Full Edit density, author readiness, CKEditor font/DAM; USER_VISUAL_ACCEPTED=NO)
@@ -115,7 +116,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P08-T015
+TB-P08-T016-R5
 ```
 
 USER_VISUAL_ACCEPTED:

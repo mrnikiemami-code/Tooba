@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Tooba.Fulfillment.Application;
 using Tooba.Order.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
@@ -26,12 +25,10 @@ public sealed class OpenReturnUseCaseGuard : IReturnUseCaseGuard
 /// </summary>
 public sealed class ReturnDirectory : IReturnDirectory
 {
-    private static readonly TimeSpan ReturnWindow = TimeSpan.FromDays(30);
-
     private readonly ReturnsDbContext _db;
     private readonly IReturnUseCaseGuard _guard;
     private readonly IOrderReturnReader _orders;
-    private readonly IFulfillmentReturnReader _fulfillment;
+    private readonly IReturnEligibilityEvaluator _eligibility;
     private readonly IPaymentDirectory _payments;
     private readonly IPaymentRefundGateway _refundGateway;
     private readonly IWalletDirectory _wallets;
@@ -40,13 +37,13 @@ public sealed class ReturnDirectory : IReturnDirectory
     private readonly ILogger<ReturnDirectory> _logger;
 
     /// <summary>
-    /// دایرکتوری را به schema returns و درز Order/Fulfillment/Payment/Wallet وصل می‌کند.
+    /// دایرکتوری را به schema returns و درز Order/Payment/Wallet و evaluator وصل می‌کند.
     /// </summary>
     public ReturnDirectory(
         ReturnsDbContext db,
         IReturnUseCaseGuard guard,
         IOrderReturnReader orders,
-        IFulfillmentReturnReader fulfillment,
+        IReturnEligibilityEvaluator eligibility,
         IPaymentDirectory payments,
         IPaymentRefundGateway refundGateway,
         IWalletDirectory wallets,
@@ -57,7 +54,7 @@ public sealed class ReturnDirectory : IReturnDirectory
         _db = db;
         _guard = guard;
         _orders = orders;
-        _fulfillment = fulfillment;
+        _eligibility = eligibility;
         _payments = payments;
         _refundGateway = refundGateway;
         _wallets = wallets;
@@ -67,7 +64,23 @@ public sealed class ReturnDirectory : IReturnDirectory
     }
 
     /// <inheritdoc />
-    public async Task<ReturnSnapshot> CreateAsync(CreateReturnCommand command, CancellationToken cancellationToken)
+    public Task<ReturnSnapshot> CreateAsync(CreateReturnCommand command, CancellationToken cancellationToken) =>
+        CreateInternalAsync(command, requireOwner: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ReturnSnapshot> CreateAdminInitiatedAsync(CreateReturnCommand command, CancellationToken cancellationToken) =>
+        CreateInternalAsync(command, requireOwner: false, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ReturnEligibilityResult> EvaluateEligibilityAsync(
+        Guid sellerOrderId,
+        CancellationToken cancellationToken) =>
+        _eligibility.EvaluateAsync(sellerOrderId, cancellationToken);
+
+    private async Task<ReturnSnapshot> CreateInternalAsync(
+        CreateReturnCommand command,
+        bool requireOwner,
+        CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
 
@@ -79,40 +92,25 @@ public sealed class ReturnDirectory : IReturnDirectory
         }
 
         var orderContext = await _orders.GetReturnContextAsync(command.SellerOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("سفارش برای مرجوعی پیدا نشد.");
-        if (orderContext.PlacedByUserId != command.ActorUserId)
+            ?? throw new InvalidOperationException(ReturnEligibilityReasonCodes.ToFaMessage(ReturnEligibilityReasonCodes.OrderMissing));
+        if (requireOwner && orderContext.PlacedByUserId != command.ActorUserId)
         {
             throw new InvalidOperationException("درخواست‌دهنده مالک سفارش نیست.");
         }
 
-        if (!orderContext.IsPaid)
+        var eligibility = await _eligibility.EvaluateAsync(command.SellerOrderId, cancellationToken);
+        if (!eligibility.Eligible)
         {
-            throw new InvalidOperationException("مرجوعی فقط برای سفارش Paid مجاز است.");
+            throw new InvalidOperationException(ReturnEligibilityReasonCodes.ToFaMessage(eligibility.ReasonCode));
         }
 
-        var fulfillment = await _fulfillment.GetEligibilityAsync(command.SellerOrderId, cancellationToken)
-            ?? throw new InvalidOperationException("اطلاعات fulfillment برای مرجوعی پیدا نشد.");
-
-        if (fulfillment.LastDeliveredAt is null)
-        {
-            throw new InvalidOperationException("هنوز تحویلی ثبت نشده است.");
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        if (now - fulfillment.LastDeliveredAt.Value > ReturnWindow)
-        {
-            throw new InvalidOperationException("مهلت ۳۰ روزهٔ مرجوعی گذشته است.");
-        }
-
-        var alreadyReturned = await GetAlreadyReturnedQuantitiesAsync(command.SellerOrderId, cancellationToken);
+        var remainingByLine = eligibility.Lines.ToDictionary(x => x.OrderLineId, x => x.RemainingReturnableQuantity);
         var lineSnapshots = new List<(Guid OrderLineId, int Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>();
         foreach (var item in command.Items)
         {
             var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)
                 ?? throw new InvalidOperationException("خط سفارش پیدا نشد.");
-            fulfillment.DeliveredQuantities.TryGetValue(item.OrderLineId, out var delivered);
-            alreadyReturned.TryGetValue(item.OrderLineId, out var returned);
-            var remaining = delivered - returned;
+            remainingByLine.TryGetValue(item.OrderLineId, out var remaining);
             if (item.Quantity <= 0 || item.Quantity > remaining)
             {
                 throw new InvalidOperationException("تعداد مرجوعی از باقیماندهٔ تحویل‌شده بیشتر است.");
@@ -121,11 +119,13 @@ public sealed class ReturnDirectory : IReturnDirectory
             lineSnapshots.Add((item.OrderLineId, item.Quantity, orderLine.UnitPriceSnapshot, orderLine.ReservationId));
         }
 
+        var now = DateTimeOffset.UtcNow;
+        var requestedBy = orderContext.PlacedByUserId;
         var request = ReturnRequest.Create(
             orderContext.SellerOrderId,
             orderContext.CheckoutId,
             orderContext.SellerPartyId,
-            command.ActorUserId,
+            requestedBy,
             command.IdempotencyKey,
             command.Reason,
             orderContext.Currency,
@@ -315,34 +315,6 @@ public sealed class ReturnDirectory : IReturnDirectory
         request.PaymentId is { } existing
             ? await _payments.GetAsync(existing, request.RequestedByUserId, null, cancellationToken)
             : await _payments.GetLatestForCheckoutAsync(request.CheckoutId, request.RequestedByUserId, null, cancellationToken);
-
-    private async Task<Dictionary<Guid, int>> GetAlreadyReturnedQuantitiesAsync(
-        Guid sellerOrderId,
-        CancellationToken cancellationToken)
-    {
-        var activeStatuses = new[]
-        {
-            ReturnRequestStatus.Requested,
-            ReturnRequestStatus.Approved,
-            ReturnRequestStatus.RefundProcessing,
-            ReturnRequestStatus.Completed,
-        };
-        var requestIds = await _db.ReturnRequests.AsNoTracking()
-            .Where(x => x.SellerOrderId == sellerOrderId && activeStatuses.Contains(x.Status))
-            .Select(x => x.ReturnRequestId)
-            .ToListAsync(cancellationToken);
-        if (requestIds.Count == 0)
-        {
-            return [];
-        }
-
-        var items = await _db.ReturnItems.AsNoTracking()
-            .Where(x => requestIds.Contains(x.ReturnRequestId))
-            .ToListAsync(cancellationToken);
-        return items
-            .GroupBy(x => x.OrderLineId)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
-    }
 
     private async Task<ReturnRequest> LoadMutableAsync(Guid returnRequestId, CancellationToken cancellationToken)
     {

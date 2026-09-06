@@ -34,6 +34,7 @@ import {
   type AdminResult,
   type AdminSellerFinancial,
 } from "./admin-api";
+import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
 
 function Denied({ retry }: { retry: () => void }) {
@@ -343,6 +344,12 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
             <ArrowRight className="size-3.5" />
             بازگشت
           </Link>
+          <AdminOrderOperationsMenu
+            checkoutId={checkoutId}
+            label="عملیات سفارش"
+            onCompleted={refresh}
+            testId={`admin-order-detail-ops-${checkoutId}`}
+          />
           <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50">
             <Printer className="size-3.5" />
             چاپ فاکتور

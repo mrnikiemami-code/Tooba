@@ -205,11 +205,15 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
             actor,
             CancellationToken.None);
 
+        var eligibility = new ReturnEligibilityEvaluator(
+            new OrderReturnBridge(orderDb),
+            new FulfillmentReturnBridge(fulfillmentDb),
+            returnsDb);
         var returnDirectory = new ReturnDirectory(
             returnsDb,
             new OpenReturnUseCaseGuard(),
             new OrderReturnBridge(orderDb),
-            new FulfillmentReturnBridge(fulfillmentDb),
+            eligibility,
             paymentDirectory,
             new FakePaymentRefundGateway(),
             new UnusedWalletDirectoryStub(),
@@ -274,7 +278,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
             returnsDb,
             new OpenReturnUseCaseGuard(),
             new OrderReturnBridge(orderDb),
-            new FulfillmentReturnBridge(fulfillmentDb),
+            eligibility,
             paymentDirectory,
             new FakePaymentRefundGateway(),
             new UnusedWalletDirectoryStub(),

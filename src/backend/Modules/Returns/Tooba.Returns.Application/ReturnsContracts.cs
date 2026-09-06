@@ -99,12 +99,90 @@ public sealed record RefundAttemptSnapshot(
     DateTimeOffset? CompletedAt);
 
 /// <summary>
+/// eligibility خط مرجوعی برای یک OrderLine.
+/// </summary>
+public sealed record ReturnLineEligibility(
+    Guid OrderLineId,
+    int DeliveredQuantity,
+    int AlreadyReturnedQuantity,
+    int RemainingReturnableQuantity);
+
+/// <summary>
+/// نتیجهٔ ارزیابی eligibility مرجوعی (منبع حقیقت یکتا؛ settlement دخیل نیست).
+/// </summary>
+public sealed record ReturnEligibilityResult(
+    Guid SellerOrderId,
+    Guid CheckoutId,
+    bool Eligible,
+    string ReasonCode,
+    DateTimeOffset? EligibleUntil,
+    DateTimeOffset? LastDeliveredAt,
+    IReadOnlyList<ReturnLineEligibility> Lines);
+
+/// <summary>
+/// کدهای پایدار reason برای eligibility مرجوعی.
+/// </summary>
+public static class ReturnEligibilityReasonCodes
+{
+    /// <summary>سفارش Paid نیست.</summary>
+    public const string NotPaid = "not_paid";
+
+    /// <summary>تحویلی ثبت نشده.</summary>
+    public const string NotDelivered = "not_delivered";
+
+    /// <summary>مهلت مرجوعی گذشته.</summary>
+    public const string WindowExpired = "window_expired";
+
+    /// <summary>تعداد قابل مرجوعی نمانده.</summary>
+    public const string NothingReturnable = "nothing_returnable";
+
+    /// <summary>واجد شرایط.</summary>
+    public const string Eligible = "eligible";
+
+    /// <summary>سفارش پیدا نشد.</summary>
+    public const string OrderMissing = "order_missing";
+
+    /// <summary>fulfillment پیدا نشد.</summary>
+    public const string FulfillmentMissing = "fulfillment_missing";
+
+    /// <summary>پیام فارسی قابل‌نمایش برای UI/API از ReasonCode.</summary>
+    public static string ToFaMessage(string reasonCode) => reasonCode switch
+    {
+        NotPaid => "مرجوعی فقط برای سفارش Paid مجاز است.",
+        NotDelivered => "هنوز تحویلی ثبت نشده است.",
+        WindowExpired => "مهلت ۳۰ روزهٔ مرجوعی گذشته است.",
+        NothingReturnable => "تعداد قابل مرجوعی باقی نمانده است.",
+        OrderMissing => "سفارش برای مرجوعی پیدا نشد.",
+        FulfillmentMissing => "اطلاعات fulfillment برای مرجوعی پیدا نشد.",
+        Eligible => "سفارش واجد شرایط مرجوعی است.",
+        _ => "مرجوعی برای این سفارش مجاز نیست.",
+    };
+}
+
+/// <summary>
+/// ارزیابی‌کنندهٔ authoritative eligibility مرجوعی.
+/// </summary>
+public interface IReturnEligibilityEvaluator
+{
+    /// <summary>eligibility را برای یک سفارش فروشنده ارزیابی می‌کند.</summary>
+    Task<ReturnEligibilityResult> EvaluateAsync(Guid sellerOrderId, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// ارکستراسیون مرجوعی.
 /// </summary>
 public interface IReturnDirectory
 {
     /// <summary>درخواست مرجوعی می‌سازد.</summary>
     Task<ReturnSnapshot> CreateAsync(CreateReturnCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// درخواست مرجوعی را از مسیر admin می‌سازد؛ مالکیت را چک نمی‌کند و RequestedByUserId = مشتری سفارش است.
+    /// </summary>
+    Task<ReturnSnapshot> CreateAdminInitiatedAsync(CreateReturnCommand command, CancellationToken cancellationToken);
+
+    /// <summary>eligibility مرجوعی را از evaluator برمی‌گرداند.</summary>
+    Task<ReturnEligibilityResult> EvaluateEligibilityAsync(Guid sellerOrderId, CancellationToken cancellationToken);
 
     /// <summary>درخواست را می‌خواند.</summary>
     Task<ReturnSnapshot?> GetAsync(Guid returnRequestId, CancellationToken cancellationToken);

@@ -28,6 +28,7 @@ public sealed class ReturnsModule : IToobaModule
         services.AddSingleton<ReturnsInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, ReturnsOutboxRegistration>();
         services.AddScoped<IReturnUseCaseGuard, OpenReturnUseCaseGuard>();
+        services.AddScoped<IReturnEligibilityEvaluator, ReturnEligibilityEvaluator>();
         services.AddScoped<ReturnDirectory>();
         services.AddScoped<IReturnDirectory>(sp => sp.GetRequiredService<ReturnDirectory>());
         services.AddScoped<IReturnInventoryGateway, ReturnInventoryGateway>();

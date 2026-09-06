@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { CheckCircle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutTemplate, Package, ShoppingBag, Star, Store, Users } from "lucide-react";
 import { ErrorState, faWorkspaceMessages, AppDataGrid, adminGridQueryAdapter, createClientGridQueryAdapter, useLegacyAdminGridDirectProps } from "../../design-system";
 import { AppGridRowActionsCell, type AppGridRowAction } from "../../design-system/app-data-grid/app-grid-row-actions";
+import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import type { GridColumnDef, GridServerQuery, SavedViewStore } from "../../design-system/data-grid";
 import type { AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import {
@@ -388,7 +389,12 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     id: "actions",
     header: "عملیات",
     accessor: () => "",
-    cell: (row) => <AppGridRowActionsCell row={row} actions={orderRowActions} compact />,
+    cell: (row) => (
+      <span className="inline-flex items-center gap-1">
+        <AppGridRowActionsCell row={row} actions={orderRowActions} compact />
+        <AdminOrderOperationsMenu checkoutId={row.checkoutId} label="عملیات" compact />
+      </span>
+    ),
     exportable: false,
     sortable: false,
   },

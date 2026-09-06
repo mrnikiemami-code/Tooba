@@ -231,7 +231,9 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
 
         var debit = await settlementDb.SettlementEntries.SingleAsync(x => x.EntryType == EntryType.Debit);
         Assert.Equal(returnRequest.RefundAmount - debit.CommissionAmount, debit.NetAmount);
+        Assert.Equal("refund", debit.SourceType);
 
+        var statementsBefore = await settlementDb.SettlementStatements.AsNoTracking().Select(x => new { x.StatementId, x.Status }).ToListAsync();
         await settlementDirectory.AdjustFromRefundAsync(
             returnRequest.ReturnRequestId,
             returnRequest.RefundAmount,
@@ -239,6 +241,9 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
             Guid.NewGuid(),
             CancellationToken.None);
         Assert.Equal(1, await settlementDb.SettlementEntries.CountAsync(x => x.EntryType == EntryType.Debit));
+        var statementsAfter = await settlementDb.SettlementStatements.AsNoTracking().Select(x => new { x.StatementId, x.Status }).ToListAsync();
+        Assert.Equal(statementsBefore.Count, statementsAfter.Count);
+        Assert.Equal(statementsBefore, statementsAfter);
     }
 
     /// <summary>

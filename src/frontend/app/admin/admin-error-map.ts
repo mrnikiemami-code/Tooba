@@ -202,6 +202,18 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "دسترسی مجاز نیست.",
     en: "You are not allowed to perform this action.",
   },
+  "order.operation.denied": {
+    fa: "مجوز انجام این عملیات وجود ندارد.",
+    en: "You are not allowed to perform this order operation.",
+  },
+  "order.operation.invalid": {
+    fa: "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+    en: "This operation is not valid for the current order state.",
+  },
+  "order.operation.failed": {
+    fa: "انجام عملیات سفارش ناموفق بود.",
+    en: "The order operation could not be completed.",
+  },
   "host-unreachable": {
     fa: "اتصال به سرویس برقرار نیست. لطفاً دوباره تلاش کنید.",
     en: "Could not reach the service. Please try again.",
