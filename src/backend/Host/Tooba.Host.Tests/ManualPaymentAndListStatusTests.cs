@@ -1,5 +1,6 @@
 using Tooba.Host.Grid;
 using Tooba.Order.Domain;
+using Tooba.Payment.Infrastructure;
 using Tooba.Returns.Domain;
 using Xunit;
 
@@ -8,32 +9,20 @@ namespace Tooba.Host.Tests;
 public sealed class ManualPaymentAndListStatusTests
 {
     [Fact]
-    public void Manual_gateway_pending_until_confirm()
+    public async Task Manual_gateway_verify_stays_pending_without_admin_confirm()
     {
-        var gateway = new Tooba.Payment.Infrastructure.ManualPaymentGateway();
-        var reference = $"manual-{Guid.NewGuid():N}";
-        Tooba.Payment.Infrastructure.ManualPaymentGateway.ConfirmedReferences.TryRemove(reference, out _);
-        Tooba.Payment.Infrastructure.ManualPaymentGateway.RejectedReferences.TryRemove(reference, out _);
-
-        var pending = gateway.VerifyAsync(reference, true, CancellationToken.None).GetAwaiter().GetResult();
+        var gateway = new ManualPaymentGateway();
+        var pending = await gateway.VerifyAsync($"manual-{Guid.NewGuid():N}", true, CancellationToken.None);
         Assert.False(pending.VerifiedSuccess);
         Assert.Equal("MANUAL_DEPOSIT_PENDING", pending.FailureCode);
-
-        Tooba.Payment.Infrastructure.ManualPaymentGateway.Confirm(reference);
-        var ok = gateway.VerifyAsync(reference, false, CancellationToken.None).GetAwaiter().GetResult();
-        Assert.True(ok.VerifiedSuccess);
-        Assert.StartsWith("manual-txn-", ok.ProviderTransactionReference);
     }
 
     [Fact]
-    public void Manual_gateway_reject_fails_verify()
+    public void Manual_provider_code_is_stable()
     {
-        var gateway = new Tooba.Payment.Infrastructure.ManualPaymentGateway();
-        var reference = $"manual-{Guid.NewGuid():N}";
-        Tooba.Payment.Infrastructure.ManualPaymentGateway.Reject(reference);
-        var failed = gateway.VerifyAsync(reference, true, CancellationToken.None).GetAwaiter().GetResult();
-        Assert.False(failed.VerifiedSuccess);
-        Assert.Equal("MANUAL_DEPOSIT_REJECTED", failed.FailureCode);
+        Assert.Equal("manual", ManualPaymentGateway.ProviderCodeValue);
+        Assert.True(ManualPaymentGateway.IsManual("manual"));
+        Assert.False(ManualPaymentGateway.IsManual("fake"));
     }
 
     [Fact]

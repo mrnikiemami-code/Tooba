@@ -524,7 +524,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                 <dl className="mt-2 flex-1 border-t border-gray-100 pt-1">
                   <InfoRow label="درگاه">{formatAdminPaymentProvider(detail.payment.providerCode)}</InfoRow>
                   <InfoRow label="شناسه تراکنش"><span dir="ltr" className="font-mono text-[11px] font-medium text-gray-600">{formatAdminPaymentReference(detail.payment)}</span></InfoRow>
-                  <InfoRow label="وضعیت درگاه"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${paymentStatusBadge(detail.payment.status).className}`}>{formatAdminStatus(detail.payment.status)}</span></InfoRow>
+                  <InfoRow label="وضعیت درگاه"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${paymentStatusBadge(detail.payment.providerCode?.toLowerCase() === "manual" && detail.payment.status === "Pending" ? "PendingManualConfirmation" : detail.payment.status).className}`}>{formatAdminStatus(detail.payment.providerCode?.toLowerCase() === "manual" && detail.payment.status === "Pending" ? "PendingManualConfirmation" : detail.payment.status)}</span></InfoRow>
                   <InfoRow label="تاریخ پرداخت">{formatAdminDate(detail.payment.completedAt ?? detail.payment.createdAt)}</InfoRow>
                   <InfoRow label="مبلغ قابل پرداخت">{formatAdminMoney(detail.payment.amount, detail.payment.currency)}</InfoRow>
                 </dl>

@@ -54,4 +54,10 @@ public sealed class PaymentGatewayOptions
     /// حداکثر تلاش Verify برای خطاهای موقت (timeout/rate-limit/unavailable).
     /// </summary>
     public int VerifyMaxAttempts { get; set; } = 3;
+
+    /// <summary>
+    /// فعال‌سازی درگاه کارت‌به‌کارت/دستی برای این فروشگاه/محیط. پیش‌فرض خاموش.
+    /// بدون دادهٔ کارت/حساب در سورس؛ فقط قابلیت روش پرداخت.
+    /// </summary>
+    public bool ManualCardToCardEnabled { get; set; }
 }

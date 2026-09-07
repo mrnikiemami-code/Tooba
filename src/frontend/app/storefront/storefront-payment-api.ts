@@ -9,6 +9,9 @@ const PAYMENT_IDEMPOTENCY_KEY = "tooba.storefront.paymentIdempotency";
 /** کد درگاه کیف پول (پرداخت کامل؛ بدون redirect سندباکس). */
 export const WALLET_PROVIDER_CODE = "wallet";
 
+/** کد درگاه کارت‌به‌کارت/دستی (تأیید واریز ادمین). */
+export const MANUAL_PROVIDER_CODE = "manual";
+
 /**
  * نتیجهٔ شروع پرداخت. مبلغ از Host است.
  */
@@ -52,9 +55,15 @@ export interface StorefrontWalletQuote {
   payableAmount: number;
   canPayFullyWithWallet: boolean;
   mixedTenderAvailable: boolean;
+  manualCardToCardEnabled: boolean;
 }
 
-export type StorefrontPaymentMethodId = "gateway" | "wallet";
+export type StorefrontPaymentMethodId = "gateway" | "wallet" | "manual";
+
+export interface StorefrontPaymentMethodsPage {
+  methods: Array<{ code: string; labelFa: string; descriptionFa: string }>;
+  manualCardToCardEnabled: boolean;
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -114,7 +123,8 @@ export function mapStorefrontPaymentInitiation(payload: unknown): StorefrontPaym
   const providerCode = asString(readProp(item, "providerCode", "ProviderCode"));
   const redirectUrl = asString(readProp(item, "redirectUrl", "RedirectUrl"));
   const isWallet = providerCode.toLowerCase() === WALLET_PROVIDER_CODE;
-  if (!redirectUrl && !isWallet) {
+  const isManual = providerCode.toLowerCase() === MANUAL_PROVIDER_CODE;
+  if (!redirectUrl && !isWallet && !isManual) {
     return null;
   }
   return {
@@ -159,6 +169,35 @@ export function mapStorefrontWalletQuote(payload: unknown): StorefrontWalletQuot
     payableAmount: asNumber(readProp(item, "payableAmount", "PayableAmount")),
     canPayFullyWithWallet: Boolean(readProp(item, "canPayFullyWithWallet", "CanPayFullyWithWallet")),
     mixedTenderAvailable: typeof mixedRaw === "boolean" ? mixedRaw : false,
+    manualCardToCardEnabled: Boolean(readProp(item, "manualCardToCardEnabled", "ManualCardToCardEnabled")),
+  };
+}
+
+/**
+ * روش‌های پرداخت فعال فروشگاه را از Host می‌خواند.
+ */
+export async function loadStorefrontPaymentMethods(): Promise<StorefrontPaymentMethodsPage> {
+  const response = await fetch("/v1/storefront/payment-methods", { cache: "no-store" });
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.methods.missing");
+  const item = asRecord(payload);
+  const methodsRaw = readProp(item ?? {}, "methods", "Methods");
+  const methods = Array.isArray(methodsRaw)
+    ? methodsRaw
+        .map((row) => {
+          const r = asRecord(row);
+          if (!r) return null;
+          return {
+            code: asString(readProp(r, "code", "Code")),
+            labelFa: asString(readProp(r, "labelFa", "LabelFa")),
+            descriptionFa: asString(readProp(r, "descriptionFa", "DescriptionFa")),
+          };
+        })
+        .filter((x): x is { code: string; labelFa: string; descriptionFa: string } => !!x?.code)
+    : [];
+  return {
+    methods,
+    manualCardToCardEnabled: Boolean(readProp(item ?? {}, "manualCardToCardEnabled", "ManualCardToCardEnabled")),
   };
 }
 
@@ -168,7 +207,7 @@ export function mapStorefrontWalletQuote(payload: unknown): StorefrontWalletQuot
  */
 export function requiresProviderRedirect(initiation: StorefrontPaymentInitiation): boolean {
   const provider = initiation.providerCode.trim().toLowerCase();
-  if (provider === WALLET_PROVIDER_CODE) {
+  if (provider === WALLET_PROVIDER_CODE || provider === MANUAL_PROVIDER_CODE) {
     return false;
   }
   if (initiation.status === "Succeeded") {

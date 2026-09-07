@@ -52,6 +52,8 @@ public sealed class PaymentModule : IToobaModule
 
             // کیف پول در Production هم در دسترس است (ledger محلی؛ PSP نیست).
             services.AddScoped<IPaymentGateway, WalletPaymentGateway>();
+            // کارت‌به‌کارت/دستی: ثبت درگاه؛ در دسترس بودن با ManualCardToCardEnabled کنترل می‌شود.
+            services.AddScoped<IPaymentGateway, ManualPaymentGateway>();
         }
         else
         {

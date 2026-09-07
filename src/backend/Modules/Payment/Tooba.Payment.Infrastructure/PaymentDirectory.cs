@@ -327,7 +327,8 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     /// <inheritdoc />
     public async Task<PaymentVerificationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken)
     {
-        var payment = await _db.Payments.AsNoTracking()
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("payment.missing");
@@ -346,27 +347,36 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             throw new InvalidOperationException("payment.confirm.invalid_state");
         }
 
-        var attempt = await _db.Attempts.AsNoTracking()
+        var attempt = await _db.Attempts
             .Where(x => x.PaymentId == paymentId)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("payment.attempt.missing");
 
-        ManualPaymentGateway.Confirm(attempt.ProviderRequestReference);
-        return await VerifyAsync(
-            new VerifyPaymentCommand(
-                payment.PaymentId,
-                attempt.AttemptId,
-                attempt.ProviderRequestReference,
-                true),
+        payment.AttachLoadedAttempt(attempt);
+        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        payment.AttachLoadedAllocations(allocations);
+        var txn = $"manual-confirm-{payment.PaymentId:N}";
+        var duplicateTxn = await _db.Attempts.AnyAsync(
+            x => x.ProviderTransactionReference == txn,
             cancellationToken).ConfigureAwait(false);
+        if (duplicateTxn)
+        {
+            return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
+        }
+
+        var firstSuccess = payment.ApplyVerifiedSuccess(attempt.AttemptId, txn, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return new PaymentVerificationResult(payment.PaymentId, payment.Status, firstSuccess);
     }
 
     /// <inheritdoc />
     public async Task<PaymentVerificationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken)
     {
-        var payment = await _db.Payments.AsNoTracking()
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
             .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("payment.missing");
@@ -380,21 +390,20 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             throw new InvalidOperationException("payment.reject.invalid_state");
         }
 
-        var attempt = await _db.Attempts.AsNoTracking()
+        var attempt = await _db.Attempts
             .Where(x => x.PaymentId == paymentId)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("payment.attempt.missing");
 
-        ManualPaymentGateway.Reject(attempt.ProviderRequestReference);
-        return await VerifyAsync(
-            new VerifyPaymentCommand(
-                payment.PaymentId,
-                attempt.AttemptId,
-                attempt.ProviderRequestReference,
-                false),
-            cancellationToken).ConfigureAwait(false);
+        payment.AttachLoadedAttempt(attempt);
+        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        payment.AttachLoadedAllocations(allocations);
+        payment.ApplyVerifiedFailure(attempt.AttemptId, "MANUAL_DEPOSIT_REJECTED", DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
     }
 
     private async Task<PaymentOperationalSnapshot> ToOperationalAsync(

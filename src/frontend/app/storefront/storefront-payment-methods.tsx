@@ -5,7 +5,7 @@
  * کیف پول فقط وقتی Host canPayFullyWithWallet بدهد؛ mixed tender ادعا نمی‌شود.
  */
 
-import { CheckCircle, CreditCard, ShieldCheck, Wallet } from "lucide-react";
+import { CheckCircle, CreditCard, Landmark, ShieldCheck, Wallet } from "lucide-react";
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontPaymentMethodId, StorefrontWalletQuote } from "./storefront-payment-api.ts";
 
@@ -25,6 +25,7 @@ export function StorefrontPaymentMethodPicker({
 }) {
   const walletEligible = Boolean(quote?.canPayFullyWithWallet);
   const mixedLive = Boolean(quote?.mixedTenderAvailable);
+  const manualEnabled = Boolean(quote?.manualCardToCardEnabled);
 
   return (
     <section
@@ -69,6 +70,20 @@ export function StorefrontPaymentMethodPicker({
           iconClass="text-violet-500"
           iconBg="bg-violet-50"
           testId="payment-method-wallet"
+        />
+      ) : null}
+
+      {manualEnabled ? (
+        <MethodRow
+          id="manual"
+          selected={selected === "manual"}
+          onSelect={() => onChange("manual")}
+          title="کارت به کارت"
+          subtitle="پرداخت دستی — سفارش پس از تأیید واریز توسط فروشگاه فعال می‌شود"
+          icon={Landmark}
+          iconClass="text-amber-600"
+          iconBg="bg-amber-50"
+          testId="payment-method-manual"
         />
       ) : null}
 

@@ -34,6 +34,7 @@ public static class StorefrontEndpoints
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
         group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
         group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", GetWalletQuoteAsync);
+        group.MapGet("/payment-methods", ListPaymentMethodsAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
         if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         {
@@ -316,6 +317,10 @@ public static class StorefrontEndpoints
             cartId,
             ReadGuestSecret(request),
             cancellationToken));
+
+    private static Task<IResult> ListPaymentMethodsAsync(
+        StorefrontPaymentComposer composer)
+        => Task.FromResult(Results.Json(composer.ListPaymentMethods()));
 
     private static async Task<IResult> GetPaymentAsync(
         Guid paymentId,

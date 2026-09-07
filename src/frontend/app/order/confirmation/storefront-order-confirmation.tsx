@@ -108,7 +108,8 @@ function ConfirmationBody() {
     setError(null);
     try {
       const initiated = await startStorefrontPayment(current.checkoutId, {
-        providerCode: method === "wallet" ? WALLET_PROVIDER_CODE : undefined,
+        providerCode:
+          method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : undefined,
       });
       if (requiresProviderRedirect(initiated)) {
         window.location.assign(initiated.redirectUrl);

@@ -404,6 +404,8 @@ export function formatAdminStatus(status: string): string {
     Paid: "پرداخت‌شده",
     Unpaid: "پرداخت‌نشده",
     Pending: "در انتظار",
+    PendingManualConfirmation: "در انتظار تأیید واریز",
+    AwaitingManualDeposit: "در انتظار تأیید واریز",
     PendingPayment: "در انتظار پرداخت",
     Submitted: "ثبت‌شده",
     ReservationRequested: "در انتظار بررسی",

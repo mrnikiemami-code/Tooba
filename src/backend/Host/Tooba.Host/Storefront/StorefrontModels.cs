@@ -371,7 +371,19 @@ public sealed record StorefrontWalletQuotePage(
     decimal RemainingPayable,
     bool CanPayFullyWithWallet,
     string Currency,
-    bool MixedTenderDeferred);
+    bool MixedTenderDeferred,
+    bool ManualCardToCardEnabled = false);
+
+/// <summary>یک روش پرداخت قابل‌نمایش در ویترین.</summary>
+public sealed record StorefrontPaymentMethodOption(
+    string Code,
+    string LabelFa,
+    string DescriptionFa);
+
+/// <summary>فهرست روش‌های پرداخت فعال برای فروشگاه/محیط جاری.</summary>
+public sealed record StorefrontPaymentMethodsPage(
+    IReadOnlyList<StorefrontPaymentMethodOption> Methods,
+    bool ManualCardToCardEnabled);
 
 /// <summary>
 /// نتیجهٔ شروع پرداخت. Redirect به صفحهٔ sandbox/dev است نه بانک واقعی؛ full-wallet بدون PSP.

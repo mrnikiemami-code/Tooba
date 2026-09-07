@@ -61,7 +61,28 @@ public sealed class StorefrontPaymentComposer
             quote.RemainingPayable,
             quote.CanPayFullyWithWallet,
             quote.Currency,
-            MixedTenderDeferred: true);
+            MixedTenderDeferred: true,
+            ManualCardToCardEnabled: _gatewayOptions.ManualCardToCardEnabled);
+    }
+
+    /// <summary>
+    /// روش‌های پرداخت فعال برای ویترین (پیکربندی فروشگاه/محیط).
+    /// </summary>
+    public StorefrontPaymentMethodsPage ListPaymentMethods()
+    {
+        var methods = new List<StorefrontPaymentMethodOption>
+        {
+            new("gateway", "درگاه بانکی", "پرداخت آنلاین از طریق درگاه"),
+        };
+        if (_gatewayOptions.ManualCardToCardEnabled)
+        {
+            methods.Add(new(
+                ManualPaymentGateway.ProviderCodeValue,
+                "کارت به کارت",
+                "پرداخت دستی؛ سفارش پس از تأیید واریز توسط فروشگاه تکمیل می‌شود"));
+        }
+
+        return new StorefrontPaymentMethodsPage(methods, _gatewayOptions.ManualCardToCardEnabled);
     }
 
     /// <summary>
@@ -107,6 +128,11 @@ public sealed class StorefrontPaymentComposer
         else if (!string.IsNullOrWhiteSpace(providerCodeOverride)
             && ManualPaymentGateway.IsManual(providerCodeOverride))
         {
+            if (!_gatewayOptions.ManualCardToCardEnabled)
+            {
+                throw new InvalidOperationException("پرداخت کارت به کارت در این فروشگاه فعال نیست.");
+            }
+
             providerCode = ManualPaymentGateway.ProviderCodeValue;
         }
 
@@ -153,6 +179,21 @@ public sealed class StorefrontPaymentComposer
                 RedirectUrl: $"/payment/result?checkoutId={checkout.CheckoutId.Value:D}&paymentId={after.PaymentId:D}",
                 after.Amount,
                 after.Currency,
+                RequiresPspRedirect: false);
+        }
+
+        if (ManualPaymentGateway.IsManual(initiated.ProviderCode))
+        {
+            return new StorefrontPaymentInitiationPage(
+                initiated.PaymentId,
+                initiated.AttemptId,
+                checkout.CheckoutId.Value,
+                initiated.Status.ToString(),
+                initiated.ProviderCode,
+                initiated.ProviderRequestReference,
+                RedirectUrl: $"/payment/result?checkoutId={checkout.CheckoutId.Value:D}&paymentId={initiated.PaymentId:D}&awaitingManual=1",
+                initiated.Amount,
+                initiated.Currency,
                 RequiresPspRedirect: false);
         }
 

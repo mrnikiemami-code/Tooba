@@ -45,8 +45,8 @@ export function paymentStatusBadge(status: string): StatusBadge {
   if (status === "Paid" || status === "Succeeded" || status === "Captured") {
     return { text: formatAdminStatus(status), className: "bg-emerald-50 text-emerald-700" };
   }
-  if (status === "PendingPayment" || status === "Pending" || status === "Authorized") {
-    return { text: formatAdminStatus(status), className: "bg-blue-50 text-blue-700" };
+  if (status === "PendingPayment" || status === "Pending" || status === "Authorized" || status === "PendingManualConfirmation" || status === "AwaitingManualDeposit") {
+    return { text: formatAdminStatus(status), className: "bg-amber-50 text-amber-700" };
   }
   if (status === "Failed" || status === "Cancelled" || status === "Canceled" || status === "Expired") {
     return { text: formatAdminStatus(status), className: "bg-red-50 text-red-700" };
