@@ -1,0 +1,20 @@
+﻿[
+    {
+        "kind":  "payment_succeeded",
+        "labelFa":  "پرداخت موفق",
+        "summaryFa":  "381500 IRR",
+        "actorDisplayFa":  "توسط سیستم"
+    },
+    {
+        "kind":  "payment_created",
+        "labelFa":  "ایجاد پرداخت",
+        "summaryFa":  "381500 IRR",
+        "actorDisplayFa":  "توسط سیستم"
+    },
+    {
+        "kind":  "order_created",
+        "labelFa":  "ثبت سفارش",
+        "summaryFa":  "Checkout 01a07bcac49",
+        "actorDisplayFa":  "توسط سیستم"
+    }
+]

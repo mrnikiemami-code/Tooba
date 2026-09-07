@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Domain;
+using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Domain;
 using Tooba.Identity.Application;
@@ -12,6 +14,7 @@ using Tooba.OperatorProfile.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Party.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
 using Tooba.Returns.Domain;
@@ -28,6 +31,7 @@ public sealed class AdminOrderCompletenessComposer
 {
     private readonly OrderDbContext _orders;
     private readonly ReturnsDbContext _returns;
+    private readonly CatalogDbContext _catalog;
     private readonly ICheckoutDirectory _checkout;
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly IPaymentAdminDirectory _payments;
@@ -36,11 +40,13 @@ public sealed class AdminOrderCompletenessComposer
     private readonly IOperatorProfileDirectory _profiles;
     private readonly IIdentityContactLookup _contacts;
     private readonly ICurrentTenant _tenant;
+    private readonly IPartyLookupGateway _parties;
 
     /// <summary>ترکیب‌گر را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderCompletenessComposer(
         OrderDbContext orders,
         ReturnsDbContext returns,
+        CatalogDbContext catalog,
         ICheckoutDirectory checkout,
         IFulfillmentDirectory fulfillment,
         IPaymentAdminDirectory payments,
@@ -48,10 +54,12 @@ public sealed class AdminOrderCompletenessComposer
         IAccessControlDirectory access,
         IOperatorProfileDirectory profiles,
         IIdentityContactLookup contacts,
-        ICurrentTenant tenant)
+        ICurrentTenant tenant,
+        IPartyLookupGateway parties)
     {
         _orders = orders;
         _returns = returns;
+        _catalog = catalog;
         _checkout = checkout;
         _fulfillment = fulfillment;
         _payments = payments;
@@ -60,6 +68,7 @@ public sealed class AdminOrderCompletenessComposer
         _profiles = profiles;
         _contacts = contacts;
         _tenant = tenant;
+        _parties = parties;
     }
 
     /// <summary>یادداشت‌های داخلی را فهرست می‌کند (order.view).</summary>
@@ -258,9 +267,60 @@ public sealed class AdminOrderCompletenessComposer
             }
         }
 
+        var sellerPartyIds = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().ToList();
+        var sellerNameMap = new Dictionary<Guid, string>();
+        foreach (var partyId in sellerPartyIds)
+        {
+            var party = await _parties.FindByIdAsync(partyId, cancellationToken);
+            sellerNameMap[partyId] = string.IsNullOrWhiteSpace(party?.DisplayName)
+                ? "فروشنده"
+                : party!.DisplayName;
+        }
+
+        string SellerName(Guid sellerPartyId) =>
+            sellerNameMap.TryGetValue(sellerPartyId, out var n) ? n : "فروشنده";
+
+        var lineById = group.SellerOrders
+            .SelectMany(o => o.Lines)
+            .ToDictionary(l => l.LineId);
+        var titlesByVariant = await LoadVariantTitlesAsync(
+            lineById.Values.Select(l => l.CatalogVariantId).Distinct().ToList(),
+            cancellationToken);
+        string LineTitle(Guid orderLineId) =>
+            lineById.TryGetValue(orderLineId, out var line)
+            && titlesByVariant.TryGetValue(line.CatalogVariantId, out var title)
+            && !string.IsNullOrWhiteSpace(title)
+                ? title
+                : "کالای سفارش";
+
+        string FormatLineQtyScope(IReadOnlyList<(Guid OrderLineId, int Quantity)> items)
+        {
+            var list = items.Where(x => x.Quantity > 0).ToList();
+            if (list.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            if (list.Count == 1)
+            {
+                var only = list[0];
+                return $"{LineTitle(only.OrderLineId)} — تعداد {ToFaDigits(only.Quantity)}";
+            }
+
+            var total = list.Sum(x => x.Quantity);
+            return $"{LineTitle(list[0].OrderLineId)} و {ToFaDigits(list.Count - 1)} کالای دیگر — تعداد {ToFaDigits(total)}";
+        }
+
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         foreach (var f in fulfillments)
         {
+            var sellerLabel = SellerName(f.SellerPartyId);
+            var packedQty = f.Items.Sum(i => i.QuantityPacked > 0 ? i.QuantityPacked : 0);
+            if (packedQty <= 0)
+            {
+                packedQty = f.Items.Sum(i => i.QuantityOrdered);
+            }
+
             if (f.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
                 or FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
             {
@@ -269,7 +329,9 @@ public sealed class AdminOrderCompletenessComposer
                     "fulfillment_processing",
                     "آماده‌سازی",
                     "Processing",
-                    null));
+                    null,
+                    $"{sellerLabel}",
+                    sellerLabel));
             }
 
             if (f.Status is FulfillmentStatus.Packed or FulfillmentStatus.Dispatched
@@ -280,20 +342,28 @@ public sealed class AdminOrderCompletenessComposer
                     "fulfillment_packed",
                     "بسته‌بندی",
                     "Packed",
-                    null));
+                    null,
+                    $"{sellerLabel} — {ToFaDigits(packedQty)} قلم",
+                    $"{sellerLabel} — {packedQty} items"));
             }
 
             foreach (var shipment in f.Shipments)
             {
                 var created = shipment.CreatedAt == default ? f.UpdatedAt : shipment.CreatedAt;
+                var methodLabel = string.IsNullOrWhiteSpace(shipment.ShippingMethodLabel)
+                    ? (string.IsNullOrWhiteSpace(shipment.CarrierDisplayName) ? "مرسوله" : shipment.CarrierDisplayName)
+                    : shipment.ShippingMethodLabel;
+                var shipQty = shipment.Items.Sum(i => i.Quantity);
+                var lineScope = FormatLineQtyScope(
+                    shipment.Items.Select(i => (i.OrderLineId, i.Quantity)).ToList());
                 entries.Add(Draft(
                     created == default ? f.CreatedAt : created,
                     "shipment_created",
-                    "ایجاد محموله",
+                    "ایجاد مرسوله",
                     "Shipment created",
                     null,
-                    shipment.CarrierDisplayName,
-                    shipment.CarrierDisplayName));
+                    $"{methodLabel} — {ToFaDigits(shipQty)} قلم",
+                    $"{methodLabel} — {shipQty} items"));
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference))
                 {
                     entries.Add(Draft(
@@ -302,8 +372,8 @@ public sealed class AdminOrderCompletenessComposer
                         "ثبت رهگیری",
                         "Tracking assigned",
                         null,
-                        shipment.TrackingReference,
-                        shipment.TrackingReference));
+                        $"کد رهگیری {shipment.TrackingReference}",
+                        $"Tracking {shipment.TrackingReference}"));
                 }
 
                 if (shipment.DispatchedAt is { } dispatched)
@@ -311,9 +381,13 @@ public sealed class AdminOrderCompletenessComposer
                     entries.Add(Draft(
                         dispatched,
                         "shipment_dispatched",
-                        "ارسال محموله",
+                        "ارسال مرسوله",
                         "Shipment dispatched",
-                        null));
+                        null,
+                        string.IsNullOrWhiteSpace(shipment.TrackingReference)
+                            ? $"{methodLabel} — {ToFaDigits(shipQty)} قلم"
+                            : $"کد رهگیری {shipment.TrackingReference}",
+                        shipment.TrackingReference ?? methodLabel));
                 }
 
                 if (shipment.DeliveredAt is { } delivered)
@@ -321,20 +395,35 @@ public sealed class AdminOrderCompletenessComposer
                     entries.Add(Draft(
                         delivered,
                         "shipment_delivered",
-                        "تحویل محموله",
+                        "تحویل",
                         "Shipment delivered",
-                        null));
+                        null,
+                        string.IsNullOrWhiteSpace(lineScope)
+                            ? $"{methodLabel} — تعداد {ToFaDigits(shipQty)}"
+                            : lineScope,
+                        lineScope));
                 }
             }
         }
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var orderByReturnSeller = group.SellerOrders.ToDictionary(x => x.SellerOrderId);
         var returns = await _returns.ReturnRequests.AsNoTracking()
             .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
             .OrderByDescending(x => x.CreatedAt)
             .Take(200)
             .ToListAsync(cancellationToken);
         var returnIds = returns.Select(x => x.ReturnRequestId).ToList();
+        var returnItems = returnIds.Count == 0
+            ? []
+            : await _returns.ReturnItems.AsNoTracking()
+                .Where(x => returnIds.Contains(x.ReturnRequestId))
+                .ToListAsync(cancellationToken);
+        var itemsByReturn = returnItems
+            .GroupBy(x => x.ReturnRequestId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<(Guid OrderLineId, int Quantity)>)g
+                .Select(i => (i.OrderLineId, i.Quantity))
+                .ToList());
         var refundAttempts = returnIds.Count == 0
             ? []
             : await _returns.RefundAttempts.AsNoTracking()
@@ -345,14 +434,21 @@ public sealed class AdminOrderCompletenessComposer
 
         foreach (var ret in returns)
         {
+            orderByReturnSeller.TryGetValue(ret.SellerOrderId, out var so);
+            var sellerLabel = so is null ? "فروشنده" : SellerName(so.SellerPartyId);
+            itemsByReturn.TryGetValue(ret.ReturnRequestId, out var retLines);
+            var returnScope = retLines is { Count: > 0 }
+                ? FormatLineQtyScope(retLines)
+                : string.Empty;
+            var summaryFa = string.IsNullOrWhiteSpace(returnScope) ? sellerLabel : returnScope;
             entries.Add(Draft(
                 ret.CreatedAt,
                 "return_requested",
-                "درخواست مرجوعی",
+                "مرجوعی",
                 "Return requested",
                 ret.RequestedByUserId == Guid.Empty ? null : ret.RequestedByUserId,
-                ret.Reason,
-                ret.Reason));
+                summaryFa,
+                summaryFa));
             if (ret.Status is ReturnRequestStatus.Approved or ReturnRequestStatus.RefundProcessing
                 or ReturnRequestStatus.Completed or ReturnRequestStatus.RefundFailed)
             {
@@ -361,7 +457,9 @@ public sealed class AdminOrderCompletenessComposer
                     "return_approved",
                     "تأیید مرجوعی",
                     "Return approved",
-                    null));
+                    null,
+                    sellerLabel,
+                    sellerLabel));
             }
 
             if (ret.Status == ReturnRequestStatus.Rejected)
@@ -371,7 +469,9 @@ public sealed class AdminOrderCompletenessComposer
                     "return_rejected",
                     "رد مرجوعی",
                     "Return rejected",
-                    null));
+                    null,
+                    sellerLabel,
+                    sellerLabel));
             }
 
             if (!attemptsByReturn.TryGetValue(ret.ReturnRequestId, out var attempts))
@@ -389,7 +489,7 @@ public sealed class AdminOrderCompletenessComposer
                         "بازگشت وجه",
                         "Refund completed",
                         null,
-                        $"{attempt.Amount:0} {attempt.Currency}",
+                        $"{FormatMoneyFa(attempt.Amount)} ریال",
                         $"{attempt.Amount:0} {attempt.Currency}"));
                 }
                 else if (attempt.Status == RefundAttemptStatus.Failed)
@@ -558,6 +658,60 @@ public sealed class AdminOrderCompletenessComposer
         string? summaryFa = null,
         string? summaryEn = null) =>
         new(occurredAt, kind, labelFa, labelEn, actorUserId, summaryFa, summaryEn);
+
+    private static string ToFaDigits(int value)
+    {
+        var s = value.ToString(CultureInfo.InvariantCulture);
+        var map = new[] { '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹' };
+        return string.Concat(s.Select(ch => ch is >= '0' and <= '9' ? map[ch - '0'] : ch));
+    }
+
+    private static string FormatMoneyFa(decimal amount)
+    {
+        var rounded = decimal.Round(amount, 0, MidpointRounding.AwayFromZero);
+        var withSep = rounded.ToString("#,##0", CultureInfo.InvariantCulture);
+        return ToFaDigitsString(withSep);
+    }
+
+    private static string ToFaDigitsString(string value)
+    {
+        var map = new[] { '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹' };
+        return string.Concat(value.Select(ch => ch is >= '0' and <= '9' ? map[ch - '0'] : ch));
+    }
+
+    /// <summary>خلاصهٔ محدوده برای تست و ترکیب تاریخچه (فروشنده / قلم / تعداد).</summary>
+    internal static string FormatPackScopeFa(string sellerDisplayName, int quantity) =>
+        $"{(string.IsNullOrWhiteSpace(sellerDisplayName) ? "فروشنده" : sellerDisplayName)} — {ToFaDigits(quantity)} قلم";
+
+    /// <summary>خلاصهٔ کالایی تعداددار برای تحویل/مرجوعی.</summary>
+    internal static string FormatProductQtyScopeFa(string productTitle, int quantity) =>
+        $"{(string.IsNullOrWhiteSpace(productTitle) ? "کالای سفارش" : productTitle)} — تعداد {ToFaDigits(quantity)}";
+
+    private async Task<Dictionary<Guid, string>> LoadVariantTitlesAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0)
+        {
+            return [];
+        }
+
+        var variants = await _catalog.Variants.AsNoTracking()
+            .Where(x => variantIds.Contains(x.VariantId))
+            .Select(x => new { x.VariantId, x.ProductId })
+            .ToListAsync(cancellationToken);
+        var productIds = variants.Select(x => x.ProductId).Distinct().ToList();
+        var names = await _catalog.LocalizedTexts.AsNoTracking()
+            .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Product
+                && productIds.Contains(x.OwnerId)
+                && x.FieldKey == "name")
+            .ToListAsync(cancellationToken);
+        var productNames = names.GroupBy(x => x.OwnerId).ToDictionary(
+            x => x.Key,
+            x => x.OrderBy(row => row.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+        return variants.Where(x => productNames.ContainsKey(x.ProductId))
+            .ToDictionary(x => x.VariantId, x => productNames[x.ProductId]);
+    }
 
     private static string? FirstNonEmpty(params string?[] values)
     {

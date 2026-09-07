@@ -112,11 +112,15 @@ function settlementBadge(status: string): { text: string; className: string } {
 function eventTypeLabel(type: string): string {
   switch (type) {
     case "CustomerReceipt":
-      return "دریافت مشتری";
+      return "دریافت از مشتری";
+    case "CustomerRefund":
+      return "بازگشت وجه به مشتری";
+    case "SellerPayout":
     case "SellerSettlement":
-      return "تسویه فروشنده";
+      return "واریز سهم فروشنده";
+    case "SellerRefundAdjustment":
     case "SettlementAdjustment":
-      return "تعدیل تسویه";
+      return "کسر از حساب فروشنده بابت بازگشت وجه";
     case "WalletDeposit":
       return "واریز کیف پول";
     default:
@@ -128,8 +132,14 @@ function eventTypeClass(type: string): string {
   switch (type) {
     case "CustomerReceipt":
       return "bg-teal-50 text-teal-700";
+    case "CustomerRefund":
+      return "bg-rose-50 text-rose-700";
+    case "SellerPayout":
     case "SellerSettlement":
       return "bg-emerald-50 text-emerald-700";
+    case "SellerRefundAdjustment":
+    case "SettlementAdjustment":
+      return "bg-amber-50 text-amber-800";
     case "WalletDeposit":
       return "bg-blue-50 text-blue-700";
     default:
@@ -157,8 +167,8 @@ const historyColumns: GridColumnDef<AdminFinancialEvent & { id: string }>[] = [
         {eventTypeLabel(row.eventType)}
       </span>
     ),
-    width: 128,
-    minWidth: 108,
+    width: 168,
+    minWidth: 140,
   },
   {
     id: "amount",
@@ -324,6 +334,12 @@ function OperationalHistoryTimeline({
   entries: AdminOperationalHistoryEntry[];
   empty: string;
 }) {
+  const [filter, setFilter] = useState<"all" | "order" | "shipment" | "return" | "payment">("all");
+  const filtered = useMemo(() => {
+    if (filter === "all") return entries;
+    return entries.filter((entry) => historyFilterBucket(entry.kind) === filter);
+  }, [entries, filter]);
+
   if (entries.length === 0) {
     return (
       <p className="text-sm text-gray-500" data-testid="admin-order-history-empty">
@@ -332,26 +348,77 @@ function OperationalHistoryTimeline({
     );
   }
 
+  const filters: { id: typeof filter; label: string }[] = [
+    { id: "all", label: "همه" },
+    { id: "order", label: "سفارش" },
+    { id: "shipment", label: "ارسال" },
+    { id: "return", label: "مرجوعی" },
+    { id: "payment", label: "پرداخت" },
+  ];
+
   return (
-    <ol className="space-y-3" data-testid="admin-order-operational-history">
-      {entries.map((entry, index) => (
-        <li
-          key={`${entry.kind}-${entry.occurredAt}-${index}`}
-          className="rounded-xl border border-gray-100 p-3 text-sm"
-          data-testid={`admin-order-history-${entry.kind}`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-semibold text-gray-900">{entry.labelFa}</span>
-            <span className="text-xs text-gray-500" dir="ltr">
-              {formatJalaliDateTime(entry.occurredAt, "fa")}
-            </span>
-          </div>
-          {entry.summaryFa ? <p className="mt-1 text-gray-600">{entry.summaryFa}</p> : null}
-          <p className="mt-2 text-xs text-gray-500">{entry.actorDisplayFa}</p>
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-1.5" data-testid="admin-order-history-filters">
+        {filters.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setFilter(item.id)}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+              filter === item.id
+                ? "bg-slate-800 text-white"
+                : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+            data-testid={`admin-order-history-filter-${item.id}`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-gray-500">رویدادی در این محدوده نیست.</p>
+      ) : (
+        <ol className="space-y-3" data-testid="admin-order-operational-history">
+          {filtered.map((entry, index) => (
+            <li
+              key={`${entry.kind}-${entry.occurredAt}-${index}`}
+              className="rounded-xl border border-gray-100 p-3 text-sm"
+              data-testid={`admin-order-history-${entry.kind}`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-gray-900">{entry.labelFa}</span>
+                <span className="text-xs text-gray-500" dir="ltr">
+                  {formatJalaliDateTime(entry.occurredAt, "fa")}
+                </span>
+              </div>
+              {entry.summaryFa ? <p className="mt-1 text-gray-600">{entry.summaryFa}</p> : null}
+              <p className="mt-2 text-xs text-gray-500">{entry.actorDisplayFa}</p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
+}
+
+function historyFilterBucket(kind: string): "order" | "shipment" | "return" | "payment" {
+  if (
+    kind.startsWith("shipment_")
+    || kind.startsWith("fulfillment_")
+    || kind === "tracking_assigned"
+  ) {
+    return "shipment";
+  }
+  if (kind.startsWith("return_") || kind.startsWith("refund_")) {
+    return "return";
+  }
+  if (
+    kind.startsWith("payment_")
+    || kind.startsWith("settlement_")
+  ) {
+    return "payment";
+  }
+  return "order";
 }
 
 /** جزئیات سفارش Admin با UX مالی بازارگاه مطابق مرجع T042. */
@@ -368,7 +435,6 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
   const historyPageSize = 20;
-
   const refreshNotes = useCallback(() => {
     void loadAdminOrderNotes(checkoutId).then((res) => {
       if (res.state === "ok" && res.data) setNotes(res.data);

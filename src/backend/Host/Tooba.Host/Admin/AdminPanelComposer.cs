@@ -263,7 +263,8 @@ public sealed class AdminPanelComposer
         var lineCount = group.SellerOrders.Sum(x => x.Lines.Sum(line => line.Quantity));
         var sellerCount = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count();
         var sellerFinancials = BuildSellerFinancials(group, sellerNames, settlementByOrder);
-        var financialEvents = BuildFinancialEvents(group, sellerNames, paymentView, settlementByOrder);
+        var financialEvents = await BuildFinancialEventsAsync(
+            group, sellerNames, paymentView, settlementByOrder, cancellationToken);
         var financialSummary = BuildFinancialSummary(group, sellerFinancials, paymentView);
 
         return new AdminOrderDetailPage(
@@ -608,25 +609,70 @@ public sealed class AdminPanelComposer
         }).ToList();
     }
 
-    private static IReadOnlyList<AdminFinancialEventView> BuildFinancialEvents(
+    /// <summary>
+    /// حرکات مالی واقعی قابل‌انتساب به همین سفارش (بدون مبلغ کل batch payout).
+    /// </summary>
+    internal static IReadOnlyList<AdminFinancialEventView> BuildFinancialEvents(
         CheckoutGroup group,
         IReadOnlyDictionary<Guid, string> sellerNames,
         AdminPaymentOpsView? payment,
-        IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder)
+        IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder,
+        IReadOnlyList<OrderFinancialRefundInput> succeededRefunds)
     {
         var events = new List<AdminFinancialEventView>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+
+        void AddOnce(string key, AdminFinancialEventView row)
+        {
+            if (!seen.Add(key))
+            {
+                return;
+            }
+
+            events.Add(row);
+        }
+
         if (payment is not null && IsSuccessfulPaymentStatus(payment.Status))
         {
-            events.Add(new AdminFinancialEventView(
-                payment.CompletedAt ?? payment.CreatedAt,
-                "CustomerReceipt",
-                payment.Amount,
-                payment.Currency,
-                string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
-                payment.ProviderTransactionReference ?? payment.ProviderRequestReference ?? payment.PaymentId.ToString("N")[..12],
-                HumanizeProviderCode(payment.ProviderCode),
-                payment.Status,
-                "دریافت از مشتری"));
+            AddOnce(
+                $"receipt:{payment.PaymentId:N}",
+                new AdminFinancialEventView(
+                    payment.CompletedAt ?? payment.CreatedAt,
+                    "CustomerReceipt",
+                    payment.Amount,
+                    payment.Currency,
+                    string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+                    payment.ProviderTransactionReference
+                        ?? payment.ProviderRequestReference
+                        ?? payment.PaymentId.ToString("N")[..12],
+                    HumanizeProviderCode(payment.ProviderCode),
+                    "Succeeded",
+                    "دریافت از مشتری"));
+        }
+
+        // یک حرکت بازگشت وجه موفق به ازای هر ReturnRequest (retries/idempotency تکراری نمی‌شوند).
+        foreach (var refund in succeededRefunds
+                     .GroupBy(x => x.ReturnRequestId)
+                     .Select(g => g.OrderByDescending(x => x.OccurredAt).First()))
+        {
+            var expected = refund.ExpectedRefundAmount > 0 ? refund.ExpectedRefundAmount : refund.Amount;
+            var description = refund.Amount < expected
+                ? "بازگشت وجه جزئی به مشتری"
+                : "بازگشت وجه به مشتری";
+            AddOnce(
+                $"refund:{refund.ReturnRequestId:N}",
+                new AdminFinancialEventView(
+                    refund.OccurredAt,
+                    "CustomerRefund",
+                    refund.Amount,
+                    refund.Currency,
+                    string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+                    string.IsNullOrWhiteSpace(refund.Reference)
+                        ? refund.RefundAttemptId.ToString("N")[..12]
+                        : refund.Reference!,
+                    "بازگشت وجه",
+                    "Succeeded",
+                    description));
         }
 
         foreach (var order in group.SellerOrders)
@@ -639,22 +685,80 @@ public sealed class AdminPanelComposer
             sellerNames.TryGetValue(order.SellerPartyId, out var sellerName);
             foreach (var entry in entries)
             {
-                events.Add(new AdminFinancialEventView(
-                    entry.PostedAt,
-                    entry.EntryType == EntryType.Credit ? "SellerSettlement" : "SettlementAdjustment",
-                    entry.NetAmount,
-                    entry.Currency,
-                    sellerName ?? "فروشنده",
-                    entry.EntryId.ToString("N")[..12],
-                    entry.SourceType,
-                    "Succeeded",
-                    entry.EntryType == EntryType.Credit
-                        ? $"تسویه سهم سفارش {order.OrderNumber}"
-                        : $"تعدیل تسویه سفارش {order.OrderNumber}"));
+                // فقط مبلغ خالص همین SellerOrder — نه مبلغ کل درخواست payout چندسفارشی.
+                var isRefundAdj = string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
+                                  || entry.EntryType == EntryType.Debit;
+                AddOnce(
+                    $"settlement:{entry.EntryId:N}",
+                    new AdminFinancialEventView(
+                        entry.PostedAt,
+                        isRefundAdj ? "SellerRefundAdjustment" : "SellerPayout",
+                        entry.NetAmount,
+                        entry.Currency,
+                        sellerName ?? "فروشنده",
+                        entry.EntryId.ToString("N")[..12],
+                        isRefundAdj ? "تعدیل مرجوعی" : "تسویه سفارش",
+                        "Succeeded",
+                        isRefundAdj
+                            ? "کسر از حساب فروشنده بابت بازگشت وجه"
+                            : "واریز سهم فروشنده"));
             }
         }
 
-        return events.OrderByDescending(x => x.OccurredAt).ToList();
+        return events
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenBy(x => x.EventType, StringComparer.Ordinal)
+            .ThenBy(x => x.Reference, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>ورودی محدود برای projection بازگشت وجه سفارش (بدون افشای payload درگاه).</summary>
+    internal sealed record OrderFinancialRefundInput(
+        Guid ReturnRequestId,
+        Guid RefundAttemptId,
+        decimal Amount,
+        string Currency,
+        DateTimeOffset OccurredAt,
+        decimal ExpectedRefundAmount,
+        string? Reference = null);
+
+    private async Task<IReadOnlyList<AdminFinancialEventView>> BuildFinancialEventsAsync(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, string> sellerNames,
+        AdminPaymentOpsView? payment,
+        IReadOnlyDictionary<Guid, IReadOnlyList<SettlementEntrySnapshot>> settlementByOrder,
+        CancellationToken cancellationToken)
+    {
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var returns = sellerOrderIds.Count == 0
+            ? []
+            : await _returns.ReturnRequests.AsNoTracking()
+                .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+                .ToListAsync(cancellationToken);
+        var returnIds = returns.Select(x => x.ReturnRequestId).ToList();
+        var refundAttempts = returnIds.Count == 0
+            ? []
+            : await _returns.RefundAttempts.AsNoTracking()
+                .Where(x => returnIds.Contains(x.ReturnRequestId)
+                            && x.Status == RefundAttemptStatus.Succeeded)
+                .ToListAsync(cancellationToken);
+        var returnById = returns.ToDictionary(x => x.ReturnRequestId);
+        var succeeded = refundAttempts
+            .Where(a => returnById.ContainsKey(a.ReturnRequestId))
+            .Select(a =>
+            {
+                var ret = returnById[a.ReturnRequestId];
+                return new OrderFinancialRefundInput(
+                    ret.ReturnRequestId,
+                    a.RefundAttemptId,
+                    a.Amount,
+                    a.Currency,
+                    a.CompletedAt ?? a.CreatedAt,
+                    ret.RefundAmount,
+                    string.IsNullOrWhiteSpace(a.ProviderReference) ? null : a.ProviderReference);
+            })
+            .ToList();
+        return BuildFinancialEvents(group, sellerNames, payment, settlementByOrder, succeeded);
     }
 
     private static AdminFinancialSummaryView BuildFinancialSummary(
