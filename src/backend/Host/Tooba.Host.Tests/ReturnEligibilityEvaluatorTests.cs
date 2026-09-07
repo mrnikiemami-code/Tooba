@@ -27,7 +27,7 @@ public sealed class ReturnEligibilityEvaluatorTests
                 Guid.NewGuid(),
                 true,
                 "IRR",
-                [new OrderReturnLineSnapshot(lineId, 2, 1000m, "IRR", null)])),
+                [new OrderReturnLineSnapshot(lineId, 2, 1000m, "IRR", null, true, 7)])),
             new FakeFulfillmentReturnReader(new FulfillmentReturnEligibilitySnapshot(
                 sellerOrderId,
                 new Dictionary<Guid, int> { [lineId] = 2 },
@@ -37,7 +37,7 @@ public sealed class ReturnEligibilityEvaluatorTests
         var result = await evaluator.EvaluateAsync(sellerOrderId, CancellationToken.None);
         Assert.True(result.Eligible);
         Assert.Equal(ReturnEligibilityReasonCodes.Eligible, result.ReasonCode);
-        Assert.Equal(deliveredAt.AddDays(30), result.EligibleUntil);
+        Assert.Equal(deliveredAt.AddDays(7), result.EligibleUntil);
         Assert.Equal(2, result.Lines.Single().RemainingReturnableQuantity);
     }
 
@@ -56,7 +56,7 @@ public sealed class ReturnEligibilityEvaluatorTests
                 Guid.NewGuid(),
                 true,
                 "IRR",
-                [new OrderReturnLineSnapshot(lineId, 1, 1000m, "IRR", null)])),
+                [new OrderReturnLineSnapshot(lineId, 1, 1000m, "IRR", null, true, 7)])),
             new FakeFulfillmentReturnReader(new FulfillmentReturnEligibilitySnapshot(
                 sellerOrderId,
                 new Dictionary<Guid, int> { [lineId] = 1 },

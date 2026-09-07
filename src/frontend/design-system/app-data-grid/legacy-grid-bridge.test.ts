@@ -59,5 +59,26 @@ test("buildLegacyGridBridge pins actions column at rtl grid end", () => {
   const actions = bridge.columnDefs.at(-1);
   assert.equal(actions?.colId, "actions");
   assert.equal(actions?.pinned, "left");
+  assert.equal(actions?.maxWidth, 90);
   assert.deepEqual(bridge.exportHeaders, ["نام", "وضعیت"]);
+});
+
+test("buildLegacyGridBridge leaves actions maxWidth open when not provided", () => {
+  const withActions: GridColumnDef<Row>[] = [
+    ...columns,
+    {
+      id: "actions",
+      header: "عملیات",
+      accessor: () => "",
+      width: 120,
+      minWidth: 100,
+      exportable: false,
+    },
+  ];
+  const actions = buildLegacyGridBridge(withActions, "rtl").columnDefs.at(-1);
+  assert.equal(actions?.colId, "actions");
+  assert.equal(actions?.width, 120);
+  assert.equal(actions?.minWidth, 100);
+  assert.equal(actions?.maxWidth, undefined);
+  assert.equal(actions?.resizable, true);
 });

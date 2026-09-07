@@ -45,6 +45,7 @@ export type AdminOrderOperationRequest = {
   trackingReference?: string | null;
   reason?: string | null;
   idempotencyKey?: string | null;
+  selections?: Array<{ orderLineId: string; quantity: number }> | null;
 };
 
 /** نگاشت خطای عملیات سفارش به FA. */
@@ -168,6 +169,10 @@ export async function executeAdminOrderOperation(
         trackingReference: body.trackingReference ?? null,
         reason: body.reason ?? null,
         idempotencyKey: body.idempotencyKey ?? null,
+        selections: body.selections?.map((s) => ({
+          orderLineId: s.orderLineId,
+          quantity: s.quantity,
+        })) ?? null,
       }),
     });
     if (response.status === 401 || response.status === 403) {

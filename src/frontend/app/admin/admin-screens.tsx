@@ -367,11 +367,11 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     filterKind: "text",
     sortable: true,
   },
-  { id: "lines", header: "قلم", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 75, minWidth: 64, sortable: true },
+  { id: "lines", header: "قلم", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 75, minWidth: 64, filterKind: "number", sortable: true },
   { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, filterKind: "status", enumOptions: orderPaymentEnumOptions },
   { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, filterKind: "status", enumOptions: orderStatusEnumOptions },
-  { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, sortable: true },
-  { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, sortable: true },
+  { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, filterKind: "money", sortable: true },
+  { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, filterKind: "date", sortable: true },
   {
     id: "actions",
     header: "عملیات",
@@ -382,6 +382,8 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
         <AdminOrderOperationsMenu checkoutId={row.checkoutId} label="عملیات" compact iconOnly scope="whole-order" />
       </span>
     ),
+    width: 120,
+    minWidth: 100,
     exportable: false,
     sortable: false,
   },

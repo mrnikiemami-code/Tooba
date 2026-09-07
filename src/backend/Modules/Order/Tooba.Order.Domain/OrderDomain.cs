@@ -193,6 +193,26 @@ public sealed class OrderLine
     public Guid? CategoryIdSnapshot { get; init; }
 
     /// <summary>
+    /// آیا خط در لحظهٔ خرید قابل مرجوعی بوده است.
+    /// </summary>
+    public bool IsReturnableSnapshot { get; init; } = true;
+
+    /// <summary>
+    /// پنجرهٔ مرجوعی به روز از زمان تحویل — تصویر خرید.
+    /// </summary>
+    public int ReturnWindowDaysSnapshot { get; init; } = 7;
+
+    /// <summary>
+    /// منبع سیاست مرجوعی در لحظهٔ خرید (platform_default / offer_override / non_returnable).
+    /// </summary>
+    public string? ReturnPolicySourceSnapshot { get; init; }
+
+    /// <summary>
+    /// برچسب انسانی سیاست مرجوعی در لحظهٔ خرید.
+    /// </summary>
+    public string? ReturnPolicyLabelSnapshot { get; init; }
+
+    /// <summary>
     /// خط را از نقل‌قول تازه، تخفیف ارزیابی‌شده و نتیجهٔ مالیات می‌سازد.
     /// </summary>
     public static OrderLine FromCheckout(
@@ -219,7 +239,11 @@ public sealed class OrderLine
         decimal? preDiscountTaxExclusive = null,
         decimal? postDiscountTaxExclusive = null,
         DateTimeOffset? promotionAppliedAt = null,
-        Guid? categoryIdSnapshot = null)
+        Guid? categoryIdSnapshot = null,
+        bool isReturnableSnapshot = true,
+        int returnWindowDaysSnapshot = 7,
+        string? returnPolicySourceSnapshot = "platform_default",
+        string? returnPolicyLabelSnapshot = null)
     {
         if (quantity <= 0)
         {
@@ -230,6 +254,16 @@ public sealed class OrderLine
         {
             throw new InvalidOperationException("قیمت پایه باید بدون مالیات باشد؛ Tax مبلغ را داخل Pricing دفن نمی‌کند.");
         }
+
+        if (returnWindowDaysSnapshot < 0)
+        {
+            throw new InvalidOperationException("پنجرهٔ مرجوعی نمی‌تواند منفی باشد.");
+        }
+
+        var policyLabel = returnPolicyLabelSnapshot
+            ?? (isReturnableSnapshot
+                ? $"{returnWindowDaysSnapshot} روز پس از تحویل"
+                : "غیرقابل مرجوعی");
 
         return new OrderLine
         {
@@ -259,6 +293,10 @@ public sealed class OrderLine
             PostDiscountTaxExclusiveSnapshot = postDiscountTaxExclusive ?? decimal.Multiply(unitPrice, quantity) - discountAmount,
             PromotionAppliedAtSnapshot = promotionAppliedAt,
             CategoryIdSnapshot = categoryIdSnapshot,
+            IsReturnableSnapshot = isReturnableSnapshot,
+            ReturnWindowDaysSnapshot = returnWindowDaysSnapshot,
+            ReturnPolicySourceSnapshot = returnPolicySourceSnapshot,
+            ReturnPolicyLabelSnapshot = policyLabel,
         };
     }
 }

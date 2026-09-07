@@ -49,7 +49,13 @@ public sealed record FulfillmentItemSnapshot(
     Guid OrderLineId,
     int QuantityOrdered,
     int QuantityShipped,
-    Guid? ReservationId);
+    Guid? ReservationId,
+    int QuantityPacked = 0);
+
+/// <summary>
+/// انتخاب خط/تعداد برای عملیات seller-scoped.
+/// </summary>
+public sealed record FulfillmentSelectionCommand(Guid OrderLineId, int Quantity);
 
 /// <summary>
 /// snapshot محموله.
@@ -95,12 +101,33 @@ public interface IFulfillmentDirectory
     /// <summary>به Packed می‌رود.</summary>
     Task<FulfillmentSnapshot> MarkPackedAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken);
 
+    /// <summary>بسته‌بندی انتخاب‌شده (یا کل باقیمانده وقتی selections خالی است در لایهٔ Host).</summary>
+    Task<FulfillmentSnapshot> PackSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken);
+
+    /// <summary>بازگشت از بسته‌بندی برای تعداد تخصیص‌نشده.</summary>
+    Task<FulfillmentSnapshot> UnpackSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken);
+
     /// <summary>محموله می‌سازد.</summary>
     Task<FulfillmentSnapshot> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
         string carrierDisplayName,
         IReadOnlyList<ShipmentLineCommand> items,
+        CancellationToken cancellationToken);
+
+    /// <summary>ابطال مرسوله پیش از dispatch.</summary>
+    Task<FulfillmentSnapshot> CancelShipmentAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
         CancellationToken cancellationToken);
 
     /// <summary>tracking idempotent ثبت می‌کند.</summary>

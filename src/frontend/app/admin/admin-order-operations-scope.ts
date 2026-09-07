@@ -12,7 +12,9 @@ export type AdminOrderOperationActionLike = {
 export const GRID_EXCLUDED_OPERATION_CODES = new Set([
   "mark_processing",
   "mark_packed",
+  "unpack",
   "create_shipment",
+  "cancel_shipment",
   "assign_tracking",
   "dispatch_shipment",
   "deliver_shipment",
@@ -35,18 +37,21 @@ export function filterOperationsForScope<T extends AdminOrderOperationActionLike
 export function sellerQuickActionLabels(hasSelection: boolean): {
   pack: string;
   createShipment: string;
+  unpack: string;
   dispatch: string;
 } {
   if (hasSelection) {
     return {
       pack: "بسته‌بندی انتخاب‌شده‌ها",
       createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
+      unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
       dispatch: "ارسال انتخاب‌شده‌ها",
     };
   }
   return {
     pack: "بسته‌بندی همه اقلام آماده",
     createShipment: "ایجاد مرسوله",
+    unpack: "بازگشت از بسته‌بندی",
     dispatch: "ارسال",
   };
 }

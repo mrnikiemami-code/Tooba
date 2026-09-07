@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T003
+TB-P09-T004
 ```
 
 Prior accepted catalog wave:
@@ -62,13 +62,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T004
+TB-P09-T005
 ```
 
 Current Issued Task:
 
 ```text
-TB-P09-T004
+TB-P09-T005
 ```
 
 Current Repair Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T005 — Seller-scoped line/quantity fulfillment ops, reverse rules, return deadline UI; USER_VISUAL_ACCEPTED=NO
 TB-P09-T004 — Orders Operational UX Foundation (grid kebab ops, اقلام و ارسال shell, shipment modal; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003-R3 — Admin Orders Repair R3 (production-safe configurable manual/card-to-card payment; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003-R2 — Admin Orders Repair R2 (manual/card-to-card confirm, fresh order E2E, list return/refund visibility; USER_VISUAL_ACCEPTED=NO)
@@ -125,7 +126,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T003
+TB-P09-T004
 ```
 
 USER_VISUAL_ACCEPTED:

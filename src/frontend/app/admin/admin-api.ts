@@ -51,8 +51,16 @@ export interface AdminOrderLine {
   linePayable: number;
   currency: string;
   quantityShipped: number | null;
+  quantityPacked: number | null;
+  quantityAllocated: number | null;
   imageUrl: string | null;
   operationalStatus: string | null;
+  isReturnable: boolean | null;
+  returnWindowDays: number | null;
+  returnPolicyLabel: string | null;
+  returnDeadlineDisplay: string | null;
+  returnRemainingDisplay: string | null;
+  returnStatusCode: string | null;
 }
 
 export interface AdminShipmentLine {
@@ -445,6 +453,11 @@ export function formatAdminStatus(status: string): string {
     Captured: "دریافت‌شده",
     Expired: "منقضی",
     ReadyToShip: "آماده ارسال",
+    ReadyToFulfill: "آماده پردازش",
+    Packed: "بسته‌بندی‌شده",
+    Dispatched: "ارسال‌شده",
+    InTransit: "در مسیر تحویل",
+    Created: "ایجادشده",
     Shipped: "ارسال‌شده",
     Delivered: "تحویل‌شده",
     Fulfilled: "تکمیل‌شده",
@@ -542,6 +555,10 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       const orderLineId = text(prop(line, "orderLineId", "OrderLineId")) || null;
       const offerId = text(prop(line, "offerId", "OfferId"), `${sellerOrderId}-${index}`);
       const shippedRaw = prop(line, "quantityShipped", "QuantityShipped");
+      const packedRaw = prop(line, "quantityPacked", "QuantityPacked");
+      const allocatedRaw = prop(line, "quantityAllocated", "QuantityAllocated");
+      const isReturnableRaw = prop(line, "isReturnable", "IsReturnable");
+      const windowRaw = prop(line, "returnWindowDays", "ReturnWindowDays");
       return [{
         id: orderLineId || offerId,
         orderLineId,
@@ -552,8 +569,16 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         linePayable: number(prop(line, "linePayable", "LinePayable")),
         currency: text(prop(line, "currency", "Currency"), "IRR"),
         quantityShipped: shippedRaw == null || shippedRaw === "" ? null : number(shippedRaw),
+        quantityPacked: packedRaw == null || packedRaw === "" ? null : number(packedRaw),
+        quantityAllocated: allocatedRaw == null || allocatedRaw === "" ? null : number(allocatedRaw),
         imageUrl: text(prop(line, "imageUrl", "ImageUrl")) || null,
         operationalStatus: text(prop(line, "operationalStatus", "OperationalStatus")) || null,
+        isReturnable: typeof isReturnableRaw === "boolean" ? isReturnableRaw : isReturnableRaw == null ? null : Boolean(isReturnableRaw),
+        returnWindowDays: windowRaw == null || windowRaw === "" ? null : number(windowRaw),
+        returnPolicyLabel: text(prop(line, "returnPolicyLabel", "ReturnPolicyLabel")) || null,
+        returnDeadlineDisplay: text(prop(line, "returnDeadlineDisplay", "ReturnDeadlineDisplay")) || null,
+        returnRemainingDisplay: text(prop(line, "returnRemainingDisplay", "ReturnRemainingDisplay")) || null,
+        returnStatusCode: text(prop(line, "returnStatusCode", "ReturnStatusCode")) || null,
       }];
     });
     const shipments = array(prop(seller, "shipments", "Shipments")).flatMap((raw): AdminShipment[] => {

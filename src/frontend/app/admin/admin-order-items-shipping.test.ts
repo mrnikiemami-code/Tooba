@@ -66,11 +66,65 @@ test("selected-state labels switch correctly", () => {
   assert.deepEqual(sellerQuickActionLabels(false), {
     pack: "بسته‌بندی همه اقلام آماده",
     createShipment: "ایجاد مرسوله",
+    unpack: "بازگشت از بسته‌بندی",
     dispatch: "ارسال",
   });
   assert.deepEqual(sellerQuickActionLabels(true), {
     pack: "بسته‌بندی انتخاب‌شده‌ها",
     createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
+    unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
     dispatch: "ارسال انتخاب‌شده‌ها",
   });
+});
+
+test("panel preserves horizontal scroll and return deadline column", () => {
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  assert.match(panel, /overflow-x-auto/);
+  assert.match(panel, /min-w-\[920px\]/);
+  assert.match(panel, /مهلت مرجوعی/);
+  assert.match(panel, /admin-order-line-return-/);
+  assert.match(panel, /admin-order-line-qty-/);
+  assert.match(panel, /unpack/);
+  assert.match(panel, /cancel_shipment/);
+  assert.doesNotMatch(panel, /ReadyToFulfill/);
+  assert.doesNotMatch(panel, /window\.prompt\(|window\.confirm\(|window\.alert\(/);
+});
+
+test("create shipment modal sends selections without deferred T005 block", () => {
+  const modal = readFileSync(join(dir, "admin-create-shipment-modal.tsx"), "utf8");
+  assert.match(modal, /selections/);
+  assert.doesNotMatch(modal, /admin-create-shipment-deferred|به T005 موکول/);
+});
+
+test("mapAdminOrderDetail maps return deadline fields", () => {
+  const detail = mapAdminOrderDetail({
+    checkoutId: "c1",
+    reference: "R1",
+    sellerOrders: [{
+      sellerOrderId: "so1",
+      orderNumber: "SO-1",
+      sellerDisplayName: "آرمان",
+      lines: [{
+        orderLineId: "ol1",
+        offerId: "o1",
+        productTitle: "کالا",
+        quantity: 2,
+        quantityPacked: 1,
+        quantityShipped: 0,
+        quantityAllocated: 0,
+        unitAmount: 100,
+        linePayable: 200,
+        currency: "IRR",
+        isReturnable: true,
+        returnWindowDays: 7,
+        returnDeadlineDisplay: "۷ روز پس از تحویل",
+        returnRemainingDisplay: "۷ روز پس از تحویل",
+        returnStatusCode: "before_delivery",
+      }],
+      shipments: [],
+    }],
+  });
+  assert.equal(detail?.sellerOrders[0]?.lines[0]?.quantityPacked, 1);
+  assert.equal(detail?.sellerOrders[0]?.lines[0]?.returnStatusCode, "before_delivery");
+  assert.equal(detail?.sellerOrders[0]?.lines[0]?.returnDeadlineDisplay, "۷ روز پس از تحویل");
 });

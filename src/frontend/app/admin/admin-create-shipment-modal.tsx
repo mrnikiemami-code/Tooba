@@ -20,14 +20,20 @@ type Props = {
   checkoutId: string;
   sellerOrder: AdminSellerOrder;
   fulfillmentId: string | null;
-  /** وقتی خالی باشد یعنی کل اقلام باقی‌مانده (رفتار فعلی Host). */
+  /** وقتی خالی باشد یعنی کل اقلام باقی‌مانده بسته‌بندی‌شده و تخصیص‌نشده. */
   selectedLines: CreateShipmentLineSelection[];
   onCompleted?: () => void;
 };
 
+function remainingShippable(line: AdminOrderLine): number {
+  const packed = line.quantityPacked ?? 0;
+  const allocated = line.quantityAllocated ?? line.quantityShipped ?? 0;
+  return Math.max(0, packed - allocated);
+}
+
 /**
  * مودال ایجاد مرسوله با Dialog دیزاین‌سیستم — بدون prompt مرورگر.
- * ارسال جزئی خط در Host هنوز کامل نیست؛ انتخاب جزئی با پیام شفاف غیرفعال می‌شود.
+ * انتخاب جزئی خط/تعداد به Host ارسال می‌شود.
  */
 export function AdminCreateShipmentModal({
   open,
@@ -44,36 +50,33 @@ export function AdminCreateShipmentModal({
 
   const remainingLines = useMemo(
     () =>
-      sellerOrder.lines.filter((line) => {
-        const shipped = line.quantityShipped ?? 0;
-        return line.quantity > shipped;
-      }),
+      sellerOrder.lines
+        .map((line) => ({ line, quantity: remainingShippable(line) }))
+        .filter((x) => x.quantity > 0),
     [sellerOrder.lines],
   );
 
-  const displayLines = selectedLines.length > 0 ? selectedLines : remainingLines.map((line) => ({
-    line,
-    quantity: Math.max(0, line.quantity - (line.quantityShipped ?? 0)),
-  }));
+  const displayLines = selectedLines.length > 0 ? selectedLines : remainingLines;
 
-  const isPartialSelection = useMemo(() => {
-    if (selectedLines.length === 0) return false;
-    if (selectedLines.length !== remainingLines.length) return true;
-    const selectedIds = new Set(selectedLines.map((x) => x.line.orderLineId ?? x.line.id));
-    return remainingLines.some((line) => !selectedIds.has(line.orderLineId ?? line.id));
-  }, [selectedLines, remainingLines]);
-
-  const canSubmit = Boolean(fulfillmentId) && !isPartialSelection && displayLines.length > 0 && carrier.trim().length > 0;
+  const canSubmit = Boolean(fulfillmentId) && displayLines.length > 0 && carrier.trim().length > 0;
 
   async function submit() {
     if (!canSubmit || !fulfillmentId) return;
     setPending(true);
     setError(null);
+    const selections =
+      selectedLines.length > 0
+        ? selectedLines.map((x) => ({
+            orderLineId: x.line.orderLineId || x.line.id,
+            quantity: x.quantity,
+          }))
+        : null;
     const result = await executeAdminOrderOperation(checkoutId, {
       code: "create_shipment",
       sellerOrderId: sellerOrder.id,
       fulfillmentId,
       carrierDisplayName: carrier.trim(),
+      selections,
     });
     setPending(false);
     if (result.state !== "ok") {
@@ -124,11 +127,6 @@ export function AdminCreateShipmentModal({
             ))}
           </select>
         </label>
-        {isPartialSelection ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800" data-testid="admin-create-shipment-deferred">
-            تخصیص جزئی خط برای ایجاد مرسوله هنوز در Host کامل نشده و به T005 موکول است. همهٔ اقلام باقی‌مانده را انتخاب کنید یا انتخاب را خالی بگذارید.
-          </p>
-        ) : null}
         {!fulfillmentId ? (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
             برای این فروشنده fulfillment ثبت نشده است؛ ایجاد مرسوله ممکن نیست.

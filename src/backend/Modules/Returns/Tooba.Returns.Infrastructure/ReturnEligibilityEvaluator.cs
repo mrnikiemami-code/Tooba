@@ -7,13 +7,13 @@ using Tooba.Returns.Infrastructure.Persistence;
 
 namespace Tooba.Returns.Infrastructure;
 
-    /// <summary>
-    /// SoT eligibility مرجوعی: Paid + Delivered + پنجره ۳۰ روزه + باقیمانده؛ تسویه فروشنده هرگز چک نمی‌شود.
-    /// </summary>
+/// <summary>
+/// SoT eligibility مرجوعی: Paid + Delivered + پنجرهٔ snapshot خط + باقیمانده؛ تسویه فروشنده هرگز چک نمی‌شود.
+/// </summary>
 public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
 {
-    /// <summary>پنجرهٔ مرجوعی از آخرین تحویل.</summary>
-    public static readonly TimeSpan ReturnWindow = TimeSpan.FromDays(30);
+    /// <summary>پنجرهٔ پیش‌فرض وقتی snapshot خط در دسترس نباشد (legacy).</summary>
+    public static readonly TimeSpan ReturnWindow = TimeSpan.FromDays(7);
 
     private readonly IOrderReturnReader _orders;
     private readonly IFulfillmentReturnReader _fulfillment;
@@ -75,22 +75,40 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
         }
 
         var lastDeliveredAt = fulfillment.LastDeliveredAt.Value;
-        var eligibleUntil = lastDeliveredAt + ReturnWindow;
+        var alreadyReturned = await GetAlreadyReturnedQuantitiesAsync(sellerOrderId, cancellationToken);
+        var lines = BuildLines(orderContext, fulfillment, alreadyReturned, lastDeliveredAt, DateTimeOffset.UtcNow);
+        var anyReturnablePolicy = orderContext.Lines.Any(x => x.IsReturnableSnapshot);
+        if (!anyReturnablePolicy)
+        {
+            return new ReturnEligibilityResult(
+                orderContext.SellerOrderId,
+                orderContext.CheckoutId,
+                false,
+                ReturnEligibilityReasonCodes.NothingReturnable,
+                null,
+                lastDeliveredAt,
+                lines);
+        }
+
+        var eligibleUntil = orderContext.Lines
+            .Where(x => x.IsReturnableSnapshot)
+            .Select(x => lastDeliveredAt.AddDays(x.ReturnWindowDaysSnapshot > 0 ? x.ReturnWindowDaysSnapshot : ReturnWindow.TotalDays))
+            .DefaultIfEmpty(lastDeliveredAt + ReturnWindow)
+            .Max();
+
         var now = DateTimeOffset.UtcNow;
         if (now > eligibleUntil)
         {
-            return WithLines(
-                orderContext,
+            return new ReturnEligibilityResult(
+                orderContext.SellerOrderId,
+                orderContext.CheckoutId,
+                false,
                 ReturnEligibilityReasonCodes.WindowExpired,
-                eligible: false,
                 eligibleUntil,
                 lastDeliveredAt,
-                fulfillment,
-                await GetAlreadyReturnedQuantitiesAsync(sellerOrderId, cancellationToken));
+                lines);
         }
 
-        var alreadyReturned = await GetAlreadyReturnedQuantitiesAsync(sellerOrderId, cancellationToken);
-        var lines = BuildLines(orderContext, fulfillment, alreadyReturned);
         if (lines.All(x => x.RemainingReturnableQuantity <= 0))
         {
             return new ReturnEligibilityResult(
@@ -156,32 +174,31 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             lastDeliveredAt,
             []);
 
-    private static ReturnEligibilityResult WithLines(
-        OrderReturnContextSnapshot orderContext,
-        string reasonCode,
-        bool eligible,
-        DateTimeOffset? eligibleUntil,
-        DateTimeOffset? lastDeliveredAt,
-        FulfillmentReturnEligibilitySnapshot fulfillment,
-        IReadOnlyDictionary<Guid, int> alreadyReturned) =>
-        new(
-            orderContext.SellerOrderId,
-            orderContext.CheckoutId,
-            eligible,
-            reasonCode,
-            eligibleUntil,
-            lastDeliveredAt,
-            BuildLines(orderContext, fulfillment, alreadyReturned));
-
     private static IReadOnlyList<ReturnLineEligibility> BuildLines(
         OrderReturnContextSnapshot orderContext,
         FulfillmentReturnEligibilitySnapshot fulfillment,
-        IReadOnlyDictionary<Guid, int> alreadyReturned)
+        IReadOnlyDictionary<Guid, int> alreadyReturned,
+        DateTimeOffset lastDeliveredAt,
+        DateTimeOffset now)
     {
         return orderContext.Lines.Select(line =>
         {
             fulfillment.DeliveredQuantities.TryGetValue(line.OrderLineId, out var delivered);
             alreadyReturned.TryGetValue(line.OrderLineId, out var returned);
+            if (!line.IsReturnableSnapshot)
+            {
+                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+            }
+
+            var windowDays = line.ReturnWindowDaysSnapshot > 0
+                ? line.ReturnWindowDaysSnapshot
+                : (int)ReturnWindow.TotalDays;
+            var lineUntil = lastDeliveredAt.AddDays(windowDays);
+            if (now > lineUntil)
+            {
+                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+            }
+
             var remaining = Math.Max(0, delivered - returned);
             return new ReturnLineEligibility(line.OrderLineId, delivered, returned, remaining);
         }).ToArray();

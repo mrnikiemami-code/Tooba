@@ -42,7 +42,15 @@ public sealed record AdminOrderLineView(
     Guid? OrderLineId = null,
     int? QuantityShipped = null,
     string? ImageUrl = null,
-    string? OperationalStatus = null);
+    string? OperationalStatus = null,
+    int? QuantityPacked = null,
+    int? QuantityAllocated = null,
+    bool? IsReturnable = null,
+    int? ReturnWindowDays = null,
+    string? ReturnPolicyLabel = null,
+    string? ReturnDeadlineDisplay = null,
+    string? ReturnRemainingDisplay = null,
+    string? ReturnStatusCode = null);
 
 /// <summary>
 /// خط تخصیص‌یافته در مرسولهٔ فروشنده.

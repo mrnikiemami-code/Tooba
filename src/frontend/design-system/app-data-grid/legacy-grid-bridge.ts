@@ -92,7 +92,8 @@ export function buildLegacyGridBridge<T>(
       headerName: actionsColumn.header,
       width: actionsColumn.width ?? 108,
       minWidth: actionsColumn.minWidth ?? 100,
-      maxWidth: actionsColumn.maxWidth ?? 156,
+      // بدون سقف اجباری: کاربر می‌تواند عرض را بزرگ کند و اسکرول افقی بگیرد.
+      ...(actionsColumn.maxWidth != null ? { maxWidth: actionsColumn.maxWidth } : {}),
       sortable: false,
       filter: false,
       resizable: true,

@@ -176,7 +176,9 @@ public sealed class AdminOrderOperationsComposer
             {
                 "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
                 "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken),
+                "unpack" => await UnpackAsync(request, actorUserId, cancellationToken),
                 "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
+                "cancel_shipment" => await CancelShipmentAsync(request, actorUserId, cancellationToken),
                 "assign_tracking" => await AssignTrackingAsync(request, actorUserId, cancellationToken),
                 "dispatch_shipment" => await DispatchAsync(request, actorUserId, cancellationToken),
                 "deliver_shipment" => await DeliverAsync(request, actorUserId, cancellationToken),
@@ -240,7 +242,8 @@ public sealed class AdminOrderOperationsComposer
                     "شروع پردازش این سفارش؟"));
             }
 
-            if (fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing
+            if (fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing or FulfillmentStatus.Packed
+                && HasPackableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -256,7 +259,23 @@ public sealed class AdminOrderOperationsComposer
                     "بسته‌بندی این سفارش ثبت شود؟"));
             }
 
-            if (fulfillment.Status is FulfillmentStatus.Packed or FulfillmentStatus.Processing or FulfillmentStatus.ReadyToFulfill
+            if (HasUnpackableQuantity(fulfillment)
+                && HasAny(effective, "order.handle", "fulfillment.manage"))
+            {
+                actions.Add(Action(
+                    "unpack",
+                    "بازگشت از بسته‌بندی",
+                    "Unpack",
+                    order.SellerOrderId,
+                    fulfillment.FulfillmentId,
+                    null,
+                    null,
+                    Prefer(effective, "order.handle", "fulfillment.manage"),
+                    true,
+                    "بازگشت از بسته‌بندی برای اقلام تخصیص‌نشده؟"));
+            }
+
+            if (fulfillment.Status is not (FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
                 && HasUnallocatedShipmentQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
@@ -273,9 +292,26 @@ public sealed class AdminOrderOperationsComposer
                     "مرسوله برای این سفارش ایجاد شود؟"));
             }
 
-            foreach (var shipment in fulfillment.Shipments)
+            foreach (var shipment in fulfillment.Shipments.Where(s => s.Status != ShipmentStatus.Cancelled))
             {
+                if (shipment.Status == ShipmentStatus.Created
+                    && HasAny(effective, "order.handle", "fulfillment.manage"))
+                {
+                    actions.Add(Action(
+                        "cancel_shipment",
+                        "ابطال مرسوله",
+                        "Cancel shipment",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        shipment.ShipmentId,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "مرسوله ابطال و تخصیص آزاد شود؟"));
+                }
+
                 if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
+                    && shipment.Status == ShipmentStatus.Created
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -418,7 +454,32 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var fulfillmentId = RequireFulfillmentId(request);
-        return await _fulfillment.MarkPackedAsync(fulfillmentId, actorUserId, cancellationToken);
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+        var selections = ResolvePackSelections(snapshot, request.Selections);
+        if (selections.Count == 0)
+        {
+            throw new PlatformHttpException(400, "قلم قابل بسته‌بندی باقی نمانده است.", "order.operation.invalid");
+        }
+
+        return await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
+    }
+
+    private async Task<object> UnpackAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+        var selections = ResolveUnpackSelections(snapshot, request.Selections);
+        if (selections.Count == 0)
+        {
+            throw new PlatformHttpException(400, "قلم قابل بازگشت از بسته‌بندی باقی نمانده است.", "order.operation.invalid");
+        }
+
+        return await _fulfillment.UnpackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
     private async Task<object> CreateShipmentAsync(
@@ -434,10 +495,7 @@ public sealed class AdminOrderOperationsComposer
 
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
             ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
-        var lines = snapshot.Items
-            .Where(x => x.QuantityOrdered > x.QuantityShipped)
-            .Select(x => new ShipmentLineCommand(x.OrderLineId, x.QuantityOrdered - x.QuantityShipped))
-            .ToArray();
+        var lines = ResolveShipmentSelections(snapshot, request.Selections);
         if (lines.Length == 0)
         {
             throw new PlatformHttpException(400, "قلم قابل ارسال باقی نمانده است.", "order.operation.invalid");
@@ -449,6 +507,16 @@ public sealed class AdminOrderOperationsComposer
             request.CarrierDisplayName.Trim(),
             lines,
             cancellationToken);
+    }
+
+    private async Task<object> CancelShipmentAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var shipmentId = RequireShipmentId(request);
+        return await _fulfillment.CancelShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
     private async Task<object> AssignTrackingAsync(
@@ -722,24 +790,157 @@ public sealed class AdminOrderOperationsComposer
         ?? throw new PlatformHttpException(400, "شناسه درخواست مرجوعی الزامی است.", "order.operation.invalid");
 
     /// <summary>
-    /// آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده (با احتساب محمولهٔ Created باز).
+    /// آیا هنوز تعدادی برای ایجاد محمولهٔ جدید باقی مانده (با احتساب محمولهٔ Created باز و packed).
     /// </summary>
     private static bool HasUnallocatedShipmentQuantity(FulfillmentSnapshot fulfillment)
     {
         foreach (var item in fulfillment.Items)
         {
-            var openAllocated = fulfillment.Shipments
-                .Where(s => s.Status == ShipmentStatus.Created)
-                .SelectMany(s => s.Items)
-                .Where(line => line.OrderLineId == item.OrderLineId)
-                .Sum(line => line.Quantity);
-            if (item.QuantityOrdered > item.QuantityShipped + openAllocated)
+            var openAllocated = OpenAllocated(fulfillment, item.OrderLineId);
+            if (item.QuantityPacked > item.QuantityShipped + openAllocated)
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static bool HasPackableQuantity(FulfillmentSnapshot fulfillment) =>
+        fulfillment.Items.Any(x => x.QuantityOrdered > x.QuantityPacked);
+
+    private static bool HasUnpackableQuantity(FulfillmentSnapshot fulfillment) =>
+        fulfillment.Items.Any(item =>
+        {
+            var blocking = OpenAllocated(fulfillment, item.OrderLineId) + item.QuantityShipped;
+            return item.QuantityPacked > blocking;
+        });
+
+    private static int OpenAllocated(FulfillmentSnapshot fulfillment, Guid orderLineId) =>
+        fulfillment.Shipments
+            .Where(s => s.Status == ShipmentStatus.Created)
+            .SelectMany(s => s.Items)
+            .Where(line => line.OrderLineId == orderLineId)
+            .Sum(line => line.Quantity);
+
+    private static IReadOnlyList<FulfillmentSelectionCommand> ResolvePackSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection>? selections)
+    {
+        if (selections is null || selections.Count == 0)
+        {
+            return snapshot.Items
+                .Where(x => x.QuantityOrdered > x.QuantityPacked)
+                .Select(x => new FulfillmentSelectionCommand(x.OrderLineId, x.QuantityOrdered - x.QuantityPacked))
+                .ToArray();
+        }
+
+        return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
+        {
+            var packable = item.QuantityOrdered - item.QuantityPacked;
+            if (qty > packable)
+            {
+                throw new PlatformHttpException(400, "تعداد از باقیماندهٔ قابل بسته‌بندی بیشتر است.", "order.operation.invalid");
+            }
+        });
+    }
+
+    private static IReadOnlyList<FulfillmentSelectionCommand> ResolveUnpackSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection>? selections)
+    {
+        if (selections is null || selections.Count == 0)
+        {
+            return snapshot.Items
+                .Select(item =>
+                {
+                    var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
+                    var unpackable = item.QuantityPacked - blocking;
+                    return unpackable > 0
+                        ? new FulfillmentSelectionCommand(item.OrderLineId, unpackable)
+                        : null;
+                })
+                .Where(x => x is not null)
+                .Cast<FulfillmentSelectionCommand>()
+                .ToArray();
+        }
+
+        return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
+        {
+            var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
+            var unpackable = item.QuantityPacked - blocking;
+            if (qty > unpackable)
+            {
+                throw new PlatformHttpException(
+                    400,
+                    "بازگشت از بسته‌بندی برای تعداد تخصیص‌یافته یا ارسال‌شده مجاز نیست.",
+                    "order.operation.invalid");
+            }
+        });
+    }
+
+    private static ShipmentLineCommand[] ResolveShipmentSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection>? selections)
+    {
+        if (selections is null || selections.Count == 0)
+        {
+            return snapshot.Items
+                .Select(item =>
+                {
+                    var open = OpenAllocated(snapshot, item.OrderLineId);
+                    var remaining = item.QuantityPacked - item.QuantityShipped - open;
+                    return remaining > 0
+                        ? new ShipmentLineCommand(item.OrderLineId, remaining)
+                        : null;
+                })
+                .Where(x => x is not null)
+                .Cast<ShipmentLineCommand>()
+                .ToArray();
+        }
+
+        var normalized = NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
+        {
+            var open = OpenAllocated(snapshot, item.OrderLineId);
+            var remaining = item.QuantityPacked - item.QuantityShipped - open;
+            if (qty > remaining)
+            {
+                throw new PlatformHttpException(400, "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.", "order.operation.invalid");
+            }
+        });
+        return normalized.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray();
+    }
+
+    private static IReadOnlyList<FulfillmentSelectionCommand> NormalizeAndValidateSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection> selections,
+        Action<FulfillmentItemSnapshot, int> validateQuantity)
+    {
+        var itemsByLine = snapshot.Items.ToDictionary(x => x.OrderLineId);
+        var map = new Dictionary<Guid, int>();
+        foreach (var selection in selections)
+        {
+            if (selection.Quantity <= 0)
+            {
+                throw new PlatformHttpException(400, "تعداد باید بزرگ‌تر از صفر باشد.", "order.operation.invalid");
+            }
+
+            if (!itemsByLine.ContainsKey(selection.OrderLineId))
+            {
+                throw new PlatformHttpException(400, "خط انتخاب‌شده متعلق به این فروشنده نیست.", "order.operation.invalid");
+            }
+
+            map[selection.OrderLineId] = map.TryGetValue(selection.OrderLineId, out var existing)
+                ? existing + selection.Quantity
+                : selection.Quantity;
+        }
+
+        foreach (var pair in map)
+        {
+            validateQuantity(itemsByLine[pair.Key], pair.Value);
+        }
+
+        return map.Select(x => new FulfillmentSelectionCommand(x.Key, x.Value)).ToArray();
     }
 
     private static AdminOrderOperationAction Action(

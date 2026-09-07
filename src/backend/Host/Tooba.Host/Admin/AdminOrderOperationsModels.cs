@@ -21,6 +21,9 @@ public sealed record AdminOrderOperationsPage(
     IReadOnlyList<AdminOrderOperationAction> Actions,
     IReadOnlyList<ReturnEligibilityResult> ReturnEligibility);
 
+/// <summary>انتخاب خط/تعداد برای عملیات seller-scoped.</summary>
+public sealed record AdminOrderLineSelection(Guid OrderLineId, int Quantity);
+
 /// <summary>بدنهٔ اجرای یک عملیات سفارش.</summary>
 public sealed record AdminOrderOperationRequest(
     string Code,
@@ -32,4 +35,5 @@ public sealed record AdminOrderOperationRequest(
     string? TrackingReference,
     string? Reason,
     string? IdempotencyKey,
-    IReadOnlyList<ReturnLineCommand>? ReturnItems);
+    IReadOnlyList<ReturnLineCommand>? ReturnItems,
+    IReadOnlyList<AdminOrderLineSelection>? Selections = null);

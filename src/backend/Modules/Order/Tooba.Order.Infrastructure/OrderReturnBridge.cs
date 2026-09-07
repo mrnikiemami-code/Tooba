@@ -51,5 +51,9 @@ public sealed class OrderReturnBridge : IOrderReturnReader
                 x.Quantity,
                 x.UnitPriceSnapshot,
                 x.Currency,
-                x.ReservationId)).ToArray());
+                x.ReservationId,
+                x.IsReturnableSnapshot,
+                x.ReturnWindowDaysSnapshot,
+                x.ReturnPolicySourceSnapshot,
+                x.ReturnPolicyLabelSnapshot)).ToArray());
 }

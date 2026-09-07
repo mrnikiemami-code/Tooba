@@ -634,7 +634,8 @@ export function AppDataGrid<T extends { id: string }>({
       filter: true,
       resizable: true,
       minWidth: 72,
-      flex: 1,
+      // بدون flex پیش‌فرض: عرض ستون‌ها جمع می‌شود و اسکرول افقی فعال می‌ماند
+      // (flex:1 باعث فشرده‌شدن/روی‌هم‌افتادن به‌جای overflow افقی می‌شد).
       filterParams: COLUMN_FILTER_APPLY_PARAMS,
       tooltipValueGetter: (params) => gridTooltipText(params.value, params.valueFormatted),
     }),

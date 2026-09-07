@@ -43,7 +43,25 @@ test("orders grid order reference is non-navigation text; View is canonical", ()
   assert.doesNotMatch(orderColumnsBlock, /href=\{`\/admin\/orders\/\$\{row\.checkoutId\}`\}/);
   assert.doesNotMatch(orderColumnsBlock, /<Link[\s\S]*row\.reference/);
   assert.doesNotMatch(orderColumnsBlock, /maxWidth:/);
+  assert.match(orderColumnsBlock, /id:\s*"actions"[\s\S]*width:\s*120[\s\S]*minWidth:\s*100/);
   assert.match(screens, /orderRowActions[\s\S]*id:\s*"view"[\s\S]*href:\s*\(row\)\s*=>\s*`\/admin\/orders\/\$\{row\.checkoutId\}`/);
+});
+
+test("orders grid exposes filters on all data columns including amount/date/lines", () => {
+  const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+  const orderColumnsBlock = screens.slice(
+    screens.indexOf("const orderColumns"),
+    screens.indexOf("const sellerColumns"),
+  );
+  assert.match(orderColumnsBlock, /id:\s*"reference"[\s\S]*filterKind:\s*"text"/);
+  assert.match(orderColumnsBlock, /id:\s*"customer"[\s\S]*filterKind:\s*"text"/);
+  assert.match(orderColumnsBlock, /id:\s*"sellers"[\s\S]*filterKind:\s*"text"/);
+  assert.match(orderColumnsBlock, /id:\s*"lines"[\s\S]*filterKind:\s*"number"/);
+  assert.match(orderColumnsBlock, /id:\s*"payment"[\s\S]*filterKind:\s*"status"/);
+  assert.match(orderColumnsBlock, /id:\s*"status"[\s\S]*filterKind:\s*"status"/);
+  assert.match(orderColumnsBlock, /id:\s*"amount"[\s\S]*filterKind:\s*"money"/);
+  assert.match(orderColumnsBlock, /id:\s*"created"[\s\S]*filterKind:\s*"date"/);
+  assert.doesNotMatch(orderColumnsBlock, /id:\s*"actions"[\s\S]*filterKind:/);
 });
 
 test("operations menu uses portal and human empty label", () => {
@@ -135,20 +153,52 @@ test("grid trigger is icon-only without repeating عملیات text on button", 
   assert.match(menu, /aria-label=\{label\}/);
 });
 
-test("items-shipping panel selection labels switch by selection state", () => {
-  assert.equal(sellerQuickActionLabels(false).createShipment, "ایجاد مرسوله");
-  assert.equal(sellerQuickActionLabels(true).createShipment, "ایجاد مرسوله از انتخاب‌شده‌ها");
-  assert.equal(sellerQuickActionLabels(false).pack, "بسته‌بندی همه اقلام آماده");
-  assert.equal(sellerQuickActionLabels(true).pack, "بسته‌بندی انتخاب‌شده‌ها");
+test("formatAdminStatus humanizes fulfillment enums without raw ReadyToFulfill", async () => {
+  const { formatAdminStatus } = await import("./admin-api.ts");
+  assert.equal(formatAdminStatus("ReadyToFulfill"), "آماده پردازش");
+  assert.equal(formatAdminStatus("Packed"), "بسته‌بندی‌شده");
+  assert.equal(formatAdminStatus("Dispatched"), "ارسال‌شده");
+  assert.notEqual(formatAdminStatus("ReadyToFulfill"), "ReadyToFulfill");
 });
+
+test("grid excludes unpack and cancel_shipment from whole-order kebab", () => {
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("unpack"), true);
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("cancel_shipment"), true);
+  const actions = [
+    sampleAction("cancel"),
+    sampleAction("unpack"),
+    sampleAction("cancel_shipment"),
+    sampleAction("confirm_deposit"),
+  ];
+  const filtered = filterOperationsForScope(actions, "whole-order");
+  assert.deepEqual(filtered.map((a) => a.code), ["cancel", "confirm_deposit"]);
+});
+
 
 test("create shipment modal uses Dialog and never prompt", () => {
   const modal = readFileSync(join(dir, "admin-create-shipment-modal.tsx"), "utf8");
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   assert.match(modal, /Dialog/);
   assert.match(modal, /admin-create-shipment-modal/);
+  assert.match(modal, /selections/);
   assert.doesNotMatch(modal, /window\.prompt\(|window\.confirm\(|window\.alert\(/);
+  assert.doesNotMatch(modal, /admin-create-shipment-deferred|به T005 موکول/);
   assert.match(panel, /AdminCreateShipmentModal/);
   assert.match(panel, /admin-order-items-shipping/);
   assert.match(panel, /dir="rtl"/);
+});
+
+test("operations client posts selections array", () => {
+  const client = readFileSync(join(dir, "admin-order-operations.ts"), "utf8");
+  assert.match(client, /selections\?:/);
+  assert.match(client, /selections: body\.selections/);
+});
+
+test("user grid width and flex scroll preservation markers", () => {
+  const grid = readFileSync(join(dir, "../../design-system/app-data-grid/AppDataGrid.tsx"), "utf8");
+  const bridge = readFileSync(join(dir, "../../design-system/app-data-grid/legacy-grid-bridge.ts"), "utf8");
+  const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+  assert.doesNotMatch(grid, /defaultColDef:\s*\{[\s\S]*?flex:\s*1/);
+  assert.match(bridge, /maxWidth/);
+  assert.match(screens, /id:\s*"actions"[\s\S]*width:\s*120[\s\S]*minWidth:\s*100/);
 });

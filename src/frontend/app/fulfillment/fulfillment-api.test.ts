@@ -90,7 +90,7 @@ test("mapFulfillmentList derives grid rows with tracking references", () => {
 });
 
 test("formatters localize known fulfillment and shipment statuses", () => {
-  assert.equal(formatFulfillmentStatus("ReadyToFulfill"), "آماده ارسال");
+  assert.equal(formatFulfillmentStatus("ReadyToFulfill"), "آماده پردازش");
   assert.equal(formatShipmentStatus("InTransit"), "در مسیر");
   assert.notEqual(formatFulfillmentDate("2026-08-27T10:00:00Z"), "—");
   assert.equal(formatFulfillmentDate(null), "—");

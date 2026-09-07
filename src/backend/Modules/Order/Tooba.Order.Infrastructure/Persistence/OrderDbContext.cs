@@ -118,6 +118,10 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.PostDiscountTaxExclusiveSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.CategoryIdSnapshot);
             entity.HasIndex(x => x.CategoryIdSnapshot);
+            entity.Property(x => x.IsReturnableSnapshot).HasDefaultValue(true);
+            entity.Property(x => x.ReturnWindowDaysSnapshot).HasDefaultValue(7);
+            entity.Property(x => x.ReturnPolicySourceSnapshot).HasMaxLength(64);
+            entity.Property(x => x.ReturnPolicyLabelSnapshot).HasMaxLength(128);
         });
         modelBuilder.Entity<OrderPaymentInboxRecord>(entity =>
         {

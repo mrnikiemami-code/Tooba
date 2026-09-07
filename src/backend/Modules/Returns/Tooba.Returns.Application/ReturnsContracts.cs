@@ -150,7 +150,7 @@ public static class ReturnEligibilityReasonCodes
     {
         NotPaid => "مرجوعی فقط برای سفارش Paid مجاز است.",
         NotDelivered => "هنوز تحویلی ثبت نشده است.",
-        WindowExpired => "مهلت ۳۰ روزهٔ مرجوعی گذشته است.",
+        WindowExpired => "مهلت مرجوعی تمام شده است.",
         NothingReturnable => "تعداد قابل مرجوعی باقی نمانده است.",
         OrderMissing => "سفارش برای مرجوعی پیدا نشد.",
         FulfillmentMissing => "اطلاعات fulfillment برای مرجوعی پیدا نشد.",

@@ -224,12 +224,12 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
 /** وضعیت fulfillment را برای UI فارسی می‌کند. */
 export function formatFulfillmentStatus(status: string): string {
   const labels: Record<string, string> = {
-    ReadyToFulfill: "آماده ارسال",
+    ReadyToFulfill: "آماده پردازش",
     Processing: "در حال پردازش",
-    Packed: "بسته‌بندی شده",
-    Dispatched: "ارسال شده",
-    InTransit: "در مسیر",
-    Delivered: "تحویل شده",
+    Packed: "بسته‌بندی‌شده",
+    Dispatched: "ارسال‌شده",
+    InTransit: "در مسیر تحویل",
+    Delivered: "تحویل‌شده",
     Failed: "ناموفق",
     Cancelled: "لغو شده",
   };

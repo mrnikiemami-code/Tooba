@@ -259,7 +259,11 @@ public sealed record OrderReturnLineSnapshot(
     int Quantity,
     decimal UnitPriceSnapshot,
     string Currency,
-    Guid? ReservationId);
+    Guid? ReservationId,
+    bool IsReturnableSnapshot = true,
+    int ReturnWindowDaysSnapshot = 7,
+    string? ReturnPolicySourceSnapshot = null,
+    string? ReturnPolicyLabelSnapshot = null);
 
 /// <summary>
 /// snapshot سفارش برای eligibility مرجوعی.

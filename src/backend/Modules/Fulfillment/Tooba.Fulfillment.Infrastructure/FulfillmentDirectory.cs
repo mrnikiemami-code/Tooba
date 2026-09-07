@@ -201,6 +201,42 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> PackSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.PackSelections(
+            selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("packed");
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> UnpackSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.UnpackSelections(
+            selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("unpacked");
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<FulfillmentSnapshot> CreateShipmentAsync(
         Guid fulfillmentId,
         Guid actorUserId,
@@ -219,6 +255,22 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         _db.ShipmentItems.AddRange(shipment.Items);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordShipmentCreated();
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> CancelShipmentAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.CancelShipment(shipmentId, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("shipment_cancelled");
         return await MapSnapshotAsync(unit, cancellationToken);
     }
 
@@ -364,7 +416,8 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 x.OrderLineId,
                 x.QuantityOrdered,
                 x.QuantityShipped,
-                x.ReservationId)).ToArray(),
+                x.ReservationId,
+                x.QuantityPacked)).ToArray(),
             shipmentSnapshots,
             unit.CreatedAt,
             unit.UpdatedAt);

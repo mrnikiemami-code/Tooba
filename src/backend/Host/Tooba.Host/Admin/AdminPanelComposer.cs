@@ -168,10 +168,26 @@ public sealed class AdminPanelComposer
             fulfillmentBySeller.TryGetValue(order.SellerOrderId, out var fulfillment);
             var shippedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityShipped)
                 ?? new Dictionary<Guid, int>();
+            var packedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityPacked)
+                ?? new Dictionary<Guid, int>();
+            DateTimeOffset? deliveredAt = fulfillment?.Shipments
+                .Where(s => s.DeliveredAt is not null)
+                .Select(s => s.DeliveredAt!.Value)
+                .OrderByDescending(x => x)
+                .Cast<DateTimeOffset?>()
+                .FirstOrDefault();
+
             var lines = order.Lines.Select(line =>
             {
                 titles.TryGetValue(line.CatalogVariantId, out var title);
                 shippedByLine.TryGetValue(line.LineId, out var shipped);
+                packedByLine.TryGetValue(line.LineId, out var packed);
+                var openAllocated = fulfillment?.Shipments
+                    .Where(s => s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created)
+                    .SelectMany(s => s.Items)
+                    .Where(i => i.OrderLineId == line.LineId)
+                    .Sum(i => i.Quantity) ?? 0;
+                var returnUi = BuildReturnDeadlineUi(line, deliveredAt);
                 return new AdminOrderLineView(
                     line.OfferId,
                     string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
@@ -182,7 +198,15 @@ public sealed class AdminPanelComposer
                     line.LineId,
                     fulfillment is null ? null : shipped,
                     null,
-                    fulfillment?.Status.ToString());
+                    fulfillment?.Status.ToString(),
+                    fulfillment is null ? null : packed,
+                    fulfillment is null ? null : openAllocated + shipped,
+                    line.IsReturnableSnapshot,
+                    line.ReturnWindowDaysSnapshot,
+                    line.ReturnPolicyLabelSnapshot,
+                    returnUi.DeadlineDisplay,
+                    returnUi.RemainingDisplay,
+                    returnUi.StatusCode);
             }).ToList();
             var shipments = fulfillment?.Shipments.Select(s => new AdminShipmentView(
                 s.ShipmentId,
@@ -427,6 +451,57 @@ public sealed class AdminPanelComposer
 
     private static string PaymentState(SellerOrderStatus status) =>
         status == SellerOrderStatus.Paid ? "Paid" : status == SellerOrderStatus.Cancelled ? "Cancelled" : "PendingPayment";
+
+    private static (string DeadlineDisplay, string RemainingDisplay, string StatusCode) BuildReturnDeadlineUi(
+        OrderLine line,
+        DateTimeOffset? deliveredAt)
+    {
+        if (!line.IsReturnableSnapshot)
+        {
+            return ("غیرقابل مرجوعی", "غیرقابل مرجوعی", "non_returnable");
+        }
+
+        var windowDays = line.ReturnWindowDaysSnapshot < 0 ? 0 : line.ReturnWindowDaysSnapshot;
+        var policyLabel = string.IsNullOrWhiteSpace(line.ReturnPolicyLabelSnapshot)
+            ? $"{ToPersianDigits(windowDays)} روز پس از تحویل"
+            : line.ReturnPolicyLabelSnapshot!;
+
+        if (deliveredAt is null)
+        {
+            return (policyLabel, policyLabel, "before_delivery");
+        }
+
+        var deadline = deliveredAt.Value.AddDays(windowDays);
+        var remainingDays = (int)Math.Ceiling((deadline - DateTimeOffset.UtcNow).TotalDays);
+        if (remainingDays < 0)
+        {
+            return ("مهلت مرجوعی تمام شده", "مهلت مرجوعی تمام شده", "expired");
+        }
+
+        var deadlineFa = FormatPersianDate(deadline);
+        return ($"تا {deadlineFa}", $"{ToPersianDigits(remainingDays)} روز باقی‌مانده", "eligible");
+    }
+
+    private static string FormatPersianDate(DateTimeOffset value)
+    {
+        try
+        {
+            var calendar = new System.Globalization.PersianCalendar();
+            var y = calendar.GetYear(value.UtcDateTime);
+            var m = calendar.GetMonth(value.UtcDateTime);
+            var d = calendar.GetDayOfMonth(value.UtcDateTime);
+            return $"{ToPersianDigits(y)}/{ToPersianDigits(m).PadLeft(2, '۰')}/{ToPersianDigits(d).PadLeft(2, '۰')}";
+        }
+        catch
+        {
+            return value.UtcDateTime.ToString("yyyy/MM/dd");
+        }
+    }
+
+    private static string ToPersianDigits(int value) =>
+        value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            .Replace('0', '۰').Replace('1', '۱').Replace('2', '۲').Replace('3', '۳').Replace('4', '۴')
+            .Replace('5', '۵').Replace('6', '۶').Replace('7', '۷').Replace('8', '۸').Replace('9', '۹');
 
     private static string HumanizeProviderCode(string? providerCode) =>
         providerCode?.Trim().ToLowerInvariant() switch
