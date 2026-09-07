@@ -2,35 +2,24 @@
   "overrideDeny": {
     "status": 400,
     "title": "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
-    "body": {
-      "title": "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
-      "errorCode": "seller.offer.return_policy.rejected"
-    }
+    "errorCode": "seller.offer.return_policy.rejected"
   },
-  "methods": [
-    {
-      "code": "post",
-      "labelFa": "پست",
-      "providerKind": "post"
-    },
-    {
-      "code": "snapp_courier",
-      "labelFa": "اسنپ / پیک آنلاین",
-      "providerKind": "courier"
-    },
-    {
-      "code": "store_courier",
-      "labelFa": "پیک فروشگاه",
-      "providerKind": "store_courier"
-    },
-    {
-      "code": "in_person",
-      "labelFa": "تحویل حضوری",
-      "providerKind": "in_person"
-    }
-  ],
-  "tipaxListed": false,
-  "tipaxReject": {
+  "nonReturnableDeny": {
+    "status": 400,
+    "title": "تغییر سیاست مرجوعی برای فروشنده مجاز نیست."
+  },
+  "minMaxReject": {
+    "low": { "days": 0, "status": 400, "title": "مهلت مرجوعی باید بین 1 و 30 روز باشد." },
+    "high": { "days": 99, "status": 400, "title": "مهلت مرجوعی باید بین 1 و 30 روز باشد." }
+  },
+  "methodsWithoutInPerson": ["post", "tipax", "snapp_courier", "store_courier"],
+  "inPersonListed": false,
+  "inPersonReject": {
+    "checkoutId": "01a07bd3-ee11-7000-b51f-c5e245220244",
+    "status": 400,
+    "title": "روش ارسال برای این فروشگاه فعال نیست."
+  },
+  "priorTipaxDisableReject": {
     "checkoutId": "01a07bcf-75a6-7000-a785-32db368dd09f",
     "status": 400,
     "title": "روش ارسال برای این فروشگاه فعال نیست."

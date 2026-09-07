@@ -1,0 +1,91 @@
+﻿{
+    "A":  {
+              "returnWindowDays":  7,
+              "returnPolicyLabel":  "7 روز پس از تحویل",
+              "offerId":  "01a04402-7985-7000-a17c-ec4c26159857",
+              "returnStatusCode":  "before_delivery",
+              "orderLineId":  "01a07bca-c016-7000-a044-a89cd7493936",
+              "isReturnable":  true,
+              "checkoutId":  "01a07bca-c009-7000-9ad3-d31d277a08d8"
+          },
+    "B":  {
+              "returnWindowDays":  14,
+              "returnPolicyLabel":  "14 روز پس از تحویل",
+              "offerId":  "01a04402-7a75-7000-b614-6f093cb072ac",
+              "orderLineId":  "01a07bca-c49a-7000-9dde-acd42b4be6aa",
+              "isReturnable":  true,
+              "checkoutId":  "01a07bca-c495-7000-abb2-9c25da58681f"
+          },
+    "D":  {
+              "afterOfferChoice":  "NonReturnable",
+              "checkoutId":  "01a07bca-c495-7000-abb2-9c25da58681f",
+              "immutable":  true,
+              "beforeLabel":  "14 روز پس از تحویل",
+              "reloadLabel":  "14 روز پس از تحویل",
+              "reloadWindow":  14,
+              "orderLineId":  "01a07bca-c49a-7000-9dde-acd42b4be6aa",
+              "beforeWindow":  14,
+              "reloadReturnable":  true
+          },
+    "GovEnabled":  {
+                       "badLowHasFa":  true,
+                       "allowedOk":  true,
+                       "badHighStatus":  400,
+                       "badLowNoRawCode":  true,
+                       "badLowTitle":  "مهلت مرجوعی باید بین 1 و 30 روز باشد.",
+                       "badHighTitle":  "مهلت مرجوعی باید بین 1 و 30 روز باشد.",
+                       "badLowStatus":  400,
+                       "badHighHasFa":  true
+                   },
+    "C":  {
+              "orderLineId":  "01a07bd0-4259-7000-b2f5-f8a22ed1c4fa",
+              "returnPolicyLabel":  "غیرقابل مرجوعی",
+              "returnDeadlineDisplay":  "غیرقابل مرجوعی",
+              "checkoutId":  "01a07bd0-4244-7000-bc96-abc25c9c5f29",
+              "windowFixed":  true,
+              "offerId":  "01a0429e-7f0a-7000-9301-dbffbb89713e",
+              "isReturnable":  false,
+              "returnWindowDays":  0
+          },
+    "Ship":  {
+                 "courierMeta":  "{\"ServiceType\":\"پیشتاز\",\"PackageCount\":1,\"WeightKg\":null,\"Dimensions\":null,\"DeclaredValue\":null,\"RecipientName\":\"R1-ShipMethods\",\"RecipientPhone\":\"09121234567\",\"PostalCode\":\"1234567890\",\"DestinationAddress\":\"تهران، تهران، آدرس R1-ShipMethods\",\"Notes\":\"t006-r1-post\"}",
+                 "tipaxOk":  true,
+                 "noSecretsInMeta":  true,
+                 "postMeta":  "{\"ServiceType\":\"پیشتاز\",\"PackageCount\":1,\"WeightKg\":null,\"Dimensions\":null,\"DeclaredValue\":null,\"RecipientName\":\"R1-ShipMethods\",\"RecipientPhone\":\"09121234567\",\"PostalCode\":\"1234567890\",\"DestinationAddress\":\"تهران، تهران، آدرس R1-ShipMethods\",\"Notes\":\"t006-r1-post\"}",
+                 "tipaxStatus":  "Created",
+                 "orderLineId":  "01a07bd2-53b9-7000-8ff7-08b66919c0da",
+                 "tipaxId":  "7140c150-1921-4987-86b4-b26a58a34917",
+                 "postId":  "e2639a2c-6776-46c8-88dd-575351a2cd78",
+                 "courierLabel":  "اسنپ / پیک آنلاین",
+                 "tipaxMeta":  "{\"ServiceType\":\"پیشتاز\",\"PackageCount\":1,\"WeightKg\":null,\"Dimensions\":null,\"DeclaredValue\":null,\"RecipientName\":\"R1-ShipMethods\",\"RecipientPhone\":\"09121234567\",\"PostalCode\":\"1234567890\",\"DestinationAddress\":\"تهران، تهران، آدرس R1-ShipMethods\",\"Notes\":\"t006-r1-post\"}",
+                 "uiHasNoRawMeta":  true,
+                 "tipaxLabel":  "تیپاکس",
+                 "nextActions":  "cancel_shipment,assign_tracking,cancel_shipment,assign_tracking,cancel_shipment,assign_tracking",
+                 "courierOk":  true,
+                 "courierId":  "6494430e-1315-41cb-a986-0c6d025fd2ed",
+                 "postLabel":  "پست",
+                 "postOk":  true,
+                 "courierStatus":  "Created",
+                 "postStatus":  "Created",
+                 "checkoutId":  "01a07bd2-53a4-7000-bbe6-d6cbf8f9994b"
+             },
+    "Split":  {
+                  "afterBRemaining":  "تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌شده ۳: ۷ روز باقی‌مانده",
+                  "orderLineId":  "01a07bd2-5efc-7000-aaf6-7909036a48e5",
+                  "shipBId":  "c5de09d0-fe21-4bfe-b235-6eb412e07b28",
+                  "notClaimAll5Same":  true,
+                  "afterADeadline":  "تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌نشده ۳: ساعت مرجوعی شروع نشده",
+                  "undeliveredMentioned":  true,
+                  "shipAStatusAfterA":  "Delivered",
+                  "afterARemaining":  "تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌نشده ۳: قبل از تحویل",
+                  "checkoutId":  "01a07bd2-5ef4-7000-b770-a2173d8ae25c",
+                  "qty":  5,
+                  "shipBStatusAfterA":  "Created",
+                  "afterBDeadline":  "تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌شده ۳: تا ۱۴۰۵/۰۶/۲۳",
+                  "afterBStatus":  "eligible",
+                  "deliveredMentioned":  true,
+                  "afterAStatus":  "partial_eligible",
+                  "shipAId":  "781a155f-332c-4529-81b3-6dc7ed56be9b"
+              },
+    "methodCodes":  "post,tipax,snapp_courier,store_courier,in_person"
+}

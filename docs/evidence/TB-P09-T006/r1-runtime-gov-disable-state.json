@@ -1,0 +1,12 @@
+﻿{
+    "sellerCanOverride":  false,
+    "denyNRStatus":  400,
+    "denyShipCheckout":  "01a07bd3-ee11-7000-b51f-c5e245220244",
+    "denyShipStatus":  400,
+    "denyShipTitle":  "روش ارسال برای این فروشگاه فعال نیست.",
+    "denyCustomTitle":  "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
+    "denyNRTitle":  "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
+    "methodsAfterDisable":  "post,tipax,snapp_courier,store_courier",
+    "inPersonAbsent":  true,
+    "denyCustomStatus":  400
+}

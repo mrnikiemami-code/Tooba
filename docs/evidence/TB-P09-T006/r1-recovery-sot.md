@@ -9,3 +9,4 @@
 - USER_VISUAL_ACCEPTED=NO
 - Worker: IDLE
 - No TB-P09-T007 invented
+- recovery-staleness.guard.test.mjs updated for T006-R1 pointers; guard PASS

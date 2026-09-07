@@ -1,9 +1,10 @@
 # R1 Runtime — Courier / Local Shipment
 
 - Method used: `snapp_courier` (اسنپ / پیک آنلاین) — manual/external record only
-- Checkout `01a07bd2-d8ff-7000-9642-3e06064575bb`
-- Shipment `f113e9c6-ce3d-493c-bada-c59ac08a1710`
+- Checkout `01a07bd2-53a4-7000-bbe6-d6cbf8f9994b`
+- Shipment `6494430e-1315-41cb-a986-0c6d025fd2ed`
 - Status `Created`; method label FA; next `cancel_shipment,assign_tracking`
-- Metadata: pickup/destination/contacts/window/package/driverNote/externalReference — no live Snapp API success
+- Metadata persisted: pickup/destination/contacts/packageDescription/`externalReference=SNAP-MANUAL-R1` — no live Snapp API success
 - Postal-only fields not forced
-- Also exercised `store_courier` on split-delivery shipments
+- Also exercised `store_courier` on split-delivery shipment B (`c5de09d0-fe21-4bfe-b235-6eb412e07b28`)
+- Admin Order detail DTO does not expose `providerMetadataJson` (operational metadata only in fulfillment store)

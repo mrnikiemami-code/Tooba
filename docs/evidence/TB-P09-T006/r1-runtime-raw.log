@@ -1,0 +1,68 @@
+﻿
+[15:44:39] === SETUP OFFERS ===
+[15:44:39] default patch ok=True choice=Default days= status=200 raw={"offerId":"01a04402-7985-7000-a17c-ec4c26159857","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","sellerDisplayName":"فروشگاه آرمان","catalogVariantId":"01a04402-7942-7000-bc0a-c1dec184606e","
+[15:44:39] custom patch ok=True choice=Custom days=14
+[15:44:40] nonret patch ok=True choice=NonReturnable
+[15:44:40] split offer default ok=True
+[15:44:40] ship offer default ok=True
+[15:44:40] === A DEFAULT POLICY ===
+[15:44:41] A checkout=01a07bca-c009-7000-9ad3-d31d277a08d8 line=01a07bca-c016-7000-a044-a89cd7493936 ret=True win=7 lbl=7 روز پس از تحویل status=before_delivery
+[15:44:41] === B CUSTOM POLICY ===
+[15:44:42] B checkout=01a07bca-c495-7000-abb2-9c25da58681f line=01a07bca-c49a-7000-9dde-acd42b4be6aa ret=True win=14 lbl=14 روز پس از تحویل
+[15:44:42] === C NONRETURNABLE ===
+[15:44:43] C checkout=01a07bca-c8e3-7000-8fe3-5a5a428b5e7a line=01a07bca-c8f4-7000-816d-eb4930b066b9 ret=False win=7 lbl=غیرقابل مرجوعی deadline=غیرقابل مرجوعی
+[15:44:43] === D SNAPSHOT IMMUTABILITY ===
+[15:44:43] changed offer to NonReturnable ok=True choice=NonReturnable
+[15:44:43] reload win=14 lbl=14 روز پس از تحویل ret=True
+[15:44:43] === OVERRIDE GOVERNANCE (enabled + min/max) ===
+[15:44:43] allowed custom10 ok=True status=200
+[15:44:43] badLow0 ok=False status=400 title=مهلت مرجوعی باید بین 1 و 30 روز باشد.
+[15:44:43] badHigh99 ok=False status=400 title=مهلت مرجوعی باید بین 1 و 30 روز باشد.
+[15:44:43] === SHIPMENTS POST/TIPAX/COURIER ===
+[15:50:40] === PHASE2 REVERIFY NONRET WINDOW=0 ===
+[15:50:42] C2 checkout=01a07bd0-4244-7000-bc96-abc25c9c5f29 ret=False win=0 lbl=غیرقابل مرجوعی
+[15:50:42] === PHASE2 SHIPMENTS ===
+[15:50:43] pack ok=False
+[15:50:43] POST ok=False status=400 raw={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+[15:50:43] TIPAX ok=False status=400 raw={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+[15:50:43] COURIER ok=False status=400 raw={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+[15:50:43] detail shipments count=0
+[15:50:43] === PHASE2 SPLIT DELIVERY ===
+[15:50:45] shipA ok=False shipB ok=False
+[15:50:45] split A= B=
+[15:50:45] deliverA ok=False
+[15:50:45] afterA deadline=7 روز پس از تحویل
+[15:50:45] afterA remaining=7 روز پس از تحویل code=before_delivery A= B=
+[15:50:47] deliverB ok=False
+[15:50:47] afterB deadline=7 روز پس از تحویل
+[15:50:47] afterB remaining=7 روز پس از تحویل code=before_delivery
+[15:50:47] PHASE2_DONE
+[15:52:56] === REBUILD STATE FROM KNOWN PHASE1 + REVERIFY ===
+[15:52:56] C verified win=0 ret=False lbl=غیرقابل مرجوعی line=01a07bd0-4259-7000-b2f5-f8a22ed1c4fa
+[15:52:56] === SHIPMENTS ===
+[15:52:57] pre-confirm ops=[confirm_deposit,reject_deposit,cancel]
+[15:52:57] confirm ok=True {"paymentId":"fb711c96-f7c1-421c-9bb4-0cc39f8b01b6","status":"Succeeded","newlySucceeded":true}
+[15:52:58] paid ready checkout=01a07bd2-53a4-7000-bbe6-d6cbf8f9994b fid=99e13c98-3002-4479-ad78-c6c5a8419b65 so=01a07bd2-53a7-7000-b830-cdcbc1a6b414 pay=Paid/Paid
+[15:52:58] ship order so=01a07bd2-53a7-7000-b830-cdcbc1a6b414 fid=99e13c98-3002-4479-ad78-c6c5a8419b65 line=01a07bd2-53b9-7000-8ff7-08b66919c0da
+[15:52:59] opsCodes=cancel,mark_processing,mark_packed
+[15:52:59] mark_processing ok=False {"title":"شناسه fulfillment الزامی است.","errorCode":"order.operation.invalid","detail":"شناسه fulfi
+[15:52:59] pack ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"
+[15:52:59] POST ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] TIPAX ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] COURIER ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] SHIP e2639a2c-6776-46c8-88dd-575351a2cd78 st=Created code=post label=پست carrier=پست
+[15:52:59] SHIP 7140c150-1921-4987-86b4-b26a58a34917 st=Created code=tipax label=تیپاکس carrier=تیپاکس
+[15:52:59] SHIP 6494430e-1315-41cb-a986-0c6d025fd2ed st=Created code=snapp_courier label=اسنپ / پیک آنلاین carrier=اسنپ / پیک آنلاین
+[15:52:59] === SPLIT ===
+[15:53:00] pre-confirm ops=[confirm_deposit,reject_deposit,cancel]
+[15:53:00] confirm ok=True {"paymentId":"e152c93d-a622-49be-8458-8f6fb872a00d","status":"Succeeded","newlySucceeded":true}
+[15:53:01] paid ready checkout=01a07bd2-5ef4-7000-b770-a2173d8ae25c fid=a596a49d-b845-44db-8fd2-e09e7465420c so=01a07bd2-5ef5-7000-bcd1-82cae1d877ba pay=Paid/Paid
+[15:53:01] split pack ok=True
+[15:53:01] split ships okA=True okB=True
+[15:53:01] split cand 781a155f-332c-4529-81b3-6dc7ed56be9b q=2 code=post st=Created
+[15:53:01] split cand c5de09d0-fe21-4bfe-b235-6eb412e07b28 q=3 code=store_courier st=Created
+[15:53:01] deliverA ok=True
+[15:53:01] afterA=تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌نشده ۳: ساعت مرجوعی شروع نشده | تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌نشده ۳: قبل از تحویل | partial_eligible A=Delivered B=Created
+[15:53:03] deliverB ok=True
+[15:53:03] afterB=تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌شده ۳: تا ۱۴۰۵/۰۶/۲۳ | تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌شده ۳: ۷ روز باقی‌مانده | eligible
+[15:53:04] PHASE3_DONE methods=post,tipax,snapp_courier,store_courier,in_person

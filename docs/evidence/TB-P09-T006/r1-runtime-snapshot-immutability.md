@@ -1,6 +1,6 @@
 # R1 Runtime — Snapshot Immutability
 
-- Baseline order A `01a07bcf-f2e2-7000-9065-22c6dc804501` line window=7 / label `7 روز پس از تحویل`
-- After order creation, Offer changed to Custom 21 (and store default not required)
-- Reloaded same OrderLine: window still **7**, label unchanged, `isReturnable=true`
+- Baseline order B `01a07bca-c495-7000-abb2-9c25da58681f` line window=14 / label `14 روز پس از تحویل`
+- After order creation, Offer changed to NonReturnable
+- Reloaded same OrderLine: window still **14**, label unchanged, `isReturnable=true`
 - OrderLine snapshot was not edited directly

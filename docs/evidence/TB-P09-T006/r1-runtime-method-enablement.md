@@ -1,16 +1,20 @@
 # R1 Runtime — Method Enablement
 
-GET `/v1/admin/shipping-methods` after removing `tipax` from `Tooba:ShippingMethods:EnabledCodes`:
+## Enabled list
 
-- tipaxListed=false
-- codes=post, snapp_courier, store_courier, in_person
+GET `/v1/admin/shipping-methods` with all codes enabled → `post,tipax,snapp_courier,store_courier,in_person`.
 
-`create_shipment` with `shippingMethodCode=tipax` while disabled:
+## Disabled backend reject
 
-- checkout=`01a07bcf-75a6-7000-a785-32db368dd09f`
-- HTTP=400
-- title=`روش ارسال برای این فروشگاه فعال نیست.`
+Temporarily removed `in_person` from `Tooba:ShippingMethods:EnabledCodes` and restarted Host:
 
-Defect fix: `AdminOrderOperationsComposer` now uses injected `ShippingMethodsOptions` (previously `Enabled(null)` always allowed all registry codes).
+- tipaxListed remains true; `in_person` absent from GET list (`post,tipax,snapp_courier,store_courier`)
+- `create_shipment` with `shippingMethodCode=in_person` on checkout `01a07bd3-ee11-7000-b51f-c5e245220244`:
+  - HTTP 400
+  - title=`روش ارسال برای این فروشگاه فعال نیست.`
+
+Also previously proven with tipax disabled (same FA reject title). Backend authoritative via injected `ShippingMethodsOptions` (not frontend-only).
+
+Config restored after smoke.
 
 PASS=true

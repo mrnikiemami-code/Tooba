@@ -1,0 +1,23 @@
+﻿[15:52:56] === REBUILD STATE FROM KNOWN PHASE1 + REVERIFY ===
+[15:52:56] C verified win=0 ret=False lbl=غیرقابل مرجوعی line=01a07bd0-4259-7000-b2f5-f8a22ed1c4fa
+[15:52:56] === SHIPMENTS ===
+[15:52:58] ship order so=01a07bd2-53a7-7000-b830-cdcbc1a6b414 fid=99e13c98-3002-4479-ad78-c6c5a8419b65 line=01a07bd2-53b9-7000-8ff7-08b66919c0da
+[15:52:59] opsCodes=cancel,mark_processing,mark_packed
+[15:52:59] mark_processing ok=False {"title":"شناسه fulfillment الزامی است.","errorCode":"order.operation.invalid","detail":"شناسه fulfi
+[15:52:59] pack ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"
+[15:52:59] POST ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] TIPAX ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] COURIER ok=True {"fulfillmentId":"99e13c98-3002-4479-ad78-c6c5a8419b65","sellerOrderId":"01a07bd2-53a7-7000-b830-cdcbc1a6b414","checkoutId":"01a07bd2-53a4-7000-bbe6-d6cbf8f9994b","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","s
+[15:52:59] SHIP e2639a2c-6776-46c8-88dd-575351a2cd78 st=Created code=post label=پست carrier=پست
+[15:52:59] SHIP 7140c150-1921-4987-86b4-b26a58a34917 st=Created code=tipax label=تیپاکس carrier=تیپاکس
+[15:52:59] SHIP 6494430e-1315-41cb-a986-0c6d025fd2ed st=Created code=snapp_courier label=اسنپ / پیک آنلاین carrier=اسنپ / پیک آنلاین
+[15:52:59] === SPLIT ===
+[15:53:01] split pack ok=True
+[15:53:01] split ships okA=True okB=True
+[15:53:01] split cand 781a155f-332c-4529-81b3-6dc7ed56be9b q=2 code=post st=Created
+[15:53:01] split cand c5de09d0-fe21-4bfe-b235-6eb412e07b28 q=3 code=store_courier st=Created
+[15:53:01] deliverA ok=True
+[15:53:01] afterA=تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌نشده ۳: ساعت مرجوعی شروع نشده | تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌نشده ۳: قبل از تحویل | partial_eligible A=Delivered B=Created
+[15:53:03] deliverB ok=True
+[15:53:03] afterB=تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌شده ۳: تا ۱۴۰۵/۰۶/۲۳ | تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌شده ۳: ۷ روز باقی‌مانده | eligible
+[15:53:04] PHASE3_DONE methods=post,tipax,snapp_courier,store_courier,in_person
