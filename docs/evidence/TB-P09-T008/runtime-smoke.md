@@ -1,11 +1,14 @@
 ﻿# Runtime Smoke
 
-Host: http://127.0.0.1:5088 — FE: http://127.0.0.1:3000
-DevActor: 01a036c2-970e-7000-8eb7-94bf5cc2d8db
+Date: 2026-09-07
 
-- POST /v1/admin/fulfillments/work-queue/query → total=41, page=20 rows with orderReference/seller/method/actions
-- queueFilter needs_action → 39; missing_tracking → 8
-- Bulk mark_processing on one ReadyToFulfill row → attempted=1 succeeded=1
-- Cross-seller bulk → HTTP 400 rejected
-- GET /fa/admin/fulfillments → 200
-- No full Orders lifecycle replay
+Host `:5088` health: 200 `{"status":"ok"}` (Host: alpha.localhost)
+
+`POST /v1/admin/fulfillments/work-queue/query` with DevActor header → HTTP 200
+Sample row includes sellerDisplayName=فروشگاه آرمان, shippingMethodLabel=ارسال پیش‌فرض فروشگاه, status=Processing, orderReference=TB-…, queue-shaped fields present.
+
+Focused validation:
+- Host.Tests AdminFulfillmentWorkQueue + AdminDbNativeGrid: 17 passed
+- FE admin-fulfillment-work-queue.test.ts: 8 passed
+- recovery-staleness.guard.test.mjs: 3 passed
+- git diff --check: clean (CRLF warnings only)
