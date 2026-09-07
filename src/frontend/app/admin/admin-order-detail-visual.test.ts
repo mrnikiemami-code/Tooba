@@ -17,6 +17,20 @@ test("order detail screen keeps compact premium layout hooks", () => {
   assert.doesNotMatch(screenSource, /value=\{.*BadgeState\.text\}/);
 });
 
+test("financial event labels are human FA without enum codes", () => {
+  assert.match(screenSource, /دریافت از مشتری/);
+  assert.match(screenSource, /بازگشت وجه به مشتری/);
+  assert.match(screenSource, /واریز سهم فروشنده/);
+  assert.match(screenSource, /کسر از حساب فروشنده بابت بازگشت وجه/);
+  assert.match(screenSource, /CustomerRefund/);
+  assert.match(screenSource, /SellerRefundAdjustment/);
+  assert.doesNotMatch(screenSource, /case "refund"/);
+  assert.match(screenSource, /admin-order-history-filters/);
+  assert.match(screenSource, /همه/);
+  assert.match(screenSource, /ارسال/);
+  assert.match(screenSource, /مرجوعی/);
+});
+
 test("T042-R1 finance fields still map after visual polish", () => {
   const detail = mapAdminOrderDetail({
     checkoutId: "c1",
