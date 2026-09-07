@@ -170,12 +170,6 @@ public sealed class AdminPanelComposer
                 ?? new Dictionary<Guid, int>();
             var packedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityPacked)
                 ?? new Dictionary<Guid, int>();
-            DateTimeOffset? deliveredAt = fulfillment?.Shipments
-                .Where(s => s.DeliveredAt is not null)
-                .Select(s => s.DeliveredAt!.Value)
-                .OrderByDescending(x => x)
-                .Cast<DateTimeOffset?>()
-                .FirstOrDefault();
 
             var lines = order.Lines.Select(line =>
             {
@@ -187,7 +181,21 @@ public sealed class AdminPanelComposer
                     .SelectMany(s => s.Items)
                     .Where(i => i.OrderLineId == line.LineId)
                     .Sum(i => i.Quantity) ?? 0;
-                var returnUi = BuildReturnDeadlineUi(line, deliveredAt);
+                DateTimeOffset? lineDeliveredAt = null;
+                if (fulfillment is not null)
+                {
+                    var deliveredShipments = fulfillment.Shipments
+                        .Where(s => s.DeliveredAt is not null
+                                    && s.Items.Any(i => i.OrderLineId == line.LineId))
+                        .Select(s => s.DeliveredAt!.Value)
+                        .ToList();
+                    if (deliveredShipments.Count > 0)
+                    {
+                        lineDeliveredAt = deliveredShipments.Min();
+                    }
+                }
+
+                var returnUi = BuildReturnDeadlineUi(line, lineDeliveredAt);
                 return new AdminOrderLineView(
                     line.OfferId,
                     string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
@@ -214,7 +222,9 @@ public sealed class AdminPanelComposer
                 s.CarrierDisplayName,
                 s.TrackingReference,
                 s.Items.Sum(i => i.Quantity),
-                s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity)).ToList())).ToList()
+                s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity)).ToList(),
+                string.IsNullOrWhiteSpace(s.ShippingMethodCode) ? null : s.ShippingMethodCode,
+                string.IsNullOrWhiteSpace(s.ShippingMethodLabel) ? null : s.ShippingMethodLabel)).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(
                 order.SellerOrderId,

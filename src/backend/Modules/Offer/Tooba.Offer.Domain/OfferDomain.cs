@@ -111,6 +111,16 @@ public sealed class SellerOffer : IHasDomainEvents
     /// </summary>
     public DateTimeOffset UpdatedAt { get; set; }
 
+    /// <summary>
+    /// انتخاب سیاست مرجوعی: Default | Custom | NonReturnable.
+    /// </summary>
+    public string ReturnPolicyChoice { get; private set; } = "Default";
+
+    /// <summary>
+    /// مهلت اختصاصی (روز) وقتی Choice=Custom.
+    /// </summary>
+    public int? CustomReturnWindowDays { get; private set; }
+
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -134,9 +144,27 @@ public sealed class SellerOffer : IHasDomainEvents
             Status = OfferStatus.Draft,
             CreatedAt = now,
             UpdatedAt = now,
+            ReturnPolicyChoice = "Default",
+            CustomReturnWindowDays = null,
         };
         offer._domainEvents.Add(new OfferCreatedDomainEvent(offer));
         return offer;
+    }
+
+    /// <summary>
+    /// سیاست مرجوعی listing را تنظیم می‌کند (اعتبارسنجی حاکمیت در لایهٔ Application/Host).
+    /// </summary>
+    public void SetReturnPolicy(string choice, int? customReturnWindowDays, DateTimeOffset now)
+    {
+        var normalized = string.IsNullOrWhiteSpace(choice) ? "Default" : choice.Trim();
+        ReturnPolicyChoice = normalized switch
+        {
+            "Custom" => "Custom",
+            "NonReturnable" => "NonReturnable",
+            _ => "Default",
+        };
+        CustomReturnWindowDays = ReturnPolicyChoice == "Custom" ? customReturnWindowDays : null;
+        UpdatedAt = now;
     }
 
     /// <summary>

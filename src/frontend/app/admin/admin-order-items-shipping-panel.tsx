@@ -498,6 +498,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           checkoutId={checkoutId}
           sellerOrder={modalSeller}
           fulfillmentId={modalSeller.fulfillmentId}
+          orderDetail={detail}
           selectedLines={(selectedBySeller[modalSeller.id] ?? [])
             .map((id) => modalSeller.lines.find((l) => lineKey(l) === id))
             .filter((l): l is AdminOrderLine => Boolean(l))

@@ -36,4 +36,6 @@ public sealed record AdminOrderOperationRequest(
     string? Reason,
     string? IdempotencyKey,
     IReadOnlyList<ReturnLineCommand>? ReturnItems,
-    IReadOnlyList<AdminOrderLineSelection>? Selections = null);
+    IReadOnlyList<AdminOrderLineSelection>? Selections = null,
+    string? ShippingMethodCode = null,
+    string? ProviderMetadataJson = null);

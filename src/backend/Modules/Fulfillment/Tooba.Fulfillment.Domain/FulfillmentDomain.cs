@@ -387,7 +387,14 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>محموله جدید ثبت می‌کند.</summary>
-    public Shipment CreateShipment(string carrierDisplayName, IReadOnlyList<(Guid OrderLineId, int Quantity)> items, DateTimeOffset now)
+    public Shipment CreateShipment(
+        string carrierDisplayName,
+        IReadOnlyList<(Guid OrderLineId, int Quantity)> items,
+        DateTimeOffset now,
+        string? shippingMethodCode = null,
+        string? shippingMethodLabel = null,
+        string? providerMetadataJson = null,
+        int providerMetadataVersion = 0)
     {
         EnsureNotTerminal();
         if (Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
@@ -396,7 +403,17 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         }
 
         var normalized = NormalizeSelections(items);
-        var shipment = Shipment.Create(FulfillmentId, carrierDisplayName, normalized, _items, _shipments, now);
+        var shipment = Shipment.Create(
+            FulfillmentId,
+            carrierDisplayName,
+            normalized,
+            _items,
+            _shipments,
+            now,
+            shippingMethodCode,
+            shippingMethodLabel,
+            providerMetadataJson,
+            providerMetadataVersion);
         _shipments.Add(shipment);
         UpdatedAt = now;
         _domainEvents.Add(new ShipmentCreatedDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
@@ -528,6 +545,18 @@ public sealed class Shipment
     /// <summary>نام نمایشی carrier.</summary>
     public string CarrierDisplayName { get; init; } = string.Empty;
 
+    /// <summary>کد روش ارسال (رجیستری).</summary>
+    public string ShippingMethodCode { get; init; } = string.Empty;
+
+    /// <summary>برچسب روش ارسال.</summary>
+    public string ShippingMethodLabel { get; init; } = string.Empty;
+
+    /// <summary>متادیتای نرمال‌شده provider (بدون secret).</summary>
+    public string? ProviderMetadataJson { get; init; }
+
+    /// <summary>نسخهٔ schema متادیتا.</summary>
+    public int ProviderMetadataVersion { get; init; }
+
     /// <summary>کد/مرجع ردیابی.</summary>
     public string? TrackingReference { get; private set; }
 
@@ -549,7 +578,11 @@ public sealed class Shipment
         IReadOnlyList<(Guid OrderLineId, int Quantity)> items,
         IReadOnlyList<FulfillmentItem> fulfillmentItems,
         IReadOnlyList<Shipment> existingShipments,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string? shippingMethodCode = null,
+        string? shippingMethodLabel = null,
+        string? providerMetadataJson = null,
+        int providerMetadataVersion = 0)
     {
         if (string.IsNullOrWhiteSpace(carrierDisplayName))
         {
@@ -562,6 +595,12 @@ public sealed class Shipment
             FulfillmentId = fulfillmentId,
             Status = ShipmentStatus.Created,
             CarrierDisplayName = carrierDisplayName.Trim(),
+            ShippingMethodCode = (shippingMethodCode ?? string.Empty).Trim(),
+            ShippingMethodLabel = string.IsNullOrWhiteSpace(shippingMethodLabel)
+                ? carrierDisplayName.Trim()
+                : shippingMethodLabel.Trim(),
+            ProviderMetadataJson = string.IsNullOrWhiteSpace(providerMetadataJson) ? null : providerMetadataJson.Trim(),
+            ProviderMetadataVersion = providerMetadataVersion,
             CreatedAt = now,
         };
         foreach (var item in items)

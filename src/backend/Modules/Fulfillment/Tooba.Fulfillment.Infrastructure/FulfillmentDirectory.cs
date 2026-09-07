@@ -242,15 +242,38 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         Guid actorUserId,
         string carrierDisplayName,
         IReadOnlyList<ShipmentLineCommand> items,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? shippingMethodCode = null,
+        string? providerMetadataJson = null)
     {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        var methodCode = shippingMethodCode?.Trim();
+        string? normalizedMetadata = null;
+        string methodLabel = carrierDisplayName;
+        if (!string.IsNullOrWhiteSpace(methodCode))
+        {
+            var definition = ShippingMethodRegistry.Find(methodCode)
+                ?? throw new InvalidOperationException("روش ارسال پشتیبانی نمی‌شود یا غیرفعال است.");
+            methodLabel = definition.LabelFa;
+            if (string.IsNullOrWhiteSpace(carrierDisplayName))
+            {
+                carrierDisplayName = definition.LabelFa;
+            }
+
+            normalizedMetadata = ShippingProviderMetadataValidator.ValidateAndNormalize(definition.Code, providerMetadataJson);
+            methodCode = definition.Code;
+        }
+
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
         var shipment = unit.CreateShipment(
             carrierDisplayName,
             items.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            methodCode,
+            methodLabel,
+            normalizedMetadata,
+            normalizedMetadata is null ? 0 : 1);
         _db.Shipments.Add(shipment);
         _db.ShipmentItems.AddRange(shipment.Items);
         await _db.SaveChangesAsync(cancellationToken);
@@ -394,7 +417,11 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 shipment.DispatchedAt,
                 shipment.DeliveredAt,
                 shipmentItems.Select(x => new ShipmentLineSnapshot(x.OrderLineId, x.Quantity)).ToArray(),
-                shipment.CreatedAt));
+                shipment.CreatedAt,
+                shipment.ShippingMethodCode,
+                shipment.ShippingMethodLabel,
+                shipment.ProviderMetadataJson,
+                shipment.ProviderMetadataVersion));
         }
 
         return new FulfillmentSnapshot(

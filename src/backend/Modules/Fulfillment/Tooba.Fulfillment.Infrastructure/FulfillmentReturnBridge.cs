@@ -35,16 +35,36 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
             return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, new Dictionary<Guid, int>(), null);
         }
 
-        var shipmentIds = shipments.Select(x => x.ShipmentId).ToArray();
-        var shipmentItems = await _db.ShipmentItems.AsNoTracking()
-            .Where(x => shipmentIds.Contains(x.ShipmentId))
-            .ToListAsync(cancellationToken);
-        var delivered = shipmentItems
-            .GroupBy(x => x.OrderLineId)
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
-        var lastDeliveredAt = shipments
-            .Where(x => x.DeliveredAt is not null)
-            .Max(x => x.DeliveredAt);
-        return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, delivered, lastDeliveredAt);
+        var delivered = new Dictionary<Guid, int>();
+        var lineDeliveredAt = new Dictionary<Guid, DateTimeOffset>();
+        foreach (var shipment in shipments)
+        {
+            if (shipment.DeliveredAt is null)
+            {
+                continue;
+            }
+
+            var deliveredAt = shipment.DeliveredAt.Value;
+            var shipmentItems = await _db.ShipmentItems.AsNoTracking()
+                .Where(x => x.ShipmentId == shipment.ShipmentId)
+                .ToListAsync(cancellationToken);
+            foreach (var item in shipmentItems)
+            {
+                delivered[item.OrderLineId] = delivered.TryGetValue(item.OrderLineId, out var qty)
+                    ? qty + item.Quantity
+                    : item.Quantity;
+                if (!lineDeliveredAt.TryGetValue(item.OrderLineId, out var existing) || deliveredAt < existing)
+                {
+                    // ساعت مرجوعی هر خط از اولین تحویل همان خط شروع می‌شود؛ تعداد تحویل‌نشده ساعت ندارد.
+                    lineDeliveredAt[item.OrderLineId] = deliveredAt;
+                }
+            }
+        }
+
+        DateTimeOffset? lastDeliveredAt = lineDeliveredAt.Count == 0
+            ? null
+            : lineDeliveredAt.Values.Max();
+
+        return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, delivered, lastDeliveredAt, lineDeliveredAt);
     }
 }

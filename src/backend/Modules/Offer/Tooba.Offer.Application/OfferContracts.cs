@@ -11,7 +11,9 @@ public sealed record OfferReference(
     Guid SellerPartyId,
     SalesChannel Channel,
     OfferStatus Status,
-    string? SellerSku);
+    string? SellerSku,
+    string ReturnPolicyChoice = "Default",
+    int? CustomReturnWindowDays = null);
 
 /// <summary>
 /// درز خواندن Offer برای Pricing و Inventory آینده. Search منبع حقیقت Offer نمی‌شود.

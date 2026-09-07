@@ -59,6 +59,13 @@ export interface SellerOfferDetail {
   reserved: number;
   availableUnits: number;
   catalogReadOnly: boolean;
+  returnPolicyChoice: string;
+  customReturnWindowDays: number | null;
+  defaultReturnWindowDays: number;
+  sellerCanOverrideReturnPolicy: boolean;
+  minReturnWindowDays: number;
+  maxReturnWindowDays: number;
+  allowNonReturnableOffers: boolean;
 }
 
 export interface SellerOrderListRow {
@@ -389,6 +396,19 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     reserved: asNumber(readProp(item, "reserved", "Reserved")),
     availableUnits: asNumber(readProp(item, "availableUnits", "AvailableUnits")),
     catalogReadOnly: asBoolean(readProp(item, "catalogReadOnly", "CatalogReadOnly"), true),
+    returnPolicyChoice: asString(readProp(item, "returnPolicyChoice", "ReturnPolicyChoice"), "Default"),
+    customReturnWindowDays: asNullableNumber(readProp(item, "customReturnWindowDays", "CustomReturnWindowDays")),
+    defaultReturnWindowDays: asNumber(readProp(item, "defaultReturnWindowDays", "DefaultReturnWindowDays"), 7),
+    sellerCanOverrideReturnPolicy: asBoolean(
+      readProp(item, "sellerCanOverrideReturnPolicy", "SellerCanOverrideReturnPolicy"),
+      true,
+    ),
+    minReturnWindowDays: asNumber(readProp(item, "minReturnWindowDays", "MinReturnWindowDays"), 1),
+    maxReturnWindowDays: asNumber(readProp(item, "maxReturnWindowDays", "MaxReturnWindowDays"), 30),
+    allowNonReturnableOffers: asBoolean(
+      readProp(item, "allowNonReturnableOffers", "AllowNonReturnableOffers"),
+      true,
+    ),
   };
 }
 
@@ -548,13 +568,23 @@ export async function loadSellerOfferDetail(
 export async function patchSellerOffer(
   sellerPartyId: string,
   offerId: string,
-  patch: { sellerSku?: string | null; status?: string | null },
+  patch: {
+    sellerSku?: string | null;
+    status?: string | null;
+    returnPolicyChoice?: string | null;
+    customReturnWindowDays?: number | null;
+  },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
     const response = await fetch(`/v1/seller/offers/${offerId}`, {
       method: "PATCH",
       headers: sellerHeaders(sellerPartyId, currentActor(), { "Content-Type": "application/json" }),
-      body: JSON.stringify({ sellerSku: patch.sellerSku, status: patch.status }),
+      body: JSON.stringify({
+        sellerSku: patch.sellerSku,
+        status: patch.status,
+        returnPolicyChoice: patch.returnPolicyChoice,
+        customReturnWindowDays: patch.customReturnWindowDays,
+      }),
     });
     if (isDeniedStatus(response.status)) {
       return { ok: false, errorCode: "seller.authorization.denied", denied: true };

@@ -148,5 +148,13 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
     }
 
     private static OfferReference ToReference(SellerOffer offer) =>
-        new(offer.OfferId, offer.CatalogVariantId, offer.SellerPartyId, offer.Channel, offer.Status, offer.SellerSku);
+        new(
+            offer.OfferId,
+            offer.CatalogVariantId,
+            offer.SellerPartyId,
+            offer.Channel,
+            offer.Status,
+            offer.SellerSku,
+            offer.ReturnPolicyChoice,
+            offer.CustomReturnWindowDays);
 }

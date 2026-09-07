@@ -30,6 +30,21 @@ public sealed class FulfillmentModule : IToobaModule
 
         services.AddSingleton<FulfillmentInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, FulfillmentOutboxRegistration>();
+        services.AddSingleton(_ =>
+        {
+            var section = configuration.GetSection(ShippingMethodsOptions.SectionName);
+            var codes = section.GetSection("EnabledCodes").GetChildren()
+                .Select(x => x.Value)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!)
+                .ToArray();
+            return new ShippingMethodsOptions
+            {
+                EnabledCodes = codes.Length > 0
+                    ? codes
+                    : ["post", "tipax", "snapp_courier", "store_courier", "in_person"],
+            };
+        });
         services.AddScoped<IFulfillmentUseCaseGuard, OpenFulfillmentUseCaseGuard>();
         services.AddScoped<FulfillmentDirectory>();
         services.AddScoped<IFulfillmentDirectory>(sp => sp.GetRequiredService<FulfillmentDirectory>());

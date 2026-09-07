@@ -190,10 +190,23 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
             }
 
+            if (delivered <= 0)
+            {
+                // تعداد تحویل‌نشده ساعت مرجوعی ندارد.
+                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+            }
+
+            DateTimeOffset lineDeliveredAt = lastDeliveredAt;
+            if (fulfillment.LineDeliveredAt is not null
+                && fulfillment.LineDeliveredAt.TryGetValue(line.OrderLineId, out var specific))
+            {
+                lineDeliveredAt = specific;
+            }
+
             var windowDays = line.ReturnWindowDaysSnapshot > 0
                 ? line.ReturnWindowDaysSnapshot
                 : (int)ReturnWindow.TotalDays;
-            var lineUntil = lastDeliveredAt.AddDays(windowDays);
+            var lineUntil = lineDeliveredAt.AddDays(windowDays);
             if (now > lineUntil)
             {
                 return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);

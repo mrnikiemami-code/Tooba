@@ -15,7 +15,9 @@ public sealed record FulfillmentShipmentLineRequest(Guid OrderLineId, int Quanti
 /// </summary>
 public sealed record FulfillmentCreateShipmentRequest(
     string CarrierDisplayName,
-    IReadOnlyList<FulfillmentShipmentLineRequest> Items);
+    IReadOnlyList<FulfillmentShipmentLineRequest> Items,
+    string? ShippingMethodCode = null,
+    string? ProviderMetadataJson = null);
 
 /// <summary>
 /// درخواست ثبت tracking.
@@ -106,7 +108,9 @@ public sealed class FulfillmentPanelComposer
             actorUserId,
             request.CarrierDisplayName,
             request.Items.Select(x => new ShipmentLineCommand(x.OrderLineId, x.Quantity)).ToArray(),
-            cancellationToken);
+            cancellationToken,
+            request.ShippingMethodCode,
+            request.ProviderMetadataJson);
 
     /// <summary>
     /// tracking idempotent ثبت می‌کند.

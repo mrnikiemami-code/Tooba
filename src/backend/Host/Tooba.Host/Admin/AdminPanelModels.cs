@@ -66,7 +66,9 @@ public sealed record AdminShipmentView(
     string CarrierDisplayName,
     string? TrackingReference,
     int ItemCount,
-    IReadOnlyList<AdminShipmentLineView> Lines);
+    IReadOnlyList<AdminShipmentLineView> Lines,
+    string? ShippingMethodCode = null,
+    string? ShippingMethodLabel = null);
 
 /// <summary>
 /// برش سفارش یک فروشنده در جزئیات Checkout مدیر.

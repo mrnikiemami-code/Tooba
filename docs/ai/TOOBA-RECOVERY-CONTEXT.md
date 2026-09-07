@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T004
+TB-P09-T005
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P09-T005-R1
+TB-P09-T006
 ```
 
 Current Issued Task:
@@ -62,12 +62,13 @@ Current Issued Task:
 Current Repair Task:
 
 ```text
-TB-P09-T005-R1
+(none)
 ```
 
 Implemented Under Review:
 
 ```text
+TB-P09-T006 — Offer return policy + dynamic shipping provider forms; USER_VISUAL_ACCEPTED=NO
 TB-P09-T005-R1 — Seller-Scoped Fulfillment Final Proof runtime matrix; USER_VISUAL_ACCEPTED=NO
 TB-P09-T005 — Seller-scoped line/quantity fulfillment ops, reverse rules, return deadline UI; USER_VISUAL_ACCEPTED=NO
 TB-P09-T004 — Orders Operational UX Foundation (grid kebab ops, اقلام و ارسال shell, shipment modal; USER_VISUAL_ACCEPTED=NO)

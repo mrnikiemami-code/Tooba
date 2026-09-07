@@ -47,6 +47,7 @@ public sealed class SellerPanelComposer
     private readonly TaxDbContext _tax;
     private readonly IAccessControlDirectory _access;
     private readonly ICatalogLookupGateway _catalogLookup;
+    private readonly IReturnPolicyResolver _returnPolicies;
 
     /// <summary>
     /// سازندهٔ ترکیب فروشنده بدون JOIN بین‌schema؛ نوشتن تجاری از دایرکتوری‌های مالک.
@@ -64,7 +65,8 @@ public sealed class SellerPanelComposer
         ITaxDirectory taxDirectory,
         TaxDbContext tax,
         IAccessControlDirectory access,
-        ICatalogLookupGateway catalogLookup)
+        ICatalogLookupGateway catalogLookup,
+        IReturnPolicyResolver? returnPolicies = null)
     {
         _offers = offers;
         _catalog = catalog;
@@ -79,6 +81,7 @@ public sealed class SellerPanelComposer
         _tax = tax;
         _access = access;
         _catalogLookup = catalogLookup;
+        _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
     }
 
     /// <summary>
@@ -189,6 +192,7 @@ public sealed class SellerPanelComposer
 
         var onHand = stock?.OnHand ?? 0;
         var reserved = stock?.Reserved ?? 0;
+        var opts = _returnPolicies.Options;
         return new SellerOfferDetailPage(
             offer.OfferId,
             sellerPartyId,
@@ -205,7 +209,14 @@ public sealed class SellerPanelComposer
             onHand,
             reserved,
             Math.Max(0, onHand - reserved),
-            CatalogReadOnly: true);
+            CatalogReadOnly: true,
+            offer.ReturnPolicyChoice,
+            offer.CustomReturnWindowDays,
+            opts.DefaultReturnWindowDays,
+            opts.SellerCanOverrideReturnPolicy,
+            opts.MinReturnWindowDays,
+            opts.MaxReturnWindowDays,
+            opts.AllowNonReturnableOffers);
     }
 
     /// <summary>
@@ -254,6 +265,22 @@ public sealed class SellerPanelComposer
             {
                 throw new PlatformHttpException(400, "وضعیت پشتیبانی‌شده نیست.", "seller.offer.status.unsupported");
             }
+        }
+
+        if (patch.ReturnPolicyChoice is not null || patch.CustomReturnWindowDays is not null)
+        {
+            var choice = patch.ReturnPolicyChoice ?? offer.ReturnPolicyChoice;
+            var days = patch.CustomReturnWindowDays ?? offer.CustomReturnWindowDays;
+            try
+            {
+                _returnPolicies.ValidateOfferChoice(choice, days);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new PlatformHttpException(400, ex.Message, "seller.offer.return_policy.rejected");
+            }
+
+            offer.SetReturnPolicy(choice, days, DateTimeOffset.UtcNow);
         }
 
         await _offers.SaveChangesAsync(cancellationToken);
@@ -336,6 +363,23 @@ public sealed class SellerPanelComposer
             }
 
             await EnsureOfferTaxCoverageAsync(created.OfferId, cancellationToken);
+
+            if (request.ReturnPolicyChoice is not null || request.CustomReturnWindowDays is not null)
+            {
+                var choice = request.ReturnPolicyChoice ?? OfferReturnPolicyChoices.Default;
+                try
+                {
+                    _returnPolicies.ValidateOfferChoice(choice, request.CustomReturnWindowDays);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new PlatformHttpException(400, ex.Message, "seller.offer.return_policy.rejected");
+                }
+
+                var entity = await _offers.Offers.SingleAsync(x => x.OfferId == created.OfferId, cancellationToken);
+                entity.SetReturnPolicy(choice, request.CustomReturnWindowDays, DateTimeOffset.UtcNow);
+                await _offers.SaveChangesAsync(cancellationToken);
+            }
         }
         catch (InvalidOperationException ex)
         {

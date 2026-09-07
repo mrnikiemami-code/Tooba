@@ -68,7 +68,11 @@ public sealed record ShipmentSnapshot(
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? DeliveredAt,
     IReadOnlyList<ShipmentLineSnapshot> Items,
-    DateTimeOffset CreatedAt = default);
+    DateTimeOffset CreatedAt = default,
+    string ShippingMethodCode = "",
+    string ShippingMethodLabel = "",
+    string? ProviderMetadataJson = null,
+    int ProviderMetadataVersion = 0);
 
 /// <summary>
 /// snapshot خط محموله.
@@ -121,7 +125,9 @@ public interface IFulfillmentDirectory
         Guid actorUserId,
         string carrierDisplayName,
         IReadOnlyList<ShipmentLineCommand> items,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        string? shippingMethodCode = null,
+        string? providerMetadataJson = null);
 
     /// <summary>ابطال مرسوله پیش از dispatch.</summary>
     Task<FulfillmentSnapshot> CancelShipmentAsync(
@@ -159,7 +165,8 @@ public interface IFulfillmentDirectory
 public sealed record FulfillmentReturnEligibilitySnapshot(
     Guid SellerOrderId,
     IReadOnlyDictionary<Guid, int> DeliveredQuantities,
-    DateTimeOffset? LastDeliveredAt);
+    DateTimeOffset? LastDeliveredAt,
+    IReadOnlyDictionary<Guid, DateTimeOffset>? LineDeliveredAt = null);
 
 /// <summary>
 /// خواندن evidence تحویل برای Returns بدون cross-DbContext.

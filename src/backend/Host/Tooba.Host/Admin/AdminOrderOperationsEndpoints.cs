@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Fulfillment.Application;
 
 namespace Tooba.Host.Admin;
 
@@ -14,6 +15,13 @@ public static class AdminOrderOperationsEndpoints
         group.MapGet("/{checkoutId:guid}/operations", ListOperationsAsync);
         group.MapPost("/{checkoutId:guid}/operations", ExecuteOperationAsync);
         group.MapGet("/{checkoutId:guid}/return-eligibility", ListReturnEligibilityAsync);
+        app.MapGet("/v1/admin/shipping-methods", ListShippingMethodsAsync);
+    }
+
+    private static IResult ListShippingMethodsAsync(ShippingMethodsOptions options)
+    {
+        var enabled = ShippingMethodRegistry.Enabled(options);
+        return Results.Json(enabled.Select(x => new { code = x.Code, labelFa = x.LabelFa, providerKind = x.ProviderKind }));
     }
 
     private static async Task<IResult> ListOperationsAsync(

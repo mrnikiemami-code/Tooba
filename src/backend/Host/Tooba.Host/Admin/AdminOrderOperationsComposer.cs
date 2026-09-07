@@ -488,9 +488,23 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var fulfillmentId = RequireFulfillmentId(request);
-        if (string.IsNullOrWhiteSpace(request.CarrierDisplayName))
+        var methodCode = request.ShippingMethodCode?.Trim();
+        var carrier = request.CarrierDisplayName?.Trim();
+        if (string.IsNullOrWhiteSpace(methodCode) && string.IsNullOrWhiteSpace(carrier))
         {
-            throw new PlatformHttpException(400, "نام حمل‌کننده الزامی است.", "order.operation.invalid");
+            throw new PlatformHttpException(400, "روش ارسال الزامی است.", "order.operation.invalid");
+        }
+
+        if (!string.IsNullOrWhiteSpace(methodCode))
+        {
+            var enabled = ShippingMethodRegistry.Enabled(null).Any(x =>
+                string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
+            if (!enabled)
+            {
+                throw new PlatformHttpException(400, "روش ارسال برای این فروشگاه فعال نیست.", "order.operation.invalid");
+            }
+
+            carrier = ShippingMethodRegistry.ResolveLabel(methodCode, carrier);
         }
 
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
@@ -501,12 +515,21 @@ public sealed class AdminOrderOperationsComposer
             throw new PlatformHttpException(400, "قلم قابل ارسال باقی نمانده است.", "order.operation.invalid");
         }
 
-        return await _fulfillment.CreateShipmentAsync(
-            fulfillmentId,
-            actorUserId,
-            request.CarrierDisplayName.Trim(),
-            lines,
-            cancellationToken);
+        try
+        {
+            return await _fulfillment.CreateShipmentAsync(
+                fulfillmentId,
+                actorUserId,
+                carrier!,
+                lines,
+                cancellationToken,
+                methodCode,
+                request.ProviderMetadataJson);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "order.operation.invalid");
+        }
     }
 
     private async Task<object> CancelShipmentAsync(

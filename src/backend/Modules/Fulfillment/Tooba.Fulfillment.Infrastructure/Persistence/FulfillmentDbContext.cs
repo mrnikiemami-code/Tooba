@@ -93,6 +93,9 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.ShipmentId).ValueGeneratedNever();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.CarrierDisplayName).HasMaxLength(128);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(64);
+            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128);
+            entity.Property(x => x.ProviderMetadataJson).HasColumnType("text");
             entity.Property(x => x.TrackingReference).HasMaxLength(128);
             entity.Ignore(x => x.Items);
             entity.HasIndex(x => x.FulfillmentId);

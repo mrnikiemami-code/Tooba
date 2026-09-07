@@ -33,6 +33,8 @@ export default function VendorProductDetailPage() {
   const [status, setStatus] = useState("Active");
   const [amount, setAmount] = useState("");
   const [onHand, setOnHand] = useState("");
+  const [returnPolicyChoice, setReturnPolicyChoice] = useState("Default");
+  const [customReturnWindowDays, setCustomReturnWindowDays] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
@@ -42,6 +44,10 @@ export default function VendorProductDetailPage() {
     setStatus(next.status);
     setAmount(next.amount != null ? String(next.amount) : "");
     setOnHand(String(next.onHand));
+    setReturnPolicyChoice(next.returnPolicyChoice || "Default");
+    setCustomReturnWindowDays(
+      next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
+    );
   }
 
   function refresh() {
@@ -86,7 +92,21 @@ export default function VendorProductDetailPage() {
 
     setSaving(true);
     setSaveError(undefined);
-    const patchResult = await patchSellerOffer(sellerPartyId, offerId, { sellerSku, status });
+    const parsedCustomDays =
+      returnPolicyChoice === "Custom" && customReturnWindowDays.trim()
+        ? Number(customReturnWindowDays)
+        : null;
+    if (returnPolicyChoice === "Custom" && (!Number.isInteger(parsedCustomDays) || (parsedCustomDays ?? 0) <= 0)) {
+      setSaving(false);
+      setSaveError("مهلت اختصاصی مرجوعی نامعتبر است");
+      return;
+    }
+    const patchResult = await patchSellerOffer(sellerPartyId, offerId, {
+      sellerSku,
+      status,
+      returnPolicyChoice,
+      customReturnWindowDays: parsedCustomDays,
+    });
     if (!patchResult.ok) {
       setSaving(false);
       setSaveError(patchResult.denied ? "دسترسی مجاز نیست" : patchResult.errorCode);
@@ -209,6 +229,44 @@ export default function VendorProductDetailPage() {
                   dir="ltr"
                 />
               </label>
+              <label className="flex flex-col gap-1 text-sm sm:col-span-2" data-testid="offer-return-policy">
+                سیاست مرجوعی
+                <select
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                  value={returnPolicyChoice}
+                  onChange={(event) => setReturnPolicyChoice(event.target.value)}
+                  disabled={detail ? !detail.sellerCanOverrideReturnPolicy && returnPolicyChoice === "Default" : false}
+                >
+                  <option value="Default">استفاده از سیاست پیش‌فرض فروشگاه</option>
+                  {detail?.sellerCanOverrideReturnPolicy ? (
+                    <option value="Custom" disabled={!detail.sellerCanOverrideReturnPolicy}>
+                      مهلت اختصاصی
+                    </option>
+                  ) : null}
+                  {detail?.allowNonReturnableOffers && detail.sellerCanOverrideReturnPolicy ? (
+                    <option value="NonReturnable">غیرقابل مرجوعی</option>
+                  ) : null}
+                </select>
+                <span className="text-xs text-muted">
+                  پیش‌فرض فروشگاه: {detail?.defaultReturnWindowDays ?? 7} روز پس از تحویل
+                  {detail?.sellerCanOverrideReturnPolicy
+                    ? ` · محدوده مجاز ${detail.minReturnWindowDays} تا ${detail.maxReturnWindowDays} روز`
+                    : " · تغییر توسط فروشنده مجاز نیست"}
+                </span>
+              </label>
+              {returnPolicyChoice === "Custom" ? (
+                <label className="flex flex-col gap-1 text-sm">
+                  مهلت اختصاصی (روز)
+                  <input
+                    className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                    value={customReturnWindowDays}
+                    onChange={(event) => setCustomReturnWindowDays(event.target.value)}
+                    inputMode="numeric"
+                    dir="ltr"
+                    data-testid="offer-custom-return-days"
+                  />
+                </label>
+              ) : null}
             </div>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
               <div>

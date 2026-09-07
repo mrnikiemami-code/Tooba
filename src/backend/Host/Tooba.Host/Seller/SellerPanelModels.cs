@@ -44,14 +44,23 @@ public sealed record SellerOfferDetailPage(
     int OnHand,
     int Reserved,
     int AvailableUnits,
-    bool CatalogReadOnly);
+    bool CatalogReadOnly,
+    string ReturnPolicyChoice = "Default",
+    int? CustomReturnWindowDays = null,
+    int DefaultReturnWindowDays = 7,
+    bool SellerCanOverrideReturnPolicy = true,
+    int MinReturnWindowDays = 1,
+    int MaxReturnWindowDays = 30,
+    bool AllowNonReturnableOffers = true);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.
 /// </summary>
 public sealed record SellerOfferPatchRequest(
     string? SellerSku,
-    string? Status);
+    string? Status,
+    string? ReturnPolicyChoice = null,
+    int? CustomReturnWindowDays = null);
 
 /// <summary>
 /// فرمان ایجاد Offer روی گونهٔ Catalog؛ Party فروشنده فقط از زمینهٔ احراز می‌آید نه از بدنه.
@@ -59,7 +68,9 @@ public sealed record SellerOfferPatchRequest(
 public sealed record SellerOfferCreateRequest(
     Guid CatalogVariantId,
     string? SellerSku,
-    string? Status);
+    string? Status,
+    string? ReturnPolicyChoice = null,
+    int? CustomReturnWindowDays = null);
 
 /// <summary>
 /// فرمان نوشتن مبلغ بدون مالیات روی Offer متعلق به همان فروشنده از طریق Pricing.

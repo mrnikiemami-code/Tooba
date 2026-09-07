@@ -46,6 +46,8 @@ export type AdminOrderOperationRequest = {
   reason?: string | null;
   idempotencyKey?: string | null;
   selections?: Array<{ orderLineId: string; quantity: number }> | null;
+  shippingMethodCode?: string | null;
+  providerMetadataJson?: string | null;
 };
 
 /** نگاشت خطای عملیات سفارش به FA. */
@@ -169,6 +171,8 @@ export async function executeAdminOrderOperation(
         trackingReference: body.trackingReference ?? null,
         reason: body.reason ?? null,
         idempotencyKey: body.idempotencyKey ?? null,
+        shippingMethodCode: body.shippingMethodCode ?? null,
+        providerMetadataJson: body.providerMetadataJson ?? null,
         selections: body.selections?.map((s) => ({
           orderLineId: s.orderLineId,
           quantity: s.quantity,

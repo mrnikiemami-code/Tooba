@@ -44,6 +44,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IPromotionEvaluator _promotions;
     private readonly ICatalogLookupGateway _catalog;
     private readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
+    private readonly IReturnPolicyResolver _returnPolicies;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -59,7 +60,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         ITaxCalculator taxes,
         IPromotionEvaluator promotions,
         ICatalogLookupGateway catalog,
-        ISellerOrderCancelFulfillmentGate cancelFulfillmentGate)
+        ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
+        IReturnPolicyResolver? returnPolicies = null)
     {
         _db = db;
         _guard = guard;
@@ -72,6 +74,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _promotions = promotions;
         _catalog = catalog;
         _cancelFulfillmentGate = cancelFulfillmentGate;
+        _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
     }
 
     /// <inheritdoc />
@@ -427,6 +430,10 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     throw new InvalidOperationException("فروشندهٔ Offer با خط سبد یکی نیست.");
                 }
 
+                var returnPolicy = _returnPolicies.ResolveForCheckout(
+                    offer.ReturnPolicyChoice,
+                    offer.CustomReturnWindowDays);
+
                 var quote = await _prices.ResolvePriceAsync(
                     new PriceResolutionQuery(
                         cartLine.OfferId,
@@ -518,7 +525,11 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     lineExclusive,
                     promotion.PostDiscountTaxExclusiveAmount,
                     promotion.Applied.Count == 0 ? null : now,
-                    categoryByVariant.GetValueOrDefault(cartLine.CatalogVariantId)));
+                    categoryByVariant.GetValueOrDefault(cartLine.CatalogVariantId),
+                    returnPolicy.IsReturnable,
+                    returnPolicy.WindowDays,
+                    returnPolicy.Source,
+                    returnPolicy.LabelFa));
             }
 
             sellerOrders.Add(SellerOrder.Open(
