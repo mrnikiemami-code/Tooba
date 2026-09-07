@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Fulfillment.Application;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
@@ -29,6 +30,7 @@ public sealed class AdminPanelComposer
     private readonly PartyDbContext _parties;
     private readonly IPaymentAdminDirectory _payments;
     private readonly ISettlementDirectory _settlement;
+    private readonly IFulfillmentDirectory _fulfillment;
     private readonly ReturnsDbContext _returns;
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
@@ -46,6 +48,7 @@ public sealed class AdminPanelComposer
         PaymentDbContext paymentDb,
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
+        IFulfillmentDirectory fulfillment,
         ReturnsDbContext returns)
     {
         _catalog = catalog;
@@ -54,6 +57,7 @@ public sealed class AdminPanelComposer
         _parties = parties;
         _payments = payments;
         _settlement = settlement;
+        _fulfillment = fulfillment;
         _returns = returns;
         _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
@@ -153,20 +157,41 @@ public sealed class AdminPanelComposer
             .Select(x => x.CatalogVariantId).Distinct().ToList();
         var titles = await LoadVariantTitlesAsync(variantIds, cancellationToken);
 
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var fulfillmentBySeller = fulfillments
+            .GroupBy(x => x.SellerOrderId)
+            .ToDictionary(g => g.Key, g => g.First());
+
         var sellerOrders = group.SellerOrders.Select(order =>
         {
             sellerNames.TryGetValue(order.SellerPartyId, out var sellerName);
+            fulfillmentBySeller.TryGetValue(order.SellerOrderId, out var fulfillment);
+            var shippedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityShipped)
+                ?? new Dictionary<Guid, int>();
             var lines = order.Lines.Select(line =>
             {
                 titles.TryGetValue(line.CatalogVariantId, out var title);
+                shippedByLine.TryGetValue(line.LineId, out var shipped);
                 return new AdminOrderLineView(
                     line.OfferId,
                     string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
                     line.Quantity,
                     line.UnitPriceSnapshot,
                     line.LineTotalSnapshot + line.TaxAmountSnapshot - line.DiscountAmountSnapshot,
-                    line.Currency);
+                    line.Currency,
+                    line.LineId,
+                    fulfillment is null ? null : shipped,
+                    null,
+                    fulfillment?.Status.ToString());
             }).ToList();
+            var shipments = fulfillment?.Shipments.Select(s => new AdminShipmentView(
+                s.ShipmentId,
+                s.Status.ToString(),
+                s.CarrierDisplayName,
+                s.TrackingReference,
+                s.Items.Sum(i => i.Quantity),
+                s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity)).ToList())).ToList()
+                ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(
                 order.SellerOrderId,
                 order.OrderNumber,
@@ -176,7 +201,10 @@ public sealed class AdminPanelComposer
                 PaymentState(order.Status),
                 order.GrandTotalSnapshot,
                 order.Currency,
-                lines);
+                lines,
+                fulfillment?.FulfillmentId,
+                fulfillment?.Status.ToString(),
+                shipments);
         }).ToList();
         var listItem = await MapOrderListItemAsync(group, sellerNames, cancellationToken);
         var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);

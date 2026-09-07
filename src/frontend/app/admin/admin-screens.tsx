@@ -379,7 +379,7 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     cell: (row) => (
       <span className="inline-flex items-center gap-1">
         <AppGridRowActionsCell row={row} actions={orderRowActions} compact />
-        <AdminOrderOperationsMenu checkoutId={row.checkoutId} label="عملیات" compact />
+        <AdminOrderOperationsMenu checkoutId={row.checkoutId} label="عملیات" compact iconOnly scope="whole-order" />
       </span>
     ),
     exportable: false,

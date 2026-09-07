@@ -27,6 +27,18 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("FinancialSummary", detail);
         Assert.Contains("PostalAddress", detail);
         Assert.DoesNotContain("ProductPrice", detail);
+
+        var seller = typeof(AdminSellerOrderView).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("FulfillmentId", seller);
+        Assert.Contains("FulfillmentStatus", seller);
+        Assert.Contains("Shipments", seller);
+        var line = typeof(AdminOrderLineView).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("OrderLineId", line);
+        Assert.Contains("QuantityShipped", line);
+        var shipment = typeof(AdminShipmentView).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("ShipmentId", shipment);
+        Assert.Contains("CarrierDisplayName", shipment);
+        Assert.Contains("TrackingReference", shipment);
     }
 
     [Fact]
@@ -59,6 +71,7 @@ public sealed class AdminPanelCompositionTests
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("_payments.GetLatestOperationalForCheckoutAsync", source, StringComparison.Ordinal);
         Assert.Contains("_settlement.ListEntriesBySellerOrderIdsAsync", source, StringComparison.Ordinal);
+        Assert.Contains("_fulfillment.ListForCheckoutAsync", source, StringComparison.Ordinal);
         Assert.Contains("HumanizeProviderCode", source, StringComparison.Ordinal);
         Assert.Contains("IsSuccessfulPaymentStatus", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);

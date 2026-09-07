@@ -6,6 +6,15 @@ import {
   mapAdminErrorMessage,
   type AdminErrorLocale,
 } from "./admin-error-map";
+import {
+  filterOperationsForScope,
+  GRID_EXCLUDED_OPERATION_CODES,
+  sellerQuickActionLabels,
+  type AdminOrderOperationsScope,
+} from "./admin-order-operations-scope";
+
+export type { AdminOrderOperationsScope };
+export { filterOperationsForScope, GRID_EXCLUDED_OPERATION_CODES, sellerQuickActionLabels };
 
 export type AdminOrderOperationAction = {
   code: string;

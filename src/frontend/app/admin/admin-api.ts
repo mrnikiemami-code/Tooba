@@ -43,12 +43,30 @@ export interface AdminOrderRow {
 
 export interface AdminOrderLine {
   id: string;
+  orderLineId: string | null;
   title: string;
   sellerDisplayName: string;
   quantity: number;
   unitAmount: number;
   linePayable: number;
   currency: string;
+  quantityShipped: number | null;
+  imageUrl: string | null;
+  operationalStatus: string | null;
+}
+
+export interface AdminShipmentLine {
+  orderLineId: string;
+  quantity: number;
+}
+
+export interface AdminShipment {
+  shipmentId: string;
+  status: string;
+  carrierDisplayName: string;
+  trackingReference: string | null;
+  itemCount: number;
+  lines: AdminShipmentLine[];
 }
 
 export interface AdminSellerOrder {
@@ -60,6 +78,9 @@ export interface AdminSellerOrder {
   payableAmount: number;
   currency: string;
   lines: AdminOrderLine[];
+  fulfillmentId: string | null;
+  fulfillmentStatus: string | null;
+  shipments: AdminShipment[];
 }
 
 export interface AdminSellerFinancial {
@@ -518,14 +539,41 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     const lines = array(prop(seller, "lines", "Lines")).flatMap((lineValue, index): AdminOrderLine[] => {
       const line = record(lineValue);
       if (!line) return [];
+      const orderLineId = text(prop(line, "orderLineId", "OrderLineId")) || null;
+      const offerId = text(prop(line, "offerId", "OfferId"), `${sellerOrderId}-${index}`);
+      const shippedRaw = prop(line, "quantityShipped", "QuantityShipped");
       return [{
-        id: text(prop(line, "offerId", "OfferId"), `${sellerOrderId}-${index}`),
+        id: orderLineId || offerId,
+        orderLineId,
         title: text(prop(line, "title", "Title"), text(prop(line, "productTitle", "ProductTitle"), "کالای سفارش")),
         sellerDisplayName: text(prop(line, "sellerDisplayName", "SellerDisplayName"), text(prop(seller, "sellerDisplayName", "SellerDisplayName"), "فروشنده")),
         quantity: number(prop(line, "quantity", "Quantity")),
         unitAmount: number(prop(line, "unitAmount", "UnitAmount")),
         linePayable: number(prop(line, "linePayable", "LinePayable")),
         currency: text(prop(line, "currency", "Currency"), "IRR"),
+        quantityShipped: shippedRaw == null || shippedRaw === "" ? null : number(shippedRaw),
+        imageUrl: text(prop(line, "imageUrl", "ImageUrl")) || null,
+        operationalStatus: text(prop(line, "operationalStatus", "OperationalStatus")) || null,
+      }];
+    });
+    const shipments = array(prop(seller, "shipments", "Shipments")).flatMap((raw): AdminShipment[] => {
+      const row = record(raw);
+      if (!row) return [];
+      const shipmentId = text(prop(row, "shipmentId", "ShipmentId"));
+      if (!shipmentId) return [];
+      return [{
+        shipmentId,
+        status: text(prop(row, "status", "Status")),
+        carrierDisplayName: text(prop(row, "carrierDisplayName", "CarrierDisplayName"), "—"),
+        trackingReference: text(prop(row, "trackingReference", "TrackingReference")) || null,
+        itemCount: number(prop(row, "itemCount", "ItemCount")),
+        lines: array(prop(row, "lines", "Lines")).flatMap((lineRaw): AdminShipmentLine[] => {
+          const line = record(lineRaw);
+          if (!line) return [];
+          const orderLineId = text(prop(line, "orderLineId", "OrderLineId"));
+          if (!orderLineId) return [];
+          return [{ orderLineId, quantity: number(prop(line, "quantity", "Quantity")) }];
+        }),
       }];
     });
     return [{
@@ -537,6 +585,9 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       payableAmount: number(prop(seller, "payableAmount", "PayableAmount")),
       currency: text(prop(seller, "currency", "Currency"), "IRR"),
       lines,
+      fulfillmentId: text(prop(seller, "fulfillmentId", "FulfillmentId")) || null,
+      fulfillmentStatus: text(prop(seller, "fulfillmentStatus", "FulfillmentStatus")) || null,
+      shipments,
     }];
   });
   const mapped: AdminOrderDetail = {

@@ -35,6 +35,7 @@ import {
   type AdminResult,
   type AdminSellerFinancial,
 } from "./admin-api";
+import { AdminOrderItemsShippingPanel } from "./admin-order-items-shipping-panel";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
 import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
 import {
@@ -460,6 +461,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
           <AdminOrderOperationsMenu
             checkoutId={checkoutId}
             label="عملیات سفارش"
+            scope="detail"
             onCompleted={refresh}
             testId={`admin-order-detail-ops-${checkoutId}`}
           />
@@ -533,6 +535,8 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
               )}
             </section>
           </div>
+
+          <AdminOrderItemsShippingPanel detail={detail} checkoutId={checkoutId} onCompleted={refresh} />
 
           <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50/70 px-3 py-2">

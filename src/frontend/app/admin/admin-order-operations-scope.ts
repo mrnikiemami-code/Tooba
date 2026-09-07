@@ -1,0 +1,52 @@
+/**
+ * Scope helpers for Admin order operations menus (pure — no fetch).
+ */
+
+export type AdminOrderOperationsScope = "whole-order" | "detail";
+
+export type AdminOrderOperationActionLike = {
+  code: string;
+};
+
+/** عملیات‌هایی که فقط در اقلام و ارسال / جزئیات معنا دارند — از Grid کل‌سفارش حذف می‌شوند. */
+export const GRID_EXCLUDED_OPERATION_CODES = new Set([
+  "mark_processing",
+  "mark_packed",
+  "create_shipment",
+  "assign_tracking",
+  "dispatch_shipment",
+  "deliver_shipment",
+  "request_return",
+  "approve_return",
+  "reject_return",
+  "retry_refund",
+]);
+
+/** فیلتر scope منوی عملیات؛ whole-order فقط اقدامات امن کل سفارش. */
+export function filterOperationsForScope<T extends AdminOrderOperationActionLike>(
+  actions: T[],
+  scope: AdminOrderOperationsScope = "detail",
+): T[] {
+  if (scope !== "whole-order") return actions;
+  return actions.filter((action) => !GRID_EXCLUDED_OPERATION_CODES.has(action.code));
+}
+
+/** برچسب‌های اقدام سریع فروشنده: کل گروه در برابر انتخاب‌شده‌ها. */
+export function sellerQuickActionLabels(hasSelection: boolean): {
+  pack: string;
+  createShipment: string;
+  dispatch: string;
+} {
+  if (hasSelection) {
+    return {
+      pack: "بسته‌بندی انتخاب‌شده‌ها",
+      createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
+      dispatch: "ارسال انتخاب‌شده‌ها",
+    };
+  }
+  return {
+    pack: "بسته‌بندی همه اقلام آماده",
+    createShipment: "ایجاد مرسوله",
+    dispatch: "ارسال",
+  };
+}

@@ -236,8 +236,8 @@ public sealed class AdminOrderOperationsComposer
                     null,
                     null,
                     Prefer(effective, "order.handle", "fulfillment.manage"),
-                    false,
-                    null));
+                    true,
+                    "شروع پردازش این سفارش؟"));
             }
 
             if (fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing
@@ -252,8 +252,8 @@ public sealed class AdminOrderOperationsComposer
                     null,
                     null,
                     Prefer(effective, "order.handle", "fulfillment.manage"),
-                    false,
-                    null));
+                    true,
+                    "بسته‌بندی این سفارش ثبت شود؟"));
             }
 
             if (fulfillment.Status is FulfillmentStatus.Packed or FulfillmentStatus.Processing or FulfillmentStatus.ReadyToFulfill
@@ -269,8 +269,8 @@ public sealed class AdminOrderOperationsComposer
                     null,
                     null,
                     Prefer(effective, "order.handle", "fulfillment.manage"),
-                    false,
-                    null));
+                    true,
+                    "مرسوله برای این سفارش ایجاد شود؟"));
             }
 
             foreach (var shipment in fulfillment.Shipments)
@@ -287,8 +287,8 @@ public sealed class AdminOrderOperationsComposer
                         shipment.ShipmentId,
                         null,
                         Prefer(effective, "order.handle", "fulfillment.manage"),
-                        false,
-                        null));
+                        true,
+                        "کد رهگیری برای مرسوله ثبت شود؟"));
                 }
 
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
@@ -305,8 +305,8 @@ public sealed class AdminOrderOperationsComposer
                         shipment.ShipmentId,
                         null,
                         Prefer(effective, "order.handle", "fulfillment.manage"),
-                        false,
-                        null));
+                        true,
+                        "ارسال مرسوله ثبت شود؟"));
                 }
 
                 if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit
@@ -322,8 +322,8 @@ public sealed class AdminOrderOperationsComposer
                         shipment.ShipmentId,
                         null,
                         Prefer(effective, "order.handle", "fulfillment.manage"),
-                        false,
-                        null));
+                        true,
+                        "تحویل مرسوله ثبت شود؟"));
                 }
             }
         }

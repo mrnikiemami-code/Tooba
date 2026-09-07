@@ -30,6 +30,7 @@ public sealed record AdminOrderListItem(
 
 /// <summary>
 /// خط سفارش مدیر؛ مبلغ از snapshot سفارش می‌آید و قیمت جاری Product نیست.
+/// فیلدهای fulfillment اختیاری و additive برای اقلام و ارسال (TB-P09-T004).
 /// </summary>
 public sealed record AdminOrderLineView(
     Guid OfferId,
@@ -37,7 +38,27 @@ public sealed record AdminOrderLineView(
     int Quantity,
     decimal UnitAmount,
     decimal LinePayable,
-    string Currency);
+    string Currency,
+    Guid? OrderLineId = null,
+    int? QuantityShipped = null,
+    string? ImageUrl = null,
+    string? OperationalStatus = null);
+
+/// <summary>
+/// خط تخصیص‌یافته در مرسولهٔ فروشنده.
+/// </summary>
+public sealed record AdminShipmentLineView(Guid OrderLineId, int Quantity);
+
+/// <summary>
+/// کارت مرسولهٔ یک فروشنده روی جزئیات سفارش مدیر.
+/// </summary>
+public sealed record AdminShipmentView(
+    Guid ShipmentId,
+    string Status,
+    string CarrierDisplayName,
+    string? TrackingReference,
+    int ItemCount,
+    IReadOnlyList<AdminShipmentLineView> Lines);
 
 /// <summary>
 /// برش سفارش یک فروشنده در جزئیات Checkout مدیر.
@@ -51,7 +72,10 @@ public sealed record AdminSellerOrderView(
     string PaymentState,
     decimal PayableAmount,
     string Currency,
-    IReadOnlyList<AdminOrderLineView> Lines);
+    IReadOnlyList<AdminOrderLineView> Lines,
+    Guid? FulfillmentId = null,
+    string? FulfillmentStatus = null,
+    IReadOnlyList<AdminShipmentView>? Shipments = null);
 
 /// <summary>
 /// برش مالی یک فروشنده در جزئیات سفارش مدیر.
