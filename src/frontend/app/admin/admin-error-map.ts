@@ -214,6 +214,58 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "انجام عملیات سفارش ناموفق بود.",
     en: "The order operation could not be completed.",
   },
+  "payment.restore.not_manual": {
+    fa: "فقط پرداخت کارت‌به‌کارت/دستی قابل بازگردانی است.",
+    en: "Only manual or card-to-card payments can be restored.",
+  },
+  "payment.restore.already_succeeded": {
+    fa: "پرداخت موفق جایگزین شده و قابل بازگردانی نیست.",
+    en: "A successful payment already exists and cannot be restored.",
+  },
+  "payment.restore.invalid_state": {
+    fa: "بازگرداندن واریز در این وضعیت مجاز نیست.",
+    en: "Deposit restore is not allowed in the current payment state.",
+  },
+  "order.restore.not_cancelled": {
+    fa: "فقط سفارش لغوشده را می‌توان بازگرداند.",
+    en: "Only a cancelled order can be restored.",
+  },
+  "order.restore.missing_snapshot": {
+    fa: "وضعیت قبل از لغو برای بازگردانی موجود نیست.",
+    en: "The pre-cancel status snapshot is missing.",
+  },
+  "order.restore.refund_completed": {
+    fa: "بازگردانی پس از بازگشت وجه تکمیل‌شده مجاز نیست.",
+    en: "Restore is not allowed after a completed refund.",
+  },
+  "order.restore.delivered": {
+    fa: "بازگردانی پس از تحویل مجاز نیست؛ از مرجوعی استفاده کنید.",
+    en: "Restore is not allowed after delivery. Use a return instead.",
+  },
+  "order.restore.dispatched": {
+    fa: "بازگردانی پس از ارسال مرسوله مجاز نیست.",
+    en: "Restore is not allowed after a shipment has been dispatched.",
+  },
+  "order.restore.inventory_failed": {
+    fa: "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
+    en: "Restore failed; inventory could not be reserved again. The order stayed cancelled.",
+  },
+  "order.restore.invalid_state": {
+    fa: "بازگردانی سفارش در این وضعیت مجاز نیست.",
+    en: "Order restore is not allowed in the current state.",
+  },
+  "fulfillment.tracking.locked_after_dispatch": {
+    fa: "پس از ارسال نمی‌توان کد رهگیری را اصلاح کرد.",
+    en: "Tracking cannot be corrected after dispatch.",
+  },
+  "fulfillment.tracking.nothing_to_correct": {
+    fa: "ابتدا کد رهگیری را ثبت کنید.",
+    en: "Assign tracking before correcting it.",
+  },
+  "fulfillment.tracking.invalid_state": {
+    fa: "اصلاح کد رهگیری در این وضعیت مرسوله مجاز نیست.",
+    en: "Tracking correction is not allowed in the current shipment state.",
+  },
   "fulfillment.work_queue.cross_seller": {
     fa: "انتخاب چندفروشنده برای عملیات گروهی مجاز نیست.",
     en: "Cross-seller bulk selection is not allowed.",

@@ -174,6 +174,45 @@ test("grid excludes unpack and cancel_shipment from whole-order kebab", () => {
   assert.deepEqual(filtered.map((a) => a.code), ["cancel", "confirm_deposit"]);
 });
 
+test("whole-order menu shows one cancel and payment restore", () => {
+  const actions = [
+    { code: "cancel", sellerOrderId: "a", labelFa: "لغو سفارش" },
+    { code: "cancel", sellerOrderId: "b", labelFa: "لغو سفارش" },
+    { code: "cancel", sellerOrderId: null, labelFa: "لغو سفارش" },
+    { code: "restore_deposit", sellerOrderId: null, labelFa: "بازگرداندن به انتظار تأیید واریز" },
+    { code: "restore_cancelled_order", sellerOrderId: null, labelFa: "بازگردانی سفارش لغوشده" },
+    { code: "correct_tracking", sellerOrderId: "a", labelFa: "اصلاح کد رهگیری" },
+    { code: "cancel_shipment", sellerOrderId: "a", labelFa: "ابطال مرسوله" },
+  ];
+  const filtered = filterOperationsForScope(actions, "whole-order");
+  assert.equal(filtered.filter((a) => a.code === "cancel").length, 1);
+  assert.equal(filtered.find((a) => a.code === "cancel")?.sellerOrderId, null);
+  assert.deepEqual(
+    filtered.map((a) => a.code),
+    ["cancel", "restore_deposit", "restore_cancelled_order"],
+  );
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("correct_tracking"), true);
+});
+
+test("operations menu uses tracking dialog for correct_tracking and confirm Dialog", () => {
+  const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
+  assert.match(menu, /action\.code === "assign_tracking" \|\| action\.code === "correct_tracking"/);
+  assert.match(menu, /اصلاح کد رهگیری/);
+  assert.match(menu, /confirmAction\?\.confirmMessageFa/);
+});
+
+test("maps corrective action errors to FA", () => {
+  assert.equal(
+    mapAdminErrorMessage("payment.restore.invalid_state", "fa"),
+    "بازگرداندن واریز در این وضعیت مجاز نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("order.restore.inventory_failed", "fa"),
+    "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
+  );
+  assert.ok(!mapAdminErrorMessage("fulfillment.tracking.locked_after_dispatch", "fa").includes("fulfillment.tracking"));
+});
+
 
 test("create shipment modal uses Dialog and never prompt", () => {
   const modal = readFileSync(join(dir, "admin-create-shipment-modal.tsx"), "utf8");

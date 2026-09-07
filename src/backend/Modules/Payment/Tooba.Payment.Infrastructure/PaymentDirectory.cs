@@ -406,17 +406,58 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
     }
 
+    /// <inheritdoc />
+    public async Task<PaymentVerificationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.missing");
+        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
+        {
+            throw new InvalidOperationException("payment.restore.not_manual");
+        }
+
+        var attempts = await _db.Attempts
+            .Where(x => x.PaymentId == paymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var loaded in attempts)
+        {
+            payment.AttachLoadedAttempt(loaded);
+        }
+
+        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        payment.AttachLoadedAllocations(allocations);
+        payment.RestoreRejectedManualToPending(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
+    }
+
     private async Task<PaymentOperationalSnapshot> ToOperationalAsync(
         CustomerPayment payment,
         CancellationToken cancellationToken)
     {
-        var attempt = await _db.Attempts.AsNoTracking()
+        var attempts = await _db.Attempts.AsNoTracking()
             .Where(x => x.PaymentId == payment.PaymentId)
             .OrderByDescending(x => x.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        var manualPending = ManualPaymentGateway.IsManual(payment.ProviderCode)
-            && payment.Status == PaymentStatus.Pending;
+        var attempt = attempts.FirstOrDefault();
+        var manual = ManualPaymentGateway.IsManual(payment.ProviderCode);
+        var manualPending = manual && payment.Status == PaymentStatus.Pending;
+        var hasManualRejection = attempts.Any(x =>
+            x.Status == PaymentAttemptStatus.VerifiedFailed
+            && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
+        var hasSuccess = payment.Status == PaymentStatus.Succeeded
+            || attempts.Any(x => x.Status == PaymentAttemptStatus.VerifiedSucceeded);
+        var restoreEligible = manual
+            && payment.Status == PaymentStatus.Failed
+            && hasManualRejection
+            && !hasSuccess;
         return new PaymentOperationalSnapshot(
             payment.PaymentId,
             payment.CheckoutId,
@@ -432,7 +473,9 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             attempt?.FailureCode,
             payment.Status == PaymentStatus.Pending,
             ConfirmDepositEligible: manualPending,
-            RejectDepositEligible: manualPending);
+            RejectDepositEligible: manualPending,
+            RestoreDepositEligible: restoreEligible,
+            HasManualDepositRejection: hasManualRejection);
     }
 
     private async Task EnsureActorCanSeeAsync(

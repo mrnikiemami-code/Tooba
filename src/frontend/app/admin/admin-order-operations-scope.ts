@@ -7,6 +7,7 @@ export type AdminOrderOperationsScope = "whole-order" | "detail" | "fulfillment-
 export type AdminOrderOperationActionLike = {
   code: string;
   fulfillmentId?: string | null;
+  sellerOrderId?: string | null;
 };
 
 /** عملیات‌هایی که فقط در اقلام و ارسال / جزئیات معنا دارند — از Grid کل‌سفارش حذف می‌شوند. */
@@ -17,6 +18,7 @@ export const GRID_EXCLUDED_OPERATION_CODES = new Set([
   "create_shipment",
   "cancel_shipment",
   "assign_tracking",
+  "correct_tracking",
   "dispatch_shipment",
   "deliver_shipment",
   "request_return",
@@ -33,8 +35,17 @@ export const FULFILLMENT_QUEUE_OPERATION_CODES = new Set([
   "create_shipment",
   "cancel_shipment",
   "assign_tracking",
+  "correct_tracking",
   "dispatch_shipment",
   "deliver_shipment",
+]);
+
+const WHOLE_ORDER_DEDUPE_CODES = new Set([
+  "cancel",
+  "confirm_deposit",
+  "reject_deposit",
+  "restore_deposit",
+  "restore_cancelled_order",
 ]);
 
 /** فیلتر scope منوی عملیات؛ whole-order فقط اقدامات امن کل سفارش. */
@@ -51,7 +62,32 @@ export function filterOperationsForScope<T extends AdminOrderOperationActionLike
     });
   }
   if (scope !== "whole-order") return actions;
-  return actions.filter((action) => !GRID_EXCLUDED_OPERATION_CODES.has(action.code));
+  const filtered = actions.filter((action) => !GRID_EXCLUDED_OPERATION_CODES.has(action.code));
+  return dedupeWholeOrderActions(filtered);
+}
+
+/** هر کد کل‌سفارش یک‌بار؛ ترجیح با sellerOrderId خالی. */
+export function dedupeWholeOrderActions<T extends AdminOrderOperationActionLike>(actions: T[]): T[] {
+  const preferred = new Map<string, T>();
+  for (const action of actions) {
+    if (!WHOLE_ORDER_DEDUPE_CODES.has(action.code)) continue;
+    const existing = preferred.get(action.code);
+    if (!existing || action.sellerOrderId == null) {
+      preferred.set(action.code, action);
+    }
+  }
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const action of actions) {
+    if (!WHOLE_ORDER_DEDUPE_CODES.has(action.code)) {
+      result.push(action);
+      continue;
+    }
+    if (seen.has(action.code)) continue;
+    seen.add(action.code);
+    result.push(preferred.get(action.code) ?? action);
+  }
+  return result;
 }
 
 /** برچسب‌های اقدام سریع فروشنده: کل گروه در برابر انتخاب‌شده‌ها. */

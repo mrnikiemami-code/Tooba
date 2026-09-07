@@ -120,7 +120,7 @@ public sealed class OrderLine
     /// <summary>
     /// رزرو موجودی منتقل‌شده از سبد؛ جدول Inventory اینجا نیست.
     /// </summary>
-    public Guid? ReservationId { get; init; }
+    public Guid? ReservationId { get; private set; }
 
     /// <summary>
     /// نتیجهٔ مالیات در لحظهٔ checkout. از قاعدهٔ بعدی بازمحاسبه نمی‌شود.
@@ -299,6 +299,19 @@ public sealed class OrderLine
             ReturnPolicyLabelSnapshot = policyLabel,
         };
     }
+
+    /// <summary>
+    /// رزرو تازه‌گرفته‌شده را جایگزین رزرو آزادشده می‌کند؛ فقط برای بازگردانی لغو.
+    /// </summary>
+    public void ReplaceReservation(Guid reservationId)
+    {
+        if (reservationId == Guid.Empty)
+        {
+            throw new InvalidOperationException("شناسهٔ رزرو نامعتبر است.");
+        }
+
+        ReservationId = reservationId;
+    }
 }
 
 /// <summary>
@@ -342,6 +355,16 @@ public sealed class SellerOrder
     /// وضعیت این فروشنده، نه کل سبد.
     /// </summary>
     public SellerOrderStatus Status { get; private set; }
+
+    /// <summary>
+    /// وضعیت قبل از لغو؛ برای بازگردانی ایمن لازم است.
+    /// </summary>
+    public SellerOrderStatus? CancelledFromStatus { get; private set; }
+
+    /// <summary>
+    /// زمان آخرین بازگردانی از لغو.
+    /// </summary>
+    public DateTimeOffset? LastRestoredAt { get; private set; }
 
     /// <summary>
     /// جمع تصویر خطوط.
@@ -421,6 +444,7 @@ public sealed class SellerOrder
             or SellerOrderStatus.Submitted
             or SellerOrderStatus.ReservationRequested)
         {
+            CancelledFromStatus = Status;
             Status = SellerOrderStatus.Cancelled;
             return;
         }
@@ -445,7 +469,28 @@ public sealed class SellerOrder
                 "order.cancel.forbidden: لغو پیش از ارسال فقط برای سفارش Paid مجاز است.");
         }
 
+        CancelledFromStatus = Status;
         Status = SellerOrderStatus.Cancelled;
+    }
+
+    /// <summary>
+    /// سفارش لغوشده را به وضعیت ذخیره‌شدهٔ قبل از لغو برمی‌گرداند.
+    /// </summary>
+    public void RestoreFromCancellation(DateTimeOffset at)
+    {
+        if (Status != SellerOrderStatus.Cancelled)
+        {
+            throw new InvalidOperationException("order.restore.invalid_state");
+        }
+
+        if (CancelledFromStatus is null)
+        {
+            throw new InvalidOperationException("order.restore.missing_snapshot");
+        }
+
+        Status = CancelledFromStatus.Value;
+        CancelledFromStatus = null;
+        LastRestoredAt = at;
     }
 
     /// <summary>

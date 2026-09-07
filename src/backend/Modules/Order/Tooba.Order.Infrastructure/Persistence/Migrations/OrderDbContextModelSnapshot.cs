@@ -289,6 +289,11 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("checkout_id");
 
+                    b.Property<string>("CancelledFromStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("cancelled_from_status");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -304,6 +309,10 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasPrecision(19, 4)
                         .HasColumnType("numeric(19,4)")
                         .HasColumnName("grand_total_snapshot");
+
+                    b.Property<DateTimeOffset?>("LastRestoredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_restored_at");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()

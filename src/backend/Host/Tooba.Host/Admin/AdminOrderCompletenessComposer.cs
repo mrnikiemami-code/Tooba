@@ -206,6 +206,18 @@ public sealed class AdminOrderCompletenessComposer
                 $"Order {order.OrderNumber}"));
         }
 
+        foreach (var order in group.SellerOrders.Where(x => x.LastRestoredAt is not null))
+        {
+            entries.Add(Draft(
+                order.LastRestoredAt!.Value,
+                "order_restored",
+                "بازگردانی سفارش لغوشده",
+                "Cancelled order restored",
+                null,
+                $"سفارش {order.OrderNumber}",
+                $"Order {order.OrderNumber}"));
+        }
+
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (payment is not null)
         {
@@ -227,6 +239,16 @@ public sealed class AdminOrderCompletenessComposer
                         "پرداخت در انتظار",
                         "Payment pending",
                         null));
+                    if (payment.HasManualDepositRejection)
+                    {
+                        entries.Add(Draft(
+                            payment.UpdatedAt == default ? payment.CreatedAt : payment.UpdatedAt,
+                            "payment_deposit_restored",
+                            "بازگرداندن به انتظار تأیید واریز",
+                            "Deposit restored to pending confirmation",
+                            null));
+                    }
+
                     break;
                 case PaymentStatus.Succeeded:
                     entries.Add(Draft(
@@ -241,9 +263,15 @@ public sealed class AdminOrderCompletenessComposer
                 case PaymentStatus.Failed:
                     entries.Add(Draft(
                         payment.UpdatedAt,
-                        "payment_failed",
-                        "پرداخت ناموفق",
-                        "Payment failed",
+                        payment.HasManualDepositRejection || payment.LastFailureCode == "MANUAL_DEPOSIT_REJECTED"
+                            ? "payment_deposit_rejected"
+                            : "payment_failed",
+                        payment.HasManualDepositRejection || payment.LastFailureCode == "MANUAL_DEPOSIT_REJECTED"
+                            ? "رد واریز"
+                            : "پرداخت ناموفق",
+                        payment.HasManualDepositRejection || payment.LastFailureCode == "MANUAL_DEPOSIT_REJECTED"
+                            ? "Deposit rejected"
+                            : "Payment failed",
                         null,
                         payment.LastFailureCode,
                         payment.LastFailureCode));
@@ -374,6 +402,33 @@ public sealed class AdminOrderCompletenessComposer
                         null,
                         $"کد رهگیری {shipment.TrackingReference}",
                         $"Tracking {shipment.TrackingReference}"));
+                }
+
+                if (!string.IsNullOrWhiteSpace(shipment.PreviousTrackingReference)
+                    && !string.IsNullOrWhiteSpace(shipment.TrackingReference))
+                {
+                    entries.Add(Draft(
+                        created,
+                        "tracking_corrected",
+                        "اصلاح کد رهگیری",
+                        "Tracking corrected",
+                        null,
+                        $"از {shipment.PreviousTrackingReference} به {shipment.TrackingReference}",
+                        $"{shipment.PreviousTrackingReference} → {shipment.TrackingReference}"));
+                }
+
+                if (shipment.Status == ShipmentStatus.Cancelled)
+                {
+                    entries.Add(Draft(
+                        f.UpdatedAt == default ? created : f.UpdatedAt,
+                        "shipment_cancelled",
+                        "عدم پذیرش مرسوله",
+                        "Shipment rejected",
+                        null,
+                        string.IsNullOrWhiteSpace(shipment.TrackingReference)
+                            ? methodLabel
+                            : $"کد رهگیری {shipment.TrackingReference}",
+                        shipment.TrackingReference ?? methodLabel));
                 }
 
                 if (shipment.DispatchedAt is { } dispatched)

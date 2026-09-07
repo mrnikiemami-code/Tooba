@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T007
+TB-P09-T008
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T008
+TB-P09-T009
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T008 — Shipping & Delivery Operations Center — Cross-Order Work Queue; USER_VISUAL_ACCEPTED=NO
+TB-P09-T009 — Order Corrective Actions (rollback matrix, payment/shipment/cancel restore, whole-order dedupe); USER_VISUAL_ACCEPTED=NO
+TB-P09-T008 — Shipping & Delivery Operations Center — Cross-Order Work Queue; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T007 — Order Financial History + Scope-Aware Operational History; USER_VISUAL_ACCEPTED=NO
 TB-P09-T006-R1 — Offer Return Policy + Shipping Provider Forms Final Runtime Proof; USER_VISUAL_ACCEPTED=NO
 TB-P09-T006 — Offer return policy + dynamic shipping provider forms; USER_VISUAL_ACCEPTED=NO
@@ -131,7 +132,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T007
+TB-P09-T008
 ```
 
 USER_VISUAL_ACCEPTED:

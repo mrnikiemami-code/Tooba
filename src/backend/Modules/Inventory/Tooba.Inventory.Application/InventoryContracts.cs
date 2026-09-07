@@ -100,6 +100,11 @@ public interface IInventoryDirectory
     Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// رزرو را با شناسه می‌خواند؛ وضعیت Released هم برمی‌گردد.
+    /// </summary>
+    Task<ReservationReceipt?> FindReservationAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// رزروهای Held منقضی‌شده را با زمان UTC سرور آزاد می‌کند؛ تایمر کلاینت نیست.
     /// </summary>
     /// <summary>

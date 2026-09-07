@@ -90,6 +90,7 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.SellerOrderId).ValueGeneratedNever();
             entity.Property(x => x.OrderNumber).HasMaxLength(64);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.CancelledFromStatus).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Currency).HasMaxLength(3);
             entity.Property(x => x.SubtotalSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.TaxSnapshot).HasPrecision(19, 4);

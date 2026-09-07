@@ -506,6 +506,24 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         UpdatedAt = now;
     }
 
+    /// <summary>کد رهگیری را فقط پیش از dispatch اصلاح می‌کند و مقدار قبلی را نگه می‌دارد.</summary>
+    public void CorrectTracking(Guid shipmentId, string trackingReference, DateTimeOffset now)
+    {
+        var shipment = RequireShipment(shipmentId);
+        var previous = shipment.TrackingReference;
+        shipment.CorrectTracking(trackingReference, now);
+        UpdatedAt = now;
+        if (!string.Equals(previous, shipment.TrackingReference, StringComparison.Ordinal))
+        {
+            _domainEvents.Add(new ShipmentTrackingCorrectedDomainEvent(
+                FulfillmentId,
+                shipmentId,
+                SellerOrderId,
+                previous,
+                shipment.TrackingReference));
+        }
+    }
+
     private Shipment RequireShipment(Guid shipmentId) =>
         _shipments.SingleOrDefault(x => x.ShipmentId == shipmentId)
         ?? throw new InvalidOperationException("محموله پیدا نشد.");
@@ -559,6 +577,9 @@ public sealed class Shipment
 
     /// <summary>کد/مرجع ردیابی.</summary>
     public string? TrackingReference { get; private set; }
+
+    /// <summary>کد رهگیری قبلی پس از اصلاح پیش از dispatch.</summary>
+    public string? PreviousTrackingReference { get; private set; }
 
     /// <summary>زمان dispatch.</summary>
     public DateTimeOffset? DispatchedAt { get; private set; }
@@ -649,6 +670,40 @@ public sealed class Shipment
             throw new InvalidOperationException("مرجع ردیابی قبلاً ثبت شده و قابل بازنویسی نیست.");
         }
 
+        TrackingReference = normalized;
+        _ = now;
+    }
+
+    internal void CorrectTracking(string trackingReference, DateTimeOffset now)
+    {
+        if (Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered
+            || DispatchedAt is not null)
+        {
+            throw new InvalidOperationException("fulfillment.tracking.locked_after_dispatch");
+        }
+
+        if (Status != ShipmentStatus.Created)
+        {
+            throw new InvalidOperationException("fulfillment.tracking.invalid_state");
+        }
+
+        var normalized = trackingReference.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            throw new InvalidOperationException("مرجع ردیابی الزامی است.");
+        }
+
+        if (string.IsNullOrWhiteSpace(TrackingReference))
+        {
+            throw new InvalidOperationException("fulfillment.tracking.nothing_to_correct");
+        }
+
+        if (string.Equals(TrackingReference, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        PreviousTrackingReference = TrackingReference;
         TrackingReference = normalized;
         _ = now;
     }
@@ -849,6 +904,44 @@ public sealed class ShipmentCreatedDomainEvent : IDomainEvent
 
     /// <summary>سفارش فروشنده.</summary>
     public Guid SellerOrderId { get; }
+}
+
+/// <summary>رویداد اصلاح کد رهگیری پیش از ارسال.</summary>
+public sealed class ShipmentTrackingCorrectedDomainEvent : IDomainEvent
+{
+    /// <summary>رویداد را می‌سازد.</summary>
+    public ShipmentTrackingCorrectedDomainEvent(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid sellerOrderId,
+        string? previousTrackingReference,
+        string? trackingReference)
+    {
+        FulfillmentId = fulfillmentId;
+        ShipmentId = shipmentId;
+        SellerOrderId = sellerOrderId;
+        PreviousTrackingReference = previousTrackingReference;
+        TrackingReference = trackingReference;
+        Metadata = EventMetadataFactory.ForDomain("shipment.tracking.corrected.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>شناسه fulfillment.</summary>
+    public Guid FulfillmentId { get; }
+
+    /// <summary>شناسه محموله.</summary>
+    public Guid ShipmentId { get; }
+
+    /// <summary>سفارش فروشنده.</summary>
+    public Guid SellerOrderId { get; }
+
+    /// <summary>کد رهگیری قبلی.</summary>
+    public string? PreviousTrackingReference { get; }
+
+    /// <summary>کد رهگیری جدید.</summary>
+    public string? TrackingReference { get; }
 }
 
 /// <summary>رویداد ابطال مرسوله پیش از ارسال.</summary>

@@ -279,6 +279,74 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     }
 
     /// <inheritdoc />
+    public async Task RestoreCancelledCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var group = await _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
+            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+        EnsureAccess(group, access);
+        if (group.SellerOrders.Count == 0 || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
+        {
+            throw new InvalidOperationException("order.restore.not_cancelled");
+        }
+
+        if (group.SellerOrders.Any(x => x.CancelledFromStatus is null))
+        {
+            throw new InvalidOperationException("order.restore.missing_snapshot");
+        }
+
+        var acquired = new List<Guid>();
+        try
+        {
+            foreach (var order in group.SellerOrders)
+            {
+                foreach (var line in order.Lines)
+                {
+                    if (line.ReservationId is not { } previousId)
+                    {
+                        continue;
+                    }
+
+                    var previous = await _inventory.FindReservationAsync(previousId, cancellationToken)
+                        ?? throw new InvalidOperationException("order.restore.inventory_failed");
+                    var receipt = await _inventory.ReserveAsync(
+                        previous.StockItemId,
+                        previous.Quantity,
+                        $"order-restore-{line.LineId:N}",
+                        $"order-restore-{line.LineId:N}",
+                        null,
+                        cancellationToken);
+                    acquired.Add(receipt.ReservationId);
+                    line.ReplaceReservation(receipt.ReservationId);
+                }
+
+                order.RestoreFromCancellation(DateTimeOffset.UtcNow);
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            foreach (var reservationId in acquired)
+            {
+                try
+                {
+                    await _inventory.ReleaseAsync(reservationId, cancellationToken);
+                }
+                catch (InvalidOperationException)
+                {
+                    // رزرو تازه‌گرفته‌شده را تا حد ممکن آزاد می‌کنیم؛ سفارش لغو می‌ماند.
+                }
+            }
+
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(
         Guid checkoutId,
         Guid viewerUserId,

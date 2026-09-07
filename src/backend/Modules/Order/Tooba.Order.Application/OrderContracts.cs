@@ -141,6 +141,11 @@ public interface ICheckoutDirectory
     Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken);
 
     /// <summary>
+    /// سفارش‌های لغوشدهٔ یک checkout را به وضعیت قبلی برمی‌گرداند و رزرو موجودی را دوباره می‌گیرد.
+    /// </summary>
+    Task RestoreCancelledCheckoutAsync(Guid checkoutId, OrderAccess access, CancellationToken cancellationToken);
+
+    /// <summary>
     /// یادداشت‌های عملیاتی داخلی checkout را از جدید به قدیم برمی‌گرداند (محدود؛ بدون حذف‌شده‌ها).
     /// </summary>
     Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(

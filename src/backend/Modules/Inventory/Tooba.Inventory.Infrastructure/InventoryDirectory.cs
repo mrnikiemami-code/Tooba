@@ -257,6 +257,29 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     }
 
     /// <inheritdoc />
+    public async Task<ReservationReceipt?> FindReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+    {
+        var reservation = await _db.Reservations.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
+            .ConfigureAwait(false);
+        if (reservation is null)
+        {
+            return null;
+        }
+
+        var position = await _db.Positions.AsNoTracking()
+            .SingleAsync(x => x.StockItemId == reservation.StockItemId, cancellationToken)
+            .ConfigureAwait(false);
+        return new ReservationReceipt(
+            reservation.ReservationId,
+            reservation.StockItemId,
+            position.OfferId,
+            reservation.Quantity,
+            reservation.Status,
+            reservation.ExpiresAt);
+    }
+
+    /// <inheritdoc />
     public async Task ReleaseAsync(Guid reservationId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);

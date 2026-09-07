@@ -422,6 +422,54 @@ public sealed class CustomerPayment : IHasDomainEvents
     }
 
     /// <summary>
+    /// رد واریز دستی را به انتظار تأیید برمی‌گرداند؛ Succeeded یا رویداد موفقیت نمی‌سازد.
+    /// </summary>
+    public PaymentAttempt RestoreRejectedManualToPending(DateTimeOffset at)
+    {
+        if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("payment.restore.not_manual");
+        }
+
+        if (Status == PaymentStatus.Pending)
+        {
+            var latest = _attempts.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+            var hasRejected = _attempts.Any(x =>
+                x.Status == PaymentAttemptStatus.VerifiedFailed
+                && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
+            if (hasRejected && latest is not null && latest.Status == PaymentAttemptStatus.Initiated)
+            {
+                return latest;
+            }
+
+            throw new InvalidOperationException("payment.restore.invalid_state");
+        }
+
+        if (Status == PaymentStatus.Succeeded)
+        {
+            throw new InvalidOperationException("payment.restore.already_succeeded");
+        }
+
+        if (Status != PaymentStatus.Failed)
+        {
+            throw new InvalidOperationException("payment.restore.invalid_state");
+        }
+
+        var rejected = _attempts
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefault(x => x.Status == PaymentAttemptStatus.VerifiedFailed
+                && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
+        if (rejected is null)
+        {
+            throw new InvalidOperationException("payment.restore.invalid_state");
+        }
+
+        var attempt = RecordInitiation($"manual-restore-{PaymentId:N}-{at.UtcTicks}", at);
+        _domainEvents.Add(new PaymentManualDepositRestoredDomainEvent(PaymentId, CheckoutId, attempt.AttemptId));
+        return attempt;
+    }
+
+    /// <summary>
     /// تلاش تکراری با همان مرجع تراکنش را تشخیص می‌دهد.
     /// </summary>
     public bool AlreadySucceededWith(string transactionReference) =>
@@ -614,4 +662,33 @@ public sealed class PaymentFailedDomainEvent : IDomainEvent
     /// کد شکست درگاه.
     /// </summary>
     public string? FailureCode { get; }
+}
+
+/// <summary>
+/// بازگرداندن رد واریز دستی به انتظار تأیید. Paid نمی‌کند.
+/// </summary>
+public sealed class PaymentManualDepositRestoredDomainEvent : IDomainEvent
+{
+    /// <summary>
+    /// رویداد را می‌سازد.
+    /// </summary>
+    public PaymentManualDepositRestoredDomainEvent(Guid paymentId, Guid checkoutId, Guid attemptId)
+    {
+        PaymentId = paymentId;
+        CheckoutId = checkoutId;
+        AttemptId = attemptId;
+        Metadata = EventMetadataFactory.ForDomain("payment.manual_deposit.restored.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>پرداخت.</summary>
+    public Guid PaymentId { get; }
+
+    /// <summary>checkout.</summary>
+    public Guid CheckoutId { get; }
+
+    /// <summary>تلاش جدید انتظار تأیید.</summary>
+    public Guid AttemptId { get; }
 }

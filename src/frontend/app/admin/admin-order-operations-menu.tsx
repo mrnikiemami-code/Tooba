@@ -163,7 +163,7 @@ export function AdminOrderOperationsMenu({
       setCarrierAction(action);
       return;
     }
-    if (action.code === "assign_tracking") {
+    if (action.code === "assign_tracking" || action.code === "correct_tracking") {
       setTrackingValue("");
       setTrackingAction(action);
       return;
@@ -286,7 +286,7 @@ export function AdminOrderOperationsMenu({
         </div>
       </Dialog>
       <Dialog
-        title="ثبت کد رهگیری"
+        title={trackingAction?.code === "correct_tracking" ? "اصلاح کد رهگیری" : "ثبت کد رهگیری"}
         open={trackingAction !== null}
         onClose={() => setTrackingAction(null)}
         showCloseButton={false}

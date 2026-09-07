@@ -72,7 +72,8 @@ public sealed record ShipmentSnapshot(
     string ShippingMethodCode = "",
     string ShippingMethodLabel = "",
     string? ProviderMetadataJson = null,
-    int ProviderMetadataVersion = 0);
+    int ProviderMetadataVersion = 0,
+    string? PreviousTrackingReference = null);
 
 /// <summary>
 /// snapshot خط محموله.
@@ -138,6 +139,14 @@ public interface IFulfillmentDirectory
 
     /// <summary>tracking idempotent ثبت می‌کند.</summary>
     Task<FulfillmentSnapshot> AssignTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string trackingReference,
+        CancellationToken cancellationToken);
+
+    /// <summary>کد رهگیری را پیش از dispatch اصلاح می‌کند.</summary>
+    Task<FulfillmentSnapshot> CorrectTrackingAsync(
         Guid fulfillmentId,
         Guid shipmentId,
         Guid actorUserId,

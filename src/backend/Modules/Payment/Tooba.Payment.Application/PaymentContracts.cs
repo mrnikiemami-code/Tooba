@@ -221,7 +221,9 @@ public sealed record PaymentOperationalSnapshot(
     string? LastFailureCode,
     bool ReconcileEligible,
     bool ConfirmDepositEligible,
-    bool RejectDepositEligible);
+    bool RejectDepositEligible,
+    bool RestoreDepositEligible = false,
+    bool HasManualDepositRejection = false);
 
 /// <summary>
 /// بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
@@ -254,6 +256,11 @@ public interface IPaymentAdminDirectory
     /// رد واریز کارت‌به‌کارت/دستی وقتی هنوز Pending است.
     /// </summary>
     Task<PaymentVerificationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رد واریز دستی را از مسیر دامنه به انتظار تأیید برمی‌گرداند؛ Succeeded نمی‌سازد.
+    /// </summary>
+    Task<PaymentVerificationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken);
 }
 
 /// <summary>

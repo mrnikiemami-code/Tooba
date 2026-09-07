@@ -323,6 +323,31 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> CorrectTrackingAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string trackingReference,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.CorrectTracking(shipmentId, trackingReference, DateTimeOffset.UtcNow);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("این کد پیگیری قبلاً ثبت شده است.");
+        }
+
+        _telemetry.RecordTrackingAssigned();
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<FulfillmentSnapshot> DispatchShipmentAsync(
         Guid fulfillmentId,
         Guid shipmentId,
@@ -421,7 +446,8 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 shipment.ShippingMethodCode,
                 shipment.ShippingMethodLabel,
                 shipment.ProviderMetadataJson,
-                shipment.ProviderMetadataVersion));
+                shipment.ProviderMetadataVersion,
+                shipment.PreviousTrackingReference));
         }
 
         return new FulfillmentSnapshot(
