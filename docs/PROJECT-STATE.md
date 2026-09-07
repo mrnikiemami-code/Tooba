@@ -1,4 +1,4 @@
-﻿# Tooba — Project State
+# Tooba — Project State
 
 Project:
 
@@ -62,24 +62,25 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T005
+TB-P09-T005-R1
 ```
 
 Current Issued Task:
 
 ```text
-TB-P09-T005
+(none)
 ```
 
 Current Repair Task:
 
 ```text
-(none)
+TB-P09-T005-R1
 ```
 
 Implemented Under Review:
 
 ```text
+TB-P09-T005-R1 — Seller-Scoped Fulfillment Final Proof runtime matrix; USER_VISUAL_ACCEPTED=NO
 TB-P09-T005 — Seller-scoped line/quantity fulfillment ops, reverse rules, return deadline UI; USER_VISUAL_ACCEPTED=NO
 TB-P09-T004 — Orders Operational UX Foundation (grid kebab ops, اقلام و ارسال shell, shipment modal; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003-R3 — Admin Orders Repair R3 (production-safe configurable manual/card-to-card payment; USER_VISUAL_ACCEPTED=NO)
