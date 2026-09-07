@@ -165,6 +165,14 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_user_id");
 
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by_user_id");
+
                     b.HasKey("NoteId")
                         .HasName("pk_checkout_operational_notes");
 
@@ -172,6 +180,33 @@ namespace Tooba.Order.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_checkout_operational_notes_checkout_id_created_at");
 
                     b.ToTable("checkout_operational_notes", "order");
+                });
+
+            modelBuilder.Entity("Tooba.Order.Domain.CheckoutAdminViewAck", b =>
+                {
+                    b.Property<Guid>("AckId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ack_id");
+
+                    b.Property<Guid>("CheckoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checkout_id");
+
+                    b.Property<DateTimeOffset>("ViewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("viewed_at");
+
+                    b.Property<Guid>("ViewerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("viewer_user_id");
+
+                    b.HasKey("AckId")
+                        .HasName("pk_checkout_admin_view_acks");
+
+                    b.HasIndex("CheckoutId", "ViewedAt")
+                        .HasDatabaseName("ix_checkout_admin_view_acks_checkout_id_viewed_at");
+
+                    b.ToTable("checkout_admin_view_acks", "order");
                 });
 
             modelBuilder.Entity("Tooba.Order.Domain.OrderLine", b =>

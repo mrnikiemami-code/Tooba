@@ -14,6 +14,7 @@ export interface AdminOrderNote {
   actorDisplayName: string;
   actorDisplayFa: string;
   actorDisplayEn: string;
+  canDelete: boolean;
 }
 
 export interface AdminOperationalHistoryEntry {
@@ -77,6 +78,7 @@ function mapNote(value: unknown): AdminOrderNote | null {
     actorDisplayName,
     actorDisplayFa,
     actorDisplayEn: text(prop(item, "actorDisplayEn", "ActorDisplayEn"), "By system"),
+    canDelete: Boolean(prop(item, "canDelete", "CanDelete")),
   };
 }
 
@@ -178,6 +180,19 @@ export async function addAdminOrderNote(
   return mapped
     ? { ...response, data: mapped }
     : { state: "error", data: null, status: response.status, message: mapAdminErrorMessage("admin.invalid-response", "fa") };
+}
+
+/** حذف یادداشت واجد شرایط (نویسنده + قفل‌نشده). */
+export async function deleteAdminOrderNote(
+  checkoutId: string,
+  noteId: string,
+): Promise<AdminResult<true>> {
+  const response = await readJson(
+    `/v1/admin/orders/${encodeURIComponent(checkoutId)}/notes/${encodeURIComponent(noteId)}`,
+    { method: "DELETE", headers: adminHeaders() },
+  );
+  if (response.state !== "ok") return { ...response, data: null };
+  return { ...response, data: true };
 }
 
 /** صفحهٔ تاریخچهٔ عملیاتی ترکیبی. */

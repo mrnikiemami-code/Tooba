@@ -235,7 +235,7 @@ public sealed class AdminOrderOperationsComposer
             {
                 actions.Add(Action(
                     "mark_packed",
-                    "علامت بسته‌بندی",
+                    "بسته‌بندی",
                     "Mark packed",
                     order.SellerOrderId,
                     fulfillment.FulfillmentId,
@@ -252,7 +252,7 @@ public sealed class AdminOrderOperationsComposer
             {
                 actions.Add(Action(
                     "create_shipment",
-                    "ایجاد محموله",
+                    "ایجاد مرسوله",
                     "Create shipment",
                     order.SellerOrderId,
                     fulfillment.FulfillmentId,
@@ -270,7 +270,7 @@ public sealed class AdminOrderOperationsComposer
                 {
                     actions.Add(Action(
                         "assign_tracking",
-                        "ثبت کد پیگیری",
+                        "ثبت کد رهگیری",
                         "Assign tracking",
                         order.SellerOrderId,
                         fulfillment.FulfillmentId,
@@ -287,9 +287,9 @@ public sealed class AdminOrderOperationsComposer
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
-                        "dispatch_shipment",
-                        "ارسال محموله",
-                        "Dispatch shipment",
+                    "dispatch_shipment",
+                    "ارسال مرسوله",
+                    "Dispatch shipment",
                         order.SellerOrderId,
                         fulfillment.FulfillmentId,
                         shipment.ShipmentId,
@@ -347,7 +347,7 @@ public sealed class AdminOrderOperationsComposer
                     ret.ReturnRequestId,
                     "return.manage",
                     true,
-                    "مرجوعی تأیید و refund آغاز شود؟"));
+                    "مرجوعی تأیید و بازگشت وجه آغاز شود؟"));
                 actions.Add(Action(
                     "reject_return",
                     "رد مرجوعی",
@@ -366,7 +366,7 @@ public sealed class AdminOrderOperationsComposer
             {
                 actions.Add(Action(
                     "retry_refund",
-                    "تلاش مجدد refund",
+                    "تلاش مجدد برای بازگشت وجه",
                     "Retry refund",
                     order.SellerOrderId,
                     null,
@@ -374,7 +374,7 @@ public sealed class AdminOrderOperationsComposer
                     ret.ReturnRequestId,
                     Prefer(effective, "order.refund", "return.manage"),
                     true,
-                    "refund دوباره تلاش شود؟"));
+                    "بازگشت وجه دوباره تلاش شود؟"));
             }
         }
     }

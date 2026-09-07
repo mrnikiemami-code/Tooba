@@ -398,7 +398,11 @@ internal sealed class AdminOrdersGridQueryEngine
             orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid) ? "Paid" : "PendingPayment",
+            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)
+                ? "Cancelled"
+                : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
+                    ? "Paid"
+                    : "PendingPayment",
             statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
     }
 

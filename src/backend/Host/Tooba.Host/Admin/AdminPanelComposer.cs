@@ -112,7 +112,10 @@ public sealed class AdminPanelComposer
     /// <summary>
     /// جزئیات Checkout را از Order می‌خواند و عنوان Catalog و نام Party را جداگانه ترکیب می‌کند.
     /// </summary>
-    public async Task<AdminOrderDetailPage?> GetOrderAsync(Guid checkoutId, CancellationToken cancellationToken)
+    public async Task<AdminOrderDetailPage?> GetOrderAsync(
+        Guid checkoutId,
+        Guid viewerUserId,
+        CancellationToken cancellationToken)
     {
         var group = await _orders.Checkouts.AsNoTracking()
             .Include(x => x.SellerOrders)
@@ -121,6 +124,12 @@ public sealed class AdminPanelComposer
         if (group is null)
         {
             return null;
+        }
+
+        if (viewerUserId != Guid.Empty)
+        {
+            _orders.AdminViewAcks.Add(CheckoutAdminViewAck.Create(checkoutId, viewerUserId, DateTimeOffset.UtcNow));
+            await _orders.SaveChangesAsync(cancellationToken);
         }
 
         var sellerIds = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().ToList();
@@ -357,7 +366,11 @@ public sealed class AdminPanelComposer
             orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid) ? "Paid" : "PendingPayment",
+            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)
+                ? "Cancelled"
+                : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
+                    ? "Paid"
+                    : "PendingPayment",
             statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
     }
 

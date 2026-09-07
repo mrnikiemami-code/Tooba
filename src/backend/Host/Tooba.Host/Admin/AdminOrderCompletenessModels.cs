@@ -13,7 +13,8 @@ public sealed record AdminOrderNoteView(
     string ActorKind,
     string ActorDisplayName,
     string ActorDisplayFa,
-    string ActorDisplayEn);
+    string ActorDisplayEn,
+    bool CanDelete);
 
 /// <summary>ورودی تایم‌لاین عملیاتی ترکیبی (بدون event store جدید).</summary>
 public sealed record AdminOperationalHistoryEntry(

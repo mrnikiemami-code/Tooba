@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T002
+TB-P09-T003
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T003
+TB-P09-T003-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T003-R1 — Admin Orders Repair (ops matrix/menu portal, grid maxWidth, note delete rule, clean E2E; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003 — Admin Orders Final Operational Gate (View-only nav + E2E verify + defect-only shipment fixes; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T002-R1 — Order Operational History Repair (human actor resolution; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T002 — Order Detail Operational Completeness (notes, operational history, invoice/receipt; Architect-accepted)
@@ -121,7 +122,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T002
+TB-P09-T003
 ```
 
 USER_VISUAL_ACCEPTED:

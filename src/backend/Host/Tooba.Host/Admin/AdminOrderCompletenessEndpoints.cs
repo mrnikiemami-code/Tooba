@@ -13,6 +13,7 @@ public static class AdminOrderCompletenessEndpoints
         var group = app.MapGroup("/v1/admin/orders");
         group.MapGet("/{checkoutId:guid}/notes", ListNotesAsync);
         group.MapPost("/{checkoutId:guid}/notes", AddNoteAsync);
+        group.MapDelete("/{checkoutId:guid}/notes/{noteId:guid}", DeleteNoteAsync);
         group.MapGet("/{checkoutId:guid}/operational-history", ListHistoryAsync);
         group.MapGet("/{checkoutId:guid}/invoice.html", GetInvoiceAsync);
         group.MapGet("/{checkoutId:guid}/receipt.html", GetReceiptAsync);
@@ -56,6 +57,30 @@ public static class AdminOrderCompletenessEndpoints
             var actor = await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.AddNoteAsync(checkoutId, actor, body?.Body, cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> DeleteNoteAsync(
+        Guid checkoutId,
+        Guid noteId,
+        AdminOrderCompletenessComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            await composer.DeleteNoteAsync(checkoutId, noteId, actor, cancellationToken);
+            return Results.Json(new { ok = true });
         }
         catch (PlatformHttpException ex)
         {

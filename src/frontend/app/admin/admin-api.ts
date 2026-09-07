@@ -414,8 +414,8 @@ export function formatAdminStatus(status: string): string {
     Failed: "ناموفق",
     Succeeded: "موفق",
     Verified: "تأییدشده",
-    Refunded: "بازپرداخت‌شده",
-    PartiallyRefunded: "بازپرداخت جزئی",
+    Refunded: "بازگشت وجه",
+    PartiallyRefunded: "بازگشت وجه جزئی",
     Authorized: "مجاز",
     Captured: "دریافت‌شده",
     Expired: "منقضی",
@@ -425,12 +425,14 @@ export function formatAdminStatus(status: string): string {
     Fulfilled: "تکمیل‌شده",
     InFulfillment: "در حال ارسال",
     AwaitingShipment: "در انتظار ارسال",
-    Returned: "مرجوع‌شده",
+    Returned: "مرجوعی",
     Rejected: "ردشده",
     Approved: "تأییدشده",
     Open: "باز",
     Closed: "بسته",
     Completed: "تکمیل‌شده",
+    RefundFailed: "شکست بازگشت وجه",
+    RefundProcessing: "در حال بازگشت وجه",
   };
   return labels[status] ?? (status || "نامشخص");
 }

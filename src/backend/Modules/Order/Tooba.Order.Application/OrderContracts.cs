@@ -141,20 +141,38 @@ public interface ICheckoutDirectory
     Task CancelSellerOrderAsync(Guid sellerOrderId, OrderAccess access, CancellationToken cancellationToken);
 
     /// <summary>
-    /// یادداشت‌های عملیاتی داخلی checkout را از جدید به قدیم برمی‌گرداند (محدود).
+    /// یادداشت‌های عملیاتی داخلی checkout را از جدید به قدیم برمی‌گرداند (محدود؛ بدون حذف‌شده‌ها).
     /// </summary>
     Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(
         Guid checkoutId,
+        Guid viewerUserId,
         int take,
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// یادداشت عملیاتی داخلی را به صورت append-only ثبت می‌کند.
+    /// یادداشت عملیاتی داخلی را ثبت می‌کند.
     /// </summary>
     Task<CheckoutOperationalNoteSnapshot> AddNoteAsync(
         Guid checkoutId,
         Guid actorUserId,
         string body,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// یادداشت را طبق قاعدهٔ نویسنده/قفل مشاهده soft-delete می‌کند.
+    /// </summary>
+    Task DeleteNoteAsync(
+        Guid checkoutId,
+        Guid noteId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// مشاهدهٔ Admin از جزئیات سفارش را برای قفل حذف یادداشت ثبت می‌کند.
+    /// </summary>
+    Task RecordAdminViewAsync(
+        Guid checkoutId,
+        Guid viewerUserId,
         CancellationToken cancellationToken);
 }
 
@@ -164,7 +182,8 @@ public sealed record CheckoutOperationalNoteSnapshot(
     Guid CheckoutId,
     string Body,
     Guid CreatedByUserId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    bool CanDelete);
 
 /// <summary>اثبات خرید پرداخت‌شده که فقط از دادهٔ مالک Order ساخته می‌شود.</summary>
 public sealed record OrderPurchaseVerification(bool IsVerified, Guid? SellerOrderId)

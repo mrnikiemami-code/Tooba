@@ -27,7 +27,15 @@ test("orders grid order reference is non-navigation text; View is canonical", ()
   assert.match(orderColumnsBlock, /truncatedCell\(row\.reference/);
   assert.doesNotMatch(orderColumnsBlock, /href=\{`\/admin\/orders\/\$\{row\.checkoutId\}`\}/);
   assert.doesNotMatch(orderColumnsBlock, /<Link[\s\S]*row\.reference/);
+  assert.doesNotMatch(orderColumnsBlock, /maxWidth:/);
   assert.match(screens, /orderRowActions[\s\S]*id:\s*"view"[\s\S]*href:\s*\(row\)\s*=>\s*`\/admin\/orders\/\$\{row\.checkoutId\}`/);
+});
+
+test("operations menu uses portal and human empty label", () => {
+  const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
+  assert.match(menu, /createPortal/);
+  assert.match(menu, /هیچ عملیاتی مجاز نیست/);
+  assert.doesNotMatch(menu, /عملیات مجازی نیست/);
 });
 
 test("order detail header exposes عملیات سفارش menu", () => {

@@ -41,6 +41,7 @@ import {
   addAdminOrderNote,
   adminOrderInvoiceUrl,
   adminOrderReceiptUrl,
+  deleteAdminOrderNote,
   loadAdminOrderNotes,
   loadAdminOrderOperationalHistory,
   openAdminOrderHtmlDocument,
@@ -606,9 +607,25 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                   {notes.map((note) => (
                     <li key={note.noteId} className="rounded-lg border border-gray-100 bg-gray-50/50 p-2.5 text-sm">
                       <p className="whitespace-pre-wrap text-gray-900">{note.body}</p>
-                      <div className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-gray-500">
+                      <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
                         <span>{note.actorDisplayFa}</span>
                         <span dir="ltr">{formatJalaliDateTime(note.createdAt, "fa")}</span>
+                        {note.canDelete ? (
+                          <button
+                            type="button"
+                            className="text-red-600 hover:underline"
+                            data-testid={`admin-order-note-delete-${note.noteId}`}
+                            onClick={() => {
+                              if (!window.confirm("این یادداشت حذف شود؟")) return;
+                              void deleteAdminOrderNote(checkoutId, note.noteId).then((res) => {
+                                if (res.state === "ok") refreshNotes();
+                                else setNoteError(res.message || "حذف یادداشت ممکن نیست.");
+                              });
+                            }}
+                          >
+                            حذف
+                          </button>
+                        ) : null}
                       </div>
                     </li>
                   ))}

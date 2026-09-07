@@ -53,6 +53,9 @@ public sealed class OrderDbContext : DbContext
     /// </summary>
     public DbSet<CheckoutOperationalNote> OperationalNotes => Set<CheckoutOperationalNote>();
 
+    /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
+    public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,7 +135,19 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Body).HasMaxLength(CheckoutOperationalNote.MaxBodyLength).IsRequired();
             entity.Property(x => x.CreatedByUserId).IsRequired();
             entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.DeletedAt);
+            entity.Property(x => x.DeletedByUserId);
             entity.HasIndex(x => new { x.CheckoutId, x.CreatedAt });
+        });
+        modelBuilder.Entity<CheckoutAdminViewAck>(entity =>
+        {
+            entity.ToTable("checkout_admin_view_acks");
+            entity.HasKey(x => x.AckId);
+            entity.Property(x => x.AckId).ValueGeneratedNever();
+            entity.Property(x => x.CheckoutId).IsRequired();
+            entity.Property(x => x.ViewerUserId).IsRequired();
+            entity.Property(x => x.ViewedAt).IsRequired();
+            entity.HasIndex(x => new { x.CheckoutId, x.ViewedAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

@@ -70,7 +70,8 @@ public sealed class AdminOrderCompletenessComposer
     {
         await EnsurePermissionAsync(actorUserId, "order.view", cancellationToken);
         await EnsureCheckoutExistsAsync(checkoutId, cancellationToken);
-        var notes = await _checkout.ListNotesAsync(checkoutId, 50, cancellationToken);
+        await _checkout.RecordAdminViewAsync(checkoutId, actorUserId, cancellationToken);
+        var notes = await _checkout.ListNotesAsync(checkoutId, actorUserId, 50, cancellationToken);
         var labels = await ResolveActorLabelsAsync(notes.Select(x => (Guid?)x.CreatedByUserId), cancellationToken);
         return notes.Select(n => MapNote(n, labels)).ToList();
     }
@@ -96,6 +97,25 @@ public sealed class AdminOrderCompletenessComposer
         }
     }
 
+    /// <summary>یادداشت را طبق قاعدهٔ نویسنده/قفل مشاهده حذف می‌کند (order.handle).</summary>
+    public async Task DeleteNoteAsync(
+        Guid checkoutId,
+        Guid noteId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await EnsurePermissionAsync(actorUserId, "order.handle", cancellationToken);
+        await EnsureCheckoutExistsAsync(checkoutId, cancellationToken);
+        try
+        {
+            await _checkout.DeleteNoteAsync(checkoutId, noteId, actorUserId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "order.note.delete.forbidden");
+        }
+    }
+
     /// <summary>تاریخچهٔ عملیاتی ترکیبی را صفحه می‌کند (order.view).</summary>
     public async Task<AdminOperationalHistoryPage> ListOperationalHistoryAsync(
         Guid checkoutId,
@@ -105,6 +125,7 @@ public sealed class AdminOrderCompletenessComposer
         CancellationToken cancellationToken)
     {
         await EnsurePermissionAsync(actorUserId, "order.view", cancellationToken);
+        await _checkout.RecordAdminViewAsync(checkoutId, actorUserId, cancellationToken);
         var group = await LoadCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
 
@@ -426,7 +447,7 @@ public sealed class AdminOrderCompletenessComposer
             }
         }
 
-        var notes = await _checkout.ListNotesAsync(group.CheckoutId, 50, cancellationToken);
+        var notes = await _checkout.ListNotesAsync(group.CheckoutId, Guid.Empty, 50, cancellationToken);
         foreach (var note in notes)
         {
             entries.Add(Draft(
@@ -493,7 +514,8 @@ public sealed class AdminOrderCompletenessComposer
             label.Kind,
             label.DisplayName,
             label.DisplayFa,
-            label.DisplayEn);
+            label.DisplayEn,
+            note.CanDelete);
     }
 
     private static AdminOperationalHistoryEntry ToEntry(

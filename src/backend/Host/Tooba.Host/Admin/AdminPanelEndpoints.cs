@@ -82,9 +82,9 @@ public static class AdminPanelEndpoints
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
+            var actor = await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            var page = await composer.GetOrderAsync(checkoutId, cancellationToken);
+            var page = await composer.GetOrderAsync(checkoutId, actor, cancellationToken);
             return page is null
                 ? Results.Json(new { title = "سفارش پیدا نشد.", errorCode = "admin.order.missing" }, statusCode: 404)
                 : Results.Json(page);

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, MoreHorizontal } from "lucide-react";
 import {
   executeAdminOrderOperation,
@@ -36,7 +37,7 @@ function promptForExtras(action: AdminOrderOperationAction): {
   return {};
 }
 
-/** منوی یک‌دکمه‌ای عملیات سفارش — فقط actions برگشتی از API. */
+/** منوی یک‌دکمه‌ای عملیات سفارش — فقط actions برگشتی از API؛ portal برای جلوگیری از clip در Grid. */
 export function AdminOrderOperationsMenu({
   checkoutId,
   label = "عملیات",
@@ -49,7 +50,10 @@ export function AdminOrderOperationsMenu({
   const [pending, setPending] = useState(false);
   const [actions, setActions] = useState<AdminOrderOperationAction[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; minWidth: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -69,17 +73,42 @@ export function AdminOrderOperationsMenu({
     setActions(result.data.actions);
   }, [checkoutId]);
 
+  const updatePosition = useCallback(() => {
+    const btn = buttonRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const minWidth = Math.max(rect.width, 192);
+    const preferredLeft = rect.right - minWidth;
+    const left = Math.min(Math.max(8, preferredLeft), window.innerWidth - minWidth - 8);
+    const top = Math.min(rect.bottom + 4, window.innerHeight - 8);
+    setMenuPos({ top, left, minWidth });
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     void refresh();
   }, [open, refresh]);
 
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
   useEffect(() => {
     if (!open) return;
     function onDocClick(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -119,31 +148,19 @@ export function AdminOrderOperationsMenu({
     ? "inline-flex h-8 items-center gap-1 rounded-full border border-border bg-surface px-2.5 text-xs font-bold text-muted hover:bg-secondary hover:text-foreground disabled:opacity-50"
     : "inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50";
 
-  return (
-    <div ref={rootRef} className="relative inline-flex" data-testid={testId ?? `admin-order-ops-${checkoutId}`}>
-      <button
-        type="button"
-        className={buttonClass}
-        disabled={pending}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        onClick={() => setOpen((value) => !value)}
-        data-testid={`admin-order-ops-trigger-${checkoutId}`}
-      >
-        {compact ? <MoreHorizontal className="size-3.5" aria-hidden /> : null}
-        <span>{label}</span>
-        {!compact ? <ChevronDown className="size-3.5" aria-hidden /> : null}
-      </button>
-      {open ? (
+  const menu = open && menuPos && typeof document !== "undefined"
+    ? createPortal(
         <div
+          ref={menuRef}
           role="menu"
-          className="absolute end-0 top-full z-40 mt-1 min-w-[12rem] rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+          className="fixed z-[80] rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+          style={{ top: menuPos.top, left: menuPos.left, minWidth: menuPos.minWidth }}
           data-testid={`admin-order-ops-menu-${checkoutId}`}
         >
           {loading ? (
             <p className="px-3 py-2 text-xs text-gray-500">در حال بارگذاری…</p>
           ) : actions.length === 0 ? (
-            <p className="px-3 py-2 text-xs text-gray-500">عملیات مجازی نیست</p>
+            <p className="px-3 py-2 text-xs text-gray-500">هیچ عملیاتی مجاز نیست</p>
           ) : (
             actions.map((action) => (
               <button
@@ -160,8 +177,28 @@ export function AdminOrderOperationsMenu({
             ))
           )}
           {error ? <p className="border-t border-gray-100 px-3 py-2 text-xs text-danger">{error}</p> : null}
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div ref={rootRef} className="relative inline-flex" data-testid={testId ?? `admin-order-ops-${checkoutId}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={buttonClass}
+        disabled={pending}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((value) => !value)}
+        data-testid={`admin-order-ops-trigger-${checkoutId}`}
+      >
+        {compact ? <MoreHorizontal className="size-3.5" aria-hidden /> : null}
+        <span>{label}</span>
+        {!compact ? <ChevronDown className="size-3.5" aria-hidden /> : null}
+      </button>
+      {menu}
     </div>
   );
 }

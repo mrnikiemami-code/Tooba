@@ -278,6 +278,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     /// <inheritdoc />
     public async Task<IReadOnlyList<CheckoutOperationalNoteSnapshot>> ListNotesAsync(
         Guid checkoutId,
+        Guid viewerUserId,
         int take,
         CancellationToken cancellationToken)
     {
@@ -289,18 +290,36 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             return Array.Empty<CheckoutOperationalNoteSnapshot>();
         }
 
-        return await _db.OperationalNotes.AsNoTracking()
-            .Where(x => x.CheckoutId == checkoutId)
+        var notes = await _db.OperationalNotes.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId && x.DeletedAt == null)
             .OrderByDescending(x => x.CreatedAt)
             .ThenByDescending(x => x.NoteId)
             .Take(bound)
-            .Select(x => new CheckoutOperationalNoteSnapshot(
-                x.NoteId,
-                x.CheckoutId,
-                x.Body,
-                x.CreatedByUserId,
-                x.CreatedAt))
             .ToListAsync(cancellationToken);
+        if (notes.Count == 0)
+        {
+            return Array.Empty<CheckoutOperationalNoteSnapshot>();
+        }
+
+        var earliest = notes.Min(x => x.CreatedAt);
+        var otherViews = await _db.AdminViewAcks.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId && x.ViewedAt >= earliest)
+            .Select(x => new { x.ViewerUserId, x.ViewedAt })
+            .ToListAsync(cancellationToken);
+
+        return notes.Select(note =>
+        {
+            var lockedByOther = otherViews.Any(v =>
+                v.ViewerUserId != note.CreatedByUserId && v.ViewedAt > note.CreatedAt);
+            var canDelete = note.CreatedByUserId == viewerUserId && !lockedByOther;
+            return new CheckoutOperationalNoteSnapshot(
+                note.NoteId,
+                note.CheckoutId,
+                note.Body,
+                note.CreatedByUserId,
+                note.CreatedAt,
+                canDelete);
+        }).ToList();
     }
 
     /// <inheritdoc />
@@ -326,7 +345,52 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             note.CheckoutId,
             note.Body,
             note.CreatedByUserId,
-            note.CreatedAt);
+            note.CreatedAt,
+            CanDelete: true);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteNoteAsync(
+        Guid checkoutId,
+        Guid noteId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var note = await _db.OperationalNotes
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId && x.NoteId == noteId, cancellationToken)
+            ?? throw new InvalidOperationException("یادداشت پیدا نشد.");
+
+        var lockedByOther = await _db.AdminViewAcks.AsNoTracking()
+            .AnyAsync(
+                x => x.CheckoutId == checkoutId
+                     && x.ViewerUserId != note.CreatedByUserId
+                     && x.ViewedAt > note.CreatedAt,
+                cancellationToken);
+        if (lockedByOther)
+        {
+            throw new InvalidOperationException("حذف یادداشت پس از مشاهدهٔ کاربر دیگر مجاز نیست.");
+        }
+
+        note.SoftDelete(actorUserId, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RecordAdminViewAsync(
+        Guid checkoutId,
+        Guid viewerUserId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await _db.Checkouts.AsNoTracking()
+            .AnyAsync(x => x.CheckoutId == checkoutId, cancellationToken);
+        if (!exists || viewerUserId == Guid.Empty)
+        {
+            return;
+        }
+
+        _db.AdminViewAcks.Add(CheckoutAdminViewAck.Create(checkoutId, viewerUserId, DateTimeOffset.UtcNow));
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>

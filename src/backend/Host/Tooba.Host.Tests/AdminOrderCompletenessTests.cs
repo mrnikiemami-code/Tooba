@@ -174,15 +174,19 @@ public sealed class AdminOrderCompletenessTests
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Infrastructure", "CheckoutDirectory.cs"));
         var contracts = File.ReadAllText(Path.Combine(
             FindRepoRoot(), "src", "backend", "Modules", "Order", "Tooba.Order.Application", "OrderContracts.cs"));
-        Assert.Equal(5, Count(endpoints, "AdminPanelAccess.RequireAuthorizedAsync"));
+        Assert.Equal(6, Count(endpoints, "AdminPanelAccess.RequireAuthorizedAsync"));
         Assert.Contains("/notes", endpoints, StringComparison.Ordinal);
+        Assert.Contains("DeleteNoteAsync", endpoints, StringComparison.Ordinal);
         Assert.Contains("/operational-history", endpoints, StringComparison.Ordinal);
         Assert.Contains("/invoice.html", endpoints, StringComparison.Ordinal);
         Assert.Contains("/receipt.html", endpoints, StringComparison.Ordinal);
         Assert.Contains("ListNotesAsync", contracts, StringComparison.Ordinal);
         Assert.Contains("AddNoteAsync", contracts, StringComparison.Ordinal);
+        Assert.Contains("DeleteNoteAsync", contracts, StringComparison.Ordinal);
+        Assert.Contains("RecordAdminViewAsync", contracts, StringComparison.Ordinal);
         Assert.Contains("OperationalNotes", directory, StringComparison.Ordinal);
         Assert.Contains("CheckoutOperationalNote.Create", directory, StringComparison.Ordinal);
+        Assert.Contains("CanDelete", contracts, StringComparison.Ordinal);
     }
 
     private static OrderDbContext CreateOrderDb()
