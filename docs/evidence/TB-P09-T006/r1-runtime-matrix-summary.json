@@ -1,0 +1,84 @@
+﻿{
+    "default":  {
+                    "label":  "7 روز پس از تحویل",
+                    "checkoutId":  "01a07bcf-f2e2-7000-9065-22c6dc804501",
+                    "returnable":  true,
+                    "lineId":  "01a07bcf-f32a-7000-806e-a1723b32740b",
+                    "window":  7
+                },
+    "custom":  {
+                   "label":  "14 روز پس از تحویل",
+                   "checkoutId":  "01a07bcf-f87a-7000-a266-b78f5238fa3d",
+                   "returnable":  true,
+                   "lineId":  "01a07bcf-f881-7000-b417-a163c9672fb3",
+                   "window":  14
+               },
+    "non":  {
+                "status":  "non_returnable",
+                "label":  "غیرقابل مرجوعی",
+                "lineId":  "01a07bcf-fc2e-7000-bba8-243d9d00b919",
+                "deadline":  "غیرقابل مرجوعی",
+                "returnable":  false,
+                "checkoutId":  "01a07bcf-fc27-7000-aa1b-b254caf92a84"
+            },
+    "immut":  {
+                  "before":  {
+                                 "label":  "7 روز پس از تحویل",
+                                 "win":  7,
+                                 "ret":  true
+                             },
+                  "offerChangedTo":  "Custom 21",
+                  "after":  {
+                                "label":  "7 روز پس از تحویل",
+                                "win":  7,
+                                "ret":  true
+                            }
+              },
+    "post":  {
+                 "label":  "پست",
+                 "shipmentId":  "1562e96c-5ed3-4bd6-b655-a90708f6d6ac",
+                 "method":  "post",
+                 "next":  "cancel_shipment,assign_tracking",
+                 "status":  "Created",
+                 "checkoutId":  "01a07bd0-002e-7000-b406-1bc30e846f71"
+             },
+    "tipax":  {
+                  "label":  null,
+                  "shipmentId":  null,
+                  "method":  null,
+                  "next":  "cancel",
+                  "status":  null,
+                  "checkoutId":  "01a07bd0-056d-7000-ad74-497e8cabf340"
+              },
+    "courier":  {
+                    "label":  null,
+                    "shipmentId":  null,
+                    "method":  null,
+                    "next":  "cancel",
+                    "status":  null,
+                    "checkoutId":  "01a07bd0-0a51-7000-9b77-b004d6e5011a"
+                },
+    "split":  {
+                  "shipB":  null,
+                  "lineId":  "01a07bd0-0f5b-7000-af38-6c5381f3c3b2",
+                  "afterA":  {
+                                 "remain":  "14 روز پس از تحویل",
+                                 "status":  "before_delivery",
+                                 "deadline":  "14 روز پس از تحویل"
+                             },
+                  "checkoutId":  "01a07bd0-0f56-7000-9bc6-1b84d4494858",
+                  "shipA":  null,
+                  "eligA":  "[{\"sellerOrderId\":\"01a07bd0-0f57-7000-8f4b-f9b740274d0f\",\"checkoutId\":\"01a07bd0-0f56-7000-9bc6-1b84d4494858\",\"eligible\":false,\"reasonCode\":\"not_delivered\",\"lines\":[]}]",
+                  "eligB":  "[{\"sellerOrderId\":\"01a07bd0-0f57-7000-8f4b-f9b740274d0f\",\"checkoutId\":\"01a07bd0-0f56-7000-9bc6-1b84d4494858\",\"eligible\":false,\"reasonCode\":\"not_delivered\",\"lines\":[]}]",
+                  "afterB":  {
+                                 "remain":  "14 روز پس از تحویل",
+                                 "status":  "before_delivery",
+                                 "deadline":  "14 روز پس از تحویل"
+                             }
+              },
+    "disabled_attempt":  {
+                             "ok":  false,
+                             "body":  "{\"title\":\"این عملیات در وضعیت فعلی سفارش مجاز نیست.\",\"errorCode\":\"order.operation.invalid\",\"detail\":\"این عملیات در وضعیت فعلی سفارش مجاز نیست.\"}",
+                             "status":  400
+                         }
+}

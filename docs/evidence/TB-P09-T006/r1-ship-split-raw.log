@@ -1,0 +1,25 @@
+﻿
+=== TIPAX ===
+PACK_BEFORE cid=01a07bd0-fa34-7000-a91f-6f053183d80a codes=[cancel,mark_processing,mark_packed] fst=ReadyToFulfill packed=0
+mark_processing ok=True 200 {"fulfillmentId":"4ffa88cd-05ab-4789-ae7a-8a47e247cbd5","sellerOrderId":"01a07bd0-fa35-7000-9b04-bd3fa2f1262b","checkout
+mark_packed ok=True 200 {"fulfillmentId":"4ffa88cd-05ab-4789-ae7a-8a47e247cbd5","sellerOrderId":"01a07bd0-fa35-7000-9b04-bd3fa2f1262b","checkoutId":"01a07bd0-fa34-7000-a91f-6f053183d80a","sellerPartyId":"01a030d1-40cb-7000-8
+SHIP tipax ok=True status=200 body={"fulfillmentId":"4ffa88cd-05ab-4789-ae7a-8a47e247cbd5","sellerOrderId":"01a07bd0-fa35-7000-9b04-bd3fa2f1262b","checkoutId":"01a07bd0-fa34-7000-a91f-6f053183d80a","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","status":"Packed","recipientName":"R1 TIPAX2","contactMobile":"09121234567","provinceName":"تهران","cityName":"تهران","postalAddress
+TIPAX shipId=e1a487d9-840e-48dc-b5ce-36eb755628f8 status=Created method=tipax/تیپاکس next=[cancel_shipment,assign_tracking]
+=== COURIER ===
+PACK_BEFORE cid=01a07bd0-ff78-7000-8332-ad0d5e1d13a0 codes=[cancel] fst= packed=
+mark_packed ok=False 400 {"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+SHIP snapp_courier ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+COURIER shipId= status= method=/ next=[cancel]
+=== SPLIT ===
+PACK_BEFORE cid=01a07bd1-03f4-7000-8b35-5306591ec94a codes=[cancel] fst= packed=
+mark_packed ok=False 400 {"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+SHIP store_courier ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+SHIP store_courier ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+deliverA ok=False
+AFTER_A deadline=14 روز پس از تحویل remain=14 روز پس از تحویل status=before_delivery
+ELIG_A [{"sellerOrderId":"01a07bd1-03f5-7000-9f48-6dbdabbea2da","checkoutId":"01a07bd1-03f4-7000-8b35-5306591ec94a","eligible":false,"reasonCode":"not_paid","lines":[]}]
+deliverB ok=False
+AFTER_B deadline=14 روز پس از تحویل remain=14 روز پس از تحویل status=before_delivery
+ELIG_B [{"sellerOrderId":"01a07bd1-03f5-7000-9f48-6dbdabbea2da","checkoutId":"01a07bd1-03f4-7000-8b35-5306591ec94a","eligible":false,"reasonCode":"not_delivered","lines":[]}]
+SHIP_A= SHIP_B= CID=01a07bd1-03f4-7000-8b35-5306591ec94a
+DONE

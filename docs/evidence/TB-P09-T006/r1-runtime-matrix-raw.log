@@ -1,0 +1,30 @@
+﻿
+2026-09-07T15:50:20.1692593+03:30 === TB-P09-T006-R1 RUNTIME START ===
+2026-09-07T15:50:20.1749642+03:30 PATCH default offer -> Default
+2026-09-07T15:50:20.3776843+03:30 PATCH custom offer -> Custom 14
+2026-09-07T15:50:20.4215728+03:30 PATCH non offer -> NonReturnable
+2026-09-07T15:50:20.4665842+03:30 override accept custom=True non=True default=True customRaw={"offerId":"01a04402-7985-7000-a17c-ec4c26159857","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","sellerDisplayN
+2026-09-07T15:50:20.4972286+03:30 GOVERNANCE invalid99 ok=False status=400 body={"title":"مهلت مرجوعی باید بین 1 و 30 روز باشد.","errorCode":"seller.offer.return_policy.rejected"}
+2026-09-07T15:50:20.4988210+03:30 GOVERNANCE invalid0 ok=False status=400 body={"title":"مهلت مرجوعی باید بین 1 و 30 روز باشد.","errorCode":"seller.offer.return_policy.rejected"}
+2026-09-07T15:50:22.1825680+03:30 A checkout=01a07bcf-f2e2-7000-9065-22c6dc804501 line=01a07bcf-f32a-7000-806e-a1723b32740b ret=True win=7 label=7 روز پس از تحویل deadline=7 روز پس از تحویل
+2026-09-07T15:50:23.1384954+03:30 B checkout=01a07bcf-f87a-7000-a266-b78f5238fa3d line=01a07bcf-f881-7000-b417-a163c9672fb3 ret=True win=14 label=14 روز پس از تحویل
+2026-09-07T15:50:24.0225488+03:30 C checkout=01a07bcf-fc27-7000-aa1b-b254caf92a84 line=01a07bcf-fc2e-7000-bba8-243d9d00b919 ret=False win=0 label=غیرقابل مرجوعی deadline=غیرقابل مرجوعی status=non_returnable
+2026-09-07T15:50:24.1064848+03:30 D IMMUT before win=7 label=7 روز پس از تحویل afterOfferChange win=7 label=7 روز پس از تحویل ret=True
+2026-09-07T15:50:24.1618581+03:30 METHODS enabled=[post,tipax,snapp_courier,store_courier,in_person]
+2026-09-07T15:50:25.4086261+03:30 POST create ok=True status=200 body={"fulfillmentId":"ebe83f75-ecd8-43b9-b1bd-bfb66be91851","sellerOrderId":"01a07bd0-002f-7000-a7ba-5e164db63678","checkoutId":"01a07bd0-002e-7000-b406-1bc30e846f71","sellerPartyId":"01a030d1-40cb-7000-8abe-6d31739956c5","status":"Packed","recipientName":"R1 POST","contactMobile":"09121234567","provinceName":"تهران","cityName":"تهران","postalAddress":"آدرس R1 POST","postalCode":"1234567890","shipping
+2026-09-07T15:50:25.4910985+03:30 POST shipId=1562e96c-5ed3-4bd6-b655-a90708f6d6ac status=Created method=post/پست next=[cancel_shipment,assign_tracking]
+2026-09-07T15:50:26.6628258+03:30 TIPAX create ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+2026-09-07T15:50:26.7510426+03:30 TIPAX shipId= status= method=/ next=[cancel]
+2026-09-07T15:50:27.9919200+03:30 COURIER create ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+2026-09-07T15:50:28.0543080+03:30 COURIER shipId= status= method=/ next=[cancel]
+2026-09-07T15:50:29.1490146+03:30 SPLIT createA ok=False createB ok=False
+2026-09-07T15:50:29.2706370+03:30 SPLIT deliverA ok=False status=400
+2026-09-07T15:50:29.3341741+03:30 SPLIT afterA deadline=14 روز پس از تحویل remain=14 روز پس از تحویل status=before_delivery
+2026-09-07T15:50:29.3351808+03:30 SPLIT eligA=[{"sellerOrderId":"01a07bd0-0f57-7000-8f4b-f9b740274d0f","checkoutId":"01a07bd0-0f56-7000-9bc6-1b84d4494858","eligible":false,"reasonCode":"not_delivered","lines":[]}]
+2026-09-07T15:50:31.5350643+03:30 SPLIT deliverB ok=False
+2026-09-07T15:50:31.5808923+03:30 SPLIT afterB deadline=14 روز پس از تحویل remain=14 روز پس از تحویل status=before_delivery
+2026-09-07T15:50:31.5818955+03:30 SPLIT eligB=[{"sellerOrderId":"01a07bd0-0f57-7000-8f4b-f9b740274d0f","checkoutId":"01a07bd0-0f56-7000-9bc6-1b84d4494858","eligible":false,"reasonCode":"not_delivered","lines":[]}]
+2026-09-07T15:50:31.6079757+03:30 DISABLED fake code ok=False status=400 body={"title":"این عملیات در وضعیت فعلی سفارش مجاز نیست.","errorCode":"order.operation.invalid","detail":"این عملیات در وضعیت فعلی سفارش مجاز نیست."}
+2026-09-07T15:50:31.6105252+03:30 HUMAN_UI offerFa=True shipFa=True methodsRaw has labels
+2026-09-07T15:50:31.6119036+03:30 UI_PRESERVATION markers=True
+2026-09-07T15:50:31.6132063+03:30 === TB-P09-T006-R1 RUNTIME END ===
