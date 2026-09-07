@@ -1,0 +1,49 @@
+﻿{
+    "checkoutId":  "01a07bd2-5ef4-7000-b770-a2173d8ae25c",
+    "financialEvents":  [
+                            {
+                                "eventType":  "CustomerReceipt",
+                                "amount":  13625000.0000,
+                                "description":  "دریافت از مشتری",
+                                "status":  "Succeeded"
+                            }
+                        ],
+    "operationalSample":  [
+                              {
+                                  "kind":  "fulfillment_packed",
+                                  "labelFa":  "بسته‌بندی",
+                                  "summaryFa":  "فروشگاه آرمان — ۵ قلم",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              },
+                              {
+                                  "kind":  "shipment_delivered",
+                                  "labelFa":  "تحویل",
+                                  "summaryFa":  "کالای سفارش — تعداد ۳",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              },
+                              {
+                                  "kind":  "shipment_dispatched",
+                                  "labelFa":  "ارسال مرسوله",
+                                  "summaryFa":  "کد رهگیری TRK-B-R1",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              },
+                              {
+                                  "kind":  "tracking_assigned",
+                                  "labelFa":  "ثبت رهگیری",
+                                  "summaryFa":  "کد رهگیری TRK-B-R1",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              },
+                              {
+                                  "kind":  "shipment_delivered",
+                                  "labelFa":  "تحویل",
+                                  "summaryFa":  "کالای سفارش — تعداد ۲",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              },
+                              {
+                                  "kind":  "shipment_dispatched",
+                                  "labelFa":  "ارسال مرسوله",
+                                  "summaryFa":  "کد رهگیری TRK-A-R1",
+                                  "actorDisplayFa":  "توسط سیستم"
+                              }
+                          ]
+}
