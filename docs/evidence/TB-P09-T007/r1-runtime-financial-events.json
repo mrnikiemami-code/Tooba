@@ -1,10 +1,10 @@
 ﻿{
-    "occurredAt":  "2026-09-07T12:14:41.792895+00:00",
+    "occurredAt":  "2026-09-07T12:24:42.727799+00:00",
     "eventType":  "CustomerReceipt",
-    "amount":  381500.0000,
+    "amount":  2725000.0000,
     "currency":  "IRR",
-    "partyDisplayName":  "R1-Custom14",
-    "reference":  "manual-confirm-07ecaa2134bd46258a71aba03a632d03",
+    "partyDisplayName":  "R1-Disable",
+    "reference":  "manual-confirm-23dffa9766e846b698c0dfd34cf8db87",
     "paymentMethod":  "کارت به کارت",
     "status":  "Succeeded",
     "description":  "دریافت از مشتری"
