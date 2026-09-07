@@ -9,6 +9,7 @@ using Tooba.Host.Seller;
 using Tooba.Inventory.Domain;
 using Tooba.Inventory.Infrastructure;
 using Tooba.Inventory.Infrastructure.Persistence;
+using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure;
 using Tooba.Offer.Infrastructure.Persistence;
@@ -136,7 +137,8 @@ public sealed class SellerOfferSaleWriteTests : IAsyncLifetime
             taxDir,
             tax,
             new FakeAccessControlDirectory(),
-            catalogDir);
+            catalogDir,
+            new ReturnPolicyResolver(new ReturnPolicyOptions()));
 
         var names = new Dictionary<string, string> { ["fa-IR"] = "کالای فروش", ["en-US"] = "Sale item" };
         var l1 = await catalogDir.CreateCategoryAsync(

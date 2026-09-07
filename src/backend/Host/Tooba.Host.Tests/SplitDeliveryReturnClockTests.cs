@@ -44,14 +44,22 @@ public sealed class SplitDeliveryReturnClockTests
     {
         var lineId = Guid.NewGuid();
         var deliveredAt = DateTimeOffset.UtcNow.AddDays(-1);
+        var later = deliveredAt.AddHours(6);
         var fulfillment = new FulfillmentReturnEligibilitySnapshot(
             Guid.NewGuid(),
-            new Dictionary<Guid, int> { [lineId] = 2 },
-            deliveredAt,
-            new Dictionary<Guid, DateTimeOffset> { [lineId] = deliveredAt });
+            new Dictionary<Guid, int> { [lineId] = 5 },
+            later,
+            new Dictionary<Guid, DateTimeOffset> { [lineId] = deliveredAt },
+            [
+                new LineDeliverySlice(lineId, 2, deliveredAt),
+                new LineDeliverySlice(lineId, 3, later),
+            ]);
 
-        Assert.Equal(2, fulfillment.DeliveredQuantities[lineId]);
+        Assert.Equal(5, fulfillment.DeliveredQuantities[lineId]);
         Assert.Equal(deliveredAt, fulfillment.LineDeliveredAt![lineId]);
+        Assert.Equal(2, fulfillment.DeliverySlices!.Count);
+        Assert.Equal(3, fulfillment.DeliverySlices![1].Quantity);
+        Assert.Equal(later, fulfillment.DeliverySlices![1].DeliveredAt);
     }
 
     [Fact]

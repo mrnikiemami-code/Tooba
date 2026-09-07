@@ -66,7 +66,7 @@ public sealed class SellerPanelComposer
         TaxDbContext tax,
         IAccessControlDirectory access,
         ICatalogLookupGateway catalogLookup,
-        IReturnPolicyResolver? returnPolicies = null)
+        IReturnPolicyResolver returnPolicies)
     {
         _offers = offers;
         _catalog = catalog;
@@ -81,7 +81,7 @@ public sealed class SellerPanelComposer
         _tax = tax;
         _access = access;
         _catalogLookup = catalogLookup;
-        _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
+        _returnPolicies = returnPolicies;
     }
 
     /// <summary>

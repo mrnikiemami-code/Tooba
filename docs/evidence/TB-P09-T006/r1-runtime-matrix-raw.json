@@ -1,0 +1,270 @@
+{
+  "createdAt": "2026-09-07T12:14:17.751Z",
+  "ok": true,
+  "steps": [
+    {
+      "governanceAllowed": 200,
+      "rejectLow": {
+        "status": 400,
+        "title": "مهلت مرجوعی باید بین 1 و 30 روز باشد."
+      },
+      "rejectHigh": {
+        "status": 400,
+        "title": "مهلت مرجوعی باید بین 1 و 30 روز باشد."
+      }
+    },
+    {
+      "A": {
+        "checkoutId": "01a07bca-6b18-7000-88dc-a489446a03dc",
+        "line": {
+          "sellerOrderId": "01a07bca-6b23-7000-adf1-dd188a36052f",
+          "fulfillmentId": "bfdf3c2a-6028-4dac-8c0e-2b89fd3919d7",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-6b6b-7000-9988-e08aa6fc5cb7",
+          "quantity": 1,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "7 روز پس از تحویل",
+          "returnRemainingDisplay": "7 روز پس از تحویل",
+          "returnStatusCode": "before_delivery",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        },
+        "status": 200
+      }
+    },
+    {
+      "B": {
+        "checkoutId": "01a07bca-73da-7000-ba92-7cf4d2c4e4bc",
+        "line": {
+          "sellerOrderId": "01a07bca-73db-7000-ba35-c12b2d38a4c6",
+          "fulfillmentId": "3d7746bc-e892-4c34-83be-69915609b8e9",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-73df-7000-a3bd-14fd099d7f50",
+          "quantity": 1,
+          "isReturnable": true,
+          "returnWindowDays": 14,
+          "returnPolicyLabel": "14 روز پس از تحویل",
+          "returnDeadlineDisplay": "14 روز پس از تحویل",
+          "returnRemainingDisplay": "14 روز پس از تحویل",
+          "returnStatusCode": "before_delivery",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        },
+        "status": 200
+      }
+    },
+    {
+      "C": {
+        "checkoutId": "01a07bca-7c93-7000-b674-ebeac4837774",
+        "line": {
+          "sellerOrderId": "01a07bca-7c94-7000-b0be-04fc23965285",
+          "fulfillmentId": "cb9fea57-69f4-4a65-b6cb-ae5de927cfea",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-7c9a-7000-b92a-75a95731daab",
+          "quantity": 1,
+          "isReturnable": false,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "غیرقابل مرجوعی",
+          "returnDeadlineDisplay": "غیرقابل مرجوعی",
+          "returnRemainingDisplay": "غیرقابل مرجوعی",
+          "returnStatusCode": "non_returnable",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        },
+        "status": 200
+      }
+    },
+    {
+      "D": {
+        "before": {
+          "sellerOrderId": "01a07bca-6b23-7000-adf1-dd188a36052f",
+          "fulfillmentId": "bfdf3c2a-6028-4dac-8c0e-2b89fd3919d7",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-6b6b-7000-9988-e08aa6fc5cb7",
+          "quantity": 1,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "7 روز پس از تحویل",
+          "returnRemainingDisplay": "7 روز پس از تحویل",
+          "returnStatusCode": "before_delivery",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        },
+        "afterOfferChange": {
+          "sellerOrderId": "01a07bca-6b23-7000-adf1-dd188a36052f",
+          "fulfillmentId": "bfdf3c2a-6028-4dac-8c0e-2b89fd3919d7",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-6b6b-7000-9988-e08aa6fc5cb7",
+          "quantity": 1,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "7 روز پس از تحویل",
+          "returnRemainingDisplay": "7 روز پس از تحویل",
+          "returnStatusCode": "before_delivery",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        },
+        "immutable": true
+      }
+    },
+    {
+      "splitOrder": {
+        "checkoutId": "01a07bca-857a-7000-8cd4-c70510cfc651",
+        "line": {
+          "sellerOrderId": "01a07bca-857b-7000-b76a-9f881c425918",
+          "fulfillmentId": "0dca0693-62fc-456f-8b66-f2561a4f459f",
+          "fulfillmentStatus": "ReadyToFulfill",
+          "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+          "quantity": 5,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "7 روز پس از تحویل",
+          "returnRemainingDisplay": "7 روز پس از تحویل",
+          "returnStatusCode": "before_delivery",
+          "quantityPacked": 0,
+          "quantityShipped": 0
+        }
+      }
+    },
+    {
+      "post": {
+        "status": 200,
+        "shipmentId": "de1360fb-f1ae-41fd-8151-35cd563a2fb2"
+      },
+      "tipax": {
+        "status": 200,
+        "shipmentId": "bbc9c7ab-15b1-4e3b-a816-d11961b49142",
+        "method": "tipax",
+        "label": "تیپاکس"
+      },
+      "courier": {
+        "status": 200,
+        "shipmentId": "7734c787-2a10-4596-a5e7-42c34a391548",
+        "method": "snapp_courier"
+      }
+    },
+    {
+      "afterDeliverTipaxOnly": {
+        "line": {
+          "sellerOrderId": "01a07bca-857b-7000-b76a-9f881c425918",
+          "fulfillmentId": "0dca0693-62fc-456f-8b66-f2561a4f459f",
+          "fulfillmentStatus": "InTransit",
+          "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+          "quantity": 5,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌نشده ۳: ساعت مرجوعی شروع نشده",
+          "returnRemainingDisplay": "تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌نشده ۳: قبل از تحویل",
+          "returnStatusCode": "partial_eligible",
+          "quantityPacked": 5,
+          "quantityShipped": 2
+        },
+        "shipments": [
+          {
+            "id": "de1360fb-f1ae-41fd-8151-35cd563a2fb2",
+            "status": "Created",
+            "method": "post",
+            "lines": [
+              {
+                "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+                "quantity": 1
+              }
+            ]
+          },
+          {
+            "id": "bbc9c7ab-15b1-4e3b-a816-d11961b49142",
+            "status": "Delivered",
+            "method": "tipax",
+            "lines": [
+              {
+                "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+                "quantity": 2
+              }
+            ]
+          },
+          {
+            "id": "7734c787-2a10-4596-a5e7-42c34a391548",
+            "status": "Created",
+            "method": "snapp_courier",
+            "lines": [
+              {
+                "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+                "quantity": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "afterDeliverCourier": {
+        "line": {
+          "sellerOrderId": "01a07bca-857b-7000-b76a-9f881c425918",
+          "fulfillmentId": "0dca0693-62fc-456f-8b66-f2561a4f459f",
+          "fulfillmentStatus": "InTransit",
+          "orderLineId": "01a07bca-8581-7000-8b43-aaf51bd32395",
+          "quantity": 5,
+          "isReturnable": true,
+          "returnWindowDays": 7,
+          "returnPolicyLabel": "7 روز پس از تحویل",
+          "returnDeadlineDisplay": "تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌شده ۲: تا ۱۴۰۵/۰۶/۲۳ · تحویل‌نشده ۱: ساعت مرجوعی شروع نشده",
+          "returnRemainingDisplay": "تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌شده ۲: ۷ روز باقی‌مانده · تحویل‌نشده ۱: قبل از تحویل",
+          "returnStatusCode": "partial_eligible",
+          "quantityPacked": 5,
+          "quantityShipped": 4
+        }
+      }
+    },
+    {
+      "disabledUnknown": {
+        "status": 400,
+        "title": "این عملیات در وضعیت فعلی سفارش مجاز نیست."
+      }
+    },
+    {
+      "shippingMethods": {
+        "status": 200,
+        "body": [
+          {
+            "code": "post",
+            "labelFa": "پست",
+            "providerKind": "post"
+          },
+          {
+            "code": "tipax",
+            "labelFa": "تیپاکس",
+            "providerKind": "tipax"
+          },
+          {
+            "code": "snapp_courier",
+            "labelFa": "اسنپ / پیک آنلاین",
+            "providerKind": "courier"
+          },
+          {
+            "code": "store_courier",
+            "labelFa": "پیک فروشگاه",
+            "providerKind": "store_courier"
+          },
+          {
+            "code": "in_person",
+            "labelFa": "تحویل حضوری",
+            "providerKind": "in_person"
+          }
+        ]
+      }
+    },
+    {
+      "feOrders": {
+        "status": 200,
+        "len": 18643
+      }
+    }
+  ],
+  "defects": []
+}

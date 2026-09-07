@@ -76,7 +76,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
 
         var lastDeliveredAt = fulfillment.LastDeliveredAt.Value;
         var alreadyReturned = await GetAlreadyReturnedQuantitiesAsync(sellerOrderId, cancellationToken);
-        var lines = BuildLines(orderContext, fulfillment, alreadyReturned, lastDeliveredAt, DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var lines = BuildLines(orderContext, fulfillment, alreadyReturned, lastDeliveredAt, now);
         var anyReturnablePolicy = orderContext.Lines.Any(x => x.IsReturnableSnapshot);
         if (!anyReturnablePolicy)
         {
@@ -90,13 +91,8 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 lines);
         }
 
-        var eligibleUntil = orderContext.Lines
-            .Where(x => x.IsReturnableSnapshot)
-            .Select(x => lastDeliveredAt.AddDays(x.ReturnWindowDaysSnapshot > 0 ? x.ReturnWindowDaysSnapshot : ReturnWindow.TotalDays))
-            .DefaultIfEmpty(lastDeliveredAt + ReturnWindow)
-            .Max();
+        var eligibleUntil = ComputeEligibleUntil(orderContext, fulfillment, lastDeliveredAt);
 
-        var now = DateTimeOffset.UtcNow;
         if (now > eligibleUntil)
         {
             return new ReturnEligibilityResult(
@@ -174,6 +170,63 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
             lastDeliveredAt,
             []);
 
+    private static DateTimeOffset ComputeEligibleUntil(
+        OrderReturnContextSnapshot orderContext,
+        FulfillmentReturnEligibilitySnapshot fulfillment,
+        DateTimeOffset lastDeliveredAt)
+    {
+        var deadlines = new List<DateTimeOffset>();
+        foreach (var line in orderContext.Lines.Where(x => x.IsReturnableSnapshot))
+        {
+            var windowDays = line.ReturnWindowDaysSnapshot > 0
+                ? line.ReturnWindowDaysSnapshot
+                : (int)ReturnWindow.TotalDays;
+            var slices = SlicesForLine(fulfillment, line.OrderLineId, lastDeliveredAt);
+            if (slices.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var slice in slices)
+            {
+                deadlines.Add(slice.DeliveredAt.AddDays(windowDays));
+            }
+        }
+
+        if (deadlines.Count == 0)
+        {
+            return lastDeliveredAt + ReturnWindow;
+        }
+
+        return deadlines.Max();
+    }
+
+    private static IReadOnlyList<LineDeliverySlice> SlicesForLine(
+        FulfillmentReturnEligibilitySnapshot fulfillment,
+        Guid orderLineId,
+        DateTimeOffset fallbackDeliveredAt)
+    {
+        if (fulfillment.DeliverySlices is { Count: > 0 } slices)
+        {
+            return slices.Where(x => x.OrderLineId == orderLineId && x.Quantity > 0).ToArray();
+        }
+
+        fulfillment.DeliveredQuantities.TryGetValue(orderLineId, out var delivered);
+        if (delivered <= 0)
+        {
+            return [];
+        }
+
+        var at = fallbackDeliveredAt;
+        if (fulfillment.LineDeliveredAt is not null
+            && fulfillment.LineDeliveredAt.TryGetValue(orderLineId, out var specific))
+        {
+            at = specific;
+        }
+
+        return [new LineDeliverySlice(orderLineId, delivered, at)];
+    }
+
     private static IReadOnlyList<ReturnLineEligibility> BuildLines(
         OrderReturnContextSnapshot orderContext,
         FulfillmentReturnEligibilitySnapshot fulfillment,
@@ -196,23 +249,20 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
             }
 
-            DateTimeOffset lineDeliveredAt = lastDeliveredAt;
-            if (fulfillment.LineDeliveredAt is not null
-                && fulfillment.LineDeliveredAt.TryGetValue(line.OrderLineId, out var specific))
-            {
-                lineDeliveredAt = specific;
-            }
-
             var windowDays = line.ReturnWindowDaysSnapshot > 0
                 ? line.ReturnWindowDaysSnapshot
                 : (int)ReturnWindow.TotalDays;
-            var lineUntil = lineDeliveredAt.AddDays(windowDays);
-            if (now > lineUntil)
+            var slices = SlicesForLine(fulfillment, line.OrderLineId, lastDeliveredAt);
+            var stillInWindow = 0;
+            foreach (var slice in slices)
             {
-                return new ReturnLineEligibility(line.OrderLineId, delivered, returned, 0);
+                if (now <= slice.DeliveredAt.AddDays(windowDays))
+                {
+                    stillInWindow += slice.Quantity;
+                }
             }
 
-            var remaining = Math.Max(0, delivered - returned);
+            var remaining = Math.Max(0, stillInWindow - returned);
             return new ReturnLineEligibility(line.OrderLineId, delivered, returned, remaining);
         }).ToArray();
     }

@@ -119,7 +119,9 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.CategoryIdSnapshot);
             entity.HasIndex(x => x.CategoryIdSnapshot);
             entity.Property(x => x.IsReturnableSnapshot).HasDefaultValue(true);
-            entity.Property(x => x.ReturnWindowDaysSnapshot).HasDefaultValue(7);
+            // Sentinel must not be 0: NonReturnable snapshots intentionally store WindowDays=0,
+            // and EF would otherwise omit 0 and let the DB DEFAULT 7 win.
+            entity.Property(x => x.ReturnWindowDaysSnapshot).HasDefaultValue(7).HasSentinel(-1);
             entity.Property(x => x.ReturnPolicySourceSnapshot).HasMaxLength(64);
             entity.Property(x => x.ReturnPolicyLabelSnapshot).HasMaxLength(128);
         });

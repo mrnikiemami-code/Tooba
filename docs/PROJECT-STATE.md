@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T006
+TB-P09-T006-R1
 ```
 
 Current Issued Task:
@@ -74,12 +74,13 @@ Current Issued Task:
 Current Repair Task:
 
 ```text
-(none)
+TB-P09-T006-R1
 ```
 
 Implemented Under Review:
 
 ```text
+TB-P09-T006-R1 — Offer Return Policy + Shipping Provider Forms Final Runtime Proof; USER_VISUAL_ACCEPTED=NO
 TB-P09-T006 — Offer return policy + dynamic shipping provider forms; USER_VISUAL_ACCEPTED=NO
 TB-P09-T005-R1 — Seller-Scoped Fulfillment Final Proof runtime matrix; USER_VISUAL_ACCEPTED=NO
 TB-P09-T005 — Seller-scoped line/quantity fulfillment ops, reverse rules, return deadline UI; USER_VISUAL_ACCEPTED=NO

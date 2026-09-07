@@ -181,21 +181,18 @@ public sealed class AdminPanelComposer
                     .SelectMany(s => s.Items)
                     .Where(i => i.OrderLineId == line.LineId)
                     .Sum(i => i.Quantity) ?? 0;
-                DateTimeOffset? lineDeliveredAt = null;
+                var deliverySlices = Array.Empty<(int Quantity, DateTimeOffset DeliveredAt)>();
                 if (fulfillment is not null)
                 {
-                    var deliveredShipments = fulfillment.Shipments
-                        .Where(s => s.DeliveredAt is not null
-                                    && s.Items.Any(i => i.OrderLineId == line.LineId))
-                        .Select(s => s.DeliveredAt!.Value)
-                        .ToList();
-                    if (deliveredShipments.Count > 0)
-                    {
-                        lineDeliveredAt = deliveredShipments.Min();
-                    }
+                    deliverySlices = fulfillment.Shipments
+                        .Where(s => s.DeliveredAt is not null)
+                        .SelectMany(s => s.Items
+                            .Where(i => i.OrderLineId == line.LineId && i.Quantity > 0)
+                            .Select(i => (i.Quantity, DeliveredAt: s.DeliveredAt!.Value)))
+                        .ToArray();
                 }
 
-                var returnUi = BuildReturnDeadlineUi(line, lineDeliveredAt);
+                var returnUi = BuildReturnDeadlineUi(line, deliverySlices);
                 return new AdminOrderLineView(
                     line.OfferId,
                     string.IsNullOrWhiteSpace(title) ? "کالای سفارش" : title,
@@ -464,7 +461,7 @@ public sealed class AdminPanelComposer
 
     private static (string DeadlineDisplay, string RemainingDisplay, string StatusCode) BuildReturnDeadlineUi(
         OrderLine line,
-        DateTimeOffset? deliveredAt)
+        IReadOnlyList<(int Quantity, DateTimeOffset DeliveredAt)> deliverySlices)
     {
         if (!line.IsReturnableSnapshot)
         {
@@ -476,20 +473,57 @@ public sealed class AdminPanelComposer
             ? $"{ToPersianDigits(windowDays)} روز پس از تحویل"
             : line.ReturnPolicyLabelSnapshot!;
 
-        if (deliveredAt is null)
+        var deliveredQty = deliverySlices.Sum(x => x.Quantity);
+        if (deliveredQty <= 0)
         {
             return (policyLabel, policyLabel, "before_delivery");
         }
 
-        var deadline = deliveredAt.Value.AddDays(windowDays);
-        var remainingDays = (int)Math.Ceiling((deadline - DateTimeOffset.UtcNow).TotalDays);
-        if (remainingDays < 0)
+        var undeliveredQty = Math.Max(0, line.Quantity - deliveredQty);
+        var now = DateTimeOffset.UtcNow;
+        var sliceParts = new List<string>();
+        var remainingParts = new List<string>();
+        var anyEligible = false;
+        var allExpired = true;
+        foreach (var slice in deliverySlices.OrderBy(x => x.DeliveredAt))
+        {
+            var deadline = slice.DeliveredAt.AddDays(windowDays);
+            var remainingDays = (int)Math.Ceiling((deadline - now).TotalDays);
+            if (remainingDays < 0)
+            {
+                sliceParts.Add($"تحویل‌شده {ToPersianDigits(slice.Quantity)}: مهلت تمام شده");
+                remainingParts.Add($"تحویل‌شده {ToPersianDigits(slice.Quantity)}: منقضی");
+            }
+            else
+            {
+                anyEligible = true;
+                allExpired = false;
+                var deadlineFa = FormatPersianDate(deadline);
+                sliceParts.Add($"تحویل‌شده {ToPersianDigits(slice.Quantity)}: تا {deadlineFa}");
+                remainingParts.Add($"تحویل‌شده {ToPersianDigits(slice.Quantity)}: {ToPersianDigits(remainingDays)} روز باقی‌مانده");
+            }
+        }
+
+        if (undeliveredQty > 0)
+        {
+            sliceParts.Add($"تحویل‌نشده {ToPersianDigits(undeliveredQty)}: ساعت مرجوعی شروع نشده");
+            remainingParts.Add($"تحویل‌نشده {ToPersianDigits(undeliveredQty)}: قبل از تحویل");
+            allExpired = false;
+        }
+
+        var deadlineDisplay = string.Join(" · ", sliceParts);
+        var remainingDisplay = string.Join(" · ", remainingParts);
+        if (undeliveredQty > 0)
+        {
+            return (deadlineDisplay, remainingDisplay, anyEligible ? "partial_eligible" : "before_delivery");
+        }
+
+        if (!anyEligible && allExpired)
         {
             return ("مهلت مرجوعی تمام شده", "مهلت مرجوعی تمام شده", "expired");
         }
 
-        var deadlineFa = FormatPersianDate(deadline);
-        return ($"تا {deadlineFa}", $"{ToPersianDigits(remainingDays)} روز باقی‌مانده", "eligible");
+        return (deadlineDisplay, remainingDisplay, "eligible");
     }
 
     private static string FormatPersianDate(DateTimeOffset value)

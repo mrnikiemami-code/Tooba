@@ -61,6 +61,9 @@ function returnSummary(line: AdminOrderLine): string {
   if (line.returnStatusCode === "expired") {
     return "مهلت مرجوعی تمام شده";
   }
+  if (line.returnStatusCode === "partial_eligible") {
+    return line.returnDeadlineDisplay || line.returnRemainingDisplay || "—";
+  }
   if (line.returnRemainingDisplay && line.returnDeadlineDisplay) {
     return `${line.returnDeadlineDisplay} · ${line.returnRemainingDisplay}`;
   }

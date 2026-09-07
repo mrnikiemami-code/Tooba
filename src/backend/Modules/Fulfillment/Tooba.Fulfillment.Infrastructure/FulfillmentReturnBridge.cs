@@ -37,6 +37,7 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
 
         var delivered = new Dictionary<Guid, int>();
         var lineDeliveredAt = new Dictionary<Guid, DateTimeOffset>();
+        var slices = new List<LineDeliverySlice>();
         foreach (var shipment in shipments)
         {
             if (shipment.DeliveredAt is null)
@@ -53,9 +54,10 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
                 delivered[item.OrderLineId] = delivered.TryGetValue(item.OrderLineId, out var qty)
                     ? qty + item.Quantity
                     : item.Quantity;
+                slices.Add(new LineDeliverySlice(item.OrderLineId, item.Quantity, deliveredAt));
                 if (!lineDeliveredAt.TryGetValue(item.OrderLineId, out var existing) || deliveredAt < existing)
                 {
-                    // ساعت مرجوعی هر خط از اولین تحویل همان خط شروع می‌شود؛ تعداد تحویل‌نشده ساعت ندارد.
+                    // اولین تحویل خط برای سازگاری؛ ساعت هر برش از DeliveredAt همان مرسوله است.
                     lineDeliveredAt[item.OrderLineId] = deliveredAt;
                 }
             }
@@ -65,6 +67,11 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
             ? null
             : lineDeliveredAt.Values.Max();
 
-        return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, delivered, lastDeliveredAt, lineDeliveredAt);
+        return new FulfillmentReturnEligibilitySnapshot(
+            sellerOrderId,
+            delivered,
+            lastDeliveredAt,
+            lineDeliveredAt,
+            slices);
     }
 }

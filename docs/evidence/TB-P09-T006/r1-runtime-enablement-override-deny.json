@@ -1,0 +1,38 @@
+{
+  "overrideDeny": {
+    "status": 400,
+    "title": "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
+    "body": {
+      "title": "تغییر سیاست مرجوعی برای فروشنده مجاز نیست.",
+      "errorCode": "seller.offer.return_policy.rejected"
+    }
+  },
+  "methods": [
+    {
+      "code": "post",
+      "labelFa": "پست",
+      "providerKind": "post"
+    },
+    {
+      "code": "snapp_courier",
+      "labelFa": "اسنپ / پیک آنلاین",
+      "providerKind": "courier"
+    },
+    {
+      "code": "store_courier",
+      "labelFa": "پیک فروشگاه",
+      "providerKind": "store_courier"
+    },
+    {
+      "code": "in_person",
+      "labelFa": "تحویل حضوری",
+      "providerKind": "in_person"
+    }
+  ],
+  "tipaxListed": false,
+  "tipaxReject": {
+    "checkoutId": "01a07bcf-75a6-7000-a785-32db368dd09f",
+    "status": 400,
+    "title": "روش ارسال برای این فروشگاه فعال نیست."
+  }
+}

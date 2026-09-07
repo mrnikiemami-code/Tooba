@@ -38,6 +38,7 @@ public sealed class AdminOrderOperationsComposer
     private readonly IAccessControlDirectory _access;
     private readonly ICurrentTenant _tenant;
     private readonly IPaymentAdminDirectory _payments;
+    private readonly ShippingMethodsOptions _shippingMethods;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsComposer(
@@ -49,7 +50,8 @@ public sealed class AdminOrderOperationsComposer
         ICheckoutDirectory checkout,
         IAccessControlDirectory access,
         ICurrentTenant tenant,
-        IPaymentAdminDirectory payments)
+        IPaymentAdminDirectory payments,
+        ShippingMethodsOptions? shippingMethods = null)
     {
         _orders = orders;
         _returns = returns;
@@ -60,6 +62,7 @@ public sealed class AdminOrderOperationsComposer
         _access = access;
         _tenant = tenant;
         _payments = payments;
+        _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>
@@ -497,7 +500,7 @@ public sealed class AdminOrderOperationsComposer
 
         if (!string.IsNullOrWhiteSpace(methodCode))
         {
-            var enabled = ShippingMethodRegistry.Enabled(null).Any(x =>
+            var enabled = ShippingMethodRegistry.Enabled(_shippingMethods).Any(x =>
                 string.Equals(x.Code, methodCode, StringComparison.OrdinalIgnoreCase));
             if (!enabled)
             {
