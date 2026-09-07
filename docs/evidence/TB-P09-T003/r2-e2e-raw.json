@@ -1,0 +1,415 @@
+{
+  "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+  "paymentId": "132493ea-887e-42b4-a2dc-c2ef4d5a3753",
+  "steps": [
+    {
+      "name": "create-cart",
+      "status": 200,
+      "ok": true,
+      "cartId": "01a079bc-9c7a-7000-ab22-8d247c077567"
+    },
+    {
+      "name": "add-line",
+      "status": 200,
+      "ok": true,
+      "version": 3
+    },
+    {
+      "name": "submit-checkout",
+      "status": 200,
+      "ok": true,
+      "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+      "paymentState": "PendingPayment"
+    },
+    {
+      "name": "initiate-manual-payment",
+      "status": 200,
+      "ok": true,
+      "paymentId": "132493ea-887e-42b4-a2dc-c2ef4d5a3753",
+      "provider": "manual",
+      "payStatus": "Pending"
+    },
+    {
+      "name": "ops-before-confirm",
+      "status": 200,
+      "ok": true,
+      "codes": [
+        "confirm_deposit",
+        "reject_deposit",
+        "cancel"
+      ],
+      "labels": [
+        "تأیید واریز",
+        "رد واریز",
+        "لغو سفارش"
+      ]
+    },
+    {
+      "name": "confirm-deposit",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "paymentId": "132493ea-887e-42b4-a2dc-c2ef4d5a3753",
+        "status": "Succeeded",
+        "newlySucceeded": true
+      }
+    },
+    {
+      "name": "confirm-deposit-idempotent",
+      "status": 400,
+      "ok": true,
+      "body": {
+        "title": "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+        "errorCode": "order.operation.invalid",
+        "detail": "این عملیات در وضعیت فعلی سفارش مجاز نیست."
+      }
+    },
+    {
+      "name": "ops-after-confirm",
+      "status": 200,
+      "ok": true,
+      "codes": [
+        "cancel",
+        "mark_processing",
+        "mark_packed",
+        "create_shipment"
+      ]
+    },
+    {
+      "name": "mark_processing",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Processing",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 0,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:00.8701007+00:00"
+      }
+    },
+    {
+      "name": "mark_packed",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Packed",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 0,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:00.9105056+00:00"
+      }
+    },
+    {
+      "name": "create_shipment",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Packed",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 0,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [
+          {
+            "shipmentId": "70fb3807-b9b3-40ca-a8ba-7ec3eed4b136",
+            "status": "Created",
+            "carrierDisplayName": "پست پیشتاز",
+            "items": [
+              {
+                "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+                "quantity": 1
+              }
+            ],
+            "createdAt": "2026-09-07T02:40:00.955222+00:00"
+          }
+        ],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:00.9552223+00:00"
+      }
+    },
+    {
+      "name": "assign_tracking",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Packed",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 0,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [
+          {
+            "shipmentId": "70fb3807-b9b3-40ca-a8ba-7ec3eed4b136",
+            "status": "Created",
+            "carrierDisplayName": "پست پیشتاز",
+            "trackingReference": "R2-TRACK-1788748800964",
+            "items": [
+              {
+                "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+                "quantity": 1
+              }
+            ],
+            "createdAt": "2026-09-07T02:40:00.955222+00:00"
+          }
+        ],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:01.0065299+00:00"
+      }
+    },
+    {
+      "name": "dispatch_shipment",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Delivered",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 1,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [
+          {
+            "shipmentId": "70fb3807-b9b3-40ca-a8ba-7ec3eed4b136",
+            "status": "Dispatched",
+            "carrierDisplayName": "پست پیشتاز",
+            "trackingReference": "R2-TRACK-1788748800964",
+            "dispatchedAt": "2026-09-07T02:40:01.053139+00:00",
+            "items": [
+              {
+                "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+                "quantity": 1
+              }
+            ],
+            "createdAt": "2026-09-07T02:40:00.955222+00:00"
+          }
+        ],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:01.0528457+00:00"
+      }
+    },
+    {
+      "name": "deliver_shipment",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "fulfillmentId": "3a155f35-20ac-48ba-b28e-e279e161af06",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "status": "Delivered",
+        "recipientName": "گیرندهٔ نمایشی توبا",
+        "contactMobile": "+989120000014",
+        "provinceName": "تهران",
+        "cityName": "تهران",
+        "postalAddress": "خیابان نمونه، پلاک ۱۴، دفتر نمایشی فروشگاه",
+        "postalCode": "19199",
+        "shippingMethodCode": "storefront-default",
+        "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+        "items": [
+          {
+            "fulfillmentItemId": "31c5109b-b1e8-4b90-b83e-370aa242ab5e",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantityOrdered": 1,
+            "quantityShipped": 1,
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "shipments": [
+          {
+            "shipmentId": "70fb3807-b9b3-40ca-a8ba-7ec3eed4b136",
+            "status": "Delivered",
+            "carrierDisplayName": "پست پیشتاز",
+            "trackingReference": "R2-TRACK-1788748800964",
+            "dispatchedAt": "2026-09-07T02:40:01.053139+00:00",
+            "deliveredAt": "2026-09-07T02:40:01.115431+00:00",
+            "items": [
+              {
+                "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+                "quantity": 1
+              }
+            ],
+            "createdAt": "2026-09-07T02:40:00.955222+00:00"
+          }
+        ],
+        "createdAt": "2026-09-07T02:40:00.560197+00:00",
+        "updatedAt": "2026-09-07T02:40:01.1154311+00:00"
+      }
+    },
+    {
+      "name": "request_return",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "returnRequestId": "7781a0f3-5264-4522-807b-276e83d1e978",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "requestedByUserId": "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+        "status": "Requested",
+        "reason": "r2 e2e return",
+        "currency": "IRR",
+        "refundAmount": 350000,
+        "refundDestination": "OriginalPayment",
+        "createdAt": "2026-09-07T02:40:01.2025275+00:00",
+        "updatedAt": "2026-09-07T02:40:01.2025275+00:00",
+        "items": [
+          {
+            "returnItemId": "9bf44fec-ff48-4fc6-bb5f-3f06e8cc8fc8",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantity": 1,
+            "unitPriceSnapshot": 350000,
+            "currency": "IRR",
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "refundAttempts": []
+      },
+      "lines": [
+        {
+          "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "name": "approve_return",
+      "status": 200,
+      "ok": true,
+      "body": {
+        "returnRequestId": "7781a0f3-5264-4522-807b-276e83d1e978",
+        "sellerOrderId": "01a079bc-9ca9-7000-bf73-ef4c8fb4cf14",
+        "checkoutId": "01a079bc-9ca7-7000-8e29-8f0e93b629dc",
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "requestedByUserId": "aaaaaaaa-aaaa-4aaa-8aaa-000000000009",
+        "status": "Completed",
+        "reason": "r2 e2e return",
+        "currency": "IRR",
+        "refundAmount": 350000,
+        "paymentId": "132493ea-887e-42b4-a2dc-c2ef4d5a3753",
+        "refundDestination": "OriginalPayment",
+        "createdAt": "2026-09-07T02:40:01.202527+00:00",
+        "updatedAt": "2026-09-07T02:40:01.3339047+00:00",
+        "items": [
+          {
+            "returnItemId": "9bf44fec-ff48-4fc6-bb5f-3f06e8cc8fc8",
+            "orderLineId": "01a079bc-9cb1-7000-b18a-2432b9e8562b",
+            "quantity": 1,
+            "unitPriceSnapshot": 350000,
+            "currency": "IRR",
+            "reservationId": "01a079bc-9c8c-7000-a0e6-34cf2db7e2ca"
+          }
+        ],
+        "refundAttempts": [
+          {
+            "refundAttemptId": "5a8e2785-47bb-40dc-a394-406972615c2a",
+            "paymentId": "132493ea-887e-42b4-a2dc-c2ef4d5a3753",
+            "amount": 350000,
+            "currency": "IRR",
+            "status": "Succeeded",
+            "idempotencyKey": "refund-7781a0f352644522807b276e83d1e978",
+            "providerReference": "refund-txn-132493ea887e42b4a2dcc2ef4d5a3753",
+            "createdAt": "2026-09-07T02:40:01.316873+00:00",
+            "completedAt": "2026-09-07T02:40:01.333904+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "name": "list-status",
+      "status": 200,
+      "ok": true,
+      "rowStatus": "RefundCompleted",
+      "paymentState": "Paid"
+    }
+  ]
+}

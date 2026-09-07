@@ -4,6 +4,8 @@ using Tooba.Host.Admin;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
+using Tooba.Returns.Domain;
+using Tooba.Returns.Infrastructure.Persistence;
 
 namespace Tooba.Host.Grid;
 
@@ -12,11 +14,13 @@ internal sealed class AdminOrdersGridQueryEngine
 {
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
+    private readonly ReturnsDbContext _returns;
 
-    public AdminOrdersGridQueryEngine(OrderDbContext orders, PartyDbContext parties)
+    public AdminOrdersGridQueryEngine(OrderDbContext orders, PartyDbContext parties, ReturnsDbContext returns)
     {
         _orders = orders;
         _parties = parties;
+        _returns = returns;
     }
 
     public async Task<GridPageResponse<AdminOrderListItem>> QueryAsync(
@@ -359,9 +363,16 @@ internal sealed class AdminOrdersGridQueryEngine
         var byId = groups.ToDictionary(x => x.CheckoutId);
         var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
         var sellerNames = await LoadSellerNamesAsync(sellerIds, cancellationToken);
+        var sellerOrderIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerOrderId)).Distinct().ToList();
+        var returnsBySellerOrder = await _returns.ReturnRequests.AsNoTracking()
+            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+            .ToListAsync(cancellationToken);
+        var returnsLookup = returnsBySellerOrder
+            .GroupBy(x => x.SellerOrderId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
         return rows
             .Where(r => byId.ContainsKey(r.CheckoutId))
-            .Select(r => MapOrderListItem(byId[r.CheckoutId], sellerNames))
+            .Select(r => MapOrderListItem(byId[r.CheckoutId], sellerNames, returnsLookup))
             .ToList();
     }
 
@@ -381,13 +392,20 @@ internal sealed class AdminOrdersGridQueryEngine
         return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
     }
 
-    private static AdminOrderListItem MapOrderListItem(
+    /// <summary>نگاشت ردیف فهرست سفارش با وضعیت عملیاتی ترکیب‌شده.</summary>
+    internal static AdminOrderListItem MapOrderListItem(
         CheckoutGroup group,
-        IReadOnlyDictionary<Guid, string> sellerNames)
+        IReadOnlyDictionary<Guid, string> sellerNames,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnRequest>> returnsBySellerOrder)
     {
         var orders = group.SellerOrders;
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         var statuses = orders.Select(x => x.Status).Distinct().ToList();
+        var relatedReturns = orders
+            .SelectMany(o => returnsBySellerOrder.TryGetValue(o.SellerOrderId, out var list) ? list : Array.Empty<ReturnRequest>())
+            .Select(r => r.Status)
+            .ToList();
+        var composedStatus = ComposeOperationalStatus(statuses, relatedReturns);
         return new AdminOrderListItem(
             group.CheckoutId,
             references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
@@ -403,7 +421,46 @@ internal sealed class AdminOrdersGridQueryEngine
                 : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
                     ? "Paid"
                     : "PendingPayment",
-            statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
+            composedStatus);
+    }
+
+    /// <summary>
+    /// وضعیت عملیاتی فهرست: در صورت مرجوعی/بازگشت وجه، سلول وضعیت را از آن می‌سازد.
+    /// </summary>
+    internal static string ComposeOperationalStatus(
+        IReadOnlyList<SellerOrderStatus> orderStatuses,
+        IReadOnlyList<ReturnRequestStatus> returnStatuses)
+    {
+        if (returnStatuses.Count > 0)
+        {
+            if (returnStatuses.Any(s => s == ReturnRequestStatus.RefundFailed))
+            {
+                return "RefundFailed";
+            }
+
+            if (returnStatuses.Any(s => s == ReturnRequestStatus.RefundProcessing))
+            {
+                return "RefundPending";
+            }
+
+            if (returnStatuses.Any(s => s == ReturnRequestStatus.Requested))
+            {
+                return "ReturnRequested";
+            }
+
+            if (returnStatuses.Any(s => s == ReturnRequestStatus.Approved))
+            {
+                return "ReturnApproved";
+            }
+
+            if (returnStatuses.Any(s => s == ReturnRequestStatus.Completed)
+                && returnStatuses.All(s => s is ReturnRequestStatus.Completed or ReturnRequestStatus.Rejected or ReturnRequestStatus.Cancelled))
+            {
+                return "RefundCompleted";
+            }
+        }
+
+        return orderStatuses.Count == 1 ? orderStatuses[0].ToString() : "Mixed";
     }
 
     private static string FormatSellerDisplayNames(

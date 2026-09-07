@@ -219,7 +219,9 @@ public sealed record PaymentOperationalSnapshot(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? CompletedAt,
     string? LastFailureCode,
-    bool ReconcileEligible);
+    bool ReconcileEligible,
+    bool ConfirmDepositEligible,
+    bool RejectDepositEligible);
 
 /// <summary>
 /// بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
@@ -242,6 +244,16 @@ public interface IPaymentAdminDirectory
     /// Verify/Reconcile یک پرداخت Pending را با idempotency اجرا می‌کند.
     /// </summary>
     Task<PaymentVerificationResult> ReconcileAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تأیید واریز کارت‌به‌کارت/دستی؛ از مسیر Verify/موفقیت استاندارد عبور می‌کند.
+    /// </summary>
+    Task<PaymentVerificationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رد واریز کارت‌به‌کارت/دستی وقتی هنوز Pending است.
+    /// </summary>
+    Task<PaymentVerificationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken);
 }
 
 /// <summary>

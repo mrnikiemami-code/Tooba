@@ -38,6 +38,16 @@ test("operations menu uses portal and human empty label", () => {
   assert.doesNotMatch(menu, /عملیات مجازی نیست/);
 });
 
+test("formatAdminStatus surfaces return/refund human labels", async () => {
+  const { formatAdminStatus } = await import("./admin-api.ts");
+  assert.equal(formatAdminStatus("ReturnRequested"), "مرجوعی در انتظار بررسی");
+  assert.equal(formatAdminStatus("ReturnApproved"), "مرجوعی تأیید شده");
+  assert.equal(formatAdminStatus("RefundPending"), "بازگشت وجه در انتظار");
+  assert.equal(formatAdminStatus("RefundCompleted"), "بازگشت وجه انجام شد");
+  assert.equal(formatAdminStatus("Refunded"), "بازگشت وجه");
+  assert.doesNotMatch(formatAdminStatus("Refunded"), /refund/i);
+});
+
 test("order detail header exposes عملیات سفارش menu", () => {
   const detail = readFileSync(join(dir, "admin-order-detail-screen.tsx"), "utf8");
   assert.match(detail, /AdminOrderOperationsMenu/);

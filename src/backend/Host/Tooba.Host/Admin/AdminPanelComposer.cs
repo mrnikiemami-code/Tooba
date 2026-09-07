@@ -10,6 +10,8 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Application;
 using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Returns.Domain;
+using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
 
@@ -27,6 +29,7 @@ public sealed class AdminPanelComposer
     private readonly PartyDbContext _parties;
     private readonly IPaymentAdminDirectory _payments;
     private readonly ISettlementDirectory _settlement;
+    private readonly ReturnsDbContext _returns;
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
     private readonly AdminCustomersGridQueryEngine _customersGrid;
@@ -42,7 +45,8 @@ public sealed class AdminPanelComposer
         PartyDbContext parties,
         PaymentDbContext paymentDb,
         IPaymentAdminDirectory payments,
-        ISettlementDirectory settlement)
+        ISettlementDirectory settlement,
+        ReturnsDbContext returns)
     {
         _catalog = catalog;
         _offers = offers;
@@ -50,7 +54,8 @@ public sealed class AdminPanelComposer
         _parties = parties;
         _payments = payments;
         _settlement = settlement;
-        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties);
+        _returns = returns;
+        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
         _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders);
@@ -97,7 +102,13 @@ public sealed class AdminPanelComposer
         var groups = await LoadOrderGroupsAsync(cancellationToken);
         var sellerIds = groups.SelectMany(g => g.SellerOrders.Select(o => o.SellerPartyId)).Distinct().ToList();
         var sellerNames = await LoadSellerDisplayNamesAsync(sellerIds, cancellationToken);
-        return groups.Select(group => MapOrderListItem(group, sellerNames)).ToList();
+        var items = new List<AdminOrderListItem>(groups.Count);
+        foreach (var group in groups)
+        {
+            items.Add(await MapOrderListItemAsync(group, sellerNames, cancellationToken));
+        }
+
+        return items;
     }
 
     /// <summary>صفحه‌بندی server-side گرید سفارش‌های Admin (DB-native).</summary>
@@ -167,7 +178,7 @@ public sealed class AdminPanelComposer
                 order.Currency,
                 lines);
         }).ToList();
-        var listItem = MapOrderListItem(group, sellerNames);
+        var listItem = await MapOrderListItemAsync(group, sellerNames, cancellationToken);
         var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
         AdminPaymentOpsView? paymentView = paymentOps is null
             ? null
@@ -184,7 +195,9 @@ public sealed class AdminPanelComposer
                 paymentOps.UpdatedAt,
                 paymentOps.CompletedAt,
                 paymentOps.LastFailureCode,
-                paymentOps.ReconcileEligible);
+                paymentOps.ReconcileEligible,
+                paymentOps.ConfirmDepositEligible,
+                paymentOps.RejectDepositEligible);
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var settlementByOrder = await _settlement.ListEntriesBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
@@ -349,29 +362,19 @@ public sealed class AdminPanelComposer
         return sellerRows.ToDictionary(x => x.PartyId, x => x.DisplayName);
     }
 
-    private static AdminOrderListItem MapOrderListItem(
+    private async Task<AdminOrderListItem> MapOrderListItemAsync(
         CheckoutGroup group,
-        IReadOnlyDictionary<Guid, string> sellerNames)
+        IReadOnlyDictionary<Guid, string> sellerNames,
+        CancellationToken cancellationToken)
     {
-        var orders = group.SellerOrders;
-        var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
-        var statuses = orders.Select(x => x.Status).Distinct().ToList();
-        return new AdminOrderListItem(
-            group.CheckoutId,
-            references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
-            group.SubmittedAt,
-            string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
-            orders.Count,
-            FormatSellerDisplayNames(orders, sellerNames),
-            orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
-            orders.Sum(x => x.GrandTotalSnapshot),
-            orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)
-                ? "Cancelled"
-                : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
-                    ? "Paid"
-                    : "PendingPayment",
-            statuses.Count == 1 ? statuses[0].ToString() : "Mixed");
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var returns = await _returns.ReturnRequests.AsNoTracking()
+            .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
+            .ToListAsync(cancellationToken);
+        var returnsLookup = returns
+            .GroupBy(x => x.SellerOrderId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
+        return AdminOrdersGridQueryEngine.MapOrderListItem(group, sellerNames, returnsLookup);
     }
 
     private static string FormatSellerDisplayNames(
@@ -402,6 +405,7 @@ public sealed class AdminPanelComposer
         {
             "wallet" => "کیف پول",
             "fake" => "درگاه آزمایشی",
+            "manual" => "کارت به کارت",
             "webhook" => "درگاه وب‌هوک",
             "fail-closed" => "درگاه غیرفعال",
             null or "" => "—",

@@ -183,7 +183,9 @@ public sealed record AdminPaymentOpsView(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? CompletedAt,
     string? LastFailureCode,
-    bool ReconcileEligible);
+    bool ReconcileEligible,
+    bool ConfirmDepositEligible = false,
+    bool RejectDepositEligible = false);
 
 /// <summary>
 /// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.

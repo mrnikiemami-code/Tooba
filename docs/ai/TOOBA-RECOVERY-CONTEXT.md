@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P09-T003-R1
+TB-P09-T003-R2
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T003-R2 — Admin Orders Repair R2 (manual/card-to-card confirm, fresh order E2E, list return/refund visibility; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003-R1 — Admin Orders Repair (ops matrix/menu portal, grid maxWidth, note delete rule, clean E2E; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T003 — Admin Orders Final Operational Gate (View-only nav + E2E verify + defect-only shipment fixes; USER_VISUAL_ACCEPTED=NO)
 TB-P09-T002-R1 — Order Operational History Repair (human actor resolution; USER_VISUAL_ACCEPTED=NO)

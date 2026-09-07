@@ -57,6 +57,7 @@ public sealed class PaymentModule : IToobaModule
         {
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
             services.AddScoped<IPaymentGateway, FakeFailingPaymentGateway>();
+            services.AddScoped<IPaymentGateway, ManualPaymentGateway>();
             services.AddScoped<IPaymentGateway, WalletPaymentGateway>();
             services.AddScoped<IPaymentRefundGateway, FakePaymentRefundGateway>();
         }

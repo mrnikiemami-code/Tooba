@@ -20,6 +20,7 @@ public static class PaymentGatewayOutcomes
             or "GATEWAY_UNAVAILABLE"
             or "GATEWAY_RATE_LIMITED"
             or "GATEWAY_PENDING"
-            or "GATEWAY_UNKNOWN";
+            or "GATEWAY_UNKNOWN"
+            or "MANUAL_DEPOSIT_PENDING";
     }
 }

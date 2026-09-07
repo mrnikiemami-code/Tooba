@@ -82,6 +82,8 @@ public sealed class AdminOrderCompletenessTests
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow,
             null,
+            false,
+            false,
             false);
         var html = AdminOrderCompletenessComposer.RenderReceiptHtml(group, payment);
         Assert.Contains("کیف پول", html, StringComparison.Ordinal);

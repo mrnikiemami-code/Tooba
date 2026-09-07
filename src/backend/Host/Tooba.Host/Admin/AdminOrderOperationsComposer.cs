@@ -7,6 +7,8 @@ using Tooba.Fulfillment.Domain;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Payment.Application;
+using Tooba.Payment.Infrastructure;
 using Tooba.Returns.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
@@ -24,6 +26,7 @@ public sealed class AdminOrderOperationsComposer
         "return.",
         "fulfillment.",
         "refund.",
+        "payment.",
     ];
 
     private readonly OrderDbContext _orders;
@@ -34,6 +37,7 @@ public sealed class AdminOrderOperationsComposer
     private readonly ICheckoutDirectory _checkout;
     private readonly IAccessControlDirectory _access;
     private readonly ICurrentTenant _tenant;
+    private readonly IPaymentAdminDirectory _payments;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsComposer(
@@ -44,7 +48,8 @@ public sealed class AdminOrderOperationsComposer
         IReturnEligibilityEvaluator eligibility,
         ICheckoutDirectory checkout,
         IAccessControlDirectory access,
-        ICurrentTenant tenant)
+        ICurrentTenant tenant,
+        IPaymentAdminDirectory payments)
     {
         _orders = orders;
         _returns = returns;
@@ -54,6 +59,7 @@ public sealed class AdminOrderOperationsComposer
         _checkout = checkout;
         _access = access;
         _tenant = tenant;
+        _payments = payments;
     }
 
     /// <summary>اقدامات مجاز و eligibility مرجوعی یک checkout را برمی‌گرداند.</summary>
@@ -76,6 +82,8 @@ public sealed class AdminOrderOperationsComposer
 
         var eligibility = new List<ReturnEligibilityResult>();
         var actions = new List<AdminOrderOperationAction>();
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
+        ProjectPaymentActions(actions, payment, effective);
         foreach (var order in group.SellerOrders)
         {
             var elig = await _eligibility.EvaluateAsync(order.SellerOrderId, cancellationToken);
@@ -176,6 +184,8 @@ public sealed class AdminOrderOperationsComposer
                 "approve_return" => await ApproveReturnAsync(request, actorUserId, cancellationToken),
                 "reject_return" => await RejectReturnAsync(request, actorUserId, cancellationToken),
                 "retry_refund" => await RetryRefundAsync(request, actorUserId, cancellationToken),
+                "confirm_deposit" => await ConfirmDepositForCheckoutAsync(checkoutId, cancellationToken),
+                "reject_deposit" => await RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
                 _ => throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid"),
             };
         }
@@ -544,6 +554,86 @@ public sealed class AdminOrderOperationsComposer
         return await _returnDirectory.RejectAsync(
             new RejectReturnCommand(returnRequestId, actorUserId, request.Reason),
             cancellationToken);
+    }
+
+    private void ProjectPaymentActions(
+        List<AdminOrderOperationAction> actions,
+        PaymentOperationalSnapshot? payment,
+        EffectiveAccessDto effective)
+    {
+        if (payment is null || !payment.ConfirmDepositEligible)
+        {
+            return;
+        }
+
+        if (Has(effective, "payment.reconcile"))
+        {
+            actions.Add(Action(
+                "confirm_deposit",
+                "تأیید واریز",
+                "Confirm deposit",
+                null,
+                null,
+                null,
+                null,
+                "payment.reconcile",
+                true,
+                "آیا واریز کارت‌به‌کارت این سفارش را تأیید می‌کنید؟"));
+            if (payment.RejectDepositEligible)
+            {
+                actions.Add(Action(
+                    "reject_deposit",
+                    "رد واریز",
+                    "Reject deposit",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "payment.reconcile",
+                    true,
+                    "آیا از رد واریز مطمئن هستید؟"));
+            }
+        }
+    }
+
+    private async Task<object> ConfirmDepositForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new PlatformHttpException(400, "پرداختی برای تأیید پیدا نشد.", "payment.missing");
+        try
+        {
+            return await _payments.ConfirmDepositAsync(payment.PaymentId, cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
+        {
+            throw new PlatformHttpException(400, "این پرداخت کارت‌به‌کارت/دستی نیست.", ex.Message);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.confirm.invalid_state")
+        {
+            throw new PlatformHttpException(400, "تأیید واریز در این وضعیت مجاز نیست.", ex.Message);
+        }
+    }
+
+    private async Task<object> RejectDepositForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new PlatformHttpException(400, "پرداختی برای رد پیدا نشد.", "payment.missing");
+        try
+        {
+            return await _payments.RejectDepositAsync(payment.PaymentId, cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
+        {
+            throw new PlatformHttpException(400, "این پرداخت کارت‌به‌کارت/دستی نیست.", ex.Message);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.reject.invalid_state")
+        {
+            throw new PlatformHttpException(400, "رد واریز در این وضعیت مجاز نیست.", ex.Message);
+        }
     }
 
     private async Task<object> RetryRefundAsync(

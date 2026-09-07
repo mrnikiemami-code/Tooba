@@ -21,6 +21,8 @@ public static class AdminPanelEndpoints
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
         group.MapPost("/payments/{paymentId:guid}/reconcile", ReconcilePaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/confirm-deposit", ConfirmDepositAsync);
+        group.MapPost("/payments/{paymentId:guid}/reject-deposit", RejectDepositAsync);
         group.MapGet("/sellers", ListSellersAsync);
         group.MapPost("/sellers/query", QuerySellersGridAsync);
         group.MapGet("/customers", ListCustomersAsync);
@@ -140,6 +142,76 @@ public static class AdminPanelEndpoints
         catch (InvalidOperationException ex) when (ex.Message is "payment.missing" or "payment.attempt.missing")
         {
             return Results.Json(new { title = "پرداخت پیدا نشد.", errorCode = ex.Message }, statusCode: 404);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> ConfirmDepositAsync(
+        Guid paymentId,
+        IPaymentAdminDirectory payments,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var result = await payments.ConfirmDepositAsync(paymentId, cancellationToken);
+            return Results.Json(result);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.missing" or "payment.attempt.missing")
+        {
+            return Results.Json(new { title = "پرداخت پیدا نشد.", errorCode = ex.Message }, statusCode: 404);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
+        {
+            return Results.Json(new { title = "این پرداخت کارت‌به‌کارت/دستی نیست.", errorCode = ex.Message }, statusCode: 400);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.confirm.invalid_state")
+        {
+            return Results.Json(new { title = "تأیید واریز در این وضعیت مجاز نیست.", errorCode = ex.Message }, statusCode: 400);
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> RejectDepositAsync(
+        Guid paymentId,
+        IPaymentAdminDirectory payments,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var result = await payments.RejectDepositAsync(paymentId, cancellationToken);
+            return Results.Json(result);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.missing" or "payment.attempt.missing")
+        {
+            return Results.Json(new { title = "پرداخت پیدا نشد.", errorCode = ex.Message }, statusCode: 404);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
+        {
+            return Results.Json(new { title = "این پرداخت کارت‌به‌کارت/دستی نیست.", errorCode = ex.Message }, statusCode: 400);
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.reject.invalid_state")
+        {
+            return Results.Json(new { title = "رد واریز در این وضعیت مجاز نیست.", errorCode = ex.Message }, statusCode: 400);
         }
         catch (PlatformHttpException ex)
         {

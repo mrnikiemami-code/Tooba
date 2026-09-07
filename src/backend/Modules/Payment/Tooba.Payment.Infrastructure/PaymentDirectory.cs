@@ -324,6 +324,79 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<PaymentVerificationResult> ConfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.missing");
+        if (payment.Status == PaymentStatus.Succeeded)
+        {
+            return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
+        }
+
+        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
+        {
+            throw new InvalidOperationException("payment.method.not_manual");
+        }
+
+        if (payment.Status != PaymentStatus.Pending)
+        {
+            throw new InvalidOperationException("payment.confirm.invalid_state");
+        }
+
+        var attempt = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == paymentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.attempt.missing");
+
+        ManualPaymentGateway.Confirm(attempt.ProviderRequestReference);
+        return await VerifyAsync(
+            new VerifyPaymentCommand(
+                payment.PaymentId,
+                attempt.AttemptId,
+                attempt.ProviderRequestReference,
+                true),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<PaymentVerificationResult> RejectDepositAsync(Guid paymentId, CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.missing");
+        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
+        {
+            throw new InvalidOperationException("payment.method.not_manual");
+        }
+
+        if (payment.Status != PaymentStatus.Pending)
+        {
+            throw new InvalidOperationException("payment.reject.invalid_state");
+        }
+
+        var attempt = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == paymentId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.attempt.missing");
+
+        ManualPaymentGateway.Reject(attempt.ProviderRequestReference);
+        return await VerifyAsync(
+            new VerifyPaymentCommand(
+                payment.PaymentId,
+                attempt.AttemptId,
+                attempt.ProviderRequestReference,
+                false),
+            cancellationToken).ConfigureAwait(false);
+    }
+
     private async Task<PaymentOperationalSnapshot> ToOperationalAsync(
         CustomerPayment payment,
         CancellationToken cancellationToken)
@@ -333,6 +406,8 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+        var manualPending = ManualPaymentGateway.IsManual(payment.ProviderCode)
+            && payment.Status == PaymentStatus.Pending;
         return new PaymentOperationalSnapshot(
             payment.PaymentId,
             payment.CheckoutId,
@@ -346,7 +421,9 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             payment.UpdatedAt,
             payment.CompletedAt,
             attempt?.FailureCode,
-            payment.Status == PaymentStatus.Pending);
+            payment.Status == PaymentStatus.Pending,
+            ConfirmDepositEligible: manualPending,
+            RejectDepositEligible: manualPending);
     }
 
     private async Task EnsureActorCanSeeAsync(

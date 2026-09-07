@@ -302,6 +302,7 @@ public static class StorefrontEndpoints
             ReadGuestSecret(request),
             body.IdempotencyKey,
             body.WantsWallet,
+            body.ProviderCode,
             cancellationToken));
 
     private static Task<IResult> GetWalletQuoteAsync(

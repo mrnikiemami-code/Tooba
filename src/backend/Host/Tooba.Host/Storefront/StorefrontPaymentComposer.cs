@@ -73,6 +73,7 @@ public sealed class StorefrontPaymentComposer
         string? guestSecret,
         string idempotencyKey,
         bool useWallet,
+        string? providerCodeOverride,
         CancellationToken cancellationToken)
     {
         var checkout = await _checkouts.GetAsync(checkoutId, cartId, guestSecret, cancellationToken)
@@ -102,6 +103,11 @@ public sealed class StorefrontPaymentComposer
             }
 
             providerCode = WalletPaymentGateway.ProviderCodeValue;
+        }
+        else if (!string.IsNullOrWhiteSpace(providerCodeOverride)
+            && ManualPaymentGateway.IsManual(providerCodeOverride))
+        {
+            providerCode = ManualPaymentGateway.ProviderCodeValue;
         }
 
         var initiated = await _payments.InitiateAsync(
