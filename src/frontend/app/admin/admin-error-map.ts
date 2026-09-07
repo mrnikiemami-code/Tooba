@@ -214,6 +214,30 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "انجام عملیات سفارش ناموفق بود.",
     en: "The order operation could not be completed.",
   },
+  "fulfillment.work_queue.cross_seller": {
+    fa: "انتخاب چندفروشنده برای عملیات گروهی مجاز نیست.",
+    en: "Cross-seller bulk selection is not allowed.",
+  },
+  "fulfillment.work_queue.incompatible": {
+    fa: "انتخاب ناسازگار است؛ همهٔ ردیف‌ها باید همان عملیات مجاز را داشته باشند.",
+    en: "Incompatible selection; all rows must share the same allowed action.",
+  },
+  "fulfillment.work_queue.bulk_unsupported": {
+    fa: "این عملیات گروهی پشتیبانی نمی‌شود.",
+    en: "This bulk action is not supported.",
+  },
+  "fulfillment.work_queue.bulk_empty": {
+    fa: "هیچ ردیفی برای عملیات گروهی انتخاب نشده است.",
+    en: "No rows were selected for the bulk action.",
+  },
+  "fulfillment.work_queue.bulk_failed": {
+    fa: "عملیات گروهی ارسال ناموفق بود.",
+    en: "The fulfillment bulk operation failed.",
+  },
+  "fulfillment.work_queue.shipment_missing": {
+    fa: "مرسولهٔ معتبر برای این عملیات یافت نشد.",
+    en: "No valid shipment was found for this operation.",
+  },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",
     en: "The note text is not valid.",

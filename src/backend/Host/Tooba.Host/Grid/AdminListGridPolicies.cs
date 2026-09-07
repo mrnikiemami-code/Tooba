@@ -50,18 +50,26 @@ public static class AdminListGridPolicies
         defaultSortField: "activity",
         tieBreakerField: "name");
 
-    /// <summary>گرید fulfillment Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<FulfillmentSnapshot> Fulfillments = new(
+    /// <summary>صف کار ارسال و تحویل Admin.</summary>
+    public static readonly AdminListGridQueryPolicy<AdminFulfillmentWorkQueueRow> Fulfillments = new(
     [
+        new("orderReference", x => x.OrderReference, InMemoryGridFieldKind.Text, searchable: true),
         new("recipientName", x => x.RecipientName, InMemoryGridFieldKind.Text, searchable: true),
         new("fulfillmentId", x => x.FulfillmentId, InMemoryGridFieldKind.Text, searchable: true),
         new("checkoutId", x => x.CheckoutId, InMemoryGridFieldKind.Text, searchable: true),
         new("cityName", x => x.CityName, InMemoryGridFieldKind.Text, searchable: true),
-        new("shipmentCount", x => x.Shipments.Count, InMemoryGridFieldKind.Number),
-        new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),
+        new("sellerPartyId", x => x.SellerPartyId, InMemoryGridFieldKind.Text),
+        new("sellerDisplayName", x => x.SellerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
+        new("shippingMethodCode", x => x.ShippingMethodCode, InMemoryGridFieldKind.Enum),
+        new("shippingMethodLabel", x => x.ShippingMethodLabel, InMemoryGridFieldKind.Text),
+        new("shipmentCount", x => x.ShipmentCount, InMemoryGridFieldKind.Number),
+        new("status", x => x.Status, InMemoryGridFieldKind.Enum),
+        new("queueFilter", x => x.Status, InMemoryGridFieldKind.Enum),
+        new("createdAt", x => x.CreatedAt, InMemoryGridFieldKind.Date),
+        new("updatedAt", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
     ],
-        defaultSortField: "recipientName",
-        defaultSortDirection: "asc",
+        defaultSortField: "updatedAt",
+        defaultSortDirection: "desc",
         tieBreakerField: "fulfillmentId");
 
     /// <summary>گرید مرجوعی Admin.</summary>

@@ -4,6 +4,7 @@ using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
+using AdminFulfillmentWorkQueueBulkRequest = Tooba.Host.Admin.AdminFulfillmentWorkQueueBulkRequest;
 
 namespace Tooba.Host.Fulfillment;
 
@@ -30,6 +31,8 @@ public static class FulfillmentEndpoints
         var admin = app.MapGroup("/v1/admin");
         admin.MapGet("/fulfillments", AdminListAsync);
         admin.MapPost("/fulfillments/query", AdminQueryGridAsync);
+        admin.MapPost("/fulfillments/work-queue/query", AdminWorkQueueQueryAsync);
+        admin.MapPost("/fulfillments/work-queue/bulk", AdminWorkQueueBulkAsync);
         admin.MapGet("/fulfillments/{fulfillmentId:guid}", AdminGetAsync);
 
         var customer = app.MapGroup("/v1/customer");
@@ -285,6 +288,65 @@ public static class FulfillmentEndpoints
             environment,
             composer.QueryGridAsync,
             cancellationToken);
+
+    private static Task<IResult> AdminWorkQueueQueryAsync(
+        GridQueryRequest body,
+        AdminFulfillmentWorkQueueComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken) =>
+        AdminGridQueryEndpoint.ExecuteAsync(
+            body,
+            request,
+            session,
+            tenant,
+            guard,
+            environment,
+            composer.QueryAsync,
+            cancellationToken);
+
+    private static async Task<IResult> AdminWorkQueueBulkAsync(
+        AdminFulfillmentWorkQueueBulkRequest body,
+        AdminFulfillmentWorkQueueComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var actor = await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var result = await composer.ExecuteBulkAsync(actor, body, cancellationToken);
+            if (result.ErrorCode is not null)
+            {
+                return Results.Json(
+                    new
+                    {
+                        title = result.ErrorMessage ?? "عملیات گروهی ناموفق بود.",
+                        errorCode = result.ErrorCode,
+                        detail = result.ErrorMessage,
+                        attempted = result.Attempted,
+                        succeeded = result.Succeeded,
+                    },
+                    statusCode: 400);
+            }
+
+            return Results.Json(result);
+        }
+        catch (PlatformHttpException ex) { return ToError(ex); }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Json(
+                new { title = ex.Message, errorCode = "fulfillment.work_queue.bulk_failed", detail = ex.Message },
+                statusCode: 400);
+        }
+    }
 
     private static async Task<IResult> AdminGetAsync(
         Guid fulfillmentId,

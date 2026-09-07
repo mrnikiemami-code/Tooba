@@ -61,12 +61,62 @@ export interface FulfillmentListRow {
   fulfillmentId: string;
   sellerOrderId: string;
   checkoutId: string;
+  sellerPartyId: string;
+  sellerDisplayName: string;
+  orderReference: string;
   status: string;
   recipientName: string;
   cityName: string;
+  shippingMethodCode: string;
+  shippingMethodLabel: string;
+  itemCount: number;
+  quantityOrdered: number;
+  quantityShipped: number;
   shipmentCount: number;
+  primaryShipmentId: string | null;
+  trackingSummary: string;
   trackingReferences: string[];
+  createdAt: string;
+  updatedAt: string;
+  availableActionCodes: string[];
 }
+
+export type FulfillmentQueueFilter =
+  | "all"
+  | "needs_action"
+  | "ready_to_process"
+  | "ready_to_pack"
+  | "ready_to_ship"
+  | "missing_tracking"
+  | "in_transit"
+  | "delivered"
+  | "problem";
+
+export const FULFILLMENT_QUEUE_FILTERS: Array<{ id: FulfillmentQueueFilter; labelFa: string; labelEn: string }> = [
+  { id: "all", labelFa: "همه", labelEn: "All" },
+  { id: "needs_action", labelFa: "نیازمند اقدام", labelEn: "Needs action" },
+  { id: "ready_to_process", labelFa: "آماده پردازش", labelEn: "Ready to process" },
+  { id: "ready_to_pack", labelFa: "آماده بسته‌بندی", labelEn: "Ready to pack" },
+  { id: "ready_to_ship", labelFa: "آماده ارسال", labelEn: "Ready to ship" },
+  { id: "missing_tracking", labelFa: "بدون کد رهگیری", labelEn: "Missing tracking" },
+  { id: "in_transit", labelFa: "در مسیر", labelEn: "In transit" },
+  { id: "delivered", labelFa: "تحویل‌شده", labelEn: "Delivered" },
+  { id: "problem", labelFa: "مشکل‌دار", labelEn: "Problem" },
+];
+
+export const FULFILLMENT_SAFE_BULK_ACTION_CODES = [
+  "mark_processing",
+  "mark_packed",
+  "dispatch_shipment",
+  "deliver_shipment",
+] as const;
+
+export const FULFILLMENT_BULK_ACTION_LABELS: Record<string, { fa: string; en: string }> = {
+  mark_processing: { fa: "شروع پردازش گروهی", en: "Bulk mark processing" },
+  mark_packed: { fa: "بسته‌بندی گروهی", en: "Bulk pack" },
+  dispatch_shipment: { fa: "ارسال گروهی", en: "Bulk dispatch" },
+  deliver_shipment: { fa: "ثبت تحویل گروهی", en: "Bulk deliver" },
+};
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -202,6 +252,43 @@ export function mapFulfillmentSnapshot(value: unknown): FulfillmentSnapshot | nu
 export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
   const items = Array.isArray(value) ? value : [];
   return items.flatMap((raw): FulfillmentListRow[] => {
+    const item = record(raw);
+    if (!item) return [];
+
+    // Work-queue row shape (AdminFulfillmentWorkQueueRow)
+    const fulfillmentId = text(prop(item, "fulfillmentId", "FulfillmentId"));
+    if (fulfillmentId && (prop(item, "orderReference", "OrderReference") != null || prop(item, "availableActionCodes", "AvailableActionCodes") != null)) {
+      const trackingSummary = text(prop(item, "trackingSummary", "TrackingSummary"));
+      const codesRaw = prop(item, "availableActionCodes", "AvailableActionCodes");
+      const availableActionCodes = Array.isArray(codesRaw)
+        ? codesRaw.map((c) => text(c)).filter(Boolean)
+        : [];
+      return [{
+        id: fulfillmentId,
+        fulfillmentId,
+        sellerOrderId: text(prop(item, "sellerOrderId", "SellerOrderId")),
+        checkoutId: text(prop(item, "checkoutId", "CheckoutId")),
+        sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
+        sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName"), "فروشنده"),
+        orderReference: text(prop(item, "orderReference", "OrderReference")),
+        status: normalizeFulfillmentStatus(prop(item, "status", "Status")),
+        recipientName: text(prop(item, "recipientName", "RecipientName")),
+        cityName: text(prop(item, "cityName", "CityName")),
+        shippingMethodCode: text(prop(item, "shippingMethodCode", "ShippingMethodCode")),
+        shippingMethodLabel: text(prop(item, "shippingMethodLabel", "ShippingMethodLabel")),
+        itemCount: number(prop(item, "itemCount", "ItemCount")),
+        quantityOrdered: number(prop(item, "quantityOrdered", "QuantityOrdered")),
+        quantityShipped: number(prop(item, "quantityShipped", "QuantityShipped")),
+        shipmentCount: number(prop(item, "shipmentCount", "ShipmentCount")),
+        primaryShipmentId: nullableText(prop(item, "primaryShipmentId", "PrimaryShipmentId")),
+        trackingSummary,
+        trackingReferences: trackingSummary ? trackingSummary.split(" · ").filter(Boolean) : [],
+        createdAt: text(prop(item, "createdAt", "CreatedAt")),
+        updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
+        availableActionCodes,
+      }];
+    }
+
     const snapshot = mapFulfillmentSnapshot(raw);
     if (!snapshot) return [];
     const trackingReferences = snapshot.shipments
@@ -212,13 +299,34 @@ export function mapFulfillmentList(value: unknown): FulfillmentListRow[] {
       fulfillmentId: snapshot.fulfillmentId,
       sellerOrderId: snapshot.sellerOrderId,
       checkoutId: snapshot.checkoutId,
+      sellerPartyId: snapshot.sellerPartyId,
+      sellerDisplayName: "",
+      orderReference: snapshot.checkoutId.slice(0, 8),
       status: snapshot.status,
       recipientName: snapshot.recipientName,
       cityName: snapshot.cityName,
+      shippingMethodCode: snapshot.shippingMethodCode,
+      shippingMethodLabel: snapshot.shippingMethodLabel,
+      itemCount: snapshot.items.length,
+      quantityOrdered: snapshot.items.reduce((sum, row) => sum + row.quantityOrdered, 0),
+      quantityShipped: snapshot.items.reduce((sum, row) => sum + row.quantityShipped, 0),
       shipmentCount: snapshot.shipments.length,
+      primaryShipmentId: snapshot.shipments[0]?.shipmentId ?? null,
+      trackingSummary: trackingReferences.join(" · "),
       trackingReferences,
+      createdAt: "",
+      updatedAt: "",
+      availableActionCodes: [],
     }];
   });
+}
+
+/** آیا انتخاب گروهی برای یک کد عملیات سازگار است (همان فروشنده + همه دارای کد). */
+export function areFulfillmentBulkCompatible(rows: FulfillmentListRow[], actionCode: string): boolean {
+  if (rows.length === 0 || !actionCode) return false;
+  const seller = rows[0]!.sellerPartyId;
+  if (rows.some((row) => row.sellerPartyId !== seller)) return false;
+  return rows.every((row) => row.availableActionCodes.includes(actionCode));
 }
 
 /** وضعیت fulfillment را برای UI فارسی می‌کند. */
@@ -436,14 +544,60 @@ export async function loadAdminFulfillments(): Promise<AdminResult<FulfillmentLi
   }
 }
 
-/** Server GridQuery — fulfillment Admin. */
+/** Server GridQuery — صف کار ارسال و تحویل Admin. */
 export function queryAdminFulfillmentsGrid(
   query: GridServerQuery,
 ): Promise<AdminGridQueryResult<FulfillmentListRow>> {
-  return postAdminGridQuery("/v1/admin/fulfillments/query", query, adminActorHeader(), (item) => {
+  return postAdminGridQuery("/v1/admin/fulfillments/work-queue/query", query, adminActorHeader(), (item) => {
     const rows = mapFulfillmentList([item]);
     return rows[0] ?? null;
   });
+}
+
+/** اجرای گروهی عملیات صف کار — همان فرمان‌های Order Operations. */
+export async function executeAdminFulfillmentWorkQueueBulk(body: {
+  actionCode: string;
+  items: Array<{
+    checkoutId: string;
+    fulfillmentId: string;
+    sellerOrderId: string;
+    shipmentId?: string | null;
+  }>;
+  trackingReference?: string | null;
+  carrierDisplayName?: string | null;
+  shippingMethodCode?: string | null;
+}): Promise<AdminResult<{ attempted: number; succeeded: number }>> {
+  try {
+    const response = await fetch("/v1/admin/fulfillments/work-queue/bulk", {
+      method: "POST",
+      headers: { ...adminActorHeader(), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => null);
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      const recordPayload = record(payload);
+      const message =
+        text(prop(recordPayload ?? {}, "detail", "Detail"))
+        || text(prop(recordPayload ?? {}, "title", "Title"))
+        || text(prop(recordPayload ?? {}, "errorCode", "ErrorCode"))
+        || `admin.http.${response.status}`;
+      return { state: "error", data: null, status: response.status, message };
+    }
+    const row = record(payload) ?? {};
+    return {
+      state: "ok",
+      data: {
+        attempted: number(prop(row, "attempted", "Attempted")),
+        succeeded: number(prop(row, "succeeded", "Succeeded")),
+      },
+      status: response.status,
+    };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
 }
 
 /** جزئیات fulfillment برای Admin. */

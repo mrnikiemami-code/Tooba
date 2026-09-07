@@ -35,17 +35,16 @@ import {
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_FULFILLMENT_GRID_VIEW_KEY, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
   loadAdminFulfillmentDetail,
-  queryAdminFulfillmentsGrid,
-  type FulfillmentListRow,
   type FulfillmentSnapshot,
 } from "../fulfillment/fulfillment-api";
 import { FulfillmentShipmentList } from "../fulfillment/fulfillment-ui";
+import { AdminFulfillmentWorkQueueScreen } from "./admin-fulfillment-work-queue-screen";
 import {
   adminRetryReturnRefund,
   formatReturnDate,
@@ -436,64 +435,9 @@ export function AdminOrdersScreen() {
   );
 }
 
-const fulfillmentStatusEnumOptions = [
-  { value: "ReadyToFulfill", label: formatFulfillmentStatus("ReadyToFulfill") },
-  { value: "Processing", label: formatFulfillmentStatus("Processing") },
-  { value: "Packed", label: formatFulfillmentStatus("Packed") },
-  { value: "Dispatched", label: formatFulfillmentStatus("Dispatched") },
-  { value: "InTransit", label: formatFulfillmentStatus("InTransit") },
-  { value: "Delivered", label: formatFulfillmentStatus("Delivered") },
-  { value: "Failed", label: formatFulfillmentStatus("Failed") },
-  { value: "Cancelled", label: formatFulfillmentStatus("Cancelled") },
-];
-
-const fulfillmentColumns: GridColumnDef<FulfillmentListRow>[] = [
-  {
-    id: "recipientName",
-    header: "گیرنده",
-    accessor: (row) => row.recipientName,
-    cell: (row) => (
-      <Link className="min-w-0 hover:underline" href={`/admin/fulfillments/${row.fulfillmentId}`}>
-        <span className="block truncate font-semibold text-primary">{row.recipientName || "بدون نام"}</span>
-        <span className="block truncate text-xs text-muted">شناسه کوتاه: {row.fulfillmentId.slice(0, 8)}</span>
-      </Link>
-    ),
-    width: 180,
-    minWidth: 140,
-    maxWidth: 260,
-    sticky: "start",
-    filterKind: "text",
-    sortable: true,
-  },
-  {
-    id: "fulfillmentId",
-    header: "شناسه کوتاه",
-    accessor: (row) => row.fulfillmentId,
-    cell: (row) => <span className="font-mono text-xs text-muted">{row.fulfillmentId.slice(0, 8)}</span>,
-    width: 110,
-    minWidth: 88,
-    maxWidth: 140,
-    filterKind: "text",
-    sortable: true,
-    defaultVisible: false,
-  },
-  { id: "checkoutId", header: "شناسه کوتاه تسویه", accessor: (row) => row.checkoutId, cell: (row) => row.checkoutId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
-  { id: "cityName", header: "شهر", accessor: (row) => row.cityName, width: 110, minWidth: 90, maxWidth: 150, filterKind: "text", sortable: true },
-  { id: "shipmentCount", header: "محموله", accessor: (row) => row.shipmentCount, cell: (row) => row.shipmentCount.toLocaleString("fa-IR"), width: 90, minWidth: 72, maxWidth: 110, sortable: true },
-  { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <span className={fulfillmentStatusBadgeClass(row.status)}>{formatFulfillmentStatus(row.status)}</span>, width: 140, minWidth: 120, maxWidth: 180, filterKind: "status", enumOptions: fulfillmentStatusEnumOptions },
-];
-
-/** فهرست زندهٔ ارسال و تحویل برای Admin. */
+/** فهرست زندهٔ ارسال و تحویل برای Admin — صف کار عملیاتی. */
 export function AdminFulfillmentsScreen() {
-  return (
-    <ServerGridPage
-      title="ارسال و تحویل"
-      description="نظارت عملیاتی بر ارسال و تحویل و محموله‌ها"
-      queryFn={queryAdminFulfillmentsGrid}
-      columns={fulfillmentColumns}
-      gridId={ADMIN_FULFILLMENT_GRID_VIEW_KEY}
-    />
-  );
+  return <AdminFulfillmentWorkQueueScreen />;
 }
 
 /** جزئیات ارسال و تحویل برای Admin (فقط‌خواندنی). */

@@ -117,7 +117,7 @@ public sealed class AdminDbNativeGridQueryTests
             "AdminOrdersGridQueryEngine.cs",
             "AdminCustomersGridQueryEngine.cs",
             "AdminSellersGridQueryEngine.cs",
-            "AdminFulfillmentGridQueryEngine.cs",
+            "AdminFulfillmentWorkQueueQueryEngine.cs",
             "AdminReturnGridQueryEngine.cs",
             "AdminPayoutGridQueryEngine.cs",
             "AdminReviewGridQueryEngine.cs",

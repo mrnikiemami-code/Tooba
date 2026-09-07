@@ -21,8 +21,10 @@ type Props = {
   compact?: boolean;
   /** Grid: فقط آیکون kebab بدون متن تکراری عملیات. */
   iconOnly?: boolean;
-  /** Grid = whole-order؛ Detail = همهٔ actions API. */
+  /** Grid = whole-order؛ Detail = همهٔ actions API؛ صف ارسال = فقط fulfillment. */
   scope?: AdminOrderOperationsScope;
+  /** محدود کردن actions به یک fulfillment در صف کار. */
+  fulfillmentId?: string | null;
   onCompleted?: () => void;
   testId?: string;
 };
@@ -37,6 +39,7 @@ export function AdminOrderOperationsMenu({
   compact = false,
   iconOnly = false,
   scope = "detail",
+  fulfillmentId = null,
   onCompleted,
   testId,
 }: Props) {
@@ -70,8 +73,8 @@ export function AdminOrderOperationsMenu({
       setError(result.message ?? mapAdminErrorMessage(null, "fa"));
       return;
     }
-    setActions(filterOperationsForScope(result.data.actions, scope));
-  }, [checkoutId, scope]);
+    setActions(filterOperationsForScope(result.data.actions, scope, fulfillmentId));
+  }, [checkoutId, scope, fulfillmentId]);
 
   const updatePosition = useCallback(() => {
     const btn = buttonRef.current;
