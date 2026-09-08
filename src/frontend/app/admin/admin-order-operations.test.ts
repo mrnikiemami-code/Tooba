@@ -133,6 +133,8 @@ test("whole-order scope filters fulfillment/return actions from grid", () => {
     sampleAction("cancel"),
     sampleAction("confirm_deposit"),
     sampleAction("mark_packed"),
+    sampleAction("pack_selected"),
+    sampleAction("mark_processing"),
     sampleAction("create_shipment"),
     sampleAction("request_return"),
     sampleAction("retry_refund"),
@@ -142,7 +144,10 @@ test("whole-order scope filters fulfillment/return actions from grid", () => {
   for (const code of GRID_EXCLUDED_OPERATION_CODES) {
     assert.equal(filtered.some((a) => a.code === code), false);
   }
-  assert.equal(filterOperationsForScope(actions, "detail").length, actions.length);
+  assert.deepEqual(
+    filterOperationsForScope(actions, "detail").map((a) => a.code),
+    ["cancel", "confirm_deposit"],
+  );
 });
 
 test("grid trigger is icon-only without repeating عملیات text on button", () => {
@@ -164,6 +169,9 @@ test("formatAdminStatus humanizes fulfillment enums without raw ReadyToFulfill",
 test("grid excludes unpack and cancel_shipment from whole-order kebab", () => {
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("unpack"), true);
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("cancel_shipment"), true);
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("pack_selected"), true);
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("mark_processing"), true);
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("mark_packed"), true);
   const actions = [
     sampleAction("cancel"),
     sampleAction("unpack"),

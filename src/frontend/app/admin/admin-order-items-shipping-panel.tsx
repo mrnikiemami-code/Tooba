@@ -7,6 +7,11 @@ import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminO
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import {
+  compatibleBulkCodes,
+  MIXED_SELECTION_MESSAGE_FA,
+  rowActionsForLine,
+} from "./admin-order-line-actions";
+import {
   executeAdminOrderOperation,
   loadAdminOrderOperations,
   type AdminOrderOperationAction,
@@ -75,13 +80,14 @@ function actionFor(
   code: string,
   sellerOrderId: string,
   shipmentId?: string | null,
+  orderLineId?: string | null,
 ): AdminOrderOperationAction | undefined {
-  return actions.find(
-    (a) =>
-      a.code === code &&
-      a.sellerOrderId === sellerOrderId &&
-      (shipmentId == null || a.shipmentId === shipmentId),
-  );
+  return actions.find((a) => {
+    if (a.code !== code || a.sellerOrderId !== sellerOrderId) return false;
+    if (shipmentId != null && a.shipmentId !== shipmentId) return false;
+    if (orderLineId === undefined) return !a.orderLineId;
+    return a.orderLineId === orderLineId;
+  });
 }
 
 /**
@@ -93,6 +99,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [opsBySeller, setOpsBySeller] = useState<Record<string, AdminOrderOperationAction[]>>({});
   const [opsLoaded, setOpsLoaded] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
   const [shipmentModalSellerId, setShipmentModalSellerId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -175,13 +182,19 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   async function runSellerOp(
     seller: AdminSellerOrder,
     code: string,
-    opts?: { shipmentId?: string | null; selections?: Array<{ orderLineId: string; quantity: number }> | null; carrierDisplayName?: string; trackingReference?: string },
+    opts?: {
+      shipmentId?: string | null;
+      orderLineId?: string | null;
+      selections?: Array<{ orderLineId: string; quantity: number }> | null;
+      carrierDisplayName?: string;
+      trackingReference?: string;
+    },
   ) {
     const actions = [
       ...(opsBySeller[seller.id] ?? []),
       ...(opsBySeller.__checkout__ ?? []),
     ];
-    const action = actionFor(actions, code, seller.id, opts?.shipmentId);
+    const action = actionFor(actions, code, seller.id, opts?.shipmentId, opts?.orderLineId);
     if (!action) {
       toast.error("این عملیات در وضعیت فعلی برای این فروشنده مجاز نیست.");
       return;
@@ -227,9 +240,24 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const hasSelection = selected.length > 0;
           const labels = sellerQuickActionLabels(hasSelection);
           const actions = opsBySeller[seller.id] ?? [];
-          const canPack = Boolean(actionFor(actions, "mark_packed", seller.id));
-          const canUnpack = Boolean(actionFor(actions, "unpack", seller.id));
-          const canCreate = Boolean(actionFor(actions, "create_shipment", seller.id));
+          const bulkCodes = compatibleBulkCodes(actions, selected);
+          const mixedSelection = hasSelection && bulkCodes.size === 0;
+          const canStart = Boolean(actionFor(actions, "mark_processing", seller.id));
+          const canPackAll = !hasSelection && Boolean(actionFor(actions, "mark_packed", seller.id));
+          const canPackSelected = hasSelection && !mixedSelection && bulkCodes.has("pack_selected")
+            && Boolean(actionFor(actions, "pack_selected", seller.id));
+          const canUnpack = !mixedSelection && (
+            hasSelection
+              ? bulkCodes.has("unpack") && Boolean(actionFor(actions, "unpack", seller.id))
+              : Boolean(actionFor(actions, "unpack", seller.id))
+          );
+          const selectedShippable = selected.every((id) => {
+            const line = seller.lines.find((l) => lineKey(l) === id);
+            return line ? shippableQty(line) > 0 : false;
+          });
+          const canCreate = !mixedSelection
+            && Boolean(actionFor(actions, "create_shipment", seller.id))
+            && (!hasSelection || selectedShippable);
           const shipments = seller.shipments ?? [];
           const itemCount = seller.lines.reduce((sum, line) => sum + line.quantity, 0);
 
@@ -248,33 +276,61 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    type="button"
-                    disabled={!canCreate || pendingCode !== null}
-                    onClick={() => setShipmentModalSellerId(seller.id)}
-                    className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                    data-testid={`admin-order-seller-create-shipment-${seller.id}`}
-                  >
-                    {labels.createShipment}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canPack || pendingCode !== null}
-                    onClick={() => void runSellerOp(seller, "mark_packed", { selections: buildSelections(seller, "pack") })}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-                    data-testid={`admin-order-seller-pack-${seller.id}`}
-                  >
-                    {labels.pack}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!canUnpack || pendingCode !== null}
-                    onClick={() => void runSellerOp(seller, "unpack", { selections: buildSelections(seller, "unpack") })}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-                    data-testid={`admin-order-seller-unpack-${seller.id}`}
-                  >
-                    {labels.unpack}
-                  </button>
+                  {canStart ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => void runSellerOp(seller, "mark_processing")}
+                      className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 disabled:opacity-50"
+                      data-testid={`admin-order-seller-start-processing-${seller.id}`}
+                    >
+                      شروع پردازش
+                    </button>
+                  ) : null}
+                  {canCreate ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => setShipmentModalSellerId(seller.id)}
+                      className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                      data-testid={`admin-order-seller-create-shipment-${seller.id}`}
+                    >
+                      {labels.createShipment}
+                    </button>
+                  ) : null}
+                  {canPackAll ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => void runSellerOp(seller, "mark_packed")}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
+                      data-testid={`admin-order-seller-pack-${seller.id}`}
+                    >
+                      {labels.pack}
+                    </button>
+                  ) : null}
+                  {canPackSelected ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => void runSellerOp(seller, "pack_selected", { selections: buildSelections(seller, "pack") })}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
+                      data-testid={`admin-order-seller-pack-selected-${seller.id}`}
+                    >
+                      {labels.pack}
+                    </button>
+                  ) : null}
+                  {canUnpack ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => void runSellerOp(seller, "unpack", { selections: hasSelection ? buildSelections(seller, "unpack") : null })}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
+                      data-testid={`admin-order-seller-unpack-${seller.id}`}
+                    >
+                      {labels.unpack}
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
@@ -309,6 +365,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         const key = lineKey(line);
                         const maxQty = Math.max(1, line.quantity);
                         const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || 1);
+                        const lineActions = rowActionsForLine(actions, line.orderLineId || line.id);
                         return (
                           <tr key={key} className="hover:bg-gray-50/70" data-testid={`admin-order-line-row-${key}`}>
                             <td className="px-2 py-2">
@@ -366,25 +423,66 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                             <td className="px-2 py-2 text-[11px] text-gray-700" data-testid={`admin-order-line-return-${key}`}>
                               {returnSummary(line)}
                             </td>
-                            <td className="px-2 py-2">
-                              <button
-                                type="button"
-                                className="inline-flex size-7 items-center justify-center rounded-full border border-gray-200 text-gray-500"
-                                aria-label="عملیات ردیف"
-                                title="عملیات ردیف از نوار فروشنده و کارت مرسوله"
-                                disabled
-                              >
-                                <MoreHorizontal className="size-3.5" aria-hidden />
-                              </button>
+                            <td className="relative px-2 py-2">
+                              {lineActions.length === 0 ? null : (
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    className="inline-flex size-7 items-center justify-center rounded-full border border-gray-200 text-gray-600"
+                                    aria-label="عملیات ردیف"
+                                    aria-expanded={openKebabLineId === key}
+                                    data-testid={`admin-order-line-kebab-${key}`}
+                                    disabled={pendingCode !== null}
+                                    onClick={() => setOpenKebabLineId((cur) => (cur === key ? null : key))}
+                                  >
+                                    <MoreHorizontal className="size-3.5" aria-hidden />
+                                  </button>
+                                  {openKebabLineId === key ? (
+                                    <div
+                                      className="absolute left-0 top-8 z-20 min-w-[11rem] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+                                      data-testid={`admin-order-line-kebab-menu-${key}`}
+                                    >
+                                      {lineActions.map((action) => (
+                                        <button
+                                          key={`${action.code}:${action.orderLineId}`}
+                                          type="button"
+                                          className="block w-full px-3 py-1.5 text-right text-xs font-bold text-gray-800 hover:bg-gray-50"
+                                          data-testid={`admin-order-line-action-${action.code}-${key}`}
+                                          onClick={() => {
+                                            setOpenKebabLineId(null);
+                                            const mode = action.code === "unpack" ? "unpack" : "pack";
+                                            const lineId = line.orderLineId || line.id;
+                                            const max =
+                                              mode === "pack" ? packableQty(line) : unpackableQty(line);
+                                            const qty = Math.min(qtyByLine[key] ?? max, max);
+                                            void runSellerOp(seller, action.code, {
+                                              orderLineId: action.orderLineId,
+                                              selections: qty > 0 ? [{ orderLineId: lineId, quantity: qty }] : null,
+                                            });
+                                          }}
+                                        >
+                                          {action.labelFa}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                  {hasSelection ? (
+                  {mixedSelection ? (
+                    <div className="border-t border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900" data-testid={`admin-order-seller-mixed-selection-${seller.id}`}>
+                      {MIXED_SELECTION_MESSAGE_FA}
+                    </div>
+                  ) : hasSelection ? (
                     <div className="border-t border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800" data-testid={`admin-order-seller-selection-bar-${seller.id}`}>
-                      افزودن مرسوله جدید برای {selected.length.toLocaleString("fa-IR")} قلم انتخاب‌شده
+                      {bulkCodes.has("pack_selected")
+                        ? `بسته‌بندی ${selected.length.toLocaleString("fa-IR")} قلم انتخاب‌شده`
+                        : `افزودن مرسوله جدید برای ${selected.length.toLocaleString("fa-IR")} قلم انتخاب‌شده`}
                     </div>
                   ) : null}
                 </div>

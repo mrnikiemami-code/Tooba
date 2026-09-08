@@ -139,7 +139,7 @@ public static class AdminFulfillmentQueueFilters
             codes.Add("mark_processing");
         }
 
-        if (fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing or FulfillmentStatus.Packed
+        if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
             && HasPackableQuantity(fulfillment.Items))
         {
             codes.Add("mark_packed");

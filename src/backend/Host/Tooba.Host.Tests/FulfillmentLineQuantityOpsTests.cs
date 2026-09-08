@@ -6,8 +6,9 @@ namespace Tooba.Host.Tests;
 /// <summary>تست‌های خط/تعداد fulfillment برای TB-P09-T005.</summary>
 public sealed class FulfillmentLineQuantityOpsTests
 {
-    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now) =>
-        FulfillmentUnit.CreateFromPaidOrder(
+    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now)
+    {
+        var unit = FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -22,6 +23,9 @@ public sealed class FulfillmentLineQuantityOpsTests
             "ارسال",
             [(orderLineId, quantity, Guid.NewGuid())],
             now);
+        unit.MarkProcessing(now);
+        return unit;
+    }
 
     [Fact]
     public void Whole_group_pack_packs_all_remaining()

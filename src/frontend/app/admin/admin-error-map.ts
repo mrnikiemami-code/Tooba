@@ -246,6 +246,30 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بازگردانی پس از ارسال مرسوله مجاز نیست.",
     en: "Restore is not allowed after a shipment has been dispatched.",
   },
+  "fulfillment.pack.requires_processing": {
+    fa: "ابتدا پردازش را شروع کنید.",
+    en: "Start processing before packing.",
+  },
+  "fulfillment.pack.not_processing": {
+    fa: "این قلم هنوز در مرحله پردازش نیست.",
+    en: "This line is not in the processing stage yet.",
+  },
+  "fulfillment.ship.not_packed": {
+    fa: "این قلم هنوز بسته‌بندی نشده است.",
+    en: "This line has not been packed yet.",
+  },
+  "fulfillment.selection.qty_exceeded": {
+    fa: "تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.",
+    en: "The selected quantity is larger than the operable quantity.",
+  },
+  "fulfillment.bulk.incompatible": {
+    fa: "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.",
+    en: "The selected rows are not compatible for this action.",
+  },
+  "fulfillment.bulk.cross_seller": {
+    fa: "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
+    en: "Bulk actions cannot mix sellers.",
+  },
   "order.restore.seller_payout_completed": {
     fa: "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
     en: "This order cannot be restored because the seller share has already been paid out.",

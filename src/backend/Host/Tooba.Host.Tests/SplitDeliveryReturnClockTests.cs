@@ -82,6 +82,7 @@ public sealed class SplitDeliveryReturnClockTests
             "پست",
             [(lineId, 3, null)],
             now);
+        unit.MarkProcessing(now);
         unit.MarkPacked(now);
         var meta = ShippingProviderMetadataValidator.ValidateAndNormalize(
             "post",

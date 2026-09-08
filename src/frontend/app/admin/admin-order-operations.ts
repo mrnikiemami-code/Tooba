@@ -24,6 +24,7 @@ export type AdminOrderOperationAction = {
   fulfillmentId: string | null;
   shipmentId: string | null;
   returnRequestId: string | null;
+  orderLineId?: string | null;
   requiredPermission: string;
   requiresConfirm: boolean;
   confirmMessageFa: string | null;
@@ -87,6 +88,7 @@ function mapAction(raw: unknown): AdminOrderOperationAction | null {
     fulfillmentId: asString(row.fulfillmentId) ?? asString(row.FulfillmentId),
     shipmentId: asString(row.shipmentId) ?? asString(row.ShipmentId),
     returnRequestId: asString(row.returnRequestId) ?? asString(row.ReturnRequestId),
+    orderLineId: asString(row.orderLineId) ?? asString(row.OrderLineId),
     requiredPermission: asString(row.requiredPermission) ?? asString(row.RequiredPermission) ?? "",
     requiresConfirm: Boolean(row.requiresConfirm ?? row.RequiresConfirm),
     confirmMessageFa: asString(row.confirmMessageFa) ?? asString(row.ConfirmMessageFa),

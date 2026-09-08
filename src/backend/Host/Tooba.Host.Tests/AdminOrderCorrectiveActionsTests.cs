@@ -406,8 +406,9 @@ public sealed class AdminOrderCorrectiveActionsTests
             "پست");
     }
 
-    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now) =>
-        FulfillmentUnit.CreateFromPaidOrder(
+    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now)
+    {
+        var unit = FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -422,6 +423,9 @@ public sealed class AdminOrderCorrectiveActionsTests
             "ارسال",
             [(orderLineId, quantity, Guid.NewGuid())],
             now);
+        unit.MarkProcessing(now);
+        return unit;
+    }
 
     private static string FindRepoRoot()
     {

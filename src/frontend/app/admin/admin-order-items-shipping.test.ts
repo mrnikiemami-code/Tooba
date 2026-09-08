@@ -4,7 +4,13 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { mapAdminOrderDetail } from "./admin-api.ts";
+import {
+  compatibleBulkCodes,
+  MIXED_SELECTION_MESSAGE_FA,
+  rowActionsForLine,
+} from "./admin-order-line-actions.ts";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope.ts";
+import { mapAdminErrorMessage } from "./admin-error-map.ts";
 
 const dir = dirname(fileURLToPath(import.meta.url));
 
@@ -75,6 +81,54 @@ test("selected-state labels switch correctly", () => {
     unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
     dispatch: "ارسال انتخاب‌شده‌ها",
   });
+});
+
+test("detail and whole-order menus hide start-processing and pack", () => {
+  const detail = readFileSync(join(dir, "admin-order-detail-screen.tsx"), "utf8");
+  assert.match(detail, /scope="whole-order"/);
+  assert.doesNotMatch(detail, /scope="detail"/);
+});
+
+test("row kebab is projection-driven and hidden when empty", () => {
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  assert.match(panel, /rowActionsForLine/);
+  assert.match(panel, /admin-order-line-kebab-/);
+  assert.match(panel, /lineActions\.length === 0 \? null/);
+  assert.doesNotMatch(panel, /title="عملیات ردیف از نوار فروشنده و کارت مرسوله"/);
+  assert.match(panel, /pack_selected/);
+  assert.match(panel, /mark_processing/);
+  assert.match(panel, /MIXED_SELECTION_MESSAGE_FA/);
+});
+
+test("exact selection and mixed bulk helpers", () => {
+  const actions = [
+    { code: "pack_selected", orderLineId: "L1" },
+    { code: "pack_selected", orderLineId: "L2" },
+    { code: "unpack", orderLineId: "L3" },
+  ];
+  assert.deepEqual(rowActionsForLine(actions, "L1").map((a) => a.code), ["pack_selected"]);
+  assert.equal(rowActionsForLine(actions, "none").length, 0);
+  assert.deepEqual([...compatibleBulkCodes(actions, ["L1", "L2"])], ["pack_selected"]);
+  assert.equal(compatibleBulkCodes(actions, ["L1", "L3"]).size, 0);
+  assert.equal(MIXED_SELECTION_MESSAGE_FA, "ردیف‌های انتخاب‌شده در وضعیت‌های متفاوت یا ناسازگار هستند.");
+});
+
+test("qty input stays exact and pack-selected sends selections", () => {
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  assert.match(panel, /admin-order-line-qty-/);
+  assert.match(panel, /buildSelections\(seller, "pack"\)/);
+  assert.match(panel, /orderLineId: lineId, quantity: qty/);
+  assert.match(panel, /runSellerOp\(seller, "pack_selected"/);
+  assert.match(panel, /runSellerOp\(seller, "mark_packed"\)/);
+});
+
+test("fulfillment sequence errors map to FA", () => {
+  assert.equal(mapAdminErrorMessage("fulfillment.pack.requires_processing", "fa"), "ابتدا پردازش را شروع کنید.");
+  assert.equal(mapAdminErrorMessage("fulfillment.pack.not_processing", "fa"), "این قلم هنوز در مرحله پردازش نیست.");
+  assert.equal(mapAdminErrorMessage("fulfillment.ship.not_packed", "fa"), "این قلم هنوز بسته‌بندی نشده است.");
+  assert.equal(mapAdminErrorMessage("fulfillment.selection.qty_exceeded", "fa"), "تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.");
+  assert.equal(mapAdminErrorMessage("fulfillment.bulk.incompatible", "fa"), "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.");
+  assert.equal(mapAdminErrorMessage("fulfillment.bulk.cross_seller", "fa"), "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.");
 });
 
 test("panel preserves horizontal scroll and return deadline column", () => {

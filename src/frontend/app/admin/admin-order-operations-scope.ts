@@ -14,6 +14,7 @@ export type AdminOrderOperationActionLike = {
 export const GRID_EXCLUDED_OPERATION_CODES = new Set([
   "mark_processing",
   "mark_packed",
+  "pack_selected",
   "unpack",
   "create_shipment",
   "cancel_shipment",
@@ -31,6 +32,7 @@ export const GRID_EXCLUDED_OPERATION_CODES = new Set([
 export const FULFILLMENT_QUEUE_OPERATION_CODES = new Set([
   "mark_processing",
   "mark_packed",
+  "pack_selected",
   "unpack",
   "create_shipment",
   "cancel_shipment",
@@ -61,7 +63,7 @@ export function filterOperationsForScope<T extends AdminOrderOperationActionLike
       return true;
     });
   }
-  if (scope !== "whole-order") return actions;
+  if (scope !== "whole-order" && scope !== "detail") return actions;
   const filtered = actions.filter((action) => !GRID_EXCLUDED_OPERATION_CODES.has(action.code));
   return dedupeWholeOrderActions(filtered);
 }

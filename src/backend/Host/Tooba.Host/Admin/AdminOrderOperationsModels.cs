@@ -13,7 +13,8 @@ public sealed record AdminOrderOperationAction(
     Guid? ReturnRequestId,
     string RequiredPermission,
     bool RequiresConfirm,
-    string? ConfirmMessageFa);
+    string? ConfirmMessageFa,
+    Guid? OrderLineId = null);
 
 /// <summary>صفحهٔ عملیات سفارش برای یک checkout.</summary>
 public sealed record AdminOrderOperationsPage(

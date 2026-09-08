@@ -215,7 +215,8 @@ public sealed class AdminOrderOperationsComposer
             return code switch
             {
                 "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
-                "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken),
+                "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: false),
+                "pack_selected" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: true),
                 "unpack" => await UnpackAsync(request, actorUserId, cancellationToken),
                 "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
                 "cancel_shipment" => await CancelShipmentAsync(request, actorUserId, cancellationToken),
@@ -269,21 +270,47 @@ public sealed class AdminOrderOperationsComposer
                     "شروع پردازش این سفارش؟"));
             }
 
-            if (fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing or FulfillmentStatus.Packed
+            if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
                 && HasPackableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
                     "mark_packed",
-                    "بسته‌بندی",
-                    "Mark packed",
+                    "بسته‌بندی همه اقلام آماده",
+                    "Pack all eligible",
                     order.SellerOrderId,
                     fulfillment.FulfillmentId,
                     null,
                     null,
                     Prefer(effective, "order.handle", "fulfillment.manage"),
                     true,
-                    "بسته‌بندی این سفارش ثبت شود؟"));
+                    "همه اقلام آماده این فروشنده بسته‌بندی شود؟"));
+                actions.Add(Action(
+                    "pack_selected",
+                    "بسته‌بندی انتخاب‌شده‌ها",
+                    "Pack selected",
+                    order.SellerOrderId,
+                    fulfillment.FulfillmentId,
+                    null,
+                    null,
+                    Prefer(effective, "order.handle", "fulfillment.manage"),
+                    true,
+                    "اقلام انتخاب‌شده بسته‌بندی شود؟"));
+                foreach (var item in fulfillment.Items.Where(x => x.QuantityOrdered > x.QuantityPacked))
+                {
+                    actions.Add(Action(
+                        "pack_selected",
+                        "بسته‌بندی این قلم",
+                        "Pack this line",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        null,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "این قلم بسته‌بندی شود؟",
+                        item.OrderLineId));
+                }
             }
 
             if (HasUnpackableQuantity(fulfillment)
@@ -300,6 +327,27 @@ public sealed class AdminOrderOperationsComposer
                     Prefer(effective, "order.handle", "fulfillment.manage"),
                     true,
                     "بازگشت از بسته‌بندی برای اقلام تخصیص‌نشده؟"));
+                foreach (var item in fulfillment.Items)
+                {
+                    var blocking = OpenAllocated(fulfillment, item.OrderLineId) + item.QuantityShipped;
+                    if (item.QuantityPacked <= blocking)
+                    {
+                        continue;
+                    }
+
+                    actions.Add(Action(
+                        "unpack",
+                        "بازگشت از بسته‌بندی",
+                        "Unpack this line",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        null,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "بازگشت از بسته‌بندی این قلم؟",
+                        item.OrderLineId));
+                }
             }
 
             if (fulfillment.Status is not (FulfillmentStatus.Cancelled or FulfillmentStatus.Failed or FulfillmentStatus.Delivered)
@@ -516,18 +564,41 @@ public sealed class AdminOrderOperationsComposer
     private async Task<object> MarkPackedAsync(
         AdminOrderOperationRequest request,
         Guid actorUserId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool requireSelections)
     {
         var fulfillmentId = RequireFulfillmentId(request);
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
             ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
-        var selections = ResolvePackSelections(snapshot, request.Selections);
+        if (snapshot.Status == FulfillmentStatus.ReadyToFulfill)
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.pack.requires_processing"), "fulfillment.pack.requires_processing");
+        }
+
+        if (requireSelections && (request.Selections is null || request.Selections.Count == 0))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+        }
+
+        if (requireSelections && !SelectionsAreHomogeneousPackable(snapshot, request.Selections!))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+        }
+
+        var selections = ResolvePackSelections(snapshot, requireSelections ? request.Selections : request.Selections);
         if (selections.Count == 0)
         {
             throw new PlatformHttpException(400, "قلم قابل بسته‌بندی باقی نمانده است.", "order.operation.invalid");
         }
 
-        return await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
+        try
+        {
+            return await _fulfillment.PackSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("fulfillment.pack.", StringComparison.Ordinal))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa(ex.Message), ex.Message);
+        }
     }
 
     private async Task<object> UnpackAsync(
@@ -538,6 +609,11 @@ public sealed class AdminOrderOperationsComposer
         var fulfillmentId = RequireFulfillmentId(request);
         var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
             ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+        if (request.Selections is { Count: > 0 } && !SelectionsAreHomogeneousUnpackable(snapshot, request.Selections))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+        }
+
         var selections = ResolveUnpackSelections(snapshot, request.Selections);
         if (selections.Count == 0)
         {
@@ -1226,7 +1302,7 @@ public sealed class AdminOrderOperationsComposer
             var packable = item.QuantityOrdered - item.QuantityPacked;
             if (qty > packable)
             {
-                throw new PlatformHttpException(400, "تعداد از باقیماندهٔ قابل بسته‌بندی بیشتر است.", "order.operation.invalid");
+                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
             }
         });
     }
@@ -1329,6 +1405,66 @@ public sealed class AdminOrderOperationsComposer
         return map.Select(x => new FulfillmentSelectionCommand(x.Key, x.Value)).ToArray();
     }
 
+    internal static bool SelectionsAreHomogeneousUnpackable(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection> selections)
+    {
+        if (selections.Count == 0)
+        {
+            return false;
+        }
+
+        var items = snapshot.Items.ToDictionary(x => x.OrderLineId);
+        foreach (var selection in selections)
+        {
+            if (!items.TryGetValue(selection.OrderLineId, out var item))
+            {
+                return false;
+            }
+
+            var blocking = OpenAllocated(snapshot, item.OrderLineId) + item.QuantityShipped;
+            if (item.QuantityPacked <= blocking)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    internal static bool SelectionsAreHomogeneousPackable(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection> selections)
+    {
+        if (selections.Count == 0)
+        {
+            return false;
+        }
+
+        var items = snapshot.Items.ToDictionary(x => x.OrderLineId);
+        foreach (var selection in selections)
+        {
+            if (!items.TryGetValue(selection.OrderLineId, out var item)
+                || item.QuantityOrdered <= item.QuantityPacked)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    internal static string FulfillmentOpToFa(string code) => code switch
+    {
+        "fulfillment.pack.requires_processing" => "ابتدا پردازش را شروع کنید.",
+        "fulfillment.pack.not_processing" => "این قلم هنوز در مرحله پردازش نیست.",
+        "fulfillment.ship.not_packed" => "این قلم هنوز بسته‌بندی نشده است.",
+        "fulfillment.selection.qty_exceeded" => "تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.",
+        "fulfillment.bulk.incompatible" => "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.",
+        "fulfillment.bulk.cross_seller" => "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
+        _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+    };
+
     private static AdminOrderOperationAction Action(
         string code,
         string labelFa,
@@ -1339,7 +1475,8 @@ public sealed class AdminOrderOperationsComposer
         Guid? returnRequestId,
         string requiredPermission,
         bool requiresConfirm,
-        string? confirmMessageFa) =>
+        string? confirmMessageFa,
+        Guid? orderLineId = null) =>
         new(
             code,
             labelFa,
@@ -1350,7 +1487,8 @@ public sealed class AdminOrderOperationsComposer
             returnRequestId,
             requiredPermission,
             requiresConfirm,
-            confirmMessageFa);
+            confirmMessageFa,
+            orderLineId);
 }
 
 /// <summary>

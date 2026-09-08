@@ -48,7 +48,7 @@ public sealed class AdminFulfillmentWorkQueueTests
             []);
         var codes = AdminFulfillmentQueueFilters.ProjectActionCodes(ready);
         Assert.Contains("mark_processing", codes);
-        Assert.Contains("mark_packed", codes);
+        Assert.DoesNotContain("mark_packed", codes);
         Assert.DoesNotContain("dispatch_shipment", codes);
     }
 

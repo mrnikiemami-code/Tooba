@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks.Grid;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Domain;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
@@ -203,7 +204,7 @@ public sealed class AdminPanelComposer
                     line.LineId,
                     fulfillment is null ? null : shipped,
                     null,
-                    fulfillment?.Status.ToString(),
+                    LineOperationalStatus(fulfillment, packed, line.Quantity),
                     fulfillment is null ? null : packed,
                     fulfillment is null ? null : openAllocated + shipped,
                     line.IsReturnableSnapshot,
@@ -607,6 +608,35 @@ public sealed class AdminPanelComposer
                 order.Currency,
                 settlementStatus);
         }).ToList();
+    }
+
+    internal static string? LineOperationalStatus(FulfillmentSnapshot? fulfillment, int packed, int ordered)
+    {
+        if (fulfillment is null)
+        {
+            return null;
+        }
+
+        if (fulfillment.Status is FulfillmentStatus.Dispatched
+            or FulfillmentStatus.InTransit
+            or FulfillmentStatus.Delivered
+            or FulfillmentStatus.Cancelled
+            or FulfillmentStatus.Failed)
+        {
+            return fulfillment.Status.ToString();
+        }
+
+        if (ordered > 0 && packed >= ordered)
+        {
+            return "Packed";
+        }
+
+        if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill)
+        {
+            return "ReadyToFulfill";
+        }
+
+        return "Processing";
     }
 
     /// <summary>

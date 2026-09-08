@@ -300,7 +300,12 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     public void MarkPacked(DateTimeOffset now)
     {
         EnsureNotTerminal();
-        if (Status is not (FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing or FulfillmentStatus.Packed))
+        if (Status == FulfillmentStatus.ReadyToFulfill)
+        {
+            throw new InvalidOperationException("fulfillment.pack.requires_processing");
+        }
+
+        if (Status is not (FulfillmentStatus.Processing or FulfillmentStatus.Packed))
         {
             throw new InvalidOperationException("انتقال به Packed از این وضعیت مجاز نیست.");
         }
@@ -325,9 +330,19 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         DateTimeOffset now)
     {
         EnsureNotTerminal();
+        if (Status == FulfillmentStatus.ReadyToFulfill)
+        {
+            throw new InvalidOperationException("fulfillment.pack.requires_processing");
+        }
+
         if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
         {
             throw new InvalidOperationException("بسته‌بندی پس از ارسال مجاز نیست.");
+        }
+
+        if (Status is not (FulfillmentStatus.Processing or FulfillmentStatus.Packed))
+        {
+            throw new InvalidOperationException("fulfillment.pack.not_processing");
         }
 
         var normalized = NormalizeSelections(selections);
@@ -344,7 +359,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 selection.Quantity));
         }
 
-        Status = FulfillmentStatus.Packed;
+        Status = _items.All(x => x.QuantityPacked >= x.QuantityOrdered)
+            ? FulfillmentStatus.Packed
+            : FulfillmentStatus.Processing;
         UpdatedAt = now;
         return affected;
     }

@@ -527,7 +527,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
           <AdminOrderOperationsMenu
             checkoutId={checkoutId}
             label="عملیات سفارش"
-            scope="detail"
+            scope="whole-order"
             onCompleted={refresh}
             testId={`admin-order-detail-ops-${checkoutId}`}
           />

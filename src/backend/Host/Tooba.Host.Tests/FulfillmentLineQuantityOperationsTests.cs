@@ -9,7 +9,7 @@ public sealed class FulfillmentLineQuantityOperationsTests
     private static FulfillmentUnit CreateUnit(params (Guid LineId, int Qty)[] lines)
     {
         var now = DateTimeOffset.Parse("2026-09-07T06:00:00Z");
-        return FulfillmentUnit.CreateFromPaidOrder(
+        var unit = FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -24,6 +24,8 @@ public sealed class FulfillmentLineQuantityOperationsTests
             "ارسال",
             lines.Select(x => (x.LineId, x.Qty, (Guid?)Guid.NewGuid())).ToArray(),
             now);
+        unit.MarkProcessing(now);
+        return unit;
     }
 
     [Fact]
