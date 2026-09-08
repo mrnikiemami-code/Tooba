@@ -78,7 +78,7 @@ Recovery-SoT:
 Last Architect-accepted TB-P09-T011. Last Implementation TB-P09-T012. Issued none. Repair none. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T012/recovery-sot.md
 
 Git:
-commit on main. HEAD==origin/main after push.
+commit 0ddbbc61 on main. HEAD==origin/main after push.
 
 Architectural-Concerns:
 Confirm→fulfillment projection remains briefly eventual. Post create_shipment still requires provider metadata (destinationAddress); FE modal already supplies it.
