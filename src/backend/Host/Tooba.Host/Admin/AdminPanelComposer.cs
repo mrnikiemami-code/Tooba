@@ -478,7 +478,7 @@ public sealed class AdminPanelComposer
         var deliveredQty = deliverySlices.Sum(x => x.Quantity);
         if (deliveredQty <= 0)
         {
-            return (policyLabel, policyLabel, "before_delivery");
+            return (policyLabel, "", "before_delivery");
         }
 
         var undeliveredQty = Math.Max(0, line.Quantity - deliveredQty);

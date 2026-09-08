@@ -35,7 +35,7 @@ test("orders grid keeps View and adds one operations menu", () => {
 test("orders grid order reference is non-navigation text; View is canonical", () => {
   const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
   const orderColumnsBlock = screens.slice(
-    screens.indexOf("const orderColumns"),
+    screens.indexOf("function createOrderColumns"),
     screens.indexOf("const sellerColumns"),
   );
   assert.match(orderColumnsBlock, /id:\s*"reference"/);
@@ -50,7 +50,7 @@ test("orders grid order reference is non-navigation text; View is canonical", ()
 test("orders grid exposes filters on all data columns including amount/date/lines", () => {
   const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
   const orderColumnsBlock = screens.slice(
-    screens.indexOf("const orderColumns"),
+    screens.indexOf("function createOrderColumns"),
     screens.indexOf("const sellerColumns"),
   );
   assert.match(orderColumnsBlock, /id:\s*"reference"[\s\S]*filterKind:\s*"text"/);
@@ -261,4 +261,26 @@ test("user grid width and flex scroll preservation markers", () => {
   assert.doesNotMatch(grid, /defaultColDef:\s*\{[\s\S]*?flex:\s*1/);
   assert.match(bridge, /maxWidth/);
   assert.match(screens, /id:\s*"actions"[\s\S]*width:\s*120[\s\S]*minWidth:\s*100/);
+});
+
+test("orders grid reloads after kebab operation via onCompleted and reloadToken", () => {
+  const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+  assert.match(screens, /function createOrderColumns\(onOperationCompleted\?: \(\) => void\)/);
+  assert.match(screens, /onCompleted=\{onOperationCompleted\}/);
+  assert.match(screens, /const \[reloadToken, setReloadToken\] = useState\(0\)/);
+  assert.match(screens, /createOrderColumns\(\(\) => setReloadToken\(\(value\) => value \+ 1\)\)/);
+  assert.match(screens, /reloadToken=\{reloadToken\}/);
+  assert.match(screens, /reloadToken\?: number/);
+  assert.match(screens, /void reloadToken;/);
+});
+
+test("cancelled order blocks forward payment action with human FA", () => {
+  assert.equal(
+    mapAdminErrorMessage("order.cancelled.blocks_action", "fa"),
+    "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("order.cancelled.blocks_action", "en"),
+    "This order is cancelled; the action is not allowed.",
+  );
 });

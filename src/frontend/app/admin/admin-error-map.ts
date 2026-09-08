@@ -270,6 +270,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
     en: "Bulk actions cannot mix sellers.",
   },
+  "order.cancelled.blocks_action": {
+    fa: "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+    en: "This order is cancelled; the action is not allowed.",
+  },
   "order.restore.seller_payout_completed": {
     fa: "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
     en: "This order cannot be restored because the seller share has already been paid out.",

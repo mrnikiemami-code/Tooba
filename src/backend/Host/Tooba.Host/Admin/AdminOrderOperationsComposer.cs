@@ -30,6 +30,23 @@ public sealed class AdminOrderOperationsComposer
         "payment.",
     ];
 
+    internal static readonly HashSet<string> CancelledBlockedCodes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "confirm_deposit",
+        "reject_deposit",
+        "restore_deposit",
+        "mark_processing",
+        "mark_packed",
+        "pack_selected",
+        "unpack",
+        "create_shipment",
+        "cancel_shipment",
+        "assign_tracking",
+        "correct_tracking",
+        "dispatch_shipment",
+        "deliver_shipment",
+    };
+
     private readonly OrderDbContext _orders;
     private readonly ReturnsDbContext _returns;
     private readonly IFulfillmentDirectory _fulfillment;
@@ -90,7 +107,10 @@ public sealed class AdminOrderOperationsComposer
         var eligibility = new List<ReturnEligibilityResult>();
         var actions = new List<AdminOrderOperationAction>();
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
-        ProjectPaymentActions(actions, payment, fulfillments, returns, effective);
+        if (!IsCheckoutCancelled(group))
+        {
+            ProjectPaymentActions(actions, payment, fulfillments, returns, effective);
+        }
         foreach (var order in group.SellerOrders)
         {
             var elig = await _eligibility.EvaluateAsync(order.SellerOrderId, cancellationToken);
@@ -137,6 +157,10 @@ public sealed class AdminOrderOperationsComposer
             ?? throw new PlatformHttpException(404, "سفارش پیدا نشد.", "order.operation.invalid");
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
         var code = request.Code.Trim().ToLowerInvariant();
+        if (IsCheckoutCancelled(group) && CancelledBlockedCodes.Contains(code))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("order.cancelled.blocks_action"), "order.cancelled.blocks_action");
+        }
 
         // cancel / restore_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
         if (code == "cancel")
@@ -252,7 +276,7 @@ public sealed class AdminOrderOperationsComposer
         ReturnEligibilityResult eligibility,
         EffectiveAccessDto effective)
     {
-        if (fulfillment is not null)
+        if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
         {
             if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
@@ -1120,6 +1144,10 @@ public sealed class AdminOrderOperationsComposer
         return SellerOrderCancellationPolicy.CanCancel(order.Status, gate);
     }
 
+    internal static bool IsCheckoutCancelled(CheckoutGroup group) =>
+        group.SellerOrders.Count > 0
+        && group.SellerOrders.All(x => x.Status == SellerOrderStatus.Cancelled);
+
     internal static bool HasDispatchedOrDelivered(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
         fulfillments.Any(f =>
             f.Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered
@@ -1462,6 +1490,7 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.selection.qty_exceeded" => "تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.",
         "fulfillment.bulk.incompatible" => "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.",
         "fulfillment.bulk.cross_seller" => "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
+        "order.cancelled.blocks_action" => "سفارش لغوشده است؛ این عملیات مجاز نیست.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
 

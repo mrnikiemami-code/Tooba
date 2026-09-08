@@ -5,7 +5,10 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { mapAdminOrderDetail } from "./admin-api.ts";
 import {
+  canonicalReturnDisplay,
   compatibleBulkCodes,
+  isIncompatibleSelection,
+  lineLifecycleActions,
   MIXED_SELECTION_MESSAGE_FA,
   rowActionsForLine,
 } from "./admin-order-line-actions.ts";
@@ -91,7 +94,7 @@ test("detail and whole-order menus hide start-processing and pack", () => {
 
 test("row kebab is projection-driven and hidden when empty", () => {
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
-  assert.match(panel, /rowActionsForLine/);
+  assert.match(panel, /lineLifecycleActions/);
   assert.match(panel, /admin-order-line-kebab-/);
   assert.match(panel, /lineActions\.length === 0 \? null/);
   assert.doesNotMatch(panel, /title="عملیات ردیف از نوار فروشنده و کارت مرسوله"/);
@@ -113,6 +116,46 @@ test("exact selection and mixed bulk helpers", () => {
   assert.equal(MIXED_SELECTION_MESSAGE_FA, "ردیف‌های انتخاب‌شده در وضعیت‌های متفاوت یا ناسازگار هستند.");
 });
 
+test("single selection never shows mixed and recovers seller-level row actions", () => {
+  const sellerPack = [{ code: "pack_selected", orderLineId: undefined as string | undefined }];
+  const recovered = lineLifecycleActions(sellerPack, "L1", { packable: true, unpackable: false });
+  assert.deepEqual(recovered.map((a) => a.code), ["pack_selected"]);
+  assert.equal(lineLifecycleActions(sellerPack, "L1", { packable: false, unpackable: false }).length, 0);
+  assert.equal(isIncompatibleSelection(1, new Set(), [new Set(["pack_selected"])]), false);
+  assert.equal(
+    isIncompatibleSelection(2, new Set(), [new Set(["pack_selected"]), new Set(["unpack"])]),
+    true,
+  );
+  assert.equal(
+    isIncompatibleSelection(2, new Set(["pack_selected"]), [new Set(["pack_selected"]), new Set(["pack_selected"])]),
+    false,
+  );
+});
+
+test("return display is shown once when deadline and remaining match", () => {
+  assert.equal(
+    canonicalReturnDisplay({
+      returnStatusCode: "before_delivery",
+      isReturnable: true,
+      returnDeadlineDisplay: "۷ روز پس از تحویل",
+      returnRemainingDisplay: "۷ روز پس از تحویل",
+    }),
+    "۷ روز پس از تحویل",
+  );
+  assert.equal(
+    canonicalReturnDisplay({
+      returnStatusCode: "eligible",
+      isReturnable: true,
+      returnDeadlineDisplay: "۱۴۰۵/۰۱/۲۰",
+      returnRemainingDisplay: "۳ روز مانده",
+    }),
+    "۳ روز مانده",
+  );
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  assert.match(panel, /canonicalReturnDisplay\(line\)/);
+  assert.doesNotMatch(panel, /returnDeadlineDisplay.*returnRemainingDisplay/);
+});
+
 test("qty input stays exact and pack-selected sends selections", () => {
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   assert.match(panel, /admin-order-line-qty-/);
@@ -129,6 +172,7 @@ test("fulfillment sequence errors map to FA", () => {
   assert.equal(mapAdminErrorMessage("fulfillment.selection.qty_exceeded", "fa"), "تعداد انتخاب‌شده بیشتر از تعداد قابل عملیات است.");
   assert.equal(mapAdminErrorMessage("fulfillment.bulk.incompatible", "fa"), "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.");
   assert.equal(mapAdminErrorMessage("fulfillment.bulk.cross_seller", "fa"), "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.");
+  assert.equal(mapAdminErrorMessage("order.cancelled.blocks_action", "fa"), "سفارش لغوشده است؛ این عملیات مجاز نیست.");
 });
 
 test("panel preserves horizontal scroll and return deadline column", () => {

@@ -193,6 +193,7 @@ function ServerGridPage<T extends { id: string }>({
   queryFn,
   savedViewStore: savedViewStoreInput,
   testId,
+  reloadToken = 0,
 }: {
   title: string;
   description: string;
@@ -201,6 +202,7 @@ function ServerGridPage<T extends { id: string }>({
   queryFn: (query: GridServerQuery) => Promise<AdminGridQueryResult<T>>;
   savedViewStore?: SavedViewStore;
   testId?: string;
+  reloadToken?: number;
 }) {
   const savedViewStore = useMemo(
     () => savedViewStoreInput ?? createHostSavedViewStore(gridId),
@@ -208,14 +210,15 @@ function ServerGridPage<T extends { id: string }>({
   );
   const [denied, setDenied] = useState(false);
   const [gridError, setGridError] = useState<string>();
-  const [reloadToken, setReloadToken] = useState(0);
-  const refresh = () => setReloadToken((value) => value + 1);
+  const [localReloadToken, setLocalReloadToken] = useState(0);
+  const refresh = () => setLocalReloadToken((value) => value + 1);
   const queryAdapter = useCallback(
     async (query: GridServerQuery) => {
       void reloadToken;
+      void localReloadToken;
       return adminGridQueryAdapter(queryFn, () => setDenied(true), (message) => setGridError(message))(query);
     },
-    [queryFn, reloadToken],
+    [queryFn, reloadToken, localReloadToken],
   );
   const gridProps = useLegacyAdminGridDirectProps({ gridId, columns, queryAdapter, savedViewStore });
   if (denied) return <Denied retry={refresh} />;
@@ -332,7 +335,8 @@ function truncatedCell(content: ReactNode, title?: string) {
   );
 }
 
-const orderColumns: GridColumnDef<AdminOrderRow>[] = [
+function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<AdminOrderRow>[] {
+  return [
   {
     id: "reference",
     header: "سفارش",
@@ -378,7 +382,14 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     cell: (row) => (
       <span className="inline-flex items-center gap-1">
         <AppGridRowActionsCell row={row} actions={orderRowActions} compact />
-        <AdminOrderOperationsMenu checkoutId={row.checkoutId} label="عملیات" compact iconOnly scope="whole-order" />
+        <AdminOrderOperationsMenu
+          checkoutId={row.checkoutId}
+          label="عملیات"
+          compact
+          iconOnly
+          scope="whole-order"
+          onCompleted={onOperationCompleted}
+        />
       </span>
     ),
     width: 120,
@@ -387,6 +398,9 @@ const orderColumns: GridColumnDef<AdminOrderRow>[] = [
     sortable: false,
   },
 ];
+}
+
+const orderColumns = createOrderColumns();
 
 const sellerColumns: GridColumnDef<AdminSellerRow>[] = [
   { id: "name", header: "فروشنده", accessor: (row) => row.displayName, cell: (row) => <strong>{row.displayName}</strong>, width: 220, minWidth: 150, maxWidth: 300, sticky: "start", filterKind: "text", sortable: true },
@@ -422,15 +436,21 @@ function Status({ value }: { value: string }) {
 /** فهرست زندهٔ سفارش‌ها. */
 export function AdminOrdersScreen() {
   const savedViewStore = useMemo(() => createHostSavedViewStore(ADMIN_ORDER_GRID_VIEW_KEY), []);
+  const [reloadToken, setReloadToken] = useState(0);
+  const columns = useMemo(
+    () => createOrderColumns(() => setReloadToken((value) => value + 1)),
+    [],
+  );
   return (
     <ServerGridPage
       title="سفارش‌ها"
       description="پیگیری تسویه و سفارش‌های فروشندگان"
       queryFn={queryAdminOrdersGrid}
-      columns={orderColumns}
+      columns={columns}
       gridId={ADMIN_ORDER_GRID_VIEW_KEY}
       savedViewStore={savedViewStore}
       testId="admin-orders"
+      reloadToken={reloadToken}
     />
   );
 }

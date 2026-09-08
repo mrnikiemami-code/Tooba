@@ -7,9 +7,11 @@ import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminO
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import {
-  compatibleBulkCodes,
+  intersectLifecycleCodes,
+  canonicalReturnDisplay,
+  isIncompatibleSelection,
+  lineLifecycleActions,
   MIXED_SELECTION_MESSAGE_FA,
-  rowActionsForLine,
 } from "./admin-order-line-actions";
 import {
   executeAdminOrderOperation,
@@ -60,19 +62,7 @@ function allocationSummary(line: AdminOrderLine): string {
 }
 
 function returnSummary(line: AdminOrderLine): string {
-  if (line.returnStatusCode === "non_returnable" || line.isReturnable === false) {
-    return line.returnDeadlineDisplay || "غیرقابل مرجوعی";
-  }
-  if (line.returnStatusCode === "expired") {
-    return "مهلت مرجوعی تمام شده";
-  }
-  if (line.returnStatusCode === "partial_eligible") {
-    return line.returnDeadlineDisplay || line.returnRemainingDisplay || "—";
-  }
-  if (line.returnRemainingDisplay && line.returnDeadlineDisplay) {
-    return `${line.returnDeadlineDisplay} · ${line.returnRemainingDisplay}`;
-  }
-  return line.returnDeadlineDisplay || line.returnPolicyLabel || "—";
+  return canonicalReturnDisplay(line);
 }
 
 function actionFor(
@@ -240,8 +230,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const hasSelection = selected.length > 0;
           const labels = sellerQuickActionLabels(hasSelection);
           const actions = opsBySeller[seller.id] ?? [];
-          const bulkCodes = compatibleBulkCodes(actions, selected);
-          const mixedSelection = hasSelection && bulkCodes.size === 0;
+          const selectedLines = selected
+            .map((id) => seller.lines.find((l) => lineKey(l) === id))
+            .filter((l): l is AdminOrderLine => Boolean(l));
+          const perLineCodes = selectedLines.map((line) => new Set(
+            lineLifecycleActions(actions, line.orderLineId || line.id, {
+              packable: packableQty(line) > 0,
+              unpackable: unpackableQty(line) > 0,
+            }).map((a) => a.code),
+          ));
+          const bulkCodes = intersectLifecycleCodes(perLineCodes);
+          const mixedSelection = isIncompatibleSelection(selected.length, bulkCodes, perLineCodes);
           const canStart = Boolean(actionFor(actions, "mark_processing", seller.id));
           const canPackAll = !hasSelection && Boolean(actionFor(actions, "mark_packed", seller.id));
           const canPackSelected = hasSelection && !mixedSelection && bulkCodes.has("pack_selected")
@@ -365,7 +364,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         const key = lineKey(line);
                         const maxQty = Math.max(1, line.quantity);
                         const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || 1);
-                        const lineActions = rowActionsForLine(actions, line.orderLineId || line.id);
+                        const lineActions = lineLifecycleActions(actions, line.orderLineId || line.id, {
+                          packable: packableQty(line) > 0,
+                          unpackable: unpackableQty(line) > 0,
+                        });
                         return (
                           <tr key={key} className="hover:bg-gray-50/70" data-testid={`admin-order-line-row-${key}`}>
                             <td className="px-2 py-2">
@@ -456,7 +458,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                               mode === "pack" ? packableQty(line) : unpackableQty(line);
                                             const qty = Math.min(qtyByLine[key] ?? max, max);
                                             void runSellerOp(seller, action.code, {
-                                              orderLineId: action.orderLineId,
+                                              orderLineId: action.orderLineId ?? undefined,
                                               selections: qty > 0 ? [{ orderLineId: lineId, quantity: qty }] : null,
                                             });
                                           }}
