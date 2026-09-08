@@ -1,0 +1,77 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T011
+
+Parent-Task:
+TB-P09-T010
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Orders fulfillment UX regressions repaired: cancelled checkout suppresses payment/fulfillment forward actions and rejects direct POST with human FA; grid kebab completion reloads the server grid; bulk toolbar and single selection no longer treat one eligible line as mixed; row kebab recovers seller-level pack/unpack; return deadline/remaining shown once. T010 exact-selection and StartProcessing-then-pack sequence unchanged. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T012 invented.
+
+Discovery:
+docs/evidence/TB-P09-T011/discovery.md
+
+Grid-Refresh:
+ServerGridPage reloadToken + createOrderColumns(onCompleted). After cancel, query shows Cancelled without browser reload. docs/evidence/TB-P09-T011/grid-refresh.md
+
+Cancel-Precedence:
+Cancelled checkout skips payment projection; cancelled seller skips fulfillment forward projection. Direct confirm/reject/mark_processing → 400 order.cancelled.blocks_action «سفارش لغوشده است؛ این عملیات مجاز نیست.» restore_cancelled_order still independently evaluated. docs/evidence/TB-P09-T011/cancel-precedence.md
+
+Bulk-Toolbar:
+Intersection via lineLifecycleActions. Single eligible line shows Pack Selected. Mixed Processing+Packed hides invalid bulk. docs/evidence/TB-P09-T011/bulk-toolbar.md
+
+Single-Selection-Compatibility:
+isIncompatibleSelection false when selectedCount<=1. docs/evidence/TB-P09-T011/single-selection.md
+
+Row-Actions:
+lineLifecycleActions falls back to seller-level pack_selected/unpack; kebab hidden when empty. docs/evidence/TB-P09-T011/row-actions.md
+
+Return-Display-Dedup:
+Backend before_delivery remaining empty; FE canonicalReturnDisplay never concatenates identical strings. docs/evidence/TB-P09-T011/return-display-dedup.md
+
+Exact-Selection-Regression:
+pack_selected still requires selections; no sibling auto-expand. T010 AdminFulfillmentScopeSequenceTests remain green.
+
+Lifecycle-Regression:
+Pack before StartProcessing still 400 order.operation.invalid. After mark_processing, pack_selected allowed; seller stays Processing until all lines packed.
+
+Error-UX:
+order.cancelled.blocks_action mapped FA/EN. Existing fulfillment.bulk.incompatible / pack.requires_processing maps unchanged.
+
+Focused-Validation:
+Host focused 54 passed. FE shipping/ops/T006 39 passed. Recovery guard 3 passed. git diff --check clean. docs/evidence/TB-P09-T011/focused-validation.md
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T011/runtime-smoke.md — multi 01a07ec5-81ad-7000-b77d-4f60962d6d50 cancel + blocked confirm/reject/process; single 01a07ec5-7b94-7000-8e14-9b81ae2261d1 confirm → StartProcessing → pack L1 qty 1 → mixed Packed+Processing 400 fulfillment.bulk.incompatible; return display once.
+
+UI-Preservation:
+No Order Detail redesign. RTL/920px/return column/seller groups/T009-T010 menus kept. docs/evidence/TB-P09-T011/ui-preservation.md
+
+Recovery-SoT:
+Last Architect-accepted TB-P09-T010. Last Implementation TB-P09-T011. Issued none. Repair none. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T011/recovery-sot.md
+
+Git:
+commit e90703a0 on main. HEAD==origin/main after push.
+
+Architectural-Concerns:
+Confirm→fulfillment projection is briefly eventual (outbox). Smoke waited one GET; no new task invented.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Operator should confirm grid refresh after cancel, single-line Pack Selected, kebab visibility, and single return-deadline cell.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
