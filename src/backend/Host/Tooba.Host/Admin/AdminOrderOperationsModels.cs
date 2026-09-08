@@ -16,11 +16,34 @@ public sealed record AdminOrderOperationAction(
     string? ConfirmMessageFa,
     Guid? OrderLineId = null);
 
+/// <summary>قابلیت lifecycle یک خط — منبع انتخاب/کebab/مرسوله.</summary>
+public sealed record AdminOrderLineCapability(
+    Guid OrderLineId,
+    Guid SellerOrderId,
+    bool Selectable,
+    int SelectableQuantityMax,
+    IReadOnlyList<string> RowActionCodes,
+    IReadOnlyList<string> BulkActionCodes,
+    int ShipmentEligibleQuantity,
+    string? LockedReasonCode = null,
+    string? LockedReasonFa = null);
+
+/// <summary>قابلیت تجمیعی فروشنده برای اقلام و ارسال.</summary>
+public sealed record AdminSellerCapability(
+    Guid SellerOrderId,
+    bool SelectionAllowed,
+    bool PaymentLocked,
+    string? InfoMessageFa,
+    IReadOnlyList<string> WholeGroupActionCodes,
+    bool ShipmentCreationPossible);
+
 /// <summary>صفحهٔ عملیات سفارش برای یک checkout.</summary>
 public sealed record AdminOrderOperationsPage(
     Guid CheckoutId,
     IReadOnlyList<AdminOrderOperationAction> Actions,
-    IReadOnlyList<ReturnEligibilityResult> ReturnEligibility);
+    IReadOnlyList<ReturnEligibilityResult> ReturnEligibility,
+    IReadOnlyList<AdminOrderLineCapability>? LineCapabilities = null,
+    IReadOnlyList<AdminSellerCapability>? SellerCapabilities = null);
 
 /// <summary>انتخاب خط/تعداد برای عملیات seller-scoped.</summary>
 public sealed record AdminOrderLineSelection(Guid OrderLineId, int Quantity);

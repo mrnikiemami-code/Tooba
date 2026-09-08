@@ -204,7 +204,7 @@ public sealed class AdminPanelComposer
                     line.LineId,
                     fulfillment is null ? null : shipped,
                     null,
-                    LineOperationalStatus(fulfillment, packed, line.Quantity),
+                    LineOperationalStatus(order.Status, fulfillment, packed, line.Quantity),
                     fulfillment is null ? null : packed,
                     fulfillment is null ? null : openAllocated + shipped,
                     line.IsReturnableSnapshot,
@@ -610,11 +610,20 @@ public sealed class AdminPanelComposer
         }).ToList();
     }
 
-    internal static string? LineOperationalStatus(FulfillmentSnapshot? fulfillment, int packed, int ordered)
+    internal static string? LineOperationalStatus(
+        SellerOrderStatus sellerStatus,
+        FulfillmentSnapshot? fulfillment,
+        int packed,
+        int ordered)
     {
+        if (sellerStatus == SellerOrderStatus.Cancelled)
+        {
+            return "Cancelled";
+        }
+
         if (fulfillment is null)
         {
-            return null;
+            return sellerStatus == SellerOrderStatus.Paid ? "Paid" : "PendingPayment";
         }
 
         if (fulfillment.Status is FulfillmentStatus.Dispatched

@@ -1,0 +1,12 @@
+health 200 {"status":"ok"}
+A payment-lock multi=01a07ec5-81ad-7000-b77d-4f60962d6d50 sellers=3 locked=true actions=confirm_deposit,reject_deposit,cancel
+checkout 01a07f1b-41de-7000-83ff-b2484761140e pay=200 Pending
+confirm 01a07f1b-41de-7000-83ff-b2484761140e => 200
+B ready 01a07f1b-41de-7000-83ff-b2484761140e cap=["mark_processing"] packBefore=400 order.operation.invalid pass=true
+C start=200 pack=200 packed=1/2 sellerFulfill=Processing row=["pack_selected"]
+D partial-pack seller-not-Packed=true fulfill=Processing
+E mixed shared=[] packedRow=unpack procRow=pack_selected bulkPost=400 fulfillment.bulk.incompatible
+F ship=200 shipmentId=5731f80f-eab0-4911-8735-f3dc8c758acc qty=1 shipments=1 eligibleAfter=0 createPossible=false
+checkout 01a07f1b-4c41-7000-8778-5c75aef9ae6d pay=200 Pending
+G cancel=200 01a07f1b-4c41-7000-8778-5c75aef9ae6d actions=restore_cancelled_order blocked=confirm_deposit:400:order.cancelled.blocks_action | reject_deposit:400:order.cancelled.blocks_action | mark_processing:400:order.cancelled.blocks_action restore=true queryStatus=Cancelled
+SUMMARY {"A":true,"B":true,"C":true,"D":true,"E":true,"F":true,"G":true,"readyId":"01a07f1b-41de-7000-83ff-b2484761140e","cancelId":"01a07f1b-4c41-7000-8778-5c75aef9ae6d","single":"01a07ec5-7b94-7000-8e14-9b81ae2261d1","multi":"01a07ec5-81ad-7000-b77d-4f60962d6d50"}

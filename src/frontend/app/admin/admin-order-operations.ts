@@ -30,10 +30,33 @@ export type AdminOrderOperationAction = {
   confirmMessageFa: string | null;
 };
 
+export type AdminOrderLineCapability = {
+  orderLineId: string;
+  sellerOrderId: string;
+  selectable: boolean;
+  selectableQuantityMax: number;
+  rowActionCodes: string[];
+  bulkActionCodes: string[];
+  shipmentEligibleQuantity: number;
+  lockedReasonCode: string | null;
+  lockedReasonFa: string | null;
+};
+
+export type AdminSellerCapability = {
+  sellerOrderId: string;
+  selectionAllowed: boolean;
+  paymentLocked: boolean;
+  infoMessageFa: string | null;
+  wholeGroupActionCodes: string[];
+  shipmentCreationPossible: boolean;
+};
+
 export type AdminOrderOperationsPage = {
   checkoutId: string;
   actions: AdminOrderOperationAction[];
   returnEligibility: unknown[];
+  lineCapabilities: AdminOrderLineCapability[];
+  sellerCapabilities: AdminSellerCapability[];
 };
 
 export type AdminOrderOperationRequest = {
@@ -107,7 +130,53 @@ function mapPage(raw: unknown): AdminOrderOperationsPage | null {
     returnEligibility: Array.isArray(row.returnEligibility ?? row.ReturnEligibility)
       ? ((row.returnEligibility ?? row.ReturnEligibility) as unknown[])
       : [],
+    lineCapabilities: mapLineCaps(row.lineCapabilities ?? row.LineCapabilities),
+    sellerCapabilities: mapSellerCaps(row.sellerCapabilities ?? row.SellerCapabilities),
   };
+}
+
+function mapLineCaps(raw: unknown): AdminOrderLineCapability[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const orderLineId = asString(row.orderLineId) ?? asString(row.OrderLineId);
+    const sellerOrderId = asString(row.sellerOrderId) ?? asString(row.SellerOrderId);
+    if (!orderLineId || !sellerOrderId) return [];
+    return [{
+      orderLineId,
+      sellerOrderId,
+      selectable: Boolean(row.selectable ?? row.Selectable),
+      selectableQuantityMax: Number(row.selectableQuantityMax ?? row.SelectableQuantityMax ?? 0),
+      rowActionCodes: stringList(row.rowActionCodes ?? row.RowActionCodes),
+      bulkActionCodes: stringList(row.bulkActionCodes ?? row.BulkActionCodes),
+      shipmentEligibleQuantity: Number(row.shipmentEligibleQuantity ?? row.ShipmentEligibleQuantity ?? 0),
+      lockedReasonCode: asString(row.lockedReasonCode) ?? asString(row.LockedReasonCode),
+      lockedReasonFa: asString(row.lockedReasonFa) ?? asString(row.LockedReasonFa),
+    }];
+  });
+}
+
+function mapSellerCaps(raw: unknown): AdminSellerCapability[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const sellerOrderId = asString(row.sellerOrderId) ?? asString(row.SellerOrderId);
+    if (!sellerOrderId) return [];
+    return [{
+      sellerOrderId,
+      selectionAllowed: Boolean(row.selectionAllowed ?? row.SelectionAllowed),
+      paymentLocked: Boolean(row.paymentLocked ?? row.PaymentLocked),
+      infoMessageFa: asString(row.infoMessageFa) ?? asString(row.InfoMessageFa),
+      wholeGroupActionCodes: stringList(row.wholeGroupActionCodes ?? row.WholeGroupActionCodes),
+      shipmentCreationPossible: Boolean(row.shipmentCreationPossible ?? row.ShipmentCreationPossible),
+    }];
+  });
+}
+
+function stringList(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
 }
 
 async function parseError(response: Response): Promise<{ code: string; detail: string | null }> {

@@ -122,7 +122,18 @@ public sealed class AdminOrderOperationsComposer
         ProjectWholeOrderCancel(actions, group, fulfillments, effective);
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout);
-        return new AdminOrderOperationsPage(checkoutId, AdminOrderWholeOrderActions.Collapse(actions), eligibility);
+        var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
+        var lineCaps = new List<AdminOrderLineCapability>();
+        var sellerCaps = new List<AdminSellerCapability>();
+        foreach (var order in group.SellerOrders)
+        {
+            var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
+            var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment, collapsed);
+            lineCaps.AddRange(projected.Lines);
+            sellerCaps.Add(projected.Seller);
+        }
+
+        return new AdminOrderOperationsPage(checkoutId, collapsed, eligibility, lineCaps, sellerCaps);
     }
 
     /// <summary>eligibility همهٔ سفارش‌های فروشندهٔ یک checkout.</summary>
@@ -292,6 +303,21 @@ public sealed class AdminOrderOperationsComposer
                     Prefer(effective, "order.handle", "fulfillment.manage"),
                     true,
                     "شروع پردازش این سفارش؟"));
+                foreach (var line in order.Lines)
+                {
+                    actions.Add(Action(
+                        "mark_processing",
+                        "شروع پردازش این قلم",
+                        "Start processing this line",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        null,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "پردازش این قلم شروع شود؟",
+                        line.LineId));
+                }
             }
 
             if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed

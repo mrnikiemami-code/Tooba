@@ -94,6 +94,7 @@ export function dedupeWholeOrderActions<T extends AdminOrderOperationActionLike>
 
 /** برچسب‌های اقدام سریع فروشنده: کل گروه در برابر انتخاب‌شده‌ها. */
 export function sellerQuickActionLabels(hasSelection: boolean): {
+  startProcessing: string;
   pack: string;
   createShipment: string;
   unpack: string;
@@ -101,6 +102,7 @@ export function sellerQuickActionLabels(hasSelection: boolean): {
 } {
   if (hasSelection) {
     return {
+      startProcessing: "شروع پردازش انتخاب‌شده‌ها",
       pack: "بسته‌بندی انتخاب‌شده‌ها",
       createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
       unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
@@ -108,8 +110,9 @@ export function sellerQuickActionLabels(hasSelection: boolean): {
     };
   }
   return {
+    startProcessing: "شروع پردازش",
     pack: "بسته‌بندی همه اقلام آماده",
-    createShipment: "ایجاد مرسوله",
+    createShipment: "ایجاد مرسوله جدید",
     unpack: "بازگشت از بسته‌بندی",
     dispatch: "ارسال",
   };

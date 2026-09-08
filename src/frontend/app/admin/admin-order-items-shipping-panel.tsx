@@ -7,16 +7,21 @@ import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminO
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import {
-  intersectLifecycleCodes,
   canonicalReturnDisplay,
+  deriveLineCapability,
+  intersectLifecycleCodes,
   isIncompatibleSelection,
+  isPaymentLockedSeller,
   lineLifecycleActions,
   MIXED_SELECTION_MESSAGE_FA,
+  PAYMENT_LOCKED_BANNER_FA,
 } from "./admin-order-line-actions";
 import {
   executeAdminOrderOperation,
   loadAdminOrderOperations,
+  type AdminOrderLineCapability,
   type AdminOrderOperationAction,
+  type AdminSellerCapability,
 } from "./admin-order-operations";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope";
 
@@ -87,6 +92,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [selectedBySeller, setSelectedBySeller] = useState<Record<string, string[]>>({});
   const [qtyByLine, setQtyByLine] = useState<QtyMap>({});
   const [opsBySeller, setOpsBySeller] = useState<Record<string, AdminOrderOperationAction[]>>({});
+  const [lineCaps, setLineCaps] = useState<Record<string, AdminOrderLineCapability>>({});
+  const [sellerCaps, setSellerCaps] = useState<Record<string, AdminSellerCapability>>({});
   const [opsLoaded, setOpsLoaded] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
@@ -106,6 +113,12 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         (map[key] ??= []).push(action);
       }
       setOpsBySeller(map);
+      const nextLines: Record<string, AdminOrderLineCapability> = {};
+      for (const cap of result.data.lineCapabilities) nextLines[cap.orderLineId] = cap;
+      setLineCaps(nextLines);
+      const nextSellers: Record<string, AdminSellerCapability> = {};
+      for (const cap of result.data.sellerCapabilities) nextSellers[cap.sellerOrderId] = cap;
+      setSellerCaps(nextSellers);
       setOpsLoaded(true);
     });
     return () => {
@@ -129,8 +142,34 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
     });
   }
 
+  function capabilityFor(seller: AdminSellerOrder, line: AdminOrderLine) {
+    const projected = sellerCaps[seller.id];
+    const fromApi = lineCaps[line.orderLineId || line.id];
+    const paymentLocked = projected?.paymentLocked ?? isPaymentLockedSeller(seller);
+    const cancelled = seller.status === "Cancelled";
+    const derived = deriveLineCapability({
+      paymentLocked,
+      cancelled,
+      operationalStatus: line.operationalStatus,
+      packable: packableQty(line),
+      unpackable: unpackableQty(line),
+      shippable: shippableQty(line),
+      quantity: line.quantity,
+      projectedCodes: (opsBySeller[seller.id] ?? []).map((a) => a.code),
+    });
+    if (!fromApi) return derived;
+    return {
+      selectable: fromApi.selectable,
+      selectableQuantityMax: fromApi.selectableQuantityMax,
+      rowActionCodes: fromApi.rowActionCodes,
+      bulkActionCodes: fromApi.bulkActionCodes,
+      shipmentEligibleQuantity: fromApi.shipmentEligibleQuantity,
+      paymentLocked,
+    };
+  }
+
   function toggleAll(seller: AdminSellerOrder) {
-    const ids = seller.lines.map(lineKey);
+    const ids = seller.lines.filter((line) => capabilityFor(seller, line).selectable).map(lineKey);
     const current = selectedBySeller[seller.id] ?? [];
     const allSelected = ids.length > 0 && ids.every((id) => current.includes(id));
     setSelectedBySeller((prev) => ({
@@ -141,8 +180,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       setQtyByLine((q) => {
         const next = { ...q };
         for (const line of seller.lines) {
+          const cap = capabilityFor(seller, line);
+          if (!cap.selectable) continue;
           const id = lineKey(line);
-          next[id] = next[id] ?? Math.max(1, packableQty(line) || shippableQty(line) || line.quantity);
+          next[id] = next[id] ?? Math.max(1, Math.min(cap.selectableQuantityMax || line.quantity, packableQty(line) || shippableQty(line) || line.quantity));
         }
         return next;
       });
@@ -230,35 +271,36 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const hasSelection = selected.length > 0;
           const labels = sellerQuickActionLabels(hasSelection);
           const actions = opsBySeller[seller.id] ?? [];
+          const sellerCap = sellerCaps[seller.id];
+          const paymentLocked = sellerCap?.paymentLocked ?? isPaymentLockedSeller(seller);
           const selectedLines = selected
             .map((id) => seller.lines.find((l) => lineKey(l) === id))
             .filter((l): l is AdminOrderLine => Boolean(l));
-          const perLineCodes = selectedLines.map((line) => new Set(
-            lineLifecycleActions(actions, line.orderLineId || line.id, {
-              packable: packableQty(line) > 0,
-              unpackable: unpackableQty(line) > 0,
-            }).map((a) => a.code),
-          ));
+          const perLineCaps = selectedLines.map((line) => capabilityFor(seller, line));
+          const perLineCodes = perLineCaps.map((cap) => new Set(cap.bulkActionCodes));
           const bulkCodes = intersectLifecycleCodes(perLineCodes);
           const mixedSelection = isIncompatibleSelection(selected.length, bulkCodes, perLineCodes);
-          const canStart = Boolean(actionFor(actions, "mark_processing", seller.id));
-          const canPackAll = !hasSelection && Boolean(actionFor(actions, "mark_packed", seller.id));
+          const canStartGroup = !hasSelection && !paymentLocked && Boolean(actionFor(actions, "mark_processing", seller.id));
+          const canStartSelected = hasSelection && !mixedSelection && bulkCodes.has("mark_processing")
+            && Boolean(actionFor(actions, "mark_processing", seller.id));
+          const canPackAll = !hasSelection && !paymentLocked && Boolean(actionFor(actions, "mark_packed", seller.id));
           const canPackSelected = hasSelection && !mixedSelection && bulkCodes.has("pack_selected")
             && Boolean(actionFor(actions, "pack_selected", seller.id));
-          const canUnpack = !mixedSelection && (
-            hasSelection
-              ? bulkCodes.has("unpack") && Boolean(actionFor(actions, "unpack", seller.id))
-              : Boolean(actionFor(actions, "unpack", seller.id))
-          );
-          const selectedShippable = selected.every((id) => {
-            const line = seller.lines.find((l) => lineKey(l) === id);
-            return line ? shippableQty(line) > 0 : false;
-          });
-          const canCreate = !mixedSelection
+          const canUnpack = hasSelection && !mixedSelection && bulkCodes.has("unpack")
+            && Boolean(actionFor(actions, "unpack", seller.id));
+          const selectedShippable = hasSelection && !mixedSelection && perLineCaps.length > 0
+            && perLineCaps.every((cap) => cap.shipmentEligibleQuantity > 0);
+          const canCreate = !paymentLocked
             && Boolean(actionFor(actions, "create_shipment", seller.id))
-            && (!hasSelection || selectedShippable);
+            && (hasSelection
+              ? selectedShippable
+              : (sellerCap?.shipmentCreationPossible ?? seller.lines.some((line) => shippableQty(line) > 0)));
           const shipments = seller.shipments ?? [];
           const itemCount = seller.lines.reduce((sum, line) => sum + line.quantity, 0);
+          const selectableLines = seller.lines.filter((line) => capabilityFor(seller, line).selectable);
+          const headerStatus = paymentLocked
+            ? "PendingPayment"
+            : (seller.fulfillmentStatus || seller.status);
 
           return (
             <article
@@ -268,14 +310,21 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-3 py-2.5">
                 <div>
-                  <h3 className="text-sm font-black text-gray-900">{seller.sellerDisplayName}</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-black text-gray-900">{seller.sellerDisplayName}</h3>
+                    <span
+                      className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+                      data-testid={`admin-order-seller-status-${seller.id}`}
+                    >
+                      {formatAdminStatus(headerStatus)}
+                    </span>
+                  </div>
                   <p className="text-xs text-gray-500">
                     {itemCount.toLocaleString("fa-IR")} قلم · {seller.orderNumber}
-                    {seller.fulfillmentStatus ? ` · ${formatAdminStatus(seller.fulfillmentStatus)}` : ""}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {canStart ? (
+                  {canStartGroup ? (
                     <button
                       type="button"
                       disabled={pendingCode !== null}
@@ -283,18 +332,18 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 disabled:opacity-50"
                       data-testid={`admin-order-seller-start-processing-${seller.id}`}
                     >
-                      شروع پردازش
+                      {labels.startProcessing}
                     </button>
                   ) : null}
-                  {canCreate ? (
+                  {canStartSelected ? (
                     <button
                       type="button"
                       disabled={pendingCode !== null}
-                      onClick={() => setShipmentModalSellerId(seller.id)}
+                      onClick={() => void runSellerOp(seller, "mark_processing")}
                       className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                      data-testid={`admin-order-seller-create-shipment-${seller.id}`}
+                      data-testid={`admin-order-seller-start-selected-${seller.id}`}
                     >
-                      {labels.createShipment}
+                      {labels.startProcessing}
                     </button>
                   ) : null}
                   {canPackAll ? (
@@ -313,7 +362,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       type="button"
                       disabled={pendingCode !== null}
                       onClick={() => void runSellerOp(seller, "pack_selected", { selections: buildSelections(seller, "pack") })}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
+                      className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                       data-testid={`admin-order-seller-pack-selected-${seller.id}`}
                     >
                       {labels.pack}
@@ -323,7 +372,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     <button
                       type="button"
                       disabled={pendingCode !== null}
-                      onClick={() => void runSellerOp(seller, "unpack", { selections: hasSelection ? buildSelections(seller, "unpack") : null })}
+                      onClick={() => void runSellerOp(seller, "unpack", { selections: buildSelections(seller, "unpack") })}
                       className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
                       data-testid={`admin-order-seller-unpack-${seller.id}`}
                     >
@@ -332,6 +381,14 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   ) : null}
                 </div>
               </div>
+              {paymentLocked ? (
+                <div
+                  className="mx-3 mt-3 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-900"
+                  data-testid={`admin-order-seller-payment-locked-${seller.id}`}
+                >
+                  {sellerCap?.infoMessageFa || PAYMENT_LOCKED_BANNER_FA}
+                </div>
+              ) : null}
 
               <div className="grid gap-3 p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]">
                 <div className="overflow-x-auto rounded-lg border border-gray-100" data-testid={`admin-order-seller-lines-scroll-${seller.id}`}>
@@ -339,13 +396,15 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     <thead className="bg-gray-50 text-xs text-gray-600">
                       <tr>
                         <th className="px-2 py-2 text-right">
-                          <input
-                            type="checkbox"
-                            aria-label="انتخاب همه اقلام این فروشنده"
-                            checked={seller.lines.length > 0 && seller.lines.every((l) => selected.includes(lineKey(l)))}
-                            onChange={() => toggleAll(seller)}
-                            data-testid={`admin-order-seller-select-all-${seller.id}`}
-                          />
+                          {selectableLines.length === 0 ? null : (
+                            <input
+                              type="checkbox"
+                              aria-label="انتخاب همه اقلام این فروشنده"
+                              checked={selectableLines.length > 0 && selectableLines.every((l) => selected.includes(lineKey(l)))}
+                              onChange={() => toggleAll(seller)}
+                              data-testid={`admin-order-seller-select-all-${seller.id}`}
+                            />
+                          )}
                         </th>
                         <th className="px-2 py-2 text-right">#</th>
                         <th className="px-2 py-2 text-right">محصول</th>
@@ -362,22 +421,31 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     <tbody className="divide-y divide-gray-100">
                       {seller.lines.map((line, index) => {
                         const key = lineKey(line);
-                        const maxQty = Math.max(1, line.quantity);
+                        const cap = capabilityFor(seller, line);
+                        const maxQty = Math.max(1, cap.selectableQuantityMax || packableQty(line) || shippableQty(line) || line.quantity);
                         const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || 1);
+                        const qtyEnabled = cap.selectable && maxQty > 1 && (cap.rowActionCodes.includes("pack_selected") || cap.rowActionCodes.includes("unpack") || cap.shipmentEligibleQuantity > 0);
                         const lineActions = lineLifecycleActions(actions, line.orderLineId || line.id, {
-                          packable: packableQty(line) > 0,
-                          unpackable: unpackableQty(line) > 0,
+                          packable: cap.rowActionCodes.includes("pack_selected"),
+                          unpackable: cap.rowActionCodes.includes("unpack"),
+                          startable: cap.rowActionCodes.includes("mark_processing"),
                         });
                         return (
-                          <tr key={key} className="hover:bg-gray-50/70" data-testid={`admin-order-line-row-${key}`}>
+                          <tr
+                            key={key}
+                            className={selected.includes(key) ? "bg-blue-50/70" : "hover:bg-gray-50/70"}
+                            data-testid={`admin-order-line-row-${key}`}
+                          >
                             <td className="px-2 py-2">
-                              <input
-                                type="checkbox"
-                                checked={selected.includes(key)}
-                                onChange={() => toggleLine(seller.id, line)}
-                                aria-label={`انتخاب ${line.title}`}
-                                data-testid={`admin-order-line-select-${key}`}
-                              />
+                              {cap.selectable ? (
+                                <input
+                                  type="checkbox"
+                                  checked={selected.includes(key)}
+                                  onChange={() => toggleLine(seller.id, line)}
+                                  aria-label={`انتخاب ${line.title}`}
+                                  data-testid={`admin-order-line-select-${key}`}
+                                />
+                              ) : null}
                             </td>
                             <td className="px-2 py-2 tabular-nums text-xs text-gray-500">{(index + 1).toLocaleString("fa-IR")}</td>
                             <td className="px-2 py-2">
@@ -395,7 +463,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                             </td>
                             <td className="px-2 py-2 tabular-nums">{line.quantity.toLocaleString("fa-IR")}</td>
                             <td className="px-2 py-2">
-                              {line.quantity > 1 ? (
+                              {qtyEnabled ? (
                                 <input
                                   type="number"
                                   min={1}
@@ -411,7 +479,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                   aria-label={`تعداد انتخابی ${line.title}`}
                                 />
                               ) : (
-                                <span className="text-xs text-gray-400">۱</span>
+                                <span className="text-xs text-gray-400">{line.quantity.toLocaleString("fa-IR")}</span>
                               )}
                             </td>
                             <td className="px-2 py-2 tabular-nums text-xs">{formatAdminMoney(line.unitAmount, line.currency)}</td>
@@ -452,8 +520,12 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                           data-testid={`admin-order-line-action-${action.code}-${key}`}
                                           onClick={() => {
                                             setOpenKebabLineId(null);
-                                            const mode = action.code === "unpack" ? "unpack" : "pack";
                                             const lineId = line.orderLineId || line.id;
+                                            if (action.code === "mark_processing") {
+                                              void runSellerOp(seller, action.code, { orderLineId: action.orderLineId ?? undefined });
+                                              return;
+                                            }
+                                            const mode = action.code === "unpack" ? "unpack" : "pack";
                                             const max =
                                               mode === "pack" ? packableQty(line) : unpackableQty(line);
                                             const qty = Math.min(qtyByLine[key] ?? max, max);
@@ -482,9 +554,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     </div>
                   ) : hasSelection ? (
                     <div className="border-t border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800" data-testid={`admin-order-seller-selection-bar-${seller.id}`}>
-                      {bulkCodes.has("pack_selected")
-                        ? `بسته‌بندی ${selected.length.toLocaleString("fa-IR")} قلم انتخاب‌شده`
-                        : `افزودن مرسوله جدید برای ${selected.length.toLocaleString("fa-IR")} قلم انتخاب‌شده`}
+                      {`${selected.length.toLocaleString("fa-IR")} قلم انتخاب شده`}
                     </div>
                   ) : null}
                 </div>
@@ -586,6 +656,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       })}
                     </ul>
                   )}
+                  {canCreate ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => setShipmentModalSellerId(seller.id)}
+                      className="mt-3 w-full rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                      data-testid={`admin-order-seller-create-shipment-${seller.id}`}
+                    >
+                      {hasSelection ? labels.createShipment : "+ ایجاد مرسوله جدید"}
+                    </button>
+                  ) : null}
                   {!opsLoaded ? <p className="mt-2 text-[11px] text-gray-400">بارگذاری عملیات…</p> : null}
                 </aside>
               </div>

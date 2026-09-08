@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T010
+TB-P09-T011
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T011
+TB-P09-T012
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T011 — Orders Fulfillment UX Regression Repair (cancel precedence, grid refresh, bulk toolbar, single-selection, row kebab, return display dedup); USER_VISUAL_ACCEPTED=NO
+TB-P09-T012 — Reference-locked fulfillment UX (capability-driven selection/bulk/kebab/shipment); USER_VISUAL_ACCEPTED=NO
+TB-P09-T011 — Orders Fulfillment UX Regression Repair (cancel precedence, grid refresh, bulk toolbar, single-selection, row kebab, return display dedup); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T010 — Fulfillment Action Scope & Sequence Repair (whole-order pack/process hide, pack-after-processing, exact pack_selected, row kebab); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T009-R1 — Cancelled-order restore financial gate (block restore after completed seller payout/settlement); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T009 — Order Corrective Actions (rollback matrix, payment/shipment/cancel restore, whole-order dedupe); Architect-accepted after R1; USER_VISUAL_ACCEPTED=NO
@@ -135,7 +136,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T010
+TB-P09-T011
 ```
 
 USER_VISUAL_ACCEPTED:

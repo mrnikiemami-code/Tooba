@@ -1,0 +1,92 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T012
+
+Parent-Task:
+TB-P09-T011
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Reference-locked fulfillment UX completed: backend line/seller capability projection drives selection, contextual bulk, row kebab (including «شروع پردازش این قلم»), payment-lock banner, and shipment CTA. T010 exact-selection + StartProcessing-then-pack and T011 cancel/grid/return-dedup remain green. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T013 invented.
+
+Discovery:
+docs/evidence/TB-P09-T012/discovery.md
+
+Reference-Lock:
+Locked image ChatGPT Image Sep 8, 2026, 06_45_30 AM.png projected onto existing اقلام و ارسال shell. docs/evidence/TB-P09-T012/reference-lock.md
+
+Capability-Projection:
+AdminFulfillmentCapabilityProjector in existing ListAsync (no N+1). ReadyToFulfill → mark_processing only. docs/evidence/TB-P09-T012/capability-projection.md
+
+Payment-Gate:
+Waiting-payment seller banner «پرداخت این بخش از سفارش هنوز تأیید نشده است؛ پس از تأیید پرداخت، عملیات پردازش و ارسال فعال می‌شود.» No checkbox/kebab/bulk/shipment CTA. Runtime multi 01a07ec5-81ad-7000-b77d-4f60962d6d50 + FE visual. docs/evidence/TB-P09-T012/payment-gate.md
+
+Lifecycle:
+Pack before StartProcessing 400 order.operation.invalid. After mark_processing, pack_selected allowed; seller stays Processing until all packed. docs/evidence/TB-P09-T012/lifecycle.md
+
+Selection-UX:
+Capability-driven checkboxes/qty. Single selection never mixed. Mixed hint «برای عملیات گروهی، اقلام هم‌مرحله را انتخاب کنید.» docs/evidence/TB-P09-T012/selection-ux.md
+
+Bulk-Toolbar:
+Intersection-only Start/Pack/Unpack selected. Pack All only with no selection. Mixed hides invalid bulk. docs/evidence/TB-P09-T012/bulk-toolbar.md
+
+Row-Actions:
+Kebab only when row has actions. ReadyToProcess «شروع پردازش این قلم». Processing pack. Packed unallocated unpack. docs/evidence/TB-P09-T012/row-actions.md
+
+Exact-Selection:
+pack_selected still requires selections; no sibling auto-expand. docs/evidence/TB-P09-T012/exact-selection.md
+
+Shipment-Eligibility:
+CTA only in shipment aside. `+ ایجاد مرسوله جدید` / از انتخاب‌شده‌ها when eligible. Runtime shipment 5731f80f-eab0-4911-8735-f3dc8c758acc qty 1. docs/evidence/TB-P09-T012/shipment-eligibility.md
+
+Seller-Aggregate:
+Header status badge; no false seller-wide Packed after partial pack. docs/evidence/TB-P09-T012/seller-aggregate.md
+
+Return-Display:
+T011 once-only deadline kept. docs/evidence/TB-P09-T012/return-display.md
+
+Grid-Refresh-Regression:
+reloadToken + onCompleted unchanged; query after cancel shows Cancelled. docs/evidence/TB-P09-T012/grid-refresh-regression.md
+
+Cancel-Precedence-Regression:
+Cancelled blocks confirm/reject/fulfillment; restore independently evaluated. docs/evidence/TB-P09-T012/cancel-precedence-regression.md
+
+Performance:
+Capabilities composed in ListAsync; no extra fulfillment directory fetch. docs/evidence/TB-P09-T012/performance.md
+
+Focused-Validation:
+Host 39 pass. FE 40 pass. Recovery guard 3 pass. git diff --check clean. docs/evidence/TB-P09-T012/focused-validation.md
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T012/runtime-smoke.md — A–G API + FE visual A/E/F markers.
+
+UI-Preservation:
+No Order Detail/financial/notes/history redesign. RTL/920px/return column kept. docs/evidence/TB-P09-T012/ui-preservation.md
+
+Recovery-SoT:
+Last Architect-accepted TB-P09-T011. Last Implementation TB-P09-T012. Issued none. Repair none. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T012/recovery-sot.md
+
+Git:
+commit on main. HEAD==origin/main after push.
+
+Architectural-Concerns:
+Confirm→fulfillment projection remains briefly eventual. Post create_shipment still requires provider metadata (destinationAddress); FE modal already supplies it.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Operator should confirm locked reference vs payment banner, contextual bulk, kebab labels, and aside shipment CTA.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

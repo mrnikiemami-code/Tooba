@@ -7,9 +7,12 @@ import { mapAdminOrderDetail } from "./admin-api.ts";
 import {
   canonicalReturnDisplay,
   compatibleBulkCodes,
+  deriveLineCapability,
   isIncompatibleSelection,
+  isPaymentLockedSeller,
   lineLifecycleActions,
   MIXED_SELECTION_MESSAGE_FA,
+  PAYMENT_LOCKED_BANNER_FA,
   rowActionsForLine,
 } from "./admin-order-line-actions.ts";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope.ts";
@@ -73,12 +76,14 @@ test("shipments map from additive seller DTO", () => {
 
 test("selected-state labels switch correctly", () => {
   assert.deepEqual(sellerQuickActionLabels(false), {
+    startProcessing: "شروع پردازش",
     pack: "بسته‌بندی همه اقلام آماده",
-    createShipment: "ایجاد مرسوله",
+    createShipment: "ایجاد مرسوله جدید",
     unpack: "بازگشت از بسته‌بندی",
     dispatch: "ارسال",
   });
   assert.deepEqual(sellerQuickActionLabels(true), {
+    startProcessing: "شروع پردازش انتخاب‌شده‌ها",
     pack: "بسته‌بندی انتخاب‌شده‌ها",
     createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
     unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
@@ -113,7 +118,7 @@ test("exact selection and mixed bulk helpers", () => {
   assert.equal(rowActionsForLine(actions, "none").length, 0);
   assert.deepEqual([...compatibleBulkCodes(actions, ["L1", "L2"])], ["pack_selected"]);
   assert.equal(compatibleBulkCodes(actions, ["L1", "L3"]).size, 0);
-  assert.equal(MIXED_SELECTION_MESSAGE_FA, "ردیف‌های انتخاب‌شده در وضعیت‌های متفاوت یا ناسازگار هستند.");
+  assert.equal(MIXED_SELECTION_MESSAGE_FA, "برای عملیات گروهی، اقلام هم‌مرحله را انتخاب کنید.");
 });
 
 test("single selection never shows mixed and recovers seller-level row actions", () => {
@@ -186,6 +191,47 @@ test("panel preserves horizontal scroll and return deadline column", () => {
   assert.match(panel, /cancel_shipment/);
   assert.doesNotMatch(panel, /ReadyToFulfill/);
   assert.doesNotMatch(panel, /window\.prompt\(|window\.confirm\(|window\.alert\(/);
+});
+
+test("capability projection drives payment lock and start/pack row actions", () => {
+  assert.equal(isPaymentLockedSeller({ status: "PendingPayment", paymentState: "PendingPayment" }), true);
+  assert.equal(isPaymentLockedSeller({ status: "Paid", paymentState: "Paid", fulfillmentId: "f1" }), false);
+  const locked = deriveLineCapability({
+    paymentLocked: true,
+    operationalStatus: "PendingPayment",
+    packable: 2,
+    unpackable: 0,
+    shippable: 0,
+    quantity: 2,
+    projectedCodes: ["pack_selected", "mark_processing"],
+  });
+  assert.equal(locked.selectable, false);
+  assert.deepEqual(locked.rowActionCodes, []);
+  const ready = deriveLineCapability({
+    paymentLocked: false,
+    operationalStatus: "ReadyToFulfill",
+    packable: 2,
+    unpackable: 0,
+    shippable: 0,
+    quantity: 2,
+    projectedCodes: ["mark_processing"],
+  });
+  assert.deepEqual(ready.rowActionCodes, ["mark_processing"]);
+  assert.equal(ready.selectable, true);
+  const processing = deriveLineCapability({
+    paymentLocked: false,
+    operationalStatus: "Processing",
+    packable: 2,
+    unpackable: 0,
+    shippable: 0,
+    quantity: 2,
+    projectedCodes: ["pack_selected", "mark_packed"],
+  });
+  assert.deepEqual(processing.rowActionCodes, ["pack_selected"]);
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  assert.match(panel, /PAYMENT_LOCKED_BANNER_FA|admin-order-seller-payment-locked-/);
+  assert.match(panel, /admin-order-seller-create-shipment-/);
+  assert.equal(PAYMENT_LOCKED_BANNER_FA.includes("پرداخت این بخش از سفارش هنوز تأیید نشده"), true);
 });
 
 test("create shipment modal sends selections without deferred T005 block", () => {

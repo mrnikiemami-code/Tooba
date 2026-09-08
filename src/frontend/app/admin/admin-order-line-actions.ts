@@ -2,22 +2,27 @@ import type { AdminOrderOperationAction } from "./admin-order-operations";
 
 export type LineActionLike = Pick<AdminOrderOperationAction, "code" | "orderLineId">;
 
-const ROW_CODES = new Set(["pack_selected", "unpack"]);
+const ROW_CODES = new Set(["mark_processing", "pack_selected", "unpack"]);
 
 /** اقدام‌های ردیف برای یک line — فقط projection بک‌اند با orderLineId. */
 export function rowActionsForLine<T extends LineActionLike>(actions: T[], orderLineId: string): T[] {
   return actions.filter((action) => ROW_CODES.has(action.code) && action.orderLineId === orderLineId);
 }
 
-/** اگر projection خطی نبود، از اقدام seller-level + تعداد قابل عملیات استفاده می‌شود. */
+/** اگر projection خطی نبود، از اقدام seller-level + قابلیت خط استفاده می‌شود. */
 export function lineLifecycleActions<T extends LineActionLike>(
   actions: T[],
   orderLineId: string,
-  opts: { packable: boolean; unpackable: boolean },
+  opts: { packable: boolean; unpackable: boolean; startable?: boolean },
 ): T[] {
   const row = rowActionsForLine(actions, orderLineId);
   if (row.length > 0) return row;
   const result: T[] = [];
+  if (opts.startable) {
+    const start = actions.find((action) => action.code === "mark_processing" && !action.orderLineId)
+      ?? actions.find((action) => action.code === "mark_processing");
+    if (start) result.push(start);
+  }
   if (opts.packable) {
     const pack = actions.find((action) => action.code === "pack_selected" && !action.orderLineId);
     if (pack) result.push(pack);
@@ -62,7 +67,87 @@ export function compatibleBulkCode<T extends LineActionLike>(
   return null;
 }
 
-export const MIXED_SELECTION_MESSAGE_FA = "ردیف‌های انتخاب‌شده در وضعیت‌های متفاوت یا ناسازگار هستند.";
+export const MIXED_SELECTION_MESSAGE_FA = "برای عملیات گروهی، اقلام هم‌مرحله را انتخاب کنید.";
+export const PAYMENT_LOCKED_BANNER_FA =
+  "پرداخت این بخش از سفارش هنوز تأیید نشده است؛ پس از تأیید پرداخت، عملیات پردازش و ارسال فعال می‌شود.";
+
+export type LineCapability = {
+  selectable: boolean;
+  selectableQuantityMax: number;
+  rowActionCodes: string[];
+  bulkActionCodes: string[];
+  shipmentEligibleQuantity: number;
+  paymentLocked: boolean;
+};
+
+export function isPaymentLockedSeller(input: {
+  status?: string | null;
+  paymentState?: string | null;
+  fulfillmentId?: string | null;
+  fulfillmentStatus?: string | null;
+}): boolean {
+  const status = input.status ?? "";
+  const payment = input.paymentState ?? "";
+  if (status === "Cancelled" || payment === "Cancelled") return false;
+  if (status === "PendingPayment" || payment === "PendingPayment") return true;
+  if (status === "Paid" || payment === "Paid") return false;
+  return !input.fulfillmentId && !input.fulfillmentStatus;
+}
+
+export function deriveLineCapability(input: {
+  paymentLocked: boolean;
+  cancelled?: boolean;
+  operationalStatus?: string | null;
+  packable: number;
+  unpackable: number;
+  shippable: number;
+  quantity: number;
+  projectedCodes: string[];
+}): LineCapability {
+  if (input.cancelled || input.paymentLocked) {
+    return {
+      selectable: false,
+      selectableQuantityMax: 0,
+      rowActionCodes: [],
+      bulkActionCodes: [],
+      shipmentEligibleQuantity: 0,
+      paymentLocked: input.paymentLocked,
+    };
+  }
+  const codes = new Set(input.projectedCodes);
+  const row: string[] = [];
+  const bulk: string[] = [];
+  const ready = input.operationalStatus === "ReadyToFulfill" || input.operationalStatus === "ReadyToProcess";
+  if (ready && codes.has("mark_processing")) {
+    row.push("mark_processing");
+    bulk.push("mark_processing");
+  }
+  if (!ready && input.packable > 0 && codes.has("pack_selected")) {
+    row.push("pack_selected");
+    bulk.push("pack_selected");
+  }
+  if (input.unpackable > 0 && codes.has("unpack")) {
+    row.push("unpack");
+    bulk.push("unpack");
+  }
+  if (input.shippable > 0 && codes.has("create_shipment")) {
+    bulk.push("create_shipment");
+  }
+  const selectable = row.length > 0 || bulk.length > 0;
+  let max = 0;
+  if (row.includes("pack_selected")) max = Math.max(max, input.packable);
+  if (row.includes("unpack")) max = Math.max(max, input.unpackable);
+  if (bulk.includes("create_shipment")) max = Math.max(max, input.shippable);
+  if (row.includes("mark_processing")) max = Math.max(max, input.quantity);
+  return {
+    selectable,
+    selectableQuantityMax: selectable ? Math.max(1, max) : 0,
+    rowActionCodes: row,
+    bulkActionCodes: bulk,
+    shipmentEligibleQuantity: input.shippable,
+    paymentLocked: false,
+  };
+}
 
 /** یک نمایش مهلت/باقیمانده؛ اگر هر دو یکسان باشند تکرار نمی‌شود. */
 export function canonicalReturnDisplay(input: {

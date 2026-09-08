@@ -1,6 +1,7 @@
 using Tooba.Fulfillment.Application;
 using Tooba.Fulfillment.Domain;
 using Tooba.Host.Admin;
+using Tooba.Order.Domain;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -130,10 +131,12 @@ public sealed class AdminFulfillmentScopeSequenceTests
     public void Line_status_stays_mixed_after_partial_pack()
     {
         var ready = Snapshot(FulfillmentStatus.ReadyToFulfill, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2, 0, null, 0)]);
-        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(ready, 0, 2));
+        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, ready, 0, 2));
         var processing = Snapshot(FulfillmentStatus.Processing, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 3, 1, null, 0)]);
-        Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(processing, 1, 3));
-        Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(processing, 3, 3));
+        Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3));
+        Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3));
+        Assert.Equal("PendingPayment", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.PendingPayment, null, 0, 2));
+        Assert.Equal("Cancelled", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Cancelled, null, 0, 2));
     }
 
     [Fact]
