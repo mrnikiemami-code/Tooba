@@ -174,6 +174,14 @@ test("grid excludes unpack and cancel_shipment from whole-order kebab", () => {
   assert.deepEqual(filtered.map((a) => a.code), ["cancel", "confirm_deposit"]);
 });
 
+test("restore cancelled order stays hidden when projection excludes it", () => {
+  const filtered = filterOperationsForScope(
+    [{ code: "cancel", sellerOrderId: null, labelFa: "لغو سفارش" }],
+    "whole-order",
+  );
+  assert.equal(filtered.some((a) => a.code === "restore_cancelled_order"), false);
+});
+
 test("whole-order menu shows one cancel and payment restore", () => {
   const actions = [
     { code: "cancel", sellerOrderId: "a", labelFa: "لغو سفارش" },
@@ -210,6 +218,11 @@ test("maps corrective action errors to FA", () => {
     mapAdminErrorMessage("order.restore.inventory_failed", "fa"),
     "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
   );
+  assert.equal(
+    mapAdminErrorMessage("order.restore.seller_payout_completed", "fa"),
+    "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
+  );
+  assert.ok(!mapAdminErrorMessage("order.restore.seller_payout_completed", "fa").includes("order.restore"));
   assert.ok(!mapAdminErrorMessage("fulfillment.tracking.locked_after_dispatch", "fa").includes("fulfillment.tracking"));
 });
 

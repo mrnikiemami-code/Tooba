@@ -223,6 +223,65 @@ public sealed class SettlementDirectory : ISettlementDirectory
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, SellerOrderRestoreSettlementGate>> GetRestoreSettlementGatesAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = sellerOrderIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return new Dictionary<Guid, SellerOrderRestoreSettlementGate>();
+        }
+
+        var orderEntries = await _db.SettlementEntries.AsNoTracking()
+            .Where(x => x.SellerOrderId != null && ids.Contains(x.SellerOrderId.Value))
+            .ToListAsync(cancellationToken);
+        var sellerPartyIds = orderEntries.Select(x => x.SellerPartyId).Distinct().ToList();
+        var sellerLedger = sellerPartyIds.Count == 0
+            ? []
+            : await _db.SettlementEntries.AsNoTracking()
+                .Where(x => sellerPartyIds.Contains(x.SellerPartyId))
+                .ToListAsync(cancellationToken);
+        var succeededPayouts = sellerPartyIds.Count == 0
+            ? []
+            : await _db.PayoutRequests.AsNoTracking()
+                .Where(x => sellerPartyIds.Contains(x.SellerPartyId) && x.Status == PayoutStatus.Succeeded)
+                .ToListAsync(cancellationToken);
+
+        var result = new Dictionary<Guid, SellerOrderRestoreSettlementGate>();
+        foreach (var sellerOrderId in ids)
+        {
+            var thisOrder = orderEntries.Where(x => x.SellerOrderId == sellerOrderId).ToList();
+            if (thisOrder.Count == 0)
+            {
+                result[sellerOrderId] = new SellerOrderRestoreSettlementGate(sellerOrderId, false, false);
+                continue;
+            }
+
+            var sellerId = thisOrder[0].SellerPartyId;
+            var slices = sellerLedger
+                .Where(x => x.SellerPartyId == sellerId)
+                .Select(x => new RestoreSettlementLedgerSlice(
+                    x.SellerOrderId,
+                    x.EntryType,
+                    x.NetAmount,
+                    x.PostedAt,
+                    x.EntryId))
+                .ToArray();
+            var completed = succeededPayouts
+                .Where(x => x.SellerPartyId == sellerId)
+                .Sum(x => x.Amount);
+            var hasAccrual = thisOrder.Any(x => x.EntryType == EntryType.Credit);
+            result[sellerOrderId] = new SellerOrderRestoreSettlementGate(
+                sellerOrderId,
+                hasAccrual,
+                SellerOrderRestoreSettlementPolicy.HasCompletedPayoutEffect(slices, completed, sellerOrderId));
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<SettlementStatementSnapshot>> ListStatementsAsync(
         Guid sellerPartyId,
         CancellationToken cancellationToken)

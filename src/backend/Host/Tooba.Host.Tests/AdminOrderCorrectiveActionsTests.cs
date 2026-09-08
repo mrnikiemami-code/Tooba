@@ -5,6 +5,8 @@ using Tooba.Offer.Domain;
 using Tooba.Order.Domain;
 using Tooba.Payment.Domain;
 using Tooba.Returns.Domain;
+using Tooba.Settlement.Application;
+using Tooba.Settlement.Domain;
 using Xunit;
 
 namespace Tooba.Host.Tests;
@@ -195,6 +197,98 @@ public sealed class AdminOrderCorrectiveActionsTests
     {
         var group = SeedCancelledCheckout();
         Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], []));
+        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [], blockedBySellerPayout: false));
+    }
+
+    [Fact]
+    public void Restore_forbidden_when_seller_payout_completed()
+    {
+        var group = SeedCancelledCheckout();
+        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(group, [], [], blockedBySellerPayout: true));
+        Assert.Equal(
+            "order.restore.seller_payout_completed",
+            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [], blockedBySellerPayout: true));
+        Assert.Equal(
+            "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
+            AdminOrderOperationsComposer.RestoreCodeToFa("order.restore.seller_payout_completed"));
+    }
+
+    [Fact]
+    public void Restore_refund_and_dispatch_blockers_outrank_payout()
+    {
+        var group = SeedCancelledCheckout();
+        var dispatched = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            group.SellerOrders[0].SellerOrderId,
+            group.CheckoutId,
+            group.SellerOrders[0].SellerPartyId,
+            FulfillmentStatus.Dispatched,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Dispatched,
+                    "Post",
+                    "TRK",
+                    DateTimeOffset.UtcNow,
+                    null,
+                    []),
+            ]);
+        Assert.Equal(
+            "order.restore.dispatched",
+            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [dispatched], [], blockedBySellerPayout: true));
+
+        var refunded = ReturnRequest.Create(
+            group.SellerOrders[0].SellerOrderId,
+            group.CheckoutId,
+            group.SellerOrders[0].SellerPartyId,
+            Guid.NewGuid(),
+            $"ret-{Guid.NewGuid():N}",
+            "test",
+            "IRR",
+            [(group.SellerOrders[0].Lines[0].LineId, 1, 1000m, null)],
+            DateTimeOffset.UtcNow);
+        refunded.Approve(Guid.NewGuid(), DateTimeOffset.UtcNow);
+        refunded.MarkRefundProcessing(DateTimeOffset.UtcNow);
+        refunded.MarkRefundSucceeded(DateTimeOffset.UtcNow);
+        Assert.Equal(
+            "order.restore.refund_completed",
+            AdminOrderOperationsComposer.RestoreForbiddenCode(group, [], [refunded], blockedBySellerPayout: true));
+    }
+
+    [Fact]
+    public void Accrued_unpaid_seller_amount_does_not_block_restore()
+    {
+        var orderId = Guid.NewGuid();
+        var slices = new RestoreSettlementLedgerSlice[]
+        {
+            new(orderId, EntryType.Credit, 900m, DateTimeOffset.UtcNow, Guid.NewGuid()),
+        };
+        Assert.False(SellerOrderRestoreSettlementPolicy.HasCompletedPayoutEffect(slices, 0m, orderId));
+    }
+
+    [Fact]
+    public void Completed_payout_fifo_blocks_consumed_order_only()
+    {
+        var older = Guid.NewGuid();
+        var newer = Guid.NewGuid();
+        var t0 = DateTimeOffset.Parse("2026-09-01T00:00:00Z");
+        var slices = new RestoreSettlementLedgerSlice[]
+        {
+            new(older, EntryType.Credit, 100m, t0, Guid.NewGuid()),
+            new(newer, EntryType.Credit, 50m, t0.AddHours(1), Guid.NewGuid()),
+        };
+        Assert.True(SellerOrderRestoreSettlementPolicy.HasCompletedPayoutEffect(slices, 80m, older));
+        Assert.False(SellerOrderRestoreSettlementPolicy.HasCompletedPayoutEffect(slices, 80m, newer));
+        Assert.True(SellerOrderRestoreSettlementPolicy.HasCompletedPayoutEffect(slices, 150m, newer));
     }
 
     [Fact]
@@ -216,6 +310,9 @@ public sealed class AdminOrderCorrectiveActionsTests
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
         Assert.Contains("restore_deposit", composer, StringComparison.Ordinal);
         Assert.Contains("restore_cancelled_order", composer, StringComparison.Ordinal);
+        Assert.Contains("GetRestoreSettlementGatesAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("order.restore.seller_payout_completed", composer, StringComparison.Ordinal);
+        Assert.Contains("if (code == \"restore_cancelled_order\")", composer, StringComparison.Ordinal);
         Assert.Contains("correct_tracking", composer, StringComparison.Ordinal);
         Assert.Contains("ProjectWholeOrderCancel", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("sellerOrderId ?? throw new PlatformHttpException(400, \"شناسه سفارش فروشنده الزامی است.\"", composer, StringComparison.Ordinal);

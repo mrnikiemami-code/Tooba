@@ -10,6 +10,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
 using Tooba.Payment.Infrastructure;
 using Tooba.Returns.Application;
+using Tooba.Settlement.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
 
@@ -38,6 +39,7 @@ public sealed class AdminOrderOperationsComposer
     private readonly IAccessControlDirectory _access;
     private readonly ICurrentTenant _tenant;
     private readonly IPaymentAdminDirectory _payments;
+    private readonly ISettlementDirectory _settlement;
     private readonly ShippingMethodsOptions _shippingMethods;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
@@ -51,6 +53,7 @@ public sealed class AdminOrderOperationsComposer
         IAccessControlDirectory access,
         ICurrentTenant tenant,
         IPaymentAdminDirectory payments,
+        ISettlementDirectory settlement,
         ShippingMethodsOptions? shippingMethods = null)
     {
         _orders = orders;
@@ -62,6 +65,7 @@ public sealed class AdminOrderOperationsComposer
         _access = access;
         _tenant = tenant;
         _payments = payments;
+        _settlement = settlement;
         _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
 
@@ -96,7 +100,8 @@ public sealed class AdminOrderOperationsComposer
         }
 
         ProjectWholeOrderCancel(actions, group, fulfillments, effective);
-        ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective);
+        var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
+        ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout);
         return new AdminOrderOperationsPage(checkoutId, AdminOrderWholeOrderActions.Collapse(actions), eligibility);
     }
 
@@ -133,7 +138,7 @@ public sealed class AdminOrderOperationsComposer
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
         var code = request.Code.Trim().ToLowerInvariant();
 
-        // cancel / restore_deposit: projection may hide after success; domain remains authoritative.
+        // cancel / restore_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
         if (code == "cancel")
         {
             if (!Has(effective, "order.cancel"))
@@ -179,6 +184,16 @@ public sealed class AdminOrderOperationsComposer
             {
                 throw MapPaymentRestoreError(ex);
             }
+        }
+
+        if (code == "restore_cancelled_order")
+        {
+            if (!HasAny(effective, "order.cancel", "order.handle"))
+            {
+                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            }
+
+            return await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken);
         }
 
         var page = await ListAsync(checkoutId, actorUserId, cancellationToken);
@@ -826,14 +841,15 @@ public sealed class AdminOrderOperationsComposer
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
-        EffectiveAccessDto effective)
+        EffectiveAccessDto effective,
+        bool blockedBySellerPayout)
     {
         if (!HasAny(effective, "order.cancel", "order.handle"))
         {
             return;
         }
 
-        if (!CanRestoreCancelledOrder(group, fulfillments, returns))
+        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout))
         {
             return;
         }
@@ -862,12 +878,13 @@ public sealed class AdminOrderOperationsComposer
         var returns = await _returns.ReturnRequests.AsNoTracking()
             .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
             .ToListAsync(cancellationToken);
-        if (!CanRestoreCancelledOrder(group, fulfillments, returns))
+        var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
+        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout))
         {
             throw new PlatformHttpException(
                 400,
-                RestoreForbiddenMessage(group, fulfillments, returns),
-                RestoreForbiddenCode(group, fulfillments, returns));
+                RestoreForbiddenMessage(group, fulfillments, returns, blockedBySellerPayout),
+                RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout));
         }
 
         try
@@ -1046,7 +1063,8 @@ public sealed class AdminOrderOperationsComposer
     internal static bool CanRestoreCancelledOrder(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns)
+        IReadOnlyList<ReturnRequest> returns,
+        bool blockedBySellerPayout = false)
     {
         if (group.SellerOrders.Count == 0
             || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled)
@@ -1055,13 +1073,14 @@ public sealed class AdminOrderOperationsComposer
             return false;
         }
 
-        return !HasIrreversibleFinanceBlock(fulfillments, returns);
+        return !HasIrreversibleFinanceBlock(fulfillments, returns) && !blockedBySellerPayout;
     }
 
     internal static string RestoreForbiddenCode(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns)
+        IReadOnlyList<ReturnRequest> returns,
+        bool blockedBySellerPayout = false)
     {
         if (group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
         {
@@ -1090,14 +1109,20 @@ public sealed class AdminOrderOperationsComposer
             return "order.restore.dispatched";
         }
 
+        if (blockedBySellerPayout)
+        {
+            return "order.restore.seller_payout_completed";
+        }
+
         return "order.restore.invalid_state";
     }
 
     internal static string RestoreForbiddenMessage(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns) =>
-        RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns));
+        IReadOnlyList<ReturnRequest> returns,
+        bool blockedBySellerPayout = false) =>
+        RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout));
 
     internal static string RestoreCodeToFa(string code) => code switch
     {
@@ -1106,10 +1131,19 @@ public sealed class AdminOrderOperationsComposer
         "order.restore.refund_completed" => "بازگردانی پس از بازگشت وجه تکمیل‌شده مجاز نیست.",
         "order.restore.delivered" => "بازگردانی پس از تحویل مجاز نیست؛ از مرجوعی استفاده کنید.",
         "order.restore.dispatched" => "بازگردانی پس از ارسال مرسوله مجاز نیست.",
+        "order.restore.seller_payout_completed" => "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
         "order.restore.inventory_failed" => "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
         "order.restore.invalid_state" => "بازگردانی سفارش در این وضعیت مجاز نیست.",
         _ => "بازگردانی سفارش در این وضعیت مجاز نیست.",
     };
+
+    private async Task<bool> HasSellerPayoutRestoreBlockAsync(
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        var gates = await _settlement.GetRestoreSettlementGatesAsync(sellerOrderIds, cancellationToken);
+        return gates.Values.Any(x => x.HasCompletedPayoutEffect);
+    }
 
     private static PlatformHttpException MapPaymentRestoreError(InvalidOperationException ex) =>
         ex.Message switch

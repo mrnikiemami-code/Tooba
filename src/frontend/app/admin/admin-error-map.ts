@@ -246,6 +246,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بازگردانی پس از ارسال مرسوله مجاز نیست.",
     en: "Restore is not allowed after a shipment has been dispatched.",
   },
+  "order.restore.seller_payout_completed": {
+    fa: "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
+    en: "This order cannot be restored because the seller share has already been paid out.",
+  },
   "order.restore.inventory_failed": {
     fa: "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
     en: "Restore failed; inventory could not be reserved again. The order stayed cancelled.",
