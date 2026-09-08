@@ -1,0 +1,77 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T010
+
+Parent-Task:
+TB-P09-T009-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Fulfillment lifecycle actions were removed from whole-order/detail عملیات سفارش. Pack now requires StartProcessing. pack_selected packs only exact line/qty selections; mark_packed is explicit pack-all remaining. Mixed-status bulk is rejected. Row kebab uses backend line actions and hides when empty. Partial pack no longer paints sibling rows or the seller as Packed. T009 payment/shipment/order corrective paths unchanged. No Order Detail redesign. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T011 invented.
+
+Discovery:
+docs/evidence/TB-P09-T010/discovery.md
+
+Action-Scope:
+Detail/grid menus filter fulfillment codes. Seller toolbar + row kebab consume projection. docs/evidence/TB-P09-T010/action-scope.md
+
+Whole-Order-Dedup:
+Fulfillment codes stay out of whole-order/detail. T009 cancel/payment dedupe unchanged. docs/evidence/TB-P09-T010/whole-order-dedup.md
+
+Lifecycle-Sequence:
+ReadyToFulfill → mark_processing only. Pack from Processing/Packed. Seller stays Processing until every line is fully packed. docs/evidence/TB-P09-T010/lifecycle-sequence.md
+
+Exact-Selection:
+pack_selected requires selections; no sibling auto-expand. Oversized qty → fulfillment.selection.qty_exceeded. docs/evidence/TB-P09-T010/exact-selection.md
+
+Pack-All-vs-Pack-Selected:
+mark_packed = pack remaining eligible qty. pack_selected = exact selections required; empty/mixed → fulfillment.bulk.incompatible.
+
+Row-Actions:
+Per-line pack_selected/unpack with OrderLineId. FE kebab hidden when none. docs/evidence/TB-P09-T010/row-actions.md
+
+Bulk-Compatibility:
+Intersection only. Mixed FA: ردیف‌های انتخاب‌شده در وضعیت‌های متفاوت یا ناسازگار هستند. Backend fulfillment.bulk.incompatible / fulfillment.bulk.cross_seller. docs/evidence/TB-P09-T010/bulk-compatibility.md
+
+Seller-Boundary:
+Selections stay inside one seller/fulfillment. Foreign line IDs rejected. No silent partial success.
+
+Error-UX:
+FA/EN mapped for fulfillment.pack.requires_processing, fulfillment.pack.not_processing, fulfillment.ship.not_packed, fulfillment.selection.qty_exceeded, fulfillment.bulk.incompatible, fulfillment.bulk.cross_seller.
+
+Focused-Validation:
+Host focused 60 passed. FE shipping/ops/T006 tests 35 passed. Recovery guard 3 passed. git diff --check clean. docs/evidence/TB-P09-T010/focused-validation.md
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T010/runtime-smoke.md — checkout 01a07a63-ab32-7000-a62a-e67df880a8ce: pack hidden until StartProcessing; pack L1 qty 1 of 2 only; seller stays Processing; mixed L1+L2 400 fulfillment.bulk.incompatible; L1 kebab pack/unpack projected.
+
+UI-Preservation:
+No redesign. RTL, 920px scroll, return column, seller groups, shipment cards, T009 corrective menu kept. docs/evidence/TB-P09-T010/ui-preservation.md
+
+Recovery-SoT:
+Last Architect-accepted TB-P09-T009-R1. Last Implementation TB-P09-T010. Issued none. Repair none. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T010/recovery-sot.md
+
+Git:
+commit e4bad723 on main. HEAD==origin/main.
+
+Architectural-Concerns:
+Smoke checkout has two cloned order lines that are not fulfillment items; pack_selected on those IDs is rejected (no silent expand). 3-item exact pack is covered by AdminFulfillmentScopeSequenceTests.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Operator should confirm Start Processing / Pack Selected / kebab visibility on a same-seller multi-line order.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
