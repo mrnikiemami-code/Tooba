@@ -1,0 +1,109 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "languages",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "name": "uom-kg-ru",
+      "status": 200,
+      "referenced": true
+    },
+    {
+      "name": "uom-list-ru",
+      "status": 200,
+      "localizedName": "килограмм",
+      "localizedShortName": "кг"
+    },
+    {
+      "name": "product-qty",
+      "status": 200,
+      "unit": "01900000-0000-7000-8000-000000000002",
+      "places": 2,
+      "step": null
+    },
+    {
+      "name": "offer-unit",
+      "status": 200,
+      "unitCode": null,
+      "unitLabel": null
+    },
+    {
+      "name": "offer-minmax",
+      "status": 200,
+      "min": 0.5,
+      "max": 20
+    },
+    {
+      "name": "rounding-floor",
+      "status": 200,
+      "mode": "Floor",
+      "fa": "رو به پایین"
+    },
+    {
+      "name": "price-998",
+      "status": 200,
+      "amount": 998
+    },
+    {
+      "name": "promo-create",
+      "status": 201,
+      "coupon": "T014F292176",
+      "promoId": "01a08450-f0e0-7000-a120-c8d2f17a3221"
+    },
+    {
+      "name": "promo-activate",
+      "status": 200
+    },
+    {
+      "name": "cart-add",
+      "status": 200,
+      "qty": 1
+    },
+    {
+      "name": "checkout",
+      "status": 200,
+      "checkoutId": "01a08450-f2b0-7000-816d-552bb5fd54cd",
+      "discount": 199
+    },
+    {
+      "name": "header",
+      "row": "Floor|0|998.0000|199.0000|799.0000|71.0000|0.0000|71.0000|870.0000|1|1.000000"
+    },
+    {
+      "name": "floor-math",
+      "ok": true,
+      "discount": 199,
+      "net": 799,
+      "duty": 0,
+      "taxAndDuty": 71
+    },
+    {
+      "name": "invoice-html",
+      "status": 200,
+      "hasItemCount": true,
+      "hasDuty": true,
+      "hasTaxDuty": true
+    },
+    {
+      "name": "rounding-ceiling",
+      "status": 200,
+      "mode": "Ceiling"
+    },
+    {
+      "name": "historical-after-ceiling",
+      "row": "Floor|0|998.0000|199.0000|799.0000|71.0000|0.0000|71.0000|870.0000",
+      "unchanged": true
+    },
+    {
+      "name": "restore-price",
+      "status": 200
+    },
+    {
+      "name": "promo-deactivate",
+      "status": 200
+    }
+  ]
+}

@@ -130,7 +130,7 @@ internal sealed class AdminOrdersGridQueryEngine
             case "sellers":
                 return source;
             case "lines":
-                return ApplyDecimalAggFilter(source, c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity), filter);
+                return ApplyDecimalAggFilter(source, c => c.SellerOrders.Sum(o => o.TotalQuantity), filter);
             case "payment":
                 return ApplyPaymentFilter(source, filter);
             case "status":
@@ -322,8 +322,8 @@ internal sealed class AdminOrdersGridQueryEngine
                 ? source.OrderBy(c => c.SellerOrders.Count).ThenBy(c => c.CheckoutId)
                 : source.OrderByDescending(c => c.SellerOrders.Count).ThenBy(c => c.CheckoutId),
             "lines" => asc
-                ? source.OrderBy(c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity)).ThenBy(c => c.CheckoutId)
-                : source.OrderByDescending(c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity)).ThenBy(c => c.CheckoutId),
+                ? source.OrderBy(c => c.SellerOrders.Sum(o => o.TotalQuantity)).ThenBy(c => c.CheckoutId)
+                : source.OrderByDescending(c => c.SellerOrders.Sum(o => o.TotalQuantity)).ThenBy(c => c.CheckoutId),
             "payment" => asc
                 ? source.OrderBy(c => c.SellerOrders.All(o => o.Status == SellerOrderStatus.Paid) ? 1 : 0).ThenBy(c => c.CheckoutId)
                 : source.OrderByDescending(c => c.SellerOrders.All(o => o.Status == SellerOrderStatus.Paid) ? 1 : 0).ThenBy(c => c.CheckoutId),
@@ -413,7 +413,7 @@ internal sealed class AdminOrdersGridQueryEngine
             string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
             orders.Count,
             FormatSellerDisplayNames(orders, sellerNames),
-            orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
+            orders.Sum(x => x.TotalQuantity != 0 ? x.TotalQuantity : x.Lines.Sum(line => line.Quantity)),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
             orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)

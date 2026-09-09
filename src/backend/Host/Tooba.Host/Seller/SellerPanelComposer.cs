@@ -174,19 +174,34 @@ public sealed class SellerPanelComposer
             .Select(x => new { x.OnHand, x.Reserved })
             .FirstOrDefaultAsync(cancellationToken);
         string? brand = null;
+        string? productUnitCode = null;
+        string? productUnitName = null;
+        string? productUnitShortName = null;
         if (row.ProductId is Guid productId)
         {
-            var brandId = await _catalog.Products.AsNoTracking()
+            var productRow = await _catalog.Products.AsNoTracking()
                 .Where(x => x.ProductId == productId)
-                .Select(x => x.BrandId)
+                .Select(x => new { x.BrandId, x.UnitOfMeasureId })
                 .FirstOrDefaultAsync(cancellationToken);
-            if (brandId is Guid bid)
+            if (productRow?.BrandId is Guid bid)
             {
                 brand = await _catalog.LocalizedTexts.AsNoTracking()
                     .Where(x => x.OwnerKind == CatalogLocalizedOwnerKind.Brand && x.OwnerId == bid && x.FieldKey == "name")
                     .OrderBy(x => x.Locale)
                     .Select(x => x.Value)
                     .FirstOrDefaultAsync(cancellationToken);
+            }
+
+            if (productRow is not null && productRow.UnitOfMeasureId != Guid.Empty)
+            {
+                var unit = await _catalog.UnitsOfMeasure.AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.UnitOfMeasureId == productRow.UnitOfMeasureId, cancellationToken);
+                var translation = await _catalog.UnitOfMeasureTranslations.AsNoTracking()
+                    .Where(x => x.UnitOfMeasureId == productRow.UnitOfMeasureId)
+                    .FirstOrDefaultAsync(cancellationToken);
+                productUnitCode = unit?.Code;
+                productUnitName = translation?.Name ?? unit?.Code;
+                productUnitShortName = translation?.ShortName ?? unit?.Code;
             }
         }
 
@@ -218,7 +233,10 @@ public sealed class SellerPanelComposer
             opts.MaxReturnWindowDays,
             opts.AllowNonReturnableOffers,
             offer.MinimumOrderQuantity,
-            offer.MaximumOrderQuantity);
+            offer.MaximumOrderQuantity,
+            productUnitCode,
+            productUnitName,
+            productUnitShortName);
     }
 
     /// <summary>

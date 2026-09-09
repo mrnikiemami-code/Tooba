@@ -16,6 +16,7 @@ const productSiblings = [
 const catalogSiblings = [
   { id: "catalog-categories", href: "/admin/catalog/categories" },
   { id: "catalog-attributes", href: "/admin/catalog/attributes" },
+  { id: "catalog-units", href: "/admin/catalog/units" },
 ];
 
 const contentSiblings = [

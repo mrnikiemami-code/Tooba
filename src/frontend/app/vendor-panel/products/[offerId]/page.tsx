@@ -103,6 +103,10 @@ export default function VendorProductDetailPage() {
       setSaveError("حداکثر مقدار خرید نامعتبر است");
       return;
     }
+    if (parsedMin != null && parsedMax != null && parsedMin > parsedMax) {
+      setSaveError("حداقل مقدار خرید نباید از حداکثر بیشتر باشد");
+      return;
+    }
 
     setSaving(true);
     setSaveError(undefined);
@@ -255,6 +259,10 @@ export default function VendorProductDetailPage() {
                   dir="ltr"
                   data-testid="offer-min-qty"
                 />
+                <span className="text-xs text-muted" data-testid="offer-product-unit">
+                  واحد کالا: {detail.productUnitName ?? detail.productUnitCode ?? "—"}
+                  {detail.productUnitShortName ? ` (${detail.productUnitShortName})` : ""}
+                </span>
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 حداکثر مقدار خرید
@@ -266,6 +274,10 @@ export default function VendorProductDetailPage() {
                   dir="ltr"
                   data-testid="offer-max-qty"
                 />
+                <span className="text-xs text-muted">
+                  واحد کالا: {detail.productUnitName ?? detail.productUnitCode ?? "—"}
+                  {detail.productUnitShortName ? ` (${detail.productUnitShortName})` : ""}
+                </span>
               </label>
               <label className="flex flex-col gap-1 text-sm sm:col-span-2" data-testid="offer-return-policy">
                 سیاست مرجوعی

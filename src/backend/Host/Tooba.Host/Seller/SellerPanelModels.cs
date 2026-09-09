@@ -53,7 +53,10 @@ public sealed record SellerOfferDetailPage(
     int MaxReturnWindowDays = 30,
     bool AllowNonReturnableOffers = true,
     decimal? MinimumOrderQuantity = null,
-    decimal? MaximumOrderQuantity = null);
+    decimal? MaximumOrderQuantity = null,
+    string? ProductUnitCode = null,
+    string? ProductUnitName = null,
+    string? ProductUnitShortName = null);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.

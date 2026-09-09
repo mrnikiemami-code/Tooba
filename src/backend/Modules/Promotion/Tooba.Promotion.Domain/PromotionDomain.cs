@@ -70,7 +70,18 @@ public static class PromotionRounding
                     || string.Equals(currency, "KRW", StringComparison.OrdinalIgnoreCase)
             ? 0
             : 2;
-        return decimal.Round(amount, scale, MidpointRounding.AwayFromZero);
+        return Round(amount, currency, QuantityRoundingMode.Nearest);
+    }
+
+    /// <summary>گرد کردن با GlobalRoundingMode و دقت ارز.</summary>
+    public static decimal Round(decimal amount, string currency, QuantityRoundingMode mode)
+    {
+        var scale = string.Equals(currency, "IRR", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(currency, "JPY", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(currency, "KRW", StringComparison.OrdinalIgnoreCase)
+            ? 0
+            : 2;
+        return FinancialRounder.Round(amount, scale, mode);
     }
 }
 
@@ -550,7 +561,10 @@ public sealed class PromotionDefinition : IHasDomainEvents
     /// <summary>
     /// مبلغ تخفیف را از پایهٔ بدون مالیات حساب می‌کند. سقف باقیمانده از منفی شدن جلوگیری می‌کند.
     /// </summary>
-    public decimal ComputeDiscount(decimal remainingExclusive, string currency)
+    public decimal ComputeDiscount(
+        decimal remainingExclusive,
+        string currency,
+        QuantityRoundingMode roundingMode = QuantityRoundingMode.Nearest)
     {
         if (remainingExclusive <= 0)
         {
@@ -572,7 +586,7 @@ public sealed class PromotionDefinition : IHasDomainEvents
             raw = FixedAmount;
         }
 
-        var rounded = PromotionRounding.Round(raw, currency);
+        var rounded = PromotionRounding.Round(raw, currency, roundingMode);
         return rounded > remainingExclusive ? remainingExclusive : rounded;
     }
 }

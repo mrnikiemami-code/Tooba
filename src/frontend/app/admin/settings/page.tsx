@@ -237,8 +237,11 @@ export default function AdminSettingsPage() {
               }}
               data-testid="admin-settings-quantity-form"
             >
-              <p className="text-sm text-gray-500 leading-7">
-                یک حالت گرد کردن سراسری برای نرمال‌سازی مقدار کالا. سفارش‌های تاریخی بازنویسی نمی‌شوند.
+              <p className="text-sm text-gray-500 leading-7" data-testid="admin-settings-rounding-helper-fa">
+                یک حالت گرد کردن سراسری برای نرمال‌سازی مقدار و محاسبات مالی جدید. سفارش‌ها و فاکتورهای تاریخی بازنویسی نمی‌شوند.
+              </p>
+              <p className="text-xs text-gray-400 leading-6" dir="ltr" data-testid="admin-settings-rounding-helper-en">
+                Applies to new quantity and financial calculations only. Historical orders and invoices are not recalculated.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {(

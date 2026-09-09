@@ -334,6 +334,14 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
         return result;
     }
 
+    /// <inheritdoc />
+    public async Task<QuantityRoundingMode> GetGlobalRoundingModeAsync(CancellationToken cancellationToken)
+    {
+        var settings = await _db.StoreQuantitySettings.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.SettingsId == StoreQuantitySettings.SingletonId, cancellationToken);
+        return settings?.RoundingMode ?? QuantityRoundingMode.Nearest;
+    }
+
     private async Task<IReadOnlyList<Guid>> LoadPreferredLanguageIdsAsync(CancellationToken cancellationToken)
     {
         try

@@ -67,6 +67,27 @@ public sealed class UnitOfMeasure
             UpdatedAt = now,
         };
     }
+
+    /// <summary>کد/بعد/ترتیب را به‌روز می‌کند.</summary>
+    public void Update(string code, UnitOfMeasureDimension dimension, int sortOrder, DateTimeOffset now)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            throw new InvalidOperationException("unit.code.required");
+        }
+
+        Code = code.Trim().ToLowerInvariant();
+        Dimension = dimension;
+        SortOrder = sortOrder;
+        UpdatedAt = now;
+    }
+
+    /// <summary>فعال/غیرفعال می‌کند. حذف سخت نیست.</summary>
+    public void SetActive(bool isActive, DateTimeOffset now)
+    {
+        IsActive = isActive;
+        UpdatedAt = now;
+    }
 }
 
 /// <summary>ترجمهٔ واحد با LanguageId رجیستری زبان موجود.</summary>
@@ -107,6 +128,18 @@ public sealed class UnitOfMeasureTranslation
             Name = name.Trim(),
             ShortName = shortName.Trim(),
         };
+    }
+
+    /// <summary>متن ترجمه را عوض می‌کند.</summary>
+    public void SetText(string name, string shortName)
+    {
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(shortName))
+        {
+            throw new InvalidOperationException("unit.translation.required");
+        }
+
+        Name = name.Trim();
+        ShortName = shortName.Trim();
     }
 }
 

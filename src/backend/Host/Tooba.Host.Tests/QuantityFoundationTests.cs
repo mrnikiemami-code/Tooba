@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks;
+using Tooba.Catalog.Domain;
 using Tooba.Offer.Domain;
 using Xunit;
 
@@ -107,5 +108,27 @@ public sealed class QuantityFoundationTests
         const decimal unit = 40000m;
         const decimal quantity = 1.25m;
         Assert.Equal(50000m, unit * quantity);
+    }
+
+    [Fact]
+    public void Financial_floor_precision_zero_rounds_discount_once()
+    {
+        var raw = 998m * 0.20m;
+        Assert.Equal(199.6m, raw);
+        var discount = FinancialRounder.Round(raw, 0, QuantityRoundingMode.Floor);
+        Assert.Equal(199m, discount);
+        Assert.Equal(799m, 998m - discount);
+        Assert.Equal(200m, FinancialRounder.Round(raw, 0, QuantityRoundingMode.Ceiling));
+        Assert.Equal(200m, FinancialRounder.Round(raw, 0, QuantityRoundingMode.Nearest));
+    }
+
+    [Fact]
+    public void Unit_deactivate_is_soft_only()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var unit = UnitOfMeasure.Create(Guid.NewGuid(), "kg", UnitOfMeasureDimension.Mass, true, 10, now);
+        unit.SetActive(false, now.AddMinutes(1));
+        Assert.False(unit.IsActive);
+        Assert.Equal("kg", unit.Code);
     }
 }

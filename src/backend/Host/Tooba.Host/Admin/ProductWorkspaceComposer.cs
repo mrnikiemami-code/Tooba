@@ -478,7 +478,7 @@ public sealed class ProductWorkspaceComposer
             product.QuantityStep,
             await ResolveUnitCodeAsync(product.UnitOfMeasureId, cancellationToken),
             await ResolveUnitDisplayAsync(product.UnitOfMeasureId, cancellationToken),
-            await ListUnitOptionsAsync(cancellationToken));
+            await ListUnitOptionsAsync(product.UnitOfMeasureId, cancellationToken));
     }
 
     /// <summary>
@@ -1877,10 +1877,12 @@ public sealed class ProductWorkspaceComposer
             ?? await ResolveUnitCodeAsync(unitId, cancellationToken);
     }
 
-    private async Task<IReadOnlyList<UnitOfMeasureOptionView>> ListUnitOptionsAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<UnitOfMeasureOptionView>> ListUnitOptionsAsync(
+        Guid? currentUnitId,
+        CancellationToken cancellationToken)
     {
         var units = await _catalog.UnitsOfMeasure.AsNoTracking()
-            .Where(x => x.IsActive)
+            .Where(x => x.IsActive || (currentUnitId.HasValue && x.UnitOfMeasureId == currentUnitId))
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
         if (units.Count == 0)

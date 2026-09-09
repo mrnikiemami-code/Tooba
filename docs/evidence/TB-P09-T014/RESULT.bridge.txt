@@ -1,0 +1,86 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T014
+
+Parent-Task:
+TB-P09-T013-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Quantity & financial lock completion. Lock registry created. UoM admin AppDataGrid with LanguageId translations (ru-RU dynamic). Product Unit/Places/Step polished. Offer decimal Min/Max + Product unit fields. One GlobalRoundingMode helper mentions invoices. Order-backed invoice header aggregates, tax/duty split, rounding snapshot. Floor 998×20% → Discount 199 / Net 799. Header sums finalized lines. Historical invoice unchanged after Ceiling. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T015 invented.
+
+Applicable-Locks:
+docs/evidence/TB-P09-T014/applicable-locks.md
+
+Discovery:
+docs/evidence/TB-P09-T014/discovery.md
+
+Reuse-vs-Change:
+docs/evidence/TB-P09-T014/reuse-vs-change.md
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md
+
+UoM-Catalog-UI:
+docs/evidence/TB-P09-T014/uom-catalog-ui.md
+
+Product-Quantity-UI:
+docs/evidence/TB-P09-T014/product-quantity-ui.md
+
+Offer-Min-Max-UI:
+docs/evidence/TB-P09-T014/offer-min-max-ui.md
+
+Global-Rounding-UI:
+docs/evidence/TB-P09-T014/global-rounding-ui.md
+
+Invoice-Header-Model:
+docs/evidence/TB-P09-T014/invoice-header-model.md
+
+Line-Financial-Rounding:
+docs/evidence/TB-P09-T014/line-rounding.md
+
+Tax-Duty:
+docs/evidence/TB-P09-T014/tax-duty.md
+
+Invoice-Rounding-Snapshot:
+docs/evidence/TB-P09-T014/invoice-snapshot.md
+
+Query-Performance:
+docs/evidence/TB-P09-T014/query-performance.md
+
+Migration-Safety:
+docs/evidence/TB-P09-T014/migration-safety.md
+
+Focused-Validation:
+QuantityFoundationTests + InvoiceHeaderAggregateTests + QuantityDecimalRegressionTests + FulfillmentLineQuantityOpsTests + SellerPanelCompositionTests 35 pass. OfferMigrationIntegrityTests 3 pass. Recovery guard 3 pass. Frontend units/nav/seller-api 23 pass.
+
+Runtime-Smoke:
+ru-RU UoM килограмм; product kg places=2 step=null; offer Min=0.50 Max=20; Floor invoice 998/199/799; header persisted; Ceiling leaves old invoice Floor. docs/evidence/TB-P09-T014/runtime-smoke.md
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T013-R1. Issued none. Repair none. Last Implementation TB-P09-T014. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T014/recovery-sot.md
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+Duty persisted 0 until a real duty calculator exists. Admin order list LineCount column remains the quantity display fed from Header.TotalQuantity.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. UoM page and invoice HTML labels added without a broad invoice redesign.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

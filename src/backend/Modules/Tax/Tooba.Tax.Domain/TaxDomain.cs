@@ -375,7 +375,18 @@ public static class TaxRounding
                     || string.Equals(currency, "KRW", StringComparison.OrdinalIgnoreCase)
             ? 0
             : 2;
-        return decimal.Round(amount, scale, MidpointRounding.AwayFromZero);
+        return Round(amount, currency, QuantityRoundingMode.Nearest);
+    }
+
+    /// <summary>گرد کردن با GlobalRoundingMode.</summary>
+    public static decimal Round(decimal amount, string currency, QuantityRoundingMode mode)
+    {
+        var scale = string.Equals(currency, "IRR", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(currency, "JPY", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(currency, "KRW", StringComparison.OrdinalIgnoreCase)
+            ? 0
+            : 2;
+        return FinancialRounder.Round(amount, scale, mode);
     }
 }
 

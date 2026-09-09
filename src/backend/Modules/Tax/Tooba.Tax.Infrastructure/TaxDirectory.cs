@@ -169,7 +169,7 @@ public sealed class TaxDirectory : ITaxDirectory
             rate = trusted;
         }
 
-        var lineExclusive = TaxRounding.Round(exclusive * request.Quantity, request.Currency);
+        var lineExclusive = TaxRounding.Round(exclusive * request.Quantity, request.Currency, request.RoundingMode);
         decimal taxAmount;
         TaxOutcome outcome;
         switch (rule.Kind)
@@ -185,7 +185,7 @@ public sealed class TaxDirectory : ITaxDirectory
                 rate = 0m;
                 break;
             default:
-                taxAmount = TaxRounding.Round(lineExclusive * rate, request.Currency);
+                taxAmount = TaxRounding.Round(lineExclusive * rate, request.Currency, request.RoundingMode);
                 outcome = TaxOutcome.Taxable;
                 break;
         }
@@ -195,7 +195,7 @@ public sealed class TaxDirectory : ITaxDirectory
             lineExclusive,
             rate,
             taxAmount,
-            TaxRounding.Round(lineExclusive + taxAmount, request.Currency),
+            lineExclusive + taxAmount,
             request.Currency.Trim().ToUpperInvariant(),
             rule.RuleId,
             classification.CategoryId,

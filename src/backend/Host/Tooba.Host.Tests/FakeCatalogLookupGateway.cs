@@ -120,4 +120,8 @@ internal sealed class FakeCatalogLookupGateway : ICatalogLookupGateway
         IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>>(new Dictionary<Guid, EffectiveQuantityPolicy>());
+
+    /// <inheritdoc />
+    public Task<QuantityRoundingMode> GetGlobalRoundingModeAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(QuantityRoundingMode.Nearest);
 }

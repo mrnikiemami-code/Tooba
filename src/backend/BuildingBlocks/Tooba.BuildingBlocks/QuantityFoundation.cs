@@ -93,6 +93,38 @@ public sealed class QuantityNormalizer : IQuantityNormalizer
     }
 }
 
+/// <summary>گرد کردن نتیجهٔ محاسبهٔ مالی با همان GlobalRoundingMode و دقت پول.</summary>
+public static class FinancialRounder
+{
+    /// <summary>IRR/JPY/KRW صفر رقم؛ بقیه دو رقم.</summary>
+    public static int MoneyPlaces(string? currency)
+    {
+        var code = (currency ?? "").Trim().ToUpperInvariant();
+        return code is "IRR" or "JPY" or "KRW" ? 0 : 2;
+    }
+
+    /// <summary>یک‌بار گرد کردن مبلغ. جمعِ مقادیر نهایی دوباره گرد نمی‌شود.</summary>
+    public static decimal Round(decimal amount, int decimalPlaces, QuantityRoundingMode mode)
+    {
+        var places = Math.Clamp(decimalPlaces, 0, 6);
+        var factor = 1m;
+        for (var i = 0; i < places; i++)
+        {
+            factor *= 10m;
+        }
+
+        var scaled = amount * factor;
+        var aligned = mode switch
+        {
+            QuantityRoundingMode.Floor => decimal.Floor(scaled),
+            QuantityRoundingMode.Ceiling => decimal.Ceiling(scaled),
+            QuantityRoundingMode.Nearest => decimal.Round(scaled, 0, MidpointRounding.AwayFromZero),
+            _ => throw new InvalidOperationException("money.rounding.unsupported"),
+        };
+        return aligned / factor;
+    }
+}
+
 /// <summary>قالب نمایش مقدار بدون صفرهای ذخیره‌سازی.</summary>
 public static class QuantityDisplay
 {

@@ -379,7 +379,7 @@ public sealed class PromotionDirectory : IPromotionDirectory
                 continue;
             }
 
-            var discount = promotion.ComputeDiscount(remaining, request.Currency);
+            var discount = promotion.ComputeDiscount(remaining, request.Currency, request.RoundingMode);
             if (discount <= 0)
             {
                 if (promotion.DiscountKind == PromotionDiscountKind.FixedAmountOff)
@@ -399,8 +399,8 @@ public sealed class PromotionDirectory : IPromotionDirectory
                 discount));
         }
 
-        var totalDiscount = PromotionRounding.Round(request.BaseTaxExclusiveAmount - remaining, request.Currency);
-        var post = PromotionRounding.Round(remaining, request.Currency);
+        var totalDiscount = request.BaseTaxExclusiveAmount - remaining;
+        var post = remaining;
         return new PromotionEvaluationResult(totalDiscount, post, applied, rejections);
     }
 

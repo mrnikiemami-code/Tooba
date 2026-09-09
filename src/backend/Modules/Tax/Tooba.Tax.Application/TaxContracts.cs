@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Tax.Domain;
 
 namespace Tooba.Tax.Application;
@@ -15,7 +16,8 @@ public sealed record TaxCalculationRequest(
     DateTimeOffset At,
     Guid? CustomerPartyId,
     bool AllowTrustedOverride,
-    decimal? TrustedOverrideRate);
+    decimal? TrustedOverrideRate,
+    QuantityRoundingMode RoundingMode = QuantityRoundingMode.Nearest);
 
 /// <summary>
 /// خروجی صریح محاسبه. معافیت با نرخ صفر و نبودن قاعده یکی نیست.

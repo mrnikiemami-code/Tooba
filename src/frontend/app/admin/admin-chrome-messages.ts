@@ -18,6 +18,7 @@ export type AdminNavLabels = {
   productCreate: string;
   catalogCategories: string;
   catalogAttributes: string;
+  catalogUnits: string;
   categorySchema: string;
   orders: string;
   fulfillments: string;
@@ -61,6 +62,7 @@ const faNav: AdminNavLabels = {
   productCreate: "افزودن محصول",
   catalogCategories: "مدیریت دسته‌بندی‌ها",
   catalogAttributes: "ویژگی‌ها و فیلترها",
+  catalogUnits: "واحدهای اندازه‌گیری",
   categorySchema: "طرح ویژگی رده",
   orders: "سفارش‌ها و پرداخت",
   fulfillments: "ارسال و تحویل",
@@ -104,6 +106,7 @@ const enNav: AdminNavLabels = {
   productCreate: "Add product",
   catalogCategories: "Manage categories",
   catalogAttributes: "Attributes & filters",
+  catalogUnits: "Units of measure",
   categorySchema: "Category attribute schema",
   orders: "Orders & payments",
   fulfillments: "Shipping & fulfillment",

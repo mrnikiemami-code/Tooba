@@ -144,6 +144,9 @@ public interface ICatalogLookupGateway
     Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> GetEffectiveQuantityPoliciesForVariantIdsAsync(
         IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken);
+
+    /// <summary>یک GlobalRoundingMode فروشگاه.</summary>
+    Task<QuantityRoundingMode> GetGlobalRoundingModeAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -482,6 +482,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         var quantityPolicies = await _catalog.GetEffectiveQuantityPoliciesForVariantIdsAsync(
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
+        var rounding = await _catalog.GetGlobalRoundingModeAsync(cancellationToken);
+        var moneyPlaces = FinancialRounder.MoneyPlaces(cart.Currency);
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
         {
             sequence++;
@@ -546,7 +548,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                         command.BuyerPartyId,
                         null,
                         command.CouponCode,
-                        now),
+                        now,
+                        rounding),
                     cancellationToken);
 
                 var tax = await _taxes.CalculateAsync(
@@ -560,7 +563,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                         now,
                         command.BuyerPartyId,
                         AllowTrustedOverride: false,
-                        TrustedOverrideRate: null),
+                        TrustedOverrideRate: null,
+                        rounding),
                     cancellationToken);
                 if (tax.Outcome is TaxOutcome.NoApplicableRule)
                 {
@@ -614,7 +618,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 BuildOrderNumber(now, sequence),
                 command.Mode,
                 cart.Currency,
-                lines));
+                lines,
+                rounding,
+                moneyPlaces));
         }
 
         if (command.QuotedDiscountAmount is { } quotedDiscount

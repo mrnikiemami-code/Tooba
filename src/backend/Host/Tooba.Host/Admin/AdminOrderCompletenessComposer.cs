@@ -910,8 +910,13 @@ public sealed class AdminOrderCompletenessComposer
         var currency = group.SellerOrders.Select(x => x.Currency).FirstOrDefault() ?? group.Currency;
         var subtotal = group.SellerOrders.Sum(x => x.SubtotalSnapshot);
         var tax = group.SellerOrders.Sum(x => x.TaxSnapshot);
+        var duty = group.SellerOrders.Sum(x => x.TotalDutyAmount);
         var discount = group.SellerOrders.Sum(x => x.DiscountSnapshot);
+        var net = group.SellerOrders.Sum(x => x.NetAmountBeforeTax);
+        var taxAndDuty = group.SellerOrders.Sum(x => x.TotalTaxAndDutyAmount);
         var grand = group.SellerOrders.Sum(x => x.GrandTotalSnapshot);
+        var itemCount = group.SellerOrders.Sum(x => x.TotalItemCount);
+        var totalQty = group.SellerOrders.Sum(x => x.TotalQuantity);
         var paymentStatus = payment?.Status.ToString() ?? "—";
         var sb = new StringBuilder();
         sb.Append("<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charset=\"utf-8\"/>");
@@ -934,16 +939,21 @@ public sealed class AdminOrderCompletenessComposer
             {
                 var title = $"کالا {line.CatalogVariantId.ToString("N")[..8]}";
                 sb.Append("<tr><td>").Append(WebUtility.HtmlEncode(title)).Append("</td>");
-                sb.Append("<td>").Append(line.Quantity.ToString(CultureInfo.InvariantCulture)).Append("</td>");
+                sb.Append("<td>").Append(QuantityDisplay.Format(line.Quantity, line.QuantityDecimalPlacesSnapshot)).Append("</td>");
                 sb.Append("<td dir=\"ltr\">").Append(FormatMoney(line.UnitPriceSnapshot, line.Currency)).Append("</td>");
                 sb.Append("<td dir=\"ltr\">").Append(FormatMoney(line.LineTotalSnapshot, line.Currency)).Append("</td></tr>");
             }
         }
 
         sb.Append("</tbody></table><div class=\"totals\">");
-        sb.Append("<p>جمع جزء: <strong dir=\"ltr\">").Append(FormatMoney(subtotal, currency)).Append("</strong></p>");
+        sb.Append("<p>تعداد اقلام: <strong dir=\"ltr\">").Append(itemCount.ToString(CultureInfo.InvariantCulture)).Append("</strong></p>");
+        sb.Append("<p>جمع مقدار: <strong dir=\"ltr\">").Append(QuantityDisplay.Format(totalQty, 6)).Append("</strong></p>");
+        sb.Append("<p>جمع قبل از تخفیف: <strong dir=\"ltr\">").Append(FormatMoney(subtotal, currency)).Append("</strong></p>");
+        sb.Append("<p>جمع تخفیفات: <strong dir=\"ltr\">").Append(FormatMoney(discount, currency)).Append("</strong></p>");
+        sb.Append("<p>مبلغ پس از تخفیف / قبل از مالیات: <strong dir=\"ltr\">").Append(FormatMoney(net, currency)).Append("</strong></p>");
         sb.Append("<p>مالیات: <strong dir=\"ltr\">").Append(FormatMoney(tax, currency)).Append("</strong></p>");
-        sb.Append("<p>تخفیف: <strong dir=\"ltr\">").Append(FormatMoney(discount, currency)).Append("</strong></p>");
+        sb.Append("<p>عوارض: <strong dir=\"ltr\">").Append(FormatMoney(duty, currency)).Append("</strong></p>");
+        sb.Append("<p>جمع مالیات و عوارض: <strong dir=\"ltr\">").Append(FormatMoney(taxAndDuty, currency)).Append("</strong></p>");
         sb.Append("<p>مبلغ قابل پرداخت: <strong dir=\"ltr\">").Append(FormatMoney(grand, currency)).Append("</strong></p>");
         sb.Append("<p>وضعیت پرداخت: ").Append(WebUtility.HtmlEncode(paymentStatus)).Append("</p>");
         sb.Append("</div></body></html>");

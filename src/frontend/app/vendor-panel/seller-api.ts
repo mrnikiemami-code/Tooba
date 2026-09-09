@@ -68,6 +68,9 @@ export interface SellerOfferDetail {
   allowNonReturnableOffers: boolean;
   minimumOrderQuantity: number | null;
   maximumOrderQuantity: number | null;
+  productUnitCode: string | null;
+  productUnitName: string | null;
+  productUnitShortName: string | null;
 }
 
 export interface SellerOrderListRow {
@@ -413,6 +416,9 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
     ),
     minimumOrderQuantity: asNullableNumber(readProp(item, "minimumOrderQuantity", "MinimumOrderQuantity")),
     maximumOrderQuantity: asNullableNumber(readProp(item, "maximumOrderQuantity", "MaximumOrderQuantity")),
+    productUnitCode: asNullableString(readProp(item, "productUnitCode", "ProductUnitCode")),
+    productUnitName: asNullableString(readProp(item, "productUnitName", "ProductUnitName")),
+    productUnitShortName: asNullableString(readProp(item, "productUnitShortName", "ProductUnitShortName")),
   };
 }
 

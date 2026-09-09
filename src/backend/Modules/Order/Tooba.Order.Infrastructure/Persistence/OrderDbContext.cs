@@ -96,6 +96,13 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.TaxSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.DiscountSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.GrandTotalSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.TotalItemCount);
+            entity.Property(x => x.TotalQuantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.NetAmountBeforeTax).HasPrecision(19, 4);
+            entity.Property(x => x.TotalDutyAmount).HasPrecision(19, 4);
+            entity.Property(x => x.TotalTaxAndDutyAmount).HasPrecision(19, 4);
+            entity.Property(x => x.RoundingModeUsed).HasMaxLength(32);
+            entity.Property(x => x.MoneyDecimalPlacesUsed);
             entity.HasIndex(x => x.OrderNumber).IsUnique();
             entity.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.SellerOrderId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -110,6 +117,7 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.TaxOutcomeSnapshot).HasMaxLength(32);
             entity.Property(x => x.TaxRateSnapshot).HasPrecision(19, 8);
             entity.Property(x => x.TaxAmountSnapshot).HasPrecision(19, 4);
+            entity.Property(x => x.DutyAmountSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.TaxInclusiveSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.DiscountAmountSnapshot).HasPrecision(19, 4);
             entity.Property(x => x.PromotionNameSnapshot).HasMaxLength(256);

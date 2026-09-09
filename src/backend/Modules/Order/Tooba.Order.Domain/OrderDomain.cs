@@ -152,6 +152,9 @@ public sealed class OrderLine
     /// </summary>
     public decimal TaxAmountSnapshot { get; init; }
 
+    /// <summary>عوارض خط؛ جدا از مالیات.</summary>
+    public decimal DutyAmountSnapshot { get; init; }
+
     /// <summary>
     /// مبلغ با مالیات خط در تصویر تاریخی.
     /// </summary>
@@ -263,7 +266,8 @@ public sealed class OrderLine
         string? unitCodeSnapshot = null,
         string? unitDisplaySnapshot = null,
         int quantityDecimalPlacesSnapshot = 0,
-        decimal? quantityStepSnapshot = null)
+        decimal? quantityStepSnapshot = null,
+        decimal dutyAmountSnapshot = 0)
     {
         if (quantity <= 0)
         {
@@ -307,6 +311,7 @@ public sealed class OrderLine
             TaxOutcomeSnapshot = taxOutcome,
             TaxRateSnapshot = taxRate,
             TaxAmountSnapshot = taxAmount,
+            DutyAmountSnapshot = dutyAmountSnapshot,
             TaxInclusiveSnapshot = taxInclusive,
             TaxRuleIdSnapshot = taxRuleId,
             DiscountAmountSnapshot = discountAmount,
@@ -411,6 +416,27 @@ public sealed class SellerOrder
     /// </summary>
     public decimal GrandTotalSnapshot { get; private set; }
 
+    /// <summary>تعداد ردیف کالا؛ شمارشی صحیح.</summary>
+    public int TotalItemCount { get; private set; }
+
+    /// <summary>جمع مقدار کالا؛ اعشاری.</summary>
+    public decimal TotalQuantity { get; private set; }
+
+    /// <summary>مبلغ پس از تخفیف و قبل از مالیات.</summary>
+    public decimal NetAmountBeforeTax { get; private set; }
+
+    /// <summary>جمع عوارض.</summary>
+    public decimal TotalDutyAmount { get; private set; }
+
+    /// <summary>مالیات + عوارض.</summary>
+    public decimal TotalTaxAndDutyAmount { get; private set; }
+
+    /// <summary>حالت گرد کردن استفاده‌شده در صدور.</summary>
+    public string RoundingModeUsed { get; private set; } = "Nearest";
+
+    /// <summary>دقت پولی استفاده‌شده در صدور.</summary>
+    public int MoneyDecimalPlacesUsed { get; private set; }
+
     /// <summary>
     /// ارز تصویر.
     /// </summary>
@@ -425,7 +451,9 @@ public sealed class SellerOrder
         string orderNumber,
         OrderMode mode,
         string currency,
-        IReadOnlyList<OrderLine> lines)
+        IReadOnlyList<OrderLine> lines,
+        QuantityRoundingMode roundingMode = QuantityRoundingMode.Nearest,
+        int? moneyDecimalPlaces = null)
     {
         if (lines.Count == 0)
         {
@@ -451,7 +479,14 @@ public sealed class SellerOrder
         order.SubtotalSnapshot = lines.Sum(x => x.LineTotalSnapshot);
         order.TaxSnapshot = lines.Sum(x => x.TaxAmountSnapshot);
         order.DiscountSnapshot = lines.Sum(x => x.DiscountAmountSnapshot);
-        order.GrandTotalSnapshot = order.SubtotalSnapshot - order.DiscountSnapshot + order.TaxSnapshot;
+        order.TotalDutyAmount = lines.Sum(x => x.DutyAmountSnapshot);
+        order.TotalItemCount = lines.Count;
+        order.TotalQuantity = lines.Sum(x => x.Quantity);
+        order.NetAmountBeforeTax = order.SubtotalSnapshot - order.DiscountSnapshot;
+        order.TotalTaxAndDutyAmount = order.TaxSnapshot + order.TotalDutyAmount;
+        order.GrandTotalSnapshot = order.NetAmountBeforeTax + order.TotalTaxAndDutyAmount;
+        order.RoundingModeUsed = roundingMode.ToString();
+        order.MoneyDecimalPlacesUsed = moneyDecimalPlaces ?? FinancialRounder.MoneyPlaces(currency);
         return order;
     }
 

@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Promotion.Domain;
 
 namespace Tooba.Promotion.Application;
@@ -37,7 +38,8 @@ public sealed record PromotionEvaluationRequest(
     Guid? CustomerPartyId,
     Guid? OrganizationPartyId,
     string? CouponCode,
-    DateTimeOffset At);
+    DateTimeOffset At,
+    QuantityRoundingMode RoundingMode = QuantityRoundingMode.Nearest);
 
 /// <summary>
 /// یک پروموشن اعمال‌شده در نتیجهٔ ارزیابی.

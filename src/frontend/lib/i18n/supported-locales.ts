@@ -7,6 +7,7 @@ import { type Locale, type TextDirection } from "./locale.ts";
 export type CalendarDisplayPolicy = "jalali" | "gregorian";
 
 export interface SupportedLocaleDefinition {
+  languageId?: string;
   code: string;
   urlPrefix: Locale;
   displayName: string;
@@ -69,7 +70,9 @@ export function mapSupportedLocale(payload: unknown): SupportedLocaleDefinition 
   const urlPrefixRaw = String(item.urlPrefix ?? item.UrlPrefix ?? "fa").trim();
   const urlPrefix: Locale = urlPrefixRaw === "en" ? "en" : "fa";
   const calendarRaw = String(item.calendarDisplay ?? item.CalendarDisplay ?? "jalali").toLowerCase();
+  const languageId = String(item.languageId ?? item.LanguageId ?? "").trim();
   return {
+    languageId: languageId || undefined,
     code,
     urlPrefix,
     displayName: String(item.displayName ?? item.DisplayName ?? code),

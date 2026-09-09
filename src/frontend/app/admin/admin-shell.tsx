@@ -101,6 +101,7 @@ const navGroupDefs: NavGroupDef[] = [
     items: [
       { id: "catalog-categories", labelKey: "catalogCategories", href: "/admin/catalog/categories", icon: FolderTree, live: true, viewPermission: "product.view" },
       { id: "catalog-attributes", labelKey: "catalogAttributes", href: "/admin/catalog/attributes", icon: Tags, live: true, viewPermission: "catalog.attribute.view" },
+      { id: "catalog-units", labelKey: "catalogUnits", href: "/admin/catalog/units", icon: Tag, live: true, viewPermission: "product.view" },
     ],
   },
   {

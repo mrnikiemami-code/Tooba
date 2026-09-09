@@ -463,6 +463,16 @@ function ProductWorkspaceScreenInner({
         setError("گام مقدار در صورت ورود باید بزرگ‌تر از صفر باشد");
         return;
       }
+      if (step != null) {
+        const fraction = stepText.replace(",", ".").includes(".")
+          ? stepText.replace(",", ".").split(".")[1]?.replace(/0+$/, "") ?? ""
+          : "";
+        if (fraction.length > places) {
+          setBusy(false);
+          setError("دقت گام مقدار باید با تعداد اعشار سازگار باشد");
+          return;
+        }
+      }
       const qtyResult = await updateAdminProductQuantityPolicy(
         current.productId,
         {
@@ -1097,6 +1107,9 @@ function ProductWorkspaceScreenInner({
                           markGeneralDirty();
                         }}
                       />
+                      <span className="mt-1 block text-xs text-muted">
+                        اعشار ۰ تا ۶. گام خالی مجاز است. اگر گام وارد شود باید مثبت و هم‌دقت با اعشار باشد.
+                      </span>
                     </label>
                     <div className="rounded-ds border border-border bg-secondary/30 p-3 text-sm">
                       <p className="font-medium">کد کاتالوگ</p>
