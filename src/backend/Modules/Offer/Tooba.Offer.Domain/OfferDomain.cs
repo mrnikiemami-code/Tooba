@@ -121,6 +121,12 @@ public sealed class SellerOffer : IHasDomainEvents
     /// </summary>
     public int? CustomReturnWindowDays { get; private set; }
 
+    /// <summary>حداقل مقدار خرید فروشنده؛ اختیاری.</summary>
+    public decimal? MinimumOrderQuantity { get; private set; }
+
+    /// <summary>حداکثر مقدار خرید فروشنده؛ اختیاری.</summary>
+    public decimal? MaximumOrderQuantity { get; private set; }
+
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
 
@@ -164,6 +170,29 @@ public sealed class SellerOffer : IHasDomainEvents
             _ => "Default",
         };
         CustomReturnWindowDays = ReturnPolicyChoice == "Custom" ? customReturnWindowDays : null;
+        UpdatedAt = now;
+    }
+
+    /// <summary>حداقل/حداکثر مقدار خرید listing را تنظیم می‌کند.</summary>
+    public void SetOrderQuantityLimits(decimal? minimum, decimal? maximum, DateTimeOffset now)
+    {
+        if (minimum is { } min && min <= 0)
+        {
+            throw new InvalidOperationException("offer.min_quantity.invalid");
+        }
+
+        if (maximum is { } max && max <= 0)
+        {
+            throw new InvalidOperationException("offer.max_quantity.invalid");
+        }
+
+        if (minimum is { } a && maximum is { } b && a > b)
+        {
+            throw new InvalidOperationException("offer.min_quantity.exceeds_max");
+        }
+
+        MinimumOrderQuantity = minimum;
+        MaximumOrderQuantity = maximum;
         UpdatedAt = now;
     }
 

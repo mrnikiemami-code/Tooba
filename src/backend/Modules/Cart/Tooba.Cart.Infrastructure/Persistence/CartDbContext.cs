@@ -65,6 +65,7 @@ public sealed class CartDbContext : DbContext
             entity.ToTable("cart_lines");
             entity.HasKey(x => x.LineId);
             entity.Property(x => x.LineId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.QuotedAmount).HasPrecision(19, 4);
             entity.Property(x => x.QuotedCurrency).HasMaxLength(3);
             entity.HasIndex(x => new { x.CartId, x.OfferId }).IsUnique();

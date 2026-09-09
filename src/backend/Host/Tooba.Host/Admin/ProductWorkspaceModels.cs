@@ -73,7 +73,7 @@ public sealed record AdminProductListItem(
     int OfferCount,
     string CategorySummary,
     string OfferAmountRange,
-    int SellableUnits,
+    decimal SellableUnits,
     int LocationCount,
     DateTimeOffset UpdatedAt,
     Guid? PrimaryMediaAssetId,
@@ -116,7 +116,23 @@ public sealed record ProductWorkspaceView(
     IReadOnlyList<ProductTranslationView>? Translations = null,
     bool IsPrimaryCategoryAssignable = false,
     Guid? BrandId = null,
-    IReadOnlyList<ProductCategoryAssignmentView>? CategoryAssignments = null);
+    IReadOnlyList<ProductCategoryAssignmentView>? CategoryAssignments = null,
+    Guid? UnitOfMeasureId = null,
+    int QuantityDecimalPlaces = 0,
+    decimal? QuantityStep = null,
+    string? UnitCode = null,
+    string? UnitDisplayName = null,
+    IReadOnlyList<UnitOfMeasureOptionView>? Units = null);
+
+/// <summary>گزینه واحد اندازه‌گیری برای Workspace.</summary>
+public sealed record UnitOfMeasureOptionView(Guid UnitOfMeasureId, string Code, string Name, string ShortName);
+
+/// <summary>بدنهٔ به‌روزرسانی سیاست مقدار محصول.</summary>
+public sealed record AdminProductQuantityPolicyRequest(
+    Guid UnitOfMeasureId,
+    int DecimalPlaces,
+    decimal? Step,
+    DateTimeOffset ExpectedUpdatedAt);
 
 /// <summary>پیوند دسته در Workspace (اصلی / اضافی).</summary>
 public sealed record ProductCategoryAssignmentView(
@@ -173,9 +189,9 @@ public sealed record ProductStockView(
     Guid LocationId,
     string LocationCode,
     string LocationName,
-    int OnHand,
-    int Reserved,
-    int Available);
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available);
 
 /// <summary>درز SEO. ترکیب صفحه نیست.</summary>
 public sealed record ProductSeoView(string? SlugSeam, string? SeoTitleSeam, string SemanticNote);

@@ -186,6 +186,42 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> ProcessSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.ProcessSelections(
+            selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("processing");
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<FulfillmentSnapshot> UnprocessSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        unit.UnprocessSelections(
+            selections.Select(x => (x.OrderLineId, x.Quantity)).ToArray(),
+            DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("unprocessed");
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<FulfillmentSnapshot> MarkPackedAsync(
         Guid fulfillmentId,
         Guid actorUserId,
@@ -470,9 +506,158 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 x.QuantityOrdered,
                 x.QuantityShipped,
                 x.ReservationId,
-                x.QuantityPacked)).ToArray(),
+                x.QuantityPacked,
+                x.QuantityProcessing)).ToArray(),
             shipmentSnapshots,
             unit.CreatedAt,
             unit.UpdatedAt);
+    }
+
+    /// <inheritdoc />
+    public async Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var units = await _db.Fulfillments
+            .Where(x => x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        var ids = units.Select(x => x.FulfillmentId).ToList();
+        var items = await _db.Items.Where(x => ids.Contains(x.FulfillmentId)).ToListAsync(cancellationToken);
+        var shipments = await _db.Shipments.Where(x => ids.Contains(x.FulfillmentId)).ToListAsync(cancellationToken);
+        if (units.Any(x => x.Status != FulfillmentStatus.ReadyToFulfill)
+            || items.Any(x => x.QuantityPacked > 0 || x.QuantityProcessing > 0)
+            || shipments.Any(x => x.Status != ShipmentStatus.Cancelled))
+        {
+            throw new InvalidOperationException("fulfillment.unconfirm.already_started");
+        }
+
+        var shipmentIds = shipments.Select(x => x.ShipmentId).ToList();
+        var shipmentItems = shipmentIds.Count == 0
+            ? []
+            : await _db.ShipmentItems.Where(x => shipmentIds.Contains(x.ShipmentId)).ToListAsync(cancellationToken);
+        _db.ShipmentItems.RemoveRange(shipmentItems);
+        _db.Shipments.RemoveRange(shipments);
+        _db.Items.RemoveRange(items);
+        _db.Fulfillments.RemoveRange(units);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task EnsureCreatedForPaidCheckoutAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        _ = checkoutId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var created = false;
+        foreach (var sellerOrderId in sellerOrderIds.Distinct())
+        {
+            if (await _db.Fulfillments.AnyAsync(x => x.SellerOrderId == sellerOrderId, cancellationToken))
+            {
+                continue;
+            }
+
+            var handoff = await _orders.GetHandoffAsync(sellerOrderId, cancellationToken)
+                ?? throw new InvalidOperationException("سفارش برای fulfillment پیدا نشد.");
+            if (!handoff.IsPaid)
+            {
+                throw new InvalidOperationException("fulfillment فقط برای سفارش Paid ساخته می‌شود.");
+            }
+
+            var unit = FulfillmentUnit.CreateFromPaidOrder(
+                handoff.SellerOrderId,
+                handoff.CheckoutId,
+                handoff.SellerPartyId,
+                handoff.PlacedByUserId,
+                handoff.RecipientName,
+                handoff.ContactMobile,
+                handoff.ProvinceName,
+                handoff.CityName,
+                handoff.PostalAddress,
+                handoff.PostalCode,
+                handoff.ShippingMethodCode,
+                handoff.ShippingMethodLabel,
+                handoff.Lines.Select(x => (x.OrderLineId, x.Quantity, x.ReservationId)),
+                now);
+            _db.Fulfillments.Add(unit);
+            _db.Items.AddRange(unit.Items);
+            _telemetry.RecordCreated();
+            created = true;
+        }
+
+        if (created)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var units = await _db.Fulfillments
+            .Where(x => x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var loaded = new List<FulfillmentUnit>(units.Count);
+        foreach (var unit in units)
+        {
+            loaded.Add(await LoadMutableAsync(unit.FulfillmentId, cancellationToken));
+        }
+
+        if (loaded.Any(x => x.HasDispatchedQuantity()))
+        {
+            throw new InvalidOperationException("fulfillment.cancel.already_dispatched");
+        }
+
+        foreach (var unit in loaded)
+        {
+            unit.AbortForOrderCancel(now);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var units = await _db.Fulfillments
+            .Where(x => x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var loaded = new List<FulfillmentUnit>(units.Count);
+        foreach (var unit in units)
+        {
+            loaded.Add(await LoadMutableAsync(unit.FulfillmentId, cancellationToken));
+        }
+
+        if (loaded.Any(x => x.HasDispatchedQuantity()))
+        {
+            throw new InvalidOperationException("fulfillment.restore.already_dispatched");
+        }
+
+        foreach (var unit in loaded)
+        {
+            unit.ReactivateAfterOrderRestore(now);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 }

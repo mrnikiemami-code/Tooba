@@ -78,6 +78,12 @@ export interface ProductWorkspaceView {
   categoryAssignments?: ProductCategoryAssignmentView[];
   slug?: string | null;
   shortDescription?: string | null;
+  unitOfMeasureId?: string | null;
+  quantityDecimalPlaces?: number;
+  quantityStep?: number | null;
+  unitCode?: string | null;
+  unitDisplayName?: string | null;
+  units?: { unitOfMeasureId: string; code: string; name: string; shortName: string }[];
   translations?: ProductTranslationView[];
   variants: {
     variantId: string;

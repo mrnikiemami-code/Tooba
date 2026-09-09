@@ -47,6 +47,8 @@ public sealed class OfferDbContext : DbContext
             entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.ReturnPolicyChoice).HasMaxLength(32).HasDefaultValue("Default");
             entity.Property(x => x.CustomReturnWindowDays);
+            entity.Property(x => x.MinimumOrderQuantity).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.MaximumOrderQuantity).HasColumnType("numeric(18,6)");
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => new { x.SellerPartyId, x.CatalogVariantId, x.Channel })
                 .IsUnique()

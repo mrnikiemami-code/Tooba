@@ -18,6 +18,7 @@ import {
   Trash2,
   Truck,
 } from "lucide-react";
+import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
   changeCartLineQuantity,
@@ -174,28 +175,15 @@ export function StorefrontShopeivaCart() {
                         </button>
                       </div>
                       <div className="flex flex-wrap items-end justify-between gap-2 mt-2">
-                        <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden" data-testid="cart-line-qty">
-                          <button
-                            type="button"
-                            disabled={busy || line.quantity <= 1}
-                            onClick={() => void mutate(() => changeCartLineQuantity(line.lineId, line.quantity - 1))}
-                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
-                            aria-label="کاهش"
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="w-10 h-8 flex items-center justify-center text-sm font-bold border-x border-gray-200">
-                            {line.quantity.toLocaleString("fa-IR")}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void mutate(() => changeCartLineQuantity(line.lineId, line.quantity + 1))}
-                            className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100"
-                            aria-label="افزایش"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="flex items-center gap-2">
+                          <CartLineQuantityInput
+                            quantity={line.quantity}
+                            decimalPlaces={line.quantityDecimalPlaces}
+                            step={line.quantityStep}
+                            unitLabel={line.unitDisplayName ?? line.unitCode}
+                            busy={busy}
+                            onCommit={(next) => void mutate(() => changeCartLineQuantity(line.lineId, next))}
+                          />
                         </div>
                         <div className="text-left">
                           {line.unitAmountExclusiveOfTax != null ? (
@@ -323,6 +311,80 @@ export function StorefrontShopeivaCart() {
       )}
 
       <CartBenefits />
+    </div>
+  );
+}
+
+function CartLineQuantityInput({
+  quantity,
+  decimalPlaces,
+  step,
+  unitLabel,
+  busy,
+  onCommit,
+}: {
+  quantity: number;
+  decimalPlaces: number;
+  step: number | null;
+  unitLabel: string | null;
+  busy: boolean;
+  onCommit: (next: number) => void;
+}) {
+  const [text, setText] = useState(formatQuantityDisplay(quantity, decimalPlaces));
+  useEffect(() => {
+    setText(formatQuantityDisplay(quantity, decimalPlaces));
+  }, [quantity, decimalPlaces]);
+
+  const bump = step && step > 0 ? step : 1;
+  function commit(raw: string) {
+    const parsed = parseQuantityInput(raw);
+    if (parsed == null) {
+      setText(formatQuantityDisplay(quantity, decimalPlaces));
+      return;
+    }
+    onCommit(parsed);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden" data-testid="cart-line-qty">
+        <button
+          type="button"
+          disabled={busy || quantity <= bump}
+          onClick={() => onCommit(Math.max(bump, quantity - bump))}
+          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+          aria-label="کاهش"
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </button>
+        <input
+          className="w-16 h-8 text-center text-sm font-bold border-x border-gray-200 bg-white tabular-nums"
+          value={text}
+          disabled={busy}
+          inputMode="decimal"
+          dir="ltr"
+          aria-label="تعداد"
+          data-testid="cart-line-qty-input"
+          onChange={(event) => setText(event.target.value)}
+          onBlur={() => commit(text)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit(text);
+            }
+          }}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onCommit(quantity + bump)}
+          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-100"
+          aria-label="افزایش"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      {unitLabel ? <span className="text-[11px] text-gray-500">{unitLabel}</span> : null}
     </div>
   );
 }

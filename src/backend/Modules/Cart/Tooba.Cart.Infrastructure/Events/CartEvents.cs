@@ -54,7 +54,7 @@ public sealed class CartLineAddedIntegrationEvent : IIntegrationEvent
     /// <summary>
     /// تعداد.
     /// </summary>
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 /// <summary>
@@ -89,7 +89,7 @@ public sealed class CartLineChangedIntegrationEvent : IIntegrationEvent
     /// <summary>
     /// تعداد جدید.
     /// </summary>
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 /// <summary>

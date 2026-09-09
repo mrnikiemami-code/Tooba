@@ -337,6 +337,31 @@ public interface ISettlementDirectory
         string currency,
         Guid eventId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// accrual پرداخت را وقتی هنوز واریز سهم فروشنده تکمیل نشده حذف می‌کند.
+    /// مسیر برگشت تأیید واریز؛ لغو سفارش نباید این را صدا بزند.
+    /// </summary>
+    Task VoidUnpaidAccrualForPaymentAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// accrual پرداخت‌نشده را با سطر Debit خنثی می‌کند؛ Credit را پاک یا بازنویسی نمی‌کند.
+    /// </summary>
+    Task NeutralizeUnpaidAccrualForCancelAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// خنثی‌سازی لغو را با سطر Credit برمی‌گرداند؛ سطرهای قبلی پاک نمی‌شوند.
+    /// </summary>
+    Task ReinstateAccrualAfterCancelRestoreAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

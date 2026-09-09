@@ -77,6 +77,10 @@ export interface StorefrontCartLine {
   lineAmountExclusiveOfTax: number | null;
   currency: string;
   quotedTaxExclusive: boolean;
+  unitCode: string | null;
+  unitDisplayName: string | null;
+  quantityDecimalPlaces: number;
+  quantityStep: number | null;
 }
 
 /**
@@ -164,6 +168,21 @@ export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
             lineAmountExclusiveOfTax: lineRaw == null ? null : asNumber(lineRaw),
             currency: asString(readProp(line, "currency", "Currency"), "IRR"),
             quotedTaxExclusive: asBoolean(readProp(line, "quotedTaxExclusive", "QuotedTaxExclusive"), true),
+            unitCode: (() => {
+              const raw = readProp(line, "unitCode", "UnitCode");
+              const text = asString(raw);
+              return text.length > 0 ? text : null;
+            })(),
+            unitDisplayName: (() => {
+              const raw = readProp(line, "unitDisplayName", "UnitDisplayName");
+              const text = asString(raw);
+              return text.length > 0 ? text : null;
+            })(),
+            quantityDecimalPlaces: asNumber(readProp(line, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
+            quantityStep: (() => {
+              const raw = readProp(line, "quantityStep", "QuantityStep");
+              return raw == null || raw === "" ? null : asNumber(raw);
+            })(),
           } satisfies StorefrontCartLine;
         })
       : [],

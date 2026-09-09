@@ -12,7 +12,7 @@ public sealed record StorefrontOfferCandidate(
     decimal AmountExclusiveOfTax,
     string Currency,
     string Market,
-    int AvailableUnits,
+    decimal AvailableUnits,
     string TaxCategoryLabel);
 
 /// <summary>
@@ -31,7 +31,7 @@ public sealed record StorefrontProductCard(
     decimal OfferAmountExclusiveOfTax,
     decimal? PromotionalAmountExclusiveOfTax,
     string Currency,
-    int AvailableUnits,
+    decimal AvailableUnits,
     bool InStock,
     string? PromotionLabel,
     decimal? AverageRating = null,
@@ -165,7 +165,7 @@ public sealed record StorefrontAlternateOffer(
     string SellerDisplayName,
     decimal AmountExclusiveOfTax,
     string Currency,
-    int AvailableUnits,
+    decimal AvailableUnits,
     bool InStock);
 
 /// <summary>
@@ -235,11 +235,15 @@ public sealed record StorefrontCartLineView(
     string Title,
     string SellerDisplayName,
     Guid? MediaAssetId,
-    int Quantity,
+    decimal Quantity,
     decimal? UnitAmountExclusiveOfTax,
     decimal? LineAmountExclusiveOfTax,
     string Currency,
-    bool QuotedTaxExclusive);
+    bool QuotedTaxExclusive,
+    string? UnitCode = null,
+    string? UnitDisplayName = null,
+    int QuantityDecimalPlaces = 0,
+    decimal? QuantityStep = null);
 
 /// <summary>
 /// صفحهٔ سبد زنده. جمع‌ها برآورد بدون مالیات از نقل‌قول سبد هستند نه تسویهٔ Checkout.
@@ -250,7 +254,7 @@ public sealed record StorefrontCartPage(
     string Market,
     string Currency,
     string Channel,
-    int ItemCount,
+    decimal ItemCount,
     decimal SubtotalExclusiveOfTax,
     IReadOnlyList<StorefrontCartLineView> Lines,
     string? GuestSecret);
@@ -258,12 +262,12 @@ public sealed record StorefrontCartPage(
 /// <summary>
 /// ورودی افزودن خط از PDP. هویت خط Offer است.
 /// </summary>
-public sealed record StorefrontAddCartLineRequest(Guid OfferId, int Quantity);
+public sealed record StorefrontAddCartLineRequest(Guid OfferId, decimal Quantity);
 
 /// <summary>
 /// ورودی تغییر تعداد خط. صفر یعنی حذف.
 /// </summary>
-public sealed record StorefrontChangeCartLineRequest(int Quantity);
+public sealed record StorefrontChangeCartLineRequest(decimal Quantity);
 
 /// <summary>
 /// تصویر ارسال فروشگاهی. SavedAddressId اختیاری است و روی سفارش ذخیره نمی‌شود؛
@@ -296,7 +300,7 @@ public sealed record StorefrontCheckoutLineView(
     Guid SellerPartyId,
     string Title,
     string SellerDisplayName,
-    int Quantity,
+    decimal Quantity,
     decimal LineExclusiveOfTax,
     decimal DiscountAmount,
     decimal TaxAmount,

@@ -414,11 +414,11 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
 
     private sealed class RecordingReturnInventoryGateway : IReturnInventoryGateway
     {
-        public List<(Guid ReservationId, int Quantity)> Restocked { get; } = [];
+        public List<(Guid ReservationId, decimal Quantity)> Restocked { get; } = [];
 
         public Task RestockConsumedReservationAsync(
             Guid reservationId,
-            int quantity,
+            decimal quantity,
             string idempotencyKey,
             CancellationToken cancellationToken)
         {

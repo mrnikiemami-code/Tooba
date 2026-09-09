@@ -20,6 +20,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
 import { formatOfferAmount, loadStorefrontDetail, loadStorefrontQuestions, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
@@ -35,7 +36,7 @@ import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDetailPage }) {
   const router = useRouter();
   const [currentDetail, setCurrentDetail] = useState(detail);
-  const [qty, setQty] = useState(1);
+  const [qtyText, setQtyText] = useState("1");
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews" | "qa" | "bulk">("intro");
   const [qaCount, setQaCount] = useState(0);
   const [note, setNote] = useState<string | null>(null);
@@ -207,15 +208,38 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               </button>
             </div>
             <div className="flex items-center justify-between border border-gray-200 rounded-xl overflow-hidden">
-              <button type="button" className="px-3 py-2" onClick={() => setQty((value) => Math.max(1, value - 1))} aria-label="کاهش">
+              <button
+                type="button"
+                className="px-3 py-2"
+                onClick={() => {
+                  const current = parseQuantityInput(qtyText) ?? 1;
+                  setQtyText(formatQuantityDisplay(Math.max(0.01, current - 1), 6));
+                }}
+                aria-label="کاهش"
+              >
                 <Minus className="w-4 h-4" />
               </button>
-              <span className="text-sm font-bold">{qty.toLocaleString("fa-IR")}</span>
+              <input
+                className="w-20 text-center text-sm font-bold tabular-nums bg-transparent"
+                value={qtyText}
+                inputMode="decimal"
+                dir="ltr"
+                aria-label="تعداد"
+                data-testid="pdp-qty-input"
+                onChange={(event) => setQtyText(event.target.value)}
+                onBlur={() => {
+                  const parsed = parseQuantityInput(qtyText);
+                  setQtyText(parsed == null ? "1" : formatQuantityDisplay(parsed, 6));
+                }}
+              />
               <button
                 type="button"
                 className="px-3 py-2 disabled:opacity-40"
-                disabled={qty >= offer.availableUnits}
-                onClick={() => setQty((value) => Math.min(offer.availableUnits, value + 1))}
+                disabled={(parseQuantityInput(qtyText) ?? 1) >= offer.availableUnits}
+                onClick={() => {
+                  const current = parseQuantityInput(qtyText) ?? 1;
+                  setQtyText(formatQuantityDisplay(Math.min(offer.availableUnits, current + 1), 6));
+                }}
                 aria-label="افزایش"
               >
                 <Plus className="w-4 h-4" />
@@ -243,6 +267,11 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                     setBusy(true);
                     setNote(null);
                     try {
+                      const qty = parseQuantityInput(qtyText);
+                      if (qty == null) {
+                        setNote("تعداد نامعتبر است.");
+                        return;
+                      }
                       await addOfferToCart(offer.offerId, qty);
                       setNote("به سبد زنده اضافه شد.");
                       router.push("/cart");

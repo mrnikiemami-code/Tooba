@@ -128,7 +128,7 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
     }
 
     /// <summary>تعداد مرجوعی فعال/تکمیل‌شده به ازای هر خط.</summary>
-    public async Task<Dictionary<Guid, int>> GetAlreadyReturnedQuantitiesAsync(
+    public async Task<Dictionary<Guid, decimal>> GetAlreadyReturnedQuantitiesAsync(
         Guid sellerOrderId,
         CancellationToken cancellationToken)
     {
@@ -230,7 +230,7 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
     private static IReadOnlyList<ReturnLineEligibility> BuildLines(
         OrderReturnContextSnapshot orderContext,
         FulfillmentReturnEligibilitySnapshot fulfillment,
-        IReadOnlyDictionary<Guid, int> alreadyReturned,
+        IReadOnlyDictionary<Guid, decimal> alreadyReturned,
         DateTimeOffset lastDeliveredAt,
         DateTimeOffset now)
     {
@@ -253,7 +253,7 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 ? line.ReturnWindowDaysSnapshot
                 : (int)ReturnWindow.TotalDays;
             var slices = SlicesForLine(fulfillment, line.OrderLineId, lastDeliveredAt);
-            var stillInWindow = 0;
+            var stillInWindow = 0m;
             foreach (var slice in slices)
             {
                 if (now <= slice.DeliveredAt.AddDays(windowDays))
@@ -262,7 +262,7 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 }
             }
 
-            var remaining = Math.Max(0, stillInWindow - returned);
+            var remaining = Math.Max(0m, stillInWindow - returned);
             return new ReturnLineEligibility(line.OrderLineId, delivered, returned, remaining);
         }).ToArray();
     }

@@ -53,7 +53,7 @@ public sealed class BulkPurchaseInquiry
     /// <summary>نشانی تحویل.</summary>
     public string Address { get; private set; } = string.Empty;
     /// <summary>مقدار درخواستی.</summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
     /// <summary>یادداشت اختیاری.</summary>
     public string? Notes { get; private set; }
     /// <summary>وضعیت درخواست.</summary>
@@ -69,7 +69,7 @@ public sealed class BulkPurchaseInquiry
         string? email,
         string? companyName,
         string address,
-        int quantity,
+        decimal quantity,
         string? notes,
         DateTimeOffset now)
     {

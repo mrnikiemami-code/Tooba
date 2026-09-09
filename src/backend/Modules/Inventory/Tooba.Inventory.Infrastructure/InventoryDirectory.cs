@@ -115,7 +115,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     public async Task AdjustAsync(
         Guid stockItemId,
         StockAdjustmentKind kind,
-        int quantity,
+        decimal quantity,
         string reason,
         string? idempotencyKey,
         CancellationToken cancellationToken)
@@ -165,7 +165,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     /// <inheritdoc />
     public async Task<ReservationReceipt> ReserveAsync(
         Guid stockItemId,
-        int quantity,
+        decimal quantity,
         string? externalReference,
         string? idempotencyKey,
         DateTimeOffset? expiresAt,

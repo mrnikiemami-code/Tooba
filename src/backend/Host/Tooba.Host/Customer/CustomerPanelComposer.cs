@@ -326,7 +326,10 @@ public sealed class CustomerPanelComposer
     private static string PaymentState(PaymentSnapshot? payment) =>
         payment?.Status switch
         {
-            PaymentStatus.Succeeded => "Paid",
+            PaymentStatus.Succeeded
+                or PaymentStatus.RefundPending
+                or PaymentStatus.Refunded
+                or PaymentStatus.RefundFailed => "Paid",
             PaymentStatus.Failed or PaymentStatus.Cancelled => "Failed",
             _ => "PendingPayment",
         };

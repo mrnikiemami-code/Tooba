@@ -25,11 +25,13 @@ public sealed class CatalogModule : IToobaModule
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(environment);
 
+        services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddSingleton<IOutboxModuleRegistration, CatalogOutboxRegistration>();
         services.AddScoped<ICatalogUseCaseGuard, OpenCatalogUseCaseGuard>();
         services.AddScoped<ICatalogActorContext, CatalogActorContext>();
         services.AddScoped<ICatalogDirectory, CatalogDirectory>();
         services.AddScoped<ICatalogLookupGateway>(sp => (CatalogDirectory)sp.GetRequiredService<ICatalogDirectory>());
+        services.AddSingleton<IQuantityNormalizer, QuantityNormalizer>();
         services.AddDbContext<CatalogDbContext>((sp, options) =>
         {
             var connectionString = ToobaNpgsql.ResolveForContext(

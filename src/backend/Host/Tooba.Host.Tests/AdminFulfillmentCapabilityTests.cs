@@ -48,6 +48,38 @@ public sealed class AdminFulfillmentCapabilityTests
     }
 
     [Fact]
+    public void Processing_one_line_keeps_siblings_startable()
+    {
+        var group = SeedCheckout(cancel: false, extraLine: true);
+        var order = group.SellerOrders.Single();
+        order.RecordVerifiedPayment();
+        var first = order.Lines[0];
+        var second = order.Lines[1];
+        var fulfillment = Snapshot(
+            order.SellerOrderId,
+            FulfillmentStatus.Processing,
+            [
+                new FulfillmentItemSnapshot(Guid.NewGuid(), first.LineId, first.Quantity, 0, null, 0, first.Quantity),
+                new FulfillmentItemSnapshot(Guid.NewGuid(), second.LineId, second.Quantity, 0, null, 0, 0),
+            ]);
+        var actions = new[]
+        {
+            new AdminOrderOperationAction("mark_processing", "شروع", "s", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new AdminOrderOperationAction("pack_selected", "pack", "p", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+            new AdminOrderOperationAction("unprocess", "برگشت", "u", order.SellerOrderId, fulfillment.FulfillmentId, null, null, "order.handle", true, null),
+        };
+        var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment, actions);
+        var processed = projected.Lines.Single(x => x.OrderLineId == first.LineId);
+        var sibling = projected.Lines.Single(x => x.OrderLineId == second.LineId);
+        Assert.Contains("pack_selected", processed.RowActionCodes);
+        Assert.Contains("unprocess", processed.RowActionCodes);
+        Assert.DoesNotContain("mark_processing", processed.RowActionCodes);
+        Assert.Contains("mark_processing", sibling.RowActionCodes);
+        Assert.DoesNotContain("pack_selected", sibling.RowActionCodes);
+        Assert.DoesNotContain("unprocess", sibling.RowActionCodes);
+    }
+
+    [Fact]
     public void Composer_source_projects_capabilities_without_n_plus_one()
     {
         var root = FindRepoRoot();
@@ -59,9 +91,10 @@ public sealed class AdminFulfillmentCapabilityTests
         Assert.Contains("lineCaps", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("ListForCheckoutAsync(", projector, StringComparison.Ordinal);
         Assert.Contains("شروع پردازش این قلم", composer, StringComparison.Ordinal);
+        Assert.Contains("برگشت از پردازش این قلم", composer, StringComparison.Ordinal);
     }
 
-    private static CheckoutGroup SeedCheckout(bool cancel)
+    private static CheckoutGroup SeedCheckout(bool cancel, bool extraLine = false)
     {
         var checkoutId = Guid.NewGuid();
         var sellerOrderId = Guid.NewGuid();
@@ -81,13 +114,31 @@ public sealed class AdminFulfillmentCapabilityTests
             90m,
             1090m,
             null);
+        var extra = extraLine
+            ? OrderLine.FromCheckout(
+                sellerOrderId,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2,
+                1000m,
+                "IRR",
+                true,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "Taxable",
+                0.09m,
+                90m,
+                1090m,
+                null)
+            : null;
         var order = SellerOrder.Open(
             checkoutId,
             Guid.NewGuid(),
             $"SO-{sellerOrderId:N}"[..20],
             OrderMode.OnlinePurchase,
             "IRR",
-            [line]);
+            extra is null ? [line] : [line, extra]);
         if (cancel) order.Cancel();
         return CheckoutGroup.Submit(
             checkoutId,

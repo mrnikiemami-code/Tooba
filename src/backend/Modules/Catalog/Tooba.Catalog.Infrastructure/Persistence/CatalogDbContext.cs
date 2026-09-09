@@ -28,6 +28,15 @@ public sealed class CatalogDbContext : DbContext
     /// </summary>
     public DbSet<CatalogProduct> Products => Set<CatalogProduct>();
 
+    /// <summary>واحدهای اندازه‌گیری کالا.</summary>
+    public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
+
+    /// <summary>ترجمه‌های واحد با LanguageId.</summary>
+    public DbSet<UnitOfMeasureTranslation> UnitOfMeasureTranslations => Set<UnitOfMeasureTranslation>();
+
+    /// <summary>گرد کردن سراسری مقدار کالا.</summary>
+    public DbSet<StoreQuantitySettings> StoreQuantitySettings => Set<StoreQuantitySettings>();
+
     /// <summary>
     /// گونه‌های Catalog.
     /// </summary>
@@ -392,6 +401,8 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.SlugSeam).HasMaxLength(160);
             entity.Property(x => x.SeoTitleSeam).HasMaxLength(256);
+            entity.Property(x => x.QuantityDecimalPlaces).HasDefaultValue(0);
+            entity.Property(x => x.QuantityStep).HasColumnType("numeric(18,6)");
             entity.Ignore(x => x.DomainEvents);
             entity.HasOne<CatalogBrand>()
                 .WithMany()
@@ -474,6 +485,34 @@ public sealed class CatalogDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.DefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UnitOfMeasure>(entity =>
+        {
+            entity.ToTable("units_of_measure");
+            entity.HasKey(x => x.UnitOfMeasureId);
+            entity.Property(x => x.UnitOfMeasureId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Dimension).HasConversion<string>().HasMaxLength(16);
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+
+        modelBuilder.Entity<UnitOfMeasureTranslation>(entity =>
+        {
+            entity.ToTable("unit_of_measure_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ShortName).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => new { x.UnitOfMeasureId, x.LanguageId }).IsUnique();
+        });
+
+        modelBuilder.Entity<StoreQuantitySettings>(entity =>
+        {
+            entity.ToTable("store_quantity_settings");
+            entity.HasKey(x => x.SettingsId);
+            entity.Property(x => x.SettingsId).ValueGeneratedNever();
+            entity.Property(x => x.RoundingMode).HasConversion<string>().HasMaxLength(16);
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

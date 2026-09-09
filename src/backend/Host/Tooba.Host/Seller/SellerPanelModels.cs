@@ -22,7 +22,7 @@ public sealed record SellerOfferListItem(
     string Status,
     decimal? Amount,
     string Currency,
-    int AvailableUnits,
+    decimal AvailableUnits,
     DateTimeOffset? LastUpdatedAt);
 
 /// <summary>
@@ -41,9 +41,9 @@ public sealed record SellerOfferDetailPage(
     string Channel,
     decimal? Amount,
     string Currency,
-    int OnHand,
-    int Reserved,
-    int AvailableUnits,
+    decimal OnHand,
+    decimal Reserved,
+    decimal AvailableUnits,
     bool CatalogReadOnly,
     string ReturnPolicyChoice = "Default",
     int? CustomReturnWindowDays = null,
@@ -51,7 +51,9 @@ public sealed record SellerOfferDetailPage(
     bool SellerCanOverrideReturnPolicy = true,
     int MinReturnWindowDays = 1,
     int MaxReturnWindowDays = 30,
-    bool AllowNonReturnableOffers = true);
+    bool AllowNonReturnableOffers = true,
+    decimal? MinimumOrderQuantity = null,
+    decimal? MaximumOrderQuantity = null);
 
 /// <summary>
 /// فرمان باریک به‌روزرسانی seam تجاری فروشنده.
@@ -60,7 +62,9 @@ public sealed record SellerOfferPatchRequest(
     string? SellerSku,
     string? Status,
     string? ReturnPolicyChoice = null,
-    int? CustomReturnWindowDays = null);
+    int? CustomReturnWindowDays = null,
+    decimal? MinimumOrderQuantity = null,
+    decimal? MaximumOrderQuantity = null);
 
 /// <summary>
 /// فرمان ایجاد Offer روی گونهٔ Catalog؛ Party فروشنده فقط از زمینهٔ احراز می‌آید نه از بدنه.
@@ -84,7 +88,7 @@ public sealed record SellerOfferPriceWriteRequest(
 /// فرمان تنظیم موجودی روی‌دست Offer از طریق Inventory؛ Product.Stock نیست.
 /// </summary>
 public sealed record SellerOfferInventoryWriteRequest(
-    int OnHand,
+    decimal OnHand,
     string? Reason);
 
 /// <summary>
@@ -117,7 +121,7 @@ public sealed record SellerOrderListItem(
 public sealed record SellerOrderLineView(
     Guid OfferId,
     string Title,
-    int Quantity,
+    decimal Quantity,
     decimal UnitAmount,
     decimal LinePayable,
     string Currency);

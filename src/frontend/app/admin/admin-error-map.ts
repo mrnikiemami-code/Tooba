@@ -226,6 +226,34 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بازگرداندن واریز در این وضعیت مجاز نیست.",
     en: "Deposit restore is not allowed in the current payment state.",
   },
+  "payment.unconfirm.not_manual": {
+    fa: "فقط پرداخت کارت‌به‌کارت/دستی قابل برگشت از واریز است.",
+    en: "Only manual or card-to-card payments can undo a deposit.",
+  },
+  "payment.unconfirm.invalid_state": {
+    fa: "برگشت از واریز در این وضعیت مجاز نیست.",
+    en: "Undo deposit is not allowed in the current payment state.",
+  },
+  "payment.unconfirm.irreversible": {
+    fa: "برگشت از واریز پس از ارسال، تحویل یا بازگشت وجه تکمیل‌شده مجاز نیست.",
+    en: "Undo deposit is not allowed after dispatch, delivery, or a completed refund.",
+  },
+  "payment.unconfirm.payout_completed": {
+    fa: "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.",
+    en: "Undo deposit is not allowed after the seller share has been paid out.",
+  },
+  "fulfillment.unconfirm.already_started": {
+    fa: "پس از شروع پردازش نمی‌توان واریز را برگرداند.",
+    en: "Deposit cannot be undone after fulfillment has started.",
+  },
+  "order.payment.unconfirm.invalid_state": {
+    fa: "وضعیت سفارش برای برگشت از واریز مناسب نیست.",
+    en: "The order state does not allow undoing the deposit.",
+  },
+  "settlement.unconfirm.payout_completed": {
+    fa: "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.",
+    en: "Undo deposit is not allowed after the seller share has been paid out.",
+  },
   "order.restore.not_cancelled": {
     fa: "فقط سفارش لغوشده را می‌توان بازگرداند.",
     en: "Only a cancelled order can be restored.",

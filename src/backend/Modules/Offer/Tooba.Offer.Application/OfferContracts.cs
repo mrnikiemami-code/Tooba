@@ -13,7 +13,9 @@ public sealed record OfferReference(
     OfferStatus Status,
     string? SellerSku,
     string ReturnPolicyChoice = "Default",
-    int? CustomReturnWindowDays = null);
+    int? CustomReturnWindowDays = null,
+    decimal? MinimumOrderQuantity = null,
+    decimal? MaximumOrderQuantity = null);
 
 /// <summary>
 /// درز خواندن Offer برای Pricing و Inventory آینده. Search منبع حقیقت Offer نمی‌شود.

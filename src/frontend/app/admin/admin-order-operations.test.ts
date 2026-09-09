@@ -168,6 +168,7 @@ test("formatAdminStatus humanizes fulfillment enums without raw ReadyToFulfill",
 
 test("grid excludes unpack and cancel_shipment from whole-order kebab", () => {
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("unpack"), true);
+  assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("unprocess"), true);
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("cancel_shipment"), true);
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("pack_selected"), true);
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("mark_processing"), true);
@@ -195,7 +196,8 @@ test("whole-order menu shows one cancel and payment restore", () => {
     { code: "cancel", sellerOrderId: "a", labelFa: "لغو سفارش" },
     { code: "cancel", sellerOrderId: "b", labelFa: "لغو سفارش" },
     { code: "cancel", sellerOrderId: null, labelFa: "لغو سفارش" },
-    { code: "restore_deposit", sellerOrderId: null, labelFa: "بازگرداندن به انتظار تأیید واریز" },
+    { code: "restore_deposit", sellerOrderId: null, labelFa: "برگشت از رد واریز" },
+    { code: "unconfirm_deposit", sellerOrderId: null, labelFa: "برگشت از واریز" },
     { code: "restore_cancelled_order", sellerOrderId: null, labelFa: "بازگردانی سفارش لغوشده" },
     { code: "correct_tracking", sellerOrderId: "a", labelFa: "اصلاح کد رهگیری" },
     { code: "cancel_shipment", sellerOrderId: "a", labelFa: "ابطال مرسوله" },
@@ -205,7 +207,7 @@ test("whole-order menu shows one cancel and payment restore", () => {
   assert.equal(filtered.find((a) => a.code === "cancel")?.sellerOrderId, null);
   assert.deepEqual(
     filtered.map((a) => a.code),
-    ["cancel", "restore_deposit", "restore_cancelled_order"],
+    ["cancel", "restore_deposit", "unconfirm_deposit", "restore_cancelled_order"],
   );
   assert.equal(GRID_EXCLUDED_OPERATION_CODES.has("correct_tracking"), true);
 });
@@ -221,6 +223,14 @@ test("maps corrective action errors to FA", () => {
   assert.equal(
     mapAdminErrorMessage("payment.restore.invalid_state", "fa"),
     "بازگرداندن واریز در این وضعیت مجاز نیست.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("fulfillment.unconfirm.already_started", "fa"),
+    "پس از شروع پردازش نمی‌توان واریز را برگرداند.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("payment.unconfirm.invalid_state", "fa"),
+    "برگشت از واریز در این وضعیت مجاز نیست.",
   );
   assert.equal(
     mapAdminErrorMessage("order.restore.inventory_failed", "fa"),

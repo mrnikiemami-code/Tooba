@@ -88,9 +88,24 @@ public sealed class OrderLine
     public Guid SellerPartyId { get; init; }
 
     /// <summary>
-    /// تعداد صحیح.
+    /// تعداد کالای خط؛ اعشاری مجاز.
     /// </summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
+
+    /// <summary>شناسه واحد در لحظهٔ checkout.</summary>
+    public Guid? UnitOfMeasureIdSnapshot { get; init; }
+
+    /// <summary>کد واحد تاریخی.</summary>
+    public string? UnitCodeSnapshot { get; init; }
+
+    /// <summary>برچسب واحد تاریخی.</summary>
+    public string? UnitDisplaySnapshot { get; init; }
+
+    /// <summary>رقم اعشار مؤثر در لحظهٔ checkout.</summary>
+    public int QuantityDecimalPlacesSnapshot { get; init; }
+
+    /// <summary>گام مقدار تاریخی.</summary>
+    public decimal? QuantityStepSnapshot { get; init; }
 
     /// <summary>
     /// مبلغ واحد در لحظهٔ تأیید checkout.
@@ -220,7 +235,7 @@ public sealed class OrderLine
         Guid offerId,
         Guid catalogVariantId,
         Guid sellerPartyId,
-        int quantity,
+        decimal quantity,
         decimal unitPrice,
         string currency,
         bool taxExclusive,
@@ -243,7 +258,12 @@ public sealed class OrderLine
         bool isReturnableSnapshot = true,
         int returnWindowDaysSnapshot = 7,
         string? returnPolicySourceSnapshot = "platform_default",
-        string? returnPolicyLabelSnapshot = null)
+        string? returnPolicyLabelSnapshot = null,
+        Guid? unitOfMeasureIdSnapshot = null,
+        string? unitCodeSnapshot = null,
+        string? unitDisplaySnapshot = null,
+        int quantityDecimalPlacesSnapshot = 0,
+        decimal? quantityStepSnapshot = null)
     {
         if (quantity <= 0)
         {
@@ -273,6 +293,11 @@ public sealed class OrderLine
             CatalogVariantId = catalogVariantId,
             SellerPartyId = sellerPartyId,
             Quantity = quantity,
+            UnitOfMeasureIdSnapshot = unitOfMeasureIdSnapshot,
+            UnitCodeSnapshot = unitCodeSnapshot,
+            UnitDisplaySnapshot = unitDisplaySnapshot,
+            QuantityDecimalPlacesSnapshot = quantityDecimalPlacesSnapshot,
+            QuantityStepSnapshot = quantityStepSnapshot,
             UnitPriceSnapshot = unitPrice,
             LineTotalSnapshot = decimal.Multiply(unitPrice, quantity),
             Currency = currency,
@@ -509,6 +534,24 @@ public sealed class SellerOrder
         }
 
         Status = SellerOrderStatus.Paid;
+    }
+
+    /// <summary>
+    /// برگشت Paid به انتظار پرداخت وقتی تأیید واریز دستی لغو می‌شود.
+    /// </summary>
+    public void RevertVerifiedPayment()
+    {
+        if (Status == SellerOrderStatus.PendingPayment)
+        {
+            return;
+        }
+
+        if (Status != SellerOrderStatus.Paid)
+        {
+            throw new InvalidOperationException("order.payment.unconfirm.invalid_state");
+        }
+
+        Status = SellerOrderStatus.PendingPayment;
     }
 }
 

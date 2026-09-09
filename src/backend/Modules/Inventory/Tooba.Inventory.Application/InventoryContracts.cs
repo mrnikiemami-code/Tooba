@@ -9,9 +9,9 @@ public sealed record LocationAvailability(
     Guid StockItemId,
     Guid LocationId,
     string LocationCode,
-    int OnHand,
-    int Reserved,
-    int Available);
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available);
 
 /// <summary>
 /// نتیجهٔ خواندن موجودی Offer در Tenant جاری. قابل‌خرید بودن را تضمین نمی‌کند.
@@ -19,9 +19,9 @@ public sealed record LocationAvailability(
 public sealed record InventoryAvailability(
     Guid OfferId,
     Guid CatalogVariantId,
-    int OnHand,
-    int Reserved,
-    int Available,
+    decimal OnHand,
+    decimal Reserved,
+    decimal Available,
     IReadOnlyList<LocationAvailability> Locations);
 
 /// <summary>
@@ -31,7 +31,7 @@ public sealed record ReservationReceipt(
     Guid ReservationId,
     Guid StockItemId,
     Guid OfferId,
-    int Quantity,
+    decimal Quantity,
     StockReservationStatus Status,
     DateTimeOffset? ExpiresAt);
 
@@ -78,7 +78,7 @@ public interface IInventoryDirectory
     Task AdjustAsync(
         Guid stockItemId,
         StockAdjustmentKind kind,
-        int quantity,
+        decimal quantity,
         string reason,
         string? idempotencyKey,
         CancellationToken cancellationToken);
@@ -88,7 +88,7 @@ public interface IInventoryDirectory
     /// </summary>
     Task<ReservationReceipt> ReserveAsync(
         Guid stockItemId,
-        int quantity,
+        decimal quantity,
         string? externalReference,
         string? idempotencyKey,
         DateTimeOffset? expiresAt,

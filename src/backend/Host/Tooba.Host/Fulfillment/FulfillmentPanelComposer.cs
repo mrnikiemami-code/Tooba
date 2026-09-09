@@ -11,7 +11,7 @@ namespace Tooba.Host.Fulfillment;
 /// <summary>
 /// خط محموله در درخواست HTTP.
 /// </summary>
-public sealed record FulfillmentShipmentLineRequest(Guid OrderLineId, int Quantity);
+public sealed record FulfillmentShipmentLineRequest(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// درخواست ایجاد محموله.

@@ -35,6 +35,8 @@ export default function VendorProductDetailPage() {
   const [onHand, setOnHand] = useState("");
   const [returnPolicyChoice, setReturnPolicyChoice] = useState("Default");
   const [customReturnWindowDays, setCustomReturnWindowDays] = useState("");
+  const [minimumOrderQuantity, setMinimumOrderQuantity] = useState("");
+  const [maximumOrderQuantity, setMaximumOrderQuantity] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
@@ -48,6 +50,8 @@ export default function VendorProductDetailPage() {
     setCustomReturnWindowDays(
       next.customReturnWindowDays != null ? String(next.customReturnWindowDays) : "",
     );
+    setMinimumOrderQuantity(next.minimumOrderQuantity != null ? String(next.minimumOrderQuantity) : "");
+    setMaximumOrderQuantity(next.maximumOrderQuantity != null ? String(next.maximumOrderQuantity) : "");
   }
 
   function refresh() {
@@ -80,13 +84,23 @@ export default function VendorProductDetailPage() {
       return;
     }
     const parsedAmount = Number(amount);
-    const parsedOnHand = Number(onHand);
+    const parsedOnHand = Number(onHand.replace(",", "."));
+    const parsedMin = minimumOrderQuantity.trim() ? Number(minimumOrderQuantity.replace(",", ".")) : null;
+    const parsedMax = maximumOrderQuantity.trim() ? Number(maximumOrderQuantity.replace(",", ".")) : null;
     if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
       setSaveError("مبلغ نامعتبر است");
       return;
     }
-    if (!Number.isInteger(parsedOnHand) || parsedOnHand < 0) {
+    if (!Number.isFinite(parsedOnHand) || parsedOnHand < 0) {
       setSaveError("موجودی نامعتبر است");
+      return;
+    }
+    if (parsedMin != null && !(Number.isFinite(parsedMin) && parsedMin > 0)) {
+      setSaveError("حداقل مقدار خرید نامعتبر است");
+      return;
+    }
+    if (parsedMax != null && !(Number.isFinite(parsedMax) && parsedMax > 0)) {
+      setSaveError("حداکثر مقدار خرید نامعتبر است");
       return;
     }
 
@@ -106,6 +120,8 @@ export default function VendorProductDetailPage() {
       status,
       returnPolicyChoice,
       customReturnWindowDays: parsedCustomDays,
+      minimumOrderQuantity: parsedMin,
+      maximumOrderQuantity: parsedMax,
     });
     if (!patchResult.ok) {
       setSaving(false);
@@ -215,7 +231,7 @@ export default function VendorProductDetailPage() {
                   className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   dir="ltr"
                 />
               </label>
@@ -225,8 +241,30 @@ export default function VendorProductDetailPage() {
                   className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
                   value={onHand}
                   onChange={(event) => setOnHand(event.target.value)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   dir="ltr"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                حداقل مقدار خرید
+                <input
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                  value={minimumOrderQuantity}
+                  onChange={(event) => setMinimumOrderQuantity(event.target.value)}
+                  inputMode="decimal"
+                  dir="ltr"
+                  data-testid="offer-min-qty"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                حداکثر مقدار خرید
+                <input
+                  className="min-h-11 rounded-ds border border-border bg-surface px-3 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+                  value={maximumOrderQuantity}
+                  onChange={(event) => setMaximumOrderQuantity(event.target.value)}
+                  inputMode="decimal"
+                  dir="ltr"
+                  data-testid="offer-max-qty"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm sm:col-span-2" data-testid="offer-return-policy">

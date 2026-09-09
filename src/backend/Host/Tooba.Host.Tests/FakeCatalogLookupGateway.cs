@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 
@@ -107,4 +108,16 @@ internal sealed class FakeCatalogLookupGateway : ICatalogLookupGateway
         string? search,
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<AccessControlProductItem>>([]);
+
+    /// <inheritdoc />
+    public Task<EffectiveQuantityPolicy?> GetEffectiveQuantityPolicyForVariantAsync(
+        Guid variantId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<EffectiveQuantityPolicy?>(null);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> GetEffectiveQuantityPoliciesForVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>>(new Dictionary<Guid, EffectiveQuantityPolicy>());
 }

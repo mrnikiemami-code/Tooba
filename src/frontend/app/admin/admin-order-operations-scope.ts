@@ -15,6 +15,7 @@ export const GRID_EXCLUDED_OPERATION_CODES = new Set([
   "mark_processing",
   "mark_packed",
   "pack_selected",
+  "unprocess",
   "unpack",
   "create_shipment",
   "cancel_shipment",
@@ -33,6 +34,7 @@ export const FULFILLMENT_QUEUE_OPERATION_CODES = new Set([
   "mark_processing",
   "mark_packed",
   "pack_selected",
+  "unprocess",
   "unpack",
   "create_shipment",
   "cancel_shipment",
@@ -47,6 +49,7 @@ const WHOLE_ORDER_DEDUPE_CODES = new Set([
   "confirm_deposit",
   "reject_deposit",
   "restore_deposit",
+  "unconfirm_deposit",
   "restore_cancelled_order",
 ]);
 
@@ -98,6 +101,7 @@ export function sellerQuickActionLabels(hasSelection: boolean): {
   pack: string;
   createShipment: string;
   unpack: string;
+  unprocess: string;
   dispatch: string;
 } {
   if (hasSelection) {
@@ -106,6 +110,7 @@ export function sellerQuickActionLabels(hasSelection: boolean): {
       pack: "بسته‌بندی انتخاب‌شده‌ها",
       createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
       unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
+      unprocess: "برگشت از پردازش انتخاب‌شده‌ها",
       dispatch: "ارسال انتخاب‌شده‌ها",
     };
   }
@@ -114,6 +119,7 @@ export function sellerQuickActionLabels(hasSelection: boolean): {
     pack: "بسته‌بندی همه اقلام آماده",
     createShipment: "ایجاد مرسوله جدید",
     unpack: "بازگشت از بسته‌بندی",
+    unprocess: "برگشت از پردازش",
     dispatch: "ارسال",
   };
 }

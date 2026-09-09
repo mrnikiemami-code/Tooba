@@ -75,13 +75,16 @@ public sealed class FulfillmentItem
     public Guid OrderLineId { get; init; }
 
     /// <summary>تعداد سفارش‌داده‌شده.</summary>
-    public int QuantityOrdered { get; init; }
+    public decimal QuantityOrdered { get; init; }
+
+    /// <summary>تعداد واردشده به پردازش.</summary>
+    public decimal QuantityProcessing { get; private set; }
 
     /// <summary>تعداد بسته‌بندی‌شده تجمعی.</summary>
-    public int QuantityPacked { get; private set; }
+    public decimal QuantityPacked { get; private set; }
 
     /// <summary>تعداد dispatch‌شده تجمعی.</summary>
-    public int QuantityShipped { get; private set; }
+    public decimal QuantityShipped { get; private set; }
 
     /// <summary>رزرو موجودی مرجع؛ FK Inventory نیست.</summary>
     public Guid? ReservationId { get; init; }
@@ -89,7 +92,7 @@ public sealed class FulfillmentItem
     /// <summary>آیا رزرو مصرف شده است.</summary>
     public bool ReservationConsumed { get; private set; }
 
-    internal static FulfillmentItem Create(Guid fulfillmentId, Guid orderLineId, int quantityOrdered, Guid? reservationId) =>
+    internal static FulfillmentItem Create(Guid fulfillmentId, Guid orderLineId, decimal quantityOrdered, Guid? reservationId) =>
         new()
         {
             FulfillmentItemId = Guid.NewGuid(),
@@ -99,7 +102,37 @@ public sealed class FulfillmentItem
             ReservationId = reservationId,
         };
 
-    internal void ApplyPackedQuantity(int quantity)
+    internal void ApplyProcessingQuantity(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new InvalidOperationException("تعداد پردازش باید مثبت باشد.");
+        }
+
+        if (QuantityProcessing + quantity > QuantityOrdered)
+        {
+            throw new InvalidOperationException("تعداد پردازش از باقیمانده سفارش بیشتر است.");
+        }
+
+        QuantityProcessing += quantity;
+    }
+
+    internal void ReleaseProcessingQuantity(decimal quantity)
+    {
+        if (quantity <= 0)
+        {
+            throw new InvalidOperationException("تعداد برگشت از پردازش باید مثبت باشد.");
+        }
+
+        if (QuantityProcessing - quantity < QuantityPacked)
+        {
+            throw new InvalidOperationException("برگشت از پردازش برای تعداد بسته‌بندی‌شده مجاز نیست.");
+        }
+
+        QuantityProcessing -= quantity;
+    }
+
+    internal void ApplyPackedQuantity(decimal quantity)
     {
         if (quantity <= 0)
         {
@@ -114,7 +147,7 @@ public sealed class FulfillmentItem
         QuantityPacked += quantity;
     }
 
-    internal void ReleasePackedQuantity(int quantity)
+    internal void ReleasePackedQuantity(decimal quantity)
     {
         if (quantity <= 0)
         {
@@ -129,7 +162,13 @@ public sealed class FulfillmentItem
         QuantityPacked -= quantity;
     }
 
-    internal void ApplyShippedQuantity(int quantity)
+    internal void ResetWarehouseProgress()
+    {
+        QuantityProcessing = 0;
+        QuantityPacked = 0;
+    }
+
+    internal void ApplyShippedQuantity(decimal quantity)
     {
         if (quantity <= 0)
         {
@@ -237,7 +276,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         string postalCode,
         string shippingMethodCode,
         string shippingMethodLabel,
-        IEnumerable<(Guid OrderLineId, int Quantity, Guid? ReservationId)> lines,
+        IEnumerable<(Guid OrderLineId, decimal Quantity, Guid? ReservationId)> lines,
         DateTimeOffset now)
     {
         var unit = new FulfillmentUnit
@@ -282,9 +321,19 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         _shipments.AddRange(shipments);
     }
 
-    /// <summary>به Processing می‌رود.</summary>
+    /// <summary>همهٔ باقیمانده را وارد پردازش می‌کند.</summary>
     public void MarkProcessing(DateTimeOffset now)
     {
+        var remaining = _items
+            .Select(item => (item.OrderLineId, Quantity: item.QuantityOrdered - item.QuantityProcessing))
+            .Where(x => x.Quantity > 0)
+            .ToArray();
+        if (remaining.Length > 0)
+        {
+            ProcessSelections(remaining, now);
+            return;
+        }
+
         EnsureNotTerminal();
         if (Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing)
         {
@@ -296,60 +345,96 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         throw new InvalidOperationException("انتقال به Processing از این وضعیت مجاز نیست.");
     }
 
-    /// <summary>همهٔ باقیماندهٔ قابل بسته‌بندی را بسته‌بندی و به Packed می‌رود.</summary>
-    public void MarkPacked(DateTimeOffset now)
-    {
-        EnsureNotTerminal();
-        if (Status == FulfillmentStatus.ReadyToFulfill)
-        {
-            throw new InvalidOperationException("fulfillment.pack.requires_processing");
-        }
-
-        if (Status is not (FulfillmentStatus.Processing or FulfillmentStatus.Packed))
-        {
-            throw new InvalidOperationException("انتقال به Packed از این وضعیت مجاز نیست.");
-        }
-
-        var selections = _items
-            .Select(item => (item.OrderLineId, Quantity: item.QuantityOrdered - item.QuantityPacked))
-            .Where(x => x.Quantity > 0)
-            .ToArray();
-        if (selections.Length > 0)
-        {
-            PackSelections(selections, now);
-            return;
-        }
-
-        Status = FulfillmentStatus.Packed;
-        UpdatedAt = now;
-    }
-
-    /// <summary>بسته‌بندی انتخاب‌شده (خط/تعداد) روی همان مسیر canonical.</summary>
-    public IReadOnlyList<(Guid OrderLineId, int Quantity)> PackSelections(
-        IReadOnlyList<(Guid OrderLineId, int Quantity)> selections,
+    /// <summary>پردازش انتخاب‌شده فقط همان خطوط را جلو می‌برد.</summary>
+    public IReadOnlyList<(Guid OrderLineId, decimal Quantity)> ProcessSelections(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections,
         DateTimeOffset now)
     {
         EnsureNotTerminal();
-        if (Status == FulfillmentStatus.ReadyToFulfill)
+        if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("fulfillment.pack.requires_processing");
+            throw new InvalidOperationException("پردازش پس از ارسال مجاز نیست.");
         }
 
+        var normalized = NormalizeSelections(selections);
+        var affected = new List<(Guid OrderLineId, decimal Quantity)>(normalized.Count);
+        foreach (var selection in normalized)
+        {
+            var item = RequireItem(selection.OrderLineId);
+            item.ApplyProcessingQuantity(selection.Quantity);
+            affected.Add(selection);
+        }
+
+        RefreshWarehouseStatus(now);
+        return affected;
+    }
+
+    /// <summary>برگشت از پردازش فقط برای تعداد بسته‌بندی‌نشده.</summary>
+    public IReadOnlyList<(Guid OrderLineId, decimal Quantity)> UnprocessSelections(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections,
+        DateTimeOffset now)
+    {
+        EnsureNotTerminal();
+        var normalized = NormalizeSelections(selections);
+        var affected = new List<(Guid OrderLineId, decimal Quantity)>(normalized.Count);
+        foreach (var selection in normalized)
+        {
+            var item = RequireItem(selection.OrderLineId);
+            item.ReleaseProcessingQuantity(selection.Quantity);
+            affected.Add(selection);
+        }
+
+        RefreshWarehouseStatus(now);
+        return affected;
+    }
+
+    /// <summary>همهٔ باقیماندهٔ پردازش‌شدهٔ قابل بسته‌بندی را بسته‌بندی می‌کند.</summary>
+    public void MarkPacked(DateTimeOffset now)
+    {
+        EnsureNotTerminal();
         if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
         {
             throw new InvalidOperationException("بسته‌بندی پس از ارسال مجاز نیست.");
         }
 
-        if (Status is not (FulfillmentStatus.Processing or FulfillmentStatus.Packed))
+        var selections = _items
+            .Select(item => (item.OrderLineId, Quantity: item.QuantityProcessing - item.QuantityPacked))
+            .Where(x => x.Quantity > 0)
+            .ToArray();
+        if (selections.Length == 0)
         {
-            throw new InvalidOperationException("fulfillment.pack.not_processing");
+            throw new InvalidOperationException("fulfillment.pack.requires_processing");
+        }
+
+        PackSelections(selections, now);
+    }
+
+    /// <summary>بسته‌بندی انتخاب‌شده (خط/تعداد) روی همان مسیر canonical.</summary>
+    public IReadOnlyList<(Guid OrderLineId, decimal Quantity)> PackSelections(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections,
+        DateTimeOffset now)
+    {
+        EnsureNotTerminal();
+        if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
+        {
+            throw new InvalidOperationException("بسته‌بندی پس از ارسال مجاز نیست.");
         }
 
         var normalized = NormalizeSelections(selections);
-        var affected = new List<(Guid OrderLineId, int Quantity)>(normalized.Count);
+        var affected = new List<(Guid OrderLineId, decimal Quantity)>(normalized.Count);
         foreach (var selection in normalized)
         {
             var item = RequireItem(selection.OrderLineId);
+            if (item.QuantityPacked + selection.Quantity > item.QuantityOrdered)
+            {
+                throw new InvalidOperationException("تعداد بسته‌بندی از باقیمانده سفارش بیشتر است.");
+            }
+
+            if (item.QuantityProcessing < item.QuantityPacked + selection.Quantity)
+            {
+                throw new InvalidOperationException("fulfillment.pack.requires_processing");
+            }
+
             item.ApplyPackedQuantity(selection.Quantity);
             affected.Add(selection);
             _domainEvents.Add(new FulfillmentLinePackedDomainEvent(
@@ -359,21 +444,18 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 selection.Quantity));
         }
 
-        Status = _items.All(x => x.QuantityPacked >= x.QuantityOrdered)
-            ? FulfillmentStatus.Packed
-            : FulfillmentStatus.Processing;
-        UpdatedAt = now;
+        RefreshWarehouseStatus(now);
         return affected;
     }
 
     /// <summary>بازگشت از بسته‌بندی فقط برای تعداد تخصیص‌نشده/ارسال‌نشده.</summary>
-    public IReadOnlyList<(Guid OrderLineId, int Quantity)> UnpackSelections(
-        IReadOnlyList<(Guid OrderLineId, int Quantity)> selections,
+    public IReadOnlyList<(Guid OrderLineId, decimal Quantity)> UnpackSelections(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections,
         DateTimeOffset now)
     {
         EnsureNotTerminal();
         var normalized = NormalizeSelections(selections);
-        var affected = new List<(Guid OrderLineId, int Quantity)>(normalized.Count);
+        var affected = new List<(Guid OrderLineId, decimal Quantity)>(normalized.Count);
         foreach (var selection in normalized)
         {
             var item = RequireItem(selection.OrderLineId);
@@ -394,19 +476,42 @@ public sealed class FulfillmentUnit : IHasDomainEvents
                 selection.Quantity));
         }
 
-        if (_items.All(x => x.QuantityPacked <= 0))
+        RefreshWarehouseStatus(now);
+        return affected;
+    }
+
+    private void RefreshWarehouseStatus(DateTimeOffset now)
+    {
+        if (Status is FulfillmentStatus.Dispatched
+            or FulfillmentStatus.InTransit
+            or FulfillmentStatus.Delivered
+            or FulfillmentStatus.Failed
+            or FulfillmentStatus.Cancelled)
+        {
+            UpdatedAt = now;
+            return;
+        }
+
+        if (_items.Count > 0 && _items.All(x => x.QuantityPacked >= x.QuantityOrdered))
+        {
+            Status = FulfillmentStatus.Packed;
+        }
+        else if (_items.Any(x => x.QuantityProcessing > 0 || x.QuantityPacked > 0))
         {
             Status = FulfillmentStatus.Processing;
         }
+        else
+        {
+            Status = FulfillmentStatus.ReadyToFulfill;
+        }
 
         UpdatedAt = now;
-        return affected;
     }
 
     /// <summary>محموله جدید ثبت می‌کند.</summary>
     public Shipment CreateShipment(
         string carrierDisplayName,
-        IReadOnlyList<(Guid OrderLineId, int Quantity)> items,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items,
         DateTimeOffset now,
         string? shippingMethodCode = null,
         string? shippingMethodLabel = null,
@@ -447,12 +552,65 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         _domainEvents.Add(new ShipmentCancelledDomainEvent(FulfillmentId, shipmentId, SellerOrderId));
     }
 
+    /// <summary>
+    /// لغو کل سفارش: مرسوله‌های پیش از Dispatch باطل می‌شوند و واحد Cancelled می‌ماند.
+    /// اگر قبلاً Cancelled باشد no-op است.
+    /// </summary>
+    public void AbortForOrderCancel(DateTimeOffset now)
+    {
+        if (Status == FulfillmentStatus.Cancelled)
+        {
+            return;
+        }
+
+        if (HasDispatchedQuantity())
+        {
+            throw new InvalidOperationException("fulfillment.cancel.already_dispatched");
+        }
+
+        foreach (var shipment in _shipments.Where(x => x.Status == ShipmentStatus.Created).ToList())
+        {
+            shipment.CancelPreDispatch(now);
+            _domainEvents.Add(new ShipmentCancelledDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
+        }
+
+        Status = FulfillmentStatus.Cancelled;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// بازگردانی rule-based: وضعیت انبار قبل از لغو برمی‌گردد؛ مرسوله‌های باطل‌شده زنده نمی‌شوند.
+    /// </summary>
+    public void ReactivateAfterOrderRestore(DateTimeOffset now)
+    {
+        if (Status != FulfillmentStatus.Cancelled)
+        {
+            return;
+        }
+
+        if (HasDispatchedQuantity())
+        {
+            throw new InvalidOperationException("fulfillment.restore.already_dispatched");
+        }
+
+        Status = FulfillmentStatus.ReadyToFulfill;
+        RefreshWarehouseStatus(now);
+    }
+
+    /// <summary>آیا در این واحد quantity واقعی Dispatch شده است.</summary>
+    public bool HasDispatchedQuantity() =>
+        _items.Any(item => item.QuantityShipped > 0)
+        || _shipments.Any(shipment =>
+            shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered
+            || shipment.DispatchedAt is not null
+            || shipment.DeliveredAt is not null);
+
     /// <summary>تعداد فعال تخصیص‌یافته (Created + Shipped) برای یک خط.</summary>
-    public int ActiveAllocatedQuantity(Guid orderLineId) =>
+    public decimal ActiveAllocatedQuantity(Guid orderLineId) =>
         OpenAllocatedQuantity(orderLineId) + (_items.SingleOrDefault(x => x.OrderLineId == orderLineId)?.QuantityShipped ?? 0);
 
     /// <summary>تعداد تخصیص باز در مرسوله‌های Created.</summary>
-    public int OpenAllocatedQuantity(Guid orderLineId) =>
+    public decimal OpenAllocatedQuantity(Guid orderLineId) =>
         _shipments
             .Where(s => s.Status == ShipmentStatus.Created)
             .SelectMany(s => s.Items)
@@ -463,15 +621,15 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         _items.SingleOrDefault(x => x.OrderLineId == orderLineId)
         ?? throw new InvalidOperationException("خط سفارش در این فروشنده پیدا نشد.");
 
-    private static IReadOnlyList<(Guid OrderLineId, int Quantity)> NormalizeSelections(
-        IReadOnlyList<(Guid OrderLineId, int Quantity)> selections)
+    private static IReadOnlyList<(Guid OrderLineId, decimal Quantity)> NormalizeSelections(
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> selections)
     {
         if (selections is null || selections.Count == 0)
         {
             throw new InvalidOperationException("انتخاب خط/تعداد الزامی است.");
         }
 
-        var map = new Dictionary<Guid, int>();
+        var map = new Dictionary<Guid, decimal>();
         foreach (var selection in selections)
         {
             if (selection.Quantity <= 0)
@@ -613,7 +771,7 @@ public sealed class Shipment
     internal static Shipment Create(
         Guid fulfillmentId,
         string carrierDisplayName,
-        IReadOnlyList<(Guid OrderLineId, int Quantity)> items,
+        IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items,
         IReadOnlyList<FulfillmentItem> fulfillmentItems,
         IReadOnlyList<Shipment> existingShipments,
         DateTimeOffset now,
@@ -803,9 +961,9 @@ public sealed class ShipmentItem
     public Guid OrderLineId { get; init; }
 
     /// <summary>تعداد.</summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
 
-    internal static ShipmentItem Create(Guid shipmentId, Guid orderLineId, int quantity) =>
+    internal static ShipmentItem Create(Guid shipmentId, Guid orderLineId, decimal quantity) =>
         new()
         {
             ShipmentItemId = Guid.NewGuid(),
@@ -844,7 +1002,7 @@ public sealed class FulfillmentCreatedDomainEvent : IDomainEvent
 public sealed class FulfillmentLinePackedDomainEvent : IDomainEvent
 {
     /// <summary>رویداد را می‌سازد.</summary>
-    public FulfillmentLinePackedDomainEvent(Guid fulfillmentId, Guid sellerOrderId, Guid orderLineId, int quantity)
+    public FulfillmentLinePackedDomainEvent(Guid fulfillmentId, Guid sellerOrderId, Guid orderLineId, decimal quantity)
     {
         FulfillmentId = fulfillmentId;
         SellerOrderId = sellerOrderId;
@@ -866,14 +1024,14 @@ public sealed class FulfillmentLinePackedDomainEvent : IDomainEvent
     public Guid OrderLineId { get; }
 
     /// <summary>تعداد بسته‌بندی‌شده.</summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>رویداد بازگشت از بسته‌بندی.</summary>
 public sealed class FulfillmentLineUnpackedDomainEvent : IDomainEvent
 {
     /// <summary>رویداد را می‌سازد.</summary>
-    public FulfillmentLineUnpackedDomainEvent(Guid fulfillmentId, Guid sellerOrderId, Guid orderLineId, int quantity)
+    public FulfillmentLineUnpackedDomainEvent(Guid fulfillmentId, Guid sellerOrderId, Guid orderLineId, decimal quantity)
     {
         FulfillmentId = fulfillmentId;
         SellerOrderId = sellerOrderId;
@@ -895,7 +1053,7 @@ public sealed class FulfillmentLineUnpackedDomainEvent : IDomainEvent
     public Guid OrderLineId { get; }
 
     /// <summary>تعداد بازگشتی از بسته‌بندی.</summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>رویداد ایجاد محموله.</summary>

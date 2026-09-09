@@ -84,6 +84,10 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasKey(x => x.FulfillmentItemId);
             entity.Property(x => x.FulfillmentItemId).ValueGeneratedNever();
             entity.Property(x => x.FulfillmentId);
+            entity.Property(x => x.QuantityOrdered).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.QuantityProcessing).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.QuantityPacked).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.QuantityShipped).HasColumnType("numeric(18,6)");
             entity.HasIndex(x => x.FulfillmentId);
         });
         modelBuilder.Entity<Shipment>(entity =>
@@ -107,6 +111,7 @@ public sealed class FulfillmentDbContext : DbContext
             entity.ToTable("shipment_items");
             entity.HasKey(x => x.ShipmentItemId);
             entity.Property(x => x.ShipmentItemId).ValueGeneratedNever();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.HasIndex(x => x.ShipmentId);
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>

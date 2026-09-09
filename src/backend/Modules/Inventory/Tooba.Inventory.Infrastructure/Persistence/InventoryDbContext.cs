@@ -68,6 +68,8 @@ public sealed class InventoryDbContext : DbContext
             entity.ToTable("stock_positions");
             entity.HasKey(x => x.StockItemId);
             entity.Property(x => x.StockItemId).ValueGeneratedNever();
+            entity.Property(x => x.OnHand).HasColumnType("numeric(18,6)");
+            entity.Property(x => x.Reserved).HasColumnType("numeric(18,6)");
             entity.Ignore(x => x.Available);
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => new { x.OfferId, x.LocationId }).IsUnique();
@@ -79,6 +81,7 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.ReservationId).ValueGeneratedNever();
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.ExternalReference).HasMaxLength(128);
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.IdempotencyKey).HasMaxLength(128);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique().HasFilter("idempotency_key IS NOT NULL");
         });

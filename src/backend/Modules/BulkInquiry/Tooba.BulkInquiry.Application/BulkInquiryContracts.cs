@@ -8,7 +8,7 @@ public sealed record SubmitBulkInquiryRequest(
     string? Email,
     string? CompanyName,
     string Address,
-    int Quantity,
+    decimal Quantity,
     string? Notes);
 
 /// <summary>قابلیت کاربردی ثبت درخواست خرید عمده.</summary>

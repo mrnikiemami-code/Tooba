@@ -300,6 +300,112 @@ public sealed class SettlementEntry : IHasDomainEvents
             entry.SourceId));
         return entry;
     }
+
+    /// <summary>سطر Debit برای خنثی‌سازی accrual پس از لغو سفارش؛ Credit را پاک نمی‌کند.</summary>
+    public static SettlementEntry PostDebitFromOrderCancel(
+        Guid settlementAccountId,
+        Guid sellerPartyId,
+        Guid paymentId,
+        Guid sellerOrderId,
+        decimal grossAmount,
+        string currency,
+        CommissionPolicySnapshot policySnapshot,
+        string idempotencyKey,
+        DateTimeOffset now)
+    {
+        if (grossAmount <= 0)
+        {
+            throw new InvalidOperationException("مبلغ خنثی‌سازی لغو باید مثبت باشد.");
+        }
+
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new InvalidOperationException("کلید idempotency الزامی است.");
+        }
+
+        var commission = decimal.Round(grossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);
+        var net = grossAmount - commission;
+        var entry = new SettlementEntry
+        {
+            EntryId = Guid.NewGuid(),
+            SettlementAccountId = settlementAccountId,
+            SellerPartyId = sellerPartyId,
+            EntryType = EntryType.Debit,
+            GrossAmount = grossAmount,
+            CommissionAmount = commission,
+            NetAmount = net,
+            Currency = currency.Trim(),
+            CommissionPolicySnapshot = policySnapshot,
+            SourceType = "order_cancel",
+            SourceId = paymentId,
+            SellerOrderId = sellerOrderId,
+            IdempotencyKey = idempotencyKey.Trim(),
+            PostedAt = now,
+        };
+        entry._domainEvents.Add(new SettlementEntryPostedDomainEvent(
+            entry.EntryId,
+            entry.SettlementAccountId,
+            entry.SellerPartyId,
+            entry.EntryType,
+            entry.NetAmount,
+            entry.Currency,
+            entry.SourceType,
+            entry.SourceId));
+        return entry;
+    }
+
+    /// <summary>سطر Credit برای بازگرداندن accrual پس از Restore لغو؛ Debit خنثی‌سازی پاک نمی‌شود.</summary>
+    public static SettlementEntry PostCreditFromOrderRestore(
+        Guid settlementAccountId,
+        Guid sellerPartyId,
+        Guid paymentId,
+        Guid sellerOrderId,
+        decimal grossAmount,
+        string currency,
+        CommissionPolicySnapshot policySnapshot,
+        string idempotencyKey,
+        DateTimeOffset now)
+    {
+        if (grossAmount <= 0)
+        {
+            throw new InvalidOperationException("مبلغ بازگردانی تسویه باید مثبت باشد.");
+        }
+
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            throw new InvalidOperationException("کلید idempotency الزامی است.");
+        }
+
+        var commission = decimal.Round(grossAmount * policySnapshot.Rate, 4, MidpointRounding.AwayFromZero);
+        var net = grossAmount - commission;
+        var entry = new SettlementEntry
+        {
+            EntryId = Guid.NewGuid(),
+            SettlementAccountId = settlementAccountId,
+            SellerPartyId = sellerPartyId,
+            EntryType = EntryType.Credit,
+            GrossAmount = grossAmount,
+            CommissionAmount = commission,
+            NetAmount = net,
+            Currency = currency.Trim(),
+            CommissionPolicySnapshot = policySnapshot,
+            SourceType = "order_restore",
+            SourceId = paymentId,
+            SellerOrderId = sellerOrderId,
+            IdempotencyKey = idempotencyKey.Trim(),
+            PostedAt = now,
+        };
+        entry._domainEvents.Add(new SettlementEntryPostedDomainEvent(
+            entry.EntryId,
+            entry.SettlementAccountId,
+            entry.SellerPartyId,
+            entry.EntryType,
+            entry.NetAmount,
+            entry.Currency,
+            entry.SourceType,
+            entry.SourceId));
+        return entry;
+    }
 }
 
 /// <summary>

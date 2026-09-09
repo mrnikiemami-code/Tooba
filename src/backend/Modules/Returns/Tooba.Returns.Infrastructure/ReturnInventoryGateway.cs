@@ -18,7 +18,7 @@ public sealed class ReturnInventoryGateway : IReturnInventoryGateway
     /// <inheritdoc />
     public Task RestockConsumedReservationAsync(
         Guid reservationId,
-        int quantity,
+        decimal quantity,
         string idempotencyKey,
         CancellationToken cancellationToken) =>
         _inventory.RestockFromReturnAsync(reservationId, quantity, idempotencyKey, cancellationToken);

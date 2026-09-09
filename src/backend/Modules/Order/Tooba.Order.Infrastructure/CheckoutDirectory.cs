@@ -479,6 +479,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         var categoryByVariant = await _catalog.GetPrimaryCategoryIdsByVariantIdsAsync(
             cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
             cancellationToken);
+        var quantityPolicies = await _catalog.GetEffectiveQuantityPoliciesForVariantIdsAsync(
+            cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
         foreach (var sellerGroup in cart.Lines.GroupBy(x => x.SellerPartyId))
         {
             sequence++;
@@ -597,7 +600,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     returnPolicy.IsReturnable,
                     returnPolicy.WindowDays,
                     returnPolicy.Source,
-                    returnPolicy.LabelFa));
+                    returnPolicy.LabelFa,
+                    quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.UnitOfMeasureId,
+                    quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.UnitCode,
+                    quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.UnitDisplayName,
+                    quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.DecimalPlaces ?? 0,
+                    quantityPolicies.GetValueOrDefault(cartLine.CatalogVariantId)?.Step));
             }
 
             sellerOrders.Add(SellerOrder.Open(
@@ -724,5 +732,10 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 line.DiscountKindSnapshot,
                 line.PreDiscountTaxExclusiveSnapshot,
                 line.PostDiscountTaxExclusiveSnapshot,
-                line.PromotionAppliedAtSnapshot)).ToList());
+                line.PromotionAppliedAtSnapshot,
+                line.UnitOfMeasureIdSnapshot,
+                line.UnitCodeSnapshot,
+                line.UnitDisplaySnapshot,
+                line.QuantityDecimalPlacesSnapshot,
+                line.QuantityStepSnapshot)).ToList());
 }

@@ -16,7 +16,7 @@ public sealed record CartLineSnapshot(
     Guid OfferId,
     Guid CatalogVariantId,
     Guid SellerPartyId,
-    int Quantity,
+    decimal Quantity,
     Guid? ReservationId,
     decimal? QuotedAmount,
     string? QuotedCurrency,
@@ -99,7 +99,7 @@ public interface ICartDirectory
         CartAccess access,
         int expectedVersion,
         Guid offerId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -110,7 +110,7 @@ public interface ICartDirectory
         CartAccess access,
         int expectedVersion,
         Guid lineId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken);
 
     /// <summary>

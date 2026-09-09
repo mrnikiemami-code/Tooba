@@ -30,7 +30,7 @@ public sealed class InventoryReturnGateway : IInventoryReturnGateway
     /// <inheritdoc />
     public async Task RestockFromReturnAsync(
         Guid reservationId,
-        int quantity,
+        decimal quantity,
         string idempotencyKey,
         CancellationToken cancellationToken)
     {

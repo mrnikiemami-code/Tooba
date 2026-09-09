@@ -339,7 +339,7 @@ internal sealed class AdminProductGridQueryEngine
     private async Task<HashSet<Guid>> ResolveSellableUnitsProductIdsAsync(GridFilterRequest filter, CancellationToken cancellationToken) =>
         FilterMetrics(await BuildSellableUnitsMetricsAsync(cancellationToken), filter);
 
-    private async Task<Dictionary<Guid, int>> BuildSellableUnitsMetricsAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, decimal>> BuildSellableUnitsMetricsAsync(CancellationToken cancellationToken)
     {
         var variantToProduct = await LoadVariantToProductMapAsync(cancellationToken);
         var offerToVariant = await _offers.Offers.AsNoTracking()
@@ -349,7 +349,7 @@ internal sealed class AdminProductGridQueryEngine
             .Select(p => new { p.OfferId, Units = p.OnHand - p.Reserved })
             .ToListAsync(cancellationToken);
 
-        var metrics = new Dictionary<Guid, int>();
+        var metrics = new Dictionary<Guid, decimal>();
         foreach (var pos in positions)
         {
             if (!offerToVariant.TryGetValue(pos.OfferId, out var variantId) || !variantToProduct.TryGetValue(variantId, out var productId))
@@ -663,6 +663,21 @@ internal sealed class AdminProductGridQueryEngine
         return ordered.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
     }
 
+    private async Task<List<Guid>> OrderAndPageByMetricAsync(
+        IQueryable<CatalogProduct> products,
+        GridQueryRequest query,
+        GridSortRequest sort,
+        Dictionary<Guid, decimal> metrics,
+        CancellationToken cancellationToken)
+    {
+        var ids = await products.Select(p => p.ProductId).ToListAsync(cancellationToken);
+        IEnumerable<Guid> ordered = sort.Direction == "asc"
+            ? ids.OrderBy(id => metrics.GetValueOrDefault(id)).ThenBy(id => id)
+            : ids.OrderByDescending(id => metrics.GetValueOrDefault(id)).ThenBy(id => id);
+
+        return ordered.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
+    }
+
     private static HashSet<Guid> FilterMetrics(Dictionary<Guid, int> metrics, GridFilterRequest filter)
     {
         if (filter.Operator is "blank") return [];
@@ -677,7 +692,33 @@ internal sealed class AdminProductGridQueryEngine
         return metrics.Where(kv => NumberMatch(kv.Value, filter.Operator, n, nTo)).Select(kv => kv.Key).ToHashSet();
     }
 
+    private static HashSet<Guid> FilterMetrics(Dictionary<Guid, decimal> metrics, GridFilterRequest filter)
+    {
+        if (filter.Operator is "blank") return [];
+        if (filter.Operator is "notBlank") return metrics.Keys.ToHashSet();
+
+        if (!decimal.TryParse(filter.Value, NumberStyles.Number, CultureInfo.InvariantCulture, out var n))
+        {
+            return [];
+        }
+
+        decimal? nTo = decimal.TryParse(filter.ValueTo, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) ? parsed : null;
+        return metrics.Where(kv => NumberMatch(kv.Value, filter.Operator, n, nTo)).Select(kv => kv.Key).ToHashSet();
+    }
+
     private static bool NumberMatch(int value, string op, int n, int? nTo) => op switch
+    {
+        "equals" => value == n,
+        "notEqual" => value != n,
+        "greaterThan" => value > n,
+        "greaterThanOrEqual" => value >= n,
+        "lessThan" => value < n,
+        "lessThanOrEqual" => value <= n,
+        "between" when nTo.HasValue => value >= n && value <= nTo.Value,
+        _ => true,
+    };
+
+    private static bool NumberMatch(decimal value, string op, decimal n, decimal? nTo) => op switch
     {
         "equals" => value == n,
         "notEqual" => value != n,

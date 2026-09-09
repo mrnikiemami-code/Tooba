@@ -22,6 +22,24 @@ public sealed class AdminFulfillmentScopeSequenceTests
     }
 
     [Fact]
+    public void Process_one_line_does_not_process_siblings()
+    {
+        var l1 = Guid.NewGuid();
+        var l2 = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateReady([(l1, 1), (l2, 2)], now);
+        unit.ProcessSelections([(l1, 1)], now);
+        Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
+        Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l2).QuantityProcessing);
+        Assert.Equal(FulfillmentStatus.Processing, unit.Status);
+        var packOther = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(l2, 1)], now));
+        Assert.Equal("fulfillment.pack.requires_processing", packOther.Message);
+        unit.UnprocessSelections([(l1, 1)], now);
+        Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
+        Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
+    }
+
+    [Fact]
     public void StartProcessing_then_pack_is_allowed()
     {
         var line = Guid.NewGuid();
@@ -32,6 +50,31 @@ public sealed class AdminFulfillmentScopeSequenceTests
         unit.PackSelections([(line, 2)], now);
         Assert.Equal(2, unit.Items.Single().QuantityPacked);
         Assert.Equal(FulfillmentStatus.Packed, unit.Status);
+    }
+
+    [Fact]
+    public void Process_selected_changes_only_selected_line_and_can_unprocess()
+    {
+        var l1 = Guid.NewGuid();
+        var l2 = Guid.NewGuid();
+        var l3 = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateReady([(l1, 1), (l2, 2), (l3, 3)], now);
+        unit.ProcessSelections([(l1, 1)], now);
+        Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
+        Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l2).QuantityProcessing);
+        Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l3).QuantityProcessing);
+        Assert.Equal(FulfillmentStatus.Processing, unit.Status);
+        var packOther = Assert.Throws<InvalidOperationException>(() => unit.PackSelections([(l2, 1)], now));
+        Assert.Equal("fulfillment.pack.requires_processing", packOther.Message);
+        unit.PackSelections([(l1, 1)], now);
+        Assert.Equal(1, unit.Items.Single(x => x.OrderLineId == l1).QuantityPacked);
+        var blocked = Assert.Throws<InvalidOperationException>(() => unit.UnprocessSelections([(l1, 1)], now));
+        Assert.Contains("بسته‌بندی", blocked.Message, StringComparison.Ordinal);
+        unit.UnpackSelections([(l1, 1)], now);
+        unit.UnprocessSelections([(l1, 1)], now);
+        Assert.Equal(0, unit.Items.Single(x => x.OrderLineId == l1).QuantityProcessing);
+        Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
     }
 
     [Fact]
@@ -95,8 +138,8 @@ public sealed class AdminFulfillmentScopeSequenceTests
         var l2 = Guid.NewGuid();
         var snapshot = Snapshot(
             FulfillmentStatus.Processing,
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 0),
-             new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0)]);
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 0, 1),
+             new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0, 2)]);
         Assert.True(AdminOrderOperationsComposer.SelectionsAreHomogeneousPackable(
             snapshot,
             [new AdminOrderLineSelection(l1, 1), new AdminOrderLineSelection(l2, 1)]));
@@ -109,8 +152,8 @@ public sealed class AdminFulfillmentScopeSequenceTests
         var l2 = Guid.NewGuid();
         var snapshot = Snapshot(
             FulfillmentStatus.Processing,
-            [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 1),
-             new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0)]);
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), l1, 1, 0, null, 1, 1),
+             new FulfillmentItemSnapshot(Guid.NewGuid(), l2, 2, 0, null, 0, 2)]);
         Assert.False(AdminOrderOperationsComposer.SelectionsAreHomogeneousPackable(
             snapshot,
             [new AdminOrderLineSelection(l1, 1), new AdminOrderLineSelection(l2, 1)]));
@@ -131,10 +174,11 @@ public sealed class AdminFulfillmentScopeSequenceTests
     public void Line_status_stays_mixed_after_partial_pack()
     {
         var ready = Snapshot(FulfillmentStatus.ReadyToFulfill, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2, 0, null, 0)]);
-        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, ready, 0, 2));
-        var processing = Snapshot(FulfillmentStatus.Processing, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 3, 1, null, 0)]);
-        Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3));
-        Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3));
+        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, ready, 0, 2, 0));
+        var processing = Snapshot(FulfillmentStatus.Processing, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 3, 1, null, 0, 3)]);
+        Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 0, 3, 0));
+        Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3, 3));
+        Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3, 3));
         Assert.Equal("PendingPayment", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.PendingPayment, null, 0, 2));
         Assert.Equal("Cancelled", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Cancelled, null, 0, 2));
     }
@@ -145,17 +189,15 @@ public sealed class AdminFulfillmentScopeSequenceTests
         var root = FindRepoRoot();
         var composer = File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
         Assert.Contains("pack_selected", composer, StringComparison.Ordinal);
-        Assert.Contains("FulfillmentStatus.Processing or FulfillmentStatus.Packed", composer, StringComparison.Ordinal);
-        Assert.DoesNotContain(
-            "fulfillment.Status is FulfillmentStatus.ReadyToFulfill or FulfillmentStatus.Processing or FulfillmentStatus.Packed",
-            composer,
-            StringComparison.Ordinal);
+        Assert.Contains("QuantityProcessing", composer, StringComparison.Ordinal);
+        Assert.Contains("unprocess", composer, StringComparison.Ordinal);
+        Assert.Contains("fulfillment.pack.requires_processing", composer, StringComparison.Ordinal);
     }
 
-    private static FulfillmentUnit CreateReady(Guid lineId, int qty, DateTimeOffset now) =>
+    private static FulfillmentUnit CreateReady(Guid lineId, decimal qty, DateTimeOffset now) =>
         CreateReady([(lineId, qty)], now);
 
-    private static FulfillmentUnit CreateReady(IReadOnlyList<(Guid LineId, int Qty)> lines, DateTimeOffset now) =>
+    private static FulfillmentUnit CreateReady(IReadOnlyList<(Guid LineId, decimal Qty)> lines, DateTimeOffset now) =>
         FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),
             Guid.NewGuid(),

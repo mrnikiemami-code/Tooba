@@ -28,8 +28,10 @@ public sealed class AdminOrderCancelPrecedenceTests
         Assert.Contains("confirm_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("reject_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("restore_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("unconfirm_deposit", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("mark_processing", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("pack_selected", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("unprocess", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("unpack", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("create_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("dispatch_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);

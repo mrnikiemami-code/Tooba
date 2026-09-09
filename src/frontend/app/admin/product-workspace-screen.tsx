@@ -36,6 +36,7 @@ import {
   mutateAdminProductLifecycle,
   removeAdminProductAdditionalCategory,
   updateAdminProductCore,
+  updateAdminProductQuantityPolicy,
   type AdminBrandOption,
   type HostReadSource,
 } from "./host-client";
@@ -45,6 +46,7 @@ import { mapAdminErrorMessage } from "./admin-error-map";
 import { AdminSearchableCombobox } from "./admin-searchable-combobox";
 import { CatalogTagsCard } from "./catalog-tags-card";
 import { type ProductTranslationView, type ProductWorkspaceView } from "./workspace-model";
+import { formatQuantityDisplay } from "../../lib/quantity-display";
 import { storefrontMediaUrl } from "../storefront/storefront-api";
 import { toast } from "react-toastify";
 
@@ -117,6 +119,9 @@ interface GeneralDraft {
   categoryId: string | null;
   brandId: string | null;
   slugTouched: boolean;
+  unitOfMeasureId: string;
+  quantityDecimalPlaces: string;
+  quantityStep: string;
 }
 
 function draftFromView(view: ProductWorkspaceView): GeneralDraft {
@@ -125,6 +130,9 @@ function draftFromView(view: ProductWorkspaceView): GeneralDraft {
     categoryId: view.primaryCategoryId ?? null,
     brandId: view.brandId ?? null,
     slugTouched: true,
+    unitOfMeasureId: view.unitOfMeasureId ?? view.units?.[0]?.unitOfMeasureId ?? "",
+    quantityDecimalPlaces: String(view.quantityDecimalPlaces ?? 0),
+    quantityStep: view.quantityStep == null ? "" : formatQuantityDisplay(view.quantityStep, 6),
   };
 }
 
@@ -422,8 +430,8 @@ function ProductWorkspaceScreenInner({
       },
       viewScope,
     );
-    setBusy(false);
     if (!coreResult.ok) {
+      setBusy(false);
       if (coreResult.errorCode === "workspace.catalog.stale") {
         setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
         return;
@@ -431,11 +439,58 @@ function ProductWorkspaceScreenInner({
       setError(mapAdminErrorMessage(coreResult.errorCode));
       return;
     }
-    setView(coreResult.view);
-    setDraft(draftFromView(coreResult.view));
+    let saved = coreResult.view;
+    const places = Number(activeDraft.quantityDecimalPlaces);
+    const stepText = activeDraft.quantityStep.trim();
+    const step = stepText.length === 0 ? null : Number(stepText.replace(",", "."));
+    const quantityChanged =
+      activeDraft.unitOfMeasureId !== (current.unitOfMeasureId ?? "")
+      || places !== (current.quantityDecimalPlaces ?? 0)
+      || (step ?? null) !== (current.quantityStep ?? null);
+    if (quantityChanged) {
+      if (!activeDraft.unitOfMeasureId) {
+        setBusy(false);
+        setError("واحد اندازه‌گیری لازم است");
+        return;
+      }
+      if (!Number.isInteger(places) || places < 0 || places > 6) {
+        setBusy(false);
+        setError("تعداد اعشار باید بین ۰ و ۶ باشد");
+        return;
+      }
+      if (step != null && !(Number.isFinite(step) && step > 0)) {
+        setBusy(false);
+        setError("گام مقدار در صورت ورود باید بزرگ‌تر از صفر باشد");
+        return;
+      }
+      const qtyResult = await updateAdminProductQuantityPolicy(
+        current.productId,
+        {
+          unitOfMeasureId: activeDraft.unitOfMeasureId,
+          decimalPlaces: places,
+          step,
+          expectedUpdatedAt: saved.catalogUpdatedAt,
+        },
+        viewScope,
+      );
+      if (!qtyResult.ok) {
+        setBusy(false);
+        if (qtyResult.errorCode === "workspace.catalog.stale") {
+          setConflict("این محصول را کاربر دیگری تغییر داده است. نسخهٔ تازه را بارگذاری کنید.");
+          return;
+        }
+        setError(mapAdminErrorMessage(qtyResult.errorCode));
+        return;
+      }
+      saved = qtyResult.view;
+    }
+
+    setView(saved);
+    setDraft(draftFromView(saved));
     formMode.clearDirty();
     setDirty(new Set());
     setConflict(null);
+    setBusy(false);
     toast.success("تغییرات محصول ذخیره شد.");
   }
 
@@ -997,6 +1052,52 @@ function ProductWorkspaceScreenInner({
                         }}
                       />
                     </label>
+                    <label className="block text-sm font-medium">
+                      واحد اندازه‌گیری
+                      <select
+                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base"
+                        value={activeDraft.unitOfMeasureId}
+                        data-testid="product-edit-unit"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, unitOfMeasureId: event.target.value });
+                          markGeneralDirty();
+                        }}
+                      >
+                        {(view.units ?? []).map((unit) => (
+                          <option key={unit.unitOfMeasureId} value={unit.unitOfMeasureId}>
+                            {unit.name} ({unit.shortName})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block text-sm font-medium">
+                      تعداد اعشار مقدار
+                      <input
+                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                        value={activeDraft.quantityDecimalPlaces}
+                        inputMode="numeric"
+                        dir="ltr"
+                        data-testid="product-edit-decimal-places"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, quantityDecimalPlaces: event.target.value });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
+                    <label className="block text-sm font-medium">
+                      گام مقدار (اختیاری)
+                      <input
+                        className="mt-2 min-h-11 w-full rounded-ds border border-border bg-surface px-3 text-base tabular-nums"
+                        value={activeDraft.quantityStep}
+                        inputMode="decimal"
+                        dir="ltr"
+                        data-testid="product-edit-quantity-step"
+                        onChange={(event) => {
+                          setDraft({ ...activeDraft, quantityStep: event.target.value });
+                          markGeneralDirty();
+                        }}
+                      />
+                    </label>
                     <div className="rounded-ds border border-border bg-secondary/30 p-3 text-sm">
                       <p className="font-medium">کد کاتالوگ</p>
                       <p className="mt-1 text-muted">
@@ -1108,6 +1209,15 @@ function ProductWorkspaceScreenInner({
                       <SummaryCard label="برند" value={view.brandName ?? "بدون برند"} />
                       <SummaryCard label="وضعیت" value={formatAdminStatus(view.status)} />
                       <SummaryCard label="نامک سراسری" value={view.slug ?? view.seo.slugSeam ?? "—"} ltr />
+                      <SummaryCard
+                        label="واحد مقدار"
+                        value={view.unitDisplayName ?? view.unitCode ?? "—"}
+                      />
+                      <SummaryCard
+                        label="اعشار / گام"
+                        value={`${view.quantityDecimalPlaces ?? 0}${view.quantityStep == null ? "" : ` / ${formatQuantityDisplay(view.quantityStep, 6)}`}`}
+                        ltr
+                      />
                       <SummaryCard label="آخرین به‌روزرسانی" value={formatJalaliDateTime(view.catalogUpdatedAt)} />
                       <SummaryCard
                         label="کد کاتالوگ"

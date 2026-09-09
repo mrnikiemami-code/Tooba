@@ -30,7 +30,7 @@ public sealed class ReturnEligibilityEvaluatorTests
                 [new OrderReturnLineSnapshot(lineId, 2, 1000m, "IRR", null, true, 7)])),
             new FakeFulfillmentReturnReader(new FulfillmentReturnEligibilitySnapshot(
                 sellerOrderId,
-                new Dictionary<Guid, int> { [lineId] = 2 },
+                new Dictionary<Guid, decimal> { [lineId] = 2 },
                 deliveredAt)),
             CreateEmptyReturnsDb());
 
@@ -59,7 +59,7 @@ public sealed class ReturnEligibilityEvaluatorTests
                 [new OrderReturnLineSnapshot(lineId, 1, 1000m, "IRR", null, true, 7)])),
             new FakeFulfillmentReturnReader(new FulfillmentReturnEligibilitySnapshot(
                 sellerOrderId,
-                new Dictionary<Guid, int> { [lineId] = 1 },
+                new Dictionary<Guid, decimal> { [lineId] = 1 },
                 deliveredAt)),
             CreateEmptyReturnsDb());
 

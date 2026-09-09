@@ -1,3 +1,4 @@
+using Tooba.BuildingBlocks;
 using Tooba.Catalog.Domain;
 
 namespace Tooba.Catalog.Application;
@@ -130,6 +131,18 @@ public interface ICatalogLookupGateway
     /// <summary>فهرست محصولات منتشرشده برای انتخابگر Access Control.</summary>
     Task<IReadOnlyList<AccessControlProductItem>> ListProductsForAccessControlAsync(
         string? search,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// سیاست مؤثر مقدار را از Product + واحد + تنظیم سراسری می‌خواند؛ N+1 ندارد.
+    /// </summary>
+    Task<EffectiveQuantityPolicy?> GetEffectiveQuantityPolicyForVariantAsync(
+        Guid variantId,
+        CancellationToken cancellationToken);
+
+    /// <summary>سیاست مؤثر چند گونه را یکجا می‌خواند.</summary>
+    Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> GetEffectiveQuantityPoliciesForVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
         CancellationToken cancellationToken);
 }
 

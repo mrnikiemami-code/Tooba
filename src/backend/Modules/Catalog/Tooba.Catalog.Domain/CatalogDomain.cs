@@ -1811,6 +1811,15 @@ public sealed class CatalogProduct : IHasDomainEvents
     /// </summary>
     public string? SeoTitleSeam { get; set; }
 
+    /// <summary>واحد اندازه‌گیری محصول؛ Variant تکرار نمی‌کند.</summary>
+    public Guid UnitOfMeasureId { get; private set; } = CanonicalUnits.Pcs;
+
+    /// <summary>تعداد رقم اعشار مقدار؛ حداکثر ۶.</summary>
+    public int QuantityDecimalPlaces { get; private set; }
+
+    /// <summary>گام اختیاری مقدار.</summary>
+    public decimal? QuantityStep { get; private set; }
+
     /// <summary>
     /// زمان ایجاد.
     /// </summary>
@@ -1845,6 +1854,9 @@ public sealed class CatalogProduct : IHasDomainEvents
             Kind = kind,
             Status = CatalogPublicationStatus.Draft,
             SlugSeam = string.IsNullOrWhiteSpace(slugSeam) ? null : slugSeam.Trim().ToLowerInvariant(),
+            UnitOfMeasureId = CanonicalUnits.Pcs,
+            QuantityDecimalPlaces = 0,
+            QuantityStep = null,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -1871,6 +1883,40 @@ public sealed class CatalogProduct : IHasDomainEvents
         Status = CatalogPublicationStatus.Published;
         UpdatedAt = now;
         _domainEvents.Add(new CatalogProductPublishedDomainEvent(this));
+    }
+
+    /// <summary>سیاست مقدار کالا را روی Product می‌گذارد؛ Variant تکرار نمی‌کند.</summary>
+    public void SetQuantityPolicy(Guid unitOfMeasureId, int decimalPlaces, decimal? step, DateTimeOffset now)
+    {
+        if (unitOfMeasureId == Guid.Empty)
+        {
+            throw new InvalidOperationException("quantity.unit.required");
+        }
+
+        if (decimalPlaces is < 0 or > 6)
+        {
+            throw new InvalidOperationException("quantity.decimal_places.invalid");
+        }
+
+        if (step is { } value)
+        {
+            if (value <= 0)
+            {
+                throw new InvalidOperationException("quantity.step.invalid");
+            }
+
+            var scale = BitConverter.GetBytes(decimal.GetBits(value)[3])[2];
+            if (scale > decimalPlaces)
+            {
+                throw new InvalidOperationException("quantity.step.incompatible_precision");
+            }
+        }
+
+        UnitOfMeasureId = unitOfMeasureId;
+        QuantityDecimalPlaces = decimalPlaces;
+        QuantityStep = step;
+        UpdatedAt = now;
+        _domainEvents.Add(new CatalogProductUpdatedDomainEvent(this));
     }
 
     /// <summary>

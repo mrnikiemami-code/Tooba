@@ -54,6 +54,96 @@ public sealed class AdminOrderOperationsTests
     }
 
     [Fact]
+    public void CanCancel_paid_when_packed_or_created_shipment()
+    {
+        var order = CreateSellerOrder(paid: true);
+        var packed = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            order.SellerOrderId,
+            order.CheckoutId,
+            order.SellerPartyId,
+            FulfillmentStatus.Packed,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 2, 0, Guid.NewGuid(), 2, 2)],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Created,
+                    "Post",
+                    "TRK",
+                    null,
+                    null,
+                    []),
+            ]);
+        Assert.True(AdminOrderOperationsComposer.CanCancel(order, packed));
+        Assert.True(AdminOrderOperationsComposer.CanCancel(order, fulfillment: null));
+    }
+
+    [Fact]
+    public void HasDispatchedOrDelivered_true_if_any_seller_has_shipped_quantity()
+    {
+        var created = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            FulfillmentStatus.Packed,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 0, null, 1, 1)],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Created,
+                    "Post",
+                    "TRK",
+                    null,
+                    null,
+                    []),
+            ]);
+        var dispatched = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            created.CheckoutId,
+            Guid.NewGuid(),
+            FulfillmentStatus.Dispatched,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 1, null, 1, 1)],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Dispatched,
+                    "Post",
+                    "TRK",
+                    DateTimeOffset.UtcNow,
+                    null,
+                    []),
+            ]);
+        Assert.False(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created]));
+        Assert.True(AdminOrderOperationsComposer.HasDispatchedOrDelivered([created, dispatched]));
+    }
+
+    [Fact]
     public void Has_allows_legacy_admin_without_ops_family_grants()
     {
         var effective = new EffectiveAccessDto(

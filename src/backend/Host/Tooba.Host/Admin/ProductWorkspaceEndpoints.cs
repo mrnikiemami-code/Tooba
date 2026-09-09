@@ -24,6 +24,7 @@ public static class ProductWorkspaceEndpoints
         group.MapGet("/{productId:guid}/history", GetHistoryAsync);
         group.MapPatch("/{productId:guid}/catalog-title", PatchTitleAsync);
         group.MapPatch("/{productId:guid}/core", PatchCoreAsync);
+        group.MapPatch("/{productId:guid}/quantity-policy", PatchQuantityPolicyAsync);
         group.MapPut("/{productId:guid}/category", AssignCategoryAsync);
         group.MapPost("/{productId:guid}/categories/additional", AddAdditionalCategoryAsync);
         group.MapDelete("/{productId:guid}/categories/additional/{categoryId:guid}", RemoveAdditionalCategoryAsync);
@@ -232,6 +233,29 @@ public static class ProductWorkspaceEndpoints
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             return Results.Json(await composer.UpdateProductCoreAsync(productId, body, ReadPermissions(request), cancellationToken));
+        }
+        catch (PlatformHttpException ex)
+        {
+            return ToError(ex);
+        }
+    }
+
+    private static async Task<IResult> PatchQuantityPolicyAsync(
+        Guid productId,
+        AdminProductQuantityPolicyRequest body,
+        ProductWorkspaceComposer composer,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        IHostEnvironment environment,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            return Results.Json(await composer.UpdateQuantityPolicyAsync(productId, body, ReadPermissions(request), cancellationToken));
         }
         catch (PlatformHttpException ex)
         {

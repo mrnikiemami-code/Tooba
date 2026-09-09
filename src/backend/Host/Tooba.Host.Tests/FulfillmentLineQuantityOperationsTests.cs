@@ -6,7 +6,7 @@ namespace Tooba.Host.Tests;
 /// <summary>TB-P09-T005: line/quantity pack, unpack, cancel release, split allocation.</summary>
 public sealed class FulfillmentLineQuantityOperationsTests
 {
-    private static FulfillmentUnit CreateUnit(params (Guid LineId, int Qty)[] lines)
+    private static FulfillmentUnit CreateUnit(params (Guid LineId, decimal Qty)[] lines)
     {
         var now = DateTimeOffset.Parse("2026-09-07T06:00:00Z");
         var unit = FulfillmentUnit.CreateFromPaidOrder(
@@ -150,5 +150,19 @@ public sealed class FulfillmentLineQuantityOperationsTests
         var now = DateTimeOffset.UtcNow;
         unit.PackSelections([(line, 2), (line, 1)], now);
         Assert.Equal(3, unit.Items.Single().QuantityPacked);
+    }
+
+    [Fact]
+    public void Partial_pack_half_kilo_keeps_remaining()
+    {
+        var lineA = Guid.NewGuid();
+        var lineB = Guid.NewGuid();
+        var unit = CreateUnit((lineA, 2.75m), (lineB, 1.25m));
+        var now = DateTimeOffset.UtcNow;
+        unit.PackSelections([(lineA, 0.50m)], now);
+        Assert.Equal(0.50m, unit.Items.Single(x => x.OrderLineId == lineA).QuantityPacked);
+        Assert.Equal(2.75m, unit.Items.Single(x => x.OrderLineId == lineA).QuantityProcessing);
+        Assert.Equal(0m, unit.Items.Single(x => x.OrderLineId == lineB).QuantityPacked);
+        Assert.Equal(1.25m, unit.Items.Single(x => x.OrderLineId == lineB).QuantityProcessing);
     }
 }

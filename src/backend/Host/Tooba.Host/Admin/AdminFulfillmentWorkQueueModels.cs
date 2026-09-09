@@ -19,8 +19,8 @@ public sealed record AdminFulfillmentWorkQueueRow(
     string ShippingMethodCode,
     string ShippingMethodLabel,
     int ItemCount,
-    int QuantityOrdered,
-    int QuantityShipped,
+    decimal QuantityOrdered,
+    decimal QuantityShipped,
     int ShipmentCount,
     string? PrimaryShipmentId,
     string TrackingSummary,
@@ -134,13 +134,12 @@ public static class AdminFulfillmentQueueFilters
     public static IReadOnlyList<string> ProjectActionCodes(FulfillmentSnapshot fulfillment)
     {
         var codes = new List<string>();
-        if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill)
+        if (HasProcessableQuantity(fulfillment.Items))
         {
             codes.Add("mark_processing");
         }
 
-        if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
-            && HasPackableQuantity(fulfillment.Items))
+        if (HasPackableQuantity(fulfillment.Items))
         {
             codes.Add("mark_packed");
         }
@@ -200,8 +199,11 @@ public static class AdminFulfillmentQueueFilters
         return rows.All(r => r.AvailableActionCodes.Contains(actionCode, StringComparer.OrdinalIgnoreCase));
     }
 
+    private static bool HasProcessableQuantity(IReadOnlyList<FulfillmentItemSnapshot> items) =>
+        items.Any(x => x.QuantityOrdered > x.QuantityProcessing);
+
     private static bool HasPackableQuantity(IReadOnlyList<FulfillmentItemSnapshot> items) =>
-        items.Any(x => x.QuantityOrdered > x.QuantityPacked);
+        items.Any(x => x.QuantityProcessing > x.QuantityPacked);
 
     private static bool HasUnallocatedShipmentQuantity(
         IReadOnlyList<FulfillmentItemSnapshot> items,

@@ -13,7 +13,7 @@ public interface IReturnInventoryGateway
     /// </summary>
     Task RestockConsumedReservationAsync(
         Guid reservationId,
-        int quantity,
+        decimal quantity,
         string idempotencyKey,
         CancellationToken cancellationToken);
 }
@@ -21,7 +21,7 @@ public interface IReturnInventoryGateway
 /// <summary>
 /// خط مرجوعی در فرمان.
 /// </summary>
-public sealed record ReturnLineCommand(Guid OrderLineId, int Quantity);
+public sealed record ReturnLineCommand(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// فرمان ایجاد درخواست مرجوعی.
@@ -78,7 +78,7 @@ public sealed record ReturnSnapshot(
 public sealed record ReturnItemSnapshot(
     Guid ReturnItemId,
     Guid OrderLineId,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPriceSnapshot,
     string Currency,
     Guid? ReservationId);
@@ -103,9 +103,9 @@ public sealed record RefundAttemptSnapshot(
 /// </summary>
 public sealed record ReturnLineEligibility(
     Guid OrderLineId,
-    int DeliveredQuantity,
-    int AlreadyReturnedQuantity,
-    int RemainingReturnableQuantity);
+    decimal DeliveredQuantity,
+    decimal AlreadyReturnedQuantity,
+    decimal RemainingReturnableQuantity);
 
 /// <summary>
 /// نتیجهٔ ارزیابی eligibility مرجوعی (منبع حقیقت یکتا؛ settlement دخیل نیست).

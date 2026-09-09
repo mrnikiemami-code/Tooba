@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Cart.Application;
+using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
 using Tooba.Offer.Domain;
@@ -16,6 +17,7 @@ public sealed class StorefrontCartComposer
     private readonly ICartQueryGateway _cartQueries;
     private readonly CatalogDbContext _catalog;
     private readonly IPartyLookupGateway _parties;
+    private readonly ICatalogLookupGateway _catalogLookup;
 
     /// <summary>
     /// سازندهٔ ترکیب سبد فروشگاه.
@@ -24,12 +26,14 @@ public sealed class StorefrontCartComposer
         ICartDirectory carts,
         ICartQueryGateway cartQueries,
         CatalogDbContext catalog,
-        IPartyLookupGateway parties)
+        IPartyLookupGateway parties,
+        ICatalogLookupGateway catalogLookup)
     {
         _carts = carts;
         _cartQueries = cartQueries;
         _catalog = catalog;
         _parties = parties;
+        _catalogLookup = catalogLookup;
     }
 
     /// <summary>
@@ -58,7 +62,7 @@ public sealed class StorefrontCartComposer
         string? guestSecret,
         int expectedVersion,
         Guid offerId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken)
     {
         var snapshot = await _carts.AddOrIncreaseLineAsync(
@@ -79,7 +83,7 @@ public sealed class StorefrontCartComposer
         string? guestSecret,
         int expectedVersion,
         Guid lineId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken)
     {
         var snapshot = await _carts.ChangeLineQuantityAsync(
@@ -139,6 +143,9 @@ public sealed class StorefrontCartComposer
         var mediaMap = media
             .GroupBy(item => item.ProductId)
             .ToDictionary(group => group.Key, group => group.Select(item => item.MediaAssetId).FirstOrDefault());
+        var policies = await _catalogLookup.GetEffectiveQuantityPoliciesForVariantIdsAsync(
+            snapshot.Lines.Select(item => item.CatalogVariantId).Distinct().ToArray(),
+            cancellationToken);
 
         var lines = new List<StorefrontCartLineView>();
         foreach (var line in snapshot.Lines)
@@ -165,6 +172,7 @@ public sealed class StorefrontCartComposer
                 mediaId = null;
             }
 
+            policies.TryGetValue(line.CatalogVariantId, out var policy);
             lines.Add(new StorefrontCartLineView(
                 line.LineId,
                 line.OfferId,
@@ -179,7 +187,11 @@ public sealed class StorefrontCartComposer
                 unit,
                 lineAmount,
                 line.QuotedCurrency ?? snapshot.Currency,
-                line.QuotedTaxExclusive));
+                line.QuotedTaxExclusive,
+                policy?.UnitCode,
+                policy?.UnitDisplayName ?? policy?.UnitShortName,
+                policy?.DecimalPlaces ?? 0,
+                policy?.Step));
         }
 
         var subtotal = lines.Sum(item => item.LineAmountExclusiveOfTax ?? 0);

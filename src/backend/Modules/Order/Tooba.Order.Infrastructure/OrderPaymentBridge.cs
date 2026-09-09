@@ -74,5 +74,26 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
 
             order.RecordVerifiedPayment();
         }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RevertVerifiedSuccessAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        var group = await _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
+            ?? throw new InvalidOperationException("checkout برای تصویر پرداخت پیدا نشد.");
+
+        foreach (var order in group.SellerOrders.Where(x => sellerOrderIds.Contains(x.SellerOrderId)))
+        {
+            order.RevertVerifiedPayment();
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 }

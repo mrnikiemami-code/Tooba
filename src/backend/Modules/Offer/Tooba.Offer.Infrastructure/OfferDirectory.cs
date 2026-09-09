@@ -156,5 +156,7 @@ public sealed class OfferDirectory : IOfferDirectory, IOfferLookupGateway
             offer.Status,
             offer.SellerSku,
             offer.ReturnPolicyChoice,
-            offer.CustomReturnWindowDays);
+            offer.CustomReturnWindowDays,
+            offer.MinimumOrderQuantity,
+            offer.MaximumOrderQuantity);
 }

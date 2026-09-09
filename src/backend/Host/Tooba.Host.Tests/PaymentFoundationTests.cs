@@ -377,5 +377,8 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
     {
         public Task ApplyVerifiedSuccessAsync(Guid checkoutId, Guid paymentId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task RevertVerifiedSuccessAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

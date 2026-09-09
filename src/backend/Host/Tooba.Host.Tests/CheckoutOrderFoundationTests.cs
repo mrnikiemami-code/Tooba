@@ -594,10 +594,10 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         public Task<GuestCartCreated> CreateGuestAsync(string market, string currency, SalesChannel channel, CancellationToken cancellationToken) =>
             _inner.CreateGuestAsync(market, currency, channel, cancellationToken);
 
-        public Task<CartSnapshot> AddOrIncreaseLineAsync(Guid cartId, CartAccess access, int expectedVersion, Guid offerId, int quantity, CancellationToken cancellationToken) =>
+        public Task<CartSnapshot> AddOrIncreaseLineAsync(Guid cartId, CartAccess access, int expectedVersion, Guid offerId, decimal quantity, CancellationToken cancellationToken) =>
             _inner.AddOrIncreaseLineAsync(cartId, access, expectedVersion, offerId, quantity, cancellationToken);
 
-        public Task<CartSnapshot> ChangeLineQuantityAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, int quantity, CancellationToken cancellationToken) =>
+        public Task<CartSnapshot> ChangeLineQuantityAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, decimal quantity, CancellationToken cancellationToken) =>
             _inner.ChangeLineQuantityAsync(cartId, access, expectedVersion, lineId, quantity, cancellationToken);
 
         public Task<CartSnapshot> RemoveLineAsync(Guid cartId, CartAccess access, int expectedVersion, Guid lineId, CancellationToken cancellationToken) =>

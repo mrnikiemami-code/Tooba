@@ -24,6 +24,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     private readonly IPayableCheckoutReader _orders;
     private readonly IPaymentGatewayRegistry _gateways;
     private readonly PaymentGatewayActorContext _actorContext;
+    private readonly IPaymentRefundGateway? _refundGateway;
 
     /// <summary>
     /// دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
@@ -33,13 +34,15 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         IPaymentUseCaseGuard guard,
         IPayableCheckoutReader orders,
         IPaymentGatewayRegistry gateways,
-        PaymentGatewayActorContext actorContext)
+        PaymentGatewayActorContext actorContext,
+        IPaymentRefundGateway? refundGateway = null)
     {
         _db = db;
         _guard = guard;
         _orders = orders;
         _gateways = gateways;
         _actorContext = actorContext;
+        _refundGateway = refundGateway;
     }
 
     /// <inheritdoc />
@@ -358,7 +361,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         payment.AttachLoadedAllocations(allocations);
-        var txn = $"manual-confirm-{payment.PaymentId:N}";
+        var txn = $"manual-confirm-{payment.PaymentId:N}-{attempt.AttemptId:N}";
         var duplicateTxn = await _db.Attempts.AnyAsync(
             x => x.ProviderTransactionReference == txn,
             cancellationToken).ConfigureAwait(false);
@@ -432,9 +435,145 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         payment.AttachLoadedAllocations(allocations);
-        payment.RestoreRejectedManualToPending(DateTimeOffset.UtcNow);
+        var restored = payment.RestoreRejectedManualToPending(DateTimeOffset.UtcNow);
+        if (attempts.All(x => x.AttemptId != restored.AttemptId))
+        {
+            _db.Attempts.Add(restored);
+        }
+
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
+    }
+
+    /// <inheritdoc />
+    public async Task<PaymentVerificationResult> UnconfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
+            .SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("payment.missing");
+        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
+        {
+            throw new InvalidOperationException("payment.unconfirm.not_manual");
+        }
+
+        var attempts = await _db.Attempts
+            .Where(x => x.PaymentId == paymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var loaded in attempts)
+        {
+            payment.AttachLoadedAttempt(loaded);
+        }
+
+        var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        payment.AttachLoadedAllocations(allocations);
+        var unconfirmed = payment.UnconfirmManualDeposit(DateTimeOffset.UtcNow);
+        if (attempts.All(x => x.AttemptId != unconfirmed.AttemptId))
+        {
+            _db.Attempts.Add(unconfirmed);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return new PaymentVerificationResult(payment.PaymentId, payment.Status, NewlySucceeded: false);
+    }
+
+    /// <inheritdoc />
+    public async Task CloseOrStartRefundForOrderCancelAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (payment is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (payment.Status is PaymentStatus.Created
+            or PaymentStatus.Pending
+            or PaymentStatus.Failed
+            or PaymentStatus.Expired)
+        {
+            payment.CloseForOrderCancel(now);
+            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (payment.Status is PaymentStatus.Cancelled or PaymentStatus.Refunded or PaymentStatus.RefundFailed)
+        {
+            return;
+        }
+
+        payment.BeginOrderCancelRefund(now);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        if (ManualPaymentGateway.IsManual(payment.ProviderCode) || _refundGateway is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _refundGateway.RefundAsync(
+                payment.PaymentId,
+                payment.Amount,
+                payment.Currency,
+                $"order-cancel-refund:{payment.PaymentId:N}",
+                cancellationToken).ConfigureAwait(false);
+            if (result.Succeeded)
+            {
+                payment.MarkRefunded(DateTimeOffset.UtcNow);
+            }
+            else
+            {
+                payment.MarkRefundFailed(result.FailureCode, DateTimeOffset.UtcNow);
+            }
+
+            await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "payment.refund.gateway.unconfigured")
+        {
+            // صف اقدام ادمین: RefundPending می‌ماند.
+        }
+        catch (Exception)
+        {
+            // لغو سفارش به موفقیت Refund وابسته نیست؛ وضعیت RefundPending برای retry امن می‌ماند.
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task RestoreAfterOrderCancelRestoreAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken).ConfigureAwait(false);
+        var payment = await _db.Payments
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (payment is null)
+        {
+            return;
+        }
+
+        var attempts = await _db.Attempts
+            .Where(x => x.PaymentId == payment.PaymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var loaded in attempts)
+        {
+            payment.AttachLoadedAttempt(loaded);
+        }
+
+        payment.RestoreAfterOrderCancelRestore(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<PaymentOperationalSnapshot> ToOperationalAsync(
@@ -452,12 +591,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var hasManualRejection = attempts.Any(x =>
             x.Status == PaymentAttemptStatus.VerifiedFailed
             && string.Equals(x.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal));
-        var hasSuccess = payment.Status == PaymentStatus.Succeeded
-            || attempts.Any(x => x.Status == PaymentAttemptStatus.VerifiedSucceeded);
         var restoreEligible = manual
             && payment.Status == PaymentStatus.Failed
-            && hasManualRejection
-            && !hasSuccess;
+            && hasManualRejection;
+        var unconfirmEligible = manual && payment.Status == PaymentStatus.Succeeded;
         return new PaymentOperationalSnapshot(
             payment.PaymentId,
             payment.CheckoutId,
@@ -475,7 +612,8 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             ConfirmDepositEligible: manualPending,
             RejectDepositEligible: manualPending,
             RestoreDepositEligible: restoreEligible,
-            HasManualDepositRejection: hasManualRejection);
+            HasManualDepositRejection: hasManualRejection,
+            UnconfirmDepositEligible: unconfirmEligible);
     }
 
     private async Task EnsureActorCanSeeAsync(

@@ -168,21 +168,24 @@ public sealed class AdminPanelComposer
             sellerNames.TryGetValue(order.SellerPartyId, out var sellerName);
             fulfillmentBySeller.TryGetValue(order.SellerOrderId, out var fulfillment);
             var shippedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityShipped)
-                ?? new Dictionary<Guid, int>();
+                ?? new Dictionary<Guid, decimal>();
             var packedByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityPacked)
-                ?? new Dictionary<Guid, int>();
+                ?? new Dictionary<Guid, decimal>();
+            var processingByLine = fulfillment?.Items.ToDictionary(x => x.OrderLineId, x => x.QuantityProcessing)
+                ?? new Dictionary<Guid, decimal>();
 
             var lines = order.Lines.Select(line =>
             {
                 titles.TryGetValue(line.CatalogVariantId, out var title);
                 shippedByLine.TryGetValue(line.LineId, out var shipped);
                 packedByLine.TryGetValue(line.LineId, out var packed);
+                processingByLine.TryGetValue(line.LineId, out var processing);
                 var openAllocated = fulfillment?.Shipments
                     .Where(s => s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created)
                     .SelectMany(s => s.Items)
                     .Where(i => i.OrderLineId == line.LineId)
                     .Sum(i => i.Quantity) ?? 0;
-                var deliverySlices = Array.Empty<(int Quantity, DateTimeOffset DeliveredAt)>();
+                var deliverySlices = Array.Empty<(decimal Quantity, DateTimeOffset DeliveredAt)>();
                 if (fulfillment is not null)
                 {
                     deliverySlices = fulfillment.Shipments
@@ -204,7 +207,7 @@ public sealed class AdminPanelComposer
                     line.LineId,
                     fulfillment is null ? null : shipped,
                     null,
-                    LineOperationalStatus(order.Status, fulfillment, packed, line.Quantity),
+                    LineOperationalStatus(order.Status, fulfillment, packed, line.Quantity, processing),
                     fulfillment is null ? null : packed,
                     fulfillment is null ? null : openAllocated + shipped,
                     line.IsReturnableSnapshot,
@@ -212,7 +215,8 @@ public sealed class AdminPanelComposer
                     line.ReturnPolicyLabelSnapshot,
                     returnUi.DeadlineDisplay,
                     returnUi.RemainingDisplay,
-                    returnUi.StatusCode);
+                    returnUi.StatusCode,
+                    fulfillment is null ? null : processing);
             }).ToList();
             var shipments = fulfillment?.Shipments.Select(s => new AdminShipmentView(
                 s.ShipmentId,
@@ -463,7 +467,7 @@ public sealed class AdminPanelComposer
 
     private static (string DeadlineDisplay, string RemainingDisplay, string StatusCode) BuildReturnDeadlineUi(
         OrderLine line,
-        IReadOnlyList<(int Quantity, DateTimeOffset DeliveredAt)> deliverySlices)
+        IReadOnlyList<(decimal Quantity, DateTimeOffset DeliveredAt)> deliverySlices)
     {
         if (!line.IsReturnableSnapshot)
         {
@@ -481,7 +485,7 @@ public sealed class AdminPanelComposer
             return (policyLabel, "", "before_delivery");
         }
 
-        var undeliveredQty = Math.Max(0, line.Quantity - deliveredQty);
+        var undeliveredQty = Math.Max(0m, line.Quantity - deliveredQty);
         var now = DateTimeOffset.UtcNow;
         var sliceParts = new List<string>();
         var remainingParts = new List<string>();
@@ -544,8 +548,8 @@ public sealed class AdminPanelComposer
         }
     }
 
-    private static string ToPersianDigits(int value) =>
-        value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    private static string ToPersianDigits(decimal value) =>
+        Tooba.BuildingBlocks.QuantityDisplay.Format(value, 6)
             .Replace('0', '۰').Replace('1', '۱').Replace('2', '۲').Replace('3', '۳').Replace('4', '۴')
             .Replace('5', '۵').Replace('6', '۶').Replace('7', '۷').Replace('8', '۸').Replace('9', '۹');
 
@@ -613,8 +617,9 @@ public sealed class AdminPanelComposer
     internal static string? LineOperationalStatus(
         SellerOrderStatus sellerStatus,
         FulfillmentSnapshot? fulfillment,
-        int packed,
-        int ordered)
+        decimal packed,
+        decimal ordered,
+        decimal processing = 0)
     {
         if (sellerStatus == SellerOrderStatus.Cancelled)
         {
@@ -640,12 +645,12 @@ public sealed class AdminPanelComposer
             return "Packed";
         }
 
-        if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill)
+        if (processing > 0 || packed > 0)
         {
-            return "ReadyToFulfill";
+            return "Processing";
         }
 
-        return "Processing";
+        return "ReadyToFulfill";
     }
 
     /// <summary>
@@ -725,22 +730,28 @@ public sealed class AdminPanelComposer
             foreach (var entry in entries)
             {
                 // فقط مبلغ خالص همین SellerOrder — نه مبلغ کل درخواست payout چندسفارشی.
-                var isRefundAdj = string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
-                                  || entry.EntryType == EntryType.Debit;
+                var isCancelNeutralize = string.Equals(entry.SourceType, "order_cancel", StringComparison.OrdinalIgnoreCase);
+                var isRefundAdj = !isCancelNeutralize
+                    && (string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
+                        || entry.EntryType == EntryType.Debit);
                 AddOnce(
                     $"settlement:{entry.EntryId:N}",
                     new AdminFinancialEventView(
                         entry.PostedAt,
-                        isRefundAdj ? "SellerRefundAdjustment" : "SellerPayout",
+                        isCancelNeutralize
+                            ? "SellerCancelAdjustment"
+                            : isRefundAdj ? "SellerRefundAdjustment" : "SellerPayout",
                         entry.NetAmount,
                         entry.Currency,
                         sellerName ?? "فروشنده",
                         entry.EntryId.ToString("N")[..12],
-                        isRefundAdj ? "تعدیل مرجوعی" : "تسویه سفارش",
+                        isCancelNeutralize ? "خنثی‌سازی لغو" : isRefundAdj ? "تعدیل مرجوعی" : "تسویه سفارش",
                         "Succeeded",
-                        isRefundAdj
-                            ? "کسر از حساب فروشنده بابت بازگشت وجه"
-                            : "واریز سهم فروشنده"));
+                        isCancelNeutralize
+                            ? "خنثی‌سازی بدهی فروشنده بابت لغو سفارش"
+                            : isRefundAdj
+                                ? "کسر از حساب فروشنده بابت بازگشت وجه"
+                                : "واریز سهم فروشنده"));
             }
         }
 

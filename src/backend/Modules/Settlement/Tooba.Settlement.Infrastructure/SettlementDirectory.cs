@@ -393,6 +393,187 @@ public sealed class SettlementDirectory : ISettlementDirectory
     }
 
     /// <inheritdoc />
+    public async Task VoidUnpaidAccrualForPaymentAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        var gates = await GetRestoreSettlementGatesAsync(sellerOrderIds, cancellationToken);
+        if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
+        {
+            throw new InvalidOperationException("settlement.unconfirm.payout_completed");
+        }
+
+        var entries = await _db.SettlementEntries
+            .Where(x => x.SourceId == paymentId && x.SourceType == "payment")
+            .ToListAsync(cancellationToken);
+        var inbox = await _db.PaymentInbox
+            .Where(x => x.PaymentId == paymentId)
+            .ToListAsync(cancellationToken);
+        if (entries.Count == 0 && inbox.Count == 0)
+        {
+            return;
+        }
+
+        _db.SettlementEntries.RemoveRange(entries);
+        _db.PaymentInbox.RemoveRange(inbox);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task NeutralizeUnpaidAccrualForCancelAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var ids = sellerOrderIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
+        if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
+        {
+            throw new InvalidOperationException("settlement.cancel.payout_completed");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var posted = false;
+        foreach (var sellerOrderId in ids)
+        {
+            var idempotencyKey = $"cancel-neutralize:{paymentId:N}:{sellerOrderId:N}";
+            if (await _db.SettlementEntries.AnyAsync(x => x.IdempotencyKey == idempotencyKey, cancellationToken))
+            {
+                continue;
+            }
+
+            var ledger = await _db.SettlementEntries
+                .Where(x => x.SellerOrderId == sellerOrderId)
+                .ToListAsync(cancellationToken);
+            var credits = ledger
+                .Where(x => x.EntryType == EntryType.Credit
+                    && x.SourceType == "payment"
+                    && x.SourceId == paymentId)
+                .ToList();
+            if (credits.Count == 0)
+            {
+                continue;
+            }
+
+            var creditGross = credits.Sum(x => x.GrossAmount);
+            var debitGross = ledger
+                .Where(x => x.EntryType == EntryType.Debit
+                    && (x.SourceType == "refund" || x.SourceType == "order_cancel"))
+                .Sum(x => x.GrossAmount);
+            var remaining = creditGross - debitGross;
+            if (remaining <= 0)
+            {
+                continue;
+            }
+
+            var template = credits.OrderBy(x => x.PostedAt).ThenBy(x => x.EntryId).First();
+            var debit = SettlementEntry.PostDebitFromOrderCancel(
+                template.SettlementAccountId,
+                template.SellerPartyId,
+                paymentId,
+                sellerOrderId,
+                remaining,
+                template.Currency,
+                template.CommissionPolicySnapshot,
+                idempotencyKey,
+                now);
+            _db.SettlementEntries.Add(debit);
+            posted = true;
+        }
+
+        if (posted)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ReinstateAccrualAfterCancelRestoreAsync(
+        Guid paymentId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var ids = sellerOrderIds.Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var gates = await GetRestoreSettlementGatesAsync(ids, cancellationToken);
+        if (gates.Values.Any(x => x.HasCompletedPayoutEffect))
+        {
+            throw new InvalidOperationException("settlement.restore.payout_completed");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var posted = false;
+        foreach (var sellerOrderId in ids)
+        {
+            var idempotencyKey = $"cancel-restore:{paymentId:N}:{sellerOrderId:N}";
+            if (await _db.SettlementEntries.AnyAsync(x => x.IdempotencyKey == idempotencyKey, cancellationToken))
+            {
+                continue;
+            }
+
+            var ledger = await _db.SettlementEntries
+                .Where(x => x.SellerOrderId == sellerOrderId)
+                .ToListAsync(cancellationToken);
+            var cancelGross = ledger
+                .Where(x => x.EntryType == EntryType.Debit && x.SourceType == "order_cancel")
+                .Sum(x => x.GrossAmount);
+            var restoreGross = ledger
+                .Where(x => x.EntryType == EntryType.Credit && x.SourceType == "order_restore")
+                .Sum(x => x.GrossAmount);
+            var remaining = cancelGross - restoreGross;
+            if (remaining <= 0)
+            {
+                continue;
+            }
+
+            var template = ledger
+                .Where(x => x.EntryType == EntryType.Debit && x.SourceType == "order_cancel")
+                .OrderBy(x => x.PostedAt)
+                .ThenBy(x => x.EntryId)
+                .FirstOrDefault()
+                ?? ledger
+                    .Where(x => x.EntryType == EntryType.Credit && x.SourceType == "payment" && x.SourceId == paymentId)
+                    .OrderBy(x => x.PostedAt)
+                    .ThenBy(x => x.EntryId)
+                    .FirstOrDefault();
+            if (template is null)
+            {
+                continue;
+            }
+
+            var credit = SettlementEntry.PostCreditFromOrderRestore(
+                template.SettlementAccountId,
+                template.SellerPartyId,
+                paymentId,
+                sellerOrderId,
+                remaining,
+                template.Currency,
+                template.CommissionPolicySnapshot,
+                idempotencyKey,
+                now);
+            _db.SettlementEntries.Add(credit);
+            posted = true;
+        }
+
+        if (posted)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<PayoutRequestSnapshot> ProcessPayoutAsync(ProcessPayoutCommand command, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);

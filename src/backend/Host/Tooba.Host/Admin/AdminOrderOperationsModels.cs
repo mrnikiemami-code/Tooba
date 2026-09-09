@@ -21,10 +21,10 @@ public sealed record AdminOrderLineCapability(
     Guid OrderLineId,
     Guid SellerOrderId,
     bool Selectable,
-    int SelectableQuantityMax,
+    decimal SelectableQuantityMax,
     IReadOnlyList<string> RowActionCodes,
     IReadOnlyList<string> BulkActionCodes,
-    int ShipmentEligibleQuantity,
+    decimal ShipmentEligibleQuantity,
     string? LockedReasonCode = null,
     string? LockedReasonFa = null);
 
@@ -46,7 +46,7 @@ public sealed record AdminOrderOperationsPage(
     IReadOnlyList<AdminSellerCapability>? SellerCapabilities = null);
 
 /// <summary>انتخاب خط/تعداد برای عملیات seller-scoped.</summary>
-public sealed record AdminOrderLineSelection(Guid OrderLineId, int Quantity);
+public sealed record AdminOrderLineSelection(Guid OrderLineId, decimal Quantity);
 
 /// <summary>بدنهٔ اجرای یک عملیات سفارش.</summary>
 public sealed record AdminOrderOperationRequest(

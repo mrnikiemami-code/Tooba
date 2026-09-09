@@ -392,7 +392,8 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                 x.QuantityOrdered,
                 x.QuantityShipped,
                 x.ReservationId,
-                x.QuantityPacked)).ToArray();
+                x.QuantityPacked,
+                x.QuantityProcessing)).ToArray();
             var snapshot = new FulfillmentSnapshot(
                 unit.FulfillmentId,
                 unit.SellerOrderId,

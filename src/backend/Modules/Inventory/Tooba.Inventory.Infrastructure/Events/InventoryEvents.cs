@@ -29,7 +29,7 @@ public sealed class InventoryAdjustedIntegrationEvent : IIntegrationEvent
     /// <summary>
     /// تغییر OnHand.
     /// </summary>
-    public int Delta { get; set; }
+    public decimal Delta { get; set; }
 }
 
 /// <summary>
@@ -59,7 +59,7 @@ public sealed class InventoryReservedIntegrationEvent : IIntegrationEvent
     /// <summary>
     /// مقدار قفل‌شده.
     /// </summary>
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 /// <summary>
@@ -89,7 +89,7 @@ public sealed class InventoryReleasedIntegrationEvent : IIntegrationEvent
     /// <summary>
     /// مقدار برگشتی.
     /// </summary>
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 /// <summary>
@@ -119,7 +119,7 @@ public sealed class InventoryReservationConsumedIntegrationEvent : IIntegrationE
     /// <summary>
     /// مقدار کسرشده از OnHand.
     /// </summary>
-    public int Quantity { get; set; }
+    public decimal Quantity { get; set; }
 }
 
 /// <summary>
@@ -149,5 +149,5 @@ public sealed class InventoryAvailabilityChangedIntegrationEvent : IIntegrationE
     /// <summary>
     /// موجودی قابل‌فروش مشتق.
     /// </summary>
-    public int Available { get; set; }
+    public decimal Available { get; set; }
 }

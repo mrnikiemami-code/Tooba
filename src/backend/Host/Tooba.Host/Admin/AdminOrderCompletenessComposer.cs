@@ -292,6 +292,34 @@ public sealed class AdminOrderCompletenessComposer
                         "Payment expired",
                         null));
                     break;
+                case PaymentStatus.RefundPending:
+                    entries.Add(Draft(
+                        payment.UpdatedAt,
+                        "payment_refund_pending",
+                        "بازگشت وجه در انتظار",
+                        "Refund pending",
+                        null));
+                    break;
+                case PaymentStatus.Refunded:
+                    entries.Add(Draft(
+                        payment.UpdatedAt,
+                        "payment_refunded",
+                        "بازگشت وجه",
+                        "Refunded",
+                        null,
+                        $"{payment.Amount:0} {payment.Currency}",
+                        $"{payment.Amount:0} {payment.Currency}"));
+                    break;
+                case PaymentStatus.RefundFailed:
+                    entries.Add(Draft(
+                        payment.UpdatedAt,
+                        "payment_refund_failed",
+                        "شکست بازگشت وجه",
+                        "Refund failed",
+                        null,
+                        payment.LastFailureCode,
+                        payment.LastFailureCode));
+                    break;
             }
         }
 
@@ -321,7 +349,7 @@ public sealed class AdminOrderCompletenessComposer
                 ? title
                 : "کالای سفارش";
 
-        string FormatLineQtyScope(IReadOnlyList<(Guid OrderLineId, int Quantity)> items)
+        string FormatLineQtyScope(IReadOnlyList<(Guid OrderLineId, decimal Quantity)> items)
         {
             var list = items.Where(x => x.Quantity > 0).ToList();
             if (list.Count == 0)
@@ -476,7 +504,7 @@ public sealed class AdminOrderCompletenessComposer
                 .ToListAsync(cancellationToken);
         var itemsByReturn = returnItems
             .GroupBy(x => x.ReturnRequestId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<(Guid OrderLineId, int Quantity)>)g
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<(Guid OrderLineId, decimal Quantity)>)g
                 .Select(i => (i.OrderLineId, i.Quantity))
                 .ToList());
         var refundAttempts = returnIds.Count == 0
@@ -576,7 +604,18 @@ public sealed class AdminOrderCompletenessComposer
                 ?? sellerOrderId.ToString("N")[..8];
             foreach (var entry in settlementEntries)
             {
-                if (string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
+                if (string.Equals(entry.SourceType, "order_cancel", StringComparison.OrdinalIgnoreCase))
+                {
+                    entries.Add(Draft(
+                        entry.PostedAt,
+                        "settlement_cancel_adjustment",
+                        "خنثی‌سازی تسویه (لغو سفارش)",
+                        "Seller cancel adjustment",
+                        null,
+                        $"سفارش {orderNumber}",
+                        $"Order {orderNumber}"));
+                }
+                else if (string.Equals(entry.SourceType, "refund", StringComparison.OrdinalIgnoreCase)
                     || entry.EntryType == EntryType.Debit)
                 {
                     entries.Add(Draft(
@@ -714,9 +753,9 @@ public sealed class AdminOrderCompletenessComposer
         string? summaryEn = null) =>
         new(occurredAt, kind, labelFa, labelEn, actorUserId, summaryFa, summaryEn);
 
-    private static string ToFaDigits(int value)
+    private static string ToFaDigits(decimal value)
     {
-        var s = value.ToString(CultureInfo.InvariantCulture);
+        var s = Tooba.BuildingBlocks.QuantityDisplay.Format(value, 6);
         var map = new[] { '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹' };
         return string.Concat(s.Select(ch => ch is >= '0' and <= '9' ? map[ch - '0'] : ch));
     }
@@ -735,11 +774,11 @@ public sealed class AdminOrderCompletenessComposer
     }
 
     /// <summary>خلاصهٔ محدوده برای تست و ترکیب تاریخچه (فروشنده / قلم / تعداد).</summary>
-    internal static string FormatPackScopeFa(string sellerDisplayName, int quantity) =>
+    internal static string FormatPackScopeFa(string sellerDisplayName, decimal quantity) =>
         $"{(string.IsNullOrWhiteSpace(sellerDisplayName) ? "فروشنده" : sellerDisplayName)} — {ToFaDigits(quantity)} قلم";
 
     /// <summary>خلاصهٔ کالایی تعداددار برای تحویل/مرجوعی.</summary>
-    internal static string FormatProductQtyScopeFa(string productTitle, int quantity) =>
+    internal static string FormatProductQtyScopeFa(string productTitle, decimal quantity) =>
         $"{(string.IsNullOrWhiteSpace(productTitle) ? "کالای سفارش" : productTitle)} — تعداد {ToFaDigits(quantity)}";
 
     private async Task<Dictionary<Guid, string>> LoadVariantTitlesAsync(

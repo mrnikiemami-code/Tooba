@@ -11,7 +11,7 @@ public sealed record TaxCalculationRequest(
     string Market,
     string Currency,
     decimal TaxExclusiveAmount,
-    int Quantity,
+    decimal Quantity,
     DateTimeOffset At,
     Guid? CustomerPartyId,
     bool AllowTrustedOverride,

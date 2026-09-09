@@ -130,7 +130,7 @@ internal sealed class AdminOrdersGridQueryEngine
             case "sellers":
                 return source;
             case "lines":
-                return ApplyIntAggFilter(source, c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity), filter);
+                return ApplyDecimalAggFilter(source, c => c.SellerOrders.SelectMany(o => o.Lines).Sum(l => l.Quantity), filter);
             case "payment":
                 return ApplyPaymentFilter(source, filter);
             case "status":

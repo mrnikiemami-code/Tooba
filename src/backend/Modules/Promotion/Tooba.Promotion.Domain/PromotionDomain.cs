@@ -590,7 +590,7 @@ public sealed record PromotionEligibilityFacts(
     string Currency,
     Guid? CustomerPartyId,
     Guid? OrganizationPartyId,
-    int Quantity,
+    decimal Quantity,
     decimal BaseTaxExclusiveAmount,
     string? CouponCode);
 

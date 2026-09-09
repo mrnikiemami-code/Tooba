@@ -2,7 +2,7 @@ import type { AdminOrderOperationAction } from "./admin-order-operations";
 
 export type LineActionLike = Pick<AdminOrderOperationAction, "code" | "orderLineId">;
 
-const ROW_CODES = new Set(["mark_processing", "pack_selected", "unpack"]);
+const ROW_CODES = new Set(["mark_processing", "pack_selected", "unprocess", "unpack"]);
 
 /** اقدام‌های ردیف برای یک line — فقط projection بک‌اند با orderLineId. */
 export function rowActionsForLine<T extends LineActionLike>(actions: T[], orderLineId: string): T[] {
@@ -13,7 +13,7 @@ export function rowActionsForLine<T extends LineActionLike>(actions: T[], orderL
 export function lineLifecycleActions<T extends LineActionLike>(
   actions: T[],
   orderLineId: string,
-  opts: { packable: boolean; unpackable: boolean; startable?: boolean },
+  opts: { packable: boolean; unpackable: boolean; startable?: boolean; unprocessable?: boolean },
 ): T[] {
   const row = rowActionsForLine(actions, orderLineId);
   if (row.length > 0) return row;
@@ -26,6 +26,10 @@ export function lineLifecycleActions<T extends LineActionLike>(
   if (opts.packable) {
     const pack = actions.find((action) => action.code === "pack_selected" && !action.orderLineId);
     if (pack) result.push(pack);
+  }
+  if (opts.unprocessable) {
+    const unprocess = actions.find((action) => action.code === "unprocess" && !action.orderLineId);
+    if (unprocess) result.push(unprocess);
   }
   if (opts.unpackable) {
     const unpack = actions.find((action) => action.code === "unpack" && !action.orderLineId);
@@ -100,6 +104,7 @@ export function deriveLineCapability(input: {
   operationalStatus?: string | null;
   packable: number;
   unpackable: number;
+  unprocessable?: number;
   shippable: number;
   quantity: number;
   projectedCodes: string[];
@@ -118,13 +123,18 @@ export function deriveLineCapability(input: {
   const row: string[] = [];
   const bulk: string[] = [];
   const ready = input.operationalStatus === "ReadyToFulfill" || input.operationalStatus === "ReadyToProcess";
+  const unprocessable = input.unprocessable ?? 0;
   if (ready && codes.has("mark_processing")) {
     row.push("mark_processing");
     bulk.push("mark_processing");
   }
-  if (!ready && input.packable > 0 && codes.has("pack_selected")) {
+  if (input.packable > 0 && codes.has("pack_selected")) {
     row.push("pack_selected");
     bulk.push("pack_selected");
+  }
+  if (unprocessable > 0 && codes.has("unprocess")) {
+    row.push("unprocess");
+    bulk.push("unprocess");
   }
   if (input.unpackable > 0 && codes.has("unpack")) {
     row.push("unpack");
@@ -135,7 +145,7 @@ export function deriveLineCapability(input: {
   }
   const selectable = row.length > 0 || bulk.length > 0;
   let max = 0;
-  if (row.includes("pack_selected")) max = Math.max(max, input.packable);
+  if (row.includes("pack_selected") || row.includes("unprocess")) max = Math.max(max, input.packable, unprocessable);
   if (row.includes("unpack")) max = Math.max(max, input.unpackable);
   if (bulk.includes("create_shipment")) max = Math.max(max, input.shippable);
   if (row.includes("mark_processing")) max = Math.max(max, input.quantity);

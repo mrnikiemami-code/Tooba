@@ -35,6 +35,7 @@ public sealed class BulkInquiryDbContext : DbContext
             entity.Property(x => x.CompanyName).HasMaxLength(BulkPurchaseInquiry.CompanyNameMaxLength);
             entity.Property(x => x.Address).HasMaxLength(BulkPurchaseInquiry.AddressMaxLength);
             entity.Property(x => x.Notes).HasMaxLength(BulkPurchaseInquiry.NotesMaxLength);
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             entity.HasIndex(x => new { x.ProductId, x.CreatedAt });
         });

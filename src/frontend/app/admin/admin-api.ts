@@ -52,6 +52,7 @@ export interface AdminOrderLine {
   currency: string;
   quantityShipped: number | null;
   quantityPacked: number | null;
+  quantityProcessing: number | null;
   quantityAllocated: number | null;
   imageUrl: string | null;
   operationalStatus: string | null;
@@ -556,6 +557,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       const offerId = text(prop(line, "offerId", "OfferId"), `${sellerOrderId}-${index}`);
       const shippedRaw = prop(line, "quantityShipped", "QuantityShipped");
       const packedRaw = prop(line, "quantityPacked", "QuantityPacked");
+      const processingRaw = prop(line, "quantityProcessing", "QuantityProcessing");
       const allocatedRaw = prop(line, "quantityAllocated", "QuantityAllocated");
       const isReturnableRaw = prop(line, "isReturnable", "IsReturnable");
       const windowRaw = prop(line, "returnWindowDays", "ReturnWindowDays");
@@ -570,6 +572,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
         currency: text(prop(line, "currency", "Currency"), "IRR"),
         quantityShipped: shippedRaw == null || shippedRaw === "" ? null : number(shippedRaw),
         quantityPacked: packedRaw == null || packedRaw === "" ? null : number(packedRaw),
+        quantityProcessing: processingRaw == null || processingRaw === "" ? null : number(processingRaw),
         quantityAllocated: allocatedRaw == null || allocatedRaw === "" ? null : number(allocatedRaw),
         imageUrl: text(prop(line, "imageUrl", "ImageUrl")) || null,
         operationalStatus: text(prop(line, "operationalStatus", "OperationalStatus")) || null,

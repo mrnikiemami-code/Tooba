@@ -8,6 +8,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
+using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure;
 using Tooba.Returns.Application;
 using Tooba.Settlement.Application;
@@ -35,9 +36,11 @@ public sealed class AdminOrderOperationsComposer
         "confirm_deposit",
         "reject_deposit",
         "restore_deposit",
+        "unconfirm_deposit",
         "mark_processing",
         "mark_packed",
         "pack_selected",
+        "unprocess",
         "unpack",
         "create_shipment",
         "cancel_shipment",
@@ -56,6 +59,7 @@ public sealed class AdminOrderOperationsComposer
     private readonly IAccessControlDirectory _access;
     private readonly ICurrentTenant _tenant;
     private readonly IPaymentAdminDirectory _payments;
+    private readonly IOrderPaymentProjection _orderPayments;
     private readonly ISettlementDirectory _settlement;
     private readonly ShippingMethodsOptions _shippingMethods;
 
@@ -70,6 +74,7 @@ public sealed class AdminOrderOperationsComposer
         IAccessControlDirectory access,
         ICurrentTenant tenant,
         IPaymentAdminDirectory payments,
+        IOrderPaymentProjection orderPayments,
         ISettlementDirectory settlement,
         ShippingMethodsOptions? shippingMethods = null)
     {
@@ -82,6 +87,7 @@ public sealed class AdminOrderOperationsComposer
         _access = access;
         _tenant = tenant;
         _payments = payments;
+        _orderPayments = orderPayments;
         _settlement = settlement;
         _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
@@ -107,9 +113,10 @@ public sealed class AdminOrderOperationsComposer
         var eligibility = new List<ReturnEligibilityResult>();
         var actions = new List<AdminOrderOperationAction>();
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
+        var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
         if (!IsCheckoutCancelled(group))
         {
-            ProjectPaymentActions(actions, payment, fulfillments, returns, effective);
+            ProjectPaymentActions(actions, payment, fulfillments, returns, effective, blockedBySellerPayout);
         }
         foreach (var order in group.SellerOrders)
         {
@@ -119,9 +126,8 @@ public sealed class AdminOrderOperationsComposer
             ProjectActions(actions, order, fulfillment, returns, elig, effective);
         }
 
-        ProjectWholeOrderCancel(actions, group, fulfillments, effective);
-        var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
-        ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout);
+        ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
+        ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
         var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
         var lineCaps = new List<AdminOrderLineCapability>();
         var sellerCaps = new List<AdminSellerCapability>();
@@ -173,7 +179,7 @@ public sealed class AdminOrderOperationsComposer
             throw new PlatformHttpException(400, FulfillmentOpToFa("order.cancelled.blocks_action"), "order.cancelled.blocks_action");
         }
 
-        // cancel / restore_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
+        // cancel / restore_deposit / unconfirm_deposit / restore_cancelled_order: projection may hide; domain remains authoritative.
         if (code == "cancel")
         {
             if (!Has(effective, "order.cancel"))
@@ -190,9 +196,17 @@ public sealed class AdminOrderOperationsComposer
                 throw;
             }
             catch (InvalidOperationException ex) when (
-                ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal))
+                ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal)
+                || ex.Message == "fulfillment.cancel.already_dispatched")
             {
-                throw new PlatformHttpException(400, ex.Message, "order.cancel.forbidden");
+                throw new PlatformHttpException(400, "لغو پس از ارسال واقعی مرسوله مجاز نیست.", "order.cancel.forbidden");
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "settlement.cancel.payout_completed")
+            {
+                throw new PlatformHttpException(
+                    400,
+                    "لغو پس از واریز سهم فروشنده مجاز نیست.",
+                    "order.cancel.payout_completed");
             }
             catch (InvalidOperationException ex)
             {
@@ -218,6 +232,27 @@ public sealed class AdminOrderOperationsComposer
             catch (InvalidOperationException ex)
             {
                 throw MapPaymentRestoreError(ex);
+            }
+        }
+
+        if (code == "unconfirm_deposit")
+        {
+            if (!Has(effective, "payment.reconcile"))
+            {
+                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            }
+
+            try
+            {
+                return await UnconfirmDepositForCheckoutAsync(group, cancellationToken);
+            }
+            catch (PlatformHttpException)
+            {
+                throw;
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw MapPaymentUnconfirmError(ex);
             }
         }
 
@@ -252,6 +287,7 @@ public sealed class AdminOrderOperationsComposer
                 "mark_processing" => await MarkProcessingAsync(request, actorUserId, cancellationToken),
                 "mark_packed" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: false),
                 "pack_selected" => await MarkPackedAsync(request, actorUserId, cancellationToken, requireSelections: true),
+                "unprocess" => await UnprocessAsync(request, actorUserId, cancellationToken),
                 "unpack" => await UnpackAsync(request, actorUserId, cancellationToken),
                 "create_shipment" => await CreateShipmentAsync(request, actorUserId, cancellationToken),
                 "cancel_shipment" => await CancelShipmentAsync(request, actorUserId, cancellationToken),
@@ -264,7 +300,7 @@ public sealed class AdminOrderOperationsComposer
                 "approve_return" => await ApproveReturnAsync(request, actorUserId, cancellationToken),
                 "reject_return" => await RejectReturnAsync(request, actorUserId, cancellationToken),
                 "retry_refund" => await RetryRefundAsync(request, actorUserId, cancellationToken),
-                "confirm_deposit" => await ConfirmDepositForCheckoutAsync(checkoutId, cancellationToken),
+                "confirm_deposit" => await ConfirmDepositForCheckoutAsync(group, cancellationToken),
                 "reject_deposit" => await RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
                 _ => throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid"),
             };
@@ -289,7 +325,7 @@ public sealed class AdminOrderOperationsComposer
     {
         if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
         {
-            if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill
+            if (HasProcessableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -303,7 +339,7 @@ public sealed class AdminOrderOperationsComposer
                     Prefer(effective, "order.handle", "fulfillment.manage"),
                     true,
                     "شروع پردازش این سفارش؟"));
-                foreach (var line in order.Lines)
+                foreach (var item in fulfillment.Items.Where(x => x.QuantityOrdered > x.QuantityProcessing))
                 {
                     actions.Add(Action(
                         "mark_processing",
@@ -316,12 +352,11 @@ public sealed class AdminOrderOperationsComposer
                         Prefer(effective, "order.handle", "fulfillment.manage"),
                         true,
                         "پردازش این قلم شروع شود؟",
-                        line.LineId));
+                        item.OrderLineId));
                 }
             }
 
-            if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
-                && HasPackableQuantity(fulfillment)
+            if (HasPackableQuantity(fulfillment)
                 && HasAny(effective, "order.handle", "fulfillment.manage"))
             {
                 actions.Add(Action(
@@ -346,7 +381,7 @@ public sealed class AdminOrderOperationsComposer
                     Prefer(effective, "order.handle", "fulfillment.manage"),
                     true,
                     "اقلام انتخاب‌شده بسته‌بندی شود؟"));
-                foreach (var item in fulfillment.Items.Where(x => x.QuantityOrdered > x.QuantityPacked))
+                foreach (var item in fulfillment.Items.Where(x => x.QuantityProcessing > x.QuantityPacked))
                 {
                     actions.Add(Action(
                         "pack_selected",
@@ -360,7 +395,31 @@ public sealed class AdminOrderOperationsComposer
                         true,
                         "این قلم بسته‌بندی شود؟",
                         item.OrderLineId));
+                    actions.Add(Action(
+                        "unprocess",
+                        "برگشت از پردازش این قلم",
+                        "Unprocess this line",
+                        order.SellerOrderId,
+                        fulfillment.FulfillmentId,
+                        null,
+                        null,
+                        Prefer(effective, "order.handle", "fulfillment.manage"),
+                        true,
+                        "برگشت از پردازش این قلم؟",
+                        item.OrderLineId));
                 }
+
+                actions.Add(Action(
+                    "unprocess",
+                    "برگشت از پردازش",
+                    "Unprocess",
+                    order.SellerOrderId,
+                    fulfillment.FulfillmentId,
+                    null,
+                    null,
+                    Prefer(effective, "order.handle", "fulfillment.manage"),
+                    true,
+                    "برگشت از پردازش برای اقلام بسته‌بندی‌نشده؟"));
             }
 
             if (HasUnpackableQuantity(fulfillment)
@@ -573,19 +632,31 @@ public sealed class AdminOrderOperationsComposer
         AdminOrderOperationRequest request,
         CancellationToken cancellationToken)
     {
-        var access = new OrderAccess(null, group.PlacedByUserId);
-        if (request.SellerOrderId is { } sellerOrderId)
+        _ = request;
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (HasDispatchedOrDelivered(fulfillments))
         {
-            await _checkout.CancelSellerOrderAsync(sellerOrderId, access, cancellationToken);
-            return new { ok = true, code = "cancel", sellerOrderId };
+            throw new PlatformHttpException(400, "لغو پس از ارسال واقعی مرسوله مجاز نیست.", "order.cancel.forbidden");
         }
 
-        var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var alreadyCancelled = IsCheckoutCancelled(group);
+        var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
+        if (!alreadyCancelled && blockedBySellerPayout)
+        {
+            throw new PlatformHttpException(
+                400,
+                "لغو پس از واریز سهم فروشنده مجاز نیست.",
+                "order.cancel.payout_completed");
+        }
+
+        var access = new OrderAccess(null, group.PlacedByUserId);
+        await _fulfillment.AbortForCheckoutCancelAsync(group.CheckoutId, cancellationToken);
+
         var cancelled = new List<Guid>();
         foreach (var order in group.SellerOrders)
         {
-            var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
-            if (!CanCancel(order, fulfillment))
+            if (order.Status == SellerOrderStatus.Cancelled)
             {
                 continue;
             }
@@ -594,12 +665,28 @@ public sealed class AdminOrderOperationsComposer
             cancelled.Add(order.SellerOrderId);
         }
 
-        if (cancelled.Count == 0)
+        if (!alreadyCancelled && cancelled.Count == 0)
         {
             throw new PlatformHttpException(400, "لغو در وضعیت فعلی سفارش مجاز نیست.", "order.cancel.forbidden");
         }
 
-        return new { ok = true, code = "cancel", sellerOrderIds = cancelled };
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (payment is not null && !blockedBySellerPayout)
+        {
+            await _settlement.NeutralizeUnpaidAccrualForCancelAsync(
+                payment.PaymentId,
+                sellerOrderIds,
+                cancellationToken);
+        }
+
+        await _payments.CloseOrStartRefundForOrderCancelAsync(group.CheckoutId, cancellationToken);
+        return new
+        {
+            ok = true,
+            code = "cancel",
+            checkoutId = group.CheckoutId,
+            sellerOrderIds = alreadyCancelled ? sellerOrderIds : cancelled,
+        };
     }
 
     private async Task<object> MarkProcessingAsync(
@@ -608,7 +695,47 @@ public sealed class AdminOrderOperationsComposer
         CancellationToken cancellationToken)
     {
         var fulfillmentId = RequireFulfillmentId(request);
-        return await _fulfillment.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken);
+        if (request.Selections is not { Count: > 0 })
+        {
+            return await _fulfillment.MarkProcessingAsync(fulfillmentId, actorUserId, cancellationToken);
+        }
+
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+        if (!SelectionsAreHomogeneousProcessable(snapshot, request.Selections))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+        }
+
+        var selections = ResolveProcessSelections(snapshot, request.Selections);
+        if (selections.Count == 0)
+        {
+            throw new PlatformHttpException(400, "قلم قابل پردازش باقی نمانده است.", "order.operation.invalid");
+        }
+
+        return await _fulfillment.ProcessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
+    }
+
+    private async Task<object> UnprocessAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentId = RequireFulfillmentId(request);
+        var snapshot = await _fulfillment.GetAsync(fulfillmentId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "fulfillment پیدا نشد.", "order.operation.invalid");
+        if (request.Selections is { Count: > 0 } && !SelectionsAreHomogeneousUnprocessable(snapshot, request.Selections))
+        {
+            throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.bulk.incompatible"), "fulfillment.bulk.incompatible");
+        }
+
+        var selections = ResolveUnprocessSelections(snapshot, request.Selections);
+        if (selections.Count == 0)
+        {
+            throw new PlatformHttpException(400, "قلم قابل برگشت از پردازش باقی نمانده است.", "order.operation.invalid");
+        }
+
+        return await _fulfillment.UnprocessSelectionsAsync(fulfillmentId, actorUserId, selections, cancellationToken);
     }
 
     private async Task<object> MarkPackedAsync(
@@ -878,7 +1005,8 @@ public sealed class AdminOrderOperationsComposer
         PaymentOperationalSnapshot? payment,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
-        EffectiveAccessDto effective)
+        EffectiveAccessDto effective,
+        bool blockedBySellerPayout)
     {
         if (payment is null || !Has(effective, "payment.reconcile"))
         {
@@ -919,15 +1047,33 @@ public sealed class AdminOrderOperationsComposer
         {
             actions.Add(Action(
                 "restore_deposit",
-                "بازگرداندن به انتظار تأیید واریز",
-                "Restore deposit",
+                "برگشت از رد واریز",
+                "Undo deposit rejection",
                 null,
                 null,
                 null,
                 null,
                 "payment.reconcile",
                 true,
-                "واریز ردشده به انتظار تأیید واریز بازگردد؟ سفارش Paid نمی‌شود."));
+                "واریز ردشده به انتظار تأیید واریز بازگردد؟"));
+        }
+
+        if (payment.UnconfirmDepositEligible
+            && !HasIrreversibleFinanceBlock(fulfillments, returns)
+            && !HasStartedFulfillment(fulfillments)
+            && !blockedBySellerPayout)
+        {
+            actions.Add(Action(
+                "unconfirm_deposit",
+                "برگشت از واریز",
+                "Undo deposit confirmation",
+                null,
+                null,
+                null,
+                null,
+                "payment.reconcile",
+                true,
+                "تأیید واریز این سفارش به حالت انتظار برگردد؟"));
         }
     }
 
@@ -935,15 +1081,20 @@ public sealed class AdminOrderOperationsComposer
         List<AdminOrderOperationAction> actions,
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        EffectiveAccessDto effective)
+        EffectiveAccessDto effective,
+        bool blockedBySellerPayout)
     {
-        if (!Has(effective, "order.cancel"))
+        if (!Has(effective, "order.cancel")
+            || IsCheckoutCancelled(group)
+            || HasDispatchedOrDelivered(fulfillments)
+            || blockedBySellerPayout)
         {
             return;
         }
 
         var any = group.SellerOrders.Any(order =>
-            CanCancel(order, fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId)));
+            order.Status != SellerOrderStatus.Cancelled
+            && CanCancel(order, fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId)));
         if (!any)
         {
             return;
@@ -968,14 +1119,15 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
         EffectiveAccessDto effective,
-        bool blockedBySellerPayout)
+        bool blockedBySellerPayout,
+        PaymentStatus? paymentStatus)
     {
         if (!HasAny(effective, "order.cancel", "order.handle"))
         {
             return;
         }
 
-        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout))
+        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout, paymentStatus))
         {
             return;
         }
@@ -1005,20 +1157,43 @@ public sealed class AdminOrderOperationsComposer
             .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
             .ToListAsync(cancellationToken);
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
-        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout))
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (!CanRestoreCancelledOrder(group, fulfillments, returns, blockedBySellerPayout, payment?.Status))
         {
             throw new PlatformHttpException(
                 400,
-                RestoreForbiddenMessage(group, fulfillments, returns, blockedBySellerPayout),
-                RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout));
+                RestoreForbiddenMessage(group, fulfillments, returns, blockedBySellerPayout, payment?.Status),
+                RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, payment?.Status));
         }
 
+        var paidSellerOrderIds = group.SellerOrders
+            .Where(x => x.CancelledFromStatus == SellerOrderStatus.Paid)
+            .Select(x => x.SellerOrderId)
+            .ToList();
         try
         {
+            await _payments.RestoreAfterOrderCancelRestoreAsync(group.CheckoutId, cancellationToken);
+            if (payment is not null)
+            {
+                await _settlement.ReinstateAccrualAfterCancelRestoreAsync(
+                    payment.PaymentId,
+                    sellerOrderIds,
+                    cancellationToken);
+            }
+
+            await _fulfillment.ReactivateAfterOrderRestoreAsync(group.CheckoutId, cancellationToken);
             await _checkout.RestoreCancelledCheckoutAsync(
                 group.CheckoutId,
                 new OrderAccess(null, group.PlacedByUserId),
                 cancellationToken);
+            if (paidSellerOrderIds.Count > 0)
+            {
+                await _fulfillment.EnsureCreatedForPaidCheckoutAsync(
+                    group.CheckoutId,
+                    paidSellerOrderIds,
+                    cancellationToken);
+            }
+
             return new { ok = true, code = "restore_cancelled_order", checkoutId = group.CheckoutId };
         }
         catch (InvalidOperationException ex) when (ex.Message == "order.restore.inventory_failed"
@@ -1028,6 +1203,21 @@ public sealed class AdminOrderOperationsComposer
                 400,
                 "بازگردانی ممکن نیست؛ موجودی برای رزرو دوباره کافی نیست. سفارش لغوشده باقی ماند.",
                 "order.restore.inventory_failed");
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "fulfillment.restore.already_dispatched")
+        {
+            throw new PlatformHttpException(
+                400,
+                RestoreCodeToFa("order.restore.dispatched"),
+                "order.restore.dispatched");
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "payment.restore.refund_completed"
+            or "settlement.restore.payout_completed")
+        {
+            var code = ex.Message == "settlement.restore.payout_completed"
+                ? "order.restore.seller_payout_completed"
+                : "order.restore.refund_completed";
+            throw new PlatformHttpException(400, RestoreCodeToFa(code), code);
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("order.restore.", StringComparison.Ordinal))
         {
@@ -1063,15 +1253,73 @@ public sealed class AdminOrderOperationsComposer
         }
     }
 
-    private async Task<object> ConfirmDepositForCheckoutAsync(
-        Guid checkoutId,
+    private async Task<object> UnconfirmDepositForCheckoutAsync(
+        CheckoutGroup group,
         CancellationToken cancellationToken)
     {
+        var checkoutId = group.CheckoutId;
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
-            ?? throw new PlatformHttpException(400, "پرداختی برای تأیید پیدا نشد.", "payment.missing");
+            ?? throw new PlatformHttpException(400, "پرداختی برای برگشت تأیید پیدا نشد.", "payment.missing");
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        var returns = await _returns.ReturnRequests.AsNoTracking()
+            .Where(x => sellerOrderIds.Contains(x.SellerOrderId) || x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (HasIrreversibleFinanceBlock(fulfillments, returns))
+        {
+            throw new PlatformHttpException(
+                400,
+                "برگشت از واریز پس از ارسال، تحویل یا بازگشت وجه تکمیل‌شده مجاز نیست.",
+                "payment.unconfirm.irreversible");
+        }
+
+        if (HasStartedFulfillment(fulfillments))
+        {
+            throw new PlatformHttpException(
+                400,
+                "پس از شروع پردازش نمی‌توان تأیید پرداخت را برگرداند.",
+                "fulfillment.unconfirm.already_started");
+        }
+
+        if (await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken))
+        {
+            throw new PlatformHttpException(
+                400,
+                "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.",
+                "payment.unconfirm.payout_completed");
+        }
+
         try
         {
-            return await _payments.ConfirmDepositAsync(payment.PaymentId, cancellationToken);
+            await _fulfillment.VoidUnstartedForCheckoutAsync(checkoutId, cancellationToken);
+            await _orderPayments.RevertVerifiedSuccessAsync(checkoutId, sellerOrderIds, cancellationToken);
+            await _settlement.VoidUnpaidAccrualForPaymentAsync(payment.PaymentId, sellerOrderIds, cancellationToken);
+            return await _payments.UnconfirmDepositAsync(payment.PaymentId, cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw MapPaymentUnconfirmError(ex);
+        }
+    }
+
+    private async Task<object> ConfirmDepositForCheckoutAsync(
+        CheckoutGroup group,
+        CancellationToken cancellationToken)
+    {
+        var checkoutId = group.CheckoutId;
+        var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
+            ?? throw new PlatformHttpException(400, "پرداختی برای تأیید پیدا نشد.", "payment.missing");
+        var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+        try
+        {
+            var result = await _payments.ConfirmDepositAsync(payment.PaymentId, cancellationToken);
+            await _orderPayments.ApplyVerifiedSuccessAsync(
+                checkoutId,
+                payment.PaymentId,
+                sellerOrderIds,
+                cancellationToken);
+            await _fulfillment.EnsureCreatedForPaidCheckoutAsync(checkoutId, sellerOrderIds, cancellationToken);
+            return result;
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
         {
@@ -1166,7 +1414,8 @@ public sealed class AdminOrderOperationsComposer
             ? null
             : new SellerOrderCancelFulfillmentSnapshot(
                 fulfillment.Status.ToString(),
-                fulfillment.Shipments.Count);
+                fulfillment.Shipments.Count,
+                HasDispatchedQuantity(fulfillment));
         return SellerOrderCancellationPolicy.CanCancel(order.Status, gate);
     }
 
@@ -1174,27 +1423,61 @@ public sealed class AdminOrderOperationsComposer
         group.SellerOrders.Count > 0
         && group.SellerOrders.All(x => x.Status == SellerOrderStatus.Cancelled);
 
-    internal static bool HasDispatchedOrDelivered(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
-        fulfillments.Any(f =>
-            f.Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered
-            || f.Shipments.Any(s =>
-                s.DispatchedAt is not null
-                || s.DeliveredAt is not null
-                || s.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered));
+    internal static bool HasDispatchedQuantity(FulfillmentSnapshot? fulfillment)
+    {
+        if (fulfillment is null)
+        {
+            return false;
+        }
 
-    internal static bool HasCompletedRefund(IReadOnlyList<ReturnRequest> returns) =>
-        returns.Any(x => x.Status == ReturnRequestStatus.Completed);
+        if (fulfillment.Status is FulfillmentStatus.Dispatched
+            or FulfillmentStatus.InTransit
+            or FulfillmentStatus.Delivered)
+        {
+            return true;
+        }
+
+        if (fulfillment.Items.Any(item => item.QuantityShipped > 0))
+        {
+            return true;
+        }
+
+        return fulfillment.Shipments.Any(shipment =>
+            shipment.Status != ShipmentStatus.Cancelled
+            && (shipment.DispatchedAt is not null
+                || shipment.DeliveredAt is not null
+                || shipment.Status is ShipmentStatus.Dispatched
+                    or ShipmentStatus.InTransit
+                    or ShipmentStatus.Delivered));
+    }
+
+    internal static bool HasDispatchedOrDelivered(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
+        fulfillments.Any(HasDispatchedQuantity);
+
+    internal static bool HasCompletedRefund(
+        IReadOnlyList<ReturnRequest> returns,
+        PaymentStatus? paymentStatus = null) =>
+        returns.Any(x => x.Status == ReturnRequestStatus.Completed)
+        || paymentStatus == PaymentStatus.Refunded;
 
     internal static bool HasIrreversibleFinanceBlock(
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
-        IReadOnlyList<ReturnRequest> returns) =>
-        HasDispatchedOrDelivered(fulfillments) || HasCompletedRefund(returns);
+        IReadOnlyList<ReturnRequest> returns,
+        PaymentStatus? paymentStatus = null) =>
+        HasDispatchedOrDelivered(fulfillments) || HasCompletedRefund(returns, paymentStatus);
+
+    internal static bool HasStartedFulfillment(IReadOnlyList<FulfillmentSnapshot> fulfillments) =>
+        fulfillments.Any(f =>
+            f.Status != FulfillmentStatus.ReadyToFulfill
+            || f.Items.Any(i => i.QuantityPacked > 0 || i.QuantityProcessing > 0)
+            || f.Shipments.Any(s => s.Status != ShipmentStatus.Cancelled));
 
     internal static bool CanRestoreCancelledOrder(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
-        bool blockedBySellerPayout = false)
+        bool blockedBySellerPayout = false,
+        PaymentStatus? paymentStatus = null)
     {
         if (group.SellerOrders.Count == 0
             || group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled)
@@ -1203,14 +1486,15 @@ public sealed class AdminOrderOperationsComposer
             return false;
         }
 
-        return !HasIrreversibleFinanceBlock(fulfillments, returns) && !blockedBySellerPayout;
+        return !HasIrreversibleFinanceBlock(fulfillments, returns, paymentStatus) && !blockedBySellerPayout;
     }
 
     internal static string RestoreForbiddenCode(
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
-        bool blockedBySellerPayout = false)
+        bool blockedBySellerPayout = false,
+        PaymentStatus? paymentStatus = null)
     {
         if (group.SellerOrders.Any(x => x.Status != SellerOrderStatus.Cancelled))
         {
@@ -1222,7 +1506,7 @@ public sealed class AdminOrderOperationsComposer
             return "order.restore.missing_snapshot";
         }
 
-        if (HasCompletedRefund(returns))
+        if (HasCompletedRefund(returns, paymentStatus))
         {
             return "order.restore.refund_completed";
         }
@@ -1251,8 +1535,9 @@ public sealed class AdminOrderOperationsComposer
         CheckoutGroup group,
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
-        bool blockedBySellerPayout = false) =>
-        RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout));
+        bool blockedBySellerPayout = false,
+        PaymentStatus? paymentStatus = null) =>
+        RestoreCodeToFa(RestoreForbiddenCode(group, fulfillments, returns, blockedBySellerPayout, paymentStatus));
 
     internal static string RestoreCodeToFa(string code) => code switch
     {
@@ -1284,6 +1569,22 @@ public sealed class AdminOrderOperationsComposer
                 new PlatformHttpException(400, "پرداخت موفق جایگزین شده و قابل بازگردانی نیست.", ex.Message),
             "payment.restore.invalid_state" =>
                 new PlatformHttpException(400, "بازگرداندن واریز در این وضعیت مجاز نیست.", ex.Message),
+            _ => new PlatformHttpException(400, ex.Message, "order.operation.failed"),
+        };
+
+    private static PlatformHttpException MapPaymentUnconfirmError(InvalidOperationException ex) =>
+        ex.Message switch
+        {
+            "payment.unconfirm.not_manual" =>
+                new PlatformHttpException(400, "فقط پرداخت کارت‌به‌کارت/دستی قابل برگشت از واریز است.", ex.Message),
+            "payment.unconfirm.invalid_state" =>
+                new PlatformHttpException(400, "برگشت از واریز در این وضعیت مجاز نیست.", ex.Message),
+            "fulfillment.unconfirm.already_started" =>
+                new PlatformHttpException(400, "پس از شروع پردازش نمی‌توان واریز را برگرداند.", ex.Message),
+            "order.payment.unconfirm.invalid_state" =>
+                new PlatformHttpException(400, "وضعیت سفارش برای برگشت از واریز مناسب نیست.", ex.Message),
+            "settlement.unconfirm.payout_completed" =>
+                new PlatformHttpException(400, "برگشت از واریز پس از واریز سهم فروشنده مجاز نیست.", ex.Message),
             _ => new PlatformHttpException(400, ex.Message, "order.operation.failed"),
         };
 
@@ -1322,8 +1623,11 @@ public sealed class AdminOrderOperationsComposer
         return false;
     }
 
+    private static bool HasProcessableQuantity(FulfillmentSnapshot fulfillment) =>
+        fulfillment.Items.Any(x => x.QuantityOrdered > x.QuantityProcessing);
+
     private static bool HasPackableQuantity(FulfillmentSnapshot fulfillment) =>
-        fulfillment.Items.Any(x => x.QuantityOrdered > x.QuantityPacked);
+        fulfillment.Items.Any(x => x.QuantityProcessing > x.QuantityPacked);
 
     private static bool HasUnpackableQuantity(FulfillmentSnapshot fulfillment) =>
         fulfillment.Items.Any(item =>
@@ -1332,7 +1636,7 @@ public sealed class AdminOrderOperationsComposer
             return item.QuantityPacked > blocking;
         });
 
-    private static int OpenAllocated(FulfillmentSnapshot fulfillment, Guid orderLineId) =>
+    private static decimal OpenAllocated(FulfillmentSnapshot fulfillment, Guid orderLineId) =>
         fulfillment.Shipments
             .Where(s => s.Status == ShipmentStatus.Created)
             .SelectMany(s => s.Items)
@@ -1346,15 +1650,66 @@ public sealed class AdminOrderOperationsComposer
         if (selections is null || selections.Count == 0)
         {
             return snapshot.Items
-                .Where(x => x.QuantityOrdered > x.QuantityPacked)
-                .Select(x => new FulfillmentSelectionCommand(x.OrderLineId, x.QuantityOrdered - x.QuantityPacked))
+                .Where(x => x.QuantityProcessing > x.QuantityPacked)
+                .Select(x => new FulfillmentSelectionCommand(x.OrderLineId, x.QuantityProcessing - x.QuantityPacked))
                 .ToArray();
         }
 
         return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
         {
-            var packable = item.QuantityOrdered - item.QuantityPacked;
+            var packable = item.QuantityProcessing - item.QuantityPacked;
             if (qty > packable)
+            {
+                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
+            }
+        });
+    }
+
+    private static IReadOnlyList<FulfillmentSelectionCommand> ResolveProcessSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection>? selections)
+    {
+        if (selections is null || selections.Count == 0)
+        {
+            return snapshot.Items
+                .Where(x => x.QuantityOrdered > x.QuantityProcessing)
+                .Select(x => new FulfillmentSelectionCommand(x.OrderLineId, x.QuantityOrdered - x.QuantityProcessing))
+                .ToArray();
+        }
+
+        return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
+        {
+            var processable = item.QuantityOrdered - item.QuantityProcessing;
+            if (qty > processable)
+            {
+                throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
+            }
+        });
+    }
+
+    private static IReadOnlyList<FulfillmentSelectionCommand> ResolveUnprocessSelections(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection>? selections)
+    {
+        if (selections is null || selections.Count == 0)
+        {
+            return snapshot.Items
+                .Select(item =>
+                {
+                    var unprocessable = item.QuantityProcessing - item.QuantityPacked;
+                    return unprocessable > 0
+                        ? new FulfillmentSelectionCommand(item.OrderLineId, unprocessable)
+                        : null;
+                })
+                .Where(x => x is not null)
+                .Cast<FulfillmentSelectionCommand>()
+                .ToArray();
+        }
+
+        return NormalizeAndValidateSelections(snapshot, selections, (item, qty) =>
+        {
+            var unprocessable = item.QuantityProcessing - item.QuantityPacked;
+            if (qty > unprocessable)
             {
                 throw new PlatformHttpException(400, FulfillmentOpToFa("fulfillment.selection.qty_exceeded"), "fulfillment.selection.qty_exceeded");
             }
@@ -1430,10 +1785,10 @@ public sealed class AdminOrderOperationsComposer
     private static IReadOnlyList<FulfillmentSelectionCommand> NormalizeAndValidateSelections(
         FulfillmentSnapshot snapshot,
         IReadOnlyList<AdminOrderLineSelection> selections,
-        Action<FulfillmentItemSnapshot, int> validateQuantity)
+        Action<FulfillmentItemSnapshot, decimal> validateQuantity)
     {
         var itemsByLine = snapshot.Items.ToDictionary(x => x.OrderLineId);
-        var map = new Dictionary<Guid, int>();
+        var map = new Dictionary<Guid, decimal>();
         foreach (var selection in selections)
         {
             if (selection.Quantity <= 0)
@@ -1499,7 +1854,51 @@ public sealed class AdminOrderOperationsComposer
         foreach (var selection in selections)
         {
             if (!items.TryGetValue(selection.OrderLineId, out var item)
-                || item.QuantityOrdered <= item.QuantityPacked)
+                || item.QuantityProcessing <= item.QuantityPacked)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    internal static bool SelectionsAreHomogeneousProcessable(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection> selections)
+    {
+        if (selections.Count == 0)
+        {
+            return false;
+        }
+
+        var items = snapshot.Items.ToDictionary(x => x.OrderLineId);
+        foreach (var selection in selections)
+        {
+            if (!items.TryGetValue(selection.OrderLineId, out var item)
+                || item.QuantityOrdered <= item.QuantityProcessing)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    internal static bool SelectionsAreHomogeneousUnprocessable(
+        FulfillmentSnapshot snapshot,
+        IReadOnlyList<AdminOrderLineSelection> selections)
+    {
+        if (selections.Count == 0)
+        {
+            return false;
+        }
+
+        var items = snapshot.Items.ToDictionary(x => x.OrderLineId);
+        foreach (var selection in selections)
+        {
+            if (!items.TryGetValue(selection.OrderLineId, out var item)
+                || item.QuantityProcessing <= item.QuantityPacked)
             {
                 return false;
             }
@@ -1557,6 +1956,7 @@ internal static class AdminOrderWholeOrderActions
         "confirm_deposit",
         "reject_deposit",
         "restore_deposit",
+        "unconfirm_deposit",
         "restore_cancelled_order",
     };
 

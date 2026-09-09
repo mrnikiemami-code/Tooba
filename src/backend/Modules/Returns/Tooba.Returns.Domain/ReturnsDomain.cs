@@ -75,7 +75,7 @@ public sealed class ReturnItem
     public Guid OrderLineId { get; init; }
 
     /// <summary>تعداد درخواستی.</summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
 
     /// <summary>snapshot قیمت واحد.</summary>
     public decimal UnitPriceSnapshot { get; init; }
@@ -89,7 +89,7 @@ public sealed class ReturnItem
     internal static ReturnItem Create(
         Guid returnRequestId,
         Guid orderLineId,
-        int quantity,
+        decimal quantity,
         decimal unitPriceSnapshot,
         string currency,
         Guid? reservationId) =>
@@ -261,7 +261,7 @@ public sealed class ReturnRequest : IHasDomainEvents
         string idempotencyKey,
         string? reason,
         string currency,
-        IEnumerable<(Guid OrderLineId, int Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)> lines,
+        IEnumerable<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)> lines,
         DateTimeOffset now,
         RefundDestination refundDestination = RefundDestination.OriginalPayment)
     {

@@ -309,6 +309,29 @@ export function mapProductWorkspaceView(payload: unknown): ProductWorkspaceView 
     unsupportedMutations: Array.isArray(readProp(item, "unsupportedMutations", "UnsupportedMutations"))
       ? (readProp(item, "unsupportedMutations", "UnsupportedMutations") as unknown[]).map((name) => asString(name))
       : [],
+    unitOfMeasureId: (() => {
+      const text = asString(readProp(item, "unitOfMeasureId", "UnitOfMeasureId"));
+      return text.length > 0 ? text : null;
+    })(),
+    quantityDecimalPlaces: asNumber(readProp(item, "quantityDecimalPlaces", "QuantityDecimalPlaces")),
+    quantityStep: (() => {
+      const raw = readProp(item, "quantityStep", "QuantityStep");
+      return raw == null || raw === "" ? null : asNumber(raw);
+    })(),
+    unitCode: (() => {
+      const text = asString(readProp(item, "unitCode", "UnitCode"));
+      return text.length > 0 ? text : null;
+    })(),
+    unitDisplayName: (() => {
+      const text = asString(readProp(item, "unitDisplayName", "UnitDisplayName"));
+      return text.length > 0 ? text : null;
+    })(),
+    units: asRecordArray(readProp(item, "units", "Units")).map((row) => ({
+      unitOfMeasureId: asString(readProp(row, "unitOfMeasureId", "UnitOfMeasureId")),
+      code: asString(readProp(row, "code", "Code")),
+      name: asString(readProp(row, "name", "Name")),
+      shortName: asString(readProp(row, "shortName", "ShortName")),
+    })),
   };
 }
 
@@ -522,6 +545,52 @@ export async function updateAdminProductCore(
     const view = mapProductWorkspaceView(await response.json());
     if (!view) {
       return { ok: false, errorCode: "workspace.product.core-failed" };
+    }
+    return { ok: true, view };
+  } catch {
+    return { ok: false, errorCode: "workspace.host.unreachable" };
+  }
+}
+
+/** به‌روزرسانی واحد / دقت / گام مقدار محصول. */
+export async function updateAdminProductQuantityPolicy(
+  productId: string,
+  input: {
+    unitOfMeasureId: string;
+    decimalPlaces: number;
+    step: number | null;
+    expectedUpdatedAt: string;
+  },
+  viewScope = false,
+): Promise<{ ok: true; view: ProductWorkspaceView } | { ok: false; errorCode: string }> {
+  try {
+    const headers = adminHeaders({ "Content-Type": "application/json" });
+    if (viewScope) {
+      headers["X-Tooba-Workspace-Scope"] = "view";
+    }
+    const response = await fetch(`/v1/admin/products/${productId}/quantity-policy`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        unitOfMeasureId: input.unitOfMeasureId,
+        decimalPlaces: input.decimalPlaces,
+        step: input.step,
+        expectedUpdatedAt: input.expectedUpdatedAt,
+      }),
+    });
+    if (response.status === 409) {
+      return { ok: false, errorCode: "workspace.catalog.stale" };
+    }
+    if (response.status === 403) {
+      return { ok: false, errorCode: "workspace.permission.denied" };
+    }
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as { errorCode?: string } | null;
+      return { ok: false, errorCode: body?.errorCode ?? "workspace.quantity-policy.patch-failed" };
+    }
+    const view = mapProductWorkspaceView(await response.json());
+    if (!view) {
+      return { ok: false, errorCode: "workspace.quantity-policy.patch-failed" };
     }
     return { ok: true, view };
   } catch {

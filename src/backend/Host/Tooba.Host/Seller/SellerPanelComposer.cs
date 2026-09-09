@@ -216,7 +216,9 @@ public sealed class SellerPanelComposer
             opts.SellerCanOverrideReturnPolicy,
             opts.MinReturnWindowDays,
             opts.MaxReturnWindowDays,
-            opts.AllowNonReturnableOffers);
+            opts.AllowNonReturnableOffers,
+            offer.MinimumOrderQuantity,
+            offer.MaximumOrderQuantity);
     }
 
     /// <summary>
@@ -281,6 +283,18 @@ public sealed class SellerPanelComposer
             }
 
             offer.SetReturnPolicy(choice, days, DateTimeOffset.UtcNow);
+        }
+
+        if (patch.MinimumOrderQuantity is not null || patch.MaximumOrderQuantity is not null)
+        {
+            try
+            {
+                offer.SetOrderQuantityLimits(patch.MinimumOrderQuantity, patch.MaximumOrderQuantity, DateTimeOffset.UtcNow);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new PlatformHttpException(400, ex.Message, "seller.offer.quantity.rejected");
+            }
         }
 
         await _offers.SaveChangesAsync(cancellationToken);

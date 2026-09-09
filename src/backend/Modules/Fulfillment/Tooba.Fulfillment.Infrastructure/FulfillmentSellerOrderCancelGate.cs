@@ -1,4 +1,5 @@
 using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Domain;
 using Tooba.Order.Application;
 
 namespace Tooba.Fulfillment.Infrastructure;
@@ -26,6 +27,17 @@ public sealed class FulfillmentSellerOrderCancelGate : ISellerOrderCancelFulfill
 
         return new SellerOrderCancelFulfillmentSnapshot(
             snapshot.Status.ToString(),
-            snapshot.Shipments.Count);
+            snapshot.Shipments.Count,
+            HasDispatchedQuantity(snapshot));
     }
+
+    internal static bool HasDispatchedQuantity(FulfillmentSnapshot snapshot) =>
+        snapshot.Items.Any(item => item.QuantityShipped > 0)
+        || snapshot.Shipments.Any(shipment =>
+            shipment.Status != ShipmentStatus.Cancelled
+            && (shipment.DispatchedAt is not null
+                || shipment.DeliveredAt is not null
+                || shipment.Status is ShipmentStatus.Dispatched
+                    or ShipmentStatus.InTransit
+                    or ShipmentStatus.Delivered));
 }

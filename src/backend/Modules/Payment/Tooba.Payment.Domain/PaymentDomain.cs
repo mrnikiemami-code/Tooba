@@ -36,6 +36,21 @@ public enum PaymentStatus
     /// مهلت تلاش تمام شده.
     /// </summary>
     Expired = 5,
+
+    /// <summary>
+    /// بازگشت وجه شروع شده؛ هنوز موفق فرض نمی‌شود.
+    /// </summary>
+    RefundPending = 6,
+
+    /// <summary>
+    /// بازگشت وجه نزد درگاه تکمیل شده.
+    /// </summary>
+    Refunded = 7,
+
+    /// <summary>
+    /// بازگشت وجه شکست خورده؛ اقدام ادمین لازم است.
+    /// </summary>
+    RefundFailed = 8,
 }
 
 /// <summary>
@@ -366,7 +381,11 @@ public sealed class CustomerPayment : IHasDomainEvents
     /// </summary>
     public PaymentAttempt RecordInitiation(string requestReference, DateTimeOffset at)
     {
-        if (Status is PaymentStatus.Succeeded or PaymentStatus.Cancelled)
+        if (Status is PaymentStatus.Succeeded
+            or PaymentStatus.Cancelled
+            or PaymentStatus.RefundPending
+            or PaymentStatus.Refunded
+            or PaymentStatus.RefundFailed)
         {
             throw new InvalidOperationException("پرداخت پایان‌یافته دوباره شروع نمی‌شود.");
         }
@@ -384,7 +403,10 @@ public sealed class CustomerPayment : IHasDomainEvents
     /// </summary>
     public bool ApplyVerifiedSuccess(Guid attemptId, string transactionReference, DateTimeOffset at)
     {
-        if (Status == PaymentStatus.Succeeded)
+        if (Status is PaymentStatus.Succeeded
+            or PaymentStatus.RefundPending
+            or PaymentStatus.Refunded
+            or PaymentStatus.RefundFailed)
         {
             return false;
         }
@@ -409,7 +431,10 @@ public sealed class CustomerPayment : IHasDomainEvents
     /// </summary>
     public void ApplyVerifiedFailure(Guid attemptId, string? failureCode, DateTimeOffset at)
     {
-        if (Status == PaymentStatus.Succeeded)
+        if (Status is PaymentStatus.Succeeded
+            or PaymentStatus.RefundPending
+            or PaymentStatus.Refunded
+            or PaymentStatus.RefundFailed)
         {
             return;
         }
@@ -470,11 +495,177 @@ public sealed class CustomerPayment : IHasDomainEvents
     }
 
     /// <summary>
+    /// تأیید واریز دستی را به انتظار تأیید برمی‌گرداند؛ Paid نمی‌ماند و رویداد موفقیت جدید نمی‌سازد.
+    /// </summary>
+    public PaymentAttempt UnconfirmManualDeposit(DateTimeOffset at)
+    {
+        if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("payment.unconfirm.not_manual");
+        }
+
+        if (Status == PaymentStatus.Pending)
+        {
+            var latest = _attempts.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+            var hadSuccess = _attempts.Any(x => x.Status == PaymentAttemptStatus.VerifiedSucceeded);
+            if (hadSuccess && latest is not null && latest.Status == PaymentAttemptStatus.Initiated)
+            {
+                return latest;
+            }
+
+            throw new InvalidOperationException("payment.unconfirm.invalid_state");
+        }
+
+        if (Status != PaymentStatus.Succeeded)
+        {
+            throw new InvalidOperationException("payment.unconfirm.invalid_state");
+        }
+
+        CompletedAt = null;
+        Status = PaymentStatus.Pending;
+        var attempt = RecordInitiation($"manual-unconfirm-{PaymentId:N}-{at.UtcTicks}", at);
+        _domainEvents.Add(new PaymentManualDepositUnconfirmedDomainEvent(PaymentId, CheckoutId, attempt.AttemptId));
+        return attempt;
+    }
+
+    /// <summary>
     /// تلاش تکراری با همان مرجع تراکنش را تشخیص می‌دهد.
     /// </summary>
     public bool AlreadySucceededWith(string transactionReference) =>
         Status == PaymentStatus.Succeeded
         && _attempts.Any(x => x.ProviderTransactionReference == transactionReference);
+
+    /// <summary>
+    /// پرداخت موفق‌نشده را با لغو سفارش می‌بندد تا Confirm/Reject نماند.
+    /// </summary>
+    public void CloseForOrderCancel(DateTimeOffset at)
+    {
+        if (Status is PaymentStatus.Cancelled
+            or PaymentStatus.RefundPending
+            or PaymentStatus.Refunded
+            or PaymentStatus.RefundFailed)
+        {
+            return;
+        }
+
+        if (Status == PaymentStatus.Succeeded)
+        {
+            throw new InvalidOperationException("payment.cancel.requires_refund");
+        }
+
+        Status = PaymentStatus.Cancelled;
+        UpdatedAt = at;
+        _domainEvents.Add(new PaymentFailedDomainEvent(PaymentId, CheckoutId, "ORDER_CANCELLED"));
+    }
+
+    /// <summary>
+    /// شروع workflow بازگشت وجه پس از لغو سفارش؛ موفقیت درگاه را فرض نمی‌کند.
+    /// </summary>
+    public void BeginOrderCancelRefund(DateTimeOffset at)
+    {
+        if (Status is PaymentStatus.RefundPending or PaymentStatus.Refunded or PaymentStatus.RefundFailed)
+        {
+            return;
+        }
+
+        if (Status != PaymentStatus.Succeeded)
+        {
+            throw new InvalidOperationException("payment.refund.invalid_state");
+        }
+
+        Status = PaymentStatus.RefundPending;
+        UpdatedAt = at;
+        _domainEvents.Add(new PaymentRefundPendingDomainEvent(PaymentId, CheckoutId));
+    }
+
+    /// <summary>بازگشت وجه درگاه را موفق ثبت می‌کند.</summary>
+    public void MarkRefunded(DateTimeOffset at)
+    {
+        if (Status == PaymentStatus.Refunded)
+        {
+            return;
+        }
+
+        if (Status is not (PaymentStatus.RefundPending or PaymentStatus.Succeeded))
+        {
+            throw new InvalidOperationException("payment.refund.invalid_state");
+        }
+
+        Status = PaymentStatus.Refunded;
+        UpdatedAt = at;
+        _domainEvents.Add(new PaymentRefundedDomainEvent(PaymentId, CheckoutId, Amount, Currency));
+    }
+
+    /// <summary>شکست بازگشت وجه؛ سفارش Cancelled می‌ماند.</summary>
+    public void MarkRefundFailed(string? failureCode, DateTimeOffset at)
+    {
+        if (Status == PaymentStatus.RefundFailed)
+        {
+            return;
+        }
+
+        if (Status != PaymentStatus.RefundPending)
+        {
+            throw new InvalidOperationException("payment.refund.invalid_state");
+        }
+
+        Status = PaymentStatus.RefundFailed;
+        UpdatedAt = at;
+        _domainEvents.Add(new PaymentRefundFailedDomainEvent(PaymentId, CheckoutId, failureCode));
+    }
+
+    /// <summary>
+    /// بازگردانی لغو: اگر Refund نهایی نشده باشد، پرداخت به وضعیت عملیاتی قبل از Cancel برمی‌گردد.
+    /// رویداد موفقیت جدید نمی‌سازد تا accrual تکرار نشود.
+    /// </summary>
+    public void RestoreAfterOrderCancelRestore(DateTimeOffset at)
+    {
+        if (Status is PaymentStatus.Succeeded
+            or PaymentStatus.Pending
+            or PaymentStatus.Created
+            or PaymentStatus.Failed)
+        {
+            return;
+        }
+
+        if (Status == PaymentStatus.Refunded)
+        {
+            throw new InvalidOperationException("payment.restore.refund_completed");
+        }
+
+        if (Status is PaymentStatus.RefundPending or PaymentStatus.RefundFailed)
+        {
+            Status = PaymentStatus.Succeeded;
+            UpdatedAt = at;
+            return;
+        }
+
+        if (Status is PaymentStatus.Cancelled or PaymentStatus.Expired)
+        {
+            Status = ResolveOperationalStatusBeforeOrderCancel();
+            UpdatedAt = at;
+        }
+    }
+
+    private PaymentStatus ResolveOperationalStatusBeforeOrderCancel()
+    {
+        if (_attempts.Count == 0)
+        {
+            return PaymentStatus.Created;
+        }
+
+        var latest = _attempts
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.AttemptId)
+            .First();
+        if (latest.Status == PaymentAttemptStatus.VerifiedFailed
+            && string.Equals(latest.FailureCode, "MANUAL_DEPOSIT_REJECTED", StringComparison.Ordinal))
+        {
+            return PaymentStatus.Failed;
+        }
+
+        return PaymentStatus.Pending;
+    }
 
     /// <summary>
     /// تلاش بارگذاری‌شده از DbSet را به ریشه وصل می‌کند چون navigation در EF نادیده گرفته شده است.
@@ -691,4 +882,106 @@ public sealed class PaymentManualDepositRestoredDomainEvent : IDomainEvent
 
     /// <summary>تلاش جدید انتظار تأیید.</summary>
     public Guid AttemptId { get; }
+}
+
+/// <summary>
+/// برگشت تأیید واریز دستی به انتظار تأیید. Paid را نگه نمی‌دارد.
+/// </summary>
+public sealed class PaymentManualDepositUnconfirmedDomainEvent : IDomainEvent
+{
+    /// <summary>رویداد را می‌سازد.</summary>
+    public PaymentManualDepositUnconfirmedDomainEvent(Guid paymentId, Guid checkoutId, Guid attemptId)
+    {
+        PaymentId = paymentId;
+        CheckoutId = checkoutId;
+        AttemptId = attemptId;
+        Metadata = EventMetadataFactory.ForDomain("payment.manual_deposit.unconfirmed.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>پرداخت.</summary>
+    public Guid PaymentId { get; }
+
+    /// <summary>checkout.</summary>
+    public Guid CheckoutId { get; }
+
+    /// <summary>تلاش جدید انتظار تأیید.</summary>
+    public Guid AttemptId { get; }
+}
+
+/// <summary>شروع بازگشت وجه پس از لغو سفارش؛ موفقیت درگاه نیست.</summary>
+public sealed class PaymentRefundPendingDomainEvent : IDomainEvent
+{
+    /// <summary>رویداد را می‌سازد.</summary>
+    public PaymentRefundPendingDomainEvent(Guid paymentId, Guid checkoutId)
+    {
+        PaymentId = paymentId;
+        CheckoutId = checkoutId;
+        Metadata = EventMetadataFactory.ForDomain("payment.refund_pending.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>پرداخت.</summary>
+    public Guid PaymentId { get; }
+
+    /// <summary>checkout.</summary>
+    public Guid CheckoutId { get; }
+}
+
+/// <summary>بازگشت وجه نزد درگاه تکمیل شد.</summary>
+public sealed class PaymentRefundedDomainEvent : IDomainEvent
+{
+    /// <summary>رویداد را می‌سازد.</summary>
+    public PaymentRefundedDomainEvent(Guid paymentId, Guid checkoutId, decimal amount, string currency)
+    {
+        PaymentId = paymentId;
+        CheckoutId = checkoutId;
+        Amount = amount;
+        Currency = currency;
+        Metadata = EventMetadataFactory.ForDomain("payment.refunded.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>پرداخت.</summary>
+    public Guid PaymentId { get; }
+
+    /// <summary>checkout.</summary>
+    public Guid CheckoutId { get; }
+
+    /// <summary>مبلغ.</summary>
+    public decimal Amount { get; }
+
+    /// <summary>ارز.</summary>
+    public string Currency { get; }
+}
+
+/// <summary>شکست بازگشت وجه؛ سفارش Cancelled می‌ماند.</summary>
+public sealed class PaymentRefundFailedDomainEvent : IDomainEvent
+{
+    /// <summary>رویداد را می‌سازد.</summary>
+    public PaymentRefundFailedDomainEvent(Guid paymentId, Guid checkoutId, string? failureCode)
+    {
+        PaymentId = paymentId;
+        CheckoutId = checkoutId;
+        FailureCode = failureCode;
+        Metadata = EventMetadataFactory.ForDomain("payment.refund_failed.v1");
+    }
+
+    /// <inheritdoc />
+    public EventMetadata Metadata { get; }
+
+    /// <summary>پرداخت.</summary>
+    public Guid PaymentId { get; }
+
+    /// <summary>checkout.</summary>
+    public Guid CheckoutId { get; }
+
+    /// <summary>کد شکست.</summary>
+    public string? FailureCode { get; }
 }

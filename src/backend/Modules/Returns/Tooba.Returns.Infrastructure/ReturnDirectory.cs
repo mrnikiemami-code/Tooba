@@ -105,7 +105,7 @@ public sealed class ReturnDirectory : IReturnDirectory
         }
 
         var remainingByLine = eligibility.Lines.ToDictionary(x => x.OrderLineId, x => x.RemainingReturnableQuantity);
-        var lineSnapshots = new List<(Guid OrderLineId, int Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>();
+        var lineSnapshots = new List<(Guid OrderLineId, decimal Quantity, decimal UnitPriceSnapshot, Guid? ReservationId)>();
         foreach (var item in command.Items)
         {
             var orderLine = orderContext.Lines.SingleOrDefault(x => x.OrderLineId == item.OrderLineId)

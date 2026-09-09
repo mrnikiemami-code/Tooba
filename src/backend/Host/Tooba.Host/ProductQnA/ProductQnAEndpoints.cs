@@ -93,7 +93,7 @@ public sealed record BulkInquiryBody(
     string? Email,
     string? CompanyName,
     string Address,
-    int Quantity,
+    decimal Quantity,
     string? Notes);
 
 /// <summary>پاسخ عمومی صفحهٔ پرسش‌های Published.</summary>

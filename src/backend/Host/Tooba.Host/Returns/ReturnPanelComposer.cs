@@ -8,7 +8,7 @@ namespace Tooba.Host.Returns;
 /// <summary>
 /// خط مرجوعی در درخواست HTTP.
 /// </summary>
-public sealed record ReturnLineRequest(Guid OrderLineId, int Quantity);
+public sealed record ReturnLineRequest(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// درخواست ایجاد مرجوعی.

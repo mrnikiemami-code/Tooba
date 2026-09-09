@@ -472,7 +472,13 @@ public sealed class ProductWorkspaceComposer
             translations,
             isPrimaryCategoryAssignable,
             product.BrandId,
-            categoryAssignments);
+            categoryAssignments,
+            product.UnitOfMeasureId,
+            product.QuantityDecimalPlaces,
+            product.QuantityStep,
+            await ResolveUnitCodeAsync(product.UnitOfMeasureId, cancellationToken),
+            await ResolveUnitDisplayAsync(product.UnitOfMeasureId, cancellationToken),
+            await ListUnitOptionsAsync(cancellationToken));
     }
 
     /// <summary>
@@ -1824,5 +1830,78 @@ public sealed class ProductWorkspaceComposer
             .ToDictionary(
                 g => g.Key,
                 g => g.OrderBy(x => x.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
+    }
+
+    /// <summary>سیاست مقدار محصول را به‌روز می‌کند.</summary>
+    public async Task<ProductWorkspaceView> UpdateQuantityPolicyAsync(
+        Guid productId,
+        AdminProductQuantityPolicyRequest request,
+        ProductWorkspacePermissions permissions,
+        CancellationToken cancellationToken)
+    {
+        if (!permissions.CanEditCatalog)
+        {
+            throw new PlatformHttpException(403, "Forbidden", "workspace.permission.denied");
+        }
+
+        var product = await _catalog.Products.SingleOrDefaultAsync(x => x.ProductId == productId, cancellationToken)
+            ?? throw new PlatformHttpException(404, "Not Found", "workspace.product.missing");
+        if (product.UpdatedAt != request.ExpectedUpdatedAt)
+        {
+            throw new PlatformHttpException(409, "Conflict", "workspace.catalog.stale");
+        }
+
+        try
+        {
+            product.SetQuantityPolicy(request.UnitOfMeasureId, request.DecimalPlaces, request.Step, DateTimeOffset.UtcNow);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new PlatformHttpException(400, ex.Message, "workspace.quantity.rejected");
+        }
+
+        await _catalog.SaveChangesAsync(cancellationToken);
+        return await GetAsync(productId, permissions, cancellationToken);
+    }
+
+    private async Task<string?> ResolveUnitCodeAsync(Guid unitId, CancellationToken cancellationToken) =>
+        (await _catalog.UnitsOfMeasure.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.UnitOfMeasureId == unitId, cancellationToken))?.Code;
+
+    private async Task<string?> ResolveUnitDisplayAsync(Guid unitId, CancellationToken cancellationToken)
+    {
+        var translations = await _catalog.UnitOfMeasureTranslations.AsNoTracking()
+            .Where(x => x.UnitOfMeasureId == unitId)
+            .ToListAsync(cancellationToken);
+        return translations.FirstOrDefault()?.Name
+            ?? await ResolveUnitCodeAsync(unitId, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<UnitOfMeasureOptionView>> ListUnitOptionsAsync(CancellationToken cancellationToken)
+    {
+        var units = await _catalog.UnitsOfMeasure.AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = units.Select(x => x.UnitOfMeasureId).ToArray();
+        var translations = await _catalog.UnitOfMeasureTranslations.AsNoTracking()
+            .Where(x => ids.Contains(x.UnitOfMeasureId))
+            .ToListAsync(cancellationToken);
+        var byUnit = translations.GroupBy(x => x.UnitOfMeasureId).ToDictionary(g => g.Key, g => g.ToList());
+        return units.Select(u =>
+        {
+            byUnit.TryGetValue(u.UnitOfMeasureId, out var rows);
+            var picked = rows?.FirstOrDefault();
+            return new UnitOfMeasureOptionView(
+                u.UnitOfMeasureId,
+                u.Code,
+                picked?.Name ?? u.Code,
+                picked?.ShortName ?? u.Code);
+        }).ToList();
     }
 }

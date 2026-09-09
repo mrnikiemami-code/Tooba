@@ -47,7 +47,7 @@ public sealed class SplitDeliveryReturnClockTests
         var later = deliveredAt.AddHours(6);
         var fulfillment = new FulfillmentReturnEligibilitySnapshot(
             Guid.NewGuid(),
-            new Dictionary<Guid, int> { [lineId] = 5 },
+            new Dictionary<Guid, decimal> { [lineId] = 5 },
             later,
             new Dictionary<Guid, DateTimeOffset> { [lineId] = deliveredAt },
             [

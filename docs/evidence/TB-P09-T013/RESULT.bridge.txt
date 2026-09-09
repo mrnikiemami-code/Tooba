@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T013
+
+Parent-Task:
+TB-P09-T012
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Quantity decimal foundation complete: numeric(18,6) product-qty columns, multilingual UoM, Product policy, Offer min/max, one GlobalRoundingMode, cart normalize, order snapshots. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T014 invented.
+
+Discovery:
+docs/evidence/TB-P09-T013/discovery.md
+
+Gap-Analysis:
+docs/evidence/TB-P09-T013/gap-analysis.md
+
+Schema-Migration:
+Hand-written 20260909130000–30700. Catalog UoM/settings/product columns + pcs/kg/g seed. Offer min/max. Cart/order/inventory/fulfillment/returns/bulkinquiry integer product-qty → numeric(18,6) USING. Record counts unchanged. docs/evidence/TB-P09-T013/schema-migration.md
+
+Unit-Foundation:
+DB-backed UnitOfMeasure + LanguageId translations. No second language system. docs/evidence/TB-P09-T013/unit-foundation.md
+
+Quantity-Policy:
+EffectiveQuantityPolicy from Product + store rounding. IQuantityNormalizer decimal-only. Step null allows 1.25 at places=2. docs/evidence/TB-P09-T013/quantity-policy.md
+
+Offer-Min-Max:
+Optional Offer min/max after normalize. OfferReference + seller UI. docs/evidence/TB-P09-T013/offer-min-max.md
+
+Global-Rounding:
+One store_quantity_settings row. Floor/Ceiling/Nearest. FA: رو به پایین / رو به بالا / نزدیک‌ترین مقدار. GET/PUT /v1/admin/settings/quantity-rounding. docs/evidence/TB-P09-T013/global-rounding.md
+
+Backend-Decimal-Migration:
+Cart/Order/Inventory/Fulfillment/Returns/BulkInquiry qty CLR decimal. No (int)quantity casts. Int literals still compile.
+
+Frontend-Quantity:
+Workspace unit/places/step. Offer min/max. Cart/PDP decimal input without forced HTML step when Step null. QuantityDisplay. docs/evidence/TB-P09-T013/frontend-quantity.md
+
+Order-Snapshot:
+OrderLine unit/places/step/display snapshots. Later Product policy change does not rewrite history.
+
+Inventory:
+Available=OnHand-Reserved decimal. 100 − 1.25 = 98.75. docs/evidence/TB-P09-T013/inventory-regression.md
+
+Fulfillment:
+Exact/partial decimal pack; T010–T012 rules kept. docs/evidence/TB-P09-T013/fulfillment-regression.md
+
+Returns:
+Eligibility remaining/delivered/returned decimal. docs/evidence/TB-P09-T013/returns-regression.md
+
+Pricing-Boundary:
+Line totals use decimal quantity × unit price. Tax request quantity remains line-count after amount multiply. No second invoice rounding.
+
+Performance:
+CatalogDirectory batches units/translations/settings. Cart presentation batches GetEffectiveQuantityPoliciesForVariantIdsAsync.
+
+Focused-Validation:
+QuantityFoundationTests + QuantityDecimalRegressionTests + FulfillmentLineQuantityOpsTests + capability/cart foundation 30 pass (1 skip docker). T010–T012 related 10 pass / 5 skip docker. Recovery guard 3 pass.
+
+Runtime-Smoke:
+kg product places=2 step=null; cart 1.25; reservation 1.25 Held; pack 0.50 column; rounding Nearest. docs/evidence/TB-P09-T013/runtime-smoke.md
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T012. Issued none. Repair none. Last Implementation TB-P09-T013. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T013/recovery-sot.md
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+Offer EF history on tooba_alpha still only InitialOffer; T013 offer row inserted manually so later full Migrate replay of T006 return-policy would collide if history is not backfilled.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. No UI redesign; additive fields only.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

@@ -80,6 +80,7 @@ test("selected-state labels switch correctly", () => {
     pack: "بسته‌بندی همه اقلام آماده",
     createShipment: "ایجاد مرسوله جدید",
     unpack: "بازگشت از بسته‌بندی",
+    unprocess: "برگشت از پردازش",
     dispatch: "ارسال",
   });
   assert.deepEqual(sellerQuickActionLabels(true), {
@@ -87,6 +88,7 @@ test("selected-state labels switch correctly", () => {
     pack: "بسته‌بندی انتخاب‌شده‌ها",
     createShipment: "ایجاد مرسوله از انتخاب‌شده‌ها",
     unpack: "بازگشت از بسته‌بندی انتخاب‌شده‌ها",
+    unprocess: "برگشت از پردازش انتخاب‌شده‌ها",
     dispatch: "ارسال انتخاب‌شده‌ها",
   });
 });
@@ -105,6 +107,8 @@ test("row kebab is projection-driven and hidden when empty", () => {
   assert.doesNotMatch(panel, /title="عملیات ردیف از نوار فروشنده و کارت مرسوله"/);
   assert.match(panel, /pack_selected/);
   assert.match(panel, /mark_processing/);
+  assert.match(panel, /unprocess/);
+  assert.match(panel, /برگشت از پردازش|unprocess/);
   assert.match(panel, /MIXED_SELECTION_MESSAGE_FA/);
 });
 
@@ -223,11 +227,12 @@ test("capability projection drives payment lock and start/pack row actions", () 
     operationalStatus: "Processing",
     packable: 2,
     unpackable: 0,
+    unprocessable: 2,
     shippable: 0,
     quantity: 2,
-    projectedCodes: ["pack_selected", "mark_packed"],
+    projectedCodes: ["pack_selected", "mark_packed", "unprocess"],
   });
-  assert.deepEqual(processing.rowActionCodes, ["pack_selected"]);
+  assert.deepEqual(processing.rowActionCodes, ["pack_selected", "unprocess"]);
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   assert.match(panel, /PAYMENT_LOCKED_BANNER_FA|admin-order-seller-payment-locked-/);
   assert.match(panel, /admin-order-seller-create-shipment-/);

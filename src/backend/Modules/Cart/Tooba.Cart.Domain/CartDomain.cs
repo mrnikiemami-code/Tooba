@@ -106,7 +106,7 @@ public sealed class CartLine
     /// <summary>
     /// تعداد صحیح مثبت. اعشار نیست.
     /// </summary>
-    public int Quantity { get; private set; }
+    public decimal Quantity { get; private set; }
 
     /// <summary>
     /// رزرو موجودی متعلق به این خط؛ جداول Inventory اینجا join نمی‌شوند.
@@ -146,7 +146,7 @@ public sealed class CartLine
         Guid offerId,
         Guid catalogVariantId,
         Guid sellerPartyId,
-        int quantity,
+        decimal quantity,
         Guid? reservationId,
         decimal quotedAmount,
         string quotedCurrency,
@@ -176,7 +176,7 @@ public sealed class CartLine
     /// تعداد و رزرو و نقل‌قول را پس از هم‌ترازسازی موجودی عوض می‌کند.
     /// </summary>
     public void ReplaceHold(
-        int quantity,
+        decimal quantity,
         Guid? reservationId,
         decimal quotedAmount,
         string quotedCurrency,
@@ -200,13 +200,13 @@ public sealed class CartLine
     public void ClearReservation() => ReservationId = null;
 
     /// <summary>
-    /// تعداد باید عدد صحیح مثبت و حداکثر ۹۹ باشد.
+    /// تعداد باید مثبت و حداکثر ۹۹ باشد (اعشار طبق سیاست مقدار مجاز است).
     /// </summary>
-    public static void EnsureQuantity(int quantity)
+    public static void EnsureQuantity(decimal quantity)
     {
         if (quantity <= 0)
         {
-            throw new InvalidOperationException("تعداد خط سبد باید عدد صحیح مثبت باشد.");
+            throw new InvalidOperationException("تعداد خط سبد باید مثبت باشد.");
         }
 
         if (quantity > 99)
@@ -379,7 +379,7 @@ public sealed class ShoppingCart : IHasDomainEvents
     /// <summary>
     /// پس از تغییر تعداد، رویداد و نسخه را جلو می‌برد.
     /// </summary>
-    public void RecordLineChanged(Guid lineId, Guid offerId, int quantity, DateTimeOffset now)
+    public void RecordLineChanged(Guid lineId, Guid offerId, decimal quantity, DateTimeOffset now)
     {
         EnsureActive();
         Touch(now);
@@ -567,7 +567,7 @@ public sealed class CartLineAddedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد افزودن را می‌سازد.
     /// </summary>
-    public CartLineAddedDomainEvent(Guid cartId, Guid lineId, Guid offerId, int quantity)
+    public CartLineAddedDomainEvent(Guid cartId, Guid lineId, Guid offerId, decimal quantity)
     {
         CartId = cartId;
         LineId = lineId;
@@ -597,7 +597,7 @@ public sealed class CartLineAddedDomainEvent : IDomainEvent
     /// <summary>
     /// تعداد.
     /// </summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>
@@ -608,7 +608,7 @@ public sealed class CartLineChangedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد تغییر را می‌سازد.
     /// </summary>
-    public CartLineChangedDomainEvent(Guid cartId, Guid lineId, Guid offerId, int quantity)
+    public CartLineChangedDomainEvent(Guid cartId, Guid lineId, Guid offerId, decimal quantity)
     {
         CartId = cartId;
         LineId = lineId;
@@ -638,7 +638,7 @@ public sealed class CartLineChangedDomainEvent : IDomainEvent
     /// <summary>
     /// تعداد جدید.
     /// </summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>

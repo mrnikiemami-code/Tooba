@@ -32,7 +32,7 @@ public sealed record PromotionEvaluationRequest(
     string Market,
     string SalesChannel,
     string Currency,
-    int Quantity,
+    decimal Quantity,
     decimal BaseTaxExclusiveAmount,
     Guid? CustomerPartyId,
     Guid? OrganizationPartyId,

@@ -10,7 +10,7 @@ public interface IInventoryReturnGateway
     /// </summary>
     Task RestockFromReturnAsync(
         Guid reservationId,
-        int quantity,
+        decimal quantity,
         string idempotencyKey,
         CancellationToken cancellationToken);
 }

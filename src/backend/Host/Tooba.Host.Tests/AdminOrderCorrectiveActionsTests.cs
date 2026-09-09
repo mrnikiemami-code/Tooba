@@ -103,6 +103,93 @@ public sealed class AdminOrderCorrectiveActionsTests
     }
 
     [Fact]
+    public void Unconfirm_deposit_after_success_returns_pending_without_new_success()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            800m,
+            "IRR",
+            "manual",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 800m)],
+            now);
+        var first = payment.RecordInitiation("manual-ok", now);
+        payment.ApplyVerifiedSuccess(first.AttemptId, "manual-confirm", now.AddMinutes(1));
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
+        var successEvents = payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent);
+        var unconfirmed = payment.UnconfirmManualDeposit(now.AddMinutes(2));
+        Assert.Equal(PaymentStatus.Pending, payment.Status);
+        Assert.Null(payment.CompletedAt);
+        Assert.Equal(PaymentAttemptStatus.Initiated, unconfirmed.Status);
+        Assert.Equal(successEvents, payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent));
+        Assert.Contains(payment.DomainEvents, e => e is PaymentManualDepositUnconfirmedDomainEvent);
+        var again = payment.UnconfirmManualDeposit(now.AddMinutes(3));
+        Assert.Equal(unconfirmed.AttemptId, again.AttemptId);
+    }
+
+    [Fact]
+    public void Revert_verified_payment_returns_pending_payment()
+    {
+        var order = CreateSellerOrder(paid: true);
+        Assert.Equal(SellerOrderStatus.Paid, order.Status);
+        order.RevertVerifiedPayment();
+        Assert.Equal(SellerOrderStatus.PendingPayment, order.Status);
+        order.RevertVerifiedPayment();
+        Assert.Equal(SellerOrderStatus.PendingPayment, order.Status);
+    }
+
+    [Fact]
+    public void Unconfirm_hidden_after_fulfillment_starts()
+    {
+        var ready = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            FulfillmentStatus.ReadyToFulfill,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1, 0, null, 0)],
+            []);
+        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([ready]));
+        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([]));
+
+        var processing = ready with { Status = FulfillmentStatus.Processing };
+        Assert.True(AdminOrderOperationsComposer.HasStartedFulfillment([processing]));
+
+        var cancelledOnly = ready with
+        {
+            Shipments =
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Cancelled,
+                    "Post",
+                    "TRK",
+                    null,
+                    null,
+                    []),
+            ],
+        };
+        Assert.False(AdminOrderOperationsComposer.HasStartedFulfillment([cancelledOnly]));
+
+        var packedAfterRestore = ready with
+        {
+            Status = FulfillmentStatus.Packed,
+            Items = [ready.Items[0] with { QuantityPacked = 1, QuantityProcessing = 1 }],
+            Shipments = cancelledOnly.Shipments,
+        };
+        Assert.True(AdminOrderOperationsComposer.HasStartedFulfillment([packedAfterRestore]));
+    }
+
+    [Fact]
     public void Shipment_with_tracking_can_cancel_pre_dispatch_and_release_allocation()
     {
         var lineId = Guid.NewGuid();
@@ -214,6 +301,142 @@ public sealed class AdminOrderCorrectiveActionsTests
     }
 
     [Fact]
+    public void Restore_forbidden_when_payment_refunded_but_allowed_while_refund_pending()
+    {
+        var group = SeedCancelledCheckout();
+        Assert.False(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
+            group,
+            [],
+            [],
+            paymentStatus: PaymentStatus.Refunded));
+        Assert.Equal(
+            "order.restore.refund_completed",
+            AdminOrderOperationsComposer.RestoreForbiddenCode(
+                group,
+                [],
+                [],
+                paymentStatus: PaymentStatus.Refunded));
+        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
+            group,
+            [],
+            [],
+            paymentStatus: PaymentStatus.RefundPending));
+        Assert.True(AdminOrderOperationsComposer.CanRestoreCancelledOrder(
+            group,
+            [],
+            [],
+            paymentStatus: PaymentStatus.RefundFailed));
+    }
+
+    [Fact]
+    public void Restore_after_cancel_refund_pending_returns_succeeded_without_success_event()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            1000m,
+            "IRR",
+            "manual",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 1000m)],
+            now);
+        var attempt = payment.RecordInitiation("req-1", now);
+        payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
+        var successEvents = payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent);
+        payment.BeginOrderCancelRefund(now.AddMinutes(2));
+        Assert.Equal(PaymentStatus.RefundPending, payment.Status);
+        payment.RestoreAfterOrderCancelRestore(now.AddMinutes(3));
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
+        Assert.Equal(successEvents, payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent));
+        payment.RestoreAfterOrderCancelRestore(now.AddMinutes(4));
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
+        Assert.Equal(successEvents, payment.DomainEvents.Count(e => e is PaymentSucceededDomainEvent));
+    }
+
+    [Fact]
+    public void Restore_after_cancel_from_pending_returns_pending()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            1000m,
+            "IRR",
+            "manual",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 1000m)],
+            now);
+        payment.RecordInitiation("req-1", now);
+        payment.CloseForOrderCancel(now.AddMinutes(1));
+        Assert.Equal(PaymentStatus.Cancelled, payment.Status);
+        payment.RestoreAfterOrderCancelRestore(now.AddMinutes(2));
+        Assert.Equal(PaymentStatus.Pending, payment.Status);
+        Assert.DoesNotContain(payment.DomainEvents, e => e is PaymentSucceededDomainEvent);
+    }
+
+    [Fact]
+    public void Restore_after_cancel_from_rejected_deposit_returns_failed()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            1000m,
+            "IRR",
+            "manual",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 1000m)],
+            now);
+        var first = payment.RecordInitiation("manual-1", now);
+        payment.ApplyVerifiedFailure(first.AttemptId, "MANUAL_DEPOSIT_REJECTED", now.AddMinutes(1));
+        payment.CloseForOrderCancel(now.AddMinutes(2));
+        Assert.Equal(PaymentStatus.Cancelled, payment.Status);
+        payment.RestoreAfterOrderCancelRestore(now.AddMinutes(3));
+        Assert.Equal(PaymentStatus.Failed, payment.Status);
+    }
+
+    [Fact]
+    public void Restore_after_completed_refund_is_forbidden()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            1000m,
+            "IRR",
+            "manual",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 1000m)],
+            now);
+        var attempt = payment.RecordInitiation("req-1", now);
+        payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
+        payment.BeginOrderCancelRefund(now.AddMinutes(2));
+        payment.MarkRefunded(now.AddMinutes(3));
+        var ex = Assert.Throws<InvalidOperationException>(() => payment.RestoreAfterOrderCancelRestore(now.AddMinutes(4)));
+        Assert.Equal("payment.restore.refund_completed", ex.Message);
+    }
+
+    [Fact]
+    public void Order_cancel_refund_does_not_un_cancel_payment_until_gateway_succeeds()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var payment = CustomerPayment.Open(
+            Guid.NewGuid(),
+            1000m,
+            "IRR",
+            "fake",
+            $"idem-{Guid.NewGuid():N}",
+            [(Guid.NewGuid(), 1000m)],
+            now);
+        var attempt = payment.RecordInitiation("req-1", now);
+        payment.ApplyVerifiedSuccess(attempt.AttemptId, "txn-1", now.AddMinutes(1));
+        Assert.Equal(PaymentStatus.Succeeded, payment.Status);
+        payment.BeginOrderCancelRefund(now.AddMinutes(2));
+        Assert.Equal(PaymentStatus.RefundPending, payment.Status);
+        payment.BeginOrderCancelRefund(now.AddMinutes(3));
+        Assert.Equal(PaymentStatus.RefundPending, payment.Status);
+        payment.MarkRefundFailed("GATEWAY_REFUND_REJECTED", now.AddMinutes(4));
+        Assert.Equal(PaymentStatus.RefundFailed, payment.Status);
+    }
+
+    [Fact]
     public void Restore_refund_and_dispatch_blockers_outrank_payout()
     {
         var group = SeedCancelledCheckout();
@@ -309,12 +532,24 @@ public sealed class AdminOrderCorrectiveActionsTests
         var composer = File.ReadAllText(Path.Combine(
             root, "src", "backend", "Host", "Tooba.Host", "Admin", "AdminOrderOperationsComposer.cs"));
         Assert.Contains("restore_deposit", composer, StringComparison.Ordinal);
+        Assert.Contains("unconfirm_deposit", composer, StringComparison.Ordinal);
+        Assert.Contains("ApplyVerifiedSuccessAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("EnsureCreatedForPaidCheckoutAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("برگشت از واریز", composer, StringComparison.Ordinal);
+        Assert.Contains("برگشت از رد واریز", composer, StringComparison.Ordinal);
         Assert.Contains("restore_cancelled_order", composer, StringComparison.Ordinal);
         Assert.Contains("GetRestoreSettlementGatesAsync", composer, StringComparison.Ordinal);
         Assert.Contains("order.restore.seller_payout_completed", composer, StringComparison.Ordinal);
         Assert.Contains("if (code == \"restore_cancelled_order\")", composer, StringComparison.Ordinal);
         Assert.Contains("correct_tracking", composer, StringComparison.Ordinal);
         Assert.Contains("ProjectWholeOrderCancel", composer, StringComparison.Ordinal);
+        Assert.Contains("AbortForCheckoutCancelAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("NeutralizeUnpaidAccrualForCancelAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("CloseOrStartRefundForOrderCancelAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("ReactivateAfterOrderRestoreAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("RestoreAfterOrderCancelRestoreAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("ReinstateAccrualAfterCancelRestoreAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("VoidUnpaidAccrualForPaymentAsync", composer, StringComparison.Ordinal);
         Assert.DoesNotContain("sellerOrderId ?? throw new PlatformHttpException(400, \"شناسه سفارش فروشنده الزامی است.\"", composer, StringComparison.Ordinal);
     }
 
@@ -406,7 +641,7 @@ public sealed class AdminOrderCorrectiveActionsTests
             "پست");
     }
 
-    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now)
+    private static FulfillmentUnit CreateUnit(Guid orderLineId, decimal quantity, DateTimeOffset now)
     {
         var unit = FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),

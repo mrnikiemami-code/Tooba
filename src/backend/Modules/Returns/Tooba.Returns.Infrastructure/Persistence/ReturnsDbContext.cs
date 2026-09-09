@@ -73,6 +73,7 @@ public sealed class ReturnsDbContext : DbContext
             entity.HasKey(x => x.ReturnItemId);
             entity.Property(x => x.ReturnItemId).ValueGeneratedNever();
             entity.Property(x => x.Currency).HasMaxLength(8);
+            entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.Property(x => x.UnitPriceSnapshot).HasPrecision(18, 4);
             entity.HasIndex(x => x.ReturnRequestId);
             entity.HasIndex(x => x.OrderLineId);

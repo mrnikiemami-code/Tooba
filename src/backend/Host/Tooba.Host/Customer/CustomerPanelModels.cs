@@ -44,7 +44,7 @@ public sealed record CustomerOrderListItem(
     string Reference,
     DateTimeOffset SubmittedAt,
     int SellerCount,
-    int ItemCount,
+    decimal ItemCount,
     decimal PayableAmount,
     string Currency,
     string PaymentState,
@@ -57,7 +57,7 @@ public sealed record CustomerOrderLineView(
     Guid OfferId,
     string Title,
     string SellerDisplayName,
-    int Quantity,
+    decimal Quantity,
     decimal UnitAmount,
     decimal LinePayable,
     string Currency);

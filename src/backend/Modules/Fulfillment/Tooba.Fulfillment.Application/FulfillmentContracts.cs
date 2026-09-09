@@ -17,7 +17,7 @@ public interface IFulfillmentInventoryGateway
 /// <summary>
 /// خط محموله در فرمان.
 /// </summary>
-public sealed record ShipmentLineCommand(Guid OrderLineId, int Quantity);
+public sealed record ShipmentLineCommand(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// snapshot خواندنی fulfillment.
@@ -47,15 +47,16 @@ public sealed record FulfillmentSnapshot(
 public sealed record FulfillmentItemSnapshot(
     Guid FulfillmentItemId,
     Guid OrderLineId,
-    int QuantityOrdered,
-    int QuantityShipped,
+    decimal QuantityOrdered,
+    decimal QuantityShipped,
     Guid? ReservationId,
-    int QuantityPacked = 0);
+    decimal QuantityPacked = 0,
+    decimal QuantityProcessing = 0);
 
 /// <summary>
 /// انتخاب خط/تعداد برای عملیات seller-scoped.
 /// </summary>
-public sealed record FulfillmentSelectionCommand(Guid OrderLineId, int Quantity);
+public sealed record FulfillmentSelectionCommand(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// snapshot محموله.
@@ -78,7 +79,7 @@ public sealed record ShipmentSnapshot(
 /// <summary>
 /// snapshot خط محموله.
 /// </summary>
-public sealed record ShipmentLineSnapshot(Guid OrderLineId, int Quantity);
+public sealed record ShipmentLineSnapshot(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// ارکستراسیون fulfillment.
@@ -102,6 +103,20 @@ public interface IFulfillmentDirectory
 
     /// <summary>به Processing می‌رود.</summary>
     Task<FulfillmentSnapshot> MarkProcessingAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken);
+
+    /// <summary>پردازش انتخاب‌شده.</summary>
+    Task<FulfillmentSnapshot> ProcessSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken);
+
+    /// <summary>برگشت از پردازش برای تعداد بسته‌بندی‌نشده.</summary>
+    Task<FulfillmentSnapshot> UnprocessSelectionsAsync(
+        Guid fulfillmentId,
+        Guid actorUserId,
+        IReadOnlyList<FulfillmentSelectionCommand> selections,
+        CancellationToken cancellationToken);
 
     /// <summary>به Packed می‌رود.</summary>
     Task<FulfillmentSnapshot> MarkPackedAsync(Guid fulfillmentId, Guid actorUserId, CancellationToken cancellationToken);
@@ -166,6 +181,29 @@ public interface IFulfillmentDirectory
         Guid shipmentId,
         Guid actorUserId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// fulfillment شروع‌نشده را پس از برگشت تأیید پرداخت حذف می‌کند.
+    /// </summary>
+    Task VoidUnstartedForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// برای سفارش‌های Paid که هنوز fulfillment ندارند، واحد ReadyToFulfill می‌سازد.
+    /// </summary>
+    Task EnsureCreatedForPaidCheckoutAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// مرسوله‌های پیش از Dispatch را باطل و واحدها را Cancelled می‌کند؛ idempotent.
+    /// </summary>
+    Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// واحدهای Cancelled را به ReadyToFulfill برمی‌گرداند؛ مرسوله‌های باطل‌شده را زنده نمی‌کند.
+    /// </summary>
+    Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -173,7 +211,7 @@ public interface IFulfillmentDirectory
 /// </summary>
 public sealed record LineDeliverySlice(
     Guid OrderLineId,
-    int Quantity,
+    decimal Quantity,
     DateTimeOffset DeliveredAt);
 
 /// <summary>
@@ -181,7 +219,7 @@ public sealed record LineDeliverySlice(
 /// </summary>
 public sealed record FulfillmentReturnEligibilitySnapshot(
     Guid SellerOrderId,
-    IReadOnlyDictionary<Guid, int> DeliveredQuantities,
+    IReadOnlyDictionary<Guid, decimal> DeliveredQuantities,
     DateTimeOffset? LastDeliveredAt,
     IReadOnlyDictionary<Guid, DateTimeOffset>? LineDeliveredAt = null,
     IReadOnlyList<LineDeliverySlice>? DeliverySlices = null);

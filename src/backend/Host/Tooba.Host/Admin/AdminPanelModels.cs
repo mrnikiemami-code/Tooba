@@ -22,7 +22,7 @@ public sealed record AdminOrderListItem(
     string CustomerDisplayName,
     int SellerCount,
     string SellerDisplayNames,
-    int LineCount,
+    decimal LineCount,
     decimal PayableAmount,
     string Currency,
     string PaymentState,
@@ -35,27 +35,28 @@ public sealed record AdminOrderListItem(
 public sealed record AdminOrderLineView(
     Guid OfferId,
     string ProductTitle,
-    int Quantity,
+    decimal Quantity,
     decimal UnitAmount,
     decimal LinePayable,
     string Currency,
     Guid? OrderLineId = null,
-    int? QuantityShipped = null,
+    decimal? QuantityShipped = null,
     string? ImageUrl = null,
     string? OperationalStatus = null,
-    int? QuantityPacked = null,
-    int? QuantityAllocated = null,
+    decimal? QuantityPacked = null,
+    decimal? QuantityAllocated = null,
     bool? IsReturnable = null,
     int? ReturnWindowDays = null,
     string? ReturnPolicyLabel = null,
     string? ReturnDeadlineDisplay = null,
     string? ReturnRemainingDisplay = null,
-    string? ReturnStatusCode = null);
+    string? ReturnStatusCode = null,
+    decimal? QuantityProcessing = null);
 
 /// <summary>
 /// خط تخصیص‌یافته در مرسولهٔ فروشنده.
 /// </summary>
-public sealed record AdminShipmentLineView(Guid OrderLineId, int Quantity);
+public sealed record AdminShipmentLineView(Guid OrderLineId, decimal Quantity);
 
 /// <summary>
 /// کارت مرسولهٔ یک فروشنده روی جزئیات سفارش مدیر.
@@ -65,7 +66,7 @@ public sealed record AdminShipmentView(
     string Status,
     string CarrierDisplayName,
     string? TrackingReference,
-    int ItemCount,
+    decimal ItemCount,
     IReadOnlyList<AdminShipmentLineView> Lines,
     string? ShippingMethodCode = null,
     string? ShippingMethodLabel = null);
@@ -94,7 +95,7 @@ public sealed record AdminSellerFinancialView(
     Guid SellerOrderId,
     Guid SellerPartyId,
     string SellerDisplayName,
-    int LineCount,
+    decimal LineCount,
     decimal GrossAmount,
     decimal CommissionAmount,
     decimal PayableAmount,
@@ -138,7 +139,7 @@ public sealed record AdminOrderDetailPage(
     DateTimeOffset SubmittedAt,
     string Status,
     string PaymentState,
-    int LineCount,
+    decimal LineCount,
     int SellerCount,
     decimal Subtotal,
     decimal TaxAmount,

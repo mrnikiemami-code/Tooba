@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe2, Save, Settings, User } from "lucide-react";
+import { Globe2, Hash, Save, Settings, User } from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { type Locale } from "../../../lib/i18n/locale.ts";
 import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
@@ -13,8 +13,13 @@ import {
   saveOperatorProfile,
   type OperatorProfile,
 } from "../operator-settings-api";
+import {
+  loadStoreQuantitySettings,
+  saveStoreQuantitySettings,
+  type QuantityRoundingMode,
+} from "../quantity-settings-api";
 
-type AdminSettingsTab = "profile" | "locale";
+type AdminSettingsTab = "profile" | "locale" | "quantity";
 
 /**
  * تنظیمات اپراتور Admin — پروفایل شخصی + locale؛ بدون سوئیچ سراسری جعلی.
@@ -33,13 +38,18 @@ export default function AdminSettingsPage() {
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
   const [locale, setLocale] = useState<Locale>("fa");
+  const [roundingMode, setRoundingMode] = useState<QuantityRoundingMode>("Nearest");
 
   async function refresh() {
     setDenied(false);
     setLoadError(null);
     setProfile(undefined);
     await prepareAdminDevActor();
-    const [profileResult, prefsResult] = await Promise.all([loadOperatorProfile(), loadOperatorPreferences()]);
+    const [profileResult, prefsResult, roundingResult] = await Promise.all([
+      loadOperatorProfile(),
+      loadOperatorPreferences(),
+      loadStoreQuantitySettings(),
+    ]);
     if (profileResult.state === "denied") {
       setDenied(true);
       setProfile(null);
@@ -60,6 +70,9 @@ export default function AdminSettingsPage() {
       writeBrowserLocaleCookie(prefsResult.data.locale);
     } else {
       setLocale(readBrowserLocaleCookie());
+    }
+    if (roundingResult.ok) {
+      setRoundingMode(roundingResult.data.globalRoundingMode);
     }
   }
 
@@ -119,6 +132,26 @@ export default function AdminSettingsPage() {
     setBusy(false);
   }
 
+  async function onSaveRounding() {
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const result = await saveStoreQuantitySettings(roundingMode);
+    if (result.denied) {
+      setDenied(true);
+      setBusy(false);
+      return;
+    }
+    if (!result.ok) {
+      setError("ذخیرهٔ گرد کردن مقدار انجام نشد.");
+      setBusy(false);
+      return;
+    }
+    setRoundingMode(result.data.globalRoundingMode);
+    setSuccess("گرد کردن سراسری مقدار ذخیره شد.");
+    setBusy(false);
+  }
+
   if (denied) {
     return (
       <section data-testid="admin-settings-page">
@@ -163,7 +196,7 @@ export default function AdminSettingsPage() {
             <Settings className="w-5 h-5 text-[#2563EB]" />
             <h1 className="text-lg font-bold text-gray-900">تنظیمات اپراتور</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">پروفایل شخصی و ترجیح زبان — بدون سوئیچ سراسری سامانه</p>
+          <p className="text-sm text-gray-500 mt-1">پروفایل، زبان، و یک گرد کردن سراسری مقدار</p>
         </div>
 
         <div className="flex overflow-x-auto border-b border-gray-200 scrollbar-hide">
@@ -171,6 +204,7 @@ export default function AdminSettingsPage() {
             [
               { id: "profile" as const, label: "پروفایل", icon: User },
               { id: "locale" as const, label: "زبان", icon: Globe2 },
+              { id: "quantity" as const, label: "مقدار", icon: Hash },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -194,7 +228,57 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="p-4 md:p-6">
-          {activeTab === "profile" ? (
+          {activeTab === "quantity" ? (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void onSaveRounding();
+              }}
+              data-testid="admin-settings-quantity-form"
+            >
+              <p className="text-sm text-gray-500 leading-7">
+                یک حالت گرد کردن سراسری برای نرمال‌سازی مقدار کالا. سفارش‌های تاریخی بازنویسی نمی‌شوند.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {(
+                  [
+                    { id: "Floor" as const, fa: "رو به پایین", en: "Floor" },
+                    { id: "Ceiling" as const, fa: "رو به بالا", en: "Ceiling" },
+                    { id: "Nearest" as const, fa: "نزدیک‌ترین مقدار", en: "Nearest" },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setRoundingMode(item.id)}
+                    className={`p-4 rounded-xl border-2 transition-all text-start ${
+                      roundingMode === item.id
+                        ? "border-[#2563EB] bg-[#2563EB]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    } ${busy ? "opacity-70 cursor-not-allowed" : ""}`}
+                    data-testid={`admin-settings-rounding-${item.id.toLowerCase()}`}
+                    aria-pressed={roundingMode === item.id}
+                  >
+                    <p className="text-sm font-medium text-gray-800">{item.fa}</p>
+                    <p className="text-xs text-gray-500 mt-1" dir="ltr">
+                      {item.en}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold hover:bg-[#1D4ED8] transition-colors shadow-lg shadow-[#2563EB]/30 flex items-center justify-center gap-2 disabled:opacity-70"
+                data-testid="admin-settings-save-rounding"
+              >
+                <Save className="w-4 h-4" />
+                ذخیره گرد کردن مقدار
+              </button>
+            </form>
+          ) : activeTab === "profile" ? (
             <form
               className="space-y-4"
               onSubmit={(event) => {

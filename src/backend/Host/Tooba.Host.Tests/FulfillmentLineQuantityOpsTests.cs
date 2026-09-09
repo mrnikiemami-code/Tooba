@@ -6,7 +6,7 @@ namespace Tooba.Host.Tests;
 /// <summary>تست‌های خط/تعداد fulfillment برای TB-P09-T005.</summary>
 public sealed class FulfillmentLineQuantityOpsTests
 {
-    private static FulfillmentUnit CreateUnit(Guid orderLineId, int quantity, DateTimeOffset now)
+    private static FulfillmentUnit CreateUnit(Guid orderLineId, decimal quantity, DateTimeOffset now)
     {
         var unit = FulfillmentUnit.CreateFromPaidOrder(
             Guid.NewGuid(),
@@ -25,6 +25,17 @@ public sealed class FulfillmentLineQuantityOpsTests
             now);
         unit.MarkProcessing(now);
         return unit;
+    }
+
+    [Fact]
+    public void Partial_decimal_pack_keeps_exact_remaining()
+    {
+        var lineId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateUnit(lineId, 2.75m, now);
+        unit.PackSelections([(lineId, 1.25m)], now);
+        Assert.Equal(1.25m, unit.Items.Single().QuantityPacked);
+        Assert.Equal(2.75m, unit.Items.Single().QuantityProcessing);
     }
 
     [Fact]
@@ -59,7 +70,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         unit.PackSelections([(lineId, 4)], now);
         unit.UnpackSelections([(lineId, 2)], now);
         Assert.Equal(2, unit.Items.Single().QuantityPacked);
-        Assert.Equal(FulfillmentStatus.Packed, unit.Status);
+        Assert.Equal(FulfillmentStatus.Processing, unit.Status);
     }
 
     [Fact]
@@ -128,5 +139,45 @@ public sealed class FulfillmentLineQuantityOpsTests
         var ex = Assert.Throws<InvalidOperationException>(() =>
             unit.PackSelections([(foreign, 1)], now));
         Assert.Contains("فروشنده", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AbortForOrderCancel_voids_created_shipments_and_is_idempotent()
+    {
+        var lineId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateUnit(lineId, 2, now);
+        unit.PackSelections([(lineId, 2)], now);
+        var shipment = unit.CreateShipment("پست", [(lineId, 2)], now);
+        unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
+        unit.AbortForOrderCancel(now);
+        Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
+        Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
+        Assert.Equal(2, unit.Items.Single().QuantityPacked);
+        Assert.Equal(2, unit.Items.Single().QuantityProcessing);
+        unit.AbortForOrderCancel(now.AddMinutes(1));
+        Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
+
+        unit.ReactivateAfterOrderRestore(now.AddMinutes(2));
+        Assert.Equal(FulfillmentStatus.Packed, unit.Status);
+        Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
+        var replacement = unit.CreateShipment("پست", [(lineId, 2)], now.AddMinutes(3));
+        Assert.Equal(ShipmentStatus.Created, replacement.Status);
+        Assert.Equal(2, unit.Shipments.Count);
+    }
+
+    [Fact]
+    public void AbortForOrderCancel_rejects_after_dispatch()
+    {
+        var lineId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateUnit(lineId, 1, now);
+        unit.PackSelections([(lineId, 1)], now);
+        var shipment = unit.CreateShipment("پست", [(lineId, 1)], now);
+        unit.AssignTracking(shipment.ShipmentId, "TRK-1", now);
+        unit.ApplyShipmentDispatched(shipment.ShipmentId, now);
+        var ex = Assert.Throws<InvalidOperationException>(() => unit.AbortForOrderCancel(now));
+        Assert.Equal("fulfillment.cancel.already_dispatched", ex.Message);
+        Assert.NotEqual(FulfillmentStatus.Cancelled, unit.Status);
     }
 }

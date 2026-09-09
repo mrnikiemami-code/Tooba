@@ -160,12 +160,12 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// موجودی فیزیکی. اعشار شناور نیست.
     /// </summary>
-    public int OnHand { get; private set; }
+    public decimal OnHand { get; private set; }
 
     /// <summary>
     /// مقدار قفل‌شده برای رزروهای Held.
     /// </summary>
-    public int Reserved { get; private set; }
+    public decimal Reserved { get; private set; }
 
     /// <summary>
     /// زمان ایجاد UTC.
@@ -180,7 +180,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// موجودی قابل‌فروش مشتق؛ ستون جدا ذخیره نمی‌شود تا منحرف نشود.
     /// </summary>
-    public int Available => OnHand - Reserved;
+    public decimal Available => OnHand - Reserved;
 
     /// <inheritdoc />
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.Events;
@@ -216,7 +216,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// پس از به‌روزرسانی اتمی پایگاه، مقادیر خوانده‌شده را با رویداد هم‌تراز می‌کند.
     /// </summary>
-    public void SyncQuantities(int onHand, int reserved, DateTimeOffset now)
+    public void SyncQuantities(decimal onHand, decimal reserved, DateTimeOffset now)
     {
         EnsureLegal(onHand, reserved);
         OnHand = onHand;
@@ -228,7 +228,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// رویداد اصلاح را ثبت می‌کند. مقدار را جداگانه با SQL اتمی عوض می‌کنند.
     /// </summary>
-    public void RecordAdjustment(StockAdjustmentKind kind, int delta, string reason)
+    public void RecordAdjustment(StockAdjustmentKind kind, decimal delta, string reason)
     {
         _domainEvents.Add(new StockAdjustedDomainEvent(StockItemId, OfferId, kind, delta, reason));
     }
@@ -236,7 +236,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// رویداد رزرو موفق را ثبت می‌کند.
     /// </summary>
-    public void RecordReserved(Guid reservationId, int quantity)
+    public void RecordReserved(Guid reservationId, decimal quantity)
     {
         _domainEvents.Add(new StockReservedDomainEvent(reservationId, StockItemId, OfferId, quantity));
     }
@@ -244,7 +244,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// رویداد آزادسازی رزرو را ثبت می‌کند.
     /// </summary>
-    public void RecordReleased(Guid reservationId, int quantity)
+    public void RecordReleased(Guid reservationId, decimal quantity)
     {
         _domainEvents.Add(new StockReleasedDomainEvent(reservationId, StockItemId, OfferId, quantity));
     }
@@ -252,7 +252,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// رویداد مصرف رزرو را ثبت می‌کند.
     /// </summary>
-    public void RecordConsumed(Guid reservationId, int quantity)
+    public void RecordConsumed(Guid reservationId, decimal quantity)
     {
         _domainEvents.Add(new StockReservationConsumedDomainEvent(reservationId, StockItemId, OfferId, quantity));
     }
@@ -260,7 +260,7 @@ public sealed class StockPosition : IHasDomainEvents
     /// <summary>
     /// حالت غیرممکن موجودی را رد می‌کند.
     /// </summary>
-    public static void EnsureLegal(int onHand, int reserved)
+    public static void EnsureLegal(decimal onHand, decimal reserved)
     {
         if (onHand < 0 || reserved < 0 || reserved > onHand)
         {
@@ -287,7 +287,7 @@ public sealed class StockReservation
     /// <summary>
     /// مقدار قفل‌شده.
     /// </summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
 
     /// <summary>
     /// وضعیت چرخهٔ رزرو.
@@ -324,7 +324,7 @@ public sealed class StockReservation
     /// </summary>
     public static StockReservation Hold(
         Guid stockItemId,
-        int quantity,
+        decimal quantity,
         string? externalReference,
         string? idempotencyKey,
         DateTimeOffset now,
@@ -378,7 +378,7 @@ public sealed class StockAdjustedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد اصلاح را می‌سازد.
     /// </summary>
-    public StockAdjustedDomainEvent(Guid stockItemId, Guid offerId, StockAdjustmentKind kind, int delta, string reason)
+    public StockAdjustedDomainEvent(Guid stockItemId, Guid offerId, StockAdjustmentKind kind, decimal delta, string reason)
     {
         StockItemId = stockItemId;
         OfferId = offerId;
@@ -409,7 +409,7 @@ public sealed class StockAdjustedDomainEvent : IDomainEvent
     /// <summary>
     /// تغییر OnHand.
     /// </summary>
-    public int Delta { get; }
+    public decimal Delta { get; }
 
     /// <summary>
     /// دلیل عملیاتی.
@@ -425,7 +425,7 @@ public sealed class StockReservedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد رزرو را می‌سازد.
     /// </summary>
-    public StockReservedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, int quantity)
+    public StockReservedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, decimal quantity)
     {
         ReservationId = reservationId;
         StockItemId = stockItemId;
@@ -455,7 +455,7 @@ public sealed class StockReservedDomainEvent : IDomainEvent
     /// <summary>
     /// مقدار قفل‌شده.
     /// </summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>
@@ -466,7 +466,7 @@ public sealed class StockReleasedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد آزادسازی را می‌سازد.
     /// </summary>
-    public StockReleasedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, int quantity)
+    public StockReleasedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, decimal quantity)
     {
         ReservationId = reservationId;
         StockItemId = stockItemId;
@@ -496,7 +496,7 @@ public sealed class StockReleasedDomainEvent : IDomainEvent
     /// <summary>
     /// مقدار برگشتی.
     /// </summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>
@@ -507,7 +507,7 @@ public sealed class StockReservationConsumedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد مصرف را می‌سازد.
     /// </summary>
-    public StockReservationConsumedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, int quantity)
+    public StockReservationConsumedDomainEvent(Guid reservationId, Guid stockItemId, Guid offerId, decimal quantity)
     {
         ReservationId = reservationId;
         StockItemId = stockItemId;
@@ -537,7 +537,7 @@ public sealed class StockReservationConsumedDomainEvent : IDomainEvent
     /// <summary>
     /// مقدار کسرشده از OnHand.
     /// </summary>
-    public int Quantity { get; }
+    public decimal Quantity { get; }
 }
 
 /// <summary>
@@ -548,7 +548,7 @@ public sealed class StockAvailabilityChangedDomainEvent : IDomainEvent
     /// <summary>
     /// رویداد تغییر موجودی را می‌سازد.
     /// </summary>
-    public StockAvailabilityChangedDomainEvent(Guid stockItemId, Guid offerId, int onHand, int reserved, int available)
+    public StockAvailabilityChangedDomainEvent(Guid stockItemId, Guid offerId, decimal onHand, decimal reserved, decimal available)
     {
         StockItemId = stockItemId;
         OfferId = offerId;
@@ -574,15 +574,15 @@ public sealed class StockAvailabilityChangedDomainEvent : IDomainEvent
     /// <summary>
     /// موجودی فیزیکی.
     /// </summary>
-    public int OnHand { get; }
+    public decimal OnHand { get; }
 
     /// <summary>
     /// مقدار رزرو.
     /// </summary>
-    public int Reserved { get; }
+    public decimal Reserved { get; }
 
     /// <summary>
     /// موجودی قابل‌فروش مشتق.
     /// </summary>
-    public int Available { get; }
+    public decimal Available { get; }
 }

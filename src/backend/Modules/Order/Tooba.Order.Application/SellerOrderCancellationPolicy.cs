@@ -4,8 +4,12 @@ namespace Tooba.Order.Application;
 
 /// <summary>
 /// snapshot سبک وضعیت fulfillment برای تصمیم لغو؛ بدون وابستگی به DbContext Fulfillment.
+/// خط قرمز لغو کل سفارش، اولین quantity واقعی Dispatch است نه ایجاد مرسوله یا Packed.
 /// </summary>
-public sealed record SellerOrderCancelFulfillmentSnapshot(string Status, int ShipmentCount);
+public sealed record SellerOrderCancelFulfillmentSnapshot(
+    string Status,
+    int ShipmentCount,
+    bool HasDispatchedQuantity = false);
 
 /// <summary>
 /// درز خواندن وضعیت ارسال برای لغو Paid پیش از محموله.
@@ -27,22 +31,17 @@ public static class SellerOrderCancellationPolicy
             or SellerOrderStatus.Submitted
             or SellerOrderStatus.ReservationRequested;
 
-    /// <summary>Paid فقط قبل از هر محموله و در ReadyToFulfill/Processing.</summary>
+    /// <summary>Paid تا قبل از اولین quantity واقعی Dispatch؛ Packed و مرسولهٔ Created مانع نیستند.</summary>
     public static bool IsPaidPreShipmentCancellable(
         SellerOrderStatus status,
         SellerOrderCancelFulfillmentSnapshot? fulfillment)
     {
-        if (status != SellerOrderStatus.Paid || fulfillment is null)
+        if (status != SellerOrderStatus.Paid)
         {
             return false;
         }
 
-        if (fulfillment.ShipmentCount > 0)
-        {
-            return false;
-        }
-
-        return fulfillment.Status is "ReadyToFulfill" or "Processing";
+        return fulfillment is null || !fulfillment.HasDispatchedQuantity;
     }
 
     /// <summary>آیا لغو در این ترکیب وضعیت مجاز است.</summary>

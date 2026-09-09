@@ -65,6 +65,14 @@ public interface IOrderPaymentProjection
         Guid paymentId,
         IReadOnlyList<Guid> sellerOrderIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Paid را پس از برگشت تأیید واریز دستی به PendingPayment برمی‌گرداند.
+    /// </summary>
+    Task RevertVerifiedSuccessAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> sellerOrderIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -223,7 +231,8 @@ public sealed record PaymentOperationalSnapshot(
     bool ConfirmDepositEligible,
     bool RejectDepositEligible,
     bool RestoreDepositEligible = false,
-    bool HasManualDepositRejection = false);
+    bool HasManualDepositRejection = false,
+    bool UnconfirmDepositEligible = false);
 
 /// <summary>
 /// بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
@@ -261,6 +270,23 @@ public interface IPaymentAdminDirectory
     /// رد واریز دستی را از مسیر دامنه به انتظار تأیید برمی‌گرداند؛ Succeeded نمی‌سازد.
     /// </summary>
     Task<PaymentVerificationResult> RestoreDepositAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تأیید واریز دستی را به انتظار تأیید برمی‌گرداند؛ رویداد موفقیت جدید نمی‌سازد.
+    /// </summary>
+    Task<PaymentVerificationResult> UnconfirmDepositAsync(Guid paymentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// با لغو سفارش: پرداخت موفق‌نشده را می‌بندد یا workflow بازگشت وجه را شروع می‌کند.
+    /// موفقیت Refund را فرض نمی‌کند و سفارش را برنمی‌گرداند.
+    /// </summary>
+    Task CloseOrStartRefundForOrderCancelAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پس از بازگردانی سفارش لغوشده، پرداخت را به وضعیت عملیاتی قبل از Cancel برمی‌گرداند
+    /// اگر Refund نهایی نشده باشد.
+    /// </summary>
+    Task RestoreAfterOrderCancelRestoreAsync(Guid checkoutId, CancellationToken cancellationToken);
 }
 
 /// <summary>

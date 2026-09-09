@@ -12,7 +12,7 @@ public sealed record OrderLineSnapshot(
     Guid OfferId,
     Guid CatalogVariantId,
     Guid SellerPartyId,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPriceSnapshot,
     decimal LineTotalSnapshot,
     string Currency,
@@ -31,7 +31,12 @@ public sealed record OrderLineSnapshot(
     string? DiscountKindSnapshot,
     decimal PreDiscountTaxExclusiveSnapshot,
     decimal PostDiscountTaxExclusiveSnapshot,
-    DateTimeOffset? PromotionAppliedAtSnapshot);
+    DateTimeOffset? PromotionAppliedAtSnapshot,
+    Guid? UnitOfMeasureIdSnapshot = null,
+    string? UnitCodeSnapshot = null,
+    string? UnitDisplaySnapshot = null,
+    int QuantityDecimalPlacesSnapshot = 0,
+    decimal? QuantityStepSnapshot = null);
 
 /// <summary>
 /// سفارش یک فروشنده داخل checkout. چرخهٔ ارسال نیست.
@@ -234,7 +239,7 @@ public sealed record OrderFulfillmentHandoffSnapshot(
 /// </summary>
 public sealed record OrderFulfillmentLineSnapshot(
     Guid OrderLineId,
-    int Quantity,
+    decimal Quantity,
     Guid? ReservationId);
 
 /// <summary>
@@ -261,7 +266,7 @@ public interface IOrderFulfillmentReader
 /// </summary>
 public sealed record OrderReturnLineSnapshot(
     Guid OrderLineId,
-    int Quantity,
+    decimal Quantity,
     decimal UnitPriceSnapshot,
     string Currency,
     Guid? ReservationId,

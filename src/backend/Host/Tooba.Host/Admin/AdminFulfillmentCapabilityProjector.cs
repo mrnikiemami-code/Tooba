@@ -47,31 +47,37 @@ internal static class AdminFulfillmentCapabilityProjector
         {
             var item = fulfillment.Items.FirstOrDefault(x => x.OrderLineId == line.LineId);
             var packed = item?.QuantityPacked ?? 0;
+            var processing = item?.QuantityProcessing ?? 0;
             var shipped = item?.QuantityShipped ?? 0;
             var openAllocated = fulfillment.Shipments
                 .Where(s => s.Status == ShipmentStatus.Created)
                 .SelectMany(s => s.Items)
                 .Where(i => i.OrderLineId == line.LineId)
                 .Sum(i => i.Quantity);
-            var packable = Math.Max(0, (item?.QuantityOrdered ?? line.Quantity) - packed);
+            var ordered = item?.QuantityOrdered ?? line.Quantity;
+            var processable = Math.Max(0, ordered - processing);
+            var packable = Math.Max(0, processing - packed);
             var unpackable = Math.Max(0, packed - openAllocated - shipped);
             var shippable = Math.Max(0, packed - openAllocated);
             var row = new List<string>();
             var bulk = new List<string>();
 
-            if (fulfillment.Status == FulfillmentStatus.ReadyToFulfill
-                && sellerActions.Any(a => a.Code == "mark_processing"))
+            if (processable > 0 && sellerActions.Any(a => a.Code == "mark_processing"))
             {
                 row.Add("mark_processing");
                 bulk.Add("mark_processing");
             }
 
-            if (fulfillment.Status is FulfillmentStatus.Processing or FulfillmentStatus.Packed
-                && packable > 0
-                && sellerActions.Any(a => a.Code == "pack_selected"))
+            if (packable > 0 && sellerActions.Any(a => a.Code == "pack_selected"))
             {
                 row.Add("pack_selected");
                 bulk.Add("pack_selected");
+            }
+
+            if (packable > 0 && sellerActions.Any(a => a.Code == "unprocess"))
+            {
+                row.Add("unprocess");
+                bulk.Add("unprocess");
             }
 
             if (unpackable > 0 && sellerActions.Any(a => a.Code == "unpack"))
@@ -86,17 +92,17 @@ internal static class AdminFulfillmentCapabilityProjector
             }
 
             var selectable = row.Count > 0 || bulk.Count > 0;
-            var max = 0;
-            if (row.Contains("pack_selected")) max = Math.Max(max, packable);
+            var max = 0m;
+            if (row.Contains("pack_selected") || row.Contains("unprocess")) max = Math.Max(max, packable);
             if (row.Contains("unpack")) max = Math.Max(max, unpackable);
             if (bulk.Contains("create_shipment")) max = Math.Max(max, shippable);
-            if (row.Contains("mark_processing")) max = Math.Max(max, line.Quantity);
+            if (row.Contains("mark_processing")) max = Math.Max(max, processable);
 
             lineCaps.Add(new AdminOrderLineCapability(
                 line.LineId,
                 order.SellerOrderId,
                 selectable,
-                selectable ? Math.Max(1, max) : 0,
+                selectable ? max : 0m,
                 row,
                 bulk,
                 shippable));
@@ -105,6 +111,7 @@ internal static class AdminFulfillmentCapabilityProjector
         var whole = new List<string>();
         if (sellerActions.Any(a => a.Code == "mark_processing")) whole.Add("mark_processing");
         if (sellerActions.Any(a => a.Code == "mark_packed")) whole.Add("mark_packed");
+        if (sellerActions.Any(a => a.Code == "unprocess")) whole.Add("unprocess");
         if (sellerActions.Any(a => a.Code == "unpack")) whole.Add("unpack");
         var shipmentPossible = sellerActions.Any(a => a.Code == "create_shipment")
             && lineCaps.Any(x => x.ShipmentEligibleQuantity > 0);

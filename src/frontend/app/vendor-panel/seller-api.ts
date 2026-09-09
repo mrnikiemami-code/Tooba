@@ -66,6 +66,8 @@ export interface SellerOfferDetail {
   minReturnWindowDays: number;
   maxReturnWindowDays: number;
   allowNonReturnableOffers: boolean;
+  minimumOrderQuantity: number | null;
+  maximumOrderQuantity: number | null;
 }
 
 export interface SellerOrderListRow {
@@ -409,6 +411,8 @@ export function mapSellerOfferDetail(payload: unknown): SellerOfferDetail | null
       readProp(item, "allowNonReturnableOffers", "AllowNonReturnableOffers"),
       true,
     ),
+    minimumOrderQuantity: asNullableNumber(readProp(item, "minimumOrderQuantity", "MinimumOrderQuantity")),
+    maximumOrderQuantity: asNullableNumber(readProp(item, "maximumOrderQuantity", "MaximumOrderQuantity")),
   };
 }
 
@@ -573,6 +577,8 @@ export async function patchSellerOffer(
     status?: string | null;
     returnPolicyChoice?: string | null;
     customReturnWindowDays?: number | null;
+    minimumOrderQuantity?: number | null;
+    maximumOrderQuantity?: number | null;
   },
 ): Promise<{ ok: true; detail: SellerOfferDetail } | { ok: false; errorCode: string; denied?: boolean }> {
   try {
@@ -584,6 +590,8 @@ export async function patchSellerOffer(
         status: patch.status,
         returnPolicyChoice: patch.returnPolicyChoice,
         customReturnWindowDays: patch.customReturnWindowDays,
+        minimumOrderQuantity: patch.minimumOrderQuantity,
+        maximumOrderQuantity: patch.maximumOrderQuantity,
       }),
     });
     if (isDeniedStatus(response.status)) {

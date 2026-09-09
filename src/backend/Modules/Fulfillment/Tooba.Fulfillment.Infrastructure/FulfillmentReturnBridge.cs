@@ -32,10 +32,10 @@ public sealed class FulfillmentReturnBridge : IFulfillmentReturnReader
             .ToListAsync(cancellationToken);
         if (shipments.Count == 0)
         {
-            return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, new Dictionary<Guid, int>(), null);
+            return new FulfillmentReturnEligibilitySnapshot(sellerOrderId, new Dictionary<Guid, decimal>(), null);
         }
 
-        var delivered = new Dictionary<Guid, int>();
+        var delivered = new Dictionary<Guid, decimal>();
         var lineDeliveredAt = new Dictionary<Guid, DateTimeOffset>();
         var slices = new List<LineDeliverySlice>();
         foreach (var shipment in shipments)

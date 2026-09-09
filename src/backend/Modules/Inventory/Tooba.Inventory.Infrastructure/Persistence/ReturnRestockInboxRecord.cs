@@ -12,7 +12,7 @@ public sealed class ReturnRestockInboxRecord
     public Guid ReservationId { get; init; }
 
     /// <summary>تعداد restock.</summary>
-    public int Quantity { get; init; }
+    public decimal Quantity { get; init; }
 
     /// <summary>زمان پردازش.</summary>
     public DateTimeOffset ProcessedAt { get; init; }

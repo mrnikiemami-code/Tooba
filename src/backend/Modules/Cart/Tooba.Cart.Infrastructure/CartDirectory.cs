@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Cart.Domain;
 using Tooba.Cart.Infrastructure.Persistence;
+using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Offer.Application;
 using Tooba.Offer.Domain;
@@ -33,6 +35,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     private readonly IPriceLookupGateway _prices;
     private readonly IInventoryDirectory _inventory;
     private readonly IInventoryAvailabilityGateway _availability;
+    private readonly ICatalogLookupGateway? _catalog;
+    private readonly IQuantityNormalizer _normalizer;
 
     /// <summary>
     /// دایرکتوری را به schema Cart و درزهای Offer/Pricing/Inventory وصل می‌کند.
@@ -43,7 +47,9 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         IOfferLookupGateway offers,
         IPriceLookupGateway prices,
         IInventoryDirectory inventory,
-        IInventoryAvailabilityGateway availability)
+        IInventoryAvailabilityGateway availability,
+        ICatalogLookupGateway? catalog = null,
+        IQuantityNormalizer? normalizer = null)
     {
         _db = db;
         _guard = guard;
@@ -51,6 +57,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _prices = prices;
         _inventory = inventory;
         _availability = availability;
+        _catalog = catalog;
+        _normalizer = normalizer ?? new QuantityNormalizer();
     }
 
     /// <inheritdoc />
@@ -106,11 +114,10 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         CartAccess access,
         int expectedVersion,
         Guid offerId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
-        CartLine.EnsureQuantity(quantity);
         var cart = await LoadRequiredAsync(cartId, cancellationToken);
         EnsureAccess(cart, access);
         cart.EnsureVersion(expectedVersion);
@@ -121,7 +128,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         var now = DateTimeOffset.UtcNow;
-        var (offer, quote) = await ValidateOfferAndQuoteAsync(cart, offerId, quantity, now, cancellationToken);
+        var (offer, quote, normalized) = await ValidateOfferAndQuoteAsync(cart, offerId, quantity, now, cancellationToken);
+        quantity = normalized;
         var line = CartLine.Open(
             cart.CartId,
             offer.OfferId,
@@ -148,7 +156,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         CartAccess access,
         int expectedVersion,
         Guid lineId,
-        int quantity,
+        decimal quantity,
         CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
@@ -272,11 +280,11 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         return ToSnapshot(cart);
     }
 
-    private async Task<CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, int quantity, CancellationToken cancellationToken)
+    private async Task<CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
     {
-        CartLine.EnsureQuantity(quantity);
         var now = DateTimeOffset.UtcNow;
-        var (_, quote) = await ValidateOfferAndQuoteAsync(cart, line.OfferId, quantity, now, cancellationToken);
+        var (_, quote, normalized) = await ValidateOfferAndQuoteAsync(cart, line.OfferId, quantity, now, cancellationToken);
+        quantity = normalized;
         var previousReservation = line.ReservationId;
         var previousQuantity = line.Quantity;
         if (previousReservation is { } oldId)
@@ -333,10 +341,10 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         return ToSnapshot(cart);
     }
 
-    private async Task<(OfferReference Offer, PriceQuote Quote)> ValidateOfferAndQuoteAsync(
+    private async Task<(OfferReference Offer, PriceQuote Quote, decimal Quantity)> ValidateOfferAndQuoteAsync(
         ShoppingCart cart,
         Guid offerId,
-        int quantity,
+        decimal quantity,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
@@ -352,18 +360,36 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             throw new InvalidOperationException("کانال Offer با زمینهٔ سبد یکی نیست.");
         }
 
+        if (_catalog is not null)
+        {
+            var policy = await _catalog.GetEffectiveQuantityPolicyForVariantAsync(offer.CatalogVariantId, cancellationToken)
+                ?? throw new InvalidOperationException("سیاست مقدار گونه از Catalog پیدا نشد.");
+            quantity = _normalizer.Normalize(quantity, policy);
+        }
+
+        CartLine.EnsureQuantity(quantity);
+        if (offer.MinimumOrderQuantity is { } min && quantity < min)
+        {
+            throw new InvalidOperationException("offer.min_quantity.not_met");
+        }
+
+        if (offer.MaximumOrderQuantity is { } max && quantity > max)
+        {
+            throw new InvalidOperationException("offer.max_quantity.exceeded");
+        }
+
         var quote = await _prices.ResolvePriceAsync(
             new PriceResolutionQuery(offerId, cart.Market, cart.Channel, cart.Currency, now, null, null, quantity),
             cancellationToken)
             ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد؛ مبلغ روی Product/Offer نیست.");
-        return (offer, quote);
+        return (offer, quote, quantity);
     }
 
     private async Task<ReservationReceipt> ReserveForLineAsync(
         ShoppingCart cart,
         Guid lineId,
         Guid offerId,
-        int quantity,
+        decimal quantity,
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {

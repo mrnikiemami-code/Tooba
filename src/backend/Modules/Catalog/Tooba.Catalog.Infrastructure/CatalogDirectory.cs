@@ -259,6 +259,141 @@ public sealed class CatalogDirectory : ICatalogDirectory, ICatalogLookupGateway
     }
 
     /// <inheritdoc />
+    public async Task<EffectiveQuantityPolicy?> GetEffectiveQuantityPolicyForVariantAsync(
+        Guid variantId,
+        CancellationToken cancellationToken)
+    {
+        var map = await GetEffectiveQuantityPoliciesForVariantIdsAsync([variantId], cancellationToken);
+        return map.TryGetValue(variantId, out var policy) ? policy : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, EffectiveQuantityPolicy>> GetEffectiveQuantityPoliciesForVariantIdsAsync(
+        IReadOnlyCollection<Guid> variantIds,
+        CancellationToken cancellationToken)
+    {
+        if (variantIds.Count == 0)
+        {
+            return new Dictionary<Guid, EffectiveQuantityPolicy>();
+        }
+
+        var distinct = variantIds.Distinct().ToArray();
+        var variants = await _db.Variants.AsNoTracking()
+            .Where(v => distinct.Contains(v.VariantId))
+            .Select(v => new { v.VariantId, v.ProductId })
+            .ToListAsync(cancellationToken);
+        if (variants.Count == 0)
+        {
+            return new Dictionary<Guid, EffectiveQuantityPolicy>();
+        }
+
+        var productIds = variants.Select(v => v.ProductId).Distinct().ToArray();
+        var products = await _db.Products.AsNoTracking()
+            .Where(p => productIds.Contains(p.ProductId))
+            .Select(p => new { p.ProductId, p.UnitOfMeasureId, p.QuantityDecimalPlaces, p.QuantityStep })
+            .ToListAsync(cancellationToken);
+        var unitIds = products.Select(p => p.UnitOfMeasureId).Distinct().ToArray();
+        var units = await _db.UnitsOfMeasure.AsNoTracking()
+            .Where(u => unitIds.Contains(u.UnitOfMeasureId))
+            .ToListAsync(cancellationToken);
+        var translations = await _db.UnitOfMeasureTranslations.AsNoTracking()
+            .Where(t => unitIds.Contains(t.UnitOfMeasureId))
+            .ToListAsync(cancellationToken);
+        var settings = await _db.StoreQuantitySettings.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.SettingsId == StoreQuantitySettings.SingletonId, cancellationToken);
+        var rounding = settings?.RoundingMode ?? QuantityRoundingMode.Nearest;
+
+        var languagePreference = await LoadPreferredLanguageIdsAsync(cancellationToken);
+        var unitById = units.ToDictionary(u => u.UnitOfMeasureId);
+        var translationsByUnit = translations.GroupBy(t => t.UnitOfMeasureId).ToDictionary(g => g.Key, g => g.ToList());
+        var productById = products.ToDictionary(p => p.ProductId);
+
+        var result = new Dictionary<Guid, EffectiveQuantityPolicy>();
+        foreach (var variant in variants)
+        {
+            if (!productById.TryGetValue(variant.ProductId, out var product))
+            {
+                continue;
+            }
+
+            unitById.TryGetValue(product.UnitOfMeasureId, out var unit);
+            translationsByUnit.TryGetValue(product.UnitOfMeasureId, out var unitTranslations);
+            var picked = PickTranslation(unitTranslations, languagePreference);
+            var code = unit?.Code ?? "pcs";
+            result[variant.VariantId] = new EffectiveQuantityPolicy(
+                product.ProductId,
+                product.UnitOfMeasureId,
+                code,
+                picked?.Name ?? code,
+                picked?.ShortName ?? code,
+                product.QuantityDecimalPlaces,
+                product.QuantityStep,
+                rounding);
+        }
+
+        return result;
+    }
+
+    private async Task<IReadOnlyList<Guid>> LoadPreferredLanguageIdsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var rows = await _db.Database
+                .SqlQuery<LanguageCodeRow>(
+                    $"""
+                     SELECT language_id AS "LanguageId", code AS "Code"
+                     FROM localization.languages
+                     """)
+                .ToListAsync(cancellationToken);
+            return rows
+                .OrderBy(r => LanguageRank(r.Code))
+                .Select(r => r.LanguageId)
+                .ToList();
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    private static int LanguageRank(string? code)
+    {
+        var normalized = (code ?? string.Empty).Trim().ToLowerInvariant();
+        if (normalized is "fa" or "fa-ir") return 0;
+        if (normalized.StartsWith("fa", StringComparison.Ordinal)) return 1;
+        if (normalized is "en" or "en-us") return 2;
+        if (normalized.StartsWith("en", StringComparison.Ordinal)) return 3;
+        return 8;
+    }
+
+    private static UnitOfMeasureTranslation? PickTranslation(
+        IReadOnlyList<UnitOfMeasureTranslation>? translations,
+        IReadOnlyList<Guid> preferredLanguageIds)
+    {
+        if (translations is null || translations.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var languageId in preferredLanguageIds)
+        {
+            var match = translations.FirstOrDefault(t => t.LanguageId == languageId);
+            if (match is not null)
+            {
+                return match;
+            }
+        }
+
+        return translations[0];
+    }
+
+    private sealed class LanguageCodeRow
+    {
+        public Guid LanguageId { get; set; }
+        public string Code { get; set; } = string.Empty;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, ReviewableProductReference>> GetReviewableProductsByIdsAsync(
         IReadOnlyCollection<Guid> productIds,
         CancellationToken cancellationToken)

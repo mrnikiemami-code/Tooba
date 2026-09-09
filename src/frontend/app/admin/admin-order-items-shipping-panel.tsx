@@ -37,9 +37,20 @@ function lineKey(line: AdminOrderLine): string {
   return line.orderLineId || line.id;
 }
 
+function processingQty(line: AdminOrderLine): number {
+  return line.quantityProcessing ?? 0;
+}
+
+function processableQty(line: AdminOrderLine): number {
+  return Math.max(0, line.quantity - processingQty(line));
+}
+
 function packableQty(line: AdminOrderLine): number {
-  const packed = line.quantityPacked ?? 0;
-  return Math.max(0, line.quantity - packed);
+  return Math.max(0, processingQty(line) - (line.quantityPacked ?? 0));
+}
+
+function unprocessableQty(line: AdminOrderLine): number {
+  return Math.max(0, processingQty(line) - (line.quantityPacked ?? 0));
 }
 
 function shippableQty(line: AdminOrderLine): number {
@@ -135,7 +146,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         current.add(id);
         setQtyByLine((q) => ({
           ...q,
-          [id]: q[id] ?? Math.max(1, packableQty(line) || shippableQty(line) || line.quantity),
+          [id]: q[id] ?? Math.max(1, processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity),
         }));
       }
       return { ...prev, [sellerOrderId]: [...current] };
@@ -153,6 +164,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       operationalStatus: line.operationalStatus,
       packable: packableQty(line),
       unpackable: unpackableQty(line),
+      unprocessable: unprocessableQty(line),
       shippable: shippableQty(line),
       quantity: line.quantity,
       projectedCodes: (opsBySeller[seller.id] ?? []).map((a) => a.code),
@@ -183,14 +195,14 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const cap = capabilityFor(seller, line);
           if (!cap.selectable) continue;
           const id = lineKey(line);
-          next[id] = next[id] ?? Math.max(1, Math.min(cap.selectableQuantityMax || line.quantity, packableQty(line) || shippableQty(line) || line.quantity));
+          next[id] = next[id] ?? Math.max(1, Math.min(cap.selectableQuantityMax || line.quantity, processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity));
         }
         return next;
       });
     }
   }
 
-  function buildSelections(seller: AdminSellerOrder, mode: "pack" | "ship" | "unpack") {
+  function buildSelections(seller: AdminSellerOrder, mode: "pack" | "ship" | "unpack" | "process" | "unprocess") {
     const selected = selectedBySeller[seller.id] ?? [];
     if (selected.length === 0) return null;
     const lines = selected
@@ -200,7 +212,11 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       .map((line) => {
         const id = lineKey(line);
         const max =
-          mode === "pack" ? packableQty(line) : mode === "unpack" ? unpackableQty(line) : shippableQty(line);
+          mode === "pack" ? packableQty(line)
+          : mode === "unpack" ? unpackableQty(line)
+          : mode === "process" ? processableQty(line)
+          : mode === "unprocess" ? unprocessableQty(line)
+          : shippableQty(line);
         const qty = Math.min(qtyByLine[id] ?? max, max);
         return {
           orderLineId: line.orderLineId || line.id,
@@ -286,6 +302,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const canPackAll = !hasSelection && !paymentLocked && Boolean(actionFor(actions, "mark_packed", seller.id));
           const canPackSelected = hasSelection && !mixedSelection && bulkCodes.has("pack_selected")
             && Boolean(actionFor(actions, "pack_selected", seller.id));
+          const canUnprocess = hasSelection && !mixedSelection && bulkCodes.has("unprocess")
+            && Boolean(actionFor(actions, "unprocess", seller.id));
           const canUnpack = hasSelection && !mixedSelection && bulkCodes.has("unpack")
             && Boolean(actionFor(actions, "unpack", seller.id));
           const selectedShippable = hasSelection && !mixedSelection && perLineCaps.length > 0
@@ -339,7 +357,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                     <button
                       type="button"
                       disabled={pendingCode !== null}
-                      onClick={() => void runSellerOp(seller, "mark_processing")}
+                      onClick={() => void runSellerOp(seller, "mark_processing", { selections: buildSelections(seller, "process") })}
                       className="rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                       data-testid={`admin-order-seller-start-selected-${seller.id}`}
                     >
@@ -366,6 +384,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       data-testid={`admin-order-seller-pack-selected-${seller.id}`}
                     >
                       {labels.pack}
+                    </button>
+                  ) : null}
+                  {canUnprocess ? (
+                    <button
+                      type="button"
+                      disabled={pendingCode !== null}
+                      onClick={() => void runSellerOp(seller, "unprocess", { selections: buildSelections(seller, "unprocess") })}
+                      className="rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 disabled:opacity-50"
+                      data-testid={`admin-order-seller-unprocess-${seller.id}`}
+                    >
+                      {labels.unprocess}
                     </button>
                   ) : null}
                   {canUnpack ? (
@@ -424,11 +453,12 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                         const cap = capabilityFor(seller, line);
                         const maxQty = Math.max(1, cap.selectableQuantityMax || packableQty(line) || shippableQty(line) || line.quantity);
                         const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || 1);
-                        const qtyEnabled = cap.selectable && maxQty > 1 && (cap.rowActionCodes.includes("pack_selected") || cap.rowActionCodes.includes("unpack") || cap.shipmentEligibleQuantity > 0);
+                        const qtyEnabled = cap.selectable && maxQty > 1 && (cap.rowActionCodes.includes("pack_selected") || cap.rowActionCodes.includes("unprocess") || cap.rowActionCodes.includes("unpack") || cap.shipmentEligibleQuantity > 0);
                         const lineActions = lineLifecycleActions(actions, line.orderLineId || line.id, {
                           packable: cap.rowActionCodes.includes("pack_selected"),
                           unpackable: cap.rowActionCodes.includes("unpack"),
                           startable: cap.rowActionCodes.includes("mark_processing"),
+                          unprocessable: cap.rowActionCodes.includes("unprocess"),
                         });
                         return (
                           <tr
@@ -522,12 +552,19 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                             setOpenKebabLineId(null);
                                             const lineId = line.orderLineId || line.id;
                                             if (action.code === "mark_processing") {
-                                              void runSellerOp(seller, action.code, { orderLineId: action.orderLineId ?? undefined });
+                                              const max = processableQty(line);
+                                              const qty = Math.min(qtyByLine[key] ?? max, max);
+                                              void runSellerOp(seller, action.code, {
+                                                orderLineId: action.orderLineId ?? undefined,
+                                                selections: qty > 0 ? [{ orderLineId: lineId, quantity: qty }] : null,
+                                              });
                                               return;
                                             }
-                                            const mode = action.code === "unpack" ? "unpack" : "pack";
+                                            const mode = action.code === "unpack" ? "unpack" : action.code === "unprocess" ? "unprocess" : "pack";
                                             const max =
-                                              mode === "pack" ? packableQty(line) : unpackableQty(line);
+                                              mode === "pack" ? packableQty(line)
+                                              : mode === "unprocess" ? unprocessableQty(line)
+                                              : unpackableQty(line);
                                             const qty = Math.min(qtyByLine[key] ?? max, max);
                                             void runSellerOp(seller, action.code, {
                                               orderLineId: action.orderLineId ?? undefined,
