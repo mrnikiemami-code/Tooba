@@ -1,0 +1,222 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "historical-before",
+      "rows": [
+        "01a08175-30ba-7000-a551-50d71543c54c|2.000000||0|",
+        "01a08175-30bf-7000-b302-5fadc9e901e2|3.000000||0|",
+        "01a08175-30c3-7000-9ae9-dcea23688190|1.000000||0|",
+        "01a08175-32c2-7000-8293-370478e66873|1.000000||0|",
+        "01a08175-32c8-7000-b749-2ec8157fbb90|2.000000||0|"
+      ]
+    },
+    {
+      "name": "patch-step",
+      "status": 200,
+      "step": 0.25,
+      "places": 2
+    },
+    {
+      "name": "rounding-Floor",
+      "status": 200,
+      "mode": "Floor",
+      "fa": "رو به پایین"
+    },
+    {
+      "name": "floor-1.37",
+      "status": 200,
+      "quantity": 1.25,
+      "cartId": "01a083ed-7a8f-7000-8367-93602a8f94f2",
+      "error": {
+        "cartId": "01a083ed-7a8f-7000-8367-93602a8f94f2",
+        "version": 3,
+        "market": "IR",
+        "currency": "IRR",
+        "channel": "Marketplace",
+        "itemCount": 1.25,
+        "subtotalExclusiveOfTax": 29568750,
+        "lines": [
+          {
+            "lineId": "01a083ed-7b36-7000-99c7-e57f1b61a675",
+            "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+            "catalogVariantId": "01a05387-fcf1-7000-8974-16c163961338",
+            "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+            "productId": "01a05387-fbd0-7000-acd3-4382ce92c773",
+            "productSlug": "demo-prod-mobile-tablet-phones-smartphones-1",
+            "title": "گوشی هوشمند سری 1",
+            "sellerDisplayName": "تجارت الکترونیک پارس",
+            "mediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "quantity": 1.25,
+            "unitAmountExclusiveOfTax": 23655000,
+            "lineAmountExclusiveOfTax": 29568750,
+            "currency": "IRR",
+            "quotedTaxExclusive": true,
+            "unitCode": "kg",
+            "unitDisplayName": "کیلوگرم",
+            "quantityDecimalPlaces": 2,
+            "quantityStep": 0.25
+          }
+        ]
+      }
+    },
+    {
+      "name": "rounding-Ceiling",
+      "status": 200,
+      "mode": "Ceiling",
+      "fa": "رو به بالا"
+    },
+    {
+      "name": "ceiling-1.37",
+      "status": 200,
+      "quantity": 1.5,
+      "cartId": "01a083ed-7be7-7000-9fac-536109d007d9",
+      "error": {
+        "cartId": "01a083ed-7be7-7000-9fac-536109d007d9",
+        "version": 3,
+        "market": "IR",
+        "currency": "IRR",
+        "channel": "Marketplace",
+        "itemCount": 1.5,
+        "subtotalExclusiveOfTax": 35482500,
+        "lines": [
+          {
+            "lineId": "01a083ed-7bf9-7000-9996-ba9271435a00",
+            "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+            "catalogVariantId": "01a05387-fcf1-7000-8974-16c163961338",
+            "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+            "productId": "01a05387-fbd0-7000-acd3-4382ce92c773",
+            "productSlug": "demo-prod-mobile-tablet-phones-smartphones-1",
+            "title": "گوشی هوشمند سری 1",
+            "sellerDisplayName": "تجارت الکترونیک پارس",
+            "mediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "quantity": 1.5,
+            "unitAmountExclusiveOfTax": 23655000,
+            "lineAmountExclusiveOfTax": 35482500,
+            "currency": "IRR",
+            "quotedTaxExclusive": true,
+            "unitCode": "kg",
+            "unitDisplayName": "کیلوگرم",
+            "quantityDecimalPlaces": 2,
+            "quantityStep": 0.25
+          }
+        ]
+      }
+    },
+    {
+      "name": "rounding-Nearest",
+      "status": 200,
+      "mode": "Nearest",
+      "fa": "نزدیک‌ترین مقدار"
+    },
+    {
+      "name": "nearest-1.37",
+      "status": 200,
+      "quantity": 1.25,
+      "cartId": "01a083ed-7c13-7000-a33c-0dfb29ca0fef",
+      "error": {
+        "cartId": "01a083ed-7c13-7000-a33c-0dfb29ca0fef",
+        "version": 3,
+        "market": "IR",
+        "currency": "IRR",
+        "channel": "Marketplace",
+        "itemCount": 1.25,
+        "subtotalExclusiveOfTax": 29568750,
+        "lines": [
+          {
+            "lineId": "01a083ed-7c20-7000-bb0a-5fe3681b1d87",
+            "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+            "catalogVariantId": "01a05387-fcf1-7000-8974-16c163961338",
+            "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+            "productId": "01a05387-fbd0-7000-acd3-4382ce92c773",
+            "productSlug": "demo-prod-mobile-tablet-phones-smartphones-1",
+            "title": "گوشی هوشمند سری 1",
+            "sellerDisplayName": "تجارت الکترونیک پارس",
+            "mediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "quantity": 1.25,
+            "unitAmountExclusiveOfTax": 23655000,
+            "lineAmountExclusiveOfTax": 29568750,
+            "currency": "IRR",
+            "quotedTaxExclusive": true,
+            "unitCode": "kg",
+            "unitDisplayName": "کیلوگرم",
+            "quantityDecimalPlaces": 2,
+            "quantityStep": 0.25
+          }
+        ]
+      }
+    },
+    {
+      "name": "rounding-Ceiling",
+      "status": 200,
+      "mode": "Ceiling",
+      "fa": "رو به بالا"
+    },
+    {
+      "name": "patch-step-0.5",
+      "status": 200,
+      "step": 0.5
+    },
+    {
+      "name": "historical-after",
+      "rows": [
+        "01a08175-30ba-7000-a551-50d71543c54c|2.000000||0|",
+        "01a08175-30bf-7000-b302-5fadc9e901e2|3.000000||0|",
+        "01a08175-30c3-7000-9ae9-dcea23688190|1.000000||0|",
+        "01a08175-32c2-7000-8293-370478e66873|1.000000||0|",
+        "01a08175-32c8-7000-b749-2ec8157fbb90|2.000000||0|"
+      ]
+    },
+    {
+      "name": "immutability",
+      "changed": false
+    },
+    {
+      "name": "new-op-after-policy-change",
+      "status": 200,
+      "quantity": 1.5,
+      "cartId": "01a083ed-7cfc-7000-b178-75a1a87783a7",
+      "error": {
+        "cartId": "01a083ed-7cfc-7000-b178-75a1a87783a7",
+        "version": 3,
+        "market": "IR",
+        "currency": "IRR",
+        "channel": "Marketplace",
+        "itemCount": 1.5,
+        "subtotalExclusiveOfTax": 35482500,
+        "lines": [
+          {
+            "lineId": "01a083ed-7d07-7000-832a-c8d9c90933e9",
+            "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+            "catalogVariantId": "01a05387-fcf1-7000-8974-16c163961338",
+            "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+            "productId": "01a05387-fbd0-7000-acd3-4382ce92c773",
+            "productSlug": "demo-prod-mobile-tablet-phones-smartphones-1",
+            "title": "گوشی هوشمند سری 1",
+            "sellerDisplayName": "تجارت الکترونیک پارس",
+            "mediaAssetId": "01a05387-fb86-7000-8f52-16dbea0b0ce6",
+            "quantity": 1.5,
+            "unitAmountExclusiveOfTax": 23655000,
+            "lineAmountExclusiveOfTax": 35482500,
+            "currency": "IRR",
+            "quotedTaxExclusive": true,
+            "unitCode": "kg",
+            "unitDisplayName": "کیلوگرم",
+            "quantityDecimalPlaces": 2,
+            "quantityStep": 0.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "rounding-Nearest",
+      "status": 200,
+      "mode": "Nearest",
+      "fa": "نزدیک‌ترین مقدار"
+    },
+    {
+      "name": "restore-step-null",
+      "status": 200
+    }
+  ]
+}

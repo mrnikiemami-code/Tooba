@@ -1,0 +1,62 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T013-R1
+
+Parent-Task:
+TB-P09-T013
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Offer/Fulfillment EF history now replay-safe. Fresh DB and tooba_alpha migrate to HEAD. Floor 1.37→1.25, Ceiling 1.37→1.50, Nearest 1.37→1.25 with Step 0.25. Historical OrderLine rows unchanged. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T014 invented.
+
+Migration-History-Discovery:
+tooba_alpha offer history skipped T006 AddOfferReturnPolicy while columns already existed; T013 min/max history was present. Sibling T006 fulfillment AddShipmentProviderMetadata same gap. docs/evidence/TB-P09-T013/r1-migration-history.md
+
+Migration-Integrity-Repair:
+ADD COLUMN IF NOT EXISTS on the two omitted T006 Up() scripts after schema-match proof. Offer snapshot now includes return policy + min/max. No history rows invented by hand.
+
+Fresh-DB-Migrate:
+Offer + full MigrationRunner empty-DB apply to HEAD. docs/evidence/TB-P09-T013/r1-fresh-db-migrate.md
+
+Existing-DB-Migrate:
+MigrationRunner apply store-alpha: pending 0; offer/fulfillment history completed; no wipe. docs/evidence/TB-P09-T013/r1-existing-db-migrate.md
+
+Offer-Schema-Coexistence:
+One return_policy_choice + custom_return_window_days; one min/max numeric(18,6). Offer has no Unit/DecimalPlaces/Step.
+
+Global-Rounding-Runtime:
+Step 0.25, places 2. Floor 1.25, Ceiling 1.50, Nearest 1.25. docs/evidence/TB-P09-T013/r1-rounding-runtime.md
+
+Historical-Snapshot-Immutability:
+Existing order_lines unchanged after Ceiling + Step 0.50. New cart uses new policy. docs/evidence/TB-P09-T013/r1-snapshot-immutability.md
+
+Focused-Validation:
+OfferMigrationIntegrityTests 3 pass; Apply_on_empty_database 1 pass; QuantityFoundation + QuantityDecimalRegression 14 pass; recovery guard 3 pass; git diff --check clean.
+
+Recovery-SoT:
+Architect T012. Issued none. Repair none. Implementation TB-P09-T013-R1. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T013/r1-recovery-sot.md
+
+Git:
+Commit + push origin/main. HEAD==origin/main.
+
+Architectural-Concerns:
+Fulfillment T006 history gap was the same class of defect and was required for existing-DB HEAD apply; only that Up() was made replay-safe.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. No UI change.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

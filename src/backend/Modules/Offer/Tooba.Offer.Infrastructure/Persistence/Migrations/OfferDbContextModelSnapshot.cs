@@ -43,6 +43,26 @@ namespace Tooba.Offer.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int?>("CustomReturnWindowDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("custom_return_window_days");
+
+                    b.Property<decimal?>("MaximumOrderQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("maximum_order_quantity");
+
+                    b.Property<decimal?>("MinimumOrderQuantity")
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("minimum_order_quantity");
+
+                    b.Property<string>("ReturnPolicyChoice")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Default")
+                        .HasColumnName("return_policy_choice");
+
                     b.Property<Guid>("SellerPartyId")
                         .HasColumnType("uuid")
                         .HasColumnName("seller_party_id");

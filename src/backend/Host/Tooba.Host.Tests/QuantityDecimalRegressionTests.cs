@@ -100,4 +100,47 @@ public sealed class QuantityDecimalRegressionTests
         unit.PackSelections([(lineId, 0.75m)], now);
         Assert.Equal(1.25m, unit.Items.Single().QuantityPacked);
     }
+
+    [Fact]
+    public void Historical_order_line_snapshots_stay_fixed_when_later_policy_normalizes_differently()
+    {
+        var line = OrderLine.FromCheckout(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            1.25m,
+            80000m,
+            "IRR",
+            true,
+            Guid.NewGuid(),
+            null,
+            "Taxable",
+            0.09m,
+            9000m,
+            109000m,
+            null,
+            unitOfMeasureIdSnapshot: CanonicalUnits.Kg,
+            unitCodeSnapshot: "kg",
+            unitDisplaySnapshot: "کیلوگرم",
+            quantityDecimalPlacesSnapshot: 2,
+            quantityStepSnapshot: 0.25m);
+
+        var later = new EffectiveQuantityPolicy(
+            Guid.NewGuid(),
+            CanonicalUnits.Kg,
+            "kg",
+            "کیلوگرم",
+            "kg",
+            2,
+            0.50m,
+            QuantityRoundingMode.Ceiling);
+        var n = new QuantityNormalizer();
+        Assert.Equal(1.50m, n.Normalize(1.37m, later));
+        Assert.Equal(1.25m, line.Quantity);
+        Assert.Equal(2, line.QuantityDecimalPlacesSnapshot);
+        Assert.Equal(0.25m, line.QuantityStepSnapshot);
+        Assert.Equal("kg", line.UnitCodeSnapshot);
+        Assert.Equal(CanonicalUnits.Kg, line.UnitOfMeasureIdSnapshot);
+    }
 }

@@ -14,21 +14,15 @@ namespace Tooba.Offer.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "return_policy_choice",
-                schema: "offer",
-                table: "offers",
-                type: "character varying(32)",
-                maxLength: 32,
-                nullable: false,
-                defaultValue: "Default");
-
-            migrationBuilder.AddColumn<int>(
-                name: "custom_return_window_days",
-                schema: "offer",
-                table: "offers",
-                type: "integer",
-                nullable: true);
+            // Replay-safe: local tooba_alpha already has these T006 columns while
+            // offer.__ef_migrations_history omitted this row. Fresh DBs add them.
+            migrationBuilder.Sql(
+                """
+                ALTER TABLE offer.offers
+                    ADD COLUMN IF NOT EXISTS return_policy_choice character varying(32) NOT NULL DEFAULT 'Default';
+                ALTER TABLE offer.offers
+                    ADD COLUMN IF NOT EXISTS custom_return_window_days integer NULL;
+                """);
         }
 
         /// <inheritdoc />
