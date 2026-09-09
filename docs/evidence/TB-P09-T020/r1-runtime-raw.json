@@ -1,0 +1,88 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "multiseller-404",
+      "fixtureStatusProbeDeferred": true,
+      "listingStatus": 200,
+      "listingOffer": "01a030d1-40f1-7000-95f6-b8efc58e2619",
+      "listingSeller": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "kgSeller": null,
+      "ok": true
+    },
+    {
+      "name": "checkout",
+      "checkoutId": "01a0864a-f248-7000-92d9-426915151d95",
+      "sellerCount": 2,
+      "distinctSellers": true,
+      "probeB": 404,
+      "probeCode": "cart.missing",
+      "addB": 200,
+      "ok": true
+    },
+    {
+      "name": "multiseller-404-probe",
+      "fixtureStatus": 404,
+      "fixtureCode": "cart.missing",
+      "fixtureDetail": "سبد پیدا نشد.",
+      "listingOfferUsed": true,
+      "ok": true
+    },
+    {
+      "name": "partial-status",
+      "packA": 200,
+      "shipA": 200,
+      "dispatchA": 200,
+      "kgStatus": "PartialDispatched",
+      "kgLineStatus": "PartialDispatched",
+      "bStatus": "ReadyToFulfill",
+      "hasPackAfter": true,
+      "hasCancel": false,
+      "cancelStatus": 400,
+      "ok": true
+    },
+    {
+      "name": "filters",
+      "needs": 200,
+      "inTransitStatus": 200,
+      "inNeeds": true,
+      "inTransit": false,
+      "needRowStatus": "PartialDispatched",
+      "ok": true
+    },
+    {
+      "name": "seller-b-separate",
+      "pack": 200,
+      "ship": 200,
+      "bStatus": "Packed",
+      "differentFulfillment": true,
+      "ok": true
+    },
+    {
+      "name": "terminal-dispatch",
+      "packB": 200,
+      "shipB": 200,
+      "dispatchB": 200,
+      "kgStatus": "Dispatched",
+      "ok": true
+    },
+    {
+      "name": "return-0.25",
+      "deliverA": 200,
+      "deliverB": 200,
+      "retStatus": 200,
+      "ok": true
+    },
+    {
+      "name": "cancel-refund-coexistence",
+      "opsStatus": 200,
+      "noRequestReturn": true,
+      "ok": true
+    }
+  ]
+}

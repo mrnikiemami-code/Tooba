@@ -52,6 +52,7 @@ test("work queue screen uses AppDataGrid not AgGridReact", () => {
   assert.match(source, /fulfillment-queue/);
   assert.match(source, /admin\/orders\/\$\{row\.checkoutId\}/);
   assert.match(source, /admin-fulfillment-queue-filters/);
+  assert.match(source, /PartialDispatched/);
 });
 
 test("AdminFulfillmentsScreen delegates to work queue screen", () => {

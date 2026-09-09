@@ -207,7 +207,7 @@ public sealed class AdminPanelComposer
                     line.LineId,
                     fulfillment is null ? null : shipped,
                     null,
-                    LineOperationalStatus(order.Status, fulfillment, packed, line.Quantity, processing),
+                    LineOperationalStatus(order.Status, fulfillment, packed, line.Quantity, processing, shipped),
                     fulfillment is null ? null : packed,
                     fulfillment is null ? null : openAllocated + shipped,
                     line.IsReturnableSnapshot,
@@ -239,7 +239,7 @@ public sealed class AdminPanelComposer
                 order.Currency,
                 lines,
                 fulfillment?.FulfillmentId,
-                fulfillment?.Status.ToString(),
+                fulfillment is null ? null : AdminFulfillmentQueueFilters.ComposeOperationalStatus(fulfillment),
                 shipments);
         }).ToList();
         var listItem = await MapOrderListItemAsync(group, sellerNames, cancellationToken);
@@ -619,7 +619,8 @@ public sealed class AdminPanelComposer
         FulfillmentSnapshot? fulfillment,
         decimal packed,
         decimal ordered,
-        decimal processing = 0)
+        decimal processing = 0,
+        decimal shipped = 0)
     {
         if (sellerStatus == SellerOrderStatus.Cancelled)
         {
@@ -631,13 +632,23 @@ public sealed class AdminPanelComposer
             return sellerStatus == SellerOrderStatus.Paid ? "Paid" : "PendingPayment";
         }
 
-        if (fulfillment.Status is FulfillmentStatus.Dispatched
-            or FulfillmentStatus.InTransit
-            or FulfillmentStatus.Delivered
-            or FulfillmentStatus.Cancelled
-            or FulfillmentStatus.Failed)
+        if (fulfillment.Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed)
         {
             return fulfillment.Status.ToString();
+        }
+
+        if (ordered > 0 && shipped >= ordered)
+        {
+            return fulfillment.Status == FulfillmentStatus.Delivered
+                ? "Delivered"
+                : fulfillment.Status == FulfillmentStatus.InTransit
+                    ? "InTransit"
+                    : "Dispatched";
+        }
+
+        if (shipped > 0 && shipped < ordered)
+        {
+            return AdminFulfillmentQueueFilters.PartialDispatched;
         }
 
         if (ordered > 0 && packed >= ordered)

@@ -350,6 +350,7 @@ export function formatFulfillmentStatus(status: string): string {
     ReadyToFulfill: "آماده پردازش",
     Processing: "در حال پردازش",
     Packed: "بسته‌بندی‌شده",
+    PartialDispatched: "ارسال جزئی",
     Dispatched: "ارسال‌شده",
     InTransit: "در مسیر تحویل",
     Delivered: "تحویل‌شده",

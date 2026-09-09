@@ -53,6 +53,7 @@ const fulfillmentStatusEnumOptions = [
   { value: "ReadyToFulfill", label: formatFulfillmentStatus("ReadyToFulfill") },
   { value: "Processing", label: formatFulfillmentStatus("Processing") },
   { value: "Packed", label: formatFulfillmentStatus("Packed") },
+  { value: "PartialDispatched", label: formatFulfillmentStatus("PartialDispatched") },
   { value: "Dispatched", label: formatFulfillmentStatus("Dispatched") },
   { value: "InTransit", label: formatFulfillmentStatus("InTransit") },
   { value: "Delivered", label: formatFulfillmentStatus("Delivered") },

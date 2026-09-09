@@ -179,6 +179,9 @@ public sealed class AdminFulfillmentScopeSequenceTests
         Assert.Equal("ReadyToFulfill", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 0, 3, 0));
         Assert.Equal("Processing", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 1, 3, 3));
         Assert.Equal("Packed", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, processing, 3, 3, 3));
+        var dispatched = Snapshot(FulfillmentStatus.Dispatched, [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0.50m, null, 0.50m, 1.25m)]);
+        Assert.Equal("PartialDispatched", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 0.50m, 1.25m, 1.25m, 0.50m));
+        Assert.Equal("Dispatched", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Paid, dispatched, 1.25m, 1.25m, 1.25m, 1.25m));
         Assert.Equal("PendingPayment", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.PendingPayment, null, 0, 2));
         Assert.Equal("Cancelled", AdminPanelComposer.LineOperationalStatus(SellerOrderStatus.Cancelled, null, 0, 2));
     }

@@ -453,6 +453,7 @@ export function formatAdminStatus(status: string): string {
     ReadyToShip: "آماده ارسال",
     ReadyToFulfill: "آماده پردازش",
     Packed: "بسته‌بندی‌شده",
+    PartialDispatched: "ارسال جزئی",
     Dispatched: "ارسال‌شده",
     InTransit: "در مسیر تحویل",
     Created: "ایجادشده",

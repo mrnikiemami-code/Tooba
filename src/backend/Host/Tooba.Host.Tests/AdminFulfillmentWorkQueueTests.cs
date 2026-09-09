@@ -110,7 +110,31 @@ public sealed class AdminFulfillmentWorkQueueTests
         Assert.Contains("mark_packed", codes);
         Assert.Contains("pack_selected", codes);
         Assert.True(AdminFulfillmentQueueFilters.MatchesNeedsAction(partial.Status, partial.Shipments, partial.Items));
+        Assert.Equal(AdminFulfillmentQueueFilters.PartialDispatched, AdminFulfillmentQueueFilters.ComposeOperationalStatus(partial));
         Assert.DoesNotContain("cancel", codes);
+    }
+
+    [Fact]
+    public void Full_dispatch_projects_terminal_dispatched_not_partial()
+    {
+        var lineId = Guid.NewGuid();
+        var shipmentId = Guid.NewGuid();
+        var full = Snapshot(
+            FulfillmentStatus.Dispatched,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1.25m, 1.25m, null, 1.25m, 1.25m)],
+            [
+                new ShipmentSnapshot(
+                    shipmentId,
+                    ShipmentStatus.Dispatched,
+                    "پست",
+                    "TRK-A",
+                    DateTimeOffset.UtcNow,
+                    null,
+                    [new ShipmentLineSnapshot(lineId, 1.25m)]),
+            ]);
+        Assert.Equal("Dispatched", AdminFulfillmentQueueFilters.ComposeOperationalStatus(full));
+        Assert.False(AdminFulfillmentQueueFilters.HasRemainingFulfillableQuantity(full.Items));
+        Assert.False(AdminFulfillmentQueueFilters.MatchesNeedsAction(full.Status, full.Shipments, full.Items));
     }
 
     [Fact]
@@ -122,6 +146,8 @@ public sealed class AdminFulfillmentWorkQueueTests
         Assert.Contains("x => x.OrderNumber", engine, StringComparison.Ordinal);
         Assert.Contains("OrderByOrderNumber", engine, StringComparison.Ordinal);
         Assert.Contains("\"فروشنده\"", engine, StringComparison.Ordinal);
+        Assert.Contains("QuantityOrdered > i.QuantityShipped", engine, StringComparison.Ordinal);
+        Assert.Contains("PartialDispatched", engine, StringComparison.Ordinal);
         Assert.DoesNotContain("CheckoutId.ToString(\"N\")", engine, StringComparison.Ordinal);
     }
 

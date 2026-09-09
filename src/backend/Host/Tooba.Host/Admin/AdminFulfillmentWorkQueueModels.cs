@@ -84,6 +84,34 @@ public static class AdminFulfillmentQueueFilters
         };
     }
 
+    /// <summary>وضعیت نمایشی quantity-aware؛ enum دامنه را عوض نمی‌کند.</summary>
+    public const string PartialDispatched = "PartialDispatched";
+
+    /// <summary>باقیماندهٔ قابل fulfillment وقتی تعداد سفارش از ارسال بیشتر است.</summary>
+    public static bool HasRemainingFulfillableQuantity(IReadOnlyList<FulfillmentItemSnapshot> items) =>
+        items.Any(x => x.QuantityOrdered > x.QuantityShipped);
+
+    /// <summary>
+    /// وضعیت عملیاتی ترکیب‌شده: ارسال جزئی وقتی مقدار ارسال‌شده کمتر از سفارش است.
+    /// وضعیت persisted <see cref="FulfillmentStatus.Dispatched"/> حفظ می‌شود.
+    /// </summary>
+    public static string ComposeOperationalStatus(FulfillmentSnapshot fulfillment)
+    {
+        if (fulfillment.Status is FulfillmentStatus.Cancelled or FulfillmentStatus.Failed)
+        {
+            return fulfillment.Status.ToString();
+        }
+
+        var ordered = fulfillment.Items.Sum(x => x.QuantityOrdered);
+        var shipped = fulfillment.Items.Sum(x => x.QuantityShipped);
+        if (ordered > 0 && shipped > 0 && shipped < ordered)
+        {
+            return PartialDispatched;
+        }
+
+        return fulfillment.Status.ToString();
+    }
+
     /// <summary>آیا مرسولهٔ Created بدون کد رهگیری دارد.</summary>
     public static bool HasMissingTracking(IEnumerable<ShipmentSnapshot> shipments) =>
         shipments.Any(s =>

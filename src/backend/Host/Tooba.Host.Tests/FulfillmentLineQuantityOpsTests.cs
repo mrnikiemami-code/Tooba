@@ -200,6 +200,7 @@ public sealed class FulfillmentLineQuantityOpsTests
         Assert.Equal(2, unit.Shipments.Count);
         unit.AssignTracking(second.ShipmentId, "TRK-B", now);
         unit.ApplyShipmentDispatched(second.ShipmentId, now);
+        Assert.Equal(FulfillmentStatus.Dispatched, unit.Status);
         Assert.Equal(1.25m, unit.Items.Single().QuantityShipped);
         Assert.Equal(0.50m, first.Items.Single().Quantity);
         Assert.Equal(0.75m, second.Items.Single().Quantity);

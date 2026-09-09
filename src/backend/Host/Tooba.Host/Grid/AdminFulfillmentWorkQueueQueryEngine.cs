@@ -176,7 +176,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                 return joined.Select(x => x.Unit);
             }
             case "status":
-                return AdminEfGridQuery.ApplyEnumFilter(source, x => x.Status, filter);
+                return await ApplyStatusFilterAsync(source, filter, cancellationToken);
             case "queueFilter":
                 return await ApplyQueueFilterAsync(source, filter, cancellationToken);
             case "createdAt":
@@ -208,16 +208,34 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             or AdminFulfillmentQueueFilters.Delivered
             or AdminFulfillmentQueueFilters.Problem)
         {
+            var processableIds = await ItemFulfillmentIdsAsync(i => i.QuantityOrdered > i.QuantityProcessing, cancellationToken);
+            var packableIds = await ItemFulfillmentIdsAsync(i => i.QuantityProcessing > i.QuantityPacked, cancellationToken);
+            var shippableIds = await ItemFulfillmentIdsAsync(i => i.QuantityPacked > i.QuantityShipped, cancellationToken);
+            var remainingIds = await ItemFulfillmentIdsAsync(i => i.QuantityOrdered > i.QuantityShipped, cancellationToken);
             return key switch
             {
                 AdminFulfillmentQueueFilters.ReadyToProcess =>
-                    source.Where(x => x.Status == FulfillmentStatus.ReadyToFulfill),
+                    source.Where(x =>
+                        x.Status != FulfillmentStatus.Cancelled
+                        && x.Status != FulfillmentStatus.Delivered
+                        && x.Status != FulfillmentStatus.Failed
+                        && (x.Status == FulfillmentStatus.ReadyToFulfill || processableIds.Contains(x.FulfillmentId))),
                 AdminFulfillmentQueueFilters.ReadyToPack =>
-                    source.Where(x => x.Status == FulfillmentStatus.Processing),
+                    source.Where(x =>
+                        x.Status != FulfillmentStatus.Cancelled
+                        && x.Status != FulfillmentStatus.Delivered
+                        && x.Status != FulfillmentStatus.Failed
+                        && (x.Status == FulfillmentStatus.Processing || packableIds.Contains(x.FulfillmentId))),
                 AdminFulfillmentQueueFilters.ReadyToShip =>
-                    source.Where(x => x.Status == FulfillmentStatus.Packed),
+                    source.Where(x =>
+                        x.Status != FulfillmentStatus.Cancelled
+                        && x.Status != FulfillmentStatus.Delivered
+                        && x.Status != FulfillmentStatus.Failed
+                        && (x.Status == FulfillmentStatus.Packed || shippableIds.Contains(x.FulfillmentId))),
                 AdminFulfillmentQueueFilters.InTransit =>
-                    source.Where(x => x.Status == FulfillmentStatus.Dispatched || x.Status == FulfillmentStatus.InTransit),
+                    source.Where(x =>
+                        (x.Status == FulfillmentStatus.Dispatched || x.Status == FulfillmentStatus.InTransit)
+                        && !remainingIds.Contains(x.FulfillmentId)),
                 AdminFulfillmentQueueFilters.Delivered =>
                     source.Where(x => x.Status == FulfillmentStatus.Delivered),
                 AdminFulfillmentQueueFilters.Problem =>
@@ -245,16 +263,72 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                 .Select(s => s.FulfillmentId)
                 .Distinct()
                 .ToListAsync(cancellationToken);
+            var remainingIds = await ItemFulfillmentIdsAsync(i => i.QuantityOrdered > i.QuantityShipped, cancellationToken);
             return source.Where(x =>
                 x.Status == FulfillmentStatus.ReadyToFulfill
                 || x.Status == FulfillmentStatus.Failed
                 || x.Status == FulfillmentStatus.Processing
                 || x.Status == FulfillmentStatus.Packed
-                || missingTrackingIds.Contains(x.FulfillmentId));
+                || missingTrackingIds.Contains(x.FulfillmentId)
+                || (x.Status != FulfillmentStatus.Cancelled
+                    && x.Status != FulfillmentStatus.Delivered
+                    && remainingIds.Contains(x.FulfillmentId)));
         }
 
         return source;
     }
+
+    private async Task<IQueryable<FulfillmentUnit>> ApplyStatusFilterAsync(
+        IQueryable<FulfillmentUnit> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var values = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var wantPartial = values.Any(v => v.Equals(AdminFulfillmentQueueFilters.PartialDispatched, StringComparison.OrdinalIgnoreCase));
+        var domainValues = values
+            .Where(v => !v.Equals(AdminFulfillmentQueueFilters.PartialDispatched, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (!wantPartial && domainValues.Count == 0)
+        {
+            return source.Where(_ => false);
+        }
+
+        var remainingIds = wantPartial || domainValues.Any(v => v.Equals(nameof(FulfillmentStatus.Dispatched), StringComparison.OrdinalIgnoreCase)
+            || v.Equals(nameof(FulfillmentStatus.InTransit), StringComparison.OrdinalIgnoreCase))
+            ? await ItemFulfillmentIdsAsync(i => i.QuantityOrdered > i.QuantityShipped, cancellationToken)
+            : new List<Guid>();
+        var parsed = domainValues
+            .Select(v => Enum.TryParse<FulfillmentStatus>(v, true, out var e) ? (FulfillmentStatus?)e : null)
+            .Where(v => v.HasValue)
+            .Select(v => v!.Value)
+            .ToList();
+        var wantDispatched = parsed.Contains(FulfillmentStatus.Dispatched);
+        var wantInTransit = parsed.Contains(FulfillmentStatus.InTransit);
+        var otherStatuses = parsed
+            .Where(s => s is not FulfillmentStatus.Dispatched and not FulfillmentStatus.InTransit)
+            .ToList();
+        return source.Where(x =>
+            (wantPartial
+                && remainingIds.Contains(x.FulfillmentId)
+                && (x.Status == FulfillmentStatus.Dispatched || x.Status == FulfillmentStatus.InTransit))
+            || (wantDispatched && x.Status == FulfillmentStatus.Dispatched && !remainingIds.Contains(x.FulfillmentId))
+            || (wantInTransit && x.Status == FulfillmentStatus.InTransit && !remainingIds.Contains(x.FulfillmentId))
+            || otherStatuses.Contains(x.Status));
+    }
+
+    private Task<List<Guid>> ItemFulfillmentIdsAsync(
+        System.Linq.Expressions.Expression<Func<FulfillmentItem, bool>> predicate,
+        CancellationToken cancellationToken) =>
+        _db.Items.AsNoTracking()
+            .Where(predicate)
+            .Select(x => x.FulfillmentId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
     private static List<Guid> ParseGuidValues(GridFilterRequest filter)
     {
@@ -456,7 +530,7 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                 unit.SellerPartyId,
                 string.IsNullOrWhiteSpace(sellerName) ? "فروشنده" : sellerName,
                 orderReference,
-                unit.Status.ToString(),
+                AdminFulfillmentQueueFilters.ComposeOperationalStatus(snapshot),
                 unit.RecipientName,
                 unit.CityName,
                 unit.ShippingMethodCode,

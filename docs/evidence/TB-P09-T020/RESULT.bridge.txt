@@ -3,10 +3,10 @@ PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID:
-TB-P09-T020
+TB-P09-T020-R1
 
 Parent-Task:
-TB-P09-T019
+TB-P09-T020
 
 Channel:
 tooba-main
@@ -18,70 +18,46 @@ Status:
 PASS
 
 Summary:
-P09 final gate remainder repair: packing remaining qty after first dispatch is allowed. Ordered 1.25 kg; dispatch 0.50 does not terminalize remainder 0.75; second shipment 0.75 Created then Dispatched; whole-order cancel stays blocked; split-delivery return 0.25 green; invoice snapshot unchanged. USER_VISUAL_ACCEPTED=NO. No TB-P09-T021.
+P09 final-gate repair: composed ارسال جزئی / PartialDispatched from remaining vs shipped qty; persisted enum stays Dispatched. Capability wins over aggregate. Multi-seller 404 is catalog/offer fixture (orphaned variant / Draft products), not cart regression; two-seller checkout via storefront listing offer. Seller scopes independent. Queue needs_action holds remainder; not fully-terminal InTransit. T020 remainder, T016 cancel-after-dispatch, T019 return 0.25 preserved. USER_VISUAL_ACCEPTED=NO. No TB-P09-T021.
 
 Applicable-Locks:
-docs/evidence/TB-P09-T020/applicable-locks.md
+LOCK-OPS-009, LOCK-OPS-010, LOCK-OPS-002. Persisted status is not sole operational truth; seller-scoped. No second status engine.
 
-Final-Discovery:
-docs/evidence/TB-P09-T020/final-discovery.md
+Status-Discovery:
+docs/evidence/TB-P09-T020/r1-status-discovery.md
 
-Partial-Dispatch-Remainder:
-docs/evidence/TB-P09-T020/partial-dispatch-remainder.md
+Partial-Status-Projection:
+docs/evidence/TB-P09-T020/r1-partial-status-projection.md
 
-Multi-Shipment-Continuation:
-docs/evidence/TB-P09-T020/multi-shipment-continuation.md
+Capability-Semantics:
+docs/evidence/TB-P09-T020/r1-capability-semantics.md
 
-Fulfillment-Status-Semantics:
-docs/evidence/TB-P09-T020/fulfillment-status-semantics.md
+MultiSeller-404:
+docs/evidence/TB-P09-T020/r1-multiseller-404.md
 
-Inventory-Allocation:
-docs/evidence/TB-P09-T020/inventory-allocation.md
+MultiSeller-Runtime:
+docs/evidence/TB-P09-T020/r1-multiseller-runtime.md
 
-Return-Split-Delivery:
-docs/evidence/TB-P09-T020/return-split-delivery.md
+Cross-Surface:
+docs/evidence/TB-P09-T020/r1-cross-surface.md
 
-Cancel-Compatibility:
-docs/evidence/TB-P09-T020/cancel-compatibility.md
-
-Refund-Settlement:
-docs/evidence/TB-P09-T020/refund-settlement.md
-
-Invoice-Financial:
-docs/evidence/TB-P09-T020/invoice-financial.md
-
-Cross-Surface-Consistency:
-docs/evidence/TB-P09-T020/cross-surface-consistency.md
-
-Action-Matrix:
-docs/evidence/TB-P09-T020/action-matrix.md
-
-Error-UX:
-docs/evidence/TB-P09-T020/error-ux.md
-
-Performance:
-docs/evidence/TB-P09-T020/performance.md
-
-Focused-Validation:
-Host FulfillmentLineQuantityOps + AdminFulfillmentWorkQueue + cancel/return/settlement/qty focused 68 pass. FE after_delivered FA maps. Recovery guard 3 pass. git diff --check clean.
+Filters:
+docs/evidence/TB-P09-T020/r1-filters.md
 
 Runtime-Smoke:
-docs/evidence/TB-P09-T020/runtime-smoke.md
+docs/evidence/TB-P09-T020/r1-runtime-smoke.md
 
-Migration-Final:
-docs/evidence/TB-P09-T020/migration-final.md
-
-Lock-Registry:
-LOCK-OPS-009 added. Quantity/invoice/return locks not duplicated.
+Focused-Validation:
+Recovery guard 3/3. Host FulfillmentLineQuantityOps + AdminFulfillmentWorkQueue + AdminFulfillmentScopeSequence + WholeOrderCancelUntilDispatch 56 pass. FE fulfillment-api + admin-fulfillment-work-queue + admin-order-operations 38 pass. git diff --check clean.
 
 Recovery-SoT:
-Phase P09. Last Architect-accepted TB-P09-T019. Issued none. Repair none. Last Implementation TB-P09-T020. USER_VISUAL_ACCEPTED=NO. No T021.
+Phase P09. Last Architect-accepted TB-P09-T019. Issued none. Repair none. Last Implementation TB-P09-T020-R1. USER_VISUAL_ACCEPTED=NO. No T021.
 
 Git:
 Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
 
 Architectural-Concerns:
-Second-seller storefront add of B_OFFER returned 404; remainder/multi-shipment proven on kg 1.25. Aggregate status stays Dispatched after first dispatch while remainder packs.
+B_OFFER fixture 01a03826-a21a-7000-ac2a-b44156838b10 still 404 cart.missing (orphaned catalog_variant_id / Draft catalog). Two-seller proof used listing Arman offer after variant fixture repair. cart.missing swallows catalog lookup misses.
 
 Visual-Concerns:
 USER_VISUAL_ACCEPTED=NO.

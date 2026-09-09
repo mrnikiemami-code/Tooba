@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P09-T020).
+ * Recovery SoT staleness guard (TB-P09-T020-R1).
  * Deterministic, repo-local — does NOT call Bridge API.
  */
 import assert from "node:assert/strict";
@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
-const CURRENT_TASK_ID = "TB-P09-T020";
+const CURRENT_TASK_ID = "TB-P09-T020-R1";
 
 const REQUIRED_MARKERS = [
   "P09",
@@ -81,6 +81,7 @@ const REQUIRED_MARKERS = [
   "TB-P09-T018",
   "TB-P09-T019",
   "TB-P09-T020",
+  "TB-P09-T020-R1",
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
 ];
@@ -140,6 +141,7 @@ const STALE_CURRENT_POINTERS = [
   "TB-P09-T017",
   "TB-P09-T018",
   "TB-P09-T019",
+  "TB-P09-T020",
 ];
 
 function read(p) {
@@ -160,7 +162,7 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT points Last Implementation at TB-P09-T020; Architect T019; Issued none; Repair none", () => {
+test("recovery SoT points Last Implementation at TB-P09-T020-R1; Architect T019; Issued none; Repair none", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
@@ -186,13 +188,13 @@ test("recovery SoT points Last Implementation at TB-P09-T020; Architect T019; Is
   );
   assert.match(
     state,
-    /Last Implementation Task:\s*```text\s*TB-P09-T020\s*```/,
-    "PROJECT-STATE Last Implementation Task must be TB-P09-T020",
+    /Last Implementation Task:\s*```text\s*TB-P09-T020-R1\s*```/,
+    "PROJECT-STATE Last Implementation Task must be TB-P09-T020-R1",
   );
   assert.match(
     recovery,
-    /Last Implementation Task:\s*```text\s*TB-P09-T020\s*```/,
-    "recovery Last Implementation Task must be TB-P09-T020",
+    /Last Implementation Task:\s*```text\s*TB-P09-T020-R1\s*```/,
+    "recovery Last Implementation Task must be TB-P09-T020-R1",
   );
   assert.match(
     state,
@@ -216,7 +218,7 @@ test("recovery SoT points Last Implementation at TB-P09-T020; Architect T019; Is
   );
   assert.match(state, /USER_VISUAL_ACCEPTED:\s*```text\s*NO\s*```/);
   assert.match(recovery, /USER_VISUAL_ACCEPTED:\s*```text\s*NO\s*```/);
-  assert.equal(CURRENT_TASK_ID, "TB-P09-T020");
+  assert.equal(CURRENT_TASK_ID, "TB-P09-T020-R1");
 });
 
 test("recovery SoT does not leave stale tasks as Last Implementation", () => {
@@ -229,8 +231,8 @@ test("recovery SoT does not leave stale tasks as Last Implementation", () => {
   };
   const implRecovery = implBlock(recovery);
   const implState = implBlock(state);
-  assert.equal(implRecovery, "TB-P09-T020");
-  assert.equal(implState, "TB-P09-T020");
+  assert.equal(implRecovery, "TB-P09-T020-R1");
+  assert.equal(implState, "TB-P09-T020-R1");
   for (const stale of STALE_CURRENT_POINTERS) {
     assert.notEqual(implRecovery, stale, `recovery Last Implementation must not be stale ${stale}`);
     assert.notEqual(implState, stale, `PROJECT-STATE Last Implementation must not be stale ${stale}`);

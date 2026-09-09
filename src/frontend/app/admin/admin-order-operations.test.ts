@@ -175,6 +175,7 @@ test("formatAdminStatus humanizes fulfillment enums without raw ReadyToFulfill",
   assert.equal(formatAdminStatus("ReadyToFulfill"), "آماده پردازش");
   assert.equal(formatAdminStatus("Packed"), "بسته‌بندی‌شده");
   assert.equal(formatAdminStatus("Dispatched"), "ارسال‌شده");
+  assert.equal(formatAdminStatus("PartialDispatched"), "ارسال جزئی");
   assert.notEqual(formatAdminStatus("ReadyToFulfill"), "ReadyToFulfill");
 });
 

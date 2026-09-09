@@ -657,9 +657,7 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             fulfillmentItem.ApplyShippedQuantity(item.Quantity);
         }
 
-        Status = AllItemsDelivered()
-            ? FulfillmentStatus.Delivered
-            : FulfillmentStatus.Dispatched;
+        Status = FulfillmentStatus.Dispatched;
         UpdatedAt = now;
         _domainEvents.Add(new ShipmentDispatchedDomainEvent(FulfillmentId, shipmentId, SellerOrderId));
     }
