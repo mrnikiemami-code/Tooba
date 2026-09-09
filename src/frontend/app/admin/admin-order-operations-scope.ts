@@ -2,12 +2,13 @@
  * Scope helpers for Admin order operations menus (pure — no fetch).
  */
 
-export type AdminOrderOperationsScope = "whole-order" | "detail" | "fulfillment-queue";
+export type AdminOrderOperationsScope = "whole-order" | "detail" | "fulfillment-queue" | "returns-queue";
 
 export type AdminOrderOperationActionLike = {
   code: string;
   fulfillmentId?: string | null;
   sellerOrderId?: string | null;
+  returnRequestId?: string | null;
 };
 
 /** عملیات‌هایی که فقط در اقلام و ارسال / جزئیات معنا دارند — از Grid کل‌سفارش حذف می‌شوند. */
@@ -44,6 +45,13 @@ export const FULFILLMENT_QUEUE_OPERATION_CODES = new Set([
   "deliver_shipment",
 ]);
 
+/** کدهای مجاز در kebab صف کار مرجوعی و بازگشت وجه. */
+export const RETURN_QUEUE_OPERATION_CODES = new Set([
+  "approve_return",
+  "reject_return",
+  "retry_refund",
+]);
+
 const WHOLE_ORDER_DEDUPE_CODES = new Set([
   "cancel",
   "confirm_deposit",
@@ -58,11 +66,19 @@ export function filterOperationsForScope<T extends AdminOrderOperationActionLike
   actions: T[],
   scope: AdminOrderOperationsScope = "detail",
   fulfillmentId?: string | null,
+  returnRequestId?: string | null,
 ): T[] {
   if (scope === "fulfillment-queue") {
     return actions.filter((action) => {
       if (!FULFILLMENT_QUEUE_OPERATION_CODES.has(action.code)) return false;
       if (fulfillmentId && action.fulfillmentId && action.fulfillmentId !== fulfillmentId) return false;
+      return true;
+    });
+  }
+  if (scope === "returns-queue") {
+    return actions.filter((action) => {
+      if (!RETURN_QUEUE_OPERATION_CODES.has(action.code)) return false;
+      if (returnRequestId && action.returnRequestId && action.returnRequestId !== returnRequestId) return false;
       return true;
     });
   }

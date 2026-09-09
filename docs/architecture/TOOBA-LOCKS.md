@@ -81,3 +81,26 @@ A Shipment belongs to one seller and one shipping method. Bulk queue actions tha
 
 ### LOCK-OPS-008 — Queue bulk requires shared valid capability
 Work-queue bulk toolbar shows only the intersection of backend-projected capabilities for every selected row. No fake atomicity; partial failures are explicit.
+
+## Returns / Refunds
+
+### LOCK-RET-001 — Return and Refund are independent lifecycles
+Return = مرجوعی. Refund = بازگشت وجه. Do not merge them into one status machine. Admin surfaces must show Return status and Refund status separately. Completing one does not silently complete the other unless the existing Return aggregate already defines that transition.
+
+### LOCK-RET-002 — Return rights survive seller settlement
+Seller settlement / payout never ends customer return rights. Eligibility does not consult settlement state.
+
+### LOCK-RET-003 — Immutable OrderLine effective return-policy snapshot
+Eligibility uses OrderLine `IsReturnableSnapshot` / `ReturnWindowDaysSnapshot` / `ReturnPolicyLabelSnapshot` captured at checkout. Do not recompute historical policy from current Product/Offer settings.
+
+### LOCK-RET-004 — Delivery-based, split-delivery, quantity-aware deadline
+Return window starts per delivered quantity. Split deliveries keep separate clocks. Undelivered quantity has no deadline. Remaining returnable quantity subtracts already requested/approved/in-progress/returned amounts. Product quantities are decimal; no integer truncation.
+
+### LOCK-RET-005 — Post-payout refund uses compensating seller debit
+Completed payout history is immutable. If a refund occurs after payout, create/reuse the canonical seller debit/compensating adjustment and reduce future payable. Do not rewrite historical settlement/payout rows. Do not create a second ledger.
+
+### LOCK-RET-006 — Cancellation refund can exist without Return
+Paid-order cancellation starts the existing Payment refund workflow without a Return request. Return-sourced refunds reuse the same Payment refund implementation. No duplicate refund rows for the same idempotency key/business event.
+
+### LOCK-RET-007 — One Return domain and one Refund implementation
+Admin `مرجوعی‌ها و بازگشت وجه` is a work queue over existing Return/Refund aggregates and Admin order operations. Do not create a second Return or Refund subsystem.

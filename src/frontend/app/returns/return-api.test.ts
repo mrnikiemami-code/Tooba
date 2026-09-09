@@ -5,6 +5,7 @@ import {
   formatReturnDate,
   formatReturnStatus,
   formatRefundAttemptStatus,
+  formatRefundLifecycleStatus,
   mapReturnList,
   mapReturnSnapshot,
   normalizeRefundDestination,
@@ -85,6 +86,7 @@ test("mapReturnList derives grid rows", () => {
 
 test("formatters localize return statuses and destinations", () => {
   assert.equal(formatReturnStatus("Requested"), "در انتظار بررسی");
+  assert.equal(formatRefundLifecycleStatus("pending"), "در انتظار بازگشت وجه");
   assert.equal(formatRefundAttemptStatus("Succeeded"), "موفق");
   assert.equal(formatReturnDate(null), "—");
   assert.equal(formatRefundDestination("Wallet"), "کیف پول");

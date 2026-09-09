@@ -53,7 +53,7 @@ const columns: GridColumnDef<ReturnListRow>[] = [
   },
   {
     id: "refundAmount",
-    header: "بازپرداخت",
+    header: "بازگشت وجه",
     accessor: (row) => row.refundAmount,
     cell: (row) => <span className="tabular-nums">{row.refundAmount.toLocaleString("fa-IR")}</span>,
     width: 120,
@@ -146,7 +146,7 @@ export default function SellerReturnsPage() {
     <main>
       <div className="mb-5">
         <p className="text-sm text-muted">خانه / مرجوعی</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">مرجوعی و بازپرداخت</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">مرجوعی و بازگشت وجه</h1>
         <p className="mt-1 text-base text-muted">بررسی درخواست‌های مرجوعی مشتری</p>
       </div>
       <section className="overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-sm">

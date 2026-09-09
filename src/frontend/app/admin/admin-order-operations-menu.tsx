@@ -25,6 +25,8 @@ type Props = {
   scope?: AdminOrderOperationsScope;
   /** محدود کردن actions به یک fulfillment در صف کار. */
   fulfillmentId?: string | null;
+  /** محدود کردن actions به یک درخواست مرجوعی در صف کار. */
+  returnRequestId?: string | null;
   onCompleted?: () => void;
   testId?: string;
 };
@@ -40,6 +42,7 @@ export function AdminOrderOperationsMenu({
   iconOnly = false,
   scope = "detail",
   fulfillmentId = null,
+  returnRequestId = null,
   onCompleted,
   testId,
 }: Props) {
@@ -73,8 +76,8 @@ export function AdminOrderOperationsMenu({
       setError(result.message ?? mapAdminErrorMessage(null, "fa"));
       return;
     }
-    setActions(filterOperationsForScope(result.data.actions, scope, fulfillmentId));
-  }, [checkoutId, scope, fulfillmentId]);
+    setActions(filterOperationsForScope(result.data.actions, scope, fulfillmentId, returnRequestId));
+  }, [checkoutId, scope, fulfillmentId, returnRequestId]);
 
   const updatePosition = useCallback(() => {
     const btn = buttonRef.current;

@@ -66,7 +66,7 @@ const faNav: AdminNavLabels = {
   categorySchema: "طرح ویژگی رده",
   orders: "سفارش‌ها و پرداخت",
   fulfillments: "ارسال و تحویل",
-  returns: "مرجوعی و بازپرداخت",
+  returns: "مرجوعی‌ها و بازگشت وجه",
   receipts: "دریافت‌ها",
   settlement: "تسویه فروشندگان",
   payouts: "پرداخت به فروشندگان",

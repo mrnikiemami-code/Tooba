@@ -1,0 +1,133 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-pre-delivery",
+      "checkoutId": "01a08608-6581-7000-9549-865d451554f7",
+      "hasRequestReturn": false,
+      "label": "7 روز پس از تحویل",
+      "reason": "not_delivered",
+      "prematureStatus": 400,
+      "prematureCode": "return.not_delivered",
+      "prematureMsg": "هنوز تحویلی ثبت نشده است.",
+      "noEnglish": true,
+      "ok": true
+    },
+    {
+      "name": "B-decimal-return",
+      "deliverOk": true,
+      "retStatus": 200,
+      "qty": 0.25,
+      "returnStatus": "Requested",
+      "refundStatus": "none",
+      "unit": "kg",
+      "noGuid": true,
+      "ok": true
+    },
+    {
+      "name": "F-approve-refund-distinct",
+      "approveStatus": 200,
+      "returnStatus": "Completed",
+      "refundStatus": "completed",
+      "ok": true
+    },
+    {
+      "name": "J-stale",
+      "status": 400,
+      "code": "return.stale",
+      "msg": "وضعیت مرجوعی تغییر کرده است. صفحه را تازه کنید.",
+      "noEnglish": true,
+      "ok": true
+    },
+    {
+      "name": "G-refund-retry-guard",
+      "status": 400,
+      "code": "refund.retry.invalid_state",
+      "msg": "تلاش مجدد بازگشت وجه فقط برای وضعیت ناموفق مجاز است.",
+      "queueRefund": "completed",
+      "ok": true
+    },
+    {
+      "name": "C-split-delivery",
+      "firstPack": 200,
+      "secondPack": 200,
+      "secondPackErr": "",
+      "firstReject": 400,
+      "firstCode": "return.quantity_exceeded",
+      "laterStatus": 200,
+      "laterCode": "",
+      "laterMsg": "{\"returnRequestId\":\"d06d1f26-46f1-410a-bc33-4bc2db9af03d\",\"sellerOrderId\":\"01a08608-6ff3-7000-9d61-fc769b1c09b3\",\"checkoutId\":\"01a08608-6fec-7000-adba-953074b11240\",\"sellerPartyId\":\"01a03826-97c5-7000-ad15-c9d141b1f32e\",\"requestedByUserId\":\"aaaaaaaa-aaaa-4aaa-8aaa-000000000009\",\"status\":\"Requested\",\"currency\":\"IRR\",\"refundAmount\":748.500000,\"refundDestination\":\"OriginalPayment\",\"createdAt\":\"2026-09-09T11:58:16.5422808+00:00\",\"updatedAt\":\"2026-09-09T11:58:16.5422808+00:00\",\"items\":[{\"returnItemId\":\"72cef015-b71d-414a-920b-45d48cd4352e\",\"orderLineId\":\"01a08608-6ff8-7000-af51-d6604e8802aa\",\"quantity\":0.750000,\"unitPriceSnapshot\":998.0000,\"currency\":\"IRR\",\"reservationId\":\"01a08608-6fb4-7000-be37-43f814542a82\"}],\"refundAttempts\":[]}",
+      "laterQty": 748.5,
+      "ok": true
+    },
+    {
+      "name": "D-non-returnable",
+      "policyBefore": "NonReturnable",
+      "snapshotReturnable": false,
+      "label": "غیرقابل مرجوعی",
+      "hasAction": false,
+      "status": 400,
+      "code": "return.non_returnable",
+      "msg": "این کالا طبق سیاست سفارش قابل مرجوعی نیست.",
+      "ok": true
+    },
+    {
+      "name": "E-expired",
+      "viaEvaluator": true,
+      "message": "مهلت مرجوعی تمام شده است.",
+      "code": "return.expired",
+      "ok": true
+    },
+    {
+      "name": "I-cancel-refund-coexistence",
+      "opsStatus": 200,
+      "returnCount": 0,
+      "noRequestReturn": true,
+      "ok": true
+    },
+    {
+      "name": "filters",
+      "filters": [
+        {
+          "id": "pending_review",
+          "status": 200
+        },
+        {
+          "id": "approved",
+          "status": 200
+        },
+        {
+          "id": "refund_needed",
+          "status": 200
+        },
+        {
+          "id": "refund_pending",
+          "status": 200
+        },
+        {
+          "id": "refund_failed",
+          "status": 200
+        },
+        {
+          "id": "completed",
+          "status": 200
+        },
+        {
+          "id": "rejected",
+          "status": 200
+        }
+      ],
+      "ok": true
+    },
+    {
+      "name": "H-settlement-compensation",
+      "viaFoundationTests": true,
+      "ok": true
+    }
+  ]
+}

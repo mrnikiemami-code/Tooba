@@ -1,5 +1,5 @@
 /**
- * کلاینت و نگاشت مرجوعی/بازپرداخت مشترک بین Customer/Seller/Admin.
+ * کلاینت و نگاشت مرجوعی/بازگشت وجه مشترک بین Customer/Seller/Admin.
  * فقط دادهٔ واقعی Host؛ بدون وضعیت ساختگی.
  */
 
@@ -36,7 +36,7 @@ export interface RefundAttempt {
   completedAt: string | null;
 }
 
-/** مقصد بازپرداخت تایپ‌شده — بدون free-form. */
+/** مقصد بازگشت وجه تایپ‌شده — بدون free-form. */
 export type RefundDestination = "OriginalPayment" | "Wallet";
 
 export const DEFAULT_REFUND_DESTINATION: RefundDestination = "OriginalPayment";
@@ -52,7 +52,7 @@ export interface ReturnSnapshot {
   currency: string;
   refundAmount: number;
   paymentId: string | null;
-  /** مقصد بازپرداخت؛ پیش‌فرض OriginalPayment اگر Host نفرستد. */
+  /** مقصد بازگشت وجه؛ پیش‌فرض OriginalPayment اگر Host نفرستد. */
   destination: RefundDestination;
   createdAt: string;
   updatedAt: string;
@@ -93,7 +93,7 @@ function nullableText(value: unknown): string | null {
   return value == null || String(value).length === 0 ? null : String(value);
 }
 
-/** مقصد بازپرداخت را نرمال می‌کند؛ مقدار ناشناخته → OriginalPayment. */
+/** مقصد بازگشت وجه را نرمال می‌کند؛ مقدار ناشناخته → OriginalPayment. */
 export function normalizeRefundDestination(value: unknown): RefundDestination {
   // Host may serialize enum as number (Wallet=1) or string.
   if (typeof value === "number") {
@@ -104,7 +104,7 @@ export function normalizeRefundDestination(value: unknown): RefundDestination {
   return "OriginalPayment";
 }
 
-/** برچسب فارسی مقصد بازپرداخت. */
+/** برچسب فارسی مقصد بازگشت وجه. */
 export function formatRefundDestination(destination: RefundDestination | string): string {
   return normalizeRefundDestination(destination) === "Wallet" ? "کیف پول" : "پرداخت اصلی";
 }
@@ -198,18 +198,126 @@ export function mapReturnList(value: unknown): ReturnListRow[] {
   });
 }
 
+export interface ReturnWorkQueueRow {
+  id: string;
+  returnRequestId: string;
+  sellerOrderId: string;
+  checkoutId: string;
+  sellerPartyId: string;
+  returnReference: string;
+  orderReference: string;
+  customerDisplayName: string;
+  sellerDisplayName: string;
+  productLabel: string;
+  quantityRequested: number;
+  unitLabel: string;
+  returnStatus: string;
+  refundStatus: string;
+  eligibilitySummary: string;
+  createdAt: string;
+  updatedAt: string;
+  availableActionCodes: string[];
+}
+
+export type ReturnQueueFilter =
+  | "all"
+  | "pending_review"
+  | "approved"
+  | "refund_needed"
+  | "refund_pending"
+  | "refund_failed"
+  | "completed"
+  | "rejected";
+
+export const RETURN_QUEUE_FILTERS: { id: ReturnQueueFilter; labelFa: string }[] = [
+  { id: "all", labelFa: "همه" },
+  { id: "pending_review", labelFa: "در انتظار بررسی" },
+  { id: "approved", labelFa: "تأییدشده" },
+  { id: "refund_needed", labelFa: "نیازمند بازگشت وجه" },
+  { id: "refund_pending", labelFa: "بازگشت وجه در انتظار" },
+  { id: "refund_failed", labelFa: "بازگشت وجه ناموفق" },
+  { id: "completed", labelFa: "تکمیل‌شده" },
+  { id: "rejected", labelFa: "ردشده" },
+];
+
+function stringList(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
+}
+
+/** ردیف صف کار Admin را از DTO Host نگاشت می‌کند. */
+export function mapReturnWorkQueueRow(value: unknown): ReturnWorkQueueRow | null {
+  const item = record(value);
+  if (!item) return null;
+  const returnRequestId = text(prop(item, "returnRequestId", "ReturnRequestId"));
+  const checkoutId = text(prop(item, "checkoutId", "CheckoutId"));
+  if (!returnRequestId || !checkoutId) return null;
+  return {
+    id: returnRequestId,
+    returnRequestId,
+    sellerOrderId: text(prop(item, "sellerOrderId", "SellerOrderId")),
+    checkoutId,
+    sellerPartyId: text(prop(item, "sellerPartyId", "SellerPartyId")),
+    returnReference: text(prop(item, "returnReference", "ReturnReference")),
+    orderReference: text(prop(item, "orderReference", "OrderReference")),
+    customerDisplayName: text(prop(item, "customerDisplayName", "CustomerDisplayName")),
+    sellerDisplayName: text(prop(item, "sellerDisplayName", "SellerDisplayName")),
+    productLabel: text(prop(item, "productLabel", "ProductLabel")),
+    quantityRequested: number(prop(item, "quantityRequested", "QuantityRequested")),
+    unitLabel: text(prop(item, "unitLabel", "UnitLabel"), "واحد"),
+    returnStatus: text(prop(item, "returnStatus", "ReturnStatus")),
+    refundStatus: text(prop(item, "refundStatus", "RefundStatus")),
+    eligibilitySummary: text(prop(item, "eligibilitySummary", "EligibilitySummary")),
+    createdAt: text(prop(item, "createdAt", "CreatedAt")),
+    updatedAt: text(prop(item, "updatedAt", "UpdatedAt")),
+    availableActionCodes: stringList(prop(item, "availableActionCodes", "AvailableActionCodes")),
+  };
+}
+
+/** فهرست صف کار Admin. */
+export function mapReturnWorkQueueList(value: unknown): ReturnWorkQueueRow[] {
+  const items = Array.isArray(value) ? value : [];
+  return items.flatMap((raw) => {
+    const row = mapReturnWorkQueueRow(raw);
+    return row ? [row] : [];
+  });
+}
+
 /** وضعیت مرجوعی را برای UI فارسی می‌کند. */
 export function formatReturnStatus(status: string): string {
   const labels: Record<string, string> = {
     Requested: "در انتظار بررسی",
     Approved: "تأیید شده",
     Rejected: "رد شده",
-    RefundProcessing: "در حال بازپرداخت",
+    RefundProcessing: "در حال بازگشت وجه",
     Completed: "تکمیل شده",
-    RefundFailed: "بازپرداخت ناموفق",
+    RefundFailed: "بازگشت وجه ناموفق",
     Cancelled: "لغو شده",
   };
   return labels[status] ?? (status || "نامشخص");
+}
+
+/** وضعیت جداگانهٔ بازگشت وجه در صف کار Admin. */
+export function formatRefundLifecycleStatus(status: string): string {
+  const labels: Record<string, string> = {
+    none: "بدون بازگشت وجه",
+    pending: "در انتظار بازگشت وجه",
+    failed: "بازگشت وجه ناموفق",
+    completed: "بازگشت وجه تکمیل‌شده",
+  };
+  return labels[status] ?? (status || "نامشخص");
+}
+
+/** badge وضعیت بازگشت وجه در صف کار. */
+export function refundLifecycleBadgeClass(status: string): string {
+  const tone =
+    status === "completed"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "failed"
+        ? "bg-red-50 text-red-700"
+        : status === "pending"
+          ? "bg-blue-50 text-[#2563EB]"
+          : "bg-gray-50 text-gray-600";
+  return `inline-flex rounded-xl px-3 py-1 text-xs font-bold ${tone}`;
 }
 
 /** وضعیت تلاش refund را فارسی می‌کند. */
@@ -435,12 +543,9 @@ export async function loadAdminReturns(): Promise<AdminResult<ReturnListRow[]>> 
   }
 }
 
-/** Server GridQuery — مرجوعی Admin. */
-export function queryAdminReturnsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<ReturnListRow>> {
-  return postAdminGridQuery("/v1/admin/returns/query", query, adminActorHeader(), (item) => {
-    const rows = mapReturnList([item]);
-    return rows[0] ?? null;
-  });
+/** Server GridQuery — صف کار مرجوعی Admin. */
+export function queryAdminReturnsGrid(query: GridServerQuery): Promise<AdminGridQueryResult<ReturnWorkQueueRow>> {
+  return postAdminGridQuery("/v1/admin/returns/query", query, adminActorHeader(), mapReturnWorkQueueRow);
 }
 
 /** جزئیات مرجوعی Admin. */

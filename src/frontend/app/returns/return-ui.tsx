@@ -48,7 +48,13 @@ export function ReturnStatusBadge({ status }: { status: string }) {
 }
 
 /** جزئیات مرجوعی — card مطابق returnDetailModal Shopeiva (read-only). */
-export function ReturnDetailCard({ snapshot }: { snapshot: ReturnSnapshot }) {
+export function ReturnDetailCard({
+  snapshot,
+  hideTechnicalIds = false,
+}: {
+  snapshot: ReturnSnapshot;
+  hideTechnicalIds?: boolean;
+}) {
   const [reasonLabel, description] = splitReturnReason(snapshot.reason);
 
   return (
@@ -64,10 +70,19 @@ export function ReturnDetailCard({ snapshot }: { snapshot: ReturnSnapshot }) {
             {formatReturnDate(snapshot.createdAt)}
           </p>
         </div>
-        <div className="bg-gray-50 rounded-xl p-3">
-          <p className="text-[10px] text-gray-500">شناسه</p>
-          <p className="text-sm font-bold font-mono mt-1">{snapshot.returnRequestId.slice(0, 8)}</p>
-        </div>
+        {hideTechnicalIds ? (
+          <div className="bg-gray-50 rounded-xl p-3">
+            <p className="text-[10px] text-gray-500">مبلغ بازگشت وجه</p>
+            <p className="text-sm font-bold text-gray-900 mt-1">
+              {snapshot.refundAmount.toLocaleString("fa-IR")} {snapshot.currency}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-xl p-3">
+            <p className="text-[10px] text-gray-500">شناسه</p>
+            <p className="text-sm font-bold font-mono mt-1">{snapshot.returnRequestId.slice(0, 8)}</p>
+          </div>
+        )}
       </div>
       {reasonLabel ? (
         <div>
@@ -101,11 +116,11 @@ export function ReturnDetailCard({ snapshot }: { snapshot: ReturnSnapshot }) {
       </ul>
       {snapshot.refundAmount > 0 ? (
         <p className="text-sm">
-          مبلغ بازپرداخت: <strong className="text-[#2563EB]">{snapshot.refundAmount.toLocaleString("fa-IR")} {snapshot.currency}</strong>
+          مبلغ بازگشت وجه: <strong className="text-[#2563EB]">{snapshot.refundAmount.toLocaleString("fa-IR")} {snapshot.currency}</strong>
         </p>
       ) : null}
       <div className="bg-gray-50 rounded-xl p-3" data-testid="return-destination-display">
-        <p className="text-[10px] text-gray-500">مقصد بازپرداخت</p>
+        <p className="text-[10px] text-gray-500">مقصد بازگشت وجه</p>
         <p className="text-sm font-bold text-gray-900 mt-1 flex items-center gap-1.5">
           {snapshot.destination === "Wallet" ? (
             <Wallet className="w-3.5 h-3.5 text-violet-500" />
@@ -117,7 +132,7 @@ export function ReturnDetailCard({ snapshot }: { snapshot: ReturnSnapshot }) {
       </div>
       {snapshot.refundAttempts.length > 0 ? (
         <div className="space-y-2">
-          <h4 className="text-sm font-bold">تلاش‌های بازپرداخت</h4>
+          <h4 className="text-sm font-bold">تلاش‌های بازگشت وجه</h4>
           {snapshot.refundAttempts.map((attempt) => (
             <div key={attempt.refundAttemptId} className="rounded-xl bg-gray-50 p-3 text-xs text-gray-600 flex flex-wrap gap-2 justify-between">
               <span>{formatRefundAttemptStatus(attempt.status)}</span>
@@ -493,7 +508,7 @@ export function ReturnReviewModal({
             </>
           ) : (
             <div className="bg-gray-50 rounded-xl p-3 text-sm" data-testid="return-review-destination">
-              مقصد بازپرداخت: <strong>{formatRefundDestination(snapshot.destination)}</strong>
+              مقصد بازگشت وجه: <strong>{formatRefundDestination(snapshot.destination)}</strong>
             </div>
           )}
         </div>
@@ -502,7 +517,7 @@ export function ReturnReviewModal({
   );
 }
 
-/** انتخابگر مقصد بازپرداخت — OriginalPayment (پیش‌فرض) یا Wallet. */
+/** انتخابگر مقصد بازگشت وجه — OriginalPayment (پیش‌فرض) یا Wallet. */
 export function RefundDestinationSelector({
   value,
   onChange,
@@ -512,7 +527,7 @@ export function RefundDestinationSelector({
 }) {
   return (
     <div data-testid="refund-destination-selector">
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">مقصد بازپرداخت</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">مقصد بازگشت وجه</label>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <button
           type="button"

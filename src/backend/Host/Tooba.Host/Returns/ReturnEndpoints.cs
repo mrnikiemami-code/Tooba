@@ -102,7 +102,7 @@ public static class ReturnEndpoints
             return Results.Json(await composer.CreateAsync(actor.Value, body, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "return.rejected", detail = ex.Message }, statusCode: 400); }
+        catch (InvalidOperationException ex) { return ToMappedError(ex); }
     }
 
     private static async Task<IResult> SellerListAsync(
@@ -192,7 +192,7 @@ public static class ReturnEndpoints
             return Results.Json(await action(actorUserId, returnRequestId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "return.rejected", detail = ex.Message }, statusCode: 400); }
+        catch (InvalidOperationException ex) { return ToMappedError(ex); }
     }
 
     private static async Task<IResult> AdminListAsync(
@@ -271,7 +271,13 @@ public static class ReturnEndpoints
             return Results.Json(await composer.RetryRefundAsync(returnRequestId, actorUserId, cancellationToken));
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
-        catch (InvalidOperationException ex) { return Results.Json(new { title = "Bad Request", errorCode = "return.rejected", detail = ex.Message }, statusCode: 400); }
+        catch (InvalidOperationException ex) { return ToMappedError(ex); }
+    }
+
+    private static IResult ToMappedError(InvalidOperationException ex)
+    {
+        var mapped = ReturnErrorMapper.Map(ex.Message);
+        return Results.Json(new { title = mapped.Fa, errorCode = mapped.Code, detail = mapped.Fa }, statusCode: 400);
     }
 
     private static Guid? ResolveCustomerActor(HttpRequest request, CurrentAuthenticatedSession session, IHostEnvironment environment)

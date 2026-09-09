@@ -1,4 +1,5 @@
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Host.Admin;
 using Tooba.Host.Grid;
 using Tooba.Returns.Application;
 using Tooba.Returns.Infrastructure.Persistence;
@@ -50,10 +51,10 @@ public sealed class ReturnPanelComposer
     /// <summary>
     /// سازندهٔ ترکیب مرجوعی.
     /// </summary>
-    public ReturnPanelComposer(IReturnDirectory returns, ReturnsDbContext db)
+    public ReturnPanelComposer(IReturnDirectory returns, AdminReturnGridQueryEngine grid)
     {
         _returns = returns;
-        _grid = new AdminReturnGridQueryEngine(db);
+        _grid = grid;
     }
 
     /// <summary>
@@ -90,7 +91,7 @@ public sealed class ReturnPanelComposer
         _returns.ListAllAsync(cancellationToken);
 
     /// <summary>صفحه‌بندی server-side گرید مرجوعی Admin (DB-native).</summary>
-    public Task<GridPageResponse<ReturnSnapshot>> QueryGridAsync(
+    public Task<GridPageResponse<AdminReturnWorkQueueRow>> QueryGridAsync(
         GridQueryRequest request,
         CancellationToken cancellationToken)
     {

@@ -69,6 +69,34 @@ public sealed class ReturnEligibilityEvaluatorTests
     }
 
     [Fact]
+    public async Task Ineligible_when_line_snapshot_is_non_returnable()
+    {
+        var sellerOrderId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3");
+        var checkoutId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3");
+        var lineId = Guid.Parse("cccccccc-cccc-cccc-cccc-ccccccccccc3");
+        var deliveredAt = DateTimeOffset.UtcNow.AddDays(-1);
+        var evaluator = new ReturnEligibilityEvaluator(
+            new FakeOrderReturnReader(new OrderReturnContextSnapshot(
+                sellerOrderId,
+                checkoutId,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                true,
+                "IRR",
+                [new OrderReturnLineSnapshot(lineId, 1, 1000m, "IRR", null, false, 0)])),
+            new FakeFulfillmentReturnReader(new FulfillmentReturnEligibilitySnapshot(
+                sellerOrderId,
+                new Dictionary<Guid, decimal> { [lineId] = 1 },
+                deliveredAt)),
+            CreateEmptyReturnsDb());
+
+        var result = await evaluator.EvaluateAsync(sellerOrderId, CancellationToken.None);
+        Assert.False(result.Eligible);
+        Assert.Equal(ReturnEligibilityReasonCodes.NonReturnable, result.ReasonCode);
+        Assert.Equal("return.non_returnable", ReturnEligibilityReasonCodes.ToErrorCode(result.ReasonCode));
+    }
+
+    [Fact]
     public void Evaluator_source_never_references_settlement()
     {
         var root = FindRepoRoot();

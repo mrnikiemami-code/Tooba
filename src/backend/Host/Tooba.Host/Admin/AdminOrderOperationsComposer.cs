@@ -14,6 +14,7 @@ using Tooba.Returns.Application;
 using Tooba.Settlement.Application;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Host.Returns;
 
 namespace Tooba.Host.Admin;
 
@@ -276,12 +277,20 @@ public sealed class AdminOrderOperationsComposer
         var projected = page.Actions.FirstOrDefault(a =>
             string.Equals(a.Code, request.Code, StringComparison.OrdinalIgnoreCase)
             && MatchesIds(a, request));
+        var isReturnLifecycleOp = code is "request_return" or "approve_return" or "reject_return" or "retry_refund";
         if (projected is null)
         {
-            throw new PlatformHttpException(400, "این عملیات در وضعیت فعلی سفارش مجاز نیست.", "order.operation.invalid");
-        }
+            if (!isReturnLifecycleOp)
+            {
+                throw new PlatformHttpException(400, "این عملیات در وضعیت فعلی سفارش مجاز نیست.", "order.operation.invalid");
+            }
 
-        if (!Has(effective, projected.RequiredPermission))
+            if (!Has(effective, "return.manage"))
+            {
+                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            }
+        }
+        else if (!Has(effective, projected.RequiredPermission))
         {
             throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
         }
@@ -318,6 +327,11 @@ public sealed class AdminOrderOperationsComposer
         catch (InvalidOperationException ex)
         {
             var mapped = MapFulfillmentException(ex.Message);
+            if (mapped.Code == "order.operation.failed")
+            {
+                mapped = ReturnErrorMapper.Map(ex.Message);
+            }
+
             throw new PlatformHttpException(400, mapped.Fa, mapped.Code);
         }
     }
@@ -955,10 +969,18 @@ public sealed class AdminOrderOperationsComposer
             throw new PlatformHttpException(
                 400,
                 ReturnEligibilityReasonCodes.ToFaMessage(eligibility.ReasonCode),
-                "order.operation.failed");
+                ReturnEligibilityReasonCodes.ToErrorCode(eligibility.ReasonCode));
         }
 
         var items = request.ReturnItems;
+        if (items is null || items.Count == 0)
+        {
+            items = request.Selections?
+                .Where(x => x.Quantity > 0)
+                .Select(x => new ReturnLineCommand(x.OrderLineId, x.Quantity))
+                .ToArray();
+        }
+
         if (items is null || items.Count == 0)
         {
             items = eligibility.Lines
@@ -969,7 +991,7 @@ public sealed class AdminOrderOperationsComposer
 
         if (items.Count == 0)
         {
-            throw new PlatformHttpException(400, "قلم قابل مرجوعی باقی نمانده است.", "order.operation.invalid");
+            throw new PlatformHttpException(400, "قلم قابل مرجوعی باقی نمانده است.", "return.quantity_exceeded");
         }
 
         var idempotency = string.IsNullOrWhiteSpace(request.IdempotencyKey)

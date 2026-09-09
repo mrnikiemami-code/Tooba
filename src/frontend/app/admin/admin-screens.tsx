@@ -35,7 +35,7 @@ import {
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
-  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_RETURN_GRID_VIEW_KEY, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
+  ADMIN_ORDER_GRID_VIEW_KEY, createHostSavedViewStore, ADMIN_SELLER_GRID_VIEW_KEY, ADMIN_CUSTOMER_GRID_VIEW_KEY, ADMIN_SETTLEMENT_GRID_VIEW_KEY, ADMIN_REVIEW_GRID_VIEW_KEY, ADMIN_PROMOTION_GRID_VIEW_KEY, ADMIN_PAYOUT_GRID_VIEW_KEY, ADMIN_RECEIPT_GRID_VIEW_KEY,
 } from "./saved-view-store";
 import {
   formatFulfillmentStatus,
@@ -45,14 +45,11 @@ import {
 } from "../fulfillment/fulfillment-api";
 import { FulfillmentShipmentList } from "../fulfillment/fulfillment-ui";
 import { AdminFulfillmentWorkQueueScreen } from "./admin-fulfillment-work-queue-screen";
+import { AdminReturnsWorkQueueScreen } from "./admin-returns-work-queue-screen";
 import {
   adminRetryReturnRefund,
   formatReturnDate,
-  formatReturnStatus,
   loadAdminReturnDetail,
-  queryAdminReturnsGrid,
-  returnStatusBadgeClass,
-  type ReturnListRow,
   type ReturnSnapshot,
 } from "../returns/return-api";
 import { ReturnDetailCard } from "../returns/return-ui";
@@ -506,79 +503,9 @@ export function AdminFulfillmentDetailScreen({ fulfillmentId }: { fulfillmentId:
   );
 }
 
-const returnStatusEnumOptions = [
-  { value: "Requested", label: formatReturnStatus("Requested") },
-  { value: "Approved", label: formatReturnStatus("Approved") },
-  { value: "Rejected", label: formatReturnStatus("Rejected") },
-  { value: "RefundProcessing", label: formatReturnStatus("RefundProcessing") },
-  { value: "Completed", label: formatReturnStatus("Completed") },
-  { value: "RefundFailed", label: formatReturnStatus("RefundFailed") },
-  { value: "Cancelled", label: formatReturnStatus("Cancelled") },
-];
-
-const returnColumns: GridColumnDef<ReturnListRow>[] = [
-  {
-    id: "returnRequestId",
-    header: "شناسه کوتاه",
-    accessor: (row) => row.returnRequestId,
-    cell: (row) => (
-      <Link className="font-semibold text-primary hover:underline" href={`/admin/returns/${row.returnRequestId}`}>
-        {row.returnRequestId.slice(0, 8)}
-      </Link>
-    ),
-    width: 120,
-    minWidth: 96,
-    maxWidth: 160,
-    sticky: "start",
-    filterKind: "text",
-    sortable: true,
-  },
-  { id: "sellerOrderId", header: "سفارش (شناسه کوتاه)", accessor: (row) => row.sellerOrderId, cell: (row) => row.sellerOrderId.slice(0, 8), width: 120, minWidth: 96, maxWidth: 160, filterKind: "text" },
-  { id: "itemCount", header: "اقلام", accessor: (row) => row.itemCount, width: 80, minWidth: 64, maxWidth: 96, sortable: true },
-  {
-    id: "refundAmount",
-    header: "بازپرداخت",
-    accessor: (row) => row.refundAmount,
-    cell: (row) => row.refundAmount.toLocaleString("fa-IR"),
-    width: 120,
-    minWidth: 96,
-    maxWidth: 150,
-    sortable: true,
-  },
-  {
-    id: "status",
-    header: "وضعیت",
-    accessor: (row) => row.status,
-    cell: (row) => <span className={returnStatusBadgeClass(row.status)}>{formatReturnStatus(row.status)}</span>,
-    width: 140,
-    minWidth: 120,
-    maxWidth: 180,
-    filterKind: "status",
-    enumOptions: returnStatusEnumOptions,
-  },
-  {
-    id: "createdAt",
-    header: "تاریخ",
-    accessor: (row) => row.createdAt,
-    cell: (row) => formatReturnDate(row.createdAt),
-    width: 140,
-    minWidth: 110,
-    maxWidth: 180,
-    sortable: true,
-  },
-];
-
-/** فهرست زندهٔ مرجوعی برای Admin. */
+/** فهرست زندهٔ مرجوعی برای Admin — صف کار عملیاتی. */
 export function AdminReturnsScreen() {
-  return (
-    <ServerGridPage
-      title="مرجوعی و بازپرداخت"
-      description="نظارت بر درخواست‌های مرجوعی و بازپرداخت"
-      queryFn={queryAdminReturnsGrid}
-      columns={returnColumns}
-      gridId={ADMIN_RETURN_GRID_VIEW_KEY}
-    />
-  );
+  return <AdminReturnsWorkQueueScreen />;
 }
 
 /** جزئیات مرجوعی Admin با retry refund. */
@@ -595,7 +522,7 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <PageHeading
           title="جزئیات مرجوعی"
-          description={snapshot ? `شناسه کوتاه: ${snapshot.returnRequestId.slice(0, 8)}` : "در حال بارگذاری"}
+          description={snapshot ? formatReturnDate(snapshot.createdAt) : "در حال بارگذاری"}
         />
         <Link className="text-sm text-primary hover:underline" href="/admin/returns">بازگشت به فهرست</Link>
       </div>
@@ -603,14 +530,14 @@ export function AdminReturnDetailScreen({ returnRequestId }: { returnRequestId: 
         <ErrorState title="مرجوعی خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
       ) : snapshot ? (
         <div className="grid gap-5">
-          <ReturnDetailCard snapshot={snapshot} />
+          <ReturnDetailCard snapshot={snapshot} hideTechnicalIds />
           {canRetry ? (
             <button
               type="button"
               className="rounded-xl px-4 py-2 text-sm font-bold bg-[#2563EB] text-white hover:bg-blue-700 transition-colors w-fit"
               onClick={() => void adminRetryReturnRefund(returnRequestId).then(refresh)}
             >
-              تلاش مجدد بازپرداخت
+              تلاش مجدد بازگشت وجه
             </button>
           ) : null}
         </div>

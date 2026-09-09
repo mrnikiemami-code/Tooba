@@ -386,6 +386,74 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
     en: "The quantity exceeds remaining allocatable packed amount.",
   },
+  "return.expired": {
+    fa: "مهلت مرجوعی تمام شده است.",
+    en: "The return window has expired.",
+  },
+  "return.non_returnable": {
+    fa: "این کالا طبق سیاست سفارش قابل مرجوعی نیست.",
+    en: "This item is not returnable under the order policy.",
+  },
+  "return.quantity_exceeded": {
+    fa: "تعداد مرجوعی از باقیماندهٔ قابل مرجوعی بیشتر است.",
+    en: "The return quantity exceeds the remaining returnable quantity.",
+  },
+  "return.quantity_invalid": {
+    fa: "تعداد مرجوعی باید مثبت باشد.",
+    en: "Return quantity must be positive.",
+  },
+  "return.not_delivered": {
+    fa: "هنوز تحویلی ثبت نشده است.",
+    en: "No delivery has been recorded yet.",
+  },
+  "return.not_paid": {
+    fa: "مرجوعی فقط برای سفارش Paid مجاز است.",
+    en: "Returns are allowed only for paid orders.",
+  },
+  "return.missing": {
+    fa: "درخواست مرجوعی پیدا نشد.",
+    en: "The return request was not found.",
+  },
+  "return.fulfillment_missing": {
+    fa: "اطلاعات ارسال برای مرجوعی پیدا نشد.",
+    en: "Fulfillment data for this return was not found.",
+  },
+  "return.stale": {
+    fa: "وضعیت مرجوعی تغییر کرده است. صفحه را تازه کنید.",
+    en: "The return state changed. Refresh the page.",
+  },
+  "return.already_approved": {
+    fa: "این مرجوعی قبلاً تأیید شده است.",
+    en: "This return has already been approved.",
+  },
+  "return.already_rejected": {
+    fa: "این مرجوعی قبلاً رد شده است.",
+    en: "This return has already been rejected.",
+  },
+  "return.rejected": {
+    fa: "درخواست مرجوعی انجام نشد.",
+    en: "The return request could not be completed.",
+  },
+  "refund.retry.invalid_state": {
+    fa: "تلاش مجدد بازگشت وجه فقط برای وضعیت ناموفق مجاز است.",
+    en: "Refund retry is allowed only after a failed refund.",
+  },
+  "refund.already_started": {
+    fa: "بازگشت وجه قبلاً آغاز شده است.",
+    en: "The refund has already started.",
+  },
+  "refund.already_completed": {
+    fa: "بازگشت وجه قبلاً تکمیل شده است.",
+    en: "The refund has already completed.",
+  },
+  "refund.payment_missing": {
+    fa: "پرداخت مرجع برای بازگشت وجه پیدا نشد.",
+    en: "The source payment for this refund was not found.",
+  },
+  "refund.destination.invalid": {
+    fa: "مقصد بازگشت وجه نامعتبر است.",
+    en: "The refund destination is not valid.",
+  },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",
     en: "The note text is not valid.",

@@ -85,7 +85,7 @@ public sealed class ReturnEligibilityEvaluator : IReturnEligibilityEvaluator
                 orderContext.SellerOrderId,
                 orderContext.CheckoutId,
                 false,
-                ReturnEligibilityReasonCodes.NothingReturnable,
+                ReturnEligibilityReasonCodes.NonReturnable,
                 null,
                 lastDeliveredAt,
                 lines);

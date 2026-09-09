@@ -53,6 +53,8 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
   );
   assert.ok(listMappedAdminErrorCodes().includes("media.missing"));
   assert.ok(listMappedAdminErrorCodes().includes("media.storage.unavailable"));
+  assert.ok(listMappedAdminErrorCodes().includes("return.expired"));
+  assert.ok(listMappedAdminErrorCodes().includes("refund.already_completed"));
 });
 
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {

@@ -73,14 +73,20 @@ public static class AdminListGridPolicies
         tieBreakerField: "fulfillmentId");
 
     /// <summary>گرید مرجوعی Admin.</summary>
-    public static readonly AdminListGridQueryPolicy<ReturnSnapshot> Returns = new(
+    public static readonly AdminListGridQueryPolicy<AdminReturnWorkQueueRow> Returns = new(
     [
-        new("returnRequestId", x => x.ReturnRequestId, InMemoryGridFieldKind.Text, searchable: true),
-        new("sellerOrderId", x => x.SellerOrderId, InMemoryGridFieldKind.Text, searchable: true),
-        new("itemCount", x => x.Items.Count, InMemoryGridFieldKind.Number),
-        new("refundAmount", x => x.RefundAmount, InMemoryGridFieldKind.Number),
-        new("status", x => x.Status.ToString(), InMemoryGridFieldKind.Enum),
+        new("returnReference", x => x.ReturnReference, InMemoryGridFieldKind.Text, searchable: true),
+        new("orderReference", x => x.OrderReference, InMemoryGridFieldKind.Text, searchable: true),
+        new("returnRequestId", x => x.ReturnRequestId, InMemoryGridFieldKind.Text),
+        new("customerDisplayName", x => x.CustomerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
+        new("sellerDisplayName", x => x.SellerDisplayName, InMemoryGridFieldKind.Text, searchable: true),
+        new("productLabel", x => x.ProductLabel, InMemoryGridFieldKind.Text),
+        new("quantityRequested", x => x.QuantityRequested, InMemoryGridFieldKind.Number),
+        new("returnStatus", x => x.ReturnStatus, InMemoryGridFieldKind.Enum),
+        new("refundStatus", x => x.RefundStatus, InMemoryGridFieldKind.Enum),
+        new("queueFilter", x => x.ReturnStatus, InMemoryGridFieldKind.Enum),
         new("createdAt", x => x.CreatedAt, InMemoryGridFieldKind.Date),
+        new("updatedAt", x => x.UpdatedAt, InMemoryGridFieldKind.Date),
     ],
         defaultSortField: "createdAt",
         tieBreakerField: "returnRequestId");
