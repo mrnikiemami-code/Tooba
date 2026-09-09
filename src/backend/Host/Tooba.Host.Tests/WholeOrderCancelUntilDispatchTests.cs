@@ -112,11 +112,12 @@ public sealed class WholeOrderCancelUntilDispatchTests
         Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
         Assert.Equal("TRK-T016", unit.Shipments.Single().TrackingReference);
-        Assert.Equal(0.50m, unit.Items.Single().QuantityPacked);
-        Assert.Equal(1.25m, unit.Items.Single().QuantityProcessing);
+        Assert.Equal(0m, unit.Items.Single().QuantityPacked);
+        Assert.Equal(0m, unit.Items.Single().QuantityProcessing);
         Assert.Equal(0m, unit.Items.Single().QuantityShipped);
 
         unit.ReactivateAfterOrderRestore(now.AddMinutes(2));
+        Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
         Assert.NotEqual(ShipmentStatus.Created, unit.Shipments.Single().Status);
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
 
