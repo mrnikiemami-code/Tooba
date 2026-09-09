@@ -1,0 +1,65 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T014-R1
+
+Parent-Task:
+TB-P09-T014
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Invoice header count/quantity repaired. LineCount is integer TotalItemCount. TotalQuantity stays decimal and is omitted from the admin list. تعداد اقلام never shows TotalQuantity. Mixed-unit جمع مقدار omitted on print. Duty calculator not invented. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T015.
+
+Applicable-Locks:
+LOCK-QTY-001, LOCK-INVOICE-002, LOCK-INVOICE-001, LOCK-INVOICE-004. docs/architecture/TOOBA-LOCKS.md
+
+Count-vs-Quantity-Discovery:
+docs/evidence/TB-P09-T014/r1-count-vs-quantity-discovery.md
+
+Header-Semantics:
+docs/evidence/TB-P09-T014/r1-header-semantics.md
+
+Admin-Grid:
+docs/evidence/TB-P09-T014/r1-admin-grid.md
+
+Invoice-Display:
+docs/evidence/TB-P09-T014/r1-invoice-display.md
+
+API-Query-Export:
+List/detail/filter/sort LineCount map from Header.TotalItemCount. TotalQuantity not aliased. No primary-path line JOIN+SUM.
+
+Duty-Clarification:
+docs/evidence/TB-P09-T014/r1-duty-clarification.md
+
+Focused-Validation:
+InvoiceHeaderSemanticsTests 3 pass. InvoiceHeaderAggregateTests + Quantity + Completeness + Seller composition + Fulfillment qty 46 pass. Recovery guard 3 pass. Frontend admin-api/detail-visual 13 pass.
+
+Runtime-Smoke:
+Checkout 01a08175-306a-7000-a19c-5c2b294a9004: list/detail lineCount=3 with TotalQuantity 5.25; invoice تعداد اقلام=3 جمع مقدار=5.25. Restored. docs/evidence/TB-P09-T014/r1-runtime-smoke.md
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T013-R1. Issued none. Repair none. Last Implementation TB-P09-T014-R1. USER_VISUAL_ACCEPTED=NO. docs/evidence/TB-P09-T014/r1-recovery-sot.md
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. List column header renamed قلم → تعداد اقلام only.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

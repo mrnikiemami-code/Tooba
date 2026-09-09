@@ -180,6 +180,27 @@ test("enrichAdminOrderDetail keeps explicit server projections", () => {
   assert.equal(enriched.sellerFinancials[0]?.commissionAmount, 20);
 });
 
+test("enrichAdminOrderDetail counts lines not summed quantity", () => {
+  const detail = mapAdminOrderDetail({
+    checkoutId: "c-qty",
+    reference: "TOOBA-Q",
+    lineCount: 0,
+    sellerCount: 0,
+    sellerOrders: [{
+      sellerOrderId: "so-q",
+      orderNumber: "SO-Q",
+      sellerDisplayName: "آرمان",
+      lines: [
+        { offerId: "o1", productTitle: "آ", quantity: 1.25, unitAmount: 10, linePayable: 12.5 },
+        { offerId: "o2", productTitle: "ب", quantity: 2, unitAmount: 10, linePayable: 20 },
+        { offerId: "o3", productTitle: "پ", quantity: 1, unitAmount: 10, linePayable: 10 },
+      ],
+    }],
+  });
+  assert.equal(detail?.lineCount, 3);
+  assert.equal(detail?.sellerFinancials[0]?.lineCount, 3);
+});
+
 test("uses Persian money and status labels", () => {
   assert.equal(formatAdminStatus("PendingPayment"), "در انتظار پرداخت");
   assert.equal(formatAdminStatus("Archived"), "بایگانی");

@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T014
+TB-P09-T014-R1
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T014 — Quantity & financial lock completion (lock registry, UoM admin, invoice header aggregates); USER_VISUAL_ACCEPTED=NO
+TB-P09-T014-R1 — Invoice header LineCount vs TotalQuantity semantic repair; USER_VISUAL_ACCEPTED=NO
+TB-P09-T014 — Quantity & financial lock completion (lock registry, UoM admin, invoice header aggregates); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T013-R1 — Offer/Fulfillment EF history replay-safe + Floor/Ceiling/Nearest runtime proof; USER_VISUAL_ACCEPTED=NO
 TB-P09-T013 — Quantity decimal foundation (UoM, product policy, offer min/max, global rounding, numeric(18,6)); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T012 — Reference-locked fulfillment UX (capability-driven selection/bulk/kebab/shipment); USER_VISUAL_ACCEPTED=NO

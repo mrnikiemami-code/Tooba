@@ -265,7 +265,7 @@ public sealed class AdminPanelComposer
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var settlementByOrder = await _settlement.ListEntriesBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
-        var lineCount = group.SellerOrders.Sum(x => x.Lines.Sum(line => line.Quantity));
+        var lineCount = InvoiceHeaderSemantics.LineCount(group.SellerOrders);
         var sellerCount = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count();
         var sellerFinancials = BuildSellerFinancials(group, sellerNames, settlementByOrder);
         var financialEvents = await BuildFinancialEventsAsync(
@@ -605,7 +605,7 @@ public sealed class AdminPanelComposer
                 order.SellerOrderId,
                 order.SellerPartyId,
                 sellerName ?? "فروشنده",
-                order.Lines.Sum(line => line.Quantity),
+                InvoiceHeaderSemantics.LineCount(order),
                 gross,
                 commission,
                 payable,

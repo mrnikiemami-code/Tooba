@@ -915,8 +915,9 @@ public sealed class AdminOrderCompletenessComposer
         var net = group.SellerOrders.Sum(x => x.NetAmountBeforeTax);
         var taxAndDuty = group.SellerOrders.Sum(x => x.TotalTaxAndDutyAmount);
         var grand = group.SellerOrders.Sum(x => x.GrandTotalSnapshot);
-        var itemCount = group.SellerOrders.Sum(x => x.TotalItemCount);
+        var itemCount = InvoiceHeaderSemantics.LineCount(group.SellerOrders);
         var totalQty = group.SellerOrders.Sum(x => x.TotalQuantity);
+        var showTotalQuantity = InvoiceHeaderSemantics.HasSharedUnit(group.SellerOrders);
         var paymentStatus = payment?.Status.ToString() ?? "—";
         var sb = new StringBuilder();
         sb.Append("<!DOCTYPE html><html lang=\"fa\" dir=\"rtl\"><head><meta charset=\"utf-8\"/>");
@@ -947,7 +948,10 @@ public sealed class AdminOrderCompletenessComposer
 
         sb.Append("</tbody></table><div class=\"totals\">");
         sb.Append("<p>تعداد اقلام: <strong dir=\"ltr\">").Append(itemCount.ToString(CultureInfo.InvariantCulture)).Append("</strong></p>");
-        sb.Append("<p>جمع مقدار: <strong dir=\"ltr\">").Append(QuantityDisplay.Format(totalQty, 6)).Append("</strong></p>");
+        if (showTotalQuantity)
+        {
+            sb.Append("<p>جمع مقدار: <strong dir=\"ltr\">").Append(QuantityDisplay.Format(totalQty, 6)).Append("</strong></p>");
+        }
         sb.Append("<p>جمع قبل از تخفیف: <strong dir=\"ltr\">").Append(FormatMoney(subtotal, currency)).Append("</strong></p>");
         sb.Append("<p>جمع تخفیفات: <strong dir=\"ltr\">").Append(FormatMoney(discount, currency)).Append("</strong></p>");
         sb.Append("<p>مبلغ پس از تخفیف / قبل از مالیات: <strong dir=\"ltr\">").Append(FormatMoney(net, currency)).Append("</strong></p>");

@@ -298,10 +298,7 @@ function isSuccessfulPaymentStatus(status: string): boolean {
 }
 
 function countOrderLines(sellerOrders: AdminSellerOrder[]): number {
-  return sellerOrders.reduce(
-    (sum, order) => sum + order.lines.reduce((lineSum, line) => lineSum + line.quantity, 0),
-    0,
-  );
+  return sellerOrders.reduce((sum, order) => sum + order.lines.length, 0);
 }
 
 function countDistinctSellers(sellerOrders: AdminSellerOrder[]): number {
@@ -313,7 +310,7 @@ function synthesizeSellerFinancials(sellerOrders: AdminSellerOrder[]): AdminSell
   return sellerOrders.flatMap((order) => {
     const sellerOrderId = order.id;
     if (!sellerOrderId) return [];
-    const lineCount = order.lines.reduce((sum, line) => sum + line.quantity, 0);
+    const lineCount = order.lines.length;
     const grossFromLines = order.lines.reduce((sum, line) => sum + line.linePayable, 0);
     const grossAmount = grossFromLines > 0 ? grossFromLines : order.payableAmount;
     const settlementStatus = order.paymentState === "Paid"

@@ -88,3 +88,11 @@ test("T042-R1 finance fields still map after visual polish", () => {
   assert.equal(enriched.lineCount, 1);
   assert.equal(enriched.sellerFinancials.length, 1);
 });
+
+test("orders grid and detail keep count label off TotalQuantity", () => {
+  const grid = readFileSync(join(import.meta.dirname, "admin-screens.tsx"), "utf8");
+  assert.match(grid, /header: "تعداد اقلام"/);
+  assert.match(screenSource, /label="تعداد اقلام"/);
+  assert.doesNotMatch(screenSource, /TotalQuantity/);
+  assert.doesNotMatch(grid, /totalQuantity/);
+});
