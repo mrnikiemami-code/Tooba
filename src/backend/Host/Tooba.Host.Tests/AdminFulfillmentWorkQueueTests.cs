@@ -89,6 +89,31 @@ public sealed class AdminFulfillmentWorkQueueTests
     }
 
     [Fact]
+    public void Partial_dispatch_with_remainder_projects_pack_and_needs_action()
+    {
+        var lineId = Guid.NewGuid();
+        var shipmentId = Guid.NewGuid();
+        var partial = Snapshot(
+            FulfillmentStatus.Dispatched,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1.25m, 0.50m, null, 0.50m, 1.25m)],
+            [
+                new ShipmentSnapshot(
+                    shipmentId,
+                    ShipmentStatus.Dispatched,
+                    "پست",
+                    "TRK-A",
+                    DateTimeOffset.UtcNow,
+                    null,
+                    [new ShipmentLineSnapshot(lineId, 0.50m)]),
+            ]);
+        var codes = AdminFulfillmentQueueFilters.ProjectActionCodes(partial);
+        Assert.Contains("mark_packed", codes);
+        Assert.Contains("pack_selected", codes);
+        Assert.True(AdminFulfillmentQueueFilters.MatchesNeedsAction(partial.Status, partial.Shipments, partial.Items));
+        Assert.DoesNotContain("cancel", codes);
+    }
+
+    [Fact]
     public void Work_queue_query_engine_filters_order_reference_by_order_number()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
@@ -110,6 +135,11 @@ public sealed class AdminFulfillmentWorkQueueTests
         Assert.Equal("fulfillment.dispatch.tracking_required", tracking.Code);
         var voided = AdminOrderOperationsComposer.MapFulfillmentException("ابطال مرسوله پس از ارسال مجاز نیست.");
         Assert.Equal("fulfillment.shipment.void_after_dispatch", voided.Code);
+        var packAfter = AdminOrderOperationsComposer.MapFulfillmentException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
+        Assert.Equal("fulfillment.pack.after_delivered", packAfter.Code);
+        Assert.Equal("پس از تحویل کامل نمی‌توان بسته‌بندی کرد.", packAfter.Fa);
+        var processAfter = AdminOrderOperationsComposer.MapFulfillmentException("پردازش پس از تحویل کامل مجاز نیست.");
+        Assert.Equal("fulfillment.process.after_delivered", processAfter.Code);
     }
 
     [Fact]

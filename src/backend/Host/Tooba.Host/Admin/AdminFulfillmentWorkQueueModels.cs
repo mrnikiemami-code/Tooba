@@ -98,22 +98,24 @@ public static class AdminFulfillmentQueueFilters
         IReadOnlyList<ShipmentSnapshot> shipments,
         IReadOnlyList<FulfillmentItemSnapshot> items)
     {
+        if (status is FulfillmentStatus.Cancelled or FulfillmentStatus.Delivered)
+        {
+            return false;
+        }
+
         if (status == FulfillmentStatus.Failed || status == FulfillmentStatus.ReadyToFulfill)
         {
             return true;
         }
 
-        if (status == FulfillmentStatus.Processing && HasPackableQuantity(items))
+        if (HasProcessableQuantity(items)
+            || HasPackableQuantity(items)
+            || HasUnallocatedShipmentQuantity(items, shipments))
         {
             return true;
         }
 
         if (HasMissingTracking(shipments))
-        {
-            return true;
-        }
-
-        if (status == FulfillmentStatus.Packed && HasUnallocatedShipmentQuantity(items, shipments))
         {
             return true;
         }
@@ -147,6 +149,7 @@ public static class AdminFulfillmentQueueFilters
         if (HasPackableQuantity(fulfillment.Items))
         {
             codes.Add("mark_packed");
+            codes.Add("pack_selected");
         }
 
         if (HasUnpackableQuantity(fulfillment))

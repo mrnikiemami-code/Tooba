@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "checkout",
+      "checkoutId": "01a08620-9529-7000-9e28-7d57ab0f9b72",
+      "sellerCount": 1,
+      "distinctSellers": false,
+      "ok": true
+    },
+    {
+      "name": "partial-dispatch-remainder",
+      "packA": 200,
+      "shipA": 200,
+      "dispatchA": 200,
+      "hasPackAfter": true,
+      "hasCancel": false,
+      "cancelStatus": 400,
+      "cancelCode": "order.cancel.forbidden",
+      "noEnglish": true,
+      "ok": true
+    },
+    {
+      "name": "multi-shipment",
+      "packB": 200,
+      "packErr": "",
+      "shipB": 200,
+      "shipErr": "",
+      "dispatchB": 200,
+      "ok": true
+    },
+    {
+      "name": "return-0.25",
+      "deliverA": 200,
+      "deliverB": 200,
+      "retStatus": 200,
+      "ok": true
+    },
+    {
+      "name": "seller-b-separate",
+      "skipped": true,
+      "addB": 404,
+      "ok": true
+    },
+    {
+      "name": "invoice-snapshot",
+      "status": 200,
+      "hasLineCount": true,
+      "ok": true
+    },
+    {
+      "name": "cancel-refund-coexistence",
+      "opsStatus": 200,
+      "noRequestReturn": true,
+      "ok": true
+    },
+    {
+      "name": "queues",
+      "fulfill": 200,
+      "returns": 200,
+      "ok": true
+    },
+    {
+      "name": "settlement",
+      "viaFoundationTests": true,
+      "ok": true
+    }
+  ]
+}

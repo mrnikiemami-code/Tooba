@@ -274,6 +274,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بازگردانی پس از ارسال مرسوله مجاز نیست.",
     en: "Restore is not allowed after a shipment has been dispatched.",
   },
+  "fulfillment.pack.after_delivered": {
+    fa: "پس از تحویل کامل نمی‌توان بسته‌بندی کرد.",
+    en: "Packing is not allowed after full delivery.",
+  },
+  "fulfillment.process.after_delivered": {
+    fa: "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
+    en: "Processing cannot continue after full delivery.",
+  },
   "fulfillment.pack.requires_processing": {
     fa: "ابتدا پردازش را شروع کنید.",
     en: "Start processing before packing.",

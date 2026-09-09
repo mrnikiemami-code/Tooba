@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T018
+TB-P09-T019
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T019
+TB-P09-T020
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T019 — Admin returns & refunds queue finalization; USER_VISUAL_ACCEPTED=NO
+TB-P09-T020 — P09 final gate: partial-dispatch remainder + multi-shipment continuation; USER_VISUAL_ACCEPTED=NO
+TB-P09-T019 — Admin returns & refunds queue finalization; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T018 — Admin fulfillment queue finalization; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T017 — Orders menu final gate; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T016 — Whole-order cancel until first dispatched quantity; Architect-accepted; USER_VISUAL_ACCEPTED=NO
@@ -145,7 +146,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T018
+TB-P09-T019
 ```
 
 USER_VISUAL_ACCEPTED:

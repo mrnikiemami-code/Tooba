@@ -1949,6 +1949,8 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.dispatch.invalid_state" => "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
         "fulfillment.dispatch.tracking_required" => "بدون کد رهگیری نمی‌توان ارسال کرد.",
         "fulfillment.dispatch.already_dispatched" => "این مرسوله قبلاً ارسال شده است.",
+        "fulfillment.pack.after_delivered" => "پس از تحویل کامل نمی‌توان بسته‌بندی کرد.",
+        "fulfillment.process.after_delivered" => "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
         "fulfillment.shipment.void_after_dispatch" => "پس از ارسال نمی‌توان مرسوله را ابطال کرد.",
         "fulfillment.shipment.void_invalid_state" => "ابطال مرسوله در این وضعیت مجاز نیست.",
         "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
@@ -1968,6 +1970,14 @@ public sealed class AdminOrderOperationsComposer
             ("fulfillment.shipment.void_invalid_state", FulfillmentOpToFa("fulfillment.shipment.void_invalid_state")),
         "fulfillment.cancel.already_dispatched" =>
             ("fulfillment.dispatch.already_dispatched", FulfillmentOpToFa("fulfillment.dispatch.already_dispatched")),
+        "بسته‌بندی پس از تحویل کامل مجاز نیست." =>
+            ("fulfillment.pack.after_delivered", FulfillmentOpToFa("fulfillment.pack.after_delivered")),
+        "پردازش پس از تحویل کامل مجاز نیست." =>
+            ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
+        "بسته‌بندی پس از ارسال مجاز نیست." =>
+            ("fulfillment.pack.after_delivered", FulfillmentOpToFa("fulfillment.pack.after_delivered")),
+        "پردازش پس از ارسال مجاز نیست." =>
+            ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
         "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
             ("fulfillment.allocation.conflict", FulfillmentOpToFa("fulfillment.allocation.conflict")),
         _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) =>

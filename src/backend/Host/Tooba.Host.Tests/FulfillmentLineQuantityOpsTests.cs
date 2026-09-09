@@ -180,4 +180,30 @@ public sealed class FulfillmentLineQuantityOpsTests
         Assert.Equal("fulfillment.cancel.already_dispatched", ex.Message);
         Assert.NotEqual(FulfillmentStatus.Cancelled, unit.Status);
     }
+
+    [Fact]
+    public void Partial_dispatch_leaves_remaining_packable_and_shippable()
+    {
+        var lineId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var unit = CreateUnit(lineId, 1.25m, now);
+        unit.PackSelections([(lineId, 0.50m)], now);
+        var first = unit.CreateShipment("پست", [(lineId, 0.50m)], now);
+        unit.AssignTracking(first.ShipmentId, "TRK-A", now);
+        unit.ApplyShipmentDispatched(first.ShipmentId, now);
+        Assert.Equal(FulfillmentStatus.Dispatched, unit.Status);
+        Assert.True(unit.HasDispatchedQuantity());
+
+        unit.PackSelections([(lineId, 0.75m)], now);
+        Assert.Equal(1.25m, unit.Items.Single().QuantityPacked);
+        var second = unit.CreateShipment("پست", [(lineId, 0.75m)], now);
+        Assert.Equal(2, unit.Shipments.Count);
+        unit.AssignTracking(second.ShipmentId, "TRK-B", now);
+        unit.ApplyShipmentDispatched(second.ShipmentId, now);
+        Assert.Equal(1.25m, unit.Items.Single().QuantityShipped);
+        Assert.Equal(0.50m, first.Items.Single().Quantity);
+        Assert.Equal(0.75m, second.Items.Single().Quantity);
+        var abort = Assert.Throws<InvalidOperationException>(() => unit.AbortForOrderCancel(now));
+        Assert.Equal("fulfillment.cancel.already_dispatched", abort.Message);
+    }
 }

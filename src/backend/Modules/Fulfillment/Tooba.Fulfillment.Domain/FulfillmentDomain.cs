@@ -351,9 +351,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         DateTimeOffset now)
     {
         EnsureNotTerminal();
-        if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
+        if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("پردازش پس از ارسال مجاز نیست.");
+            throw new InvalidOperationException("پردازش پس از تحویل کامل مجاز نیست.");
         }
 
         var normalized = NormalizeSelections(selections);
@@ -392,9 +392,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     public void MarkPacked(DateTimeOffset now)
     {
         EnsureNotTerminal();
-        if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
+        if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("بسته‌بندی پس از ارسال مجاز نیست.");
+            throw new InvalidOperationException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
         }
 
         var selections = _items
@@ -415,9 +415,9 @@ public sealed class FulfillmentUnit : IHasDomainEvents
         DateTimeOffset now)
     {
         EnsureNotTerminal();
-        if (Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered)
+        if (Status == FulfillmentStatus.Delivered)
         {
-            throw new InvalidOperationException("بسته‌بندی پس از ارسال مجاز نیست.");
+            throw new InvalidOperationException("بسته‌بندی پس از تحویل کامل مجاز نیست.");
         }
 
         var normalized = NormalizeSelections(selections);

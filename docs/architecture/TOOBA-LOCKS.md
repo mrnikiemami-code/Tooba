@@ -82,6 +82,9 @@ A Shipment belongs to one seller and one shipping method. Bulk queue actions tha
 ### LOCK-OPS-008 — Queue bulk requires shared valid capability
 Work-queue bulk toolbar shows only the intersection of backend-projected capabilities for every selected row. No fake atomicity; partial failures are explicit.
 
+### LOCK-OPS-009 — Partial dispatch does not terminalize remainder
+Dispatch of one allocated quantity blocks whole-order cancellation (LOCK-OPS-002) but does not terminalize undispatched remainder. Remaining quantity may continue processing, packing, and new Shipment creation. Aggregate fulfillment capabilities/status are quantity-aware. One Seller Order may create multiple Shipments over time. Dispatched quantity and its shipment history stay immutable.
+
 ## Returns / Refunds
 
 ### LOCK-RET-001 — Return and Refund are independent lifecycles

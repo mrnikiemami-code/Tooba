@@ -55,6 +55,14 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
   assert.ok(listMappedAdminErrorCodes().includes("media.storage.unavailable"));
   assert.ok(listMappedAdminErrorCodes().includes("return.expired"));
   assert.ok(listMappedAdminErrorCodes().includes("refund.already_completed"));
+  assert.equal(
+    mapAdminErrorMessage("fulfillment.pack.after_delivered", "fa"),
+    "پس از تحویل کامل نمی‌توان بسته‌بندی کرد.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("fulfillment.process.after_delivered", "fa"),
+    "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
+  );
 });
 
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {
