@@ -60,3 +60,15 @@ Header snapshots `RoundingModeUsed` and `MoneyDecimalPlacesUsed`. Historical inv
 
 ### LOCK-OPS-001
 Exact line+quantity targeting, lifecycle sequence, cancelled-order precedence, capability-driven actions. No Orders UI regression on touched surfaces.
+
+### LOCK-OPS-002 — Whole-order cancel until first dispatched quantity
+Whole-order cancel is allowed until the first real dispatched quantity anywhere in the Checkout. Waiting payment, waiting manual confirm, Paid/ReadyToFulfill, Processing, Packed, Shipment Created, and Created+tracking are allowed. Any Dispatched / InTransit / Delivered quantity blocks. Packed and Created shipment do not block. Tracking does not block. Multi-seller: any one dispatched quantity blocks the whole cancel. Human block: `پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.`
+
+### LOCK-OPS-003 — Cancel cleanup without hard-delete
+Pre-dispatch shipments are cancelled/voided through existing fulfillment abort. Shipment + tracking/history stay. No hard-delete. Processing/packing history is preserved. After cancel, pack/ship/dispatch/deliver are blocked.
+
+### LOCK-OPS-004 — Inventory / payment / settlement on whole-order cancel
+Inventory release is exact decimal via existing `IInventoryDirectory.ReleaseAsync` (no cross-module SQL). Pending/unconfirmed payments close without a fake refund. Successful payment starts the existing refund workflow. Order becomes Cancelled immediately and does not wait for refund. Refund failure keeps Order Cancelled. Unpaid accrual is neutralized; completed payout is not rewritten; compensating debit is used when needed.
+
+### LOCK-OPS-005 — Restore after whole-order cancel
+T009 / T009-R1 restore gates remain. Cancelled pre-dispatch shipments are not resurrected. Completed refund blocks restore.

@@ -1,0 +1,150 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-B-delivered-blocks",
+      "status": 200,
+      "codes": [
+        "mark_packed",
+        "pack_selected",
+        "pack_selected",
+        "unprocess",
+        "unprocess",
+        "request_return",
+        "approve_return",
+        "reject_return"
+      ],
+      "cancelProjected": false,
+      "postStatus": 400,
+      "postCode": "order.cancel.forbidden",
+      "postMessage": "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+      "ok": true
+    },
+    {
+      "name": "kg-stock-before",
+      "row": "10.750000|0.000000"
+    },
+    {
+      "name": "smoke-D-unpaid-cart",
+      "status": 200,
+      "qty": 1.25,
+      "ok": true
+    },
+    {
+      "name": "smoke-D-unpaid-checkout",
+      "status": 200,
+      "checkoutId": "01a084cc-8aef-7000-ae2d-3dfaff8d6344",
+      "ok": true
+    },
+    {
+      "name": "smoke-D-unpaid-cancel",
+      "status": 200,
+      "confirm": "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟",
+      "after": [
+        "restore_cancelled_order"
+      ],
+      "ok": true
+    },
+    {
+      "name": "smoke-A-cart",
+      "status": 200,
+      "qty": 1.25,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-checkout",
+      "status": 200,
+      "checkoutId": "01a084cc-8be3-7000-bbcf-9fb2cfb1cc2c",
+      "ok": true
+    },
+    {
+      "name": "smoke-A-pay",
+      "status": 200,
+      "payStatus": "Pending"
+    },
+    {
+      "name": "smoke-A-confirm",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-process",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-E-pack-0.50",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-E-decimal",
+      "packed": 0.5,
+      "ordered": 1.25,
+      "remain": 0.75,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-shipment",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-tracking",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-cancel-projected",
+      "codes": [
+        "mark_packed",
+        "pack_selected",
+        "pack_selected",
+        "unprocess",
+        "unprocess",
+        "cancel_shipment",
+        "correct_tracking",
+        "dispatch_shipment",
+        "cancel"
+      ],
+      "confirm": "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟",
+      "ok": true
+    },
+    {
+      "name": "smoke-A-cancel",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "smoke-A-after",
+      "codes": [
+        "restore_cancelled_order"
+      ],
+      "reservedBefore": "1.250000",
+      "reservedAfter": "0.000000",
+      "shipmentStatus": "Cancelled",
+      "restore": true,
+      "ok": true
+    },
+    {
+      "name": "smoke-C-fulfillment-stop",
+      "packStatus": 400,
+      "packCode": "order.cancelled.blocks_action",
+      "packMsg": "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+      "dispatchStatus": 400,
+      "ok": true
+    },
+    {
+      "name": "grid-refresh",
+      "status": 200,
+      "listed": true,
+      "statusLabel": "Cancelled",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T016
+
+Parent-Task:
+TB-P09-T015
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Whole-order cancel is allowed until the first real dispatched quantity. Packed / Created / Created+tracking stay cancellable. Dispatch/InTransit/Delivered block with `پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.` Pre-dispatch shipments voided (not deleted), inventory released via ReleaseAsync (1.25→0), unpaid payment closed, successful payment starts existing refund, unpaid accrual neutralized. Restore gates kept; cancelled shipments not resurrected. ONE `لغو سفارش` + Dialog confirm. USER_VISUAL_ACCEPTED=NO. No TB-P09-T017.
+
+Applicable-Locks:
+docs/evidence/TB-P09-T016/applicable-locks.md
+
+Discovery:
+docs/evidence/TB-P09-T016/discovery.md
+
+Reuse-vs-Change:
+docs/evidence/TB-P09-T016/reuse-vs-change.md
+
+Cancel-Eligibility:
+docs/evidence/TB-P09-T016/cancel-eligibility.md
+
+Direct-Guard:
+Composer CancelAsync + HasDispatchedOrDelivered + fulfillment.cancel.already_dispatched mapped to order.cancel.forbidden. Gate unit status aligned.
+
+Shipment-Cleanup:
+AbortForOrderCancel cancels Created shipments, keeps tracking/history, no hard-delete.
+
+Fulfillment-Stop:
+CancelledBlockedCodes include pack/process/ship/dispatch/deliver. Runtime pack/dispatch after cancel → order.cancelled.blocks_action.
+
+Inventory-Release:
+CheckoutDirectory CancelSellerOrderAsync → IInventoryDirectory.ReleaseAsync. Runtime reserved 1.250000 → 0.000000.
+
+Payment-Refund:
+CloseOrStartRefundForOrderCancelAsync reused. Pending/unconfirmed close. Succeeded starts refund. Order Cancelled immediately.
+
+Settlement-Effects:
+NeutralizeUnpaidAccrualForCancelAsync reused. Completed payout not rewritten.
+
+Restore-Compatibility:
+T009/T009-R1 gates kept. ReactivateAfterOrderRestore does not resurrect cancelled shipments. Completed refund still blocks restore.
+
+Audit-History:
+سفارش لغو شد / مرسوله پیش از ارسال ابطال شد / تخصیص اقلام آزاد شد / رزرو موجودی آزاد شد / بازگشت وجه آغاز شد / تعدیل سهم فروشنده ثبت شد.
+
+Decimal-Regression:
+1.25 / pack 0.50 / remain 0.75 preserved. Inventory release exact.
+
+Grid-Detail-Refresh:
+Menu refresh() + onCompleted + reloadToken. Grid lists Cancelled after cancel.
+
+Focused-Validation:
+docs/evidence/TB-P09-T016/focused-validation.md
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T016/runtime-smoke.md
+
+Lock-Registry:
+LOCK-OPS-002..005 added. LOCK-OPS-001 not duplicated.
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T015. Issued none. Repair none. Last Implementation TB-P09-T016. USER_VISUAL_ACCEPTED=NO. No T017.
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+None. Seller/line partial cancel remains out of scope.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Dialog confirm text length is longer than the previous one-liner.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

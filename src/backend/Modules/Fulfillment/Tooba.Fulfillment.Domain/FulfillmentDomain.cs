@@ -599,7 +599,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
 
     /// <summary>آیا در این واحد quantity واقعی Dispatch شده است.</summary>
     public bool HasDispatchedQuantity() =>
-        _items.Any(item => item.QuantityShipped > 0)
+        Status is FulfillmentStatus.Dispatched or FulfillmentStatus.InTransit or FulfillmentStatus.Delivered
+        || _items.Any(item => item.QuantityShipped > 0)
         || _shipments.Any(shipment =>
             shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered
             || shipment.DispatchedAt is not null

@@ -50,6 +50,12 @@ public sealed class AdminOrderOperationsComposer
         "deliver_shipment",
     };
 
+    internal const string WholeOrderCancelBlockedAfterDispatchFa =
+        "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.";
+
+    internal const string WholeOrderCancelConfirmFa =
+        "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟";
+
     private readonly OrderDbContext _orders;
     private readonly ReturnsDbContext _returns;
     private readonly IFulfillmentDirectory _fulfillment;
@@ -199,7 +205,7 @@ public sealed class AdminOrderOperationsComposer
                 ex.Message.StartsWith("order.cancel.forbidden", StringComparison.Ordinal)
                 || ex.Message == "fulfillment.cancel.already_dispatched")
             {
-                throw new PlatformHttpException(400, "لغو پس از ارسال واقعی مرسوله مجاز نیست.", "order.cancel.forbidden");
+                throw new PlatformHttpException(400, WholeOrderCancelBlockedAfterDispatchFa, "order.cancel.forbidden");
             }
             catch (InvalidOperationException ex) when (ex.Message == "settlement.cancel.payout_completed")
             {
@@ -636,7 +642,7 @@ public sealed class AdminOrderOperationsComposer
         var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
         if (HasDispatchedOrDelivered(fulfillments))
         {
-            throw new PlatformHttpException(400, "لغو پس از ارسال واقعی مرسوله مجاز نیست.", "order.cancel.forbidden");
+            throw new PlatformHttpException(400, WholeOrderCancelBlockedAfterDispatchFa, "order.cancel.forbidden");
         }
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
@@ -1110,7 +1116,7 @@ public sealed class AdminOrderOperationsComposer
             null,
             "order.cancel",
             true,
-            "آیا از لغو این سفارش مطمئن هستید؟"));
+            WholeOrderCancelConfirmFa));
     }
 
     private void ProjectRestoreCancelledOrder(
@@ -1916,6 +1922,7 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.bulk.incompatible" => "ردیف‌های انتخاب‌شده برای این عملیات سازگار نیستند.",
         "fulfillment.bulk.cross_seller" => "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
         "order.cancelled.blocks_action" => "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+        "order.cancel.forbidden" => WholeOrderCancelBlockedAfterDispatchFa,
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
 

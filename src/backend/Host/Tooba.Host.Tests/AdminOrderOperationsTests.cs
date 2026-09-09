@@ -87,6 +87,61 @@ public sealed class AdminOrderOperationsTests
     }
 
     [Fact]
+    public void CanCancel_paid_when_created_shipment_has_tracking()
+    {
+        var order = CreateSellerOrder(paid: true);
+        var createdTracked = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            order.SellerOrderId,
+            order.CheckoutId,
+            order.SellerPartyId,
+            FulfillmentStatus.Packed,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0, Guid.NewGuid(), 0.50m, 1.25m)],
+            [
+                new ShipmentSnapshot(
+                    Guid.NewGuid(),
+                    ShipmentStatus.Created,
+                    "Post",
+                    "TRK-PRE",
+                    null,
+                    null,
+                    [new ShipmentLineSnapshot(Guid.NewGuid(), 0.50m)]),
+            ]);
+        Assert.True(AdminOrderOperationsComposer.CanCancel(order, createdTracked));
+        Assert.False(AdminOrderOperationsComposer.HasDispatchedQuantity(createdTracked));
+    }
+
+    [Fact]
+    public void HasDispatchedQuantity_true_when_unit_status_is_dispatched_even_if_shipped_qty_zero()
+    {
+        var unitOnly = new FulfillmentSnapshot(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            FulfillmentStatus.Dispatched,
+            "n",
+            "m",
+            "p",
+            "c",
+            "a",
+            "1",
+            "post",
+            "پست",
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), Guid.NewGuid(), 1.25m, 0, null, 0.50m, 1.25m)],
+            []);
+        Assert.True(AdminOrderOperationsComposer.HasDispatchedQuantity(unitOnly));
+    }
+
+    [Fact]
     public void HasDispatchedOrDelivered_true_if_any_seller_has_shipped_quantity()
     {
         var created = new FulfillmentSnapshot(

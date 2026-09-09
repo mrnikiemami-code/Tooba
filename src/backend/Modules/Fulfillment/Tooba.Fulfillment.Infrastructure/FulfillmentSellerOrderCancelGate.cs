@@ -32,7 +32,10 @@ public sealed class FulfillmentSellerOrderCancelGate : ISellerOrderCancelFulfill
     }
 
     internal static bool HasDispatchedQuantity(FulfillmentSnapshot snapshot) =>
-        snapshot.Items.Any(item => item.QuantityShipped > 0)
+        snapshot.Status is FulfillmentStatus.Dispatched
+            or FulfillmentStatus.InTransit
+            or FulfillmentStatus.Delivered
+        || snapshot.Items.Any(item => item.QuantityShipped > 0)
         || snapshot.Shipments.Any(shipment =>
             shipment.Status != ShipmentStatus.Cancelled
             && (shipment.DispatchedAt is not null

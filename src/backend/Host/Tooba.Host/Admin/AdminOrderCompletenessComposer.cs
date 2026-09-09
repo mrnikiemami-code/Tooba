@@ -199,8 +199,16 @@ public sealed class AdminOrderCompletenessComposer
             entries.Add(Draft(
                 group.SubmittedAt,
                 "order_cancelled",
-                "لغو سفارش",
+                "سفارش لغو شد",
                 "Order cancelled",
+                null,
+                $"سفارش {order.OrderNumber}",
+                $"Order {order.OrderNumber}"));
+            entries.Add(Draft(
+                group.SubmittedAt,
+                "inventory_released",
+                "رزرو موجودی آزاد شد",
+                "Inventory reservation released",
                 null,
                 $"سفارش {order.OrderNumber}",
                 $"Order {order.OrderNumber}"));
@@ -296,7 +304,9 @@ public sealed class AdminOrderCompletenessComposer
                     entries.Add(Draft(
                         payment.UpdatedAt,
                         "payment_refund_pending",
-                        "بازگشت وجه در انتظار",
+                        group.SellerOrders.Any(x => x.Status == SellerOrderStatus.Cancelled)
+                            ? "بازگشت وجه آغاز شد"
+                            : "بازگشت وجه در انتظار",
                         "Refund pending",
                         null));
                     break;
@@ -447,16 +457,29 @@ public sealed class AdminOrderCompletenessComposer
 
                 if (shipment.Status == ShipmentStatus.Cancelled)
                 {
+                    var preDispatchAbort = group.SellerOrders.Any(x =>
+                        x.SellerOrderId == f.SellerOrderId && x.Status == SellerOrderStatus.Cancelled);
                     entries.Add(Draft(
                         f.UpdatedAt == default ? created : f.UpdatedAt,
                         "shipment_cancelled",
-                        "عدم پذیرش مرسوله",
-                        "Shipment rejected",
+                        preDispatchAbort ? "مرسوله پیش از ارسال ابطال شد" : "عدم پذیرش مرسوله",
+                        preDispatchAbort ? "Pre-dispatch shipment cancelled" : "Shipment rejected",
                         null,
                         string.IsNullOrWhiteSpace(shipment.TrackingReference)
                             ? methodLabel
                             : $"کد رهگیری {shipment.TrackingReference}",
                         shipment.TrackingReference ?? methodLabel));
+                    if (preDispatchAbort)
+                    {
+                        entries.Add(Draft(
+                            f.UpdatedAt == default ? created : f.UpdatedAt,
+                            "allocation_released",
+                            "تخصیص اقلام آزاد شد",
+                            "Line allocation released",
+                            null,
+                            $"{methodLabel} — {ToFaDigits(shipQty)} قلم",
+                            $"{methodLabel} — {shipQty} items"));
+                    }
                 }
 
                 if (shipment.DispatchedAt is { } dispatched)
@@ -609,7 +632,7 @@ public sealed class AdminOrderCompletenessComposer
                     entries.Add(Draft(
                         entry.PostedAt,
                         "settlement_cancel_adjustment",
-                        "خنثی‌سازی تسویه (لغو سفارش)",
+                        "تعدیل سهم فروشنده ثبت شد",
                         "Seller cancel adjustment",
                         null,
                         $"سفارش {orderNumber}",

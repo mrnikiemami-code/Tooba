@@ -35,6 +35,8 @@ public sealed class AdminOrderCancelPrecedenceTests
         Assert.Contains("unpack", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("create_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.Contains("dispatch_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("deliver_shipment", AdminOrderOperationsComposer.CancelledBlockedCodes);
+        Assert.Contains("mark_packed", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.DoesNotContain("restore_cancelled_order", AdminOrderOperationsComposer.CancelledBlockedCodes);
         Assert.DoesNotContain("cancel", AdminOrderOperationsComposer.CancelledBlockedCodes);
     }

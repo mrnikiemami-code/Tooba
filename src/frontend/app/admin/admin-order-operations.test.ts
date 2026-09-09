@@ -294,3 +294,15 @@ test("cancelled order blocks forward payment action with human FA", () => {
     "This order is cancelled; the action is not allowed.",
   );
 });
+
+test("whole-order cancel after dispatch maps human FA and keeps one cancel", () => {
+  assert.equal(
+    mapAdminErrorMessage("order.cancel.forbidden", "fa"),
+    "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+  );
+  assert.ok(!mapAdminErrorMessage("order.cancel.forbidden", "fa").includes("order.cancel"));
+  const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
+  assert.match(menu, /confirmAction\?\.confirmMessageFa/);
+  assert.match(menu, /await refresh\(\)/);
+  assert.match(menu, /onCompleted\?\.\(\)/);
+});

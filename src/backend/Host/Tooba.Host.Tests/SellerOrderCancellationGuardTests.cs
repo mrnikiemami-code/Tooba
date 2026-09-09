@@ -54,6 +54,24 @@ public sealed class SellerOrderCancellationGuardTests
             new SellerOrderCancelFulfillmentSnapshot("Packed", 0)));
         Assert.True(SellerOrderCancellationPolicy.CanCancel(SellerOrderStatus.Paid, null));
         Assert.True(SellerOrderCancellationPolicy.CanCancel(SellerOrderStatus.PendingPayment, null));
+        Assert.True(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Paid,
+            new SellerOrderCancelFulfillmentSnapshot("Processing", 0)));
+        Assert.True(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Paid,
+            new SellerOrderCancelFulfillmentSnapshot("Packed", 1, HasDispatchedQuantity: false)));
+        Assert.True(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Submitted,
+            new SellerOrderCancelFulfillmentSnapshot("ReadyToFulfill", 0)));
+        Assert.False(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Paid,
+            new SellerOrderCancelFulfillmentSnapshot("Dispatched", 1, HasDispatchedQuantity: true)));
+        Assert.False(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Paid,
+            new SellerOrderCancelFulfillmentSnapshot("InTransit", 1, HasDispatchedQuantity: true)));
+        Assert.False(SellerOrderCancellationPolicy.CanCancel(
+            SellerOrderStatus.Cancelled,
+            new SellerOrderCancelFulfillmentSnapshot("ReadyToFulfill", 0)));
     }
 
     [Fact]

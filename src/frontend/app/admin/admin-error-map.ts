@@ -302,6 +302,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "سفارش لغوشده است؛ این عملیات مجاز نیست.",
     en: "This order is cancelled; the action is not allowed.",
   },
+  "order.cancel.forbidden": {
+    fa: "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+    en: "The whole order cannot be cancelled after goods have been dispatched.",
+  },
   "order.restore.seller_payout_completed": {
     fa: "این سفارش به‌دلیل انجام تسویه/واریز سهم فروشنده قابل بازگردانی نیست.",
     en: "This order cannot be restored because the seller share has already been paid out.",

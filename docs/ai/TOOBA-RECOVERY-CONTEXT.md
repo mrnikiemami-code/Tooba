@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T014-R1
+TB-P09-T015
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P09-T015
+TB-P09-T016
 ```
 
 Current Issued Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T015 — Quantity & invoice final gate; USER_VISUAL_ACCEPTED=NO
+TB-P09-T016 — Whole-order cancel until first dispatched quantity; USER_VISUAL_ACCEPTED=NO
+TB-P09-T015 — Quantity & invoice final gate; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T014-R1 — Invoice header LineCount vs TotalQuantity semantic repair; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T014 — Quantity & financial lock completion (lock registry, UoM admin, invoice header aggregates); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T013-R1 — Offer/Fulfillment EF history replay-safe + Floor/Ceiling/Nearest runtime proof; USER_VISUAL_ACCEPTED=NO
