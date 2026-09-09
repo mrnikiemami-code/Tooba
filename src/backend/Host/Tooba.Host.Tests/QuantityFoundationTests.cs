@@ -51,6 +51,8 @@ public sealed class QuantityFoundationTests
     public void Step_null_accepts_precision_value()
     {
         var n = new QuantityNormalizer();
+        Assert.Equal(1m, n.Normalize(1m, Precision2));
+        Assert.Equal(1.2m, n.Normalize(1.2m, Precision2));
         Assert.Equal(1.25m, n.Normalize(1.25m, Precision2));
     }
 

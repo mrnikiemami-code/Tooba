@@ -24,6 +24,7 @@ import {
   type AdminSellerCapability,
 } from "./admin-order-operations";
 import { sellerQuickActionLabels } from "./admin-order-operations-scope";
+import { parseQuantityInput } from "../../lib/quantity-display";
 
 type Props = {
   detail: AdminOrderDetail;
@@ -146,7 +147,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
         current.add(id);
         setQtyByLine((q) => ({
           ...q,
-          [id]: q[id] ?? Math.max(1, processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity),
+          [id]: q[id] ?? (processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity),
         }));
       }
       return { ...prev, [sellerOrderId]: [...current] };
@@ -195,7 +196,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           const cap = capabilityFor(seller, line);
           if (!cap.selectable) continue;
           const id = lineKey(line);
-          next[id] = next[id] ?? Math.max(1, Math.min(cap.selectableQuantityMax || line.quantity, processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity));
+          next[id] = next[id] ?? Math.min(cap.selectableQuantityMax || line.quantity, processableQty(line) || packableQty(line) || unprocessableQty(line) || shippableQty(line) || line.quantity);
         }
         return next;
       });
@@ -451,9 +452,9 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       {seller.lines.map((line, index) => {
                         const key = lineKey(line);
                         const cap = capabilityFor(seller, line);
-                        const maxQty = Math.max(1, cap.selectableQuantityMax || packableQty(line) || shippableQty(line) || line.quantity);
-                        const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || 1);
-                        const qtyEnabled = cap.selectable && maxQty > 1 && (cap.rowActionCodes.includes("pack_selected") || cap.rowActionCodes.includes("unprocess") || cap.rowActionCodes.includes("unpack") || cap.shipmentEligibleQuantity > 0);
+                        const maxQty = cap.selectableQuantityMax || packableQty(line) || shippableQty(line) || line.quantity;
+                        const selectedQty = qtyByLine[key] ?? Math.min(maxQty, packableQty(line) || shippableQty(line) || maxQty);
+                        const qtyEnabled = cap.selectable && maxQty > 0 && (cap.rowActionCodes.includes("pack_selected") || cap.rowActionCodes.includes("unprocess") || cap.rowActionCodes.includes("unpack") || cap.shipmentEligibleQuantity > 0);
                         const lineActions = lineLifecycleActions(actions, line.orderLineId || line.id, {
                           packable: cap.rowActionCodes.includes("pack_selected"),
                           unpackable: cap.rowActionCodes.includes("unpack"),
@@ -495,14 +496,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                             <td className="px-2 py-2">
                               {qtyEnabled ? (
                                 <input
-                                  type="number"
-                                  min={1}
+                                  inputMode="decimal"
+                                  dir="ltr"
+                                  min={0}
                                   max={maxQty}
+                                  step="any"
                                   value={selectedQty}
                                   disabled={!selected.includes(key)}
                                   onChange={(e) => {
-                                    const next = Math.max(1, Math.min(maxQty, Number(e.target.value) || 1));
-                                    setQtyByLine((q) => ({ ...q, [key]: next }));
+                                    const parsed = parseQuantityInput(e.target.value.replace(",", "."));
+                                    if (parsed == null) return;
+                                    setQtyByLine((q) => ({ ...q, [key]: Math.min(maxQty, parsed) }));
                                   }}
                                   className="w-16 rounded border border-gray-200 px-1.5 py-1 text-xs tabular-nums disabled:opacity-40"
                                   data-testid={`admin-order-line-qty-${key}`}

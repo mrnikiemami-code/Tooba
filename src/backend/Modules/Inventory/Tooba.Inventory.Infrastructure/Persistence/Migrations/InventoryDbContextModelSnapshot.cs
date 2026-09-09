@@ -87,12 +87,12 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("offer_id");
 
-                    b.Property<int>("OnHand")
-                        .HasColumnType("integer")
+                    b.Property<decimal>("OnHand")
+                        .HasColumnType("numeric(18,6)")
                         .HasColumnName("on_hand");
 
-                    b.Property<int>("Reserved")
-                        .HasColumnType("integer")
+                    b.Property<decimal>("Reserved")
+                        .HasColumnType("numeric(18,6)")
                         .HasColumnName("reserved");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -133,8 +133,8 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("idempotency_key");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
                         .HasColumnName("quantity");
 
                     b.Property<string>("Status")
@@ -173,8 +173,8 @@ namespace Tooba.Inventory.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("processed_at");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric(18,6)")
                         .HasColumnName("quantity");
 
                     b.Property<Guid>("ReservationId")

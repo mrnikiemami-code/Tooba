@@ -1,0 +1,185 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "languages",
+      "status": 200,
+      "ru": "ru-RU",
+      "ruId": "01a0844c-829e-7000-ab25-64b381896053"
+    },
+    {
+      "name": "uom-list-ru",
+      "status": 200,
+      "localizedName": "килограмм",
+      "localizedShortName": "кг",
+      "ok": true
+    },
+    {
+      "name": "product-qty",
+      "status": 200,
+      "places": 2,
+      "step": null,
+      "ok": true
+    },
+    {
+      "name": "arman-offer-minmax",
+      "status": 200,
+      "min": 0.5,
+      "max": 20,
+      "unit": null,
+      "ok": true
+    },
+    {
+      "name": "kg-stock-before",
+      "row": "10.750000|0.000000",
+      "ok": true
+    },
+    {
+      "name": "step-null-values",
+      "one": 1,
+      "oneTwo": 1.2,
+      "oneTwoFive": 1.25,
+      "ok": true
+    },
+    {
+      "name": "step-constrained-expected",
+      "floor": 1.25,
+      "ceiling": 1.5,
+      "nearest": 1.25,
+      "input": 1.37,
+      "ok": true
+    },
+    {
+      "name": "cart-1.25",
+      "status": 200,
+      "qty": 1.25,
+      "ok": true
+    },
+    {
+      "name": "inventory-after-cart",
+      "row": "10.750000|1.250000"
+    },
+    {
+      "name": "checkout",
+      "status": 200,
+      "checkoutId": "01a084a4-4138-7000-a7d1-676e53356f73",
+      "ok": true
+    },
+    {
+      "name": "pay-manual",
+      "status": 200,
+      "payStatus": "Pending"
+    },
+    {
+      "name": "confirm-deposit",
+      "status": 200
+    },
+    {
+      "name": "header",
+      "row": "Floor|0|1247.5000|249.0000|998.5000|89.0000|0.0000|89.0000|1087.5000|1|1.250000"
+    },
+    {
+      "name": "invoice-floor-998",
+      "row": "Floor|0|998.0000|199.0000|799.0000|71.0000|0.0000|71.0000|870.0000|1|1.000000",
+      "ok": true
+    },
+    {
+      "name": "invoice-floor-weighted",
+      "discount": 249,
+      "net": 998.5,
+      "tax": 89,
+      "duty": 0,
+      "taxDuty": 89,
+      "itemCount": 1,
+      "totalQty": 1.25,
+      "ok": true
+    },
+    {
+      "name": "order-line",
+      "row": "01a084a4-414c-7000-bba5-311b5ed4f307|1.250000|kg|2|null",
+      "ok": true
+    },
+    {
+      "name": "inventory-after-order",
+      "row": "10.750000|1.250000",
+      "ok": true
+    },
+    {
+      "name": "order-detail",
+      "status": 200,
+      "sellerOrderId": "01a084a4-4143-7000-8d2f-ed5d6ac0f4d6",
+      "fulfillmentId": "c36d3131-079a-4f70-992e-efdd68770f2c",
+      "orderLineId": "01a084a4-414c-7000-bba5-311b5ed4f307",
+      "qty": 1.25
+    },
+    {
+      "name": "start-processing",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "pack-0.50",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "pack-remain",
+      "packed": 0.5,
+      "ordered": 1.25,
+      "remain": 0.75,
+      "ok": true
+    },
+    {
+      "name": "shipment-0.50",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "shipment-row",
+      "shipmentId": "1e962c40-c32b-4813-a84d-a12f1577db42",
+      "itemCount": 0.5
+    },
+    {
+      "name": "assign-tracking",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "dispatch",
+      "status": 200,
+      "quantityShipped": 0.5,
+      "ok": true
+    },
+    {
+      "name": "deliver",
+      "status": 200,
+      "shipmentStatus": "Delivered",
+      "ok": true
+    },
+    {
+      "name": "return-0.25",
+      "status": 200,
+      "returnRequestId": "7564cb93-0420-4e6b-9c29-0c1fb7cbdfdd",
+      "quantity": 0.25,
+      "ok": true
+    },
+    {
+      "name": "invoice-html",
+      "status": 200,
+      "hasItemCount": true,
+      "hasDuty": true,
+      "hasTaxDuty": true
+    },
+    {
+      "name": "list-header",
+      "status": 200,
+      "lineCount": 1,
+      "ok": true
+    },
+    {
+      "name": "historical-after-ceiling",
+      "row": "Floor|0|1247.5000|249.0000|998.5000",
+      "ok": true
+    }
+  ]
+}

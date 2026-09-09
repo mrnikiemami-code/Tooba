@@ -151,7 +151,7 @@ export function deriveLineCapability(input: {
   if (row.includes("mark_processing")) max = Math.max(max, input.quantity);
   return {
     selectable,
-    selectableQuantityMax: selectable ? Math.max(1, max) : 0,
+    selectableQuantityMax: selectable ? Math.max(0, max) : 0,
     rowActionCodes: row,
     bulkActionCodes: bulk,
     shipmentEligibleQuantity: input.shippable,

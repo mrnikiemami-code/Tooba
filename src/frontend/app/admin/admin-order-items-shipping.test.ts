@@ -172,6 +172,11 @@ test("qty input stays exact and pack-selected sends selections", () => {
   assert.match(panel, /orderLineId: lineId, quantity: qty/);
   assert.match(panel, /runSellerOp\(seller, "pack_selected"/);
   assert.match(panel, /runSellerOp\(seller, "mark_packed"\)/);
+  assert.match(panel, /parseQuantityInput/);
+  assert.match(panel, /step="any"/);
+  assert.doesNotMatch(panel, /Math\.max\(1, cap.selectableQuantityMax/);
+  assert.doesNotMatch(panel, /Math\.max\(1,/);
+  assert.doesNotMatch(panel, /type="number"/);
 });
 
 test("fulfillment sequence errors map to FA", () => {
@@ -233,6 +238,17 @@ test("capability projection drives payment lock and start/pack row actions", () 
     projectedCodes: ["pack_selected", "mark_packed", "unprocess"],
   });
   assert.deepEqual(processing.rowActionCodes, ["pack_selected", "unprocess"]);
+  const fractional = deriveLineCapability({
+    paymentLocked: false,
+    operationalStatus: "Processing",
+    packable: 0.75,
+    unpackable: 0,
+    unprocessable: 0.75,
+    shippable: 0,
+    quantity: 1.25,
+    projectedCodes: ["pack_selected", "unprocess"],
+  });
+  assert.equal(fractional.selectableQuantityMax, 0.75);
   const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
   assert.match(panel, /PAYMENT_LOCKED_BANNER_FA|admin-order-seller-payment-locked-/);
   assert.match(panel, /admin-order-seller-create-shipment-/);

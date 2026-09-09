@@ -15,6 +15,7 @@ public sealed class CustomerPanelCompositionTests
         Assert.Contains("CheckoutId", list);
         Assert.Contains("PayableAmount", list);
         Assert.Contains("PaymentState", list);
+        Assert.Equal(typeof(int), typeof(CustomerOrderListItem).GetProperty("ItemCount")!.PropertyType);
         Assert.DoesNotContain("ProductPrice", list);
         Assert.DoesNotContain("ProductStock", list);
 
@@ -59,6 +60,8 @@ public sealed class CustomerPanelCompositionTests
         Assert.DoesNotContain("FromSql", source, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Product.Price", source, StringComparison.Ordinal);
         Assert.DoesNotContain("Product.Stock", source, StringComparison.Ordinal);
+        Assert.Contains("orders.Sum(x => x.TotalItemCount)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Lines.Sum(line => line.Quantity)", source, StringComparison.Ordinal);
         Assert.Contains("GetLatestForCheckoutAsync", source, StringComparison.Ordinal);
         Assert.Contains("PaymentStatus.Failed", source, StringComparison.Ordinal);
         Assert.DoesNotContain("PaymentState(sellerOrder.Status)", source, StringComparison.Ordinal);

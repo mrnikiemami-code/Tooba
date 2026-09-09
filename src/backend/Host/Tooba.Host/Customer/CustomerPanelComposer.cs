@@ -286,7 +286,6 @@ public sealed class CustomerPanelComposer
         CancellationToken cancellationToken) =>
         await _orders.Checkouts.AsNoTracking()
             .Include(x => x.SellerOrders)
-            .ThenInclude(x => x.Lines)
             .Where(x => x.PlacedByUserId == actorUserId)
             .OrderByDescending(x => x.SubmittedAt)
             .Take(200)
@@ -316,7 +315,7 @@ public sealed class CustomerPanelComposer
             references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
             group.SubmittedAt,
             orders.Count,
-            orders.Sum(x => x.Lines.Sum(line => line.Quantity)),
+            orders.Sum(x => x.TotalItemCount),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
             payment,

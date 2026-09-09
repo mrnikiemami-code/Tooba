@@ -44,7 +44,7 @@ public sealed record CustomerOrderListItem(
     string Reference,
     DateTimeOffset SubmittedAt,
     int SellerCount,
-    decimal ItemCount,
+    int ItemCount,
     decimal PayableAmount,
     string Currency,
     string PaymentState,

@@ -131,7 +131,7 @@ export function StorefrontPdpBulk({ detail }: { detail: StorefrontProductDetailP
             <input {...register("companyName")} className={inputClass} />
           </Field>
           <Field label="تعداد" error={errors.quantity?.message}>
-            <input type="number" {...register("quantity")} className={inputClass} />
+            <input inputMode="decimal" dir="ltr" step="any" {...register("quantity")} className={inputClass} />
           </Field>
           <div className="flex items-end text-xs text-gray-500 pb-2">
             تعداد درخواستی: {Number(quantity).toLocaleString("fa-IR")} — بدون محاسبهٔ قیمت در UI

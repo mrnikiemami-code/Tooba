@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T015
+
+Parent-Task:
+TB-P09-T014-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Quantity + UoM + Global Rounding + Invoice Header final gate. Residual customer list count/quantity alias and admin pack qty Math.max(1) removed. Weighted kg product E2E 1.25/0.50/0.75/0.25 green. Floor 998×20% → 199/799 preserved. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T016.
+
+Applicable-Locks:
+docs/evidence/TB-P09-T015/applicable-locks.md
+
+Final-Gap-Audit:
+docs/evidence/TB-P09-T015/final-gap-audit.md
+
+Weighted-E2E:
+docs/evidence/TB-P09-T015/weighted-e2e.md
+
+Step-Null:
+1 / 1.2 / 1.25 valid. Cart/PDP/admin qty inputs have no HTML type=number step=1. QuantityFoundationTests.Step_null_accepts_precision_value.
+
+Step-Constrained:
+1.37 + Step 0.25 → Floor 1.25 / Ceiling 1.50 / Nearest 1.25.
+
+Global-Rounding:
+One GlobalRoundingMode. No Product/Offer rounding overrides. Quantity vs money split unchanged.
+
+UoM-UI:
+AppDataGrid + LanguageId. ru-RU kg = килограмм / кг.
+
+Product-UI:
+Unit / Places / optional Step. Inactive unit not assignable to new Product.
+
+Offer-UI:
+Decimal Min/Max. Product unit displayed. No Unit selector. Arman 0.50..20.
+
+Invoice-Financial:
+T014 fixture Floor|0|998|199|799. Weighted 1.25×998 Floor → Discount 249 / Net 998.5.
+
+Invoice-Header:
+TotalItemCount int, TotalQuantity decimal. TaxAndDuty = Tax + Duty. تعداد اقلام never maps to TotalQuantity.
+
+Historical-Immutability:
+After Ceiling, checkout 01a084a4-4138-7000-a7d1-676e53356f73 stays Floor|0|1247.5|249|998.5. Line snapshots kg/2/null.
+
+Query-Reporting:
+Admin list LineCount from Header.TotalItemCount. Customer ItemCount from TotalItemCount. No primary-path line JOIN+SUM.
+
+Orders-Fulfillment-Regression:
+Focused T010–T014 suites green. Pack 0.50 remain 0.75. selectableQuantityMax 0.75.
+
+Migration-Gate:
+Order current 20260909140000_AddInvoiceHeaderAggregates pending 0. Inventory snapshot aligned to numeric(18,6). No wipe.
+
+Focused-Validation:
+Host 53 pass. OfferMigrationIntegrity 3 pass. Recovery guard 3 pass. Frontend 39 pass. git diff --check clean.
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T015/runtime-smoke.md
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T014-R1. Issued none. Repair none. Last Implementation TB-P09-T015. USER_VISUAL_ACCEPTED=NO. No T016.
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+Duty remains 0 until a real duty calculator exists. Kg-offer seller party is not in /v1/seller/dev-contexts (admin/SQL + guest cart used for that offer).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
