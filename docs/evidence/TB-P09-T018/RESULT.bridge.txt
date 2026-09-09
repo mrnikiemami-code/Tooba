@@ -1,0 +1,86 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T018
+
+Parent-Task:
+TB-P09-T017
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Admin ارسال و تحویل finalization on the existing T008 work queue. Defects repaired: GUID-free labels, decimal quantity display, order-number filter/sort, hide empty kebab, cancelled projects no forward actions, correct_tracking projection, stale dispatch/void FA map. Runtime A–H green. USER_VISUAL_ACCEPTED=NO. No TB-P09-T019.
+
+Applicable-Locks:
+docs/evidence/TB-P09-T018/applicable-locks.md
+
+Discovery:
+docs/evidence/TB-P09-T018/discovery.md
+
+Reuse-vs-Change:
+docs/evidence/TB-P09-T018/reuse-vs-change.md
+
+Grid-Final:
+docs/evidence/TB-P09-T018/grid-final.md
+
+Filters-Final:
+docs/evidence/TB-P09-T018/filters-final.md
+
+Row-Actions:
+docs/evidence/TB-P09-T018/row-actions.md
+
+Bulk-Actions:
+docs/evidence/TB-P09-T018/bulk-actions.md
+
+Shipment-Ops:
+docs/evidence/TB-P09-T018/shipment-ops.md
+
+Decimal-Quantity:
+docs/evidence/TB-P09-T018/decimal-quantity.md
+
+Cross-Surface-Consistency:
+docs/evidence/TB-P09-T018/cross-surface-consistency.md
+
+Cancellation-Interaction:
+docs/evidence/TB-P09-T018/cancellation-interaction.md
+
+Error-UX:
+docs/evidence/TB-P09-T018/error-ux.md
+
+Performance:
+docs/evidence/TB-P09-T018/performance.md
+
+Focused-Validation:
+Host AdminFulfillmentWorkQueue + sequence/allocation/cancel/qty focused 46 pass. Frontend work-queue + order-ops 33 pass. Recovery guard 3 pass. git diff --check clean.
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T018/runtime-smoke.md
+
+Lock-Registry:
+LOCK-OPS-006..008 added. Quantity/cancel locks not duplicated.
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T017. Issued none. Repair none. Last Implementation TB-P09-T018. USER_VISUAL_ACCEPTED=NO. No T019.
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+Exact 0.50 pack from the queue kebab still uses Order Detail selection dialogs / pack_selected; bulk pack remains remaining-qty. Fulfillment detail page GUID chips left out of scope.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

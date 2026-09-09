@@ -1,5 +1,5 @@
 /**
- * Recovery SoT staleness guard (TB-P09-T017).
+ * Recovery SoT staleness guard (TB-P09-T018).
  * Deterministic, repo-local — does NOT call Bridge API.
  */
 import assert from "node:assert/strict";
@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const recoveryPath = path.join(root, "docs/ai/TOOBA-RECOVERY-CONTEXT.md");
 const statePath = path.join(root, "docs/PROJECT-STATE.md");
 
-const CURRENT_TASK_ID = "TB-P09-T017";
+const CURRENT_TASK_ID = "TB-P09-T018";
 
 const REQUIRED_MARKERS = [
   "P09",
@@ -78,6 +78,7 @@ const REQUIRED_MARKERS = [
   "TB-P09-T015",
   "TB-P09-T016",
   "TB-P09-T017",
+  "TB-P09-T018",
   "USER_VISUAL_ACCEPTED",
   "BRIDGE-WAKE-V1",
 ];
@@ -134,6 +135,7 @@ const STALE_CURRENT_POINTERS = [
   "TB-P09-T014-R1",
   "TB-P09-T015",
   "TB-P09-T016",
+  "TB-P09-T017",
 ];
 
 function read(p) {
@@ -154,39 +156,39 @@ test("recovery SoT files exist and contain current task markers", () => {
   }
 });
 
-test("recovery SoT points Last Implementation at TB-P09-T017; Architect T016; Issued none; Repair none", () => {
+test("recovery SoT points Last Implementation at TB-P09-T018; Architect T017; Issued none; Repair none", () => {
   const recovery = read(recoveryPath);
   const state = read(statePath);
 
-  assert.match(recovery, /TB-P09-T016/);
-  assert.match(state, /TB-P09-T016/);
+  assert.match(recovery, /TB-P09-T017/);
+  assert.match(state, /TB-P09-T017/);
   assert.match(recovery, /P09/);
   assert.match(state, /P09/);
 
   assert.match(
     state,
-    /Last Architect Accepted Task:\s*```text\s*TB-P09-T016\s*```/,
-    "PROJECT-STATE Last Architect Accepted Task must be TB-P09-T016",
+    /Last Architect Accepted Task:\s*```text\s*TB-P09-T017\s*```/,
+    "PROJECT-STATE Last Architect Accepted Task must be TB-P09-T017",
   );
   assert.match(
     state,
-    /Last Architect-Accepted Task:\s*```text\s*TB-P09-T016\s*```/,
-    "PROJECT-STATE Last Architect-Accepted Task must be TB-P09-T016",
+    /Last Architect-Accepted Task:\s*```text\s*TB-P09-T017\s*```/,
+    "PROJECT-STATE Last Architect-Accepted Task must be TB-P09-T017",
   );
   assert.match(
     recovery,
-    /Last Architect Accepted Task:\s*```text\s*TB-P09-T016\s*```/,
-    "recovery Last Architect Accepted Task must be TB-P09-T016",
+    /Last Architect Accepted Task:\s*```text\s*TB-P09-T017\s*```/,
+    "recovery Last Architect Accepted Task must be TB-P09-T017",
   );
   assert.match(
     state,
-    /Last Implementation Task:\s*```text\s*TB-P09-T017\s*```/,
-    "PROJECT-STATE Last Implementation Task must be TB-P09-T017",
+    /Last Implementation Task:\s*```text\s*TB-P09-T018\s*```/,
+    "PROJECT-STATE Last Implementation Task must be TB-P09-T018",
   );
   assert.match(
     recovery,
-    /Last Implementation Task:\s*```text\s*TB-P09-T017\s*```/,
-    "recovery Last Implementation Task must be TB-P09-T017",
+    /Last Implementation Task:\s*```text\s*TB-P09-T018\s*```/,
+    "recovery Last Implementation Task must be TB-P09-T018",
   );
   assert.match(
     state,
@@ -210,7 +212,7 @@ test("recovery SoT points Last Implementation at TB-P09-T017; Architect T016; Is
   );
   assert.match(state, /USER_VISUAL_ACCEPTED:\s*```text\s*NO\s*```/);
   assert.match(recovery, /USER_VISUAL_ACCEPTED:\s*```text\s*NO\s*```/);
-  assert.equal(CURRENT_TASK_ID, "TB-P09-T017");
+  assert.equal(CURRENT_TASK_ID, "TB-P09-T018");
 });
 
 test("recovery SoT does not leave stale tasks as Last Implementation", () => {
@@ -223,8 +225,8 @@ test("recovery SoT does not leave stale tasks as Last Implementation", () => {
   };
   const implRecovery = implBlock(recovery);
   const implState = implBlock(state);
-  assert.equal(implRecovery, "TB-P09-T017");
-  assert.equal(implState, "TB-P09-T017");
+  assert.equal(implRecovery, "TB-P09-T018");
+  assert.equal(implState, "TB-P09-T018");
   for (const stale of STALE_CURRENT_POINTERS) {
     assert.notEqual(implRecovery, stale, `recovery Last Implementation must not be stale ${stale}`);
     assert.notEqual(implState, stale, `PROJECT-STATE Last Implementation must not be stale ${stale}`);

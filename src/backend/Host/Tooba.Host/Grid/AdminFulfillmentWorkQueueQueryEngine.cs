@@ -119,7 +119,12 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             case "cityName":
                 return AdminEfGridQuery.ApplyTextFilter(source, x => x.CityName, filter);
             case "orderReference":
-                return AdminEfGridQuery.ApplyTextFilter(source, x => x.CheckoutId.ToString(), filter);
+            {
+                var orders = _orders.SellerOrders.AsNoTracking().AsQueryable();
+                orders = AdminEfGridQuery.ApplyTextFilter(orders, x => x.OrderNumber, filter);
+                var sellerOrderIds = await orders.Select(x => x.SellerOrderId).Take(500).ToListAsync(cancellationToken);
+                return source.Where(x => sellerOrderIds.Contains(x.SellerOrderId));
+            }
             case "shippingMethodCode":
             {
                 var codes = (filter.Values ?? [])
@@ -293,9 +298,10 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             "fulfillmentId" => asc
                 ? source.OrderBy(x => x.FulfillmentId)
                 : source.OrderByDescending(x => x.FulfillmentId),
-            "checkoutId" or "orderReference" => asc
+            "checkoutId" => asc
                 ? source.OrderBy(x => x.CheckoutId).ThenBy(x => x.FulfillmentId)
                 : source.OrderByDescending(x => x.CheckoutId).ThenBy(x => x.FulfillmentId),
+            "orderReference" => OrderByOrderNumber(source, asc),
             "cityName" => asc
                 ? source.OrderBy(x => x.CityName).ThenBy(x => x.FulfillmentId)
                 : source.OrderByDescending(x => x.CityName).ThenBy(x => x.FulfillmentId),
@@ -321,6 +327,20 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
                 ? source.OrderBy(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId)
                 : source.OrderByDescending(x => x.UpdatedAt).ThenBy(x => x.FulfillmentId),
         };
+    }
+
+    private IQueryable<FulfillmentUnit> OrderByOrderNumber(IQueryable<FulfillmentUnit> source, bool asc)
+    {
+        var numbers = _orders.SellerOrders.AsNoTracking()
+            .Select(x => new { x.SellerOrderId, x.OrderNumber });
+        var joined = from u in source
+                     join n in numbers on u.SellerOrderId equals n.SellerOrderId into nj
+                     from n in nj.DefaultIfEmpty()
+                     select new { Unit = u, OrderNumber = n != null ? n.OrderNumber : "" };
+        var ordered = asc
+            ? joined.OrderBy(x => x.OrderNumber).ThenBy(x => x.Unit.FulfillmentId)
+            : joined.OrderByDescending(x => x.OrderNumber).ThenBy(x => x.Unit.FulfillmentId);
+        return ordered.Select(x => x.Unit);
     }
 
     private async Task<IReadOnlyList<AdminFulfillmentWorkQueueRow>> MapPageAsync(
@@ -427,14 +447,14 @@ public sealed class AdminFulfillmentWorkQueueQueryEngine
             orderNumberBy.TryGetValue(unit.SellerOrderId, out var orderNumber);
             var orderReference = !string.IsNullOrWhiteSpace(orderNumber)
                 ? orderNumber!
-                : unit.CheckoutId.ToString("N")[..12];
+                : string.Empty;
             sellerNameBy.TryGetValue(unit.SellerPartyId, out var sellerName);
             return new AdminFulfillmentWorkQueueRow(
                 unit.FulfillmentId,
                 unit.SellerOrderId,
                 unit.CheckoutId,
                 unit.SellerPartyId,
-                string.IsNullOrWhiteSpace(sellerName) ? unit.SellerPartyId.ToString("N")[..8] : sellerName,
+                string.IsNullOrWhiteSpace(sellerName) ? "فروشنده" : sellerName,
                 orderReference,
                 unit.Status.ToString(),
                 unit.RecipientName,

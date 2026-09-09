@@ -72,3 +72,12 @@ Inventory release is exact decimal via existing `IInventoryDirectory.ReleaseAsyn
 
 ### LOCK-OPS-005 — Restore after whole-order cancel
 T009 / T009-R1 restore gates remain. Cancelled pre-dispatch shipments are not resurrected. Completed refund blocks restore.
+
+### LOCK-OPS-006 — Fulfillment work queue reuses Order Detail capabilities
+Admin `ارسال و تحویل` is a cross-order work queue over the same fulfillment domain and `AdminOrderOperationsComposer` commands. Do not create a second fulfillment lifecycle or move shipment eligibility into React.
+
+### LOCK-OPS-007 — No cross-seller Shipment
+A Shipment belongs to one seller and one shipping method. Bulk queue actions that create or advance shipments must reject mixed sellers.
+
+### LOCK-OPS-008 — Queue bulk requires shared valid capability
+Work-queue bulk toolbar shows only the intersection of backend-projected capabilities for every selected row. No fake atomicity; partial failures are explicit.

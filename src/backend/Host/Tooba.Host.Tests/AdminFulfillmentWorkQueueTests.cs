@@ -53,6 +53,66 @@ public sealed class AdminFulfillmentWorkQueueTests
     }
 
     [Fact]
+    public void Cancelled_fulfillment_projects_no_forward_actions()
+    {
+        var lineId = Guid.NewGuid();
+        var cancelled = Snapshot(
+            FulfillmentStatus.Cancelled,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1.25m, 0, null, 0, 0)],
+            []);
+        Assert.Empty(AdminFulfillmentQueueFilters.ProjectActionCodes(cancelled));
+    }
+
+    [Fact]
+    public void Created_shipment_with_tracking_projects_correct_and_dispatch()
+    {
+        var lineId = Guid.NewGuid();
+        var shipmentId = Guid.NewGuid();
+        var packed = Snapshot(
+            FulfillmentStatus.Packed,
+            [new FulfillmentItemSnapshot(Guid.NewGuid(), lineId, 1.25m, 0, null, 1.25m, 1.25m)],
+            [
+                new ShipmentSnapshot(
+                    shipmentId,
+                    ShipmentStatus.Created,
+                    "پست",
+                    "TRK-1",
+                    null,
+                    null,
+                    [new ShipmentLineSnapshot(lineId, 0.50m)]),
+            ]);
+        var codes = AdminFulfillmentQueueFilters.ProjectActionCodes(packed);
+        Assert.Contains("correct_tracking", codes);
+        Assert.Contains("dispatch_shipment", codes);
+        Assert.Contains("cancel_shipment", codes);
+        Assert.DoesNotContain("assign_tracking", codes);
+    }
+
+    [Fact]
+    public void Work_queue_query_engine_filters_order_reference_by_order_number()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Tooba.Host"));
+        var engine = File.ReadAllText(Path.Combine(root, "Grid", "AdminFulfillmentWorkQueueQueryEngine.cs"));
+        Assert.Contains("case \"orderReference\"", engine, StringComparison.Ordinal);
+        Assert.Contains("x => x.OrderNumber", engine, StringComparison.Ordinal);
+        Assert.Contains("OrderByOrderNumber", engine, StringComparison.Ordinal);
+        Assert.Contains("\"فروشنده\"", engine, StringComparison.Ordinal);
+        Assert.DoesNotContain("CheckoutId.ToString(\"N\")", engine, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Composer_maps_stale_dispatch_english_to_human_fa()
+    {
+        var mapped = AdminOrderOperationsComposer.MapFulfillmentException("dispatch از این وضعیت مجاز نیست.");
+        Assert.Equal("fulfillment.dispatch.invalid_state", mapped.Code);
+        Assert.Equal("ارسال در وضعیت فعلی مرسوله مجاز نیست.", mapped.Fa);
+        var tracking = AdminOrderOperationsComposer.MapFulfillmentException("dispatch بدون tracking مجاز نیست.");
+        Assert.Equal("fulfillment.dispatch.tracking_required", tracking.Code);
+        var voided = AdminOrderOperationsComposer.MapFulfillmentException("ابطال مرسوله پس از ارسال مجاز نیست.");
+        Assert.Equal("fulfillment.shipment.void_after_dispatch", voided.Code);
+    }
+
+    [Fact]
     public void Bulk_compatible_requires_same_seller_and_shared_action()
     {
         var sellerA = Guid.NewGuid();

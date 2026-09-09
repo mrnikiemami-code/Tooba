@@ -14,6 +14,7 @@ import {
   readSellerPartyId,
   type HostReadSource,
 } from "../vendor-panel/seller-api.ts";
+import { formatQuantityDisplay } from "../../lib/quantity-display.ts";
 
 export interface FulfillmentShipmentLine {
   orderLineId: string;
@@ -117,6 +118,20 @@ export const FULFILLMENT_BULK_ACTION_LABELS: Record<string, { fa: string; en: st
   dispatch_shipment: { fa: "ارسال گروهی", en: "Bulk dispatch" },
   deliver_shipment: { fa: "ثبت تحویل گروهی", en: "Bulk deliver" },
 };
+
+/** نمایش مقدار صف کار بدون صفر ذخیره‌سازی و بدون جمع واحدهای ناهمگن به‌عنوان یک واحد. */
+export function formatFulfillmentQueueQuantity(row: Pick<FulfillmentListRow, "itemCount" | "quantityOrdered" | "quantityShipped">): string {
+  const lines = row.itemCount.toLocaleString("fa-IR");
+  const ordered = formatQuantityDisplay(row.quantityOrdered);
+  const remaining = formatQuantityDisplay(Math.max(0, row.quantityOrdered - row.quantityShipped));
+  return `${lines} قلم · مقدار ${ordered} · باقی ${remaining}`;
+}
+
+/** برچسب انسانی مرسوله — بدون GUID خام. */
+export function formatFulfillmentShipmentSummary(row: Pick<FulfillmentListRow, "shipmentCount">): string {
+  if (row.shipmentCount <= 0) return "—";
+  return `${row.shipmentCount.toLocaleString("fa-IR")} مرسوله`;
+}
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;

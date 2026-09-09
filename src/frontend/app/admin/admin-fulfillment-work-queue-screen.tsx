@@ -19,6 +19,8 @@ import {
   areFulfillmentBulkCompatible,
   executeAdminFulfillmentWorkQueueBulk,
   formatFulfillmentDate,
+  formatFulfillmentQueueQuantity,
+  formatFulfillmentShipmentSummary,
   formatFulfillmentStatus,
   fulfillmentStatusBadgeClass,
   queryAdminFulfillmentsGrid,
@@ -93,7 +95,7 @@ export function AdminFulfillmentWorkQueueScreen() {
       id: "orderReference",
       header: "سفارش",
       accessor: (row) => row.orderReference,
-      cell: (row) => truncatedCell(row.orderReference || row.checkoutId.slice(0, 8), row.orderReference),
+      cell: (row) => truncatedCell(row.orderReference || "—", row.orderReference || undefined),
       width: 160,
       minWidth: 120,
       filterKind: "text",
@@ -112,24 +114,19 @@ export function AdminFulfillmentWorkQueueScreen() {
     {
       id: "primaryShipmentId",
       header: "مرسوله",
-      accessor: (row) => row.primaryShipmentId ?? "",
-      cell: (row) => truncatedCell(
-        row.primaryShipmentId ? row.primaryShipmentId.slice(0, 8) : "—",
-        row.primaryShipmentId ?? undefined,
-      ),
+      accessor: (row) => formatFulfillmentShipmentSummary(row),
+      cell: (row) => truncatedCell(formatFulfillmentShipmentSummary(row)),
       width: 110,
       minWidth: 88,
       sortable: false,
     },
     {
       id: "quantityOrdered",
-      header: "اقلام / تعداد",
+      header: "اقلام / مقدار",
       accessor: (row) => row.quantityOrdered,
-      cell: (row) => truncatedCell(
-        `${row.itemCount.toLocaleString("fa-IR")} قلم · ${row.quantityOrdered.toLocaleString("fa-IR")}`,
-      ),
-      width: 140,
-      minWidth: 110,
+      cell: (row) => truncatedCell(formatFulfillmentQueueQuantity(row)),
+      width: 200,
+      minWidth: 150,
       sortable: true,
     },
     {
@@ -226,16 +223,18 @@ export function AdminFulfillmentWorkQueueScreen() {
       cell: (row) => (
         <span className="inline-flex items-center gap-1" data-testid={`admin-fulfillment-ops-${row.fulfillmentId}`}>
           <AppGridRowActionsCell row={row} actions={viewActions} compact />
-          <AdminOrderOperationsMenu
-            checkoutId={row.checkoutId}
-            label="عملیات"
-            compact
-            iconOnly
-            scope="fulfillment-queue"
-            fulfillmentId={row.fulfillmentId}
-            onCompleted={refresh}
-            testId={`admin-fulfillment-kebab-${row.fulfillmentId}`}
-          />
+          {row.availableActionCodes.length > 0 ? (
+            <AdminOrderOperationsMenu
+              checkoutId={row.checkoutId}
+              label="عملیات"
+              compact
+              iconOnly
+              scope="fulfillment-queue"
+              fulfillmentId={row.fulfillmentId}
+              onCompleted={refresh}
+              testId={`admin-fulfillment-kebab-${row.fulfillmentId}`}
+            />
+          ) : null}
         </span>
       ),
       width: 120,

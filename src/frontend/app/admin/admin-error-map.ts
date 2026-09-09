@@ -354,6 +354,38 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "مرسولهٔ معتبر برای این عملیات یافت نشد.",
     en: "No valid shipment was found for this operation.",
   },
+  "fulfillment.work_queue.row_mismatch": {
+    fa: "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
+    en: "The selected row does not match server data.",
+  },
+  "fulfillment.missing": {
+    fa: "ارسال یافت نشد.",
+    en: "Fulfillment was not found.",
+  },
+  "fulfillment.dispatch.invalid_state": {
+    fa: "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
+    en: "Dispatch is not allowed in the current shipment state.",
+  },
+  "fulfillment.dispatch.tracking_required": {
+    fa: "بدون کد رهگیری نمی‌توان ارسال کرد.",
+    en: "A tracking reference is required before dispatch.",
+  },
+  "fulfillment.dispatch.already_dispatched": {
+    fa: "این مرسوله قبلاً ارسال شده است.",
+    en: "This shipment has already been dispatched.",
+  },
+  "fulfillment.shipment.void_after_dispatch": {
+    fa: "پس از ارسال نمی‌توان مرسوله را ابطال کرد.",
+    en: "A shipment cannot be voided after dispatch.",
+  },
+  "fulfillment.shipment.void_invalid_state": {
+    fa: "ابطال مرسوله در این وضعیت مجاز نیست.",
+    en: "The shipment cannot be voided in the current state.",
+  },
+  "fulfillment.allocation.conflict": {
+    fa: "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
+    en: "The quantity exceeds remaining allocatable packed amount.",
+  },
   "order.note.invalid": {
     fa: "متن یادداشت معتبر نیست.",
     en: "The note text is not valid.",

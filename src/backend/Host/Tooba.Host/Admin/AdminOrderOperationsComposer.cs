@@ -317,7 +317,8 @@ public sealed class AdminOrderOperationsComposer
         }
         catch (InvalidOperationException ex)
         {
-            throw new PlatformHttpException(400, ex.Message, "order.operation.failed");
+            var mapped = MapFulfillmentException(ex.Message);
+            throw new PlatformHttpException(400, mapped.Fa, mapped.Code);
         }
     }
 
@@ -1923,7 +1924,33 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.bulk.cross_seller" => "عملیات گروهی روی فروشندگان متفاوت مجاز نیست.",
         "order.cancelled.blocks_action" => "سفارش لغوشده است؛ این عملیات مجاز نیست.",
         "order.cancel.forbidden" => WholeOrderCancelBlockedAfterDispatchFa,
+        "fulfillment.dispatch.invalid_state" => "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
+        "fulfillment.dispatch.tracking_required" => "بدون کد رهگیری نمی‌توان ارسال کرد.",
+        "fulfillment.dispatch.already_dispatched" => "این مرسوله قبلاً ارسال شده است.",
+        "fulfillment.shipment.void_after_dispatch" => "پس از ارسال نمی‌توان مرسوله را ابطال کرد.",
+        "fulfillment.shipment.void_invalid_state" => "ابطال مرسوله در این وضعیت مجاز نیست.",
+        "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
+        "fulfillment.work_queue.row_mismatch" => "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+    };
+
+    internal static (string Code, string Fa) MapFulfillmentException(string message) => message switch
+    {
+        "dispatch از این وضعیت مجاز نیست." =>
+            ("fulfillment.dispatch.invalid_state", FulfillmentOpToFa("fulfillment.dispatch.invalid_state")),
+        "dispatch بدون tracking مجاز نیست." =>
+            ("fulfillment.dispatch.tracking_required", FulfillmentOpToFa("fulfillment.dispatch.tracking_required")),
+        "ابطال مرسوله پس از ارسال مجاز نیست." =>
+            ("fulfillment.shipment.void_after_dispatch", FulfillmentOpToFa("fulfillment.shipment.void_after_dispatch")),
+        "ابطال مرسوله از این وضعیت مجاز نیست." =>
+            ("fulfillment.shipment.void_invalid_state", FulfillmentOpToFa("fulfillment.shipment.void_invalid_state")),
+        "fulfillment.cancel.already_dispatched" =>
+            ("fulfillment.dispatch.already_dispatched", FulfillmentOpToFa("fulfillment.dispatch.already_dispatched")),
+        "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
+            ("fulfillment.allocation.conflict", FulfillmentOpToFa("fulfillment.allocation.conflict")),
+        _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) =>
+            (message, FulfillmentOpToFa(message)),
+        _ => ("order.operation.failed", message),
     };
 
     private static AdminOrderOperationAction Action(

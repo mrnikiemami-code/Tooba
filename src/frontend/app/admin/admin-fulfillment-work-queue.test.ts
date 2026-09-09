@@ -8,6 +8,8 @@ import {
   FULFILLMENT_SAFE_BULK_ACTION_CODES,
   areFulfillmentBulkCompatible,
   formatFulfillmentStatus,
+  formatFulfillmentQueueQuantity,
+  formatFulfillmentShipmentSummary,
   mapFulfillmentList,
   type FulfillmentListRow,
 } from "../fulfillment/fulfillment-api.ts";
@@ -128,9 +130,23 @@ test("fulfillment-queue scope keeps only fulfillment ops for matching id", () =>
   assert.deepEqual(filtered.map((x) => x.code), ["mark_processing"]);
 });
 
-test("human status labels remain Persian", () => {
-  assert.equal(formatFulfillmentStatus("InTransit"), "در مسیر تحویل");
-  assert.equal(formatFulfillmentStatus("Delivered"), "تحویل‌شده");
+test("queue quantity and shipment summary are decimal-aware and GUID-free", () => {
+  const source = readFileSync(join(dir, "admin-fulfillment-work-queue-screen.tsx"), "utf8");
+  assert.match(source, /formatFulfillmentQueueQuantity/);
+  assert.match(source, /formatFulfillmentShipmentSummary/);
+  assert.match(source, /availableActionCodes\.length > 0/);
+  assert.doesNotMatch(source, /checkoutId\.slice/);
+  assert.doesNotMatch(source, /primaryShipmentId\.slice/);
+  assert.doesNotMatch(source, /toLocaleString\("fa-IR"\)\}`/);
+});
+
+test("formatFulfillmentQueueQuantity strips zeros and keeps 1.25", () => {
+  const qty = formatFulfillmentQueueQuantity({ itemCount: 1, quantityOrdered: 1.25, quantityShipped: 0.5 });
+  assert.match(qty, /1\.25/);
+  assert.match(qty, /0\.75/);
+  assert.doesNotMatch(qty, /000000/);
+  assert.equal(formatFulfillmentShipmentSummary({ shipmentCount: 0 }), "—");
+  assert.match(formatFulfillmentShipmentSummary({ shipmentCount: 2 }), /مرسوله/);
 });
 
 test("work queue query client posts to work-queue endpoint", () => {

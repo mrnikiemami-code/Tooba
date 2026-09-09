@@ -1,0 +1,119 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-checkout",
+      "status": 200,
+      "checkoutId": "01a085b3-73c7-7000-a4fd-b89ea2da4231",
+      "ok": true
+    },
+    {
+      "name": "A-ready-to-fulfill",
+      "queryStatus": 200,
+      "qty": 1.25,
+      "codes": [
+        "mark_processing"
+      ],
+      "hasProcess": true,
+      "noPack": true,
+      "noDispatch": true,
+      "noGuid": true,
+      "ok": true
+    },
+    {
+      "name": "B-checkout",
+      "status": 200,
+      "checkoutId": "01a085b3-7510-7000-8812-97a35e347d1f",
+      "ok": true
+    },
+    {
+      "name": "B-partial-pack",
+      "packStatus": 200,
+      "packed": 0.5,
+      "remain": 0.75,
+      "queueCodes": [
+        "mark_packed",
+        "unpack",
+        "create_shipment"
+      ],
+      "ok": true
+    },
+    {
+      "name": "C-create-shipment",
+      "shipStatus": 200,
+      "shipmentId": "5808dae8-6ccb-44ca-b22a-f5be20c31bf6",
+      "queueShipmentId": "5808dae8-6ccb-44ca-b22a-f5be20c31bf6",
+      "sameShipment": true,
+      "ok": true
+    },
+    {
+      "name": "D-tracking",
+      "trackStatus": 200,
+      "missingGone": true,
+      "codes": [
+        "mark_packed",
+        "cancel_shipment",
+        "correct_tracking",
+        "dispatch_shipment"
+      ],
+      "hasCorrect": true,
+      "hasVoid": true,
+      "hasDispatch": true,
+      "ok": true
+    },
+    {
+      "name": "E-dispatch-boundary",
+      "dispatchStatus": 200,
+      "cancelProjected": false,
+      "cancelPost": 400,
+      "cancelMsg": "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+      "staleDispatchStatus": 400,
+      "staleDispatchMsg": "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+      "staleVoidStatus": 400,
+      "staleVoidMsg": "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+      "noEnglishDispatch": true,
+      "ok": true
+    },
+    {
+      "name": "F-multi-seller",
+      "orderSellers": 3,
+      "queueRows": 3,
+      "uniqueSellers": 3,
+      "bulkStatus": 400,
+      "bulkMsg": "انتخاب ناسازگار است؛ همهٔ ردیف‌ها باید همان عملیات مجاز را داشته باشند.",
+      "ok": true
+    },
+    {
+      "name": "G-cancelled",
+      "rowPresent": true,
+      "codes": [],
+      "staleStatus": 400,
+      "staleMsg": "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+      "ok": true
+    },
+    {
+      "name": "filters",
+      "ready": 200,
+      "pack": 200,
+      "ship": 200,
+      "missing": 200,
+      "transit": 200,
+      "delivered": 200,
+      "problem": 200,
+      "ok": true
+    },
+    {
+      "name": "G2-delivered-queue",
+      "codes": [
+        "mark_packed"
+      ],
+      "noCancel": true,
+      "ok": true
+    }
+  ]
+}

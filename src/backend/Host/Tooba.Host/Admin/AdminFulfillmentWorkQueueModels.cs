@@ -133,6 +133,11 @@ public static class AdminFulfillmentQueueFilters
     /// <summary>کدهای عملیاتی دامنه برای ردیف — بدون بررسی مجوز (اجرا در عملیات سفارش تأیید می‌شود).</summary>
     public static IReadOnlyList<string> ProjectActionCodes(FulfillmentSnapshot fulfillment)
     {
+        if (fulfillment.Status is FulfillmentStatus.Cancelled)
+        {
+            return [];
+        }
+
         var codes = new List<string>();
         if (HasProcessableQuantity(fulfillment.Items))
         {
@@ -166,6 +171,7 @@ public static class AdminFulfillmentQueueFilters
                 }
                 else if (shipment.DispatchedAt is null)
                 {
+                    codes.Add("correct_tracking");
                     codes.Add("dispatch_shipment");
                 }
             }
