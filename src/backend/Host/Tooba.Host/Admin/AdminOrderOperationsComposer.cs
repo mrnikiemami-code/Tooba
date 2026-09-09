@@ -1210,11 +1210,12 @@ public sealed class AdminOrderOperationsComposer
                     cancellationToken);
             }
 
-            await _fulfillment.ReactivateAfterOrderRestoreAsync(group.CheckoutId, cancellationToken);
+            // ابتدا رزرو فعلی روی OrderLine ساخته می‌شود؛ سپس Fulfillment به همان مرجع فعال بازمی‌بندد.
             await _checkout.RestoreCancelledCheckoutAsync(
                 group.CheckoutId,
                 new OrderAccess(null, group.PlacedByUserId),
                 cancellationToken);
+            await _fulfillment.ReactivateAfterOrderRestoreAsync(group.CheckoutId, cancellationToken);
             if (paidSellerOrderIds.Count > 0)
             {
                 await _fulfillment.EnsureCreatedForPaidCheckoutAsync(
@@ -1955,6 +1956,7 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.shipment.void_invalid_state" => "ابطال مرسوله در این وضعیت مجاز نیست.",
         "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
         "fulfillment.work_queue.row_mismatch" => "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
+        "inventory.reservation.not_active" => "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
 
@@ -1980,7 +1982,13 @@ public sealed class AdminOrderOperationsComposer
             ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
         "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
             ("fulfillment.allocation.conflict", FulfillmentOpToFa("fulfillment.allocation.conflict")),
+        "inventory.reservation.not_active" =>
+            ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
+        "فقط رزرو Held قابل آزادسازی یا مصرف است." =>
+            ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
         _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) =>
+            (message, FulfillmentOpToFa(message)),
+        _ when message.StartsWith("inventory.", StringComparison.Ordinal) =>
             (message, FulfillmentOpToFa(message)),
         _ => ("order.operation.failed", message),
     };

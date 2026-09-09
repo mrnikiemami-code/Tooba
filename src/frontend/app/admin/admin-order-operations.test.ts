@@ -310,6 +310,11 @@ test("cancelled order blocks forward payment action with human FA", () => {
 
 test("whole-order cancel after dispatch maps human FA and keeps one cancel", () => {
   assert.equal(
+    mapAdminErrorMessage("inventory.reservation.not_active", "fa"),
+    "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
+  );
+  assert.ok(!mapAdminErrorMessage("inventory.reservation.not_active", "fa").includes("Held"));
+  assert.equal(
     mapAdminErrorMessage("order.cancel.forbidden", "fa"),
     "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
   );

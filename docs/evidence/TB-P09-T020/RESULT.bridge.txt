@@ -3,10 +3,10 @@ PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 BEGIN_TOOBA_WORKER_RESULT
 
 Task-ID:
-TB-P09-T020-R1
+TB-P09-T020-R2
 
 Parent-Task:
-TB-P09-T020
+TB-P09-T020-R1
 
 Channel:
 tooba-main
@@ -18,46 +18,52 @@ Status:
 PASS
 
 Summary:
-P09 final-gate repair: composed ارسال جزئی / PartialDispatched from remaining vs shipped qty; persisted enum stays Dispatched. Capability wins over aggregate. Multi-seller 404 is catalog/offer fixture (orphaned variant / Draft products), not cart regression; two-seller checkout via storefront listing offer. Seller scopes independent. Queue needs_action holds remainder; not fully-terminal InTransit. T020 remainder, T016 cancel-after-dispatch, T019 return 0.25 preserved. USER_VISUAL_ACCEPTED=NO. No TB-P09-T021.
+Cancel→Restore reservation rebinding: Fulfillment active items now rebind to OrderLine replacement Held reservation after restore (composer order: restore inventory first, then reactivate+rebind). Old Released reservation stays historical. Dispatch consumes the new Held reservation. Inventory invariant unchanged. Stable code inventory.reservation.not_active with localized FA (no raw Held). Decimal 1.25 runtime green. USER_VISUAL_ACCEPTED=NO. No TB-P09-T021.
 
 Applicable-Locks:
-LOCK-OPS-009, LOCK-OPS-010, LOCK-OPS-002. Persisted status is not sole operational truth; seller-scoped. No second status engine.
+LOCK-OPS-011, LOCK-OPS-012. Inventory owns reservation lifecycle; no resurrect Released; UI no internal enums.
 
-Status-Discovery:
-docs/evidence/TB-P09-T020/r1-status-discovery.md
+Reservation-Discovery:
+docs/evidence/TB-P09-T020/r2-reservation-discovery.md
 
-Partial-Status-Projection:
-docs/evidence/TB-P09-T020/r1-partial-status-projection.md
+Source-of-Truth:
+docs/evidence/TB-P09-T020/r2-source-of-truth.md
 
-Capability-Semantics:
-docs/evidence/TB-P09-T020/r1-capability-semantics.md
+Restore-Rebinding:
+docs/evidence/TB-P09-T020/r2-restore-rebinding.md
 
-MultiSeller-404:
-docs/evidence/TB-P09-T020/r1-multiseller-404.md
+Decimal-Safety:
+Runtime qty 1.25 Cancel→Restore→Dispatch Consumed; exact; no truncation.
 
-MultiSeller-Runtime:
-docs/evidence/TB-P09-T020/r1-multiseller-runtime.md
+Failure-Idempotency:
+docs/evidence/TB-P09-T020/r2-failure-idempotency.md
+
+Dispatch-Guard:
+Inventory MoveTo still requires Held; machine code inventory.reservation.not_active.
+
+Error-UX:
+docs/evidence/TB-P09-T020/r2-error-ux.md
 
 Cross-Surface:
-docs/evidence/TB-P09-T020/r1-cross-surface.md
-
-Filters:
-docs/evidence/TB-P09-T020/r1-filters.md
-
-Runtime-Smoke:
-docs/evidence/TB-P09-T020/r1-runtime-smoke.md
+After restore OrderLine and fulfillment.items reservation_id aligned Held; Order Detail pack/ship/dispatch capabilities valid.
 
 Focused-Validation:
-Recovery guard 3/3. Host FulfillmentLineQuantityOps + AdminFulfillmentWorkQueue + AdminFulfillmentScopeSequence + WholeOrderCancelUntilDispatch 56 pass. FE fulfillment-api + admin-fulfillment-work-queue + admin-order-operations 38 pass. git diff --check clean.
+Host FulfillmentLineQuantityOps + WholeOrderCancelUntilDispatch + AdminOrderCorrectiveActions 48 pass. Recovery guard 3/3. FE admin-order-operations 24 pass. git diff --check clean.
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T020/r2-runtime-smoke.md
+
+Lock-Registry:
+LOCK-OPS-011 + LOCK-OPS-012 added to TOOBA-LOCKS.md.
 
 Recovery-SoT:
-Phase P09. Last Architect-accepted TB-P09-T019. Issued none. Repair none. Last Implementation TB-P09-T020-R1. USER_VISUAL_ACCEPTED=NO. No T021.
+Phase P09. Last Architect-accepted TB-P09-T020-R1. Issued none. Repair none. Last Implementation TB-P09-T020-R2. USER_VISUAL_ACCEPTED=NO. No T021.
 
 Git:
 Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
 
 Architectural-Concerns:
-B_OFFER fixture 01a03826-a21a-7000-ac2a-b44156838b10 still 404 cart.missing (orphaned catalog_variant_id / Draft catalog). Two-seller proof used listing Arman offer after variant fixture repair. cart.missing swallows catalog lookup misses.
+None for this repair. Pre-existing admin-error-map content-category wording test drift unrelated.
 
 Visual-Concerns:
 USER_VISUAL_ACCEPTED=NO.

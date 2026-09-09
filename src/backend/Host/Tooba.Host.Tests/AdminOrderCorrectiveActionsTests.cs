@@ -547,6 +547,11 @@ public sealed class AdminOrderCorrectiveActionsTests
         Assert.Contains("NeutralizeUnpaidAccrualForCancelAsync", composer, StringComparison.Ordinal);
         Assert.Contains("CloseOrStartRefundForOrderCancelAsync", composer, StringComparison.Ordinal);
         Assert.Contains("ReactivateAfterOrderRestoreAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("RestoreCancelledCheckoutAsync", composer, StringComparison.Ordinal);
+        var restoreIdx = composer.IndexOf("RestoreCancelledCheckoutAsync", StringComparison.Ordinal);
+        var reactivateIdx = composer.IndexOf("ReactivateAfterOrderRestoreAsync", StringComparison.Ordinal);
+        Assert.True(restoreIdx > 0 && reactivateIdx > restoreIdx,
+            "Restore must reacquire Inventory before Fulfillment reactivation/rebind.");
         Assert.Contains("RestoreAfterOrderCancelRestoreAsync", composer, StringComparison.Ordinal);
         Assert.Contains("ReinstateAccrualAfterCancelRestoreAsync", composer, StringComparison.Ordinal);
         Assert.Contains("VoidUnpaidAccrualForPaymentAsync", composer, StringComparison.Ordinal);

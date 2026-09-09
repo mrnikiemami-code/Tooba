@@ -361,7 +361,7 @@ public sealed class StockReservation
     {
         if (Status != StockReservationStatus.Held)
         {
-            throw new InvalidOperationException("فقط رزرو Held قابل آزادسازی یا مصرف است.");
+            throw new InvalidOperationException("inventory.reservation.not_active");
         }
 
         Status = status;

@@ -1,0 +1,105 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "json": {
+        "status": "ok"
+      },
+      "text": "{\"status\":\"ok\"}",
+      "ok": true
+    },
+    {
+      "name": "cancel-restore-dispatch-1",
+      "qty": 1,
+      "checkoutId": "01a08712-ee4a-7000-aea3-5f0c6f992820",
+      "cancel": 200,
+      "restore": 200,
+      "process": 200,
+      "pack": 200,
+      "ship": 200,
+      "track": 200,
+      "dispatch": 200,
+      "beforeCancel": {
+        "olId": "01a08712-ee1f-7000-86ab-cae03161857c",
+        "olStatus": "Held",
+        "fiId": "01a08712-ee1f-7000-86ab-cae03161857c",
+        "fiStatus": "Held",
+        "aligned": true
+      },
+      "afterCancel": {
+        "olId": "01a08712-ee1f-7000-86ab-cae03161857c",
+        "olStatus": "Released",
+        "fiId": "01a08712-ee1f-7000-86ab-cae03161857c",
+        "fiStatus": "Released",
+        "aligned": true
+      },
+      "afterRestore": {
+        "olId": "01a08712-f29b-7000-b284-a65928bff63a",
+        "olStatus": "Held",
+        "fiId": "01a08712-f29b-7000-b284-a65928bff63a",
+        "fiStatus": "Held",
+        "aligned": true
+      },
+      "afterDispatch": {
+        "olId": "01a08712-f29b-7000-b284-a65928bff63a",
+        "olStatus": "Consumed",
+        "fiId": "01a08712-f29b-7000-b284-a65928bff63a",
+        "fiStatus": "Consumed",
+        "aligned": true
+      },
+      "errLeak": false,
+      "ok": true
+    },
+    {
+      "name": "cancel-restore-dispatch-1.25",
+      "qty": 1.25,
+      "checkoutId": "01a08712-f7b9-7000-935a-a19e92da8f06",
+      "cancel": 200,
+      "restore": 200,
+      "process": 200,
+      "pack": 200,
+      "ship": 200,
+      "track": 200,
+      "dispatch": 200,
+      "beforeCancel": {
+        "olId": "01a08712-f77b-7000-a237-d3a805e54c66",
+        "olStatus": "Held",
+        "fiId": "01a08712-f77b-7000-a237-d3a805e54c66",
+        "fiStatus": "Held",
+        "aligned": true
+      },
+      "afterCancel": {
+        "olId": "01a08712-f77b-7000-a237-d3a805e54c66",
+        "olStatus": "Released",
+        "fiId": "01a08712-f77b-7000-a237-d3a805e54c66",
+        "fiStatus": "Released",
+        "aligned": true
+      },
+      "afterRestore": {
+        "olId": "01a08712-fc30-7000-997c-36c33ad71c44",
+        "olStatus": "Held",
+        "fiId": "01a08712-fc30-7000-997c-36c33ad71c44",
+        "fiStatus": "Held",
+        "aligned": true
+      },
+      "afterDispatch": {
+        "olId": "01a08712-fc30-7000-997c-36c33ad71c44",
+        "olStatus": "Consumed",
+        "fiId": "01a08712-fc30-7000-997c-36c33ad71c44",
+        "fiStatus": "Consumed",
+        "aligned": true
+      },
+      "errLeak": false,
+      "ok": true
+    },
+    {
+      "name": "error-ux-map",
+      "hasFa": true,
+      "hasHost": true,
+      "noHeldDomain": true,
+      "ok": true
+    }
+  ]
+}

@@ -88,6 +88,12 @@ Dispatch of one allocated quantity blocks whole-order cancellation (LOCK-OPS-002
 ### LOCK-OPS-010 — Operational truth is quantity-aware and seller-scoped
 Persisted aggregate `FulfillmentStatus` is not the sole operational truth when exact quantities remain. Admin Orders / Order Detail / Fulfillment Queue project a composed operational status (including ارسال جزئی) from remaining vs dispatched quantity. Capabilities stay quantity-based. Seller-scoped status and actions must not leak across sellers. Do not invent a second fulfillment status engine.
 
+### LOCK-OPS-011 — Restore rebinds active Fulfillment to replacement reservation
+Cancelled-order restore reacquires Inventory reservation on OrderLine. All active Fulfillment item references for forward-fulfillable quantity must bind to that replacement authoritative reservation before pack/ship/dispatch resume. Released/Consumed reservations remain historical and are never resurrected or consumed.
+
+### LOCK-OPS-012 — No internal reservation enums in Admin UI
+Admin surfaces must not expose raw Inventory reservation enum names (Held/Released/Consumed) or unmapped domain exception text. Use stable machine codes with centralized localization.
+
 ## Returns / Refunds
 
 ### LOCK-RET-001 — Return and Refund are independent lifecycles

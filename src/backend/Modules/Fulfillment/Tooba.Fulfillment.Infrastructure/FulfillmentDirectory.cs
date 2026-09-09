@@ -655,6 +655,10 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
 
         foreach (var unit in loaded)
         {
+            var handoff = await _orders.GetHandoffAsync(unit.SellerOrderId, cancellationToken)
+                ?? throw new InvalidOperationException("سفارش برای fulfillment پیدا نشد.");
+            var reservations = handoff.Lines.ToDictionary(x => x.OrderLineId, x => x.ReservationId);
+            unit.RebindActiveReservations(reservations);
             unit.ReactivateAfterOrderRestore(now);
         }
 

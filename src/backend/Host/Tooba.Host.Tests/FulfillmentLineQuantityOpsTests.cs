@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Tooba.Fulfillment.Domain;
 using Xunit;
 
@@ -153,15 +154,23 @@ public sealed class FulfillmentLineQuantityOpsTests
         unit.AbortForOrderCancel(now);
         Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
-        Assert.Equal(2, unit.Items.Single().QuantityPacked);
-        Assert.Equal(2, unit.Items.Single().QuantityProcessing);
+        Assert.Equal(0, unit.Items.Single().QuantityPacked);
+        Assert.Equal(0, unit.Items.Single().QuantityProcessing);
         unit.AbortForOrderCancel(now.AddMinutes(1));
         Assert.Equal(FulfillmentStatus.Cancelled, unit.Status);
 
         unit.ReactivateAfterOrderRestore(now.AddMinutes(2));
-        Assert.Equal(FulfillmentStatus.Packed, unit.Status);
+        Assert.Equal(FulfillmentStatus.ReadyToFulfill, unit.Status);
+        Assert.Equal(0, unit.Items.Single().QuantityPacked);
         Assert.Equal(ShipmentStatus.Cancelled, unit.Shipments.Single().Status);
-        var replacement = unit.CreateShipment("پست", [(lineId, 2)], now.AddMinutes(3));
+        var replacementReservation = Guid.NewGuid();
+        unit.RebindActiveReservations(new Dictionary<Guid, Guid?> { [lineId] = replacementReservation });
+        Assert.Equal(replacementReservation, unit.Items.Single().ReservationId);
+        unit.RebindActiveReservations(new Dictionary<Guid, Guid?> { [lineId] = replacementReservation });
+        Assert.Equal(replacementReservation, unit.Items.Single().ReservationId);
+        unit.MarkProcessing(now.AddMinutes(3));
+        unit.PackSelections([(lineId, 2)], now.AddMinutes(3));
+        var replacement = unit.CreateShipment("پست", [(lineId, 2)], now.AddMinutes(4));
         Assert.Equal(ShipmentStatus.Created, replacement.Status);
         Assert.Equal(2, unit.Shipments.Count);
     }

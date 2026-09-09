@@ -394,6 +394,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
     en: "The quantity exceeds remaining allocatable packed amount.",
   },
+  "inventory.reservation.not_active": {
+    fa: "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
+    en: "This order's inventory reservation is no longer active. Refresh the order or review reservation status.",
+  },
   "return.expired": {
     fa: "مهلت مرجوعی تمام شده است.",
     en: "The return window has expired.",

@@ -196,12 +196,13 @@ public interface IFulfillmentDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// مرسوله‌های پیش از Dispatch را باطل و واحدها را Cancelled می‌کند؛ idempotent.
+    /// مرسوله‌های پیش از Dispatch را باطل، پیشرفت انبار ارسال‌نشده را بازنشانی و واحدها را Cancelled می‌کند؛ idempotent.
     /// </summary>
     Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// واحدهای Cancelled را به ReadyToFulfill برمی‌گرداند؛ مرسوله‌های باطل‌شده را زنده نمی‌کند.
+    /// واحدهای Cancelled را با انبار صفر به ReadyToFulfill برمی‌گرداند و مرجع رزرو فعال را
+    /// از Order handoff فعلی بازمی‌بندد؛ مرسوله‌های باطل‌شده را زنده نمی‌کند.
     /// </summary>
     Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken);
 }

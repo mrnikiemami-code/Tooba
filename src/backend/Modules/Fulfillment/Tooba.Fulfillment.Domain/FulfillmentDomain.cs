@@ -86,8 +86,8 @@ public sealed class FulfillmentItem
     /// <summary>تعداد dispatch‌شده تجمعی.</summary>
     public decimal QuantityShipped { get; private set; }
 
-    /// <summary>رزرو موجودی مرجع؛ FK Inventory نیست.</summary>
-    public Guid? ReservationId { get; init; }
+    /// <summary>رزرو موجودی مرجع فعال؛ FK Inventory نیست.</summary>
+    public Guid? ReservationId { get; private set; }
 
     /// <summary>آیا رزرو مصرف شده است.</summary>
     public bool ReservationConsumed { get; private set; }
@@ -101,6 +101,20 @@ public sealed class FulfillmentItem
             QuantityOrdered = quantityOrdered,
             ReservationId = reservationId,
         };
+
+    /// <summary>
+    /// مرجع رزرو فعال را به شناسهٔ فعلی Order/Inventory هم‌تراز می‌کند.
+    /// رزرو Released/Consumed تاریخی را زنده نمی‌کند.
+    /// </summary>
+    internal void RebindActiveReservation(Guid? reservationId)
+    {
+        if (ReservationConsumed || QuantityShipped >= QuantityOrdered)
+        {
+            return;
+        }
+
+        ReservationId = reservationId;
+    }
 
     internal void ApplyProcessingQuantity(decimal quantity)
     {
@@ -553,8 +567,8 @@ public sealed class FulfillmentUnit : IHasDomainEvents
     }
 
     /// <summary>
-    /// لغو کل سفارش: مرسوله‌های پیش از Dispatch باطل می‌شوند و واحد Cancelled می‌ماند.
-    /// اگر قبلاً Cancelled باشد no-op است.
+    /// لغو کل سفارش: مرسوله‌های پیش از Dispatch باطل می‌شوند، پیشرفت انبار ارسال‌نشده
+    /// بازنشانی می‌شود و واحد Cancelled می‌ماند. اگر قبلاً Cancelled باشد no-op است.
     /// </summary>
     public void AbortForOrderCancel(DateTimeOffset now)
     {
@@ -574,12 +588,18 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             _domainEvents.Add(new ShipmentCancelledDomainEvent(FulfillmentId, shipment.ShipmentId, SellerOrderId));
         }
 
+        foreach (var item in _items)
+        {
+            item.ResetWarehouseProgress();
+        }
+
         Status = FulfillmentStatus.Cancelled;
         UpdatedAt = now;
     }
 
     /// <summary>
-    /// بازگردانی rule-based: وضعیت انبار قبل از لغو برمی‌گردد؛ مرسوله‌های باطل‌شده زنده نمی‌شوند.
+    /// بازگردانی: مرسوله‌های باطل‌شده زنده نمی‌شوند. پیشرفت انبار ارسال‌نشده صفر می‌شود
+    /// تا واحد ReadyToFulfill شود، نه Packed روی تخصیص مرده.
     /// </summary>
     public void ReactivateAfterOrderRestore(DateTimeOffset now)
     {
@@ -593,8 +613,34 @@ public sealed class FulfillmentUnit : IHasDomainEvents
             throw new InvalidOperationException("fulfillment.restore.already_dispatched");
         }
 
+        foreach (var item in _items)
+        {
+            item.ResetWarehouseProgress();
+        }
+
         Status = FulfillmentStatus.ReadyToFulfill;
         RefreshWarehouseStatus(now);
+    }
+
+    /// <summary>
+    /// مرجع رزرو فعال خطوط را با شناسه‌های فعلی OrderLine هم‌تراز می‌کند (idempotent).
+    /// </summary>
+    public void RebindActiveReservations(IReadOnlyDictionary<Guid, Guid?> reservationsByOrderLineId)
+    {
+        if (HasDispatchedQuantity() && _items.All(x => x.ReservationConsumed || x.QuantityShipped >= x.QuantityOrdered))
+        {
+            return;
+        }
+
+        foreach (var item in _items)
+        {
+            if (!reservationsByOrderLineId.TryGetValue(item.OrderLineId, out var reservationId))
+            {
+                continue;
+            }
+
+            item.RebindActiveReservation(reservationId);
+        }
     }
 
     /// <summary>آیا در این واحد quantity واقعی Dispatch شده است.</summary>
