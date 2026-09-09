@@ -64,6 +64,18 @@ test("orders grid exposes filters on all data columns including amount/date/line
   assert.doesNotMatch(orderColumnsBlock, /id:\s*"actions"[\s\S]*filterKind:/);
 });
 
+test("orders grid status filter matches composed return/refund labels and has no dead Processing", () => {
+  const screens = readFileSync(join(dir, "admin-screens.tsx"), "utf8");
+  const block = screens.slice(
+    screens.indexOf("const orderStatusEnumOptions"),
+    screens.indexOf("const orderRowActions"),
+  );
+  assert.match(block, /ReturnRequested/);
+  assert.match(block, /RefundPending/);
+  assert.match(block, /RefundFailed/);
+  assert.doesNotMatch(block, /value:\s*"Processing"/);
+});
+
 test("operations menu uses portal and human empty label", () => {
   const menu = readFileSync(join(dir, "admin-order-operations-menu.tsx"), "utf8");
   assert.match(menu, /createPortal/);

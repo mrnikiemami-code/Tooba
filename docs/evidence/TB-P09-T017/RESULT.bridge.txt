@@ -1,0 +1,77 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P09-T017
+
+Parent-Task:
+TB-P09-T016
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+Summary:
+Admin Orders final technical gate. Existing T009–T016 contracts hold. Two defects repaired: grid status filter now matches return/refund composed statuses (dead Processing removed), and the dead «ایجاد سند تسویه» header button was removed. Runtime A–H green. USER_VISUAL_ACCEPTED=NO. No TB-P09-T018.
+
+Applicable-Locks:
+docs/evidence/TB-P09-T017/applicable-locks.md
+
+Final-Orders-Audit:
+docs/evidence/TB-P09-T017/final-orders-audit.md
+
+Grid-Final:
+docs/evidence/TB-P09-T017/grid-final.md
+
+Action-Matrix:
+docs/evidence/TB-P09-T017/action-matrix.md
+
+Payment-Final:
+docs/evidence/TB-P09-T017/payment-final.md
+
+Fulfillment-Final:
+docs/evidence/TB-P09-T017/fulfillment-final.md
+
+Cancel-Restore-Final:
+docs/evidence/TB-P09-T017/cancel-restore-final.md
+
+Financial-Final:
+docs/evidence/TB-P09-T017/financial-final.md
+
+History-Final:
+docs/evidence/TB-P09-T017/history-final.md
+
+Print-Final:
+docs/evidence/TB-P09-T017/print-final.md
+
+Error-UX-Final:
+docs/evidence/TB-P09-T017/error-ux-final.md
+
+Focused-Validation:
+Host focused 37 pass. Frontend order ops/completeness 27 pass. Recovery guard 3 pass. git diff --check clean.
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T017/runtime-smoke.md
+
+Recovery-SoT:
+Phase P09. Last Architect-accepted TB-P09-T016. Issued none. Repair none. Last Implementation TB-P09-T017. USER_VISUAL_ACCEPTED=NO. No T018.
+
+Git:
+Commit + push origin/main. HEAD==origin/main. .tmp-* not committed.
+
+Architectural-Concerns:
+Settlement document creation remains out of scope. Invoice line catalog GUID titles not redesigned.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

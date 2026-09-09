@@ -48,7 +48,9 @@ internal sealed class AdminOrdersGridQueryEngine
         {
             q = filter.Field == "sellers"
                 ? await ApplySellerNamesFilterAsync(q, filter, cancellationToken)
-                : ApplyFilter(q, filter);
+                : filter.Field == "status"
+                    ? await ApplyStatusFilterAsync(q, filter, cancellationToken)
+                    : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -84,7 +86,13 @@ internal sealed class AdminOrdersGridQueryEngine
                 condition.Value,
                 condition.ValueTo,
                 condition.Values);
-            var ids = await ApplyFilter(_orders.Checkouts.AsNoTracking(), filter)
+            IQueryable<CheckoutGroup> filtered = _orders.Checkouts.AsNoTracking();
+            filtered = condition.Field == "status"
+                ? await ApplyStatusFilterAsync(filtered, filter, cancellationToken)
+                : condition.Field == "sellers"
+                    ? await ApplySellerNamesFilterAsync(filtered, filter, cancellationToken)
+                    : ApplyFilter(filtered, filter);
+            var ids = await filtered
                 .Select(x => x.CheckoutId)
                 .ToListAsync(cancellationToken);
             sets.Add(ids.ToHashSet());
@@ -134,7 +142,7 @@ internal sealed class AdminOrdersGridQueryEngine
             case "payment":
                 return ApplyPaymentFilter(source, filter);
             case "status":
-                return ApplyStatusFilter(source, filter);
+                return source;
             case "amount":
                 return ApplyDecimalAggFilter(source, c => c.SellerOrders.Sum(o => o.GrandTotalSnapshot), filter);
             case "created":
@@ -180,7 +188,10 @@ internal sealed class AdminOrdersGridQueryEngine
         };
     }
 
-    private static IQueryable<CheckoutGroup> ApplyStatusFilter(IQueryable<CheckoutGroup> source, GridFilterRequest filter)
+    private async Task<IQueryable<CheckoutGroup>> ApplyStatusFilterAsync(
+        IQueryable<CheckoutGroup> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
     {
         var op = (filter.Operator ?? string.Empty).Trim();
         var values = (filter.Values ?? [])
@@ -199,9 +210,32 @@ internal sealed class AdminOrdersGridQueryEngine
             return source;
         }
 
+        var overlayKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ReturnRequested",
+            "ReturnApproved",
+            "RefundPending",
+            "RefundCompleted",
+            "RefundFailed",
+        };
+        var overlayWanted = new HashSet<string>(values.Where(overlayKeys.Contains), StringComparer.OrdinalIgnoreCase);
+        HashSet<Guid> overlaySellerIds = [];
+        if (overlayWanted.Count > 0)
+        {
+            var rows = await _returns.ReturnRequests.AsNoTracking()
+                .Select(r => new { r.SellerOrderId, r.Status })
+                .ToListAsync(cancellationToken);
+            overlaySellerIds = rows
+                .GroupBy(r => r.SellerOrderId)
+                .Where(g => overlayWanted.Contains(
+                    ComposeOperationalStatus([SellerOrderStatus.Paid], g.Select(x => x.Status).ToList())))
+                .Select(g => g.Key)
+                .ToHashSet();
+        }
+
         var wantsMixed = values.Contains("Mixed");
         var parsed = values
-            .Where(v => !string.Equals(v, "Mixed", StringComparison.OrdinalIgnoreCase))
+            .Where(v => !overlayKeys.Contains(v) && !string.Equals(v, "Mixed", StringComparison.OrdinalIgnoreCase))
             .Select(v => Enum.TryParse<SellerOrderStatus>(v, true, out var s) ? (SellerOrderStatus?)s : null)
             .Where(v => v.HasValue)
             .Select(v => v!.Value)
@@ -209,15 +243,23 @@ internal sealed class AdminOrdersGridQueryEngine
 
         if (op is "notEqual" or "notIn")
         {
+            var exclude = overlaySellerIds;
             return source.Where(c =>
                 !(wantsMixed && c.SellerOrders.Select(o => o.Status).Distinct().Count() > 1)
                 && !(parsed.Count > 0
                     && c.SellerOrders.Select(o => o.Status).Distinct().Count() == 1
-                    && parsed.Contains(c.SellerOrders.Select(o => o.Status).First())));
+                    && parsed.Contains(c.SellerOrders.Select(o => o.Status).First()))
+                && !(exclude.Count > 0 && c.SellerOrders.Any(o => exclude.Contains(o.SellerOrderId))));
+        }
+
+        if (overlaySellerIds.Count == 0 && parsed.Count == 0 && !wantsMixed)
+        {
+            return source.Where(_ => false);
         }
 
         return source.Where(c =>
-            (wantsMixed && c.SellerOrders.Select(o => o.Status).Distinct().Count() > 1)
+            (overlaySellerIds.Count > 0 && c.SellerOrders.Any(o => overlaySellerIds.Contains(o.SellerOrderId)))
+            || (wantsMixed && c.SellerOrders.Select(o => o.Status).Distinct().Count() > 1)
             || (parsed.Count > 0
                 && c.SellerOrders.Select(o => o.Status).Distinct().Count() == 1
                 && parsed.Contains(c.SellerOrders.Select(o => o.Status).First())));

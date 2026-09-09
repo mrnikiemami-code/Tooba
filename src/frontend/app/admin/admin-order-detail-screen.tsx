@@ -551,9 +551,6 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
               چاپ رسید پرداخت
             </button>
           ) : null}
-          <button type="button" className="inline-flex items-center gap-1.5 rounded-lg bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">
-            ایجاد سند تسویه
-          </button>
         </div>
       </header>
       {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}

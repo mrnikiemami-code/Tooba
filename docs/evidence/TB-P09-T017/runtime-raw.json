@@ -1,0 +1,176 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-checkout",
+      "status": 200,
+      "checkoutId": "01a0859f-f99f-7000-8142-bf628d415083",
+      "ok": true
+    },
+    {
+      "name": "A-waiting-manual",
+      "codes": [
+        "confirm_deposit",
+        "reject_deposit",
+        "cancel"
+      ],
+      "hasConfirm": true,
+      "hasReject": true,
+      "hasCancel": true,
+      "noFulfill": true,
+      "ok": true
+    },
+    {
+      "name": "B-checkout",
+      "status": 200,
+      "checkoutId": "01a0859f-fa6c-7000-b9ee-731808afb539",
+      "ok": true
+    },
+    {
+      "name": "B-ready-to-fulfill",
+      "codes": [
+        "unconfirm_deposit",
+        "mark_processing",
+        "mark_processing",
+        "cancel"
+      ],
+      "sellerStatus": "Paid",
+      "hasProcess": true,
+      "hasCancel": true,
+      "ok": true
+    },
+    {
+      "name": "C-checkout",
+      "status": 200,
+      "checkoutId": "01a0859f-fbf8-7000-a0f1-5ae4bc90206b",
+      "ok": true
+    },
+    {
+      "name": "C-partial-pack",
+      "status": 200,
+      "packed": 0.5,
+      "ordered": 1.25,
+      "remain": 0.75,
+      "ok": true
+    },
+    {
+      "name": "D-created-tracking-cancel",
+      "shipStatus": 200,
+      "codes": [
+        "mark_packed",
+        "pack_selected",
+        "pack_selected",
+        "unprocess",
+        "unprocess",
+        "cancel_shipment",
+        "correct_tracking",
+        "dispatch_shipment",
+        "cancel"
+      ],
+      "cancel": true,
+      "confirm": "با لغو کامل سفارش، مرسوله‌های پیش از ارسال ابطال می‌شوند، موجودی آزاد می‌شود و در صورت پرداخت موفق بازگشت وجه آغاز می‌شود. آیا مطمئن هستید؟",
+      "ok": true
+    },
+    {
+      "name": "E-dispatched-blocks-cancel",
+      "codes": [
+        "mark_packed",
+        "pack_selected",
+        "pack_selected",
+        "unprocess",
+        "unprocess",
+        "request_return",
+        "approve_return",
+        "reject_return"
+      ],
+      "cancelProjected": false,
+      "postStatus": 400,
+      "postMessage": "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+      "ok": true
+    },
+    {
+      "name": "F-cancelled-paid",
+      "codes": [
+        "restore_cancelled_order"
+      ],
+      "restore": true,
+      "noForward": true,
+      "status": "Cancelled",
+      "historyHasCancel": true,
+      "historyHasInventory": true,
+      "ok": true
+    },
+    {
+      "name": "G-delivered",
+      "codes": [
+        "mark_packed",
+        "pack_selected",
+        "pack_selected",
+        "unprocess",
+        "unprocess",
+        "request_return",
+        "approve_return",
+        "reject_return"
+      ],
+      "noCancel": true,
+      "hasReturn": true,
+      "ok": true
+    },
+    {
+      "name": "H-multi-seller-row",
+      "row": "01a08175-32ba-7000-9551-daa24d42da61|3",
+      "ok": true
+    },
+    {
+      "name": "H-multi-seller-actions",
+      "checkoutId": "01a08175-32ba-7000-9551-daa24d42da61",
+      "codes": [
+        "cancel_shipment",
+        "assign_tracking",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "mark_processing",
+        "cancel"
+      ],
+      "whole": [
+        "cancel"
+      ],
+      "processCount": 8,
+      "packCount": 0,
+      "cancelCount": 1,
+      "ok": true
+    },
+    {
+      "name": "print-invoice",
+      "status": 200,
+      "hasItemCount": true,
+      "hasQty": true,
+      "hasTax": true,
+      "hasDuty": true,
+      "noNoise": true,
+      "ok": true
+    },
+    {
+      "name": "grid-list",
+      "status": 200,
+      "listed": true,
+      "lineCount": 1,
+      "ok": true
+    },
+    {
+      "name": "grid-status-return-filter",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

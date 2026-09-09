@@ -314,7 +314,11 @@ const orderStatusEnumOptions = [
   { value: "Paid", label: formatAdminStatus("Paid") },
   { value: "Cancelled", label: formatAdminStatus("Cancelled") },
   { value: "Mixed", label: formatAdminStatus("Mixed") },
-  { value: "Processing", label: formatAdminStatus("Processing") },
+  { value: "ReturnRequested", label: formatAdminStatus("ReturnRequested") },
+  { value: "ReturnApproved", label: formatAdminStatus("ReturnApproved") },
+  { value: "RefundPending", label: formatAdminStatus("RefundPending") },
+  { value: "RefundCompleted", label: formatAdminStatus("RefundCompleted") },
+  { value: "RefundFailed", label: formatAdminStatus("RefundFailed") },
 ];
 
 const orderRowActions: AppGridRowAction<AdminOrderRow>[] = [

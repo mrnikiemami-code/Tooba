@@ -25,6 +25,7 @@ test("order detail wires notes, history, and invoice/receipt actions", () => {
   assert.match(client, /receipt\.html/);
   assert.match(client, /adminHeaders/);
   assert.doesNotMatch(detail, /Bad Request|stack trace|errorCode/);
+  assert.doesNotMatch(detail, /ایجاد سند تسویه/);
 });
 
 test("maps note/invoice/receipt/history errors without raw codes", () => {

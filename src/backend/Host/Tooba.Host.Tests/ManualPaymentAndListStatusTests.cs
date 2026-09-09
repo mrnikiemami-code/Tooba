@@ -45,4 +45,31 @@ public sealed class ManualPaymentAndListStatusTests
             "Paid",
             AdminOrdersGridQueryEngine.ComposeOperationalStatus(orderStatuses, Array.Empty<ReturnRequestStatus>()));
     }
+
+    [Fact]
+    public void Composer_source_filters_overlay_return_statuses()
+    {
+        var root = FindRepoRoot();
+        var engine = File.ReadAllText(Path.Combine(
+            root, "src", "backend", "Host", "Tooba.Host", "Grid", "AdminOrdersGridQueryEngine.cs"));
+        Assert.Contains("ApplyStatusFilterAsync", engine, StringComparison.Ordinal);
+        Assert.Contains("ReturnRequested", engine, StringComparison.Ordinal);
+        Assert.Contains("RefundFailed", engine, StringComparison.Ordinal);
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "AGENTS.md")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("repo root not found");
+    }
 }
