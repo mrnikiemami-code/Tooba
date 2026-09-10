@@ -1,0 +1,68 @@
+{
+  "productCount": 0,
+  "sample": [],
+  "cartId": "01a08c16-cac8-7000-adf6-42ca2def668f",
+  "guestSecretPresent": true,
+  "addKg": 200,
+  "addArman": 200,
+  "itemCount": 2.25,
+  "lines": [
+    {
+      "seller": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "offer": "01a03826-9936-7000-b499-ff26a6123a8c",
+      "title": "گوشی هوشمند سری 1",
+      "qty": 1.25
+    },
+    {
+      "seller": "01a030d1-40cb-7000-8abe-6d31739956c5",
+      "offer": "01a030d1-40f1-7000-95f6-b8efc58e2619",
+      "title": "گوشی هوشمند سری 1",
+      "qty": 1
+    }
+  ],
+  "sellers": [
+    "01a03826-97c5-7000-ad15-c9d141b1f32e",
+    "01a030d1-40cb-7000-8abe-6d31739956c5"
+  ],
+  "sellerCount": 2,
+  "projectionStatus": 200,
+  "projection": {
+    "sellerCount": 2,
+    "maxSellerPreparationDays": 1,
+    "selectedMethodCode": "post:express",
+    "shippingAmount": 200000,
+    "minimumDeliveryDate": "2026-09-13",
+    "methodCodes": [
+      "post:express",
+      "post:standard",
+      "tipax:express",
+      "tipax:standard",
+      "snapp_courier",
+      "store_courier",
+      "in_person"
+    ],
+    "deliveryDates": [
+      "2026-09-13",
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17"
+    ],
+    "keys": [
+      "cartId",
+      "cartVersion",
+      "currency",
+      "itemCount",
+      "subtotalExclusiveOfTax",
+      "sellerCount",
+      "maxSellerPreparationDays",
+      "methods",
+      "selectedMethodCode",
+      "selectedShippingAmount",
+      "minimumDeliveryDate",
+      "deliveryDates",
+      "deliveryTimeWindows",
+      "provinces"
+    ]
+  }
+}

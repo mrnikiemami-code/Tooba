@@ -1,0 +1,157 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "fixture",
+      "ok": true,
+      "cartId": "01a08c19-1233-7000-bdba-ae0d7b02b96c",
+      "sellers": [
+        "01a03826-97c5-7000-ad15-c9d141b1f32e",
+        "01a030d1-40cb-7000-8abe-6d31739956c5"
+      ],
+      "lines": [
+        {
+          "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+          "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+          "title": "گوشی هوشمند سری 1",
+          "quantity": 1.25
+        },
+        {
+          "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+          "offerId": "01a030d1-40f1-7000-95f6-b8efc58e2619",
+          "title": "گوشی هوشمند سری 1",
+          "quantity": 1
+        }
+      ],
+      "itemCount": 2.25
+    },
+    {
+      "name": "projection",
+      "ok": true,
+      "status": 200,
+      "sellerCount": 2,
+      "maxPrep": 3,
+      "minDate": "2026-09-15",
+      "selectedAmount": 200000,
+      "methodCount": 7,
+      "methodCodes": [
+        "post:express",
+        "post:standard",
+        "tipax:express",
+        "tipax:standard",
+        "snapp_courier",
+        "store_courier",
+        "in_person"
+      ],
+      "firstDates": [
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18"
+      ]
+    },
+    {
+      "name": "fe-shipping",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "delivery-minimum",
+      "ok": true,
+      "earlyStatus": 400,
+      "earlyCode": "shipping.delivery.too_early",
+      "exactStatus": 200,
+      "laterStatus": 200,
+      "minDate": "2026-09-15",
+      "earlyDate": "2026-09-14",
+      "laterDate": "2026-09-17",
+      "formula": "today + max(1,3) + lead(2)",
+      "draftMin": "2026-09-15",
+      "draftSelected": "2026-09-17",
+      "draftAmount": 200000
+    },
+    {
+      "name": "shipping-price",
+      "ok": true,
+      "expressAmount": 200000,
+      "standardAmount": 120000,
+      "expressLead": 2,
+      "standardLead": 4,
+      "currency": "IRR"
+    },
+    {
+      "name": "constraint-failure",
+      "ok": true,
+      "tipaxId": "3dc3d04d-0d74-4475-96fd-85a168fd01da",
+      "deactivateStatus": 200,
+      "disabledCodes": [
+        "post:express",
+        "post:standard",
+        "snapp_courier",
+        "store_courier",
+        "in_person"
+      ],
+      "rejectStatus": 400,
+      "rejectCode": "shipping.method.unavailable",
+      "restoreStatus": 200,
+      "restoredHasTipax": true,
+      "semantics": "Store-level tipax deactivate removes method for whole multi-seller checkout; restored after"
+    },
+    {
+      "name": "handoff",
+      "ok": true,
+      "saveStatus": 200,
+      "draftMethod": "post:express",
+      "draftDate": "2026-09-15",
+      "draftNote": "r1-handoff",
+      "commitStatus": 200,
+      "checkoutId": "01a08c19-2975-7000-8a86-4ca0a327dcab",
+      "shippingAmount": 200000,
+      "methodLabel": "پست — پیشتاز",
+      "sellerCount": 2,
+      "maxPrep": 3,
+      "fePaymentStatus": 200,
+      "handoffCartId": "01a08c19-2599-7000-b43d-907a228e9a2a"
+    }
+  ],
+  "fixture": {
+    "cartId": "01a08c19-1233-7000-bdba-ae0d7b02b96c",
+    "sellers": [
+      "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "01a030d1-40cb-7000-8abe-6d31739956c5"
+    ],
+    "lines": [
+      {
+        "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+        "offerId": "01a03826-9936-7000-b499-ff26a6123a8c",
+        "title": "گوشی هوشمند سری 1",
+        "quantity": 1.25
+      },
+      {
+        "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+        "offerId": "01a030d1-40f1-7000-95f6-b8efc58e2619",
+        "title": "گوشی هوشمند سری 1",
+        "quantity": 1
+      }
+    ],
+    "kgSeller": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+    "armanSeller": "01a030d1-40cb-7000-8abe-6d31739956c5",
+    "kgPrepDays": 1,
+    "armanPrepDays": 3,
+    "expectedMaxPrep": 3,
+    "method": "post:express",
+    "methodLeadDays": 2
+  },
+  "summary": {
+    "ok": true,
+    "fixtureCartId": "01a08c19-1233-7000-bdba-ae0d7b02b96c",
+    "handoffCartId": "01a08c19-2599-7000-b43d-907a228e9a2a",
+    "checkoutId": "01a08c19-2975-7000-8a86-4ca0a327dcab",
+    "sellers": [
+      "01a03826-97c5-7000-ad15-c9d141b1f32e",
+      "01a030d1-40cb-7000-8abe-6d31739956c5"
+    ],
+    "maxPrep": 3,
+    "minDate": "2026-09-15"
+  }
+}

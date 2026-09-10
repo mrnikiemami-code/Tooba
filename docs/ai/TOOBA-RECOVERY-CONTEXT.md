@@ -50,13 +50,13 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T002
+TB-P10-T002-R1
 ```
 
 Current Issued Task:
 
 ```text
-TB-P10-T002
+(none)
 ```
 
 Current Repair Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T002 — Storefront Shipping (addresses, Store-enabled methods, delivery minimum, /payment handoff); USER_VISUAL_ACCEPTED=NO
+TB-P10-T002-R1 — Storefront Shipping multi-seller runtime gate (Scenario E real 2+ sellers); USER_VISUAL_ACCEPTED=NO
+TB-P10-T002 — Storefront Shipping (addresses, Store-enabled methods, delivery minimum, /payment handoff); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P10-T001 — Storefront Cart foundation (real ATC, mini-cart, /cart recommendations); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R4 — Paid-order reservation REAL runtime proof (TTL/expiry/dispatch/cancel-restore/decimal); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R3 — Paid-order reservation commit clears cart TTL (ExpiresAt=null); USER_VISUAL_ACCEPTED=NO

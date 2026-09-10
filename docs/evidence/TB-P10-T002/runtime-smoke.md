@@ -8,7 +8,7 @@ Ports: Host :5088, FE :3000
 | B new address + persist | PASS — draft persists note/date/method |
 | C store config tipax off | PASS — tipax omitted from projection |
 | D delivery minimum | PASS — early 400 too_early; min accepted |
-| E multi-seller formula | PASS — maxPrep applied (unit + runtime prep) |
+| E multi-seller formula | PASS — real 2 sellers; maxPrep=3; see R1 evidence |
 | F handoff /payment | PASS — checkoutId + shippingAmount on commit; /fa/payment 200 |
 
 Raw: runtime-smoke-raw.json
