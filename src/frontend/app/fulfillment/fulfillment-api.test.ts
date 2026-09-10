@@ -89,6 +89,35 @@ test("mapFulfillmentList derives grid rows with tracking references", () => {
   assert.deepEqual(rows[0]?.trackingReferences, ["A"]);
 });
 
+test("mapFulfillmentSnapshot keeps preferredTrackingReference for customer primary tracking", () => {
+  const snapshot = mapFulfillmentSnapshot({
+    fulfillmentId: "f1",
+    sellerOrderId: "so1",
+    checkoutId: "c1",
+    sellerPartyId: "s1",
+    status: "Dispatched",
+    recipientName: "علی",
+    contactMobile: "09120000000",
+    provinceName: "تهران",
+    cityName: "تهران",
+    postalAddress: "خیابان ۱",
+    postalCode: "1234567890",
+    shippingMethodCode: "post",
+    shippingMethodLabel: "پست",
+    preferredTrackingReference: "CENTRAL-MP",
+    items: [],
+    shipments: [{
+      shipmentId: "sh1",
+      status: "Dispatched",
+      carrierDisplayName: "پست",
+      trackingReference: "MEMBER-1",
+      items: [],
+    }],
+  });
+  assert.equal(snapshot?.preferredTrackingReference, "CENTRAL-MP");
+  assert.equal(snapshot?.shipments[0]?.trackingReference, "MEMBER-1");
+});
+
 test("formatters localize known fulfillment and shipment statuses", () => {
   assert.equal(formatFulfillmentStatus("ReadyToFulfill"), "آماده پردازش");
   assert.equal(formatFulfillmentStatus("PartialDispatched"), "ارسال جزئی");

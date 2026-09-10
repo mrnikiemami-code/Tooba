@@ -55,6 +55,7 @@ export interface FulfillmentSnapshot {
   shippingMethodLabel: string;
   items: FulfillmentItem[];
   shipments: FulfillmentShipment[];
+  preferredTrackingReference?: string | null;
 }
 
 export interface FulfillmentListRow {
@@ -260,6 +261,7 @@ export function mapFulfillmentSnapshot(value: unknown): FulfillmentSnapshot | nu
     shipments: Array.isArray(shipmentsRaw)
       ? shipmentsRaw.map(mapShipment).filter((row): row is FulfillmentShipment => row !== null)
       : [],
+    preferredTrackingReference: nullableText(prop(item, "preferredTrackingReference", "PreferredTrackingReference")),
   };
 }
 
@@ -403,17 +405,55 @@ export function fulfillmentStatusBadgeClass(status: string): string {
 }
 
 /** fulfillmentهای checkout مشتری را از BFF می‌خواند. */
-export async function loadCustomerFulfillments(checkoutId: string): Promise<FulfillmentSnapshot[] | null> {
+export async function loadCustomerFulfillments(checkoutId: string): Promise<{
+  snapshots: FulfillmentSnapshot[];
+  preferredTrackingReference: string | null;
+  preferredTrackingPackageNumber: string | null;
+} | null> {
   try {
     const response = await fetch(`/api/customer/orders/${encodeURIComponent(checkoutId)}/fulfillments`, {
       credentials: "include",
       headers: customerAuthHeaders(),
     });
-    if (response.status === 404) return [];
+    if (response.status === 404) {
+      return { snapshots: [], preferredTrackingReference: null, preferredTrackingPackageNumber: null };
+    }
     if (!response.ok) return null;
     const payload = await response.json();
-    if (!Array.isArray(payload)) return null;
-    return payload.map(mapFulfillmentSnapshot).filter((row): row is FulfillmentSnapshot => row !== null);
+    if (Array.isArray(payload)) {
+      return {
+        snapshots: payload.map(mapFulfillmentSnapshot).filter((row): row is FulfillmentSnapshot => row !== null),
+        preferredTrackingReference: null,
+        preferredTrackingPackageNumber: null,
+      };
+    }
+    if (!payload || typeof payload !== "object") return null;
+    const row = payload as Record<string, unknown>;
+    const list = Array.isArray(row.fulfillments)
+      ? row.fulfillments
+      : Array.isArray(row.Fulfillments)
+        ? row.Fulfillments
+        : null;
+    if (!list) return null;
+    const preferred =
+      (typeof row.preferredCustomerTrackingReference === "string" && row.preferredCustomerTrackingReference)
+      || (typeof row.PreferredCustomerTrackingReference === "string" && row.PreferredCustomerTrackingReference)
+      || null;
+    const packageNumber =
+      (typeof row.preferredCustomerTrackingPackageNumber === "string" && row.preferredCustomerTrackingPackageNumber)
+      || (typeof row.PreferredCustomerTrackingPackageNumber === "string" && row.PreferredCustomerTrackingPackageNumber)
+      || null;
+    return {
+      snapshots: list
+        .map(mapFulfillmentSnapshot)
+        .filter((row): row is FulfillmentSnapshot => row !== null)
+        .map((snapshot) => ({
+          ...snapshot,
+          preferredTrackingReference: preferred ?? snapshot.preferredTrackingReference ?? null,
+        })),
+      preferredTrackingReference: preferred,
+      preferredTrackingPackageNumber: packageNumber,
+    };
   } catch {
     return null;
   }

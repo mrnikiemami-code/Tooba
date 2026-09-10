@@ -326,6 +326,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
         unit.CancelShipment(shipmentId, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
@@ -368,6 +369,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
         unit.CorrectTracking(shipmentId, trackingReference, DateTimeOffset.UtcNow);
         try
@@ -390,15 +392,8 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
-        _ = actorUserId;
-        await _guard.EnsureCanMutateAsync(cancellationToken);
-        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        var shipment = unit.Shipments.Single(x => x.ShipmentId == shipmentId);
-        unit.ApplyShipmentDispatched(shipmentId, DateTimeOffset.UtcNow);
-        await ConsumeInventoryForShipmentAsync(unit, shipment, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
-        _telemetry.RecordDispatched();
-        return await MapSnapshotAsync(unit, cancellationToken);
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
+        return await DispatchShipmentCoreAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -408,9 +403,47 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         Guid actorUserId,
         CancellationToken cancellationToken)
     {
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
+        return await DeliverShipmentCoreAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+    }
+
+    private async Task<FulfillmentSnapshot> DispatchShipmentCoreAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        var shipment = unit.Shipments.Single(x => x.ShipmentId == shipmentId);
+        if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered)
+        {
+            return await MapSnapshotAsync(unit, cancellationToken);
+        }
+
+        unit.ApplyShipmentDispatched(shipmentId, DateTimeOffset.UtcNow);
+        await ConsumeInventoryForShipmentAsync(unit, shipment, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordDispatched();
+        return await MapSnapshotAsync(unit, cancellationToken);
+    }
+
+    private async Task<FulfillmentSnapshot> DeliverShipmentCoreAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
+        var shipment = unit.Shipments.Single(x => x.ShipmentId == shipmentId);
+        if (shipment.Status == ShipmentStatus.Delivered)
+        {
+            return await MapSnapshotAsync(unit, cancellationToken);
+        }
+
         unit.ApplyShipmentDelivered(shipmentId, DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordDelivered();
@@ -601,6 +634,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     public async Task AbortForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
+        await VoidActivePackagesForCheckoutCancelAsync(checkoutId, cancellationToken);
         var units = await _db.Fulfillments
             .Where(x => x.CheckoutId == checkoutId)
             .ToListAsync(cancellationToken);
@@ -663,5 +697,378 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var packages = await _db.ConsolidatedPackages.AsNoTracking()
+            .Where(x => x.CheckoutId == checkoutId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var results = new List<ConsolidatedPackageSnapshot>(packages.Count);
+        foreach (var package in packages)
+        {
+            results.Add(await MapPackageSnapshotAsync(package, cancellationToken));
+        }
+
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(
+        IReadOnlyList<Guid> shipmentIds,
+        CancellationToken cancellationToken)
+    {
+        if (shipmentIds is null || shipmentIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = shipmentIds.Distinct().ToArray();
+        var members = await _db.ConsolidatedPackageMembers.AsNoTracking()
+            .Where(x => ids.Contains(x.ShipmentId) && x.ReleasedAt == null)
+            .ToListAsync(cancellationToken);
+        if (members.Count == 0)
+        {
+            return [];
+        }
+
+        var packageIds = members.Select(x => x.ConsolidatedPackageId).Distinct().ToArray();
+        var packages = await _db.ConsolidatedPackages.AsNoTracking()
+            .Where(x => packageIds.Contains(x.ConsolidatedPackageId)
+                && x.Status != ConsolidatedPackageStatus.Cancelled)
+            .ToListAsync(cancellationToken);
+        var byId = packages.ToDictionary(x => x.ConsolidatedPackageId);
+        return members
+            .Where(m => byId.ContainsKey(m.ConsolidatedPackageId))
+            .Select(m =>
+            {
+                var package = byId[m.ConsolidatedPackageId];
+                return new ActivePackageMembershipSnapshot(
+                    m.ShipmentId,
+                    package.ConsolidatedPackageId,
+                    package.PackageNumber,
+                    package.Status);
+            })
+            .ToArray();
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsShipmentLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken)
+    {
+        var memberships = await GetActiveMembershipByShipmentIdsAsync([shipmentId], cancellationToken);
+        return memberships.Any(x =>
+            x.PackageStatus is ConsolidatedPackageStatus.Created or ConsolidatedPackageStatus.Dispatched);
+    }
+
+    /// <inheritdoc />
+    public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> shipmentIds,
+        string shippingMethodCode,
+        string? trackingReference,
+        string? note,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (shipmentIds is null || shipmentIds.Count == 0)
+        {
+            throw new InvalidOperationException("fulfillment.package.requires_multi_seller");
+        }
+
+        var distinctIds = shipmentIds.Distinct().ToArray();
+        if (distinctIds.Length != shipmentIds.Count)
+        {
+            throw new InvalidOperationException("fulfillment.package.duplicate_shipment");
+        }
+
+        var definition = ShippingMethodRegistry.Find(shippingMethodCode)
+            ?? throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+        var methodLabel = ShippingMethodRegistry.ResolveLabel(definition.Code, null);
+
+        var units = await _db.Fulfillments
+            .Where(x => x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            throw new InvalidOperationException("fulfillment.package.checkout_required");
+        }
+
+        var unitById = units.ToDictionary(x => x.FulfillmentId);
+        var fulfillmentIds = units.Select(x => x.FulfillmentId).ToArray();
+        var shipments = await _db.Shipments
+            .Where(x => fulfillmentIds.Contains(x.FulfillmentId) && distinctIds.Contains(x.ShipmentId))
+            .ToListAsync(cancellationToken);
+        if (shipments.Count != distinctIds.Length)
+        {
+            throw new InvalidOperationException("fulfillment.package.mixed_checkout");
+        }
+
+        var existingLocks = await GetActiveMembershipByShipmentIdsAsync(distinctIds, cancellationToken);
+        if (existingLocks.Count > 0)
+        {
+            throw new InvalidOperationException("fulfillment.package.shipment_already_member");
+        }
+
+        var memberSpecs = new List<(Guid ShipmentId, Guid SellerPartyId, Guid FulfillmentId)>(shipments.Count);
+        foreach (var shipment in shipments)
+        {
+            if (shipment.Status != ShipmentStatus.Created)
+            {
+                throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
+            }
+
+            if (!unitById.TryGetValue(shipment.FulfillmentId, out var unit)
+                || unit.CheckoutId != checkoutId
+                || unit.Status == FulfillmentStatus.Cancelled)
+            {
+                throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
+            }
+
+            memberSpecs.Add((shipment.ShipmentId, unit.SellerPartyId, unit.FulfillmentId));
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var package = ConsolidatedPackage.Create(
+            checkoutId,
+            memberSpecs,
+            definition.Code,
+            methodLabel,
+            trackingReference,
+            note,
+            actorUserId == Guid.Empty ? null : actorUserId,
+            now);
+
+        _db.ConsolidatedPackages.Add(package);
+        _db.ConsolidatedPackageMembers.AddRange(package.Members);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("fulfillment.package.shipment_already_member");
+        }
+
+        _telemetry.RecordTransition("consolidated_package_created");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        package.Cancel(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_cancelled");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        if (package.Status is ConsolidatedPackageStatus.Dispatched or ConsolidatedPackageStatus.Delivered)
+        {
+            return await MapPackageSnapshotAsync(package, cancellationToken);
+        }
+
+        if (package.Status != ConsolidatedPackageStatus.Created)
+        {
+            throw new InvalidOperationException("fulfillment.package.dispatch_invalid_state");
+        }
+
+        var activeMembers = package.Members.Where(x => x.IsActiveMembership).ToArray();
+        if (activeMembers.Length == 0)
+        {
+            throw new InvalidOperationException("fulfillment.package.member_state_changed");
+        }
+
+        foreach (var member in activeMembers)
+        {
+            var unit = await LoadMutableAsync(member.FulfillmentId, cancellationToken);
+            var shipment = unit.Shipments.SingleOrDefault(x => x.ShipmentId == member.ShipmentId)
+                ?? throw new InvalidOperationException("fulfillment.package.member_state_changed");
+            if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit or ShipmentStatus.Delivered)
+            {
+                continue;
+            }
+
+            if (shipment.Status != ShipmentStatus.Created)
+            {
+                throw new InvalidOperationException("fulfillment.package.member_state_changed");
+            }
+
+            if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
+                && !string.IsNullOrWhiteSpace(package.TrackingReference))
+            {
+                await AssignTrackingAsync(
+                    member.FulfillmentId,
+                    member.ShipmentId,
+                    actorUserId,
+                    package.TrackingReference!,
+                    cancellationToken);
+            }
+
+            await DispatchShipmentCoreAsync(
+                member.FulfillmentId,
+                member.ShipmentId,
+                actorUserId,
+                cancellationToken);
+        }
+
+        var statuses = await LoadMemberShipmentStatusesAsync(
+            activeMembers.Select(x => x.ShipmentId).ToArray(),
+            cancellationToken);
+        package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        package.MarkDispatched(DateTimeOffset.UtcNow, statuses);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_dispatched");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        if (package.Status == ConsolidatedPackageStatus.Delivered)
+        {
+            return await MapPackageSnapshotAsync(package, cancellationToken);
+        }
+
+        if (package.Status != ConsolidatedPackageStatus.Dispatched)
+        {
+            throw new InvalidOperationException("fulfillment.package.deliver_before_dispatch");
+        }
+
+        var activeMembers = package.Members.Where(x => x.IsActiveMembership).ToArray();
+        foreach (var member in activeMembers)
+        {
+            await DeliverShipmentCoreAsync(
+                member.FulfillmentId,
+                member.ShipmentId,
+                actorUserId,
+                cancellationToken);
+        }
+
+        var statuses = await LoadMemberShipmentStatusesAsync(
+            activeMembers.Select(x => x.ShipmentId).ToArray(),
+            cancellationToken);
+        package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        package.MarkDelivered(DateTimeOffset.UtcNow, statuses);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_delivered");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task VoidActivePackagesForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var packages = await _db.ConsolidatedPackages
+            .Where(x => x.CheckoutId == checkoutId && x.Status == ConsolidatedPackageStatus.Created)
+            .ToListAsync(cancellationToken);
+        if (packages.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var header in packages)
+        {
+            var package = await LoadMutablePackageAsync(header.ConsolidatedPackageId, cancellationToken);
+            package.Cancel(now);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_voided_for_order_cancel");
+    }
+
+    private async Task EnsureShipmentNotLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken)
+    {
+        if (await IsShipmentLockedByPackageAsync(shipmentId, cancellationToken))
+        {
+            throw new InvalidOperationException("fulfillment.shipment.locked_by_consolidated_package");
+        }
+    }
+
+    private async Task<ConsolidatedPackage> LoadMutablePackageAsync(
+        Guid consolidatedPackageId,
+        CancellationToken cancellationToken)
+    {
+        var package = await _db.ConsolidatedPackages
+            .SingleOrDefaultAsync(x => x.ConsolidatedPackageId == consolidatedPackageId, cancellationToken)
+            ?? throw new InvalidOperationException("fulfillment.package.not_found");
+        var members = await _db.ConsolidatedPackageMembers
+            .Where(x => x.ConsolidatedPackageId == consolidatedPackageId)
+            .ToListAsync(cancellationToken);
+        package.AttachLoadedMembers(members);
+        return package;
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, ShipmentStatus>> LoadMemberShipmentStatusesAsync(
+        IReadOnlyList<Guid> shipmentIds,
+        CancellationToken cancellationToken)
+    {
+        if (shipmentIds.Count == 0)
+        {
+            return new Dictionary<Guid, ShipmentStatus>();
+        }
+
+        var rows = await _db.Shipments.AsNoTracking()
+            .Where(x => shipmentIds.Contains(x.ShipmentId))
+            .Select(x => new { x.ShipmentId, x.Status })
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(x => x.ShipmentId, x => x.Status);
+    }
+
+    private async Task<ConsolidatedPackageSnapshot> MapPackageSnapshotAsync(
+        ConsolidatedPackage package,
+        CancellationToken cancellationToken)
+    {
+        var members = package.Members.Count > 0
+            ? package.Members
+            : await _db.ConsolidatedPackageMembers.AsNoTracking()
+                .Where(x => x.ConsolidatedPackageId == package.ConsolidatedPackageId)
+                .ToListAsync(cancellationToken);
+        return new ConsolidatedPackageSnapshot(
+            package.ConsolidatedPackageId,
+            package.PackageNumber,
+            package.CheckoutId,
+            package.Status,
+            package.ShippingMethodCode,
+            package.ShippingMethodLabel,
+            package.TrackingReference,
+            package.Note,
+            package.CreatedBy,
+            package.CreatedAt,
+            package.UpdatedAt,
+            package.DispatchedAt,
+            package.DeliveredAt,
+            package.CancelledAt,
+            members.Select(x => new ConsolidatedPackageMemberSnapshot(
+                x.ConsolidatedPackageMemberId,
+                x.ShipmentId,
+                x.SellerPartyId,
+                x.FulfillmentId,
+                x.JoinedAt,
+                x.ReleasedAt)).ToArray());
     }
 }

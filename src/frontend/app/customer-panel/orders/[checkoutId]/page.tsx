@@ -26,7 +26,13 @@ export default function CustomerOrderDetail() {
 
   useEffect(() => {
     void loadCustomerOrderDetail(params.checkoutId).then(setPage);
-    void loadCustomerFulfillments(params.checkoutId).then(setFulfillments);
+    void loadCustomerFulfillments(params.checkoutId).then((result) => {
+      if (result == null) {
+        setFulfillments(null);
+        return;
+      }
+      setFulfillments(result.snapshots);
+    });
   }, [params.checkoutId]);
 
   const fulfillmentBySeller = useMemo(() => {

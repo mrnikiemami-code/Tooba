@@ -15,6 +15,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.PlatformProbe.Infrastructure.Persistence;
 using Tooba.Pricing.Application;
 using Tooba.Pricing.Infrastructure.Persistence;
@@ -94,6 +95,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<CartDbContext>());
         await MigrateAsync(provider.GetRequiredService<OrderDbContext>());
         await MigrateAsync(provider.GetRequiredService<PaymentDbContext>());
+        await MigrateAsync(provider.GetRequiredService<FulfillmentDbContext>());
         await MigrateAsync(provider.GetRequiredService<PromotionDbContext>());
         await MigrateAsync(provider.GetRequiredService<PlatformProbeDbContext>());
         await MigrateAsync(provider.GetRequiredService<ReviewsDbContext>());

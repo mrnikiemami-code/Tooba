@@ -5,6 +5,7 @@ import { MoreHorizontal, Package, Truck } from "lucide-react";
 import { toast } from "react-toastify";
 import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminOrderLine, type AdminSellerOrder } from "./admin-api";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
+import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import {
   canonicalReturnDisplay,
@@ -282,6 +283,14 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       </div>
 
       <div className="space-y-4 p-3 md:p-4">
+        <AdminConsolidatedPackageSection
+          detail={detail}
+          checkoutId={checkoutId}
+          checkoutActions={opsBySeller.__checkout__ ?? []}
+          pendingCode={pendingCode}
+          setPendingCode={setPendingCode}
+          onCompleted={onCompleted}
+        />
         {detail.sellerOrders.map((seller) => {
           const selected = selectedBySeller[seller.id] ?? [];
           const hasSelection = selected.length > 0;
@@ -655,6 +664,15 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                             ) : (
                               <p className="mt-2 text-[11px] text-gray-400">کد رهگیری ثبت نشده</p>
                             )}
+                            {shipment.packageLockedReasonFa || shipment.activePackageNumber ? (
+                              <p
+                                className="mt-2 rounded border border-indigo-100 bg-indigo-50/70 px-2 py-1.5 text-[11px] font-semibold text-indigo-900"
+                                data-testid={`admin-order-shipment-package-lock-${shipment.shipmentId}`}
+                              >
+                                {shipment.packageLockedReasonFa
+                                  || `این مرسوله عضو بسته تجمیعی ${shipment.activePackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.`}
+                              </p>
+                            ) : null}
                             <div className="mt-2 flex flex-wrap gap-1">
                               {canTrack ? (
                                 <button

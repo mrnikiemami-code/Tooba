@@ -39,7 +39,8 @@ public sealed record FulfillmentSnapshot(
     IReadOnlyList<FulfillmentItemSnapshot> Items,
     IReadOnlyList<ShipmentSnapshot> Shipments,
     DateTimeOffset CreatedAt = default,
-    DateTimeOffset UpdatedAt = default);
+    DateTimeOffset UpdatedAt = default,
+    string? PreferredTrackingReference = null);
 
 /// <summary>
 /// snapshot خط fulfillment.
@@ -80,6 +81,46 @@ public sealed record ShipmentSnapshot(
 /// snapshot خط محموله.
 /// </summary>
 public sealed record ShipmentLineSnapshot(Guid OrderLineId, decimal Quantity);
+
+/// <summary>
+/// عضو بسته تجمیعی در snapshot.
+/// </summary>
+public sealed record ConsolidatedPackageMemberSnapshot(
+    Guid ConsolidatedPackageMemberId,
+    Guid ShipmentId,
+    Guid SellerPartyId,
+    Guid FulfillmentId,
+    DateTimeOffset JoinedAt,
+    DateTimeOffset? ReleasedAt);
+
+/// <summary>
+/// snapshot بسته تجمیعی.
+/// </summary>
+public sealed record ConsolidatedPackageSnapshot(
+    Guid ConsolidatedPackageId,
+    string PackageNumber,
+    Guid CheckoutId,
+    ConsolidatedPackageStatus Status,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    string? TrackingReference,
+    string? Note,
+    Guid? CreatedBy,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? DispatchedAt,
+    DateTimeOffset? DeliveredAt,
+    DateTimeOffset? CancelledAt,
+    IReadOnlyList<ConsolidatedPackageMemberSnapshot> Members);
+
+/// <summary>
+/// عضویت فعال مرسوله در بسته تجمیعی.
+/// </summary>
+public sealed record ActivePackageMembershipSnapshot(
+    Guid ShipmentId,
+    Guid ConsolidatedPackageId,
+    string PackageNumber,
+    ConsolidatedPackageStatus PackageStatus);
 
 /// <summary>
 /// ارکستراسیون fulfillment.
@@ -205,6 +246,58 @@ public interface IFulfillmentDirectory
     /// از Order handoff فعلی بازمی‌بندد؛ مرسوله‌های باطل‌شده را زنده نمی‌کند.
     /// </summary>
     Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>بسته‌های تجمیعی یک checkout (شامل تاریخی).</summary>
+    Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken);
+
+    /// <summary>عضویت فعال مرسوله‌ها در بستهٔ غیر Cancelled.</summary>
+    Task<IReadOnlyList<ActivePackageMembershipSnapshot>> GetActiveMembershipByShipmentIdsAsync(
+        IReadOnlyList<Guid> shipmentIds,
+        CancellationToken cancellationToken);
+
+    /// <summary>آیا مرسوله توسط بستهٔ فعال (Created/Dispatched) قفل است.</summary>
+    Task<bool> IsShipmentLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken);
+
+    /// <summary>بسته تجمیعی چندفروشنده‌ای می‌سازد.</summary>
+    Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
+        Guid checkoutId,
+        IReadOnlyList<Guid> shipmentIds,
+        string shippingMethodCode,
+        string? trackingReference,
+        string? note,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>ابطال بسته پیش از ارسال مرکزی و آزادسازی قفل اعضا.</summary>
+    Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ارسال مرکزی: برای هر عضو <see cref="DispatchShipmentAsync"/> را صدا می‌زند؛
+    /// بسته فقط وقتی همه اعضا ارسال شدند Dispatched می‌شود.
+    /// </summary>
+    Task<ConsolidatedPackageSnapshot> DispatchConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// تحویل مرکزی: برای هر عضو <see cref="DeliverShipmentAsync"/> را صدا می‌زند؛
+    /// بسته فقط وقتی همه اعضا تحویل شدند Delivered می‌شود.
+    /// </summary>
+    Task<ConsolidatedPackageSnapshot> DeliverConsolidatedPackageAsync(
+        Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// بسته‌های Created فعال checkout را باطل می‌کند (مسیر لغو سفارش).
+    /// </summary>
+    Task VoidActivePackagesForCheckoutCancelAsync(Guid checkoutId, CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -398,6 +398,58 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
     en: "This order's inventory reservation is no longer active. Refresh the order or review reservation status.",
   },
+  "fulfillment.shipment.locked_by_consolidated_package": {
+    fa: "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",
+    en: "This shipment belongs to a consolidated package; shipping actions must go through that package.",
+  },
+  "fulfillment.package.requires_multi_seller": {
+    fa: "بسته تجمیعی حداقل به دو فروشندهٔ متمایز نیاز دارد.",
+    en: "A consolidated package requires at least two distinct sellers.",
+  },
+  "fulfillment.package.shipment_not_eligible": {
+    fa: "این مرسوله برای بسته تجمیعی واجد شرایط نیست.",
+    en: "This shipment is not eligible for a consolidated package.",
+  },
+  "fulfillment.package.shipment_already_member": {
+    fa: "این مرسوله هم‌اکنون عضو یک بسته تجمیعی فعال است.",
+    en: "This shipment already belongs to an active consolidated package.",
+  },
+  "fulfillment.package.mixed_checkout": {
+    fa: "فقط مرسوله‌های همین سفارش را می‌توان در یک بسته تجمیعی قرار داد.",
+    en: "Only shipments from the same order can join one consolidated package.",
+  },
+  "fulfillment.package.duplicate_shipment": {
+    fa: "مرسوله تکراری در بسته تجمیعی مجاز نیست.",
+    en: "Duplicate shipments are not allowed in a consolidated package.",
+  },
+  "fulfillment.package.cancel_after_dispatch": {
+    fa: "پس از ارسال بسته تجمیعی، ابطال مجاز نیست.",
+    en: "A consolidated package cannot be cancelled after dispatch.",
+  },
+  "fulfillment.package.dispatch_invalid_state": {
+    fa: "ارسال بسته تجمیعی در وضعیت فعلی مجاز نیست.",
+    en: "Dispatch is not allowed for this consolidated package state.",
+  },
+  "fulfillment.package.deliver_before_dispatch": {
+    fa: "قبل از ارسال نمی‌توان بسته تجمیعی را تحویل داد.",
+    en: "A consolidated package cannot be delivered before dispatch.",
+  },
+  "fulfillment.package.member_state_changed": {
+    fa: "وضعیت مرسوله‌های عضو تغییر کرده است؛ عملیات را تازه کنید.",
+    en: "Member shipment state changed; refresh and try again.",
+  },
+  "fulfillment.package.not_found": {
+    fa: "بسته تجمیعی پیدا نشد.",
+    en: "The consolidated package was not found.",
+  },
+  "fulfillment.package.shipping_method_required": {
+    fa: "روش ارسال مرکزی الزامی است.",
+    en: "A central shipping method is required.",
+  },
+  "fulfillment.package.checkout_required": {
+    fa: "شناسه سفارش برای بسته تجمیعی الزامی است.",
+    en: "A checkout id is required for the consolidated package.",
+  },
   "return.expired": {
     fa: "مهلت مرجوعی تمام شده است.",
     en: "The return window has expired.",

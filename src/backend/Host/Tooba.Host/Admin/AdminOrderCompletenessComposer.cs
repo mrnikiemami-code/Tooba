@@ -512,6 +512,91 @@ public sealed class AdminOrderCompletenessComposer
             }
         }
 
+        var packages = await _fulfillment.GetPackagesForCheckoutAsync(group.CheckoutId, cancellationToken);
+        foreach (var package in packages)
+        {
+            entries.Add(Draft(
+                package.CreatedAt,
+                "consolidated_package_created",
+                "بسته تجمیعی ایجاد شد",
+                "Consolidated package created",
+                package.CreatedBy,
+                $"{package.PackageNumber} — {ToFaDigits(package.Members.Count)} مرسوله",
+                $"{package.PackageNumber} — {package.Members.Count} shipments"));
+            foreach (var member in package.Members)
+            {
+                var sellerLabel = SellerName(member.SellerPartyId);
+                entries.Add(Draft(
+                    member.JoinedAt == default ? package.CreatedAt : member.JoinedAt,
+                    "consolidated_package_member_added",
+                    $"مرسوله فروشنده {sellerLabel} به بسته تجمیعی اضافه شد",
+                    $"Seller shipment added to consolidated package",
+                    package.CreatedBy,
+                    package.PackageNumber,
+                    package.PackageNumber));
+            }
+
+            if (package.CancelledAt is { } cancelledAt)
+            {
+                entries.Add(Draft(
+                    cancelledAt,
+                    "consolidated_package_cancelled",
+                    "بسته تجمیعی باطل شد",
+                    "Consolidated package cancelled",
+                    null,
+                    package.PackageNumber,
+                    package.PackageNumber));
+                entries.Add(Draft(
+                    cancelledAt,
+                    "consolidated_package_members_released",
+                    "عضویت مرسوله‌ها آزاد شد",
+                    "Consolidated package memberships released",
+                    null,
+                    package.PackageNumber,
+                    package.PackageNumber));
+            }
+
+            if (package.DispatchedAt is { } packageDispatched)
+            {
+                entries.Add(Draft(
+                    packageDispatched,
+                    "consolidated_package_dispatched",
+                    "بسته تجمیعی ارسال شد",
+                    "Consolidated package dispatched",
+                    null,
+                    package.PackageNumber,
+                    package.PackageNumber));
+                entries.Add(Draft(
+                    packageDispatched,
+                    "consolidated_package_members_dispatched",
+                    "مرسوله‌های عضو ارسال شدند",
+                    "Member shipments dispatched",
+                    null,
+                    $"{package.PackageNumber} — {ToFaDigits(package.Members.Count)} مرسوله",
+                    $"{package.PackageNumber} — {package.Members.Count} shipments"));
+            }
+
+            if (package.DeliveredAt is { } packageDelivered)
+            {
+                entries.Add(Draft(
+                    packageDelivered,
+                    "consolidated_package_delivered",
+                    "بسته تجمیعی تحویل شد",
+                    "Consolidated package delivered",
+                    null,
+                    package.PackageNumber,
+                    package.PackageNumber));
+                entries.Add(Draft(
+                    packageDelivered,
+                    "consolidated_package_members_delivered",
+                    "مرسوله‌های عضو تحویل شدند",
+                    "Member shipments delivered",
+                    null,
+                    $"{package.PackageNumber} — {ToFaDigits(package.Members.Count)} مرسوله",
+                    $"{package.PackageNumber} — {package.Members.Count} shipments"));
+            }
+        }
+
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var orderByReturnSeller = group.SellerOrders.ToDictionary(x => x.SellerOrderId);
         var returns = await _returns.ReturnRequests.AsNoTracking()

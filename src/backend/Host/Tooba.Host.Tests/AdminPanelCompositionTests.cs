@@ -26,6 +26,7 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("FinancialEvents", detail);
         Assert.Contains("FinancialSummary", detail);
         Assert.Contains("PostalAddress", detail);
+        Assert.Contains("ConsolidatedPackages", detail);
         Assert.DoesNotContain("ProductPrice", detail);
 
         var seller = typeof(AdminSellerOrderView).GetProperties().Select(x => x.Name).ToHashSet(StringComparer.Ordinal);
@@ -39,6 +40,8 @@ public sealed class AdminPanelCompositionTests
         Assert.Contains("ShipmentId", shipment);
         Assert.Contains("CarrierDisplayName", shipment);
         Assert.Contains("TrackingReference", shipment);
+        Assert.Contains("ActivePackageNumber", shipment);
+        Assert.Contains("PackageLockedReasonFa", shipment);
     }
 
     [Fact]

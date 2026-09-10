@@ -69,7 +69,40 @@ public sealed record AdminShipmentView(
     decimal ItemCount,
     IReadOnlyList<AdminShipmentLineView> Lines,
     string? ShippingMethodCode = null,
-    string? ShippingMethodLabel = null);
+    string? ShippingMethodLabel = null,
+    Guid? ActivePackageId = null,
+    string? ActivePackageNumber = null,
+    string? PackageLockedReasonFa = null,
+    bool CanAddToConsolidatedPackage = false);
+
+/// <summary>
+/// عضو بسته تجمیعی روی جزئیات سفارش مدیر.
+/// </summary>
+public sealed record AdminConsolidatedPackageMemberView(
+    Guid ShipmentId,
+    Guid SellerPartyId,
+    Guid FulfillmentId,
+    DateTimeOffset JoinedAt,
+    DateTimeOffset? ReleasedAt);
+
+/// <summary>
+/// کارت بسته تجمیعی مرکزی روی جزئیات سفارش مدیر.
+/// </summary>
+public sealed record AdminConsolidatedPackageView(
+    Guid ConsolidatedPackageId,
+    string PackageNumber,
+    string Status,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    string? TrackingReference,
+    string? Note,
+    int SellerCount,
+    int MemberShipmentCount,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? DispatchedAt,
+    DateTimeOffset? DeliveredAt,
+    DateTimeOffset? CancelledAt,
+    IReadOnlyList<AdminConsolidatedPackageMemberView> Members);
 
 /// <summary>
 /// برش سفارش یک فروشنده در جزئیات Checkout مدیر.
@@ -157,7 +190,8 @@ public sealed record AdminOrderDetailPage(
     IReadOnlyList<AdminSellerFinancialView> SellerFinancials,
     IReadOnlyList<AdminFinancialEventView> FinancialEvents,
     AdminFinancialSummaryView FinancialSummary,
-    AdminPaymentOpsView? Payment = null);
+    AdminPaymentOpsView? Payment = null,
+    IReadOnlyList<AdminConsolidatedPackageView>? ConsolidatedPackages = null);
 
 /// <summary>
 /// ردیف دریافت مشتری (پرداخت) برای گرید Admin.

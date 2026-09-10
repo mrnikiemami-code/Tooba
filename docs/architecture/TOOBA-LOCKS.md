@@ -94,6 +94,33 @@ Cancelled-order restore reacquires Inventory reservation on OrderLine. All activ
 ### LOCK-OPS-012 — No internal reservation enums in Admin UI
 Admin surfaces must not expose raw Inventory reservation enum names (Held/Released/Consumed) or unmapped domain exception text. Use stable machine codes with centralized localization.
 
+### LOCK-OPS-013 — Consolidated Package is orchestration over Seller Shipments
+ConsolidatedPackage is a central orchestration/container layer over existing Seller Shipments for multi-seller Orders. It must not replace Shipment, own inventory/payment/refund/return/settlement, or invent a parallel fulfillment lifecycle. Order → Seller Shipments → Consolidated Package.
+
+### LOCK-OPS-014 — Central package UI only for multi-seller Orders
+The بسته‌بندی مرکزی Admin section is visible only when the Order has at least two distinct Sellers. Single-seller Orders must not show the section, placeholders, or disabled create controls.
+
+### LOCK-OPS-015 — Package creation requires two distinct Sellers, same Order
+Creating a Consolidated Package requires selected member Shipments from at least two distinct Sellers on the same Checkout/Order. Cross-order consolidation is out of scope. Two shipments from one Seller alone are insufficient.
+
+### LOCK-OPS-016 — Only ready pre-dispatch Shipments may join
+Only Seller Shipments that are genuinely ready for central dispatch may join (backend-authoritative eligibility). At minimum: same Order, distinct Seller Shipment, pre-dispatch Created, not cancelled/voided/delivered, not already active in another package.
+
+### LOCK-OPS-017 — One active membership per Shipment
+A Shipment cannot belong to two active Consolidated Packages. Unique active membership is enforced in domain and persistence.
+
+### LOCK-OPS-018 — Pre-dispatch rebuild is cancel-then-create
+Before central dispatch, rebuild is Cancel old package (historical Cancelled, members released) then Create a new package combination. Do not silently mutate membership history after creation. After dispatch, membership is immutable; no add/remove/rebuild/simple rollback.
+
+### LOCK-OPS-019 — Active package locks conflicting direct member ops
+While a Shipment is an active member of a Created or Dispatched Consolidated Package, conflicting direct Shipment mutations (void/cancel, dispatch, deliver, conflicting tracking assign/correct) are rejected with `fulfillment.shipment.locked_by_consolidated_package`. Readonly view remains allowed. UI must explain membership with human package number (MP-…).
+
+### LOCK-OPS-020 — Central dispatch/deliver reuse Shipment lifecycle
+Central Dispatch and Deliver must call existing per-member Dispatch/Deliver commands (no status SQL shortcuts). Package becomes Dispatched/Delivered only when all active members succeed; operations are idempotent for already-finished members.
+
+### LOCK-OPS-021 — Order cancel voids pre-dispatch packages first
+Whole-order cancel before central dispatch voids active Created Consolidated Packages and releases membership, then continues existing T016 shipment/order cancel orchestration. Post-central-dispatch whole-order cancel remains blocked by existing first-dispatch rules. Return/Refund stay outside package ownership. Member tracking/history is preserved; central tracking is preferred for customer-facing primary tracking while the package is active.
+
 ## Returns / Refunds
 
 ### LOCK-RET-001 — Return and Refund are independent lifecycles

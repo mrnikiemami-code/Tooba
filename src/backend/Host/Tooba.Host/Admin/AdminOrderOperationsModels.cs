@@ -14,7 +14,8 @@ public sealed record AdminOrderOperationAction(
     string RequiredPermission,
     bool RequiresConfirm,
     string? ConfirmMessageFa,
-    Guid? OrderLineId = null);
+    Guid? OrderLineId = null,
+    Guid? ConsolidatedPackageId = null);
 
 /// <summary>قابلیت lifecycle یک خط — منبع انتخاب/کebab/مرسوله.</summary>
 public sealed record AdminOrderLineCapability(
@@ -62,4 +63,6 @@ public sealed record AdminOrderOperationRequest(
     IReadOnlyList<ReturnLineCommand>? ReturnItems,
     IReadOnlyList<AdminOrderLineSelection>? Selections = null,
     string? ShippingMethodCode = null,
-    string? ProviderMetadataJson = null);
+    string? ProviderMetadataJson = null,
+    Guid? ConsolidatedPackageId = null,
+    IReadOnlyList<Guid>? ShipmentIds = null);

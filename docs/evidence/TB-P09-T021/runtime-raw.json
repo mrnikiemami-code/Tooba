@@ -1,0 +1,24 @@
+{
+  "scenarios": {
+    "A_to_D": {
+      "checkoutId": "01a0893a-f729-7000-a63c-954f02ddbfe5",
+      "pkg1Id": "01a0893a-fe80-7000-aac3-10b2414b077f",
+      "pkg1Num": "MP-01A0893AFE80",
+      "pkg2Id": "01a0893b-0104-7000-a6c3-7a83014d42a1",
+      "createStatuses": [
+        200,
+        200
+      ],
+      "blockedDirectDispatch": 400,
+      "cancelOrderBlocked": 400,
+      "preferredTracking": "CENTRAL-T021-A2",
+      "customerStatus": 404
+    },
+    "E": {
+      "checkoutId": "01a0893b-04e8-7000-9dc6-6b8573e09c44",
+      "independentDispatch": 200,
+      "packages": 0
+    }
+  },
+  "ok": true
+}

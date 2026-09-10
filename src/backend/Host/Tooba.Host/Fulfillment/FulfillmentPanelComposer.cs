@@ -85,10 +85,28 @@ public sealed class FulfillmentPanelComposer
     }
 
     /// <summary>
-    /// fulfillmentهای یک checkout.
+    /// fulfillmentهای یک checkout؛ رهگیری بسته تجمیعی فعال را به‌عنوان PreferredTrackingReference می‌گذارد.
     /// </summary>
-    public Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
-        _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+    public async Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var list = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+        var preferred = packages
+            .Where(p => p.Status is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
+                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched
+                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Delivered)
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => p.TrackingReference)
+            .FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+        if (string.IsNullOrWhiteSpace(preferred))
+        {
+            return list;
+        }
+
+        return list.Select(s => s with { PreferredTrackingReference = preferred }).ToList();
+    }
 
     /// <summary>
     /// به Processing می‌رود.

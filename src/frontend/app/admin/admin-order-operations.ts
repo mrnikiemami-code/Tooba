@@ -25,6 +25,7 @@ export type AdminOrderOperationAction = {
   shipmentId: string | null;
   returnRequestId: string | null;
   orderLineId?: string | null;
+  consolidatedPackageId?: string | null;
   requiredPermission: string;
   requiresConfirm: boolean;
   confirmMessageFa: string | null;
@@ -72,6 +73,9 @@ export type AdminOrderOperationRequest = {
   selections?: Array<{ orderLineId: string; quantity: number }> | null;
   shippingMethodCode?: string | null;
   providerMetadataJson?: string | null;
+  consolidatedPackageId?: string | null;
+  shipmentIds?: string[] | null;
+  note?: string | null;
 };
 
 /** نگاشت خطای عملیات سفارش به FA. */
@@ -112,6 +116,7 @@ function mapAction(raw: unknown): AdminOrderOperationAction | null {
     shipmentId: asString(row.shipmentId) ?? asString(row.ShipmentId),
     returnRequestId: asString(row.returnRequestId) ?? asString(row.ReturnRequestId),
     orderLineId: asString(row.orderLineId) ?? asString(row.OrderLineId),
+    consolidatedPackageId: asString(row.consolidatedPackageId) ?? asString(row.ConsolidatedPackageId),
     requiredPermission: asString(row.requiredPermission) ?? asString(row.RequiredPermission) ?? "",
     requiresConfirm: Boolean(row.requiresConfirm ?? row.RequiresConfirm),
     confirmMessageFa: asString(row.confirmMessageFa) ?? asString(row.ConfirmMessageFa),
@@ -244,6 +249,9 @@ export async function executeAdminOrderOperation(
         idempotencyKey: body.idempotencyKey ?? null,
         shippingMethodCode: body.shippingMethodCode ?? null,
         providerMetadataJson: body.providerMetadataJson ?? null,
+        consolidatedPackageId: body.consolidatedPackageId ?? null,
+        shipmentIds: body.shipmentIds ?? null,
+        note: body.note ?? null,
         selections: body.selections?.map((s) => ({
           orderLineId: s.orderLineId,
           quantity: s.quantity,

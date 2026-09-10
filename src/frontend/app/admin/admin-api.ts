@@ -76,6 +76,35 @@ export interface AdminShipment {
   trackingReference: string | null;
   itemCount: number;
   lines: AdminShipmentLine[];
+  activePackageId?: string | null;
+  activePackageNumber?: string | null;
+  packageLockedReasonFa?: string | null;
+  canAddToConsolidatedPackage?: boolean;
+}
+
+export interface AdminConsolidatedPackageMember {
+  shipmentId: string;
+  sellerPartyId: string;
+  fulfillmentId: string;
+  joinedAt: string;
+  releasedAt: string | null;
+}
+
+export interface AdminConsolidatedPackage {
+  consolidatedPackageId: string;
+  packageNumber: string;
+  status: string;
+  shippingMethodCode: string;
+  shippingMethodLabel: string;
+  trackingReference: string | null;
+  note: string | null;
+  sellerCount: number;
+  memberShipmentCount: number;
+  createdAt: string;
+  dispatchedAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  members: AdminConsolidatedPackageMember[];
 }
 
 export interface AdminSellerOrder {
@@ -149,6 +178,7 @@ export interface AdminOrderDetail {
   postalCode: string;
   shippingMethodLabel: string;
   sellerOrders: AdminSellerOrder[];
+  consolidatedPackages: AdminConsolidatedPackage[];
   sellerFinancials: AdminSellerFinancial[];
   financialEvents: AdminFinancialEvent[];
   financialSummary: AdminFinancialSummary;
@@ -417,6 +447,7 @@ export function enrichAdminOrderDetail(detail: AdminOrderDetail): AdminOrderDeta
     sellerFinancials,
     financialEvents,
     financialSummary,
+    consolidatedPackages: detail.consolidatedPackages ?? [],
   };
 }
 
@@ -600,6 +631,10 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
           if (!orderLineId) return [];
           return [{ orderLineId, quantity: number(prop(line, "quantity", "Quantity")) }];
         }),
+        activePackageId: text(prop(row, "activePackageId", "ActivePackageId")) || null,
+        activePackageNumber: text(prop(row, "activePackageNumber", "ActivePackageNumber")) || null,
+        packageLockedReasonFa: text(prop(row, "packageLockedReasonFa", "PackageLockedReasonFa")) || null,
+        canAddToConsolidatedPackage: Boolean(prop(row, "canAddToConsolidatedPackage", "CanAddToConsolidatedPackage")),
       }];
     });
     return [{
@@ -614,6 +649,40 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
       fulfillmentId: text(prop(seller, "fulfillmentId", "FulfillmentId")) || null,
       fulfillmentStatus: text(prop(seller, "fulfillmentStatus", "FulfillmentStatus")) || null,
       shipments,
+    }];
+  });
+  const consolidatedPackages = array(prop(item, "consolidatedPackages", "ConsolidatedPackages")).flatMap((raw): AdminConsolidatedPackage[] => {
+    const row = record(raw);
+    if (!row) return [];
+    const consolidatedPackageId = text(prop(row, "consolidatedPackageId", "ConsolidatedPackageId"));
+    if (!consolidatedPackageId) return [];
+    return [{
+      consolidatedPackageId,
+      packageNumber: text(prop(row, "packageNumber", "PackageNumber"), "MP"),
+      status: text(prop(row, "status", "Status")),
+      shippingMethodCode: text(prop(row, "shippingMethodCode", "ShippingMethodCode")),
+      shippingMethodLabel: text(prop(row, "shippingMethodLabel", "ShippingMethodLabel"), "—"),
+      trackingReference: text(prop(row, "trackingReference", "TrackingReference")) || null,
+      note: text(prop(row, "note", "Note")) || null,
+      sellerCount: number(prop(row, "sellerCount", "SellerCount")),
+      memberShipmentCount: number(prop(row, "memberShipmentCount", "MemberShipmentCount")),
+      createdAt: text(prop(row, "createdAt", "CreatedAt")),
+      dispatchedAt: text(prop(row, "dispatchedAt", "DispatchedAt")) || null,
+      deliveredAt: text(prop(row, "deliveredAt", "DeliveredAt")) || null,
+      cancelledAt: text(prop(row, "cancelledAt", "CancelledAt")) || null,
+      members: array(prop(row, "members", "Members")).flatMap((memberRaw): AdminConsolidatedPackageMember[] => {
+        const member = record(memberRaw);
+        if (!member) return [];
+        const shipmentId = text(prop(member, "shipmentId", "ShipmentId"));
+        if (!shipmentId) return [];
+        return [{
+          shipmentId,
+          sellerPartyId: text(prop(member, "sellerPartyId", "SellerPartyId")),
+          fulfillmentId: text(prop(member, "fulfillmentId", "FulfillmentId")),
+          joinedAt: text(prop(member, "joinedAt", "JoinedAt")),
+          releasedAt: text(prop(member, "releasedAt", "ReleasedAt")) || null,
+        }];
+      }),
     }];
   });
   const mapped: AdminOrderDetail = {
@@ -637,6 +706,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     postalCode: text(prop(item, "postalCode", "PostalCode")),
     shippingMethodLabel: text(prop(item, "shippingMethodLabel", "ShippingMethodLabel")),
     sellerOrders,
+    consolidatedPackages,
     sellerFinancials: array(prop(item, "sellerFinancials", "SellerFinancials")).flatMap((raw): AdminSellerFinancial[] => {
       const row = record(raw);
       if (!row) return [];

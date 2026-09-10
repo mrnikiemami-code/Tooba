@@ -293,3 +293,68 @@ test("mapAdminOrderDetail maps return deadline fields", () => {
   assert.equal(detail?.sellerOrders[0]?.lines[0]?.returnStatusCode, "before_delivery");
   assert.equal(detail?.sellerOrders[0]?.lines[0]?.returnDeadlineDisplay, "۷ روز پس از تحویل");
 });
+
+test("consolidated package section is multi-seller only and maps package lock fields", () => {
+  const panel = readFileSync(join(dir, "admin-order-items-shipping-panel.tsx"), "utf8");
+  const section = readFileSync(join(dir, "admin-consolidated-package-section.tsx"), "utf8");
+  assert.match(panel, /AdminConsolidatedPackageSection/);
+  assert.match(panel, /admin-order-shipment-package-lock-/);
+  assert.match(section, /بسته‌بندی مرکزی/);
+  assert.match(section, /ایجاد بسته تجمیعی/);
+  assert.match(section, /sellerOrders\.length >= 2|distinctSellerCount/);
+  assert.match(section, /create_consolidated_package/);
+  assert.match(section, /executeAdminOrderOperation/);
+
+  const detail = mapAdminOrderDetail({
+    checkoutId: "c1",
+    reference: "R1",
+    sellerCount: 2,
+    sellerOrders: [
+      {
+        sellerOrderId: "so1",
+        orderNumber: "SO-1",
+        sellerDisplayName: "الف",
+        shipments: [{
+          shipmentId: "sh1",
+          status: "Created",
+          carrierDisplayName: "پست",
+          trackingReference: null,
+          itemCount: 1,
+          lines: [],
+          activePackageNumber: "MP-ABC",
+          packageLockedReasonFa: "این مرسوله عضو بسته تجمیعی MP-ABC است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.",
+        }],
+        lines: [],
+      },
+      {
+        sellerOrderId: "so2",
+        orderNumber: "SO-2",
+        sellerDisplayName: "ب",
+        shipments: [],
+        lines: [],
+      },
+    ],
+    consolidatedPackages: [{
+      consolidatedPackageId: "pkg1",
+      packageNumber: "MP-ABC",
+      status: "Created",
+      shippingMethodCode: "post",
+      shippingMethodLabel: "پست",
+      trackingReference: "CENTRAL-1",
+      note: null,
+      sellerCount: 2,
+      memberShipmentCount: 1,
+      createdAt: "2026-09-10T00:00:00Z",
+      members: [{
+        shipmentId: "sh1",
+        sellerPartyId: "sp1",
+        fulfillmentId: "f1",
+        joinedAt: "2026-09-10T00:00:00Z",
+        releasedAt: null,
+      }],
+    }],
+  });
+  assert.equal(detail?.consolidatedPackages.length, 1);
+  assert.equal(detail?.consolidatedPackages[0]?.packageNumber, "MP-ABC");
+  assert.equal(detail?.sellerOrders[0]?.shipments[0]?.activePackageNumber, "MP-ABC");
+});

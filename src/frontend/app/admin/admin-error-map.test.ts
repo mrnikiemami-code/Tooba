@@ -63,6 +63,15 @@ test("maps known catalog attribute duplicate codes in fa and en", () => {
     mapAdminErrorMessage("fulfillment.process.after_delivered", "fa"),
     "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
   );
+  assert.equal(
+    mapAdminErrorMessage("fulfillment.shipment.locked_by_consolidated_package", "fa"),
+    "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",
+  );
+  assert.equal(
+    mapAdminErrorMessage("fulfillment.package.requires_multi_seller", "en"),
+    "A consolidated package requires at least two distinct sellers.",
+  );
+  assert.ok(listMappedAdminErrorCodes().includes("fulfillment.package.deliver_before_dispatch"));
 });
 
 test("unknown fallback never exposes Bad Request / HTTP / raw codes", () => {

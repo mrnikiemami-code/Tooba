@@ -44,6 +44,16 @@ public sealed class FulfillmentDbContext : DbContext
     public DbSet<ShipmentItem> ShipmentItems => Set<ShipmentItem>();
 
     /// <summary>
+    /// بسته‌های تجمیعی مرکزی.
+    /// </summary>
+    public DbSet<ConsolidatedPackage> ConsolidatedPackages => Set<ConsolidatedPackage>();
+
+    /// <summary>
+    /// اعضای بسته‌های تجمیعی.
+    /// </summary>
+    public DbSet<ConsolidatedPackageMember> ConsolidatedPackageMembers => Set<ConsolidatedPackageMember>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -113,6 +123,31 @@ public sealed class FulfillmentDbContext : DbContext
             entity.Property(x => x.ShipmentItemId).ValueGeneratedNever();
             entity.Property(x => x.Quantity).HasColumnType("numeric(18,6)");
             entity.HasIndex(x => x.ShipmentId);
+        });
+        modelBuilder.Entity<ConsolidatedPackage>(entity =>
+        {
+            entity.ToTable("consolidated_packages");
+            entity.HasKey(x => x.ConsolidatedPackageId);
+            entity.Property(x => x.ConsolidatedPackageId).ValueGeneratedNever();
+            entity.Property(x => x.PackageNumber).HasMaxLength(32);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(64);
+            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128);
+            entity.Property(x => x.TrackingReference).HasMaxLength(128);
+            entity.Property(x => x.Note).HasMaxLength(512);
+            entity.Ignore(x => x.Members);
+            entity.HasIndex(x => x.CheckoutId);
+            entity.HasIndex(x => x.PackageNumber).IsUnique();
+        });
+        modelBuilder.Entity<ConsolidatedPackageMember>(entity =>
+        {
+            entity.ToTable("consolidated_package_members");
+            entity.HasKey(x => x.ConsolidatedPackageMemberId);
+            entity.Property(x => x.ConsolidatedPackageMemberId).ValueGeneratedNever();
+            entity.HasIndex(x => x.ConsolidatedPackageId);
+            entity.HasIndex(x => x.ShipmentId)
+                .IsUnique()
+                .HasFilter("released_at IS NULL");
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>
         {

@@ -23,7 +23,9 @@ export function ShipmentStatusBadge({ status }: { status: string }) {
  * (bg-gray-50 rounded-xl p-4 space-y-2 text-sm + MapPin/Phone/Package rows).
  */
 export function FulfillmentShippingInfoBlock({ snapshot }: { snapshot: FulfillmentSnapshot }) {
-  const primaryTracking = snapshot.shipments.find((shipment) => shipment.trackingReference)?.trackingReference ?? null;
+  const primaryTracking = snapshot.preferredTrackingReference
+    || snapshot.shipments.find((shipment) => shipment.trackingReference)?.trackingReference
+    || null;
 
   return (
     <div className="mt-4 border-t border-gray-100 pt-4">

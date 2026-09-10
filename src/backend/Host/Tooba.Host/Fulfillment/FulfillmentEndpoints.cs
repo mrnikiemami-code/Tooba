@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Domain;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
 using AdminFulfillmentWorkQueueBulkRequest = Tooba.Host.Admin.AdminFulfillmentWorkQueueBulkRequest;
@@ -373,6 +375,7 @@ public static class FulfillmentEndpoints
     private static async Task<IResult> CustomerListAsync(
         Guid checkoutId,
         FulfillmentPanelComposer composer,
+        IFulfillmentDirectory fulfillment,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
@@ -394,7 +397,19 @@ public static class FulfillmentEndpoints
                 return Results.Json(new { title = "Not Found", errorCode = "customer.order.missing" }, statusCode: 404);
             }
 
-            return Results.Json(await composer.ListForCheckoutAsync(checkoutId, cancellationToken));
+            var list = await composer.ListForCheckoutAsync(checkoutId, cancellationToken);
+            var packages = await fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+            var preferred = packages
+                .Where(p => p.Status is ConsolidatedPackageStatus.Created or ConsolidatedPackageStatus.Dispatched)
+                .Where(p => !string.IsNullOrWhiteSpace(p.TrackingReference))
+                .OrderByDescending(p => p.UpdatedAt)
+                .FirstOrDefault();
+            return Results.Json(new
+            {
+                fulfillments = list,
+                preferredCustomerTrackingReference = preferred?.TrackingReference,
+                preferredCustomerTrackingPackageNumber = preferred?.PackageNumber,
+            });
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }

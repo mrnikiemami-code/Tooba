@@ -49,6 +49,10 @@ public sealed class AdminOrderOperationsComposer
         "correct_tracking",
         "dispatch_shipment",
         "deliver_shipment",
+        "create_consolidated_package",
+        "cancel_consolidated_package",
+        "dispatch_consolidated_package",
+        "deliver_consolidated_package",
     };
 
     internal const string WholeOrderCancelBlockedAfterDispatchFa =
@@ -110,6 +114,10 @@ public sealed class AdminOrderOperationsComposer
 
         var effective = await LoadEffectiveAsync(actorUserId, cancellationToken);
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+        var allShipmentIds = fulfillments.SelectMany(f => f.Shipments.Select(s => s.ShipmentId)).Distinct().ToArray();
+        var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
+        var membershipByShipment = memberships.ToDictionary(x => x.ShipmentId);
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var returns = await _returns.ReturnRequests.AsNoTracking()
             .Where(x => sellerOrderIds.Contains(x.SellerOrderId))
@@ -130,11 +138,12 @@ public sealed class AdminOrderOperationsComposer
             var elig = await _eligibility.EvaluateAsync(order.SellerOrderId, cancellationToken);
             eligibility.Add(elig);
             var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
-            ProjectActions(actions, order, fulfillment, returns, elig, effective);
+            ProjectActions(actions, order, fulfillment, returns, elig, effective, membershipByShipment);
         }
 
         ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
+        ProjectConsolidatedPackageActions(actions, group, fulfillments, packages, membershipByShipment, effective);
         var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
         var lineCaps = new List<AdminOrderLineCapability>();
         var sellerCaps = new List<AdminSellerCapability>();
@@ -311,6 +320,10 @@ public sealed class AdminOrderOperationsComposer
                 "restore_cancelled_order" => await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken),
                 "dispatch_shipment" => await DispatchAsync(request, actorUserId, cancellationToken),
                 "deliver_shipment" => await DeliverAsync(request, actorUserId, cancellationToken),
+                "create_consolidated_package" => await CreateConsolidatedPackageAsync(checkoutId, request, actorUserId, cancellationToken),
+                "cancel_consolidated_package" => await CancelConsolidatedPackageAsync(request, actorUserId, cancellationToken),
+                "dispatch_consolidated_package" => await DispatchConsolidatedPackageAsync(request, actorUserId, cancellationToken),
+                "deliver_consolidated_package" => await DeliverConsolidatedPackageAsync(request, actorUserId, cancellationToken),
                 "request_return" => await RequestReturnAsync(group, request, cancellationToken),
                 "approve_return" => await ApproveReturnAsync(request, actorUserId, cancellationToken),
                 "reject_return" => await RejectReturnAsync(request, actorUserId, cancellationToken),
@@ -342,7 +355,8 @@ public sealed class AdminOrderOperationsComposer
         FulfillmentSnapshot? fulfillment,
         IReadOnlyList<ReturnRequest> returns,
         ReturnEligibilityResult eligibility,
-        EffectiveAccessDto effective)
+        EffectiveAccessDto effective,
+        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment)
     {
         if (order.Status != SellerOrderStatus.Cancelled && fulfillment is not null)
         {
@@ -499,7 +513,11 @@ public sealed class AdminOrderOperationsComposer
 
             foreach (var shipment in fulfillment.Shipments.Where(s => s.Status != ShipmentStatus.Cancelled))
             {
+                var lockedByPackage = membershipByShipment.TryGetValue(shipment.ShipmentId, out var membership)
+                    && membership.PackageStatus is ConsolidatedPackageStatus.Created or ConsolidatedPackageStatus.Dispatched;
+
                 if (shipment.Status == ShipmentStatus.Created
+                    && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -535,6 +553,7 @@ public sealed class AdminOrderOperationsComposer
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
                     && shipment.Status == ShipmentStatus.Created
+                    && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -553,6 +572,7 @@ public sealed class AdminOrderOperationsComposer
                 if (!string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.DispatchedAt is null
                     && shipment.Status is ShipmentStatus.Created
+                    && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -570,6 +590,7 @@ public sealed class AdminOrderOperationsComposer
 
                 if (shipment.Status is ShipmentStatus.Dispatched or ShipmentStatus.InTransit
                     && shipment.DeliveredAt is null
+                    && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -645,6 +666,93 @@ public sealed class AdminOrderOperationsComposer
                     true,
                     "بازگشت وجه دوباره تلاش شود؟"));
             }
+        }
+    }
+
+    private void ProjectConsolidatedPackageActions(
+        List<AdminOrderOperationAction> actions,
+        CheckoutGroup group,
+        IReadOnlyList<FulfillmentSnapshot> fulfillments,
+        IReadOnlyList<ConsolidatedPackageSnapshot> packages,
+        IReadOnlyDictionary<Guid, ActivePackageMembershipSnapshot> membershipByShipment,
+        EffectiveAccessDto effective)
+    {
+        if (IsCheckoutCancelled(group))
+        {
+            return;
+        }
+
+        var sellerCount = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count();
+        if (sellerCount < 2 || !HasAny(effective, "order.handle", "fulfillment.manage"))
+        {
+            return;
+        }
+
+        var permission = Prefer(effective, "order.handle", "fulfillment.manage");
+        var eligibleSellerIds = fulfillments
+            .SelectMany(f => f.Shipments
+                .Where(s => s.Status == ShipmentStatus.Created
+                    && !membershipByShipment.ContainsKey(s.ShipmentId))
+                .Select(_ => f.SellerPartyId))
+            .Distinct()
+            .ToArray();
+        if (eligibleSellerIds.Length >= 2)
+        {
+            actions.Add(Action(
+                "create_consolidated_package",
+                "ایجاد بسته تجمیعی",
+                "Create consolidated package",
+                null,
+                null,
+                null,
+                null,
+                permission,
+                true,
+                "بسته تجمیعی برای مرسوله‌های انتخاب‌شده ایجاد شود؟"));
+        }
+
+        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageStatus.Created))
+        {
+            actions.Add(Action(
+                "cancel_consolidated_package",
+                "ابطال بسته تجمیعی",
+                "Cancel consolidated package",
+                null,
+                null,
+                null,
+                null,
+                permission,
+                true,
+                $"بسته {package.PackageNumber} ابطال شود؟ عضویت مرسوله‌ها آزاد می‌شود.",
+                consolidatedPackageId: package.ConsolidatedPackageId));
+            actions.Add(Action(
+                "dispatch_consolidated_package",
+                "ارسال بسته تجمیعی",
+                "Dispatch consolidated package",
+                null,
+                null,
+                null,
+                null,
+                permission,
+                true,
+                $"ارسال مرکزی بسته {package.PackageNumber} ثبت شود؟",
+                consolidatedPackageId: package.ConsolidatedPackageId));
+        }
+
+        foreach (var package in packages.Where(p => p.Status == ConsolidatedPackageStatus.Dispatched))
+        {
+            actions.Add(Action(
+                "deliver_consolidated_package",
+                "تحویل بسته تجمیعی",
+                "Deliver consolidated package",
+                null,
+                null,
+                null,
+                null,
+                permission,
+                true,
+                $"تحویل مرکزی بسته {package.PackageNumber} ثبت شود؟",
+                consolidatedPackageId: package.ConsolidatedPackageId));
         }
     }
 
@@ -954,6 +1062,67 @@ public sealed class AdminOrderOperationsComposer
         var fulfillmentId = RequireFulfillmentId(request);
         var shipmentId = RequireShipmentId(request);
         return await _fulfillment.DeliverShipmentAsync(fulfillmentId, shipmentId, actorUserId, cancellationToken);
+    }
+
+    private async Task<object> CreateConsolidatedPackageAsync(
+        Guid checkoutId,
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var shipmentIds = request.ShipmentIds;
+        if (shipmentIds is null || shipmentIds.Count == 0)
+        {
+            throw new PlatformHttpException(
+                400,
+                FulfillmentOpToFa("fulfillment.package.requires_multi_seller"),
+                "fulfillment.package.requires_multi_seller");
+        }
+
+        var methodCode = request.ShippingMethodCode?.Trim();
+        if (string.IsNullOrWhiteSpace(methodCode))
+        {
+            throw new PlatformHttpException(
+                400,
+                FulfillmentOpToFa("fulfillment.package.shipping_method_required"),
+                "fulfillment.package.shipping_method_required");
+        }
+
+        return await _fulfillment.CreateConsolidatedPackageAsync(
+            checkoutId,
+            shipmentIds,
+            methodCode,
+            request.TrackingReference,
+            request.Reason,
+            actorUserId,
+            cancellationToken);
+    }
+
+    private async Task<object> CancelConsolidatedPackageAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var packageId = RequireConsolidatedPackageId(request);
+        return await _fulfillment.CancelConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
+    }
+
+    private async Task<object> DispatchConsolidatedPackageAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var packageId = RequireConsolidatedPackageId(request);
+        return await _fulfillment.DispatchConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
+    }
+
+    private async Task<object> DeliverConsolidatedPackageAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var packageId = RequireConsolidatedPackageId(request);
+        return await _fulfillment.DeliverConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
     }
 
     private async Task<object> RequestReturnAsync(
@@ -1622,7 +1791,8 @@ public sealed class AdminOrderOperationsComposer
         (request.SellerOrderId is null || action.SellerOrderId == request.SellerOrderId)
         && (request.FulfillmentId is null || action.FulfillmentId == request.FulfillmentId)
         && (request.ShipmentId is null || action.ShipmentId == request.ShipmentId)
-        && (request.ReturnRequestId is null || action.ReturnRequestId == request.ReturnRequestId);
+        && (request.ReturnRequestId is null || action.ReturnRequestId == request.ReturnRequestId)
+        && (request.ConsolidatedPackageId is null || action.ConsolidatedPackageId == request.ConsolidatedPackageId);
 
     private static Guid RequireFulfillmentId(AdminOrderOperationRequest request) =>
         request.FulfillmentId
@@ -1631,6 +1801,10 @@ public sealed class AdminOrderOperationsComposer
     private static Guid RequireShipmentId(AdminOrderOperationRequest request) =>
         request.ShipmentId
         ?? throw new PlatformHttpException(400, "شناسه محموله الزامی است.", "order.operation.invalid");
+
+    private static Guid RequireConsolidatedPackageId(AdminOrderOperationRequest request) =>
+        request.ConsolidatedPackageId
+        ?? throw new PlatformHttpException(400, "شناسه بسته تجمیعی الزامی است.", "order.operation.invalid");
 
     private static Guid RequireReturnRequestId(AdminOrderOperationRequest request) =>
         request.ReturnRequestId
@@ -1957,6 +2131,20 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
         "fulfillment.work_queue.row_mismatch" => "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
         "inventory.reservation.not_active" => "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
+        "fulfillment.shipment.locked_by_consolidated_package" =>
+            "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",
+        "fulfillment.package.requires_multi_seller" => "بسته تجمیعی حداقل به دو فروشندهٔ متمایز نیاز دارد.",
+        "fulfillment.package.shipment_not_eligible" => "این مرسوله برای بسته تجمیعی واجد شرایط نیست.",
+        "fulfillment.package.shipment_already_member" => "این مرسوله هم‌اکنون عضو یک بسته تجمیعی فعال است.",
+        "fulfillment.package.mixed_checkout" => "فقط مرسوله‌های همین سفارش را می‌توان در یک بسته تجمیعی قرار داد.",
+        "fulfillment.package.duplicate_shipment" => "مرسوله تکراری در بسته تجمیعی مجاز نیست.",
+        "fulfillment.package.cancel_after_dispatch" => "پس از ارسال بسته تجمیعی، ابطال مجاز نیست.",
+        "fulfillment.package.dispatch_invalid_state" => "ارسال بسته تجمیعی در وضعیت فعلی مجاز نیست.",
+        "fulfillment.package.deliver_before_dispatch" => "قبل از ارسال نمی‌توان بسته تجمیعی را تحویل داد.",
+        "fulfillment.package.member_state_changed" => "وضعیت مرسوله‌های عضو تغییر کرده است؛ عملیات را تازه کنید.",
+        "fulfillment.package.not_found" => "بسته تجمیعی پیدا نشد.",
+        "fulfillment.package.shipping_method_required" => "روش ارسال مرکزی الزامی است.",
+        "fulfillment.package.checkout_required" => "شناسه سفارش برای بسته تجمیعی الزامی است.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
 
@@ -2004,7 +2192,8 @@ public sealed class AdminOrderOperationsComposer
         string requiredPermission,
         bool requiresConfirm,
         string? confirmMessageFa,
-        Guid? orderLineId = null) =>
+        Guid? orderLineId = null,
+        Guid? consolidatedPackageId = null) =>
         new(
             code,
             labelFa,
@@ -2016,7 +2205,8 @@ public sealed class AdminOrderOperationsComposer
             requiredPermission,
             requiresConfirm,
             confirmMessageFa,
-            orderLineId);
+            orderLineId,
+            consolidatedPackageId);
 }
 
 /// <summary>

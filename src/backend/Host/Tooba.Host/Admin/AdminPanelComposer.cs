@@ -159,6 +159,15 @@ public sealed class AdminPanelComposer
         var titles = await LoadVariantTitlesAsync(variantIds, cancellationToken);
 
         var fulfillments = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
+        var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
+        var allShipmentIds = fulfillments.SelectMany(f => f.Shipments.Select(s => s.ShipmentId)).Distinct().ToArray();
+        var memberships = await _fulfillment.GetActiveMembershipByShipmentIdsAsync(allShipmentIds, cancellationToken);
+        var membershipByShipment = memberships
+            .Where(m => m.PackageStatus is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
+                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched)
+            .ToDictionary(m => m.ShipmentId);
+        var memberOfAnyPackage = memberships.ToDictionary(m => m.ShipmentId);
+        var multiSeller = group.SellerOrders.Select(x => x.SellerPartyId).Distinct().Count() >= 2;
         var fulfillmentBySeller = fulfillments
             .GroupBy(x => x.SellerOrderId)
             .ToDictionary(g => g.Key, g => g.First());
@@ -218,15 +227,28 @@ public sealed class AdminPanelComposer
                     returnUi.StatusCode,
                     fulfillment is null ? null : processing);
             }).ToList();
-            var shipments = fulfillment?.Shipments.Select(s => new AdminShipmentView(
-                s.ShipmentId,
-                s.Status.ToString(),
-                s.CarrierDisplayName,
-                s.TrackingReference,
-                s.Items.Sum(i => i.Quantity),
-                s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity)).ToList(),
-                string.IsNullOrWhiteSpace(s.ShippingMethodCode) ? null : s.ShippingMethodCode,
-                string.IsNullOrWhiteSpace(s.ShippingMethodLabel) ? null : s.ShippingMethodLabel)).ToList()
+            var shipments = fulfillment?.Shipments.Select(s =>
+            {
+                membershipByShipment.TryGetValue(s.ShipmentId, out var membership);
+                var canAdd = multiSeller
+                    && s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created
+                    && !memberOfAnyPackage.ContainsKey(s.ShipmentId);
+                return new AdminShipmentView(
+                    s.ShipmentId,
+                    s.Status.ToString(),
+                    s.CarrierDisplayName,
+                    s.TrackingReference,
+                    s.Items.Sum(i => i.Quantity),
+                    s.Items.Select(i => new AdminShipmentLineView(i.OrderLineId, i.Quantity)).ToList(),
+                    string.IsNullOrWhiteSpace(s.ShippingMethodCode) ? null : s.ShippingMethodCode,
+                    string.IsNullOrWhiteSpace(s.ShippingMethodLabel) ? null : s.ShippingMethodLabel,
+                    membership?.ConsolidatedPackageId,
+                    membership?.PackageNumber,
+                    membership is null
+                        ? null
+                        : $"این مرسوله عضو بسته تجمیعی {membership.PackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.",
+                    canAdd);
+            }).ToList()
                 ?? (IReadOnlyList<AdminShipmentView>)Array.Empty<AdminShipmentView>();
             return new AdminSellerOrderView(
                 order.SellerOrderId,
@@ -271,6 +293,26 @@ public sealed class AdminPanelComposer
         var financialEvents = await BuildFinancialEventsAsync(
             group, sellerNames, paymentView, settlementByOrder, cancellationToken);
         var financialSummary = BuildFinancialSummary(group, sellerFinancials, paymentView);
+        var packageViews = packages.Select(p => new AdminConsolidatedPackageView(
+            p.ConsolidatedPackageId,
+            p.PackageNumber,
+            p.Status.ToString(),
+            p.ShippingMethodCode,
+            p.ShippingMethodLabel,
+            p.TrackingReference,
+            p.Note,
+            p.Members.Select(m => m.SellerPartyId).Distinct().Count(),
+            p.Members.Count,
+            p.CreatedAt,
+            p.DispatchedAt,
+            p.DeliveredAt,
+            p.CancelledAt,
+            p.Members.Select(m => new AdminConsolidatedPackageMemberView(
+                m.ShipmentId,
+                m.SellerPartyId,
+                m.FulfillmentId,
+                m.JoinedAt,
+                m.ReleasedAt)).ToList())).ToList();
 
         return new AdminOrderDetailPage(
             group.CheckoutId,
@@ -296,7 +338,8 @@ public sealed class AdminPanelComposer
             sellerFinancials,
             financialEvents,
             financialSummary,
-            paymentView);
+            paymentView,
+            packageViews);
     }
 
     /// <summary>
