@@ -71,6 +71,7 @@ const navGroupDefs: NavGroupDef[] = [
       { id: "dashboard", labelKey: "dashboard", href: "/admin", icon: LayoutDashboard, live: true, exact: true, viewPermission: "admin.dashboard.view" },
       { id: "orders", labelKey: "orders", href: "/admin/orders", icon: ShoppingBag, live: true, viewPermission: "order.view" },
       { id: "fulfillments", labelKey: "fulfillments", href: "/admin/fulfillments", icon: Truck, live: true, viewPermission: "fulfillment.view" },
+      { id: "shipping-services", labelKey: "shippingServices", href: "/admin/shipping-services", icon: Package, live: true, viewPermission: "fulfillment.view" },
       { id: "returns", labelKey: "returns", href: "/admin/returns", icon: RotateCcw, live: true, viewPermission: "return.view" },
       { id: "stories", labelKey: "stories", href: "/admin/stories", icon: Sparkles, live: true, viewPermission: "story.view" },
       { id: "page-composition", labelKey: "pageComposition", href: "/admin/page-composition", icon: LayoutTemplate, live: true, viewPermission: "pagecomposition.view" },

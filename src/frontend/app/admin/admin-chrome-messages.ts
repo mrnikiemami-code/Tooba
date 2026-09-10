@@ -22,6 +22,7 @@ export type AdminNavLabels = {
   categorySchema: string;
   orders: string;
   fulfillments: string;
+  shippingServices: string;
   returns: string;
   receipts: string;
   settlement: string;
@@ -66,6 +67,7 @@ const faNav: AdminNavLabels = {
   categorySchema: "طرح ویژگی رده",
   orders: "سفارش‌ها و پرداخت",
   fulfillments: "ارسال و تحویل",
+  shippingServices: "سرویس ارسال",
   returns: "مرجوعی‌ها و بازگشت وجه",
   receipts: "دریافت‌ها",
   settlement: "تسویه فروشندگان",
@@ -110,6 +112,7 @@ const enNav: AdminNavLabels = {
   categorySchema: "Category attribute schema",
   orders: "Orders & payments",
   fulfillments: "Shipping & fulfillment",
+  shippingServices: "Shipping services",
   returns: "Returns & refunds",
   receipts: "Receipts",
   settlement: "Seller settlement",

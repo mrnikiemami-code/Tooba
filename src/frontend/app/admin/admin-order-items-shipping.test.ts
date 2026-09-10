@@ -316,6 +316,14 @@ test("consolidated package section is multi-seller only and maps package lock fi
   assert.match(panel, /canTrack = !packageLocked/);
   assert.match(panel, /AdminAssignShipmentTrackingModal/);
   assert.match(panel, /admin-shipment-tracking-dialog|setTrackingTarget/);
+  assert.match(panel, /admin-order-seller-shipment-tabs-/);
+  assert.match(panel, /مرسوله جاری/);
+  assert.match(panel, /لغو شده‌ها/);
+  assert.match(panel, /isCancelledLifecycleStatus/);
+  assert.match(section, /admin-consolidated-package-tabs/);
+  assert.match(section, /admin-consolidated-package-tab-cancelled/);
+  assert.match(section, /لغو شده‌ها/);
+  assert.match(section, /isCancelledPackageStatus/);
   const trackingModal = readFileSync(join(dir, "admin-assign-shipment-tracking-modal.tsx"), "utf8");
   assert.match(trackingModal, /تولید خودکار/);
   assert.match(trackingModal, /کد تکراری مجاز نیست/);

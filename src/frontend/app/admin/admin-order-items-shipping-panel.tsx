@@ -101,6 +101,12 @@ function actionFor(
   });
 }
 
+function isCancelledLifecycleStatus(status: string | null | undefined): boolean {
+  return status === "Cancelled" || status === "Canceled";
+}
+
+type ShipmentListTab = "current" | "cancelled";
+
 /**
  * بخش اقلام و ارسال — گروه‌بندی فروشنده، انتخاب خط/تعداد، کارت مرسوله، مودال ایجاد.
  */
@@ -118,6 +124,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
     seller: AdminSellerOrder;
     shipment: AdminShipment;
   } | null>(null);
+  const [shipmentTabBySeller, setShipmentTabBySeller] = useState<Record<string, ShipmentListTab>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -625,7 +632,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
 
                 <aside className="rounded-lg border border-gray-100 bg-gray-50/40 p-3" data-testid={`admin-order-seller-shipments-${seller.id}`}>
                   <h4 className="text-xs font-black text-gray-800">
-                    مرسوله‌های این فروشنده ({shipments.length.toLocaleString("fa-IR")})
+                    مرسوله‌های این فروشنده
                   </h4>
                   {shipments.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center text-xs text-gray-500" data-testid={`admin-order-seller-shipments-empty-${seller.id}`}>
@@ -633,118 +640,179 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                       <p>هنوز مرسوله‌ای ایجاد نشده است.</p>
                     </div>
                   ) : (
-                    <ul className="mt-2 space-y-2">
-                      {shipments.map((shipment) => {
-                        const packageLocked = Boolean(
-                          shipment.packageLockedReasonFa || shipment.activePackageNumber,
-                        );
-                        const canCancel = !packageLocked
-                          && Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId));
-                        const canTrack = !packageLocked
-                          && Boolean(actionFor(actions, "assign_tracking", seller.id, shipment.shipmentId));
-                        const canDispatch = !packageLocked
-                          && Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId));
-                        const canDeliver = !packageLocked
-                          && Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId));
-                        const shipmentCancelled =
-                          shipment.status === "Cancelled" || shipment.status === "Canceled";
-                        return (
-                          <li
-                            key={shipment.shipmentId}
-                            className={
-                              shipmentCancelled
-                                ? "rounded-lg border border-red-100/80 bg-red-50/40 p-2.5 shadow-sm"
-                                : "rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
-                            }
-                            data-testid={`admin-order-shipment-card-${shipment.shipmentId}`}
-                            data-cancelled={shipmentCancelled ? "true" : undefined}
+                    (() => {
+                      const currentShipments = shipments.filter((s) => !isCancelledLifecycleStatus(s.status));
+                      const cancelledShipments = shipments.filter((s) => isCancelledLifecycleStatus(s.status));
+                      const shipmentTab = shipmentTabBySeller[seller.id] ?? "current";
+                      const visibleShipments = shipmentTab === "cancelled" ? cancelledShipments : currentShipments;
+                      return (
+                        <>
+                          <div
+                            className="mt-2 flex gap-1 rounded-lg bg-white p-0.5 ring-1 ring-gray-200"
+                            role="tablist"
+                            aria-label="فیلتر مرسوله‌های فروشنده"
+                            data-testid={`admin-order-seller-shipment-tabs-${seller.id}`}
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="font-mono text-[11px] text-gray-500" dir="ltr">
-                                  {shipment.trackingReference
-                                    ? shipment.trackingReference
-                                    : `مرسوله · ${shipment.itemCount.toLocaleString("fa-IR")} قلم`}
-                                </p>
-                                <p className="mt-0.5 text-xs font-bold text-gray-900">{shipment.carrierDisplayName}</p>
-                                <p className="text-[11px] text-gray-500">
-                                  {shipment.itemCount.toLocaleString("fa-IR")} قلم
-                                </p>
-                              </div>
-                              <span
-                                className={
-                                  shipmentCancelled
-                                    ? "rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600"
-                                    : "rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700"
-                                }
-                              >
-                                {formatAdminStatus(shipment.status)}
-                              </span>
+                            <button
+                              type="button"
+                              role="tab"
+                              aria-selected={shipmentTab === "current"}
+                              data-testid={`admin-order-seller-shipment-tab-current-${seller.id}`}
+                              className={
+                                shipmentTab === "current"
+                                  ? "flex-1 rounded-md bg-blue-50 px-2 py-1.5 text-[11px] font-bold text-blue-800"
+                                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                              }
+                              onClick={() => setShipmentTabBySeller((prev) => ({ ...prev, [seller.id]: "current" }))}
+                            >
+                              مرسوله جاری
+                              {currentShipments.length > 0
+                                ? ` (${currentShipments.length.toLocaleString("fa-IR")})`
+                                : ""}
+                            </button>
+                            <button
+                              type="button"
+                              role="tab"
+                              aria-selected={shipmentTab === "cancelled"}
+                              data-testid={`admin-order-seller-shipment-tab-cancelled-${seller.id}`}
+                              className={
+                                shipmentTab === "cancelled"
+                                  ? "flex-1 rounded-md bg-red-50 px-2 py-1.5 text-[11px] font-bold text-red-700"
+                                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
+                              }
+                              onClick={() => setShipmentTabBySeller((prev) => ({ ...prev, [seller.id]: "cancelled" }))}
+                            >
+                              لغو شده‌ها
+                              {cancelledShipments.length > 0
+                                ? ` (${cancelledShipments.length.toLocaleString("fa-IR")})`
+                                : ""}
+                            </button>
+                          </div>
+                          {visibleShipments.length === 0 ? (
+                            <div
+                              className="mt-4 py-4 text-center text-[11px] text-gray-500"
+                              data-testid={`admin-order-seller-shipments-tab-empty-${seller.id}-${shipmentTab}`}
+                            >
+                              {shipmentTab === "cancelled"
+                                ? "مرسوله لغوشده‌ای وجود ندارد."
+                                : "مرسوله جاری‌ای وجود ندارد."}
                             </div>
-                            {shipment.trackingReference ? (
-                              <p className="mt-2 text-[11px] text-gray-600" dir="ltr">
-                                رهگیری: {shipment.trackingReference}
-                              </p>
-                            ) : (
-                              <p className="mt-2 text-[11px] text-gray-400">کد رهگیری ثبت نشده</p>
-                            )}
-                            {shipment.packageLockedReasonFa || shipment.activePackageNumber ? (
-                              <p
-                                className="mt-2 rounded border border-indigo-100 bg-indigo-50/70 px-2 py-1.5 text-[11px] font-semibold text-indigo-900"
-                                data-testid={`admin-order-shipment-package-lock-${shipment.shipmentId}`}
-                              >
-                                {shipment.packageLockedReasonFa
-                                  || `این مرسوله عضو بسته تجمیعی ${shipment.activePackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.`}
-                              </p>
-                            ) : null}
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {canTrack ? (
-                                <button
-                                  type="button"
-                                  className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                                  disabled={pendingCode !== null}
-                                  data-testid={`admin-order-shipment-assign-tracking-${shipment.shipmentId}`}
-                                  onClick={() => setTrackingTarget({ seller, shipment })}
-                                >
-                                  ثبت کد رهگیری
-                                </button>
-                              ) : null}
-                              {canDispatch ? (
-                                <button
-                                  type="button"
-                                  className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                                  disabled={pendingCode !== null}
-                                  onClick={() => void runSellerOp(seller, "dispatch_shipment", { shipmentId: shipment.shipmentId })}
-                                >
-                                  ارسال
-                                </button>
-                              ) : null}
-                              {canDeliver ? (
-                                <button
-                                  type="button"
-                                  className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                                  disabled={pendingCode !== null}
-                                  onClick={() => void runSellerOp(seller, "deliver_shipment", { shipmentId: shipment.shipmentId })}
-                                >
-                                  ثبت تحویل
-                                </button>
-                              ) : null}
-                              {canCancel ? (
-                                <button
-                                  type="button"
-                                  className="rounded border border-red-200 px-2 py-1 text-[10px] font-bold text-red-700 disabled:opacity-50"
-                                  disabled={pendingCode !== null}
-                                  data-testid={`admin-order-shipment-cancel-${shipment.shipmentId}`}
-                                  onClick={() => void runSellerOp(seller, "cancel_shipment", { shipmentId: shipment.shipmentId })}
-                                >
-                                  ابطال مرسوله
-                                </button>
-                              ) : null}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                          ) : (
+                            <ul className="mt-2 space-y-2" data-testid={`admin-order-seller-shipments-list-${seller.id}-${shipmentTab}`}>
+                              {visibleShipments.map((shipment) => {
+                                const packageLocked = Boolean(
+                                  shipment.packageLockedReasonFa || shipment.activePackageNumber,
+                                );
+                                const canCancel = !packageLocked
+                                  && Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId));
+                                const canTrack = !packageLocked
+                                  && Boolean(actionFor(actions, "assign_tracking", seller.id, shipment.shipmentId));
+                                const canDispatch = !packageLocked
+                                  && Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId));
+                                const canDeliver = !packageLocked
+                                  && Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId));
+                                const shipmentCancelled = isCancelledLifecycleStatus(shipment.status);
+                                return (
+                                  <li
+                                    key={shipment.shipmentId}
+                                    className={
+                                      shipmentCancelled
+                                        ? "rounded-lg border border-red-100/80 bg-red-50/40 p-2.5 shadow-sm"
+                                        : "rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm"
+                                    }
+                                    data-testid={`admin-order-shipment-card-${shipment.shipmentId}`}
+                                    data-cancelled={shipmentCancelled ? "true" : undefined}
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div>
+                                        <p className="font-mono text-[11px] text-gray-500" dir="ltr">
+                                          {shipment.trackingReference
+                                            ? shipment.trackingReference
+                                            : `مرسوله · ${shipment.itemCount.toLocaleString("fa-IR")} قلم`}
+                                        </p>
+                                        <p className="mt-0.5 text-xs font-bold text-gray-900">{shipment.carrierDisplayName}</p>
+                                        <p className="text-[11px] text-gray-500">
+                                          {shipment.itemCount.toLocaleString("fa-IR")} قلم
+                                        </p>
+                                      </div>
+                                      <span
+                                        className={
+                                          shipmentCancelled
+                                            ? "rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600"
+                                            : "rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700"
+                                        }
+                                      >
+                                        {formatAdminStatus(shipment.status)}
+                                      </span>
+                                    </div>
+                                    {shipment.trackingReference ? (
+                                      <p className="mt-2 text-[11px] text-gray-600" dir="ltr">
+                                        رهگیری: {shipment.trackingReference}
+                                      </p>
+                                    ) : (
+                                      <p className="mt-2 text-[11px] text-gray-400">کد رهگیری ثبت نشده</p>
+                                    )}
+                                    {shipment.packageLockedReasonFa || shipment.activePackageNumber ? (
+                                      <p
+                                        className="mt-2 rounded border border-indigo-100 bg-indigo-50/70 px-2 py-1.5 text-[11px] font-semibold text-indigo-900"
+                                        data-testid={`admin-order-shipment-package-lock-${shipment.shipmentId}`}
+                                      >
+                                        {shipment.packageLockedReasonFa
+                                          || `این مرسوله عضو بسته تجمیعی ${shipment.activePackageNumber} است و عملیات ارسال از طریق بسته تجمیعی انجام می‌شود.`}
+                                      </p>
+                                    ) : null}
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                      {canTrack ? (
+                                        <button
+                                          type="button"
+                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          disabled={pendingCode !== null}
+                                          data-testid={`admin-order-shipment-assign-tracking-${shipment.shipmentId}`}
+                                          onClick={() => setTrackingTarget({ seller, shipment })}
+                                        >
+                                          ثبت کد رهگیری
+                                        </button>
+                                      ) : null}
+                                      {canDispatch ? (
+                                        <button
+                                          type="button"
+                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          disabled={pendingCode !== null}
+                                          onClick={() => void runSellerOp(seller, "dispatch_shipment", { shipmentId: shipment.shipmentId })}
+                                        >
+                                          ارسال
+                                        </button>
+                                      ) : null}
+                                      {canDeliver ? (
+                                        <button
+                                          type="button"
+                                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                                          disabled={pendingCode !== null}
+                                          onClick={() => void runSellerOp(seller, "deliver_shipment", { shipmentId: shipment.shipmentId })}
+                                        >
+                                          ثبت تحویل
+                                        </button>
+                                      ) : null}
+                                      {canCancel ? (
+                                        <button
+                                          type="button"
+                                          className="rounded border border-red-200 px-2 py-1 text-[10px] font-bold text-red-700 disabled:opacity-50"
+                                          disabled={pendingCode !== null}
+                                          data-testid={`admin-order-shipment-cancel-${shipment.shipmentId}`}
+                                          onClick={() => void runSellerOp(seller, "cancel_shipment", { shipmentId: shipment.shipmentId })}
+                                        >
+                                          ابطال مرسوله
+                                        </button>
+                                      ) : null}
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </>
+                      );
+                    })()
                   )}
                   {canCreate ? (
                     <button

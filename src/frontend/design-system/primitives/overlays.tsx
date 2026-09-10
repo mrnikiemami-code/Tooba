@@ -40,6 +40,7 @@ export function Dialog({
   onClose,
   children,
   showCloseButton = true,
+  size = "md",
 }: {
   title: string;
   open: boolean;
@@ -47,6 +48,7 @@ export function Dialog({
   children: ReactNode;
   /** وقتی دکمه‌های صریح در children هست، دکمهٔ پیش‌فرض «بستن» را پنهان کنید. */
   showCloseButton?: boolean;
+  size?: "md" | "lg" | "xl";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -55,11 +57,20 @@ export function Dialog({
     if (open && !node.open) node.showModal();
     if (!open && node.open) node.close();
   }, [open]);
+  const widthClass =
+    size === "xl"
+      ? "w-[min(52rem,calc(100%-2rem))]"
+      : size === "lg"
+        ? "w-[min(42rem,calc(100%-2rem))]"
+        : "w-[min(32rem,calc(100%-2rem))]";
   return (
     <dialog
       ref={ref}
       onClose={onClose}
-      className="z-[var(--z-modal)] w-[min(32rem,calc(100%-2rem))] rounded-ds border border-border bg-surface p-4 shadow-ds"
+      className={cn(
+        "z-[var(--z-modal)] max-h-[90vh] overflow-hidden rounded-ds border border-border bg-surface p-4 shadow-ds",
+        widthClass,
+      )}
     >
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
       {children}

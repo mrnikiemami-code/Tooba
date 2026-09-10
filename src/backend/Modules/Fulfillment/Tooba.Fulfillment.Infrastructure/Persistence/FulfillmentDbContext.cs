@@ -53,6 +53,18 @@ public sealed class FulfillmentDbContext : DbContext
     /// </summary>
     public DbSet<ConsolidatedPackageMember> ConsolidatedPackageMembers => Set<ConsolidatedPackageMember>();
 
+    /// <summary>سرویس‌های ارسال دو‌سطحی (والد).</summary>
+    public DbSet<ShippingService> ShippingServices => Set<ShippingService>();
+
+    /// <summary>ترجمه‌های سرویس ارسال والد.</summary>
+    public DbSet<ShippingServiceTranslation> ShippingServiceTranslations => Set<ShippingServiceTranslation>();
+
+    /// <summary>گزینه‌های نوع سرویس (فرزند).</summary>
+    public DbSet<ShippingServiceOption> ShippingServiceOptions => Set<ShippingServiceOption>();
+
+    /// <summary>ترجمه‌های نوع سرویس فرزند.</summary>
+    public DbSet<ShippingServiceOptionTranslation> ShippingServiceOptionTranslations => Set<ShippingServiceOptionTranslation>();
+
     /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
@@ -148,6 +160,43 @@ public sealed class FulfillmentDbContext : DbContext
             entity.HasIndex(x => x.ShipmentId)
                 .IsUnique()
                 .HasFilter("released_at IS NULL");
+        });
+        modelBuilder.Entity<ShippingService>(entity =>
+        {
+            entity.ToTable("shipping_services");
+            entity.HasKey(x => x.ShippingServiceId);
+            entity.Property(x => x.ShippingServiceId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64);
+            entity.Property(x => x.ProviderKind).HasMaxLength(64);
+            entity.Property(x => x.IconKey).HasMaxLength(32);
+            entity.Property(x => x.ColorKey).HasMaxLength(32);
+            entity.HasIndex(x => x.Code).IsUnique();
+        });
+        modelBuilder.Entity<ShippingServiceTranslation>(entity =>
+        {
+            entity.ToTable("shipping_service_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name).HasMaxLength(128);
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.HasIndex(x => new { x.ShippingServiceId, x.LanguageId }).IsUnique();
+        });
+        modelBuilder.Entity<ShippingServiceOption>(entity =>
+        {
+            entity.ToTable("shipping_service_options");
+            entity.HasKey(x => x.ShippingServiceOptionId);
+            entity.Property(x => x.ShippingServiceOptionId).ValueGeneratedNever();
+            entity.Property(x => x.Code).HasMaxLength(64);
+            entity.HasIndex(x => new { x.ShippingServiceId, x.Code }).IsUnique();
+            entity.HasIndex(x => x.ShippingServiceId);
+        });
+        modelBuilder.Entity<ShippingServiceOptionTranslation>(entity =>
+        {
+            entity.ToTable("shipping_service_option_translations");
+            entity.HasKey(x => x.TranslationId);
+            entity.Property(x => x.TranslationId).ValueGeneratedNever();
+            entity.Property(x => x.Name).HasMaxLength(128);
+            entity.HasIndex(x => new { x.ShippingServiceOptionId, x.LanguageId }).IsUnique();
         });
         modelBuilder.Entity<FulfillmentPaymentInboxRecord>(entity =>
         {

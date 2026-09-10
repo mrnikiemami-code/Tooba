@@ -1,0 +1,15 @@
+"use client";
+
+import { Suspense } from "react";
+import { ShippingServicesScreen } from "../shipping-services-screen.tsx";
+
+/** صفحهٔ سرویس ارسال دو‌سطحی. */
+export default function AdminShippingServicesPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-gray-500">در حال بارگذاری…</p>}>
+      <div className="p-4 lg:p-6">
+        <ShippingServicesScreen />
+      </div>
+    </Suspense>
+  );
+}

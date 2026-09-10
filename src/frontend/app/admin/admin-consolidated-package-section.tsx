@@ -18,6 +18,12 @@ import {
 const METHOD_MISMATCH_FA =
   "برای ایجاد بسته تجمیعی، روش ارسال مرسوله‌های انتخاب‌شده باید یکسان باشد.";
 
+type PackageListTab = "current" | "cancelled";
+
+function isCancelledPackageStatus(status: string | null | undefined): boolean {
+  return status === "Cancelled" || status === "Canceled";
+}
+
 type EligibleShipmentRow = {
   shipmentId: string;
   sellerOrderId: string;
@@ -100,9 +106,19 @@ export function AdminConsolidatedPackageSection({
   const [packageTrackingInput, setPackageTrackingInput] = useState("");
   const [trackingDialogError, setTrackingDialogError] = useState<string | null>(null);
   const [dispatchAfterTracking, setDispatchAfterTracking] = useState(false);
+  const [packageTab, setPackageTab] = useState<PackageListTab>("current");
 
   const eligible = useMemo(() => collectEligible(detail), [detail]);
   const packages = detail.consolidatedPackages ?? [];
+  const currentPackages = useMemo(
+    () => packages.filter((pkg) => !isCancelledPackageStatus(pkg.status)),
+    [packages],
+  );
+  const cancelledPackages = useMemo(
+    () => packages.filter((pkg) => isCancelledPackageStatus(pkg.status)),
+    [packages],
+  );
+  const visiblePackages = packageTab === "cancelled" ? cancelledPackages : currentPackages;
   const canCreate = checkoutActions.some((a) => a.code === "create_consolidated_package");
 
   const selectedRows = useMemo(
@@ -290,103 +306,172 @@ export function AdminConsolidatedPackageSection({
           هنوز بسته تجمیعی ایجاد نشده است.
         </p>
       ) : (
-        <ul className="mt-3 space-y-2">
-          {packages.map((pkg) => {
-            const canCancel = Boolean(packageAction(pkg, "cancel_consolidated_package"));
-            const canAssignTracking = Boolean(packageAction(pkg, "assign_consolidated_package_tracking"))
-              || (pkg.status === "Created" && !pkg.trackingReference);
-            const canDispatch = Boolean(packageAction(pkg, "dispatch_consolidated_package"));
-            const canDeliver = Boolean(packageAction(pkg, "deliver_consolidated_package"));
-            const needsTracking = !pkg.trackingReference?.trim();
-            return (
-              <li
-                key={pkg.consolidatedPackageId}
-                className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
-                data-testid={`admin-consolidated-package-card-${pkg.consolidatedPackageId}`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-mono text-xs font-bold text-gray-900" dir="ltr">{pkg.packageNumber}</p>
-                    <p className="mt-1 text-[11px] text-gray-600">
-                      {pkg.sellerCount.toLocaleString("fa-IR")} فروشنده ·{" "}
-                      {pkg.memberShipmentCount.toLocaleString("fa-IR")} مرسوله · {pkg.shippingMethodLabel}
-                    </p>
-                    {pkg.trackingReference ? (
-                      <p className="mt-1 text-[11px] text-gray-600" dir="ltr">
-                        رهگیری مرکزی: {pkg.trackingReference}
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-[11px] font-semibold text-amber-800">
-                        کد رهگیری مرکزی ثبت نشده است.
-                      </p>
-                    )}
-                  </div>
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
-                    {formatAdminStatus(pkg.status)}
-                  </span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {canAssignTracking && needsTracking ? (
-                    <button
-                      type="button"
-                      className="rounded border border-blue-200 px-2 py-1 text-[10px] font-bold text-blue-800 disabled:opacity-50"
-                      disabled={pendingCode !== null}
-                      data-testid={`admin-consolidated-package-tracking-${pkg.consolidatedPackageId}`}
-                      onClick={() => openTrackingDialog(pkg, false)}
-                    >
-                      ثبت کد رهگیری
-                    </button>
-                  ) : null}
-                  {canCancel ? (
-                    <button
-                      type="button"
-                      className="rounded border border-red-200 px-2 py-1 text-[10px] font-bold text-red-700 disabled:opacity-50"
-                      disabled={pendingCode !== null}
-                      data-testid={`admin-consolidated-package-cancel-${pkg.consolidatedPackageId}`}
-                      onClick={() => void runPackageOp("cancel_consolidated_package", {
-                        consolidatedPackageId: pkg.consolidatedPackageId,
-                      })}
-                    >
-                      ابطال بسته تجمیعی
-                    </button>
-                  ) : null}
-                  {canDispatch ? (
-                    <button
-                      type="button"
-                      className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                      disabled={pendingCode !== null}
-                      data-testid={`admin-consolidated-package-dispatch-${pkg.consolidatedPackageId}`}
-                      onClick={() => {
-                        if (needsTracking) {
-                          openTrackingDialog(pkg, true);
-                          return;
+        <>
+          <div
+            className="mt-3 flex gap-1 rounded-lg bg-white p-0.5 ring-1 ring-indigo-100"
+            role="tablist"
+            aria-label="فیلتر بسته‌های تجمیعی"
+            data-testid="admin-consolidated-package-tabs"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={packageTab === "current"}
+              data-testid="admin-consolidated-package-tab-current"
+              className={
+                packageTab === "current"
+                  ? "flex-1 rounded-md bg-indigo-50 px-2 py-1.5 text-[11px] font-bold text-indigo-900"
+                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-white/70"
+              }
+              onClick={() => setPackageTab("current")}
+            >
+              مرسوله جاری
+              {currentPackages.length > 0
+                ? ` (${currentPackages.length.toLocaleString("fa-IR")})`
+                : ""}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={packageTab === "cancelled"}
+              data-testid="admin-consolidated-package-tab-cancelled"
+              className={
+                packageTab === "cancelled"
+                  ? "flex-1 rounded-md bg-red-50 px-2 py-1.5 text-[11px] font-bold text-red-700"
+                  : "flex-1 rounded-md px-2 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-white/70"
+              }
+              onClick={() => setPackageTab("cancelled")}
+            >
+              لغو شده‌ها
+              {cancelledPackages.length > 0
+                ? ` (${cancelledPackages.length.toLocaleString("fa-IR")})`
+                : ""}
+            </button>
+          </div>
+          {visiblePackages.length === 0 ? (
+            <p
+              className="mt-3 text-center text-[11px] text-gray-500"
+              data-testid={`admin-consolidated-package-tab-empty-${packageTab}`}
+            >
+              {packageTab === "cancelled"
+                ? "بسته تجمیعی لغوشده‌ای وجود ندارد."
+                : "بسته تجمیعی جاری‌ای وجود ندارد."}
+            </p>
+          ) : (
+            <ul
+              className="mt-3 space-y-2"
+              data-testid={`admin-consolidated-package-list-${packageTab}`}
+            >
+              {visiblePackages.map((pkg) => {
+                const canCancel = Boolean(packageAction(pkg, "cancel_consolidated_package"));
+                const canAssignTracking = Boolean(packageAction(pkg, "assign_consolidated_package_tracking"))
+                  || (pkg.status === "Created" && !pkg.trackingReference);
+                const canDispatch = Boolean(packageAction(pkg, "dispatch_consolidated_package"));
+                const canDeliver = Boolean(packageAction(pkg, "deliver_consolidated_package"));
+                const needsTracking = !pkg.trackingReference?.trim();
+                const packageCancelled = isCancelledPackageStatus(pkg.status);
+                return (
+                  <li
+                    key={pkg.consolidatedPackageId}
+                    className={
+                      packageCancelled
+                        ? "rounded-lg border border-red-100/80 bg-red-50/40 p-3 shadow-sm"
+                        : "rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+                    }
+                    data-testid={`admin-consolidated-package-card-${pkg.consolidatedPackageId}`}
+                    data-cancelled={packageCancelled ? "true" : undefined}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="font-mono text-xs font-bold text-gray-900" dir="ltr">{pkg.packageNumber}</p>
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          {pkg.sellerCount.toLocaleString("fa-IR")} فروشنده ·{" "}
+                          {pkg.memberShipmentCount.toLocaleString("fa-IR")} مرسوله · {pkg.shippingMethodLabel}
+                        </p>
+                        {pkg.trackingReference ? (
+                          <p className="mt-1 text-[11px] text-gray-600" dir="ltr">
+                            رهگیری مرکزی: {pkg.trackingReference}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[11px] font-semibold text-amber-800">
+                            کد رهگیری مرکزی ثبت نشده است.
+                          </p>
+                        )}
+                      </div>
+                      <span
+                        className={
+                          packageCancelled
+                            ? "rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600"
+                            : "rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-800"
                         }
-                        void runPackageOp("dispatch_consolidated_package", {
-                          consolidatedPackageId: pkg.consolidatedPackageId,
-                        });
-                      }}
-                    >
-                      ارسال بسته تجمیعی
-                    </button>
-                  ) : null}
-                  {canDeliver ? (
-                    <button
-                      type="button"
-                      className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
-                      disabled={pendingCode !== null}
-                      data-testid={`admin-consolidated-package-deliver-${pkg.consolidatedPackageId}`}
-                      onClick={() => void runPackageOp("deliver_consolidated_package", {
-                        consolidatedPackageId: pkg.consolidatedPackageId,
-                      })}
-                    >
-                      تحویل بسته تجمیعی
-                    </button>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                      >
+                        {formatAdminStatus(pkg.status)}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {canAssignTracking && needsTracking ? (
+                        <button
+                          type="button"
+                          className="rounded border border-blue-200 px-2 py-1 text-[10px] font-bold text-blue-800 disabled:opacity-50"
+                          disabled={pendingCode !== null}
+                          data-testid={`admin-consolidated-package-tracking-${pkg.consolidatedPackageId}`}
+                          onClick={() => openTrackingDialog(pkg, false)}
+                        >
+                          ثبت کد رهگیری
+                        </button>
+                      ) : null}
+                      {canCancel ? (
+                        <button
+                          type="button"
+                          className="rounded border border-red-200 px-2 py-1 text-[10px] font-bold text-red-700 disabled:opacity-50"
+                          disabled={pendingCode !== null}
+                          data-testid={`admin-consolidated-package-cancel-${pkg.consolidatedPackageId}`}
+                          onClick={() => void runPackageOp("cancel_consolidated_package", {
+                            consolidatedPackageId: pkg.consolidatedPackageId,
+                          })}
+                        >
+                          ابطال بسته تجمیعی
+                        </button>
+                      ) : null}
+                      {canDispatch ? (
+                        <button
+                          type="button"
+                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                          disabled={pendingCode !== null}
+                          data-testid={`admin-consolidated-package-dispatch-${pkg.consolidatedPackageId}`}
+                          onClick={() => {
+                            if (needsTracking) {
+                              openTrackingDialog(pkg, true);
+                              return;
+                            }
+                            void runPackageOp("dispatch_consolidated_package", {
+                              consolidatedPackageId: pkg.consolidatedPackageId,
+                            });
+                          }}
+                        >
+                          ارسال بسته تجمیعی
+                        </button>
+                      ) : null}
+                      {canDeliver ? (
+                        <button
+                          type="button"
+                          className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
+                          disabled={pendingCode !== null}
+                          data-testid={`admin-consolidated-package-deliver-${pkg.consolidatedPackageId}`}
+                          onClick={() => void runPackageOp("deliver_consolidated_package", {
+                            consolidatedPackageId: pkg.consolidatedPackageId,
+                          })}
+                        >
+                          تحویل بسته تجمیعی
+                        </button>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
 
       <Dialog

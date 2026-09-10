@@ -1,5 +1,7 @@
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Infrastructure.Persistence;
+using Tooba.Localization.Application;
 
 namespace Tooba.Host.Admin;
 
@@ -18,10 +20,16 @@ public static class AdminOrderOperationsEndpoints
         app.MapGet("/v1/admin/shipping-methods", ListShippingMethodsAsync);
     }
 
-    private static IResult ListShippingMethodsAsync(ShippingMethodsOptions options)
+    private static async Task<IResult> ListShippingMethodsAsync(
+        FulfillmentDbContext db,
+        ILanguageDirectory languages,
+        ShippingMethodsOptions options,
+        string? language,
+        CancellationToken cancellationToken)
     {
-        var enabled = ShippingMethodRegistry.Enabled(options);
-        return Results.Json(enabled.Select(x => new { code = x.Code, labelFa = x.LabelFa, providerKind = x.ProviderKind }));
+        var tree = await ShippingServiceEndpoints.ListEnabledMethodsTreeAsync(
+            db, languages, options, language, cancellationToken);
+        return Results.Json(tree);
     }
 
     private static async Task<IResult> ListOperationsAsync(
