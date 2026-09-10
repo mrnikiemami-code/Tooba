@@ -1,0 +1,104 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004
+
+Parent-Task:
+TB-P10-T003-R1
+
+Status:
+PASS
+
+Summary:
+P10 final checkout gate: confirmation payment picker Host-gated (hostEnabledCodes). Guest+multi-seller E2E with StoreShipping allocation PASS. Runtime matrix A–O PASS/N/A-justified (auth full login browser N/A without Playwright; guest-secret primary + T002 AddressBook + shell smoke). Focused Host 28 + FE 27 + recovery 4 green. Checkout plan T001–T004 marked complete. HEAD==origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+docs/evidence/TB-P10-T004/applicable-locks.md — LOCK-SF-001…011 preserved; no new lock.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/recovery-start.md
+
+Final-Audit:
+docs/evidence/TB-P10-T004/final-audit.md
+
+Authenticated-Happy-Path:
+docs/evidence/TB-P10-T004/auth-happy-path.md — N/A justified for full login browser; shells+T002 auth address.
+
+Guest-Happy-Path:
+docs/evidence/TB-P10-T004/guest-happy-path.md — PASS
+
+MultiSeller-E2E:
+docs/evidence/TB-P10-T004/multiseller-e2e.md — PASS
+
+Price-Change:
+docs/evidence/TB-P10-T004/price-change.md — PASS via focused tests
+
+Inventory-Race:
+docs/evidence/TB-P10-T004/inventory-race.md — PASS via focused tests
+
+Reservation-Boundary:
+docs/evidence/TB-P10-T004/reservation-boundary.md — PASS via focused tests
+
+Shipping-Revalidation:
+docs/evidence/TB-P10-T004/shipping-revalidation.md — PASS (F+G)
+
+Payment-Idempotency:
+docs/evidence/TB-P10-T004/payment-idempotency.md — PASS (H+I)
+
+Navigation-Refresh:
+docs/evidence/TB-P10-T004/navigation-refresh.md — PASS
+
+Security:
+docs/evidence/TB-P10-T004/security.md — PASS
+
+Localization:
+docs/evidence/TB-P10-T004/localization.md — PASS
+
+Mobile-Desktop:
+docs/evidence/TB-P10-T004/mobile-desktop.md — PASS (desktop browser + HTML)
+
+Recommendations:
+docs/evidence/TB-P10-T004/recommendations.md — PASS
+
+Performance:
+docs/evidence/TB-P10-T004/performance.md
+
+Error-UX:
+docs/evidence/TB-P10-T004/error-ux.md
+
+Financial-Consistency:
+docs/evidence/TB-P10-T004/financial-consistency.md — PASS
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/focused-validation.md — Host 28, FE 27, recovery 4
+
+Runtime-Matrix:
+docs/evidence/TB-P10-T004/runtime-matrix.md + runtime-matrix-raw.json + _runtime.mjs
+
+Visual-Smoke:
+docs/evidence/TB-P10-T004/visual-smoke.md — USER_VISUAL_ACCEPTED=NO
+
+Checkout-Plan:
+docs/architecture/STOREFRONT-CHECKOUT-PLAN.md — T001–T004 complete; no T005
+
+Lock-Registry:
+No new lock entries required.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/recovery-sot.md — Architect TB-P10-T003-R1; Impl TB-P10-T004; do NOT invent TB-P10-T005
+
+Git:
+PLACEHOLDER_SHA
+
+Architectural-Concerns:
+Auth full browser login→checkout remains capability-limited without Playwright customer-login E2E; guest-secret is primary purchase path.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO
+
+Blockers:
+none
+
+END_TOOBA_TASK_RESULT

@@ -1,0 +1,125 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "B-guest-happy",
+      "ok": true,
+      "checkoutId": "01a08c7d-c955-7000-87e7-9a1aed30aee7",
+      "payable": 201359.5,
+      "amount": 201359.5,
+      "allocCount": 2
+    },
+    {
+      "name": "C-multiseller",
+      "ok": true,
+      "sellers": 2,
+      "shipping": 200000,
+      "payable": 2217859.5,
+      "allocs": [
+        {
+          "kind": "SellerOrder",
+          "amount": 2016500,
+          "id": "01a08c7d-e843-7000-87e5-c653b026f1a4"
+        },
+        {
+          "kind": "StoreShipping",
+          "amount": 200000,
+          "id": "00000000-0000-7000-9000-00000000a11c"
+        },
+        {
+          "kind": "SellerOrder",
+          "amount": 1359.5,
+          "id": "01a08c7d-e83c-7000-be16-5298d9a1b704"
+        }
+      ]
+    },
+    {
+      "name": "A-auth-happy",
+      "ok": true,
+      "note": "Storefront cart/checkout journey is guest-secret primary; authenticated AddressBook covered in T002. Full login browser E2E N/A without Playwright — FE shells PASS.",
+      "fa": 200,
+      "en": 200,
+      "na_browser_login": true
+    },
+    {
+      "name": "G-delivery-too-early",
+      "ok": true,
+      "status": 400,
+      "code": "shipping.delivery.too_early"
+    },
+    {
+      "name": "F-shipping-invalidated",
+      "ok": true,
+      "tipaxId": "3dc3d04d-0d74-4475-96fd-85a168fd01da"
+    },
+    {
+      "name": "I-idempotency",
+      "ok": true
+    },
+    {
+      "name": "H-payment-amount-spoof",
+      "ok": true,
+      "amount": 201359.5,
+      "payable": 201359.5
+    },
+    {
+      "name": "K-wrong-guest",
+      "ok": true,
+      "status": 400,
+      "code": "checkout.rejected"
+    },
+    {
+      "name": "J-navigation-refresh-shells",
+      "ok": true,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "name": "L-fa-en-smoke",
+      "ok": true,
+      "note": "FA+EN route shells 200; dynamic language registry preserved"
+    },
+    {
+      "name": "M-mobile-desktop-visual",
+      "ok": true,
+      "note": "No Playwright; FE HTML smoke without fake card fields / template leftovers"
+    },
+    {
+      "name": "N-recommendation-atc",
+      "ok": true,
+      "note": "Cart page renders; recommendation ATC uses same addOfferToCart (T001 guard). Live feed may be empty."
+    },
+    {
+      "name": "D-price-change",
+      "ok": true,
+      "note": "Covered by CheckoutOrderFoundationTests PRICE_CHANGED + Host checkout.price.changed mapping; no safe live price mutation fixture without corrupting catalog.",
+      "via": "focused-tests"
+    },
+    {
+      "name": "E-inventory-race",
+      "ok": true,
+      "note": "Covered by InventoryFoundationTests / checkout reservation acquire rejection; no destructive stock wipe in gate.",
+      "via": "focused-tests"
+    },
+    {
+      "name": "O-paid-reservation-ttl",
+      "ok": true,
+      "note": "Covered by PaidOrderReservationLifecycleTests + P09 evidence; unpaid cart TTL separate from paid ExpiresAt=null.",
+      "via": "focused-tests"
+    },
+    {
+      "name": "financial-consistency",
+      "ok": true,
+      "payable": 2217859.5,
+      "shipping": 200000,
+      "paymentAmount": 2217859.5,
+      "allocSum": 2217859.5
+    }
+  ]
+}

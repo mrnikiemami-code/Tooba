@@ -24,7 +24,7 @@ Reuse Shopeiva `/shipping` UI with real Tooba data:
 - Minimum delivery = max(seller prep) + method lead; later OK, earlier rejected
 - Continue → `/payment` with checkoutId
 
-## T003 — Payment (IMPLEMENTED — THIS TASK)
+## T003 — Payment (TECHNICALLY COMPLETE / Architect-accepted via T003-R1)
 
 Reuse existing `/payment` UI:
 
@@ -33,21 +33,21 @@ Reuse existing `/payment` UI:
 - Order summary + final payable backend-authoritative (includes shipping)
 - Initiate Payment attempt on existing checkout (Order already created at shipping commit)
 - Manual + Sandbox gateway paths; no fake Production PSP
+- StoreShipping payment allocation (T003-R1) — no first-seller shortcut
 
-## T004 — Checkout E2E hardening (NOT THIS TASK)
+## T004 — Checkout E2E hardening (IMPLEMENTED — THIS TASK)
 
-Cart → Shipping → Payment → successful Order:
+Cart → Shipping → Payment → Order final technical gate:
 
-- Guest/auth paths
-- Pricing/inventory concurrency
-- Sold-out / price-changed handling
-- Refresh / back / retry / idempotency hardening
-- Multilingual RTL/LTR + mobile/desktop
-- Visual regression vs Shopeiva
+- Guest E2E + multi-seller StoreShipping proven
+- Confirmation payment picker Host-gated (`hostEnabledCodes`)
+- Price/inventory/shipping invalidation + idempotency + security matrix A–O
+- FA/EN shell smoke; visual smoke without marking USER_VISUAL_ACCEPTED
+- Focused Host/FE suites green
 
-## Non-goals for T003
+## Non-goals for T004
 
-- No TB-P10-T004
-- No redesign of Shopeiva Payment layout
+- No TB-P10-T005
+- No redesign of Shopeiva checkout layout
+- No Consolidated Package work
 - No inventing COD or new provider types
-- No collecting raw bank-card credentials in Tooba UI

@@ -13,6 +13,7 @@ import {
 import { bootstrapCartSessionFromQuery } from "../../storefront/storefront-cart-api.ts";
 import { StorefrontPaymentMethodPicker } from "../../storefront/storefront-payment-methods.tsx";
 import {
+  loadStorefrontPaymentMethods,
   loadStorefrontWalletQuote,
   requiresProviderRedirect,
   startStorefrontPayment,
@@ -40,6 +41,7 @@ function ConfirmationBody() {
   const checkoutId = params.get("checkoutId");
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [quote, setQuote] = useState<StorefrontWalletQuote | null>(null);
+  const [enabledCodes, setEnabledCodes] = useState<string[]>([]);
   const [method, setMethod] = useState<StorefrontPaymentMethodId>("gateway");
   const [error, setError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
@@ -64,11 +66,20 @@ function ConfirmationBody() {
         if (cancelled) return;
         setPage(checkout);
         if (checkout.paymentState !== "Paid") {
-          const nextQuote = await loadStorefrontWalletQuote(checkoutId);
+          const [nextQuote, methodsPage] = await Promise.all([
+            loadStorefrontWalletQuote(checkoutId),
+            loadStorefrontPaymentMethods(),
+          ]);
           if (cancelled) return;
           setQuote(nextQuote);
+          const codes = methodsPage.methods.map((m) => m.code.toLowerCase());
+          setEnabledCodes(codes);
           if (nextQuote?.canPayFullyWithWallet) {
             setMethod("wallet");
+          } else if (codes.includes("gateway")) {
+            setMethod("gateway");
+          } else if (codes.includes("manual") || methodsPage.manualCardToCardEnabled) {
+            setMethod("manual");
           }
         }
       })
@@ -184,7 +195,12 @@ function ConfirmationBody() {
 
           {!paid ? (
             <div className="space-y-4 text-right mb-4">
-              <StorefrontPaymentMethodPicker selected={method} onChange={setMethod} quote={quote} />
+              <StorefrontPaymentMethodPicker
+                selected={method}
+                onChange={setMethod}
+                quote={quote}
+                hostEnabledCodes={enabledCodes}
+              />
               <button
                 type="button"
                 disabled={paying}
