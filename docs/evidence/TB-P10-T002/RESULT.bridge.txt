@@ -1,0 +1,107 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T002
+
+Status:
+PASS
+
+Summary:
+Storefront /shipping connected to real Host checkout projection: Store-enabled ShippingService methods only, backend-authoritative shipping prices, delivery minimum = today(UTC)+max(sellerPreparationDays)+methodLeadDays with later allowed and earlier rejected, address/recipient/notes draft persistence, continue → existing /payment template handoff (no payment methods). Shopeiva shipping UI preserved. Focused tests 13/0. Runtime A–F PASS on :5088/:3000. Commit fd51d592 on origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T003.
+
+Applicable-Locks:
+- LOCK-SF-001…005 preserved
+- Store-enabled shipping methods only (no template hardcode)
+- Shipping price backend-authoritative
+- Earliest delivery backend-calculated; never earlier than minimum
+- Frontend cannot spoof disabled method/earlier date
+- Cart reservation / Product!=Offer / decimal policy preserved
+
+Discovery:
+docs/evidence/TB-P10-T002/discovery.md
+
+Cart-Shipping-Handoff:
+docs/evidence/TB-P10-T002/cart-shipping-handoff.md
+/cart continue loads authoritative cart into /shipping; empty/expired rejected.
+
+Addresses:
+docs/evidence/TB-P10-T002/addresses.md
+Auth saved addresses + guest checkout-scoped address; new address dialog real; no GUID labels.
+
+Recipient:
+Prefill from selected/new address; snapshotted via checkout draft path.
+
+Shipping-Methods:
+docs/evidence/TB-P10-T002/shipping-methods.md
+Projection from Store-enabled ShippingService catalog; tipax deactivate omitted; zero methods → unavailable state.
+
+Shipping-Pricing:
+docs/evidence/TB-P10-T002/shipping-pricing.md
+Host quote only; no fake free; method change updates summary.
+
+Delivery-Minimum:
+docs/evidence/TB-P10-T002/delivery-minimum.md
+minimumDeliveryDate = today(UTC) + max(sellerPreparationDays) + methodLeadDays; forged earlier → shipping.delivery.too_early.
+
+Delivery-Selection:
+docs/evidence/TB-P10-T002/delivery-selection.md
+Date cards/time windows respect minimum; later selectable; persisted in draft.
+
+MultiSeller:
+docs/evidence/TB-P10-T002/multiseller.md
+MAX seller prep across cart SellerPartyIds; unit-tested; runtime single LIVE-A seller available.
+
+Notes:
+docs/evidence/TB-P10-T002/notes.md
+Optional order notes trimmed/persisted on draft/commit.
+
+Security:
+docs/evidence/TB-P10-T002/security.md
+Guest/cart ownership; no trusted client price/date/method; store isolation.
+
+Error-UX:
+docs/evidence/TB-P10-T002/error-ux.md
+Localized storefront mapping; no GUID/enum/JSON leak.
+
+Performance:
+docs/evidence/TB-P10-T002/performance.md
+Coherent shipping projection; no per-address/per-seller UI waterfall.
+
+Focused-Validation:
+docs/evidence/TB-P10-T002/focused-validation.md
+Passed=13 Failed=0 (StorefrontShippingCalculatorTests 6 + storefront-shipping-api.test 4 + recovery 3).
+
+Runtime-Smoke:
+docs/evidence/TB-P10-T002/runtime-smoke.md
+A–F PASS; commit yields checkoutId; /fa/payment 200.
+
+Visual-Smoke:
+docs/evidence/TB-P10-T002/visual-smoke.md
+Shopeiva shipping composition preserved; USER_VISUAL_ACCEPTED=NO.
+
+Checkout-Plan:
+docs/architecture/STOREFRONT-CHECKOUT-PLAN.md
+T001 complete; T002 implemented; T003/T004 not started.
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md shipping Store-enabled / price / delivery-minimum locks added as non-duplicates.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T002/recovery-sot.md
+Phase P10; Last Architect-accepted TB-P10-T001; Last Implementation TB-P10-T002; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T003.
+
+Git:
+fd51d592335739a563ca2639089f1cb7f7e4eacb on origin/main; HEAD==origin/main
+
+Architectural-Concerns:
+Runtime multi-seller limited to available fixture seller; MAX-prep covered by unit tests. Cart shipping drafts table applied on runtime DB — keep on normal migrate path.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending Architect visual accept.
+
+Blockers:
+None for T002 acceptance.
+
+END_TOOBA_TASK_RESULT
