@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_TASK_RESULT
 
@@ -90,7 +90,9 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/recovery-sot.md — Architect TB-P10-T003-R1; Impl TB-P10-T004; do NOT invent TB-P10-T005
 
 Git:
-PLACEHOLDER_SHA
+- branch: main
+- final HEAD: 33dbdf08082fa2fe9bb08826ea4009f5bc2a6bd6
+- synchronized: pending push
 
 Architectural-Concerns:
 Auth full browser login→checkout remains capability-limited without Playwright customer-login E2E; guest-secret is primary purchase path.
