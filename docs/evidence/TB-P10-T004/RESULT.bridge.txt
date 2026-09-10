@@ -91,8 +91,10 @@ docs/evidence/TB-P10-T004/recovery-sot.md — Architect TB-P10-T003-R1; Impl TB-
 
 Git:
 - branch: main
-- final HEAD: 33dbdf08082fa2fe9bb08826ea4009f5bc2a6bd6
-- synchronized: pending push
+- final HEAD: dc8165a10eb4fd9a3ac3dfe762ec27f543814349
+- synchronized: yes
+- HEAD==origin/main: yes
+- working tree task-owned: clean
 
 Architectural-Concerns:
 Auth full browser login→checkout remains capability-limited without Playwright customer-login E2E; guest-secret is primary purchase path.
