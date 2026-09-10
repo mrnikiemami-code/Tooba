@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P09-T022-R3
+
+Status:
+PASS
+
+Summary:
+Paid-order Inventory reservations now clear cart TTL (ExpiresAt=null) via Inventory-owned CommitReservationForPaidOrderAsync on payment success. ReleaseExpiredHoldsAsync no longer releases committed paid holds. Dispatch Consume invariant unchanged. Cancel/Restore durable semantics preserved. Focused tests 22/22 green. Commit fae76018 on origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P09-T023.
+
+Applicable-Locks:
+- Inventory owns reservation lifecycle and paid-order commit
+- Cart TTL only before payment
+- Expiry worker only Held with non-null ExpiresAt
+- Released/Consumed never resurrected
+- Restore reacquires with durable (null) ExpiresAt
+- Dispatch Consume remains strict
+- LOCK-OPS-024..028 added to TOOBA-LOCKS.md
+
+Reservation-Lifecycle-Discovery:
+docs/evidence/TB-P09-T022/r3-reservation-lifecycle-discovery.md
+Before payment: Cart-timed Held hold. After payment: same Held id, ExpiresAt must be null. Bug field: expires_at still set after confirm_deposit.
+
+Reservation-Promotion:
+docs/evidence/TB-P09-T022/r3-reservation-promotion.md
+StockReservation.CommitForPaidOrder + CommitReservationForPaidOrderAsync; wired from OrderPaymentBridge.ApplyVerifiedSuccessAsync (idempotent Held+ExpiresAt already null).
+
+Expiry-Worker:
+docs/evidence/TB-P09-T022/r3-expiry-worker.md
+Filter unchanged (Held AND expires_at IS NOT NULL AND <= now). Promoted rows excluded naturally.
+
+Payment-Expiry-Race:
+docs/evidence/TB-P09-T022/r3-payment-expiry-race.md
+Promotion clears ExpiresAt; if expiry wins first Released not resurrected; Commit throws inventory.reservation.not_active.
+
+Cancel-Compatibility:
+docs/evidence/TB-P09-T022/r3-cancel-regression.md
+Cancel still ReleaseAsync once; historical Released preserved.
+
+Restore-Compatibility:
+docs/evidence/TB-P09-T022/r3-restore-regression.md
+Restore ReserveAsync(..., expiresAt: null) already durable; OrderLine/Fulfillment rebind unchanged.
+
+Decimal-Safety:
+docs/evidence/TB-P09-T022/r3-decimal-regression.md
+1.25 covered in PaidOrderReservationLifecycleTests.
+
+Dispatch-Guard:
+Consume still requires Held + reserved/on_hand; no Released-ignore patch.
+
+Error-UX:
+docs/evidence/TB-P09-T022/r3-error-ux.md
+Stable codes inventory.reservation.not_active / not_found / stock_mismatch mapped in Admin composer + admin-error-map.
+
+Focused-Validation:
+docs/evidence/TB-P09-T022/r3-focused-validation.md
+22 passed / 0 failed (PaidOrderReservationLifecycleTests | InventoryFoundationTests | WholeOrderCancelUntilDispatchTests).
+
+Runtime-Smoke:
+docs/evidence/TB-P09-T022/r3-runtime-smoke.md
+Host stopped for rebuild locks; proof from focused tests (commit clears TTL; expiry skips; Released not resurrected).
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-OPS-024..028
+
+Recovery-SoT:
+docs/evidence/TB-P09-T022/r3-recovery-sot.md
+Phase P09; Last Implementation TB-P09-T022-R3; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T023.
+
+Git:
+fae76018c1dcafcbe7aea915978829121cf1ebbc on origin/main; HEAD==origin/main
+
+Architectural-Concerns:
+None for this repair scope. Prior cart-TTL-after-payment defect closed.
+
+Visual-Concerns:
+None (inventory lifecycle only; no Admin package UI change in this task).
+
+Blockers:
+None
+
+END_TOOBA_TASK_RESULT
