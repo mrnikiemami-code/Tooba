@@ -140,6 +140,18 @@ builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp =>
+    new Tooba.Host.Storefront.StorefrontShippingComposer(
+        sp.GetRequiredService<StorefrontCartComposer>(),
+        sp.GetRequiredService<StorefrontCheckoutComposer>(),
+        sp.GetRequiredService<Tooba.AddressBook.Application.IAddressBookDirectory>(),
+        sp.GetRequiredService<Tooba.Fulfillment.Infrastructure.Persistence.FulfillmentDbContext>(),
+        sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
+        sp.GetRequiredService<Tooba.Localization.Application.ILanguageDirectory>(),
+        sp.GetRequiredService<Tooba.Fulfillment.Application.ShippingMethodsOptions>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>(),
+        sp.GetRequiredService<IHostEnvironment>(),
+        sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Settlement.SettlementPanelComposer>();

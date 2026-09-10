@@ -13,6 +13,27 @@ public sealed record ShippingMethodDefinition(
     string ProviderKind);
 
 /// <summary>
+/// نرخ و زمان‌بری یک روش ارسال فروشگاهی (کلید = کد سرویس یا service:option).
+/// </summary>
+public sealed class ShippingMethodRateOptions
+{
+    /// <summary>کد روش (مثل post یا post:express).</summary>
+    public string Code { get; set; } = string.Empty;
+
+    /// <summary>مبلغ پایه به واحد پول Market (ریال).</summary>
+    public decimal BasePrice { get; set; }
+
+    /// <summary>روزهای حمل/تحویل پس از آماده‌سازی فروشنده.</summary>
+    public int LeadDays { get; set; } = 1;
+
+    /// <summary>اگر جمع کالا ≥ این مبلغ باشد ارسال رایگان است؛ null یعنی بدون آستانه.</summary>
+    public decimal? FreeAboveSubtotal { get; set; }
+
+    /// <summary>استان‌های مجاز؛ خالی یعنی همه.</summary>
+    public string[] AllowedProvinces { get; set; } = [];
+}
+
+/// <summary>
 /// گزینه‌های روش‌های ارسال فعال.
 /// </summary>
 public sealed class ShippingMethodsOptions
@@ -29,6 +50,29 @@ public sealed class ShippingMethodsOptions
         "store_courier",
         "in_person",
     ];
+
+    /// <summary>روزهای آماده‌سازی پیش‌فرض هر فروشنده وقتی override ندارد.</summary>
+    public int DefaultSellerPreparationDays { get; set; } = 1;
+
+    /// <summary>افق روزهای قابل انتخاب بعد از حداقل.</summary>
+    public int DeliveryHorizonDays { get; set; } = 7;
+
+    /// <summary>نرخ‌های backend-authoritative به‌ازای کد روش.</summary>
+    public ShippingMethodRateOptions[] Rates { get; set; } =
+    [
+        new() { Code = "post", BasePrice = 150_000m, LeadDays = 3 },
+        new() { Code = "post:express", BasePrice = 200_000m, LeadDays = 2 },
+        new() { Code = "post:standard", BasePrice = 120_000m, LeadDays = 4 },
+        new() { Code = "tipax", BasePrice = 220_000m, LeadDays = 2 },
+        new() { Code = "tipax:express", BasePrice = 260_000m, LeadDays = 1 },
+        new() { Code = "tipax:standard", BasePrice = 180_000m, LeadDays = 3 },
+        new() { Code = "snapp_courier", BasePrice = 90_000m, LeadDays = 0 },
+        new() { Code = "store_courier", BasePrice = 75_000m, LeadDays = 1 },
+        new() { Code = "in_person", BasePrice = 0m, LeadDays = 0 },
+    ];
+
+    /// <summary>آماده‌سازی فروشنده به‌ازای SellerPartyId (اختیاری).</summary>
+    public Dictionary<string, int> SellerPreparationDaysByPartyId { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>

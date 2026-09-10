@@ -74,7 +74,12 @@ public sealed record CheckoutSnapshot(
     string PostalAddress = "",
     string PostalCode = "",
     string ShippingMethodCode = "",
-    string ShippingMethodLabel = "");
+    string ShippingMethodLabel = "",
+    decimal ShippingAmount = 0m,
+    DateOnly? MinimumDeliveryDate = null,
+    DateOnly? RequestedDeliveryDate = null,
+    string RequestedDeliveryTimeWindow = "",
+    string CustomerNote = "");
 
 /// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
@@ -97,7 +102,12 @@ public sealed record SubmitCheckoutCommand(
     string PostalAddress = "",
     string PostalCode = "",
     string ShippingMethodCode = "",
-    string ShippingMethodLabel = "");
+    string ShippingMethodLabel = "",
+    decimal ShippingAmount = 0m,
+    DateOnly? MinimumDeliveryDate = null,
+    DateOnly? RequestedDeliveryDate = null,
+    string RequestedDeliveryTimeWindow = "",
+    string CustomerNote = "");
 
 /// <summary>
 /// هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.

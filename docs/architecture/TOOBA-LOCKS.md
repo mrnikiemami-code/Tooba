@@ -177,7 +177,10 @@ Displayed cart/checkout money comes from Host Cart / Pricing / Checkout projecti
 Add-to-Cart sends Offer identity + quantity only. Unit/line amounts and subtotals are returned by Cart projection after Pricing quote.
 
 ### LOCK-SF-004 — Shipping and payment options are Store-enabled
-Later Shipping (T002) and Payment (T003) option lists come from Store/Admin-enabled configuration and existing Tooba registries. Template-only carriers or card forms must not be presented as live choices.
+Shipping (T002) and Payment (T003) option lists come from Store/Admin-enabled configuration and existing Tooba registries (ShippingService catalog ∩ EnabledCodes for shipping). Template-only carriers or card forms must not be presented as live choices. Frontend must not spoof a disabled method.
 
 ### LOCK-SF-005 — Delivery slot never earlier than calculated minimum
-When delivery date/time selection exists, the customer may choose a later valid slot than the calculated minimum readiness, but must not choose earlier.
+When delivery date/time selection exists, the customer may choose a later valid slot than the calculated minimum readiness, but must not choose earlier. Minimum is backend-calculated as max(seller preparation days) + method lead days. Frontend must not spoof an earlier date/time.
+
+### LOCK-SF-006 — Shipping price is backend-authoritative
+Displayed shipping cost comes from Host shipping quote/configuration (Rates). Frontend must not invent authoritative rates, treat template amounts as truth, or present free shipping unless the real rule/config yields zero.

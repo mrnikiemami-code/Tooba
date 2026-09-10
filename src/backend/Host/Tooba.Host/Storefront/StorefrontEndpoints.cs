@@ -32,6 +32,10 @@ public static class StorefrontEndpoints
         group.MapPost("/checkout/preview", PreviewCheckoutAsync);
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
+        group.MapPost("/shipping/projection", ProjectShippingAsync);
+        group.MapPut("/shipping/selection", SaveShippingSelectionAsync);
+        group.MapPost("/shipping/commit", CommitShippingAsync);
+        group.MapGet("/geography/provinces", () => Results.Json(StorefrontIranGeography.Provinces));
         group.MapPost("/checkout/{checkoutId:guid}/payments", InitiatePaymentAsync);
         group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", GetWalletQuoteAsync);
         group.MapGet("/payment-methods", ListPaymentMethodsAsync);
@@ -263,6 +267,39 @@ public static class StorefrontEndpoints
             couponCode ?? request.Query["couponCode"].FirstOrDefault(),
             cancellationToken));
 
+    private static Task<IResult> ProjectShippingAsync(
+        StorefrontShippingProjectionRequest body,
+        StorefrontShippingComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteShippingAsync(() => composer.ProjectAsync(
+            body.CartId,
+            ReadGuestSecret(request),
+            body.ProvinceName,
+            body.MethodCode,
+            body.Language,
+            cancellationToken));
+
+    private static Task<IResult> SaveShippingSelectionAsync(
+        StorefrontShippingSelectionRequest body,
+        StorefrontShippingComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteShippingAsync(() => composer.SaveSelectionAsync(body, ReadGuestSecret(request), cancellationToken));
+
+    private static Task<IResult> CommitShippingAsync(
+        StorefrontShippingCommitRequest body,
+        StorefrontShippingComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteCheckoutAsync(() => composer.CommitAsync(
+            body.CartId,
+            ReadGuestSecret(request),
+            body.ExpectedCartVersion,
+            body.IdempotencyKey,
+            body.CouponCode,
+            cancellationToken));
+
     private static Task<IResult> SubmitCheckoutAsync(
         StorefrontSubmitCheckoutRequest body,
         StorefrontCheckoutComposer composer,
@@ -417,6 +454,90 @@ public static class StorefrontEndpoints
                 statusCode: mapped.Status);
         }
     }
+
+    private static async Task<IResult> ExecuteShippingAsync<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            return Results.Json(await action());
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapShippingException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapShippingCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
+
+    private static (int Status, string Title, string Code) MapShippingException(InvalidOperationException exception)
+    {
+        var text = exception.Message;
+        if (text.Contains("shipping.cart.forbidden", StringComparison.Ordinal)
+            || text.Contains("متعلق", StringComparison.Ordinal)
+            || text.Contains("دفترچه", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "shipping.address.forbidden");
+        }
+
+        if (text.Contains("shipping.cart.missing", StringComparison.Ordinal)
+            || text.Contains("پیدا نشد", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status404NotFound, "Not Found", "shipping.cart.missing");
+        }
+
+        if (text.Contains("shipping.cart.empty", StringComparison.Ordinal) || text.Contains("خالی", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.cart.empty");
+        }
+
+        if (text.Contains("shipping.cart.stale", StringComparison.Ordinal) || text.Contains("کهنه", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "shipping.cart.stale");
+        }
+
+        if (text.Contains("shipping.method.unavailable", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.method.unavailable");
+        }
+
+        if (text.Contains("shipping.delivery.too_early", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.delivery.too_early");
+        }
+
+        if (text.Contains("shipping.delivery.slot_unavailable", StringComparison.Ordinal)
+            || text.Contains("shipping.delivery.invalid", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.delivery.slot_unavailable");
+        }
+
+        if (text.Contains("shipping.note.too_long", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.note.too_long");
+        }
+
+        if (text.Contains("shipping.selection.required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.selection.required");
+        }
+
+        return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.rejected");
+    }
+
+    private static string MapShippingCustomerDetail(string code) => code switch
+    {
+        "shipping.address.forbidden" => "نشانی انتخاب‌شده متعلق به این مشتری نیست.",
+        "shipping.cart.missing" => "سبد خرید پیدا نشد.",
+        "shipping.cart.empty" => "سبد خرید خالی است.",
+        "shipping.cart.stale" => "سبد خرید تغییر کرده است؛ صفحه را تازه کنید.",
+        "shipping.method.unavailable" => "روش ارسال انتخاب‌شده در دسترس نیست.",
+        "shipping.delivery.too_early" => "تاریخ تحویل نمی‌تواند زودتر از حداقل زمان آماده‌سازی باشد.",
+        "shipping.delivery.slot_unavailable" => "بازهٔ زمانی تحویل دیگر در دسترس نیست.",
+        "shipping.note.too_long" => "توضیحات سفارش بیش از حد طولانی است.",
+        "shipping.selection.required" => "ابتدا اطلاعات ارسال را تکمیل کنید.",
+        _ => "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.",
+    };
 
     private static (int Status, string Title, string Code) MapCheckoutException(InvalidOperationException exception)
     {

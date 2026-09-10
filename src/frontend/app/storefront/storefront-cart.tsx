@@ -267,7 +267,7 @@ export function StorefrontShopeivaCart({
                     </p>
                   </div>
                   <Link
-                    href="/checkout"
+                    href="/shipping"
                     className="mt-4 w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-[#2563EB] text-white hover:bg-[#1d4ed8] shadow-lg shadow-[#2563EB]/25"
                     data-testid="cart-checkout-cta"
                   >

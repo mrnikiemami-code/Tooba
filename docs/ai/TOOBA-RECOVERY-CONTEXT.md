@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T022-R4
+TB-P10-T001
 ```
 
 Prior accepted catalog wave:
@@ -50,13 +50,13 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T001
+TB-P10-T002
 ```
 
 Current Issued Task:
 
 ```text
-TB-P10-T001
+TB-P10-T002
 ```
 
 Current Repair Task:
@@ -68,7 +68,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P10-T001 — Storefront Cart foundation (real ATC, mini-cart, /cart recommendations); USER_VISUAL_ACCEPTED=NO
+TB-P10-T002 — Storefront Shipping (addresses, Store-enabled methods, delivery minimum, /payment handoff); USER_VISUAL_ACCEPTED=NO
+TB-P10-T001 — Storefront Cart foundation (real ATC, mini-cart, /cart recommendations); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R4 — Paid-order reservation REAL runtime proof (TTL/expiry/dispatch/cancel-restore/decimal); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R3 — Paid-order reservation commit clears cart TTL (ExpiresAt=null); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R2 — Customer Tracking UI Proof (owned session + consolidated package primary rendering); USER_VISUAL_ACCEPTED=NO
@@ -150,7 +151,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T002)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T003)
 ```
 
 Issued but not accepted:

@@ -131,7 +131,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             command.PostalAddress,
             command.PostalCode,
             command.ShippingMethodCode,
-            command.ShippingMethodLabel);
+            command.ShippingMethodLabel,
+            command.ShippingAmount,
+            command.MinimumDeliveryDate,
+            command.RequestedDeliveryDate,
+            command.RequestedDeliveryTimeWindow,
+            command.CustomerNote);
         _db.Checkouts.Add(group);
         try
         {
@@ -196,7 +201,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             command.PostalAddress,
             command.PostalCode,
             command.ShippingMethodCode,
-            command.ShippingMethodLabel);
+            command.ShippingMethodLabel,
+            command.ShippingAmount,
+            command.MinimumDeliveryDate,
+            command.RequestedDeliveryDate,
+            command.RequestedDeliveryTimeWindow,
+            command.CustomerNote);
         return ToSnapshot(group);
     }
 
@@ -703,7 +713,12 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             group.PostalAddress,
             group.PostalCode,
             group.ShippingMethodCode,
-            group.ShippingMethodLabel);
+            group.ShippingMethodLabel,
+            group.ShippingAmount,
+            group.MinimumDeliveryDate,
+            group.RequestedDeliveryDate,
+            group.RequestedDeliveryTimeWindow,
+            group.CustomerNote);
 
     private static SellerOrderSnapshot ToSellerSnapshot(SellerOrder order) =>
         new(

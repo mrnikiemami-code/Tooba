@@ -38,12 +38,49 @@ public sealed class FulfillmentModule : IToobaModule
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x!)
                 .ToArray();
-            return new ShippingMethodsOptions
+            var rates = section.GetSection("Rates").GetChildren()
+                .Select(r => new ShippingMethodRateOptions
+                {
+                    Code = r["Code"] ?? string.Empty,
+                    BasePrice = decimal.TryParse(r["BasePrice"], out var price) ? price : 0m,
+                    LeadDays = int.TryParse(r["LeadDays"], out var lead) ? lead : 1,
+                    FreeAboveSubtotal = decimal.TryParse(r["FreeAboveSubtotal"], out var free) ? free : null,
+                    AllowedProvinces = r.GetSection("AllowedProvinces").GetChildren()
+                        .Select(p => p.Value)
+                        .Where(v => !string.IsNullOrWhiteSpace(v))
+                        .Select(v => v!)
+                        .ToArray(),
+                })
+                .Where(r => !string.IsNullOrWhiteSpace(r.Code))
+                .ToArray();
+            var sellerPrep = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var child in section.GetSection("SellerPreparationDaysByPartyId").GetChildren())
+            {
+                if (!string.IsNullOrWhiteSpace(child.Key) && int.TryParse(child.Value, out var days))
+                {
+                    sellerPrep[child.Key] = days;
+                }
+            }
+
+            var options = new ShippingMethodsOptions
             {
                 EnabledCodes = codes.Length > 0
                     ? codes
                     : ["post", "tipax", "snapp_courier", "store_courier", "in_person"],
+                DefaultSellerPreparationDays = int.TryParse(section["DefaultSellerPreparationDays"], out var prep)
+                    ? prep
+                    : 1,
+                DeliveryHorizonDays = int.TryParse(section["DeliveryHorizonDays"], out var horizon)
+                    ? horizon
+                    : 7,
+                SellerPreparationDaysByPartyId = sellerPrep,
             };
+            if (rates.Length > 0)
+            {
+                options.Rates = rates;
+            }
+
+            return options;
         });
         services.AddScoped<IFulfillmentUseCaseGuard, OpenFulfillmentUseCaseGuard>();
         services.AddScoped<FulfillmentDirectory>();

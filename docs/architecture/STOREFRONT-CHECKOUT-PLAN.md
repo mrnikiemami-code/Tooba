@@ -2,36 +2,29 @@
 
 ```text
 Phase: P10 — Storefront Checkout Journey
-UI contract: Shopeiva structure locked (Tooba accent #2563EB)
+UI contract: Shopeiva structure locked (Tooba accent #2563EB on cart; shipping preserves Shopeiva red hero)
 Price / stock / quantity: backend-authoritative
 USER_VISUAL_ACCEPTED=NO until user accepts
 ```
 
-## T001 — Cart foundation (THIS TASK)
+## T001 — Cart foundation (TECHNICALLY COMPLETE)
 
-Connect Shopeiva cart UI to real Host Cart APIs:
+Connected Shopeiva cart UI to real Host Cart APIs (ATC, toast, badge, mini-cart, `/cart`, recommendations). Architect-accepted.
 
-- Product-card / PDP Add-to-Cart → Offer-backed Cart lines
-- Success toast + temporary card “اضافه شد” state (existing react-toastify)
-- Header badge = real `itemCount`
-- Mini-cart drawer (overlay, left `max-w-sm`, qty/remove/total, تکمیل خرید → `/cart`)
-- Real `/cart` lines/totals; coupon via checkout preview when available
-- Cart recommendations from existing live merchandising/home feed
-- No fabricated free shipping at cart stage
-- Guest secret ownership preserved; no invented merge policy
+## T002 — Shipping (THIS TASK — IMPLEMENTED)
 
-## T002 — Shipping (NOT THIS TASK)
+Reuse Shopeiva `/shipping` UI with real Tooba data:
 
-Reuse existing `/shipping` UI when present:
-
-- Saved address selection + add address
-- Recipient/address validation
-- Shipping methods from Store/Admin configuration
-- Seller/offer availability constraints
-- Delivery date/time from seller readiness + method
-- Customer may choose a **later** valid slot; never earlier than calculated minimum
-
-Do **not** invent T002 scope from T001.
+- Cart → `/shipping` handoff with authoritative cart
+- Saved address selection + new address (auth AddressBook; guest inline)
+- Recipient prefills from address
+- Shipping methods from Store-enabled ShippingService catalog (no template carriers)
+- Multi-seller eligibility via max seller readiness (no Admin concepts)
+- Shipping price backend-authoritative
+- Minimum delivery = max(seller prep) + method lead; later OK, earlier rejected
+- Delivery date/time UI preserved; order notes persisted
+- State via `cart_shipping_drafts`; Continue → `/payment` template handoff only
+- Do **not** implement Payment methods (T003)
 
 ## T003 — Payment (NOT THIS TASK)
 
@@ -53,10 +46,9 @@ Cart → Shipping → Payment → successful Order:
 - Multilingual RTL/LTR + mobile/desktop
 - Visual regression vs Shopeiva
 
-## Non-goals for T001
+## Non-goals for T002
 
-- No Shipping/Payment implementation
-- No new Promotions domain (use existing checkout coupon evaluation)
-- No redesign of Shopeiva DOM/layout
+- No Payment method implementation / no TB-P10-T003
+- No redesign of Shopeiva Shipping or Cart
+- No Consolidated Package Admin concepts on storefront
 - No second toast system
-- No TB-P10-T002 invention by Worker

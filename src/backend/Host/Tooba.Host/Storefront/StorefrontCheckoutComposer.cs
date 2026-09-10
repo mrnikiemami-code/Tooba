@@ -75,7 +75,14 @@ public sealed class StorefrontCheckoutComposer
         string idempotencyKey,
         StorefrontCheckoutShippingInput shipping,
         string? couponCode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? shippingMethodCode = null,
+        string? shippingMethodLabel = null,
+        decimal? shippingAmount = null,
+        DateOnly? minimumDeliveryDate = null,
+        DateOnly? requestedDeliveryDate = null,
+        string? requestedDeliveryTimeWindow = null,
+        string? customerNote = null)
     {
         var prepared = await PrepareShippingAsync(shipping, cancellationToken);
         var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
@@ -85,7 +92,20 @@ public sealed class StorefrontCheckoutComposer
         }
 
         var submitted = await _checkouts.SubmitAsync(
-            BuildCommand(cart, guestSecret, idempotencyKey, prepared.PlacedByUserId, prepared.Shipping, couponCode),
+            BuildCommand(
+                cart,
+                guestSecret,
+                idempotencyKey,
+                prepared.PlacedByUserId,
+                prepared.Shipping,
+                couponCode,
+                shippingMethodCode,
+                shippingMethodLabel,
+                shippingAmount,
+                minimumDeliveryDate,
+                requestedDeliveryDate,
+                requestedDeliveryTimeWindow,
+                customerNote),
             cancellationToken);
         return MapPage(submitted, cart, persisted: true);
     }
@@ -194,7 +214,14 @@ public sealed class StorefrontCheckoutComposer
         string idempotencyKey,
         Guid placedByUserId,
         StorefrontCheckoutShippingInput? shipping = null,
-        string? couponCode = null) =>
+        string? couponCode = null,
+        string? shippingMethodCode = null,
+        string? shippingMethodLabel = null,
+        decimal? shippingAmount = null,
+        DateOnly? minimumDeliveryDate = null,
+        DateOnly? requestedDeliveryDate = null,
+        string? requestedDeliveryTimeWindow = null,
+        string? customerNote = null) =>
         new(
             cart.CartId,
             new CartAccess(null, guestSecret),
@@ -212,8 +239,13 @@ public sealed class StorefrontCheckoutComposer
             shipping?.CityName ?? string.Empty,
             shipping?.PostalAddress ?? string.Empty,
             shipping?.PostalCode ?? string.Empty,
-            DefaultShippingCode,
-            DefaultShippingLabel);
+            string.IsNullOrWhiteSpace(shippingMethodCode) ? DefaultShippingCode : shippingMethodCode.Trim().ToLowerInvariant(),
+            string.IsNullOrWhiteSpace(shippingMethodLabel) ? DefaultShippingLabel : shippingMethodLabel.Trim(),
+            shippingAmount ?? 0m,
+            minimumDeliveryDate,
+            requestedDeliveryDate,
+            requestedDeliveryTimeWindow ?? string.Empty,
+            customerNote ?? string.Empty);
 
     private static StorefrontCheckoutPage MapPage(CheckoutSnapshot snapshot, StorefrontCartPage cart, bool persisted)
     {
@@ -274,8 +306,8 @@ public sealed class StorefrontCheckoutComposer
             sellers.Sum(x => x.SubtotalExclusiveOfTax),
             sellers.Sum(x => x.DiscountAmount),
             sellers.Sum(x => x.TaxAmount),
-            0m,
-            sellers.Sum(x => x.PayableAmount),
+            snapshot.ShippingAmount,
+            sellers.Sum(x => x.PayableAmount) + snapshot.ShippingAmount,
             sellers);
     }
 

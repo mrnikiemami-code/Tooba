@@ -1,0 +1,46 @@
+﻿{
+    "A":  {
+              "cartId":  "01a08c0b-d118-7000-85a2-82069f36ed84",
+              "pass":  true,
+              "sample":  "post:express",
+              "price":  200000,
+              "methodCount":  7,
+              "labels":  "پست — پیشتاز|پست — معمولی|تیپاکس — پیشتاز|تیپاکس — معمولی|اسنپ / پیک آنلاین|پیک فروشگاه|تحویل حضوری"
+          },
+    "B":  {
+              "pass":  true,
+              "amount":  200000,
+              "note":  "note-t002",
+              "method":  "post:express",
+              "date":  "2026-09-13",
+              "persistedDraft":  true
+          },
+    "C":  {
+              "noTemplatePickup":  true,
+              "pass":  true,
+              "codes":  "post:express,post:standard,tipax:express,tipax:standard,snapp_courier,store_courier,in_person"
+          },
+    "D":  {
+              "earlyStatus":  400,
+              "min":  "2026-09-13",
+              "pass":  true,
+              "laterDate":  "2026-09-13",
+              "earlyCode":  "shipping.delivery.too_early"
+          },
+    "E":  {
+              "pass":  true,
+              "maxPrep":  1,
+              "sellerCount":  1
+          },
+    "F":  {
+              "checkoutId":  "01a08c0b-d2be-7000-9245-a8f43f43ff7a",
+              "methodLabel":  "پست — پیشتاز",
+              "pass":  true,
+              "payable":  2216500.0000000000,
+              "shippingAmount":  200000.00
+          },
+    "C_tipaxDisabled":  {
+                            "pass":  true,
+                            "codes":  "post:express,post:standard,snapp_courier,store_courier,in_person"
+                        }
+}

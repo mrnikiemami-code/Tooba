@@ -53,6 +53,11 @@ public sealed class OrderDbContext : DbContext
     /// </summary>
     public DbSet<CheckoutOperationalNote> OperationalNotes => Set<CheckoutOperationalNote>();
 
+    /// <summary>
+    /// پیش‌نویس ارسال فروشگاهی وابسته به سبد.
+    /// </summary>
+    public DbSet<CartShippingDraft> ShippingDrafts => Set<CartShippingDraft>();
+
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
 
@@ -78,10 +83,31 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.PostalCode).HasMaxLength(16);
             entity.Property(x => x.ShippingMethodCode).HasMaxLength(32);
             entity.Property(x => x.ShippingMethodLabel).HasMaxLength(64);
+            entity.Property(x => x.ShippingAmount).HasPrecision(18, 2);
+            entity.Property(x => x.RequestedDeliveryTimeWindow).HasMaxLength(32);
+            entity.Property(x => x.CustomerNote).HasMaxLength(CartShippingDraft.CustomerNoteMaxLength);
             entity.Ignore(x => x.DomainEvents);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
             entity.HasIndex(x => x.CartId).IsUnique();
             entity.HasMany(x => x.SellerOrders).WithOne().HasForeignKey(x => x.CheckoutId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<CartShippingDraft>(entity =>
+        {
+            entity.ToTable("cart_shipping_drafts");
+            entity.HasKey(x => x.CartId);
+            entity.Property(x => x.CartId).ValueGeneratedNever();
+            entity.Property(x => x.GuestSecretHash).HasMaxLength(128);
+            entity.Property(x => x.RecipientName).HasMaxLength(128);
+            entity.Property(x => x.ContactMobile).HasMaxLength(32);
+            entity.Property(x => x.ProvinceName).HasMaxLength(64);
+            entity.Property(x => x.CityName).HasMaxLength(64);
+            entity.Property(x => x.PostalAddress).HasMaxLength(512);
+            entity.Property(x => x.PostalCode).HasMaxLength(16);
+            entity.Property(x => x.ShippingMethodCode).HasMaxLength(64);
+            entity.Property(x => x.ShippingMethodLabel).HasMaxLength(128);
+            entity.Property(x => x.ShippingAmount).HasPrecision(18, 2);
+            entity.Property(x => x.SelectedDeliveryTimeWindow).HasMaxLength(32);
+            entity.Property(x => x.CustomerNote).HasMaxLength(CartShippingDraft.CustomerNoteMaxLength);
         });
         modelBuilder.Entity<SellerOrder>(entity =>
         {

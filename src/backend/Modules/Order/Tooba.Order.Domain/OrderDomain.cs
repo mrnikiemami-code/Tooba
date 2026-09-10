@@ -700,6 +700,31 @@ public sealed class CheckoutGroup : IHasDomainEvents
     public string ShippingMethodLabel { get; init; } = string.Empty;
 
     /// <summary>
+    /// مبلغ ارسال نقل‌قول‌شدهٔ backend در لحظهٔ ثبت.
+    /// </summary>
+    public decimal ShippingAmount { get; init; }
+
+    /// <summary>
+    /// حداقل تاریخ تحویل محاسبه‌شدهٔ backend.
+    /// </summary>
+    public DateOnly? MinimumDeliveryDate { get; init; }
+
+    /// <summary>
+    /// تاریخ تحویل انتخابی مشتری (هرگز زودتر از حداقل).
+    /// </summary>
+    public DateOnly? RequestedDeliveryDate { get; init; }
+
+    /// <summary>
+    /// پنجرهٔ ساعتی تحویل انتخابی.
+    /// </summary>
+    public string RequestedDeliveryTimeWindow { get; init; } = string.Empty;
+
+    /// <summary>
+    /// یادداشت مشتری برای ارسال/تحویل (نه یادداشت عملیاتی Admin).
+    /// </summary>
+    public string CustomerNote { get; init; } = string.Empty;
+
+    /// <summary>
     /// سفارش‌های فروشندهٔ این checkout. یک فروشنده کل checkout را مالک نمی‌شود.
     /// </summary>
     public List<SellerOrder> SellerOrders { get; } = [];
@@ -732,7 +757,12 @@ public sealed class CheckoutGroup : IHasDomainEvents
         string postalAddress = "",
         string postalCode = "",
         string shippingMethodCode = "",
-        string shippingMethodLabel = "")
+        string shippingMethodLabel = "",
+        decimal shippingAmount = 0m,
+        DateOnly? minimumDeliveryDate = null,
+        DateOnly? requestedDeliveryDate = null,
+        string requestedDeliveryTimeWindow = "",
+        string customerNote = "")
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -770,6 +800,13 @@ public sealed class CheckoutGroup : IHasDomainEvents
             PostalCode = postalCode.Trim(),
             ShippingMethodCode = shippingMethodCode.Trim(),
             ShippingMethodLabel = shippingMethodLabel.Trim(),
+            ShippingAmount = Math.Max(0m, shippingAmount),
+            MinimumDeliveryDate = minimumDeliveryDate,
+            RequestedDeliveryDate = requestedDeliveryDate,
+            RequestedDeliveryTimeWindow = string.IsNullOrWhiteSpace(requestedDeliveryTimeWindow)
+                ? string.Empty
+                : requestedDeliveryTimeWindow.Trim(),
+            CustomerNote = string.IsNullOrWhiteSpace(customerNote) ? string.Empty : customerNote.Trim(),
         };
         foreach (var order in sellerOrders)
         {

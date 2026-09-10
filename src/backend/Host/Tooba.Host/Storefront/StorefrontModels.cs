@@ -349,6 +349,98 @@ public sealed record StorefrontCheckoutPage(
     decimal PayableAmount,
     IReadOnlyList<StorefrontSellerOrderView> SellerOrders);
 
+/// <summary>روش ارسال قابل انتخاب فروشگاهی از کاتالوگ Store-enabled.</summary>
+public sealed record StorefrontShippingMethodView(
+    string MethodCode,
+    string Label,
+    string ServiceCode,
+    string IconKey,
+    decimal PriceAmount,
+    int LeadDays,
+    bool IsFree,
+    string EstimationLabel);
+
+/// <summary>گزینهٔ تاریخ تحویل.</summary>
+public sealed record StorefrontDeliveryDateOption(
+    string Value,
+    string Label,
+    string SubLabel,
+    bool IsEarliest);
+
+/// <summary>گزینهٔ پنجرهٔ ساعتی.</summary>
+public sealed record StorefrontDeliveryTimeOption(string Value, string Label);
+
+/// <summary>استان و شهرهای وابسته از کاتالوگ Host.</summary>
+public sealed record StorefrontProvinceOption(string Code, string Label, IReadOnlyList<string> Cities);
+
+/// <summary>پیش‌نویس ارسال ذخیره‌شده روی سبد.</summary>
+public sealed record StorefrontShippingDraftView(
+    Guid CartId,
+    int CartVersion,
+    string RecipientName,
+    string ContactMobile,
+    string ProvinceName,
+    string CityName,
+    string PostalAddress,
+    string PostalCode,
+    Guid? SavedAddressId,
+    string ShippingMethodCode,
+    string ShippingMethodLabel,
+    decimal ShippingAmount,
+    string MinimumDeliveryDate,
+    string? SelectedDeliveryDate,
+    string? SelectedDeliveryTimeWindow,
+    string? CustomerNote);
+
+/// <summary>تصویر یکپارچهٔ مرحلهٔ ارسال.</summary>
+public sealed record StorefrontShippingProjection(
+    Guid CartId,
+    int CartVersion,
+    string Currency,
+    decimal ItemCount,
+    decimal SubtotalExclusiveOfTax,
+    int SellerCount,
+    int MaxSellerPreparationDays,
+    IReadOnlyList<StorefrontShippingMethodView> Methods,
+    string? SelectedMethodCode,
+    decimal SelectedShippingAmount,
+    string? MinimumDeliveryDate,
+    IReadOnlyList<StorefrontDeliveryDateOption> DeliveryDates,
+    IReadOnlyList<StorefrontDeliveryTimeOption> DeliveryTimeWindows,
+    StorefrontShippingDraftView? Draft,
+    string? RevalidationMessage,
+    IReadOnlyList<StorefrontProvinceOption> Provinces);
+
+/// <summary>درخواست تصویر ارسال (سبد + مقصد اختیاری + روش انتخابی).</summary>
+public sealed record StorefrontShippingProjectionRequest(
+    Guid CartId,
+    string? ProvinceName = null,
+    string? MethodCode = null,
+    string? Language = null);
+
+/// <summary>ذخیرهٔ انتخاب ارسال.</summary>
+public sealed record StorefrontShippingSelectionRequest(
+    Guid CartId,
+    int ExpectedCartVersion,
+    string RecipientName,
+    string ContactMobile,
+    string ProvinceName,
+    string CityName,
+    string PostalAddress,
+    string PostalCode,
+    Guid? SavedAddressId,
+    string ShippingMethodCode,
+    string SelectedDeliveryDate,
+    string SelectedDeliveryTimeWindow,
+    string? CustomerNote);
+
+/// <summary>ثبت نهایی ارسال و ساخت checkout برای پرداخت.</summary>
+public sealed record StorefrontShippingCommitRequest(
+    Guid CartId,
+    int ExpectedCartVersion,
+    string IdempotencyKey,
+    string? CouponCode = null);
+
 /// <summary>
 /// ورودی شروع پرداخت فروشگاهی. مبلغ در بدنه نیست.
 /// UseWallet یا ProviderCode=wallet فقط وقتی موجودی کل مبلغ را پوشش دهد مجاز است (mixed deferred).
