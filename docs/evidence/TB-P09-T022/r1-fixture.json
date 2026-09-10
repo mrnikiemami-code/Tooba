@@ -1,0 +1,129 @@
+{
+  "task": "TB-P09-T022-R1",
+  "createdAt": "2026-09-10T04:18:43.460Z",
+  "actorUserId": "01a036c2-970e-7000-8eb7-94bf5cc2d8db",
+  "checkoutId": "01a0898a-0d7d-7000-b5ed-7f5d85a29241",
+  "guestSecret": "0bd9e4f7a51000917f97f1fc05563dc63efcfbc3abb0e08f9ddab31233fac9a8",
+  "cartId": "01a0898a-0c75-7000-b080-a05d07f52126",
+  "shipmentIds": [
+    "daae5ce8-276a-42c8-aa32-3d4637020b0c",
+    "2e44551c-1bfd-40b4-9a28-5d69a61efa62"
+  ],
+  "members": [
+    {
+      "sellerOrderId": "01a0898a-0d8e-7000-84f0-f78371a66f93",
+      "fulfillmentId": "a34681a3-12ed-40ec-9b0b-4ee34d7c2ea7",
+      "shipmentId": "daae5ce8-276a-42c8-aa32-3d4637020b0c",
+      "quantity": 1
+    },
+    {
+      "sellerOrderId": "01a0898a-0dbe-7000-9114-f5d9df50200a",
+      "fulfillmentId": "25495eb7-9ac5-48e2-a2ec-6e758b08b8e0",
+      "shipmentId": "2e44551c-1bfd-40b4-9a28-5d69a61efa62",
+      "quantity": 1
+    }
+  ],
+  "packageCount": 0,
+  "note": "Shipments left Created (ready for package); no consolidated package created.",
+  "customerFulfillmentsProbe": {
+    "status": 200,
+    "body": {
+      "fulfillments": [
+        {
+          "fulfillmentId": "25495eb7-9ac5-48e2-a2ec-6e758b08b8e0",
+          "sellerOrderId": "01a0898a-0dbe-7000-9114-f5d9df50200a",
+          "checkoutId": "01a0898a-0d7d-7000-b5ed-7f5d85a29241",
+          "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+          "status": "Packed",
+          "recipientName": "T022-R1",
+          "contactMobile": "09121234567",
+          "provinceName": "تهران",
+          "cityName": "تهران",
+          "postalAddress": "آدرس T022-R1",
+          "postalCode": "1234567890",
+          "shippingMethodCode": "storefront-default",
+          "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+          "items": [
+            {
+              "fulfillmentItemId": "6c16bdb9-571e-4ad0-8895-1aed8fb30754",
+              "orderLineId": "01a0898a-0dc3-7000-b201-b87f041e4f77",
+              "quantityOrdered": 1,
+              "quantityShipped": 0,
+              "reservationId": "01a0898a-0d3f-7000-aa18-8ae25432ba85",
+              "quantityPacked": 1,
+              "quantityProcessing": 1
+            }
+          ],
+          "shipments": [
+            {
+              "shipmentId": "2e44551c-1bfd-40b4-9a28-5d69a61efa62",
+              "status": "Created",
+              "carrierDisplayName": "پست",
+              "trackingReference": "TRK-2e44551c",
+              "items": [
+                {
+                  "orderLineId": "01a0898a-0dc3-7000-b201-b87f041e4f77",
+                  "quantity": 1
+                }
+              ],
+              "createdAt": "2026-09-10T04:18:43.105215+00:00",
+              "shippingMethodCode": "post",
+              "shippingMethodLabel": "پست",
+              "providerMetadataJson": "{\"ServiceType\":\"پیشتاز\",\"PackageCount\":1,\"WeightKg\":1,\"Dimensions\":null,\"DeclaredValue\":null,\"RecipientName\":\"T022-R1\",\"RecipientPhone\":\"09121234567\",\"PostalCode\":\"1234567890\",\"DestinationAddress\":\"تهران\",\"Notes\":null}",
+              "providerMetadataVersion": 1
+            }
+          ],
+          "createdAt": "2026-09-10T04:18:41.508759+00:00",
+          "updatedAt": "2026-09-10T04:18:43.319767+00:00"
+        },
+        {
+          "fulfillmentId": "a34681a3-12ed-40ec-9b0b-4ee34d7c2ea7",
+          "sellerOrderId": "01a0898a-0d8e-7000-84f0-f78371a66f93",
+          "checkoutId": "01a0898a-0d7d-7000-b5ed-7f5d85a29241",
+          "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+          "status": "Packed",
+          "recipientName": "T022-R1",
+          "contactMobile": "09121234567",
+          "provinceName": "تهران",
+          "cityName": "تهران",
+          "postalAddress": "آدرس T022-R1",
+          "postalCode": "1234567890",
+          "shippingMethodCode": "storefront-default",
+          "shippingMethodLabel": "ارسال پیش‌فرض فروشگاه",
+          "items": [
+            {
+              "fulfillmentItemId": "29508248-5812-4ee6-98b6-24632ee53542",
+              "orderLineId": "01a0898a-0dba-7000-b1f5-8cf05a0945e2",
+              "quantityOrdered": 1,
+              "quantityShipped": 0,
+              "reservationId": "01a0898a-0cee-7000-89a5-e4611ecf3227",
+              "quantityPacked": 1,
+              "quantityProcessing": 1
+            }
+          ],
+          "shipments": [
+            {
+              "shipmentId": "daae5ce8-276a-42c8-aa32-3d4637020b0c",
+              "status": "Created",
+              "carrierDisplayName": "پست",
+              "trackingReference": "TRK-daae5ce8",
+              "items": [
+                {
+                  "orderLineId": "01a0898a-0dba-7000-b1f5-8cf05a0945e2",
+                  "quantity": 1
+                }
+              ],
+              "createdAt": "2026-09-10T04:18:41.969751+00:00",
+              "shippingMethodCode": "post",
+              "shippingMethodLabel": "پست",
+              "providerMetadataJson": "{\"ServiceType\":\"پیشتاز\",\"PackageCount\":1,\"WeightKg\":1,\"Dimensions\":null,\"DeclaredValue\":null,\"RecipientName\":\"T022-R1\",\"RecipientPhone\":\"09121234567\",\"PostalCode\":\"1234567890\",\"DestinationAddress\":\"تهران\",\"Notes\":null}",
+              "providerMetadataVersion": 1
+            }
+          ],
+          "createdAt": "2026-09-10T04:18:41.508759+00:00",
+          "updatedAt": "2026-09-10T04:18:42.18306+00:00"
+        }
+      ]
+    }
+  }
+}

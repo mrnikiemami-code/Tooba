@@ -329,10 +329,15 @@ export function AdminConsolidatedPackageSection({
                     <span>
                       <span className="font-bold text-gray-900">{row.sellerDisplayName}</span>
                       {" · "}
-                      <span className="font-mono" dir="ltr">#{row.shipmentId.slice(0, 8)}</span>
-                      {" · "}
                       {row.itemCount.toLocaleString("fa-IR")} قلم · {row.carrierDisplayName}
-                      {row.trackingReference ? ` · ${row.trackingReference}` : ""}
+                      {row.trackingReference ? (
+                        <>
+                          {" · "}
+                          <span className="font-mono" dir="ltr">
+                            {row.trackingReference}
+                          </span>
+                        </>
+                      ) : null}
                     </span>
                   </label>
                 </li>

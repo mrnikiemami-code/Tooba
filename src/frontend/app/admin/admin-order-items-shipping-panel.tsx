@@ -640,7 +640,9 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="font-mono text-[11px] text-gray-500" dir="ltr">
-                                  #{shipment.shipmentId.slice(0, 8)}
+                                  {shipment.trackingReference
+                                    ? shipment.trackingReference
+                                    : `مرسوله · ${shipment.itemCount.toLocaleString("fa-IR")} قلم`}
                                 </p>
                                 <p className="mt-0.5 text-xs font-bold text-gray-900">{shipment.carrierDisplayName}</p>
                                 <p className="text-[11px] text-gray-500">
