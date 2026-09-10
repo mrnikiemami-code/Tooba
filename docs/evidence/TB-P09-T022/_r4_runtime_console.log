@@ -1,0 +1,18 @@
+﻿{
+  "ok": true,
+  "A": true,
+  "B": true,
+  "C": true,
+  "boundary": true,
+  "errorUx": true,
+  "A_res": "01a08b47-f658-7000-bf19-87baa12f0014",
+  "B_old": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+  "B_new": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+  "C_ids": {
+    "cart": "01a08b4b-191d-7000-8c3a-5a881609100e",
+    "paid": "01a08b4b-191d-7000-8c3a-5a881609100e",
+    "released": "01a08b4b-191d-7000-8c3a-5a881609100e",
+    "restored": "01a08b4c-a98b-7000-97f0-f71515506f43",
+    "consumed": "01a08b4c-a98b-7000-97f0-f71515506f43"
+  }
+}

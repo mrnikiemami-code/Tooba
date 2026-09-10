@@ -1,0 +1,476 @@
+{
+  "task": "TB-P09-T022-R4",
+  "startedAt": "2026-09-10T12:25:44.199Z",
+  "host": "http://127.0.0.1:5088",
+  "health": {
+    "status": 200,
+    "at": "2026-09-10T12:25:44.215Z",
+    "body": {
+      "status": "ok"
+    }
+  },
+  "scenarioA": {
+    "ok": true,
+    "checkoutId": "01a08b47-f702-7000-a340-2b499de017d1",
+    "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+    "originalExpiresAt": "2026-09-10 12:27:14.2514+00",
+    "payDelayMs": 77749,
+    "payAt": "2026-09-10T12:27:02.266Z",
+    "confirmStatus": 200,
+    "beforePay": {
+      "at": "2026-09-10T12:25:44.413Z",
+      "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+      "status": "Held",
+      "expiresAt": "2026-09-10 12:27:14.2514+00",
+      "quantity": "1.000000",
+      "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+      "reserved": "5.250000",
+      "onHand": "200.000000"
+    },
+    "afterPay": {
+      "at": "2026-09-10T12:27:02.599Z",
+      "orderLine": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "5.750000",
+        "onHand": "198.000000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "5.750000",
+        "onHand": "198.000000"
+      },
+      "aligned": true
+    },
+    "waitMeta": {
+      "started": "2026-09-10T12:27:02.599Z",
+      "waitedMs": 22652,
+      "ended": "2026-09-10T12:27:25.267Z",
+      "wallPastExpiry": true
+    },
+    "afterExpiryWindow": {
+      "at": "2026-09-10T12:27:25.483Z",
+      "orderLine": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "196.750000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "196.750000"
+      },
+      "aligned": true
+    },
+    "dispatchStatus": 200,
+    "afterDispatch": {
+      "at": "2026-09-10T12:27:26.850Z",
+      "orderLine": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "3.500000",
+        "onHand": "195.750000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "3.500000",
+        "onHand": "195.750000"
+      },
+      "aligned": true
+    },
+    "timestamps": {
+      "createdAt": "2026-09-10T12:25:44.413Z",
+      "confirmAt": "2026-09-10T12:27:02.355Z",
+      "dispatchAt": "2026-09-10T12:27:26.627Z"
+    }
+  },
+  "scenarioB": {
+    "ok": true,
+    "checkoutId": "01a08b49-87ca-7000-bb9e-05a49db35189",
+    "oldReservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+    "replacementId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+    "originalExpiresAt": "2026-09-10 12:28:56.858283+00",
+    "confirmStatus": 200,
+    "cancelStatus": 200,
+    "restoreStatus": 200,
+    "beforeCancel": {
+      "at": "2026-09-10T12:27:27.441Z",
+      "orderLine": {
+        "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "195.750000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "195.750000"
+      },
+      "aligned": true
+    },
+    "afterCancel": {
+      "at": "2026-09-10T12:27:28.233Z",
+      "orderLine": {
+        "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "3.500000",
+        "onHand": "195.750000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "3.500000",
+        "onHand": "195.750000"
+      },
+      "aligned": true
+    },
+    "afterRestore": {
+      "at": "2026-09-10T12:27:29.244Z",
+      "orderLine": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "195.750000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "4.500000",
+        "onHand": "195.750000"
+      },
+      "aligned": true
+    },
+    "waitMeta": {
+      "started": "2026-09-10T12:27:29.244Z",
+      "waitedMs": 98614,
+      "ended": "2026-09-10T12:29:07.885Z",
+      "wallPastExpiry": true
+    },
+    "afterExpiry": {
+      "at": "2026-09-10T12:29:08.127Z",
+      "orderLine": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.000000",
+        "onHand": "193.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.000000",
+        "onHand": "193.250000"
+      },
+      "aligned": true
+    },
+    "oldAfterExpiry": {
+      "at": "2026-09-10T12:29:08.243Z",
+      "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+      "status": "Released",
+      "expiresAt": null,
+      "quantity": "1.000000",
+      "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+      "reserved": "2.000000",
+      "onHand": "193.250000"
+    },
+    "dispatchStatus": 200,
+    "afterDispatch": {
+      "at": "2026-09-10T12:29:09.626Z",
+      "orderLine": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "192.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b49-8cb8-7000-b9f8-f9ed321bfbbf",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "192.250000"
+      },
+      "aligned": true
+    },
+    "oldFinal": {
+      "at": "2026-09-10T12:29:09.731Z",
+      "reservationId": "01a08b49-8728-7000-b4a9-4d3c3180099d",
+      "status": "Released",
+      "expiresAt": null,
+      "quantity": "1.000000",
+      "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+      "reserved": "1.000000",
+      "onHand": "192.250000"
+    }
+  },
+  "scenarioC": {
+    "ok": true,
+    "checkoutId": "01a08b4b-19a3-7000-8e6b-7195437bf1e2",
+    "reservationIds": {
+      "cart": "01a08b4b-191d-7000-8c3a-5a881609100e",
+      "paid": "01a08b4b-191d-7000-8c3a-5a881609100e",
+      "released": "01a08b4b-191d-7000-8c3a-5a881609100e",
+      "restored": "01a08b4c-a98b-7000-97f0-f71515506f43",
+      "consumed": "01a08b4c-a98b-7000-97f0-f71515506f43"
+    },
+    "qtyChain": [
+      "1.250000",
+      "1.250000",
+      "1.250000",
+      "1.250000",
+      "1.250000",
+      "1.250000"
+    ],
+    "originalExpiresAt": "2026-09-10 12:30:39.75826+00",
+    "beforePay": {
+      "at": "2026-09-10T12:29:09.900Z",
+      "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+      "status": "Held",
+      "expiresAt": "2026-09-10 12:30:39.75826+00",
+      "quantity": "1.250000",
+      "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+      "reserved": "2.250000",
+      "onHand": "192.250000"
+    },
+    "afterPay": {
+      "at": "2026-09-10T12:29:10.257Z",
+      "orderLine": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "aligned": true
+    },
+    "waitMeta": {
+      "started": "2026-09-10T12:29:10.257Z",
+      "waitedMs": 100501,
+      "ended": "2026-09-10T12:30:50.770Z",
+      "wallPastExpiry": true
+    },
+    "afterExpiry": {
+      "at": "2026-09-10T12:30:50.997Z",
+      "orderLine": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "aligned": true
+    },
+    "afterCancel": {
+      "at": "2026-09-10T12:30:51.986Z",
+      "orderLine": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "192.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4b-191d-7000-8c3a-5a881609100e",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "192.250000"
+      },
+      "aligned": true
+    },
+    "afterRestore": {
+      "at": "2026-09-10T12:30:53.299Z",
+      "orderLine": {
+        "reservationId": "01a08b4c-a98b-7000-97f0-f71515506f43",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4c-a98b-7000-97f0-f71515506f43",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.250000",
+        "onHand": "192.250000"
+      },
+      "aligned": true
+    },
+    "dispatchStatus": 200,
+    "afterDispatch": {
+      "at": "2026-09-10T12:30:55.253Z",
+      "orderLine": {
+        "reservationId": "01a08b4c-a98b-7000-97f0-f71515506f43",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "191.000000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4c-a98b-7000-97f0-f71515506f43",
+        "status": "Consumed",
+        "expiresAt": null,
+        "quantity": "1.250000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "191.000000"
+      },
+      "aligned": true
+    }
+  },
+  "boundary": {
+    "ok": true,
+    "note": "Payment delayed until near original cart TTL; R3 concurrency tests remain the race proof.",
+    "payDelayMs": 77749,
+    "ttlMs": 89749,
+    "originalExpiresAt": "2026-09-10 12:27:14.2514+00",
+    "reservationId": "01a08b47-f658-7000-bf19-87baa12f0014"
+  },
+  "errorUx": {
+    "restoreStatus": 200,
+    "cancel2Status": 200,
+    "ok": true,
+    "checkoutId": "01a08b4c-b653-7000-84c6-3c07553560d9",
+    "before": {
+      "at": "2026-09-10T12:30:56.194Z",
+      "orderLine": {
+        "reservationId": "01a08b4c-b56b-7000-b72d-0dc38e74a7dc",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.000000",
+        "onHand": "191.000000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4c-b56b-7000-b72d-0dc38e74a7dc",
+        "status": "Held",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "2.000000",
+        "onHand": "191.000000"
+      },
+      "aligned": true
+    },
+    "afterCancel": {
+      "at": "2026-09-10T12:30:57.585Z",
+      "orderLine": {
+        "reservationId": "01a08b4c-b56b-7000-b72d-0dc38e74a7dc",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "191.000000"
+      },
+      "fulfillment": {
+        "reservationId": "01a08b4c-b56b-7000-b72d-0dc38e74a7dc",
+        "status": "Released",
+        "expiresAt": null,
+        "quantity": "1.000000",
+        "stockItemId": "01a03826-9953-7000-b5bf-6c4cac278956",
+        "reserved": "1.000000",
+        "onHand": "191.000000"
+      },
+      "aligned": true
+    },
+    "probeStatus": 400,
+    "probeCode": "order.cancelled.blocks_action",
+    "probeDetail": "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+    "leaks": {
+      "hasHeld": false,
+      "hasReleased": false,
+      "hasGuid": false,
+      "hasSql": false,
+      "detail": "سفارش لغوشده است؛ این عملیات مجاز نیست.",
+      "code": "order.cancelled.blocks_action"
+    },
+    "mapped": true,
+    "noRawLeak": true
+  },
+  "ok": true,
+  "finishedAt": "2026-09-10T12:30:59.742Z"
+}

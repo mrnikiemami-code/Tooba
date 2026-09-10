@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T022-R3
+TB-P09-T022-R4
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P09-T022-R4 — Paid-order reservation REAL runtime proof (TTL/expiry/dispatch/cancel-restore/decimal); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R3 — Paid-order reservation commit clears cart TTL (ExpiresAt=null); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R2 — Customer Tracking UI Proof (owned session + consolidated package primary rendering); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R1 — Consolidated Package visual runtime repair (FE Admin 500 readiness + real browser smoke); under repair via R2; USER_VISUAL_ACCEPTED=NO

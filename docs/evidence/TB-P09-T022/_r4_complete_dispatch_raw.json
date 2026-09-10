@@ -1,0 +1,87 @@
+{
+  "at": "2026-09-10T07:46:16.270Z",
+  "A": {
+    "reservation": {
+      "at": "2026-09-10T07:46:16.385Z",
+      "reservationId": "01a08a40-90e4-7000-bf6c-26915dd8f2eb",
+      "status": "Consumed",
+      "expiresAt": null,
+      "quantity": "1.000000"
+    },
+    "note": "manual track+dispatch after initial race; Consumed expected"
+  },
+  "B": {
+    "checkoutId": "01a08a42-1f46-7000-bad4-fd05caf5faf2",
+    "before": {
+      "at": "2026-09-10T07:46:16.504Z",
+      "reservationId": "01a08a42-2447-7000-b966-5b07dcee6006",
+      "status": "Held",
+      "expiresAt": null,
+      "quantity": "1.000000"
+    },
+    "oldBefore": {
+      "at": "2026-09-10T07:46:16.616Z",
+      "reservationId": "01a08a42-1ea9-7000-88bd-18b8b06222af",
+      "status": "Released",
+      "expiresAt": null,
+      "quantity": "1.000000"
+    },
+    "flow": {
+      "process": 400,
+      "pack": 400,
+      "ship": 400,
+      "track": 200,
+      "dispatch": 200,
+      "shipmentId": "810d5e9a-8793-42fb-8c26-07238cd4c3ee"
+    },
+    "after": {
+      "at": "2026-09-10T07:47:09.577Z",
+      "reservationId": "01a08a42-2447-7000-b966-5b07dcee6006",
+      "status": "Consumed",
+      "expiresAt": null,
+      "quantity": "1.000000"
+    },
+    "oldAfter": {
+      "at": "2026-09-10T07:47:09.703Z",
+      "reservationId": "01a08a42-1ea9-7000-88bd-18b8b06222af",
+      "status": "Released",
+      "expiresAt": null,
+      "quantity": "1.000000"
+    },
+    "ok": true
+  },
+  "C": {
+    "checkoutId": "01a08a43-add3-7000-ba58-55bb498eb938",
+    "before": {
+      "at": "2026-09-10T07:47:09.831Z",
+      "reservationId": "01a08a45-3c6b-7000-be90-8cf155582e2e",
+      "status": "Held",
+      "expiresAt": null,
+      "quantity": "1.250000"
+    },
+    "released": {
+      "at": "2026-09-10T07:47:09.942Z",
+      "reservationId": "01a08a43-ad3a-7000-b8b2-e9eb5c3c9905",
+      "status": "Released",
+      "expiresAt": null,
+      "quantity": "1.250000"
+    },
+    "flow": {
+      "process": 400,
+      "pack": 400,
+      "ship": 400,
+      "track": 200,
+      "dispatch": 200,
+      "shipmentId": "d5ac0860-6295-4af8-9260-91d442fd03da"
+    },
+    "after": {
+      "at": "2026-09-10T07:48:03.083Z",
+      "reservationId": "01a08a45-3c6b-7000-be90-8cf155582e2e",
+      "status": "Consumed",
+      "expiresAt": null,
+      "quantity": "1.250000"
+    },
+    "ok": true
+  },
+  "ok": true
+}
