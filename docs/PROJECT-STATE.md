@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T020-R2
+TB-P09-T021-R1
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T021-R1
+TB-P09-T022
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T021-R1 — Consolidated Package customer tracking access/projection repair; USER_VISUAL_ACCEPTED=NO
+TB-P09-T022 — Consolidated Package admin/runtime completion (central package lifecycle + history); USER_VISUAL_ACCEPTED=NO
+TB-P09-T021-R1 — Consolidated Package customer tracking access/projection repair; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T021 — Consolidated Package foundation (multi-seller master package orchestration); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020-R2 — Cancel/Restore reservation rebinding + localized inventory error UX; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020-R1 — P09 final-gate repair: partial-dispatch composed status + multi-seller runtime; Architect-accepted; USER_VISUAL_ACCEPTED=NO
@@ -150,7 +151,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T020-R2
+TB-P09-T021-R1
 ```
 
 USER_VISUAL_ACCEPTED:

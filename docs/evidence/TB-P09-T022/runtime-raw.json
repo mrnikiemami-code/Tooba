@@ -1,0 +1,218 @@
+{
+  "task": "TB-P09-T022",
+  "host": "http://127.0.0.1:5088",
+  "startedAt": "2026-09-10T03:54:25.621Z",
+  "scenarios": {
+    "A": {
+      "name": "A_single_seller",
+      "pass": true,
+      "checkoutId": "01a08973-d831-7000-ae48-d6f8a6bc3fcf",
+      "sellerCount": 1,
+      "packages": 0,
+      "hasCreateCapability": false,
+      "opsSample": [
+        "cancel_shipment",
+        "dispatch_shipment"
+      ]
+    },
+    "B": {
+      "name": "B_create_and_lock",
+      "pass": true,
+      "checkoutId": "01a08973-dd8c-7000-b205-cc7f15358dfb",
+      "secret": "55f602e95f21be167a2f4f462ec84e8195d8f9aeef187766d2b1edf8ca6fd51b",
+      "pkgId": "01a08973-e914-7000-bcf2-c9e68c7ab71a",
+      "pkgNum": "MP-01A08973E914",
+      "members": [
+        {
+          "sellerOrderId": "01a08973-ddc4-7000-98ca-c69cf1a5008d",
+          "fulfillmentId": "2d0be106-a214-404b-9cfc-f3b4838e3887",
+          "shipmentId": "62db2fd3-0ed9-4494-9de4-843c09a43070",
+          "quantity": 1,
+          "quantityRaw": 1,
+          "allocations": []
+        },
+        {
+          "sellerOrderId": "01a08973-dde5-7000-badf-fa5b9eff3fcd",
+          "fulfillmentId": "4c8f1521-1513-451d-860d-616278260c58",
+          "shipmentId": "259d952f-b779-4c5b-afd6-b8c105ec4bf1",
+          "quantity": 1,
+          "quantityRaw": 1,
+          "allocations": []
+        }
+      ],
+      "createStatus": 200,
+      "blockedDirectDispatch": 400,
+      "blockedBody": {
+        "title": "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+        "errorCode": "order.operation.invalid",
+        "detail": "این عملیات در وضعیت فعلی سفارش مجاز نیست."
+      }
+    },
+    "C": {
+      "name": "C_rebuild",
+      "pass": true,
+      "checkoutId": "01a08973-dd8c-7000-b205-cc7f15358dfb",
+      "pkg1Id": "01a08973-e914-7000-bcf2-c9e68c7ab71a",
+      "pkg2Id": "01a08973-eb58-7000-a064-0b19022032fe",
+      "pkg2Num": "MP-01A08973EB58",
+      "members": [
+        {
+          "sellerOrderId": "01a08973-ddc4-7000-98ca-c69cf1a5008d",
+          "fulfillmentId": "2d0be106-a214-404b-9cfc-f3b4838e3887",
+          "shipmentId": "62db2fd3-0ed9-4494-9de4-843c09a43070",
+          "quantity": 1,
+          "quantityRaw": 1,
+          "allocations": []
+        },
+        {
+          "sellerOrderId": "01a08973-dde5-7000-badf-fa5b9eff3fcd",
+          "fulfillmentId": "4c8f1521-1513-451d-860d-616278260c58",
+          "shipmentId": "259d952f-b779-4c5b-afd6-b8c105ec4bf1",
+          "quantity": 1,
+          "quantityRaw": 1,
+          "allocations": []
+        }
+      ],
+      "packageCount": 2,
+      "createStatus": 200
+    },
+    "D": {
+      "name": "D_dispatch",
+      "pass": true,
+      "checkoutId": "01a08973-dd8c-7000-b205-cc7f15358dfb",
+      "pkg2Id": "01a08973-eb58-7000-a064-0b19022032fe",
+      "dispatchStatus": 200,
+      "cancelOrderBlocked": 400,
+      "cancelOrderBody": {
+        "title": "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+        "errorCode": "order.cancel.forbidden",
+        "detail": "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست."
+      }
+    },
+    "E": {
+      "name": "E_deliver",
+      "pass": true,
+      "checkoutId": "01a08973-dd8c-7000-b205-cc7f15358dfb",
+      "pkg2Id": "01a08973-eb58-7000-a064-0b19022032fe",
+      "deliverStatus": 200,
+      "pkgStatus": "Delivered"
+    },
+    "F": {
+      "name": "F_owned_customer",
+      "pass": true,
+      "checkoutId": "01a08973-f158-7000-ae5a-71f5b65b0b37",
+      "status": 200,
+      "preferred": "CENTRAL-T022-F"
+    },
+    "G": {
+      "name": "G_guest_security",
+      "pass": true,
+      "checkoutId": "01a08973-ff32-7000-8247-9ae3d4abacb3",
+      "pkgNum": "MP-01A089740A11",
+      "guestStatus": 200,
+      "guestActorStatus": 404,
+      "badSecretStatus": 404,
+      "preferred": "CENTRAL-T022-G"
+    },
+    "H": {
+      "name": "H_legacy_independent",
+      "pass": true,
+      "checkoutId": "01a08974-0bcb-7000-b851-31242114d0cb",
+      "independentDispatch": 200,
+      "packages": 0
+    },
+    "I": {
+      "name": "I_concurrency",
+      "pass": true,
+      "checkoutId": "01a08974-1899-7000-b100-1eff4da432f6",
+      "firstStatus": 200,
+      "secondStatus": 400,
+      "secondBody": {
+        "title": "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
+        "errorCode": "order.operation.invalid",
+        "detail": "این عملیات در وضعیت فعلی سفارش مجاز نیست."
+      },
+      "activeCount": 1
+    },
+    "J": {
+      "name": "J_decimal",
+      "pass": true,
+      "checkoutId": "01a08974-2617-7000-8e44-1ece1b900d22",
+      "createStatus": 200,
+      "lineQuantity": 1.25,
+      "allocationQuantity": null,
+      "exactDecimal": true,
+      "notes": [
+        "cart accepted PARS quantity 1.25"
+      ]
+    },
+    "order_cancel_void": {
+      "name": "order_cancel_voids_package",
+      "pass": true,
+      "checkoutId": "01a08974-32df-7000-88da-185b044cfcec",
+      "cancelStatus": 200,
+      "packageStatuses": [
+        "Cancelled"
+      ]
+    }
+  },
+  "summary": [
+    {
+      "key": "A",
+      "name": "A_single_seller",
+      "pass": true
+    },
+    {
+      "key": "B",
+      "name": "B_create_and_lock",
+      "pass": true
+    },
+    {
+      "key": "C",
+      "name": "C_rebuild",
+      "pass": true
+    },
+    {
+      "key": "D",
+      "name": "D_dispatch",
+      "pass": true
+    },
+    {
+      "key": "E",
+      "name": "E_deliver",
+      "pass": true
+    },
+    {
+      "key": "F",
+      "name": "F_owned_customer",
+      "pass": true
+    },
+    {
+      "key": "G",
+      "name": "G_guest_security",
+      "pass": true
+    },
+    {
+      "key": "H",
+      "name": "H_legacy_independent",
+      "pass": true
+    },
+    {
+      "key": "I",
+      "name": "I_concurrency",
+      "pass": true
+    },
+    {
+      "key": "J",
+      "name": "J_decimal",
+      "pass": true
+    },
+    {
+      "key": "order_cancel_void",
+      "name": "order_cancel_voids_package",
+      "pass": true
+    }
+  ],
+  "ok": true,
+  "finishedAt": "2026-09-10T03:54:52.026Z"
+}

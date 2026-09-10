@@ -185,6 +185,61 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Concurrent_create_rejects_double_active_membership()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, fulfillmentDb, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "race");
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("store-pkg-race", "tenant-pkg-race"));
+        var dbB = CreateFulfillmentDb(cs, commerce);
+        var directoryB = new FulfillmentDirectory(
+            dbB,
+            new OpenFulfillmentUseCaseGuard(),
+            new OrderFulfillmentBridge(CreateOrderDb(cs, commerce)),
+            new NoopInventoryGateway(),
+            new FulfillmentInstrumentation());
+
+        var shipmentIds = new[] { ready[0].ShipmentId, ready[1].ShipmentId };
+        var results = await Task.WhenAll(
+            TryCreateAsync(directory, checkoutId, shipmentIds, actor),
+            TryCreateAsync(directoryB, checkoutId, shipmentIds, actor));
+
+        Assert.Contains(results, x => x.Ok);
+        Assert.Contains(results, x => !x.Ok);
+        Assert.Contains(
+            results.Where(x => !x.Ok).Select(x => x.Error),
+            e => e is "fulfillment.package.shipment_already_member"
+                or "fulfillment.package.duplicate_shipment"
+                or "23505");
+        Assert.Equal(1, await fulfillmentDb.ConsolidatedPackages.CountAsync(x => x.Status == ConsolidatedPackageStatus.Created));
+    }
+
+    private static async Task<(bool Ok, string? Error)> TryCreateAsync(
+        FulfillmentDirectory directory,
+        Guid checkoutId,
+        IReadOnlyList<Guid> shipmentIds,
+        Guid actor)
+    {
+        try
+        {
+            await directory.CreateConsolidatedPackageAsync(
+                checkoutId,
+                shipmentIds,
+                "post",
+                null,
+                null,
+                actor,
+                CancellationToken.None);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    [SkippableFact]
     public async Task Cancel_releases_lock_and_allows_rebuild()
     {
         Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
