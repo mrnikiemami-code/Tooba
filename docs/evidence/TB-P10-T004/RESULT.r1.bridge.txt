@@ -1,0 +1,54 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R1
+
+Parent-Task:
+TB-P10-T004
+
+Status:
+PASS
+
+Summary:
+Authenticated customer checkout runtime proof PASS (real register/login + BFF tooba_session; no DevActor login substitute). Fixed StorefrontPaymentComposer payment actor to follow CurrentAuthenticatedSession for auth-placed checkouts. Address/payment/order ownership + cart continuity + guest regression + financial StoreShipping allocations PASS. Focused Host 15 + recovery 4 green. SoT Last Implementation TB-P10-T004-R1; Issued/Repair none. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T005.
+
+Defect-Fixed:
+StorefrontPaymentComposer hard-coded StorefrontGuestActorId on initiate/get/wallet-quote → auth checkout payment failed; ResolvePaymentActor + DI factory registration.
+
+Evidence:
+docs/evidence/TB-P10-T004/r1-recovery-start.md
+docs/evidence/TB-P10-T004/r1-auth-discovery.md
+docs/evidence/TB-P10-T004/r1-auth-session.md
+docs/evidence/TB-P10-T004/r1-authenticated-e2e.md
+docs/evidence/TB-P10-T004/r1-cart-continuity.md
+docs/evidence/TB-P10-T004/r1-address-ownership.md
+docs/evidence/TB-P10-T004/r1-payment-ownership.md
+docs/evidence/TB-P10-T004/r1-order-ownership.md
+docs/evidence/TB-P10-T004/r1-guest-regression.md
+docs/evidence/TB-P10-T004/r1-focused-validation.md
+docs/evidence/TB-P10-T004/r1-recovery-sot.md
+docs/evidence/TB-P10-T004/r1-runtime-raw.json
+docs/evidence/TB-P10-T004/_r1_runtime.mjs
+
+Focused-Validation:
+Host 15 (payment/address/customer ownership + payment actor contract); recovery guard 4; runtime all steps ok
+
+Recovery-SoT:
+Last Architect-accepted: TB-P10-T003-R1
+Last Implementation: TB-P10-T004-R1
+Current Issued/Repair: none
+USER_VISUAL_ACCEPTED=NO
+do NOT invent TB-P10-T005
+
+HEAD:
+33b5a48fe709a6c1a2ef3594df1849d46d07be5c
+
+HEAD==origin/main:
+yes (after push)
+
+Worker:
+IDLE
+
+END_TOOBA_TASK_RESULT

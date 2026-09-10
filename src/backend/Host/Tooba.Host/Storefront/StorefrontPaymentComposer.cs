@@ -16,23 +16,40 @@ public sealed class StorefrontPaymentComposer
     private readonly IPaymentDirectory _payments;
     private readonly IWalletDirectory _wallets;
     private readonly PaymentGatewayOptions _gatewayOptions;
+    private readonly CurrentAuthenticatedSession _session;
     private readonly ILogger<StorefrontPaymentComposer> _logger;
 
     /// <summary>
     /// سازندهٔ ترکیب پرداخت ویترین.
+    /// داخلی است چون <see cref="CurrentAuthenticatedSession"/> عمومی نیست؛ ثبت DI با کارخانه در Program انجام می‌شود.
     /// </summary>
-    public StorefrontPaymentComposer(
+    internal StorefrontPaymentComposer(
         StorefrontCheckoutComposer checkouts,
         IPaymentDirectory payments,
         IWalletDirectory wallets,
         IOptions<PaymentGatewayOptions> gatewayOptions,
+        CurrentAuthenticatedSession session,
         ILogger<StorefrontPaymentComposer> logger)
     {
         _checkouts = checkouts;
         _payments = payments;
         _wallets = wallets;
         _gatewayOptions = gatewayOptions.Value;
+        _session = session;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Actor پرداخت را با نشست احرازشده هم‌تراز می‌کند؛ مهمان همان GuestActor ثابت ویترین است.
+    /// </summary>
+    private Guid ResolvePaymentActor()
+    {
+        if (_session.IsAuthenticated && _session.UserId is Guid userId && userId != Guid.Empty)
+        {
+            return userId;
+        }
+
+        return StorefrontCheckoutComposer.StorefrontGuestActorId;
     }
 
     /// <summary>
@@ -49,8 +66,9 @@ public sealed class StorefrontPaymentComposer
         if (checkout.CheckoutId is null)
             throw new InvalidOperationException("سفارش پیدا نشد.");
 
+        var actor = ResolvePaymentActor();
         var quote = await _wallets.QuoteForPayableAsync(
-            StorefrontCheckoutComposer.StorefrontGuestActorId,
+            actor,
             checkout.PayableAmount,
             checkout.Currency,
             cancellationToken);
@@ -138,10 +156,11 @@ public sealed class StorefrontPaymentComposer
         }
 
         var providerCode = _gatewayOptions.DefaultProvider;
+        var actor = ResolvePaymentActor();
         if (useWallet)
         {
             var quote = await _wallets.QuoteForPayableAsync(
-                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                actor,
                 checkout.PayableAmount,
                 checkout.Currency,
                 cancellationToken);
@@ -185,7 +204,7 @@ public sealed class StorefrontPaymentComposer
         var initiated = await _payments.InitiateAsync(
             new InitiatePaymentCommand(
                 checkout.CheckoutId.Value,
-                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                actor,
                 null,
                 idempotencyKey,
                 providerCode),
@@ -211,7 +230,7 @@ public sealed class StorefrontPaymentComposer
 
             var after = await _payments.GetAsync(
                 initiated.PaymentId,
-                StorefrontCheckoutComposer.StorefrontGuestActorId,
+                actor,
                 null,
                 cancellationToken) ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
 
@@ -281,9 +300,10 @@ public sealed class StorefrontPaymentComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
+        var actor = ResolvePaymentActor();
         var payment = await _payments.GetAsync(
             paymentId,
-            StorefrontCheckoutComposer.StorefrontGuestActorId,
+            actor,
             null,
             cancellationToken);
         if (payment is null)

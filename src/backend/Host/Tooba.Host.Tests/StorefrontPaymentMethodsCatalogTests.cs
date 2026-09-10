@@ -77,6 +77,7 @@ public sealed class StorefrontPaymentMethodsCatalogTests
             payments: null!,
             wallets: null!,
             gatewayOptions: Options.Create(options),
+            session: new CurrentAuthenticatedSession(),
             logger: NullLogger<Storefront.StorefrontPaymentComposer>.Instance);
     }
 }

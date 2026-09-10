@@ -1,0 +1,80 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "auth-register-login",
+      "ok": true,
+      "aUserId": "01a08ca7-6fac-7000-8ec3-d7242a504c72",
+      "bUserId": "01a08ca7-70b9-7000-96e0-8946fde16adb",
+      "usedDevActorHeader": false
+    },
+    {
+      "name": "auth-bff-tooba-session",
+      "ok": true,
+      "a": 200,
+      "b": 200,
+      "hasSessionA": true
+    },
+    {
+      "name": "address-create",
+      "ok": true
+    },
+    {
+      "name": "address-ownership",
+      "ok": true,
+      "aListCount": 1,
+      "foreignStatus": 404
+    },
+    {
+      "name": "authenticated-e2e",
+      "ok": true,
+      "checkoutId": "01a08ca7-75af-7000-a453-e4c2e6e4a51c",
+      "payable": 201088,
+      "paymentAmount": 201088,
+      "ownedOrder": 200,
+      "feOrder": 200
+    },
+    {
+      "name": "payment-ownership",
+      "ok": true,
+      "idempotent": true
+    },
+    {
+      "name": "payment-foreign-denied",
+      "ok": true,
+      "status": 401,
+      "code": "payment.guest.invalid"
+    },
+    {
+      "name": "order-ownership",
+      "ok": true,
+      "owned": 200,
+      "foreign": 404,
+      "unauth": 404
+    },
+    {
+      "name": "cart-continuity",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "address-foreign-in-shipping",
+      "ok": true,
+      "status": 403,
+      "code": "shipping.address.forbidden"
+    },
+    {
+      "name": "guest-regression",
+      "ok": true,
+      "checkoutId": "01a08ca7-867a-7000-8f56-be4c0eb68994"
+    },
+    {
+      "name": "financial-consistency",
+      "ok": true,
+      "payable": 201088,
+      "allocSum": 201088,
+      "shipping": 200000
+    }
+  ],
+  "secretsOmitted": true
+}

@@ -155,7 +155,14 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
 builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Settlement.SettlementPanelComposer>();
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =>
+    new Tooba.Host.Storefront.StorefrontPaymentComposer(
+        sp.GetRequiredService<StorefrontCheckoutComposer>(),
+        sp.GetRequiredService<Tooba.Payment.Application.IPaymentDirectory>(),
+        sp.GetRequiredService<Tooba.Wallet.Application.IWalletDirectory>(),
+        sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tooba.Payment.Infrastructure.PaymentGatewayOptions>>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>(),
+        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
