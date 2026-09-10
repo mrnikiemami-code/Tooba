@@ -1,0 +1,29 @@
+{
+  "task": "TB-P09-T021-R1",
+  "scenarios": {
+    "guest_lifecycle": {
+      "checkoutId": "01a08967-6cf1-7000-a83a-97d5de460dbf",
+      "cartId": "01a08967-6c73-7000-8689-cb7fa7496136",
+      "pkg1Id": "01a08967-7807-7000-b270-cbadb89616b9",
+      "pkg1Num": "MP-01A089677807",
+      "pkg2Id": "01a08967-794e-7000-b1f8-1540663a871a",
+      "pkg2Num": "MP-01A08967794E",
+      "guestStatus": 200,
+      "guestActorStatus": 404,
+      "badActorStatus": 404,
+      "badSecretStatus": 404,
+      "preferredAfterDeliver": "CENTRAL-R1-A2",
+      "packageStatus": "Delivered"
+    },
+    "owned_actor": {
+      "checkoutId": "01a08967-7ef4-7000-a20a-b287c5159ab5",
+      "status": 200,
+      "preferred": "CENTRAL-R1-B"
+    },
+    "no_package": {
+      "checkoutId": "01a08967-8cb1-7000-abcd-c0a574829e52",
+      "status": 200,
+      "preferred": null
+    }
+  }
+}

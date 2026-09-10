@@ -85,6 +85,28 @@ public sealed class FulfillmentPanelComposer
     }
 
     /// <summary>
+    /// بسته فعال (Created/Dispatched/Delivered) برای رهگیری اصلی مشتری؛ Cancelled هرگز primary نیست.
+    /// </summary>
+    public static Tooba.Fulfillment.Application.ConsolidatedPackageSnapshot? SelectPreferredCustomerPackage(
+        IReadOnlyList<Tooba.Fulfillment.Application.ConsolidatedPackageSnapshot> packages)
+    {
+        var active = packages
+            .Where(p => p.Status is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
+                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched
+                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Delivered)
+            .OrderByDescending(p => p.UpdatedAt)
+            .ThenByDescending(p => p.CreatedAt)
+            .ToList();
+        if (active.Count == 0)
+        {
+            return null;
+        }
+
+        return active.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.TrackingReference))
+            ?? active[0];
+    }
+
+    /// <summary>
     /// fulfillmentهای یک checkout؛ رهگیری بسته تجمیعی فعال را به‌عنوان PreferredTrackingReference می‌گذارد.
     /// </summary>
     public async Task<IReadOnlyList<FulfillmentSnapshot>> ListForCheckoutAsync(
@@ -93,13 +115,7 @@ public sealed class FulfillmentPanelComposer
     {
         var list = await _fulfillment.ListForCheckoutAsync(checkoutId, cancellationToken);
         var packages = await _fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
-        var preferred = packages
-            .Where(p => p.Status is Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Created
-                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Dispatched
-                or Tooba.Fulfillment.Domain.ConsolidatedPackageStatus.Delivered)
-            .OrderByDescending(p => p.CreatedAt)
-            .Select(p => p.TrackingReference)
-            .FirstOrDefault(t => !string.IsNullOrWhiteSpace(t));
+        var preferred = SelectPreferredCustomerPackage(packages)?.TrackingReference;
         if (string.IsNullOrWhiteSpace(preferred))
         {
             return list;

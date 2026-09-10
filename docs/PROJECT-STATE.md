@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T021
+TB-P09-T021-R1
 ```
 
 Current Issued Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T021 — Consolidated Package foundation (multi-seller master package orchestration); USER_VISUAL_ACCEPTED=NO
+TB-P09-T021-R1 — Consolidated Package customer tracking access/projection repair; USER_VISUAL_ACCEPTED=NO
+TB-P09-T021 — Consolidated Package foundation (multi-seller master package orchestration); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020-R2 — Cancel/Restore reservation rebinding + localized inventory error UX; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020-R1 — P09 final-gate repair: partial-dispatch composed status + multi-seller runtime; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020 — P09 final gate: partial-dispatch remainder + multi-shipment continuation; under repair via R2; USER_VISUAL_ACCEPTED=NO

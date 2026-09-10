@@ -121,6 +121,12 @@ Central Dispatch and Deliver must call existing per-member Dispatch/Deliver comm
 ### LOCK-OPS-021 — Order cancel voids pre-dispatch packages first
 Whole-order cancel before central dispatch voids active Created Consolidated Packages and releases membership, then continues existing T016 shipment/order cancel orchestration. Post-central-dispatch whole-order cancel remains blocked by existing first-dispatch rules. Return/Refund stay outside package ownership. Member tracking/history is preserved; central tracking is preferred for customer-facing primary tracking while the package is active.
 
+### LOCK-OPS-022 — Customer tracking prefers active central package
+For Orders with an active Consolidated Package (Created / Dispatched / Delivered), customer-facing primary tracking prefers the central final-leg tracking reference and package number. Member Seller Shipment tracking and history remain preserved and may remain visible in detail. Cancelled Consolidated Packages are never projected as active primary tracking; fall back to eligible member shipment tracking. Do not invent a second customer tracking subsystem.
+
+### LOCK-OPS-023 — Customer/guest tracking respects existing ownership proof
+Customer fulfillment/tracking projection must reuse the existing ownership/guest-access model: authenticated owned Orders, Development/Testing customer-panel actor seams including `StorefrontGuestActorId`, and/or existing `X-Tooba-Guest-Secret` cart credential proof bound to the Order's CartId. Arbitrary anonymous OrderId/ShipmentId/PackageId guessing must not expose data. Forbidden/unowned access stays 404 without leakage.
+
 ## Returns / Refunds
 
 ### LOCK-RET-001 — Return and Refund are independent lifecycles

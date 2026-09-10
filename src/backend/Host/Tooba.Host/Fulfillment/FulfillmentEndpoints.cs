@@ -2,10 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tooba.BuildingBlocks;
 using Tooba.BuildingBlocks.Grid;
+using Tooba.Cart.Application;
 using Tooba.Fulfillment.Application;
-using Tooba.Fulfillment.Domain;
 using Tooba.Host.Admin;
 using Tooba.Host.Seller;
+using Tooba.Host.Storefront;
 using AdminFulfillmentWorkQueueBulkRequest = Tooba.Host.Admin.AdminFulfillmentWorkQueueBulkRequest;
 
 namespace Tooba.Host.Fulfillment;
@@ -376,6 +377,7 @@ public static class FulfillmentEndpoints
         Guid checkoutId,
         FulfillmentPanelComposer composer,
         IFulfillmentDirectory fulfillment,
+        ICartQueryGateway carts,
         HttpRequest request,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
@@ -385,35 +387,68 @@ public static class FulfillmentEndpoints
         try
         {
             var actor = ResolveCustomerActor(request, session, environment);
-            if (actor is null)
+            var guestSecret = ReadGuestSecret(request);
+            if (actor is null && string.IsNullOrWhiteSpace(guestSecret))
             {
                 return Results.Json(new { title = "Unauthorized", errorCode = "customer.actor.missing" }, statusCode: 401);
             }
 
-            var owned = await orders.Checkouts.AsNoTracking()
-                .AnyAsync(x => x.CheckoutId == checkoutId && x.PlacedByUserId == actor.Value, cancellationToken);
-            if (!owned)
+            var checkout = await orders.Checkouts.AsNoTracking()
+                .Where(x => x.CheckoutId == checkoutId)
+                .Select(x => new { x.CheckoutId, x.PlacedByUserId, x.CartId })
+                .FirstOrDefaultAsync(cancellationToken);
+            if (checkout is null)
+            {
+                return Results.Json(new { title = "Not Found", errorCode = "customer.order.missing" }, statusCode: 404);
+            }
+
+            var ownedByActor = actor is not null && checkout.PlacedByUserId == actor.Value;
+            // Shared StorefrontGuestActorId is not a bearer for every guest checkout.
+            if (checkout.PlacedByUserId == StorefrontCheckoutComposer.StorefrontGuestActorId)
+            {
+                ownedByActor = false;
+            }
+
+            var ownedByGuest = false;
+            if (!ownedByActor && !string.IsNullOrWhiteSpace(guestSecret))
+            {
+                // Reuse storefront cart credential proof (CartId alone is not a bearer).
+                try
+                {
+                    var cart = await carts.GetCartAsync(
+                        checkout.CartId,
+                        new CartAccess(null, guestSecret),
+                        cancellationToken);
+                    ownedByGuest = cart is not null;
+                }
+                catch (InvalidOperationException)
+                {
+                    ownedByGuest = false;
+                }
+            }
+
+            if (!ownedByActor && !ownedByGuest)
             {
                 return Results.Json(new { title = "Not Found", errorCode = "customer.order.missing" }, statusCode: 404);
             }
 
             var list = await composer.ListForCheckoutAsync(checkoutId, cancellationToken);
             var packages = await fulfillment.GetPackagesForCheckoutAsync(checkoutId, cancellationToken);
-            var preferred = packages
-                .Where(p => p.Status is ConsolidatedPackageStatus.Created or ConsolidatedPackageStatus.Dispatched)
-                .Where(p => !string.IsNullOrWhiteSpace(p.TrackingReference))
-                .OrderByDescending(p => p.UpdatedAt)
-                .FirstOrDefault();
+            var preferred = FulfillmentPanelComposer.SelectPreferredCustomerPackage(packages);
             return Results.Json(new
             {
                 fulfillments = list,
                 preferredCustomerTrackingReference = preferred?.TrackingReference,
                 preferredCustomerTrackingPackageNumber = preferred?.PackageNumber,
+                preferredCustomerPackageStatus = preferred?.Status.ToString(),
             });
         }
         catch (PlatformHttpException ex) { return ToError(ex); }
     }
 
+    /// <summary>
+    /// Actor مشتری را مثل پنل مشتری Resolve می‌کند: نشست، سپس Dev actor، سپس GuestActor فروشگاه در Dev/Testing.
+    /// </summary>
     private static Guid? ResolveCustomerActor(HttpRequest request, CurrentAuthenticatedSession session, IHostEnvironment environment)
     {
         if (session.IsAuthenticated && session.UserId is { } authenticated)
@@ -421,12 +456,27 @@ public static class FulfillmentEndpoints
             return authenticated;
         }
 
-        if ((environment.IsDevelopment() || environment.IsEnvironment("Testing"))
-            && request.Headers.TryGetValue("X-Tooba-Dev-Actor-User-Id", out var raw)
+        var isDevSeam = environment.IsDevelopment() || environment.IsEnvironment("Testing");
+        if (!isDevSeam)
+        {
+            return null;
+        }
+
+        if (request.Headers.TryGetValue("X-Tooba-Dev-Actor-User-Id", out var raw)
             && Guid.TryParse(raw.ToString(), out var devActor)
             && devActor != Guid.Empty)
         {
             return devActor;
+        }
+
+        return StorefrontCheckoutComposer.StorefrontGuestActorId;
+    }
+
+    private static string? ReadGuestSecret(HttpRequest request)
+    {
+        if (request.Headers.TryGetValue("X-Tooba-Guest-Secret", out var header) && !string.IsNullOrWhiteSpace(header))
+        {
+            return header.ToString();
         }
 
         return null;

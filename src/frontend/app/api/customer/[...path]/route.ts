@@ -43,10 +43,20 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   const url = new URL(request.url);
   const upstreamPath = `/v1/customer/${suffix}${url.search}`;
   const body = MUTATING.has(method) ? await request.text() : undefined;
+  const forwardHeaders: Record<string, string> = {};
+  const guestSecret = request.headers.get("X-Tooba-Guest-Secret");
+  if (guestSecret) {
+    forwardHeaders["X-Tooba-Guest-Secret"] = guestSecret;
+  }
+  const actor = request.headers.get("X-Tooba-Dev-Actor-User-Id");
+  if (actor) {
+    forwardHeaders["X-Tooba-Dev-Actor-User-Id"] = actor;
+  }
   const upstream = await forwardToHost(upstreamPath, {
     method,
     body: body && body.length > 0 ? body : undefined,
     json: Boolean(body),
+    headers: forwardHeaders,
   });
   const payload = await upstream.text();
   return new NextResponse(payload, {

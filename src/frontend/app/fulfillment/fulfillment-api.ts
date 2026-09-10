@@ -7,6 +7,7 @@ import { ADMIN_DEV_ACTOR_HEADER, type AdminResult } from "../admin/admin-api.ts"
 import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
+import { readCartSession } from "../storefront/storefront-cart-api.ts";
 import {
   DEV_ACTOR_HEADER,
   SELLER_PARTY_HEADER,
@@ -411,9 +412,14 @@ export async function loadCustomerFulfillments(checkoutId: string): Promise<{
   preferredTrackingPackageNumber: string | null;
 } | null> {
   try {
+    const headers: Record<string, string> = { ...customerAuthHeaders() };
+    const guestSecret = readCartSession().guestSecret;
+    if (guestSecret) {
+      headers["X-Tooba-Guest-Secret"] = guestSecret;
+    }
     const response = await fetch(`/api/customer/orders/${encodeURIComponent(checkoutId)}/fulfillments`, {
       credentials: "include",
-      headers: customerAuthHeaders(),
+      headers,
     });
     if (response.status === 404) {
       return { snapshots: [], preferredTrackingReference: null, preferredTrackingPackageNumber: null };
