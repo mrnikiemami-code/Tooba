@@ -1,0 +1,72 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T003-R1
+
+Parent-Task:
+TB-P10-T003
+
+Status:
+PASS
+
+Summary:
+Removed first-Seller shipping attribution shortcut. Payment allocations now use PaymentAllocationTargetKind.StoreShipping for checkout shipping (stable StoreShippingTargetId) while SellerOrder rows keep merchandise only. Settlement reader returns SellerOrder allocations only so shipping cannot inflate seller payout. Ordering independence proven (OrderBy SellerOrderId + StoreShipping). Multi-seller runtime A–E PASS; focused tests + recovery green. HEAD==origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T004.
+
+Applicable-Locks:
+LOCK-SF-001…010 preserved; LOCK-SF-011 added (marketplace shipping never attributed by ordering/first-seller shortcut).
+
+Recovery-Start:
+docs/evidence/TB-P10-T003/r1-recovery-start.md
+Start HEAD ceec5f0d == origin/main; clean tracked worktree.
+
+Shipping-Allocation-Discovery:
+docs/evidence/TB-P10-T003/r1-shipping-allocation-discovery.md
+
+Financial-Model:
+docs/evidence/TB-P10-T003/r1-financial-model.md
+
+Payment-Allocation:
+docs/evidence/TB-P10-T003/r1-payment-allocation.md
+
+Settlement-Regression:
+docs/evidence/TB-P10-T003/r1-settlement-regression.md
+
+Refund-Regression:
+docs/evidence/TB-P10-T003/r1-refund-regression.md
+
+Ordering-Independence:
+docs/evidence/TB-P10-T003/r1-ordering-independence.md
+
+Pricing-Integrity:
+docs/evidence/TB-P10-T003/r1-pricing-integrity.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T003/r1-focused-validation.md
+PaymentShippingAllocationTests 3 + payment foundation/catalog focused PASS; recovery 4/4.
+
+Runtime-Smoke:
+docs/evidence/TB-P10-T003/r1-runtime-smoke.md
+A–E PASS; r1-runtime-raw.json
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-011
+
+Recovery-SoT:
+docs/evidence/TB-P10-T003/r1-recovery-sot.md
+Phase P10; Architect TB-P10-T002-R1; Impl TB-P10-T003-R1; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; no T004.
+
+Git:
+7989187c96e6ee591266c23803b3e258effd1b55 on origin/main; HEAD==origin/main
+
+Architectural-Concerns:
+StoreShipping is a payment allocation target, not a full settlement ledger account for platform shipping revenue; sufficient to stop false seller attribution without inventing a settlement subsystem.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; Payment UI unchanged.
+
+Blockers:
+None.
+
+END_TOOBA_TASK_RESULT
