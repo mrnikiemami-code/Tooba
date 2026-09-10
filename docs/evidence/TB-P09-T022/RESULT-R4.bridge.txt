@@ -1,0 +1,62 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P09-T022-R4
+
+Status:
+PASS
+
+Summary:
+REAL Host runtime (:5088) proved paid cart-hold commit → ExpiresAt=null; wall-clock past original TTL; expiry worker did not release; Dispatch Consume → Consumed. Scenario A reservation 01a08b47-f658-7000-bf19-87baa12f0014 survived near-TTL payment and dispatch 200. Scenario B cancel Released once (…8728…); restore rebound OL+Ful to durable …8cb8…; expiry skip; dispatch Consumed; old Released untouched. Scenario C qty 1.250000 exact through reserve/commit/expiry/cancel/restore/dispatch. Error UX: order.cancelled.blocks_action localized FA; no Held/Released/SQL/GUID leak. Focused tests 46/0; recovery guard PASS; evidence-only commit 2b1d7c40 HEAD==origin/main; no Inventory/Package redesign; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T023.
+
+Applicable-Locks:
+- LOCK-OPS-024..028 preserved
+- Inventory owns paid-order commit / cart TTL only pre-payment
+- Expiry worker only Held with non-null ExpiresAt
+- Released/Consumed never resurrected
+- Restore reacquires durable (ExpiresAt=null)
+- Dispatch Consume remains strict
+- Consolidated Package / shipping-method out of scope (untouched)
+
+Runtime-Paid-TTL:
+docs/evidence/TB-P09-T022/r4-runtime-paid-ttl.md
+checkout 01a08b47-f702-7000-a340-2b499de017d1; reservation 01a08b47-f658-7000-bf19-87baa12f0014; originalExpiresAt 2026-09-10 12:27:14.2514+00; payAt 2026-09-10T12:27:02.266Z → Held ExpiresAt=null; after expiry worker same id still Held; Dispatch 200 → Consumed @ 2026-09-10T12:27:26.850Z.
+
+Runtime-Cancel-Restore:
+docs/evidence/TB-P09-T022/r4-runtime-cancel-restore.md
+checkout 01a08b49-87ca-7000-bb9e-05a49db35189; old 01a08b49-8728-7000-b4a9-4d3c3180099d Released once untouched; replacement 01a08b49-8cb8-7000-b9f8-f9ed321bfbbf Held ExpiresAt=null; OL+Ful rebound; after expiry still Held; Dispatch → replacement Consumed @ 2026-09-10T12:29:09.626Z.
+
+Runtime-Decimal:
+docs/evidence/TB-P09-T022/r4-runtime-decimal.md
+checkout 01a08b4b-19a3-7000-8e6b-7195437bf1e2; qty chain all 1.250000 through reserve/commit/expiry/cancel/restore/dispatch (…191d… → …a98b…).
+
+Runtime-Expiry-Boundary:
+Near-expiry payment delayMs=77749 without DB hacks; committed reservation survived; R3 concurrency tests remain race-class proof.
+
+Runtime-Error-UX:
+docs/evidence/TB-P09-T022/r4-runtime-error-ux.md
+checkout 01a08b4c-b653-7000-84c6-3c07553560d9; probe order.cancelled.blocks_action / «سفارش لغوشده است؛ این عملیات مجاز نیست.»; no Held/Released/SQL/GUID in user message.
+
+Focused-Validation:
+docs/evidence/TB-P09-T022/r4-focused-validation.md
+Passed=46 Failed=0; filter PaidOrderReservationLifecycleTests|InventoryFoundationTests|WholeOrderCancelUntilDispatchTests|AdminOrderCorrectiveActionsTests; git diff --check PASS.
+
+Recovery-SoT:
+docs/evidence/TB-P09-T022/r4-recovery-sot.md
+Phase P09; Last Architect-accepted TB-P09-T022-R2; R3 implementation accepted with R4 runtime proof; Last Implementation TB-P09-T022-R4; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T023; recovery guard PASS.
+
+Git:
+2b1d7c4026cdb646951b9bb341ac4cad3f6ed49e on origin/main; HEAD==origin/main; evidence-only (no Inventory/Package code change)
+
+Architectural-Concerns:
+None. Runtime confirms R3 commit-clears-TTL behavior under real Host.
+
+Visual-Concerns:
+None (inventory lifecycle runtime proof only).
+
+Blockers:
+None.
+
+END_TOOBA_TASK_RESULT
