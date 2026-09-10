@@ -260,11 +260,14 @@ public interface IFulfillmentDirectory
     /// <summary>آیا مرسوله توسط بستهٔ فعال (Created/Dispatched) قفل است.</summary>
     Task<bool> IsShipmentLockedByPackageAsync(Guid shipmentId, CancellationToken cancellationToken);
 
-    /// <summary>بسته تجمیعی چندفروشنده‌ای می‌سازد.</summary>
+    /// <summary>
+    /// بسته تجمیعی چندفروشنده‌ای می‌سازد.
+    /// روش ارسال از مرسوله‌های عضو inherit می‌شود؛ در صورت ارسال کد، باید با همان روش مشترک یکی باشد.
+    /// </summary>
     Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
-        string shippingMethodCode,
+        string? shippingMethodCode,
         string? trackingReference,
         string? note,
         Guid actorUserId,
@@ -273,6 +276,13 @@ public interface IFulfillmentDirectory
     /// <summary>ابطال بسته پیش از ارسال مرکزی و آزادسازی قفل اعضا.</summary>
     Task<ConsolidatedPackageSnapshot> CancelConsolidatedPackageAsync(
         Guid consolidatedPackageId,
+        Guid actorUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>ثبت/به‌روزرسانی کد رهگیری مرکزی بسته (فقط قبل از ارسال).</summary>
+    Task<ConsolidatedPackageSnapshot> AssignConsolidatedPackageTrackingAsync(
+        Guid consolidatedPackageId,
+        string trackingReference,
         Guid actorUserId,
         CancellationToken cancellationToken);
 

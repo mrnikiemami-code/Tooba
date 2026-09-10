@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Button, Dialog } from "../../design-system";
 import {
-  adminHeaders,
   formatAdminStatus,
   type AdminConsolidatedPackage,
   type AdminOrderDetail,
@@ -16,15 +15,8 @@ import {
   type AdminOrderOperationAction,
 } from "./admin-order-operations";
 
-type ShippingMethodOption = { code: string; labelFa: string };
-
-const DEFAULT_METHODS: ShippingMethodOption[] = [
-  { code: "post", labelFa: "پست" },
-  { code: "tipax", labelFa: "تیپاکس" },
-  { code: "snapp_courier", labelFa: "اسنپ / پیک آنلاین" },
-  { code: "store_courier", labelFa: "پیک فروشگاه" },
-  { code: "in_person", labelFa: "تحویل حضوری" },
-];
+const METHOD_MISMATCH_FA =
+  "برای ایجاد بسته تجمیعی، روش ارسال مرسوله‌های انتخاب‌شده باید یکسان باشد.";
 
 type EligibleShipmentRow = {
   shipmentId: string;
@@ -34,6 +26,8 @@ type EligibleShipmentRow = {
   itemCount: number;
   trackingReference: string | null;
   carrierDisplayName: string;
+  shippingMethodCode: string;
+  shippingMethodLabel: string;
 };
 
 type Props = {
@@ -54,14 +48,17 @@ function collectEligible(detail: AdminOrderDetail): EligibleShipmentRow[] {
   const rows: EligibleShipmentRow[] = [];
   for (const seller of detail.sellerOrders) {
     for (const shipment of seller.shipments ?? []) {
+      const methodCode = (shipment.shippingMethodCode ?? "").trim();
       const canAdd = shipment.canAddToConsolidatedPackage === true
         || (
           shipment.canAddToConsolidatedPackage !== false
           && shipment.status === "Created"
           && !shipment.activePackageNumber
+          && Boolean(methodCode)
         );
       if (!canAdd || shipment.status !== "Created") continue;
       if (shipment.activePackageNumber) continue;
+      if (!methodCode) continue;
       rows.push({
         shipmentId: shipment.shipmentId,
         sellerOrderId: seller.id,
@@ -70,6 +67,10 @@ function collectEligible(detail: AdminOrderDetail): EligibleShipmentRow[] {
         itemCount: shipment.itemCount,
         trackingReference: shipment.trackingReference,
         carrierDisplayName: shipment.carrierDisplayName,
+        shippingMethodCode: methodCode,
+        shippingMethodLabel: (shipment.shippingMethodLabel ?? "").trim()
+          || shipment.carrierDisplayName
+          || methodCode,
       });
     }
   }
@@ -78,6 +79,7 @@ function collectEligible(detail: AdminOrderDetail): EligibleShipmentRow[] {
 
 /**
  * بخش بسته‌بندی مرکزی — فقط سفارش‌های چندفروشنده‌ای.
+ * روش ارسال از مرسوله‌های عضو inherit می‌شود؛ انتخاب روش جدید در Dialog نیست.
  */
 export function AdminConsolidatedPackageSection({
   detail,
@@ -92,52 +94,43 @@ export function AdminConsolidatedPackageSection({
     || detail.sellerOrders.length >= 2;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [methodCode, setMethodCode] = useState("post");
   const [tracking, setTracking] = useState("");
-  const [methods, setMethods] = useState<ShippingMethodOption[]>(DEFAULT_METHODS);
   const [error, setError] = useState<string | null>(null);
+  const [trackingDialogPkg, setTrackingDialogPkg] = useState<AdminConsolidatedPackage | null>(null);
+  const [packageTrackingInput, setPackageTrackingInput] = useState("");
+  const [trackingDialogError, setTrackingDialogError] = useState<string | null>(null);
+  const [dispatchAfterTracking, setDispatchAfterTracking] = useState(false);
 
   const eligible = useMemo(() => collectEligible(detail), [detail]);
   const packages = detail.consolidatedPackages ?? [];
   const canCreate = checkoutActions.some((a) => a.code === "create_consolidated_package");
 
-  const selectedSellerCount = useMemo(() => {
-    const sellers = new Set(
-      eligible.filter((r) => selected.includes(r.shipmentId)).map((r) => r.sellerOrderId),
-    );
-    return sellers.size;
-  }, [eligible, selected]);
+  const selectedRows = useMemo(
+    () => eligible.filter((r) => selected.includes(r.shipmentId)),
+    [eligible, selected],
+  );
 
-  useEffect(() => {
-    if (!dialogOpen) return;
-    let cancelled = false;
-    void fetch("/v1/admin/shipping-methods", { headers: adminHeaders() })
-      .then(async (res) => {
-        if (!res.ok) return;
-        const payload = await res.json().catch(() => null);
-        const rows = Array.isArray(payload)
-          ? payload
-          : Array.isArray((payload as { items?: unknown })?.items)
-            ? ((payload as { items: unknown[] }).items)
-            : null;
-        if (!rows || cancelled) return;
-        const mapped = rows.flatMap((raw): ShippingMethodOption[] => {
-          if (!raw || typeof raw !== "object") return [];
-          const row = raw as Record<string, unknown>;
-          const code = String(row.code ?? row.Code ?? "").trim();
-          if (!code) return [];
-          return [{
-            code,
-            labelFa: String(row.labelFa ?? row.LabelFa ?? row.label ?? row.Label ?? code),
-          }];
-        });
-        if (mapped.length > 0) setMethods(mapped);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [dialogOpen]);
+  const selectedSellerCount = useMemo(() => {
+    const sellers = new Set(selectedRows.map((r) => r.sellerOrderId));
+    return sellers.size;
+  }, [selectedRows]);
+
+  const anchorMethod = selectedRows[0]?.shippingMethodCode ?? null;
+  const inheritedMethodLabel = selectedRows[0]?.shippingMethodLabel ?? null;
+  const selectedMethods = useMemo(
+    () => new Set(selectedRows.map((r) => r.shippingMethodCode.toLowerCase())),
+    [selectedRows],
+  );
+  const hasMethodMismatch = selectedMethods.size > 1;
+
+  function isCheckboxEnabled(row: EligibleShipmentRow): boolean {
+    if (selected.includes(row.shipmentId)) return true;
+    if (!anchorMethod) return true;
+    if (row.shippingMethodCode.toLowerCase() !== anchorMethod.toLowerCase()) return false;
+    // یک فروشنده نباید دو مرسوله هم‌زمان عضو بسته شود (حداقل دو فروشنده متمایز).
+    const alreadySelectedSeller = selectedRows.some((r) => r.sellerOrderId === row.sellerOrderId);
+    return !alreadySelectedSeller;
+  }
 
   if (!multiSeller) return null;
 
@@ -150,7 +143,8 @@ export function AdminConsolidatedPackageSection({
       trackingReference?: string | null;
       note?: string | null;
     },
-  ) {
+    options?: { skipConfirm?: boolean; silentSuccess?: boolean },
+  ): Promise<boolean> {
     const action = checkoutActions.find((a) => {
       if (a.code !== code) return false;
       if (body.consolidatedPackageId && a.consolidatedPackageId) {
@@ -158,18 +152,25 @@ export function AdminConsolidatedPackageSection({
       }
       return true;
     });
-    if (!action) {
+    const allowWithoutProjectedAction = code === "assign_consolidated_package_tracking"
+      && Boolean(body.consolidatedPackageId);
+    if (!action && !allowWithoutProjectedAction) {
       toast.error("این عملیات در وضعیت فعلی مجاز نیست.");
-      return;
+      return false;
     }
-    if (action.requiresConfirm && action.confirmMessageFa && !window.confirm(action.confirmMessageFa)) {
-      return;
+    if (
+      !options?.skipConfirm
+      && action?.requiresConfirm
+      && action.confirmMessageFa
+      && !window.confirm(action.confirmMessageFa)
+    ) {
+      return false;
     }
     setPendingCode(code);
     setError(null);
     const result = await executeAdminOrderOperation(checkoutId, {
       code,
-      consolidatedPackageId: body.consolidatedPackageId ?? action.consolidatedPackageId ?? null,
+      consolidatedPackageId: body.consolidatedPackageId ?? action?.consolidatedPackageId ?? null,
       shipmentIds: body.shipmentIds ?? null,
       shippingMethodCode: body.shippingMethodCode ?? null,
       trackingReference: body.trackingReference ?? null,
@@ -179,24 +180,84 @@ export function AdminConsolidatedPackageSection({
     if (result.state !== "ok") {
       const msg = mapAdminErrorMessage(result.message, "fa");
       setError(msg);
+      setTrackingDialogError(msg);
       toast.error(msg);
-      return;
+      return false;
     }
-    toast.success("عملیات با موفقیت انجام شد.");
+    if (!options?.silentSuccess) {
+      toast.success("عملیات با موفقیت انجام شد.");
+    }
     setDialogOpen(false);
     setSelected([]);
     setTracking("");
     onCompleted?.();
+    return true;
   }
 
   function toggleShipment(id: string) {
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    const row = eligible.find((r) => r.shipmentId === id);
+    if (!row) return;
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length === 0) return [id];
+      const anchor = eligible.find((r) => r.shipmentId === prev[0]);
+      if (!anchor) return [id];
+      if (row.shippingMethodCode.toLowerCase() !== anchor.shippingMethodCode.toLowerCase()) {
+        setError(METHOD_MISMATCH_FA);
+        return prev;
+      }
+      if (prev.some((sid) => eligible.find((r) => r.shipmentId === sid)?.sellerOrderId === row.sellerOrderId)) {
+        return prev;
+      }
+      setError(null);
+      return [...prev, id];
+    });
   }
 
   function packageAction(pkg: AdminConsolidatedPackage, code: string): AdminOrderOperationAction | undefined {
     return checkoutActions.find(
       (a) => a.code === code && a.consolidatedPackageId === pkg.consolidatedPackageId,
     );
+  }
+
+  function suggestPackageTracking(pkg: AdminConsolidatedPackage): string {
+    const suffix = pkg.packageNumber.replace(/^MP-?/i, "").replace(/[^A-Za-z0-9]/g, "").slice(0, 12);
+    return `CENTRAL-${suffix || pkg.consolidatedPackageId.slice(0, 8).toUpperCase()}`;
+  }
+
+  function openTrackingDialog(pkg: AdminConsolidatedPackage, thenDispatch: boolean) {
+    setTrackingDialogPkg(pkg);
+    setPackageTrackingInput(pkg.trackingReference?.trim() || suggestPackageTracking(pkg));
+    setTrackingDialogError(null);
+    setDispatchAfterTracking(thenDispatch);
+  }
+
+  async function submitPackageTracking() {
+    if (!trackingDialogPkg) return;
+    const value = packageTrackingInput.trim();
+    if (!value) {
+      setTrackingDialogError("کد رهگیری الزامی است.");
+      return;
+    }
+    const packageId = trackingDialogPkg.consolidatedPackageId;
+    const shouldDispatch = dispatchAfterTracking;
+    const assigned = await runPackageOp(
+      "assign_consolidated_package_tracking",
+      {
+        consolidatedPackageId: packageId,
+        trackingReference: value,
+      },
+      { skipConfirm: true, silentSuccess: shouldDispatch },
+    );
+    if (!assigned) return;
+    setTrackingDialogPkg(null);
+    setPackageTrackingInput("");
+    setDispatchAfterTracking(false);
+    if (shouldDispatch) {
+      await runPackageOp("dispatch_consolidated_package", {
+        consolidatedPackageId: packageId,
+      });
+    }
   }
 
   return (
@@ -216,6 +277,7 @@ export function AdminConsolidatedPackageSection({
               setDialogOpen(true);
               setError(null);
               setSelected([]);
+              setTracking("");
             }}
           >
             ایجاد بسته تجمیعی
@@ -231,8 +293,11 @@ export function AdminConsolidatedPackageSection({
         <ul className="mt-3 space-y-2">
           {packages.map((pkg) => {
             const canCancel = Boolean(packageAction(pkg, "cancel_consolidated_package"));
+            const canAssignTracking = Boolean(packageAction(pkg, "assign_consolidated_package_tracking"))
+              || (pkg.status === "Created" && !pkg.trackingReference);
             const canDispatch = Boolean(packageAction(pkg, "dispatch_consolidated_package"));
             const canDeliver = Boolean(packageAction(pkg, "deliver_consolidated_package"));
+            const needsTracking = !pkg.trackingReference?.trim();
             return (
               <li
                 key={pkg.consolidatedPackageId}
@@ -250,13 +315,28 @@ export function AdminConsolidatedPackageSection({
                       <p className="mt-1 text-[11px] text-gray-600" dir="ltr">
                         رهگیری مرکزی: {pkg.trackingReference}
                       </p>
-                    ) : null}
+                    ) : (
+                      <p className="mt-1 text-[11px] font-semibold text-amber-800">
+                        کد رهگیری مرکزی ثبت نشده است.
+                      </p>
+                    )}
                   </div>
                   <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
                     {formatAdminStatus(pkg.status)}
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
+                  {canAssignTracking && needsTracking ? (
+                    <button
+                      type="button"
+                      className="rounded border border-blue-200 px-2 py-1 text-[10px] font-bold text-blue-800 disabled:opacity-50"
+                      disabled={pendingCode !== null}
+                      data-testid={`admin-consolidated-package-tracking-${pkg.consolidatedPackageId}`}
+                      onClick={() => openTrackingDialog(pkg, false)}
+                    >
+                      ثبت کد رهگیری
+                    </button>
+                  ) : null}
                   {canCancel ? (
                     <button
                       type="button"
@@ -276,9 +356,15 @@ export function AdminConsolidatedPackageSection({
                       className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
                       disabled={pendingCode !== null}
                       data-testid={`admin-consolidated-package-dispatch-${pkg.consolidatedPackageId}`}
-                      onClick={() => void runPackageOp("dispatch_consolidated_package", {
-                        consolidatedPackageId: pkg.consolidatedPackageId,
-                      })}
+                      onClick={() => {
+                        if (needsTracking) {
+                          openTrackingDialog(pkg, true);
+                          return;
+                        }
+                        void runPackageOp("dispatch_consolidated_package", {
+                          consolidatedPackageId: pkg.consolidatedPackageId,
+                        });
+                      }}
                     >
                       ارسال بسته تجمیعی
                     </button>
@@ -311,53 +397,62 @@ export function AdminConsolidatedPackageSection({
       >
         <div className="space-y-3" data-testid="admin-consolidated-package-create-dialog">
           <p className="text-xs text-gray-600">
-            حداقل دو مرسوله از فروشنده‌های متمایز را انتخاب کنید.
+            حداقل دو مرسوله از فروشنده‌های متمایز با روش ارسال یکسان را انتخاب کنید.
+            روش ارسال بسته از مرسوله‌های انتخاب‌شده به ارث می‌رسد.
           </p>
           {eligible.length === 0 ? (
             <p className="text-xs text-amber-800">مرسولهٔ واجد شرایطی برای بسته‌بندی مرکزی وجود ندارد.</p>
           ) : (
             <ul className="max-h-64 space-y-2 overflow-y-auto">
-              {eligible.map((row) => (
-                <li key={row.shipmentId} className="rounded border border-gray-100 bg-gray-50 px-2 py-2 text-xs">
-                  <label className="flex cursor-pointer items-start gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(row.shipmentId)}
-                      onChange={() => toggleShipment(row.shipmentId)}
-                      data-testid={`admin-consolidated-package-eligible-${row.shipmentId}`}
-                    />
-                    <span>
-                      <span className="font-bold text-gray-900">{row.sellerDisplayName}</span>
-                      {" · "}
-                      {row.itemCount.toLocaleString("fa-IR")} قلم · {row.carrierDisplayName}
-                      {row.trackingReference ? (
-                        <>
-                          {" · "}
-                          <span className="font-mono" dir="ltr">
-                            {row.trackingReference}
+              {eligible.map((row) => {
+                const enabled = isCheckboxEnabled(row);
+                const disabledReason = !enabled && anchorMethod
+                  && row.shippingMethodCode.toLowerCase() !== anchorMethod.toLowerCase()
+                  ? METHOD_MISMATCH_FA
+                  : !enabled
+                    ? "برای هر فروشنده فقط یک مرسوله قابل انتخاب است."
+                    : null;
+                return (
+                  <li key={row.shipmentId} className="rounded border border-gray-100 bg-gray-50 px-2 py-2 text-xs">
+                    <label className={`flex items-start gap-2 ${enabled ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(row.shipmentId)}
+                        disabled={!enabled}
+                        onChange={() => toggleShipment(row.shipmentId)}
+                        data-testid={`admin-consolidated-package-eligible-${row.shipmentId}`}
+                      />
+                      <span>
+                        <span className="font-bold text-gray-900">{row.sellerDisplayName}</span>
+                        {" · "}
+                        {row.itemCount.toLocaleString("fa-IR")} قلم · {row.shippingMethodLabel}
+                        {row.trackingReference ? (
+                          <>
+                            {" · "}
+                            <span className="font-mono" dir="ltr">
+                              {row.trackingReference}
+                            </span>
+                          </>
+                        ) : null}
+                        {disabledReason ? (
+                          <span className="mt-1 block text-[10px] font-semibold text-amber-800">
+                            {disabledReason}
                           </span>
-                        </>
-                      ) : null}
-                    </span>
-                  </label>
-                </li>
-              ))}
+                        ) : null}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className="text-xs font-bold text-gray-700">
-              روش ارسال مرکزی
-              <select
-                className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm"
-                value={methodCode}
-                onChange={(e) => setMethodCode(e.target.value)}
-                data-testid="admin-consolidated-package-method"
-              >
-                {methods.map((m) => (
-                  <option key={m.code} value={m.code}>{m.labelFa}</option>
-                ))}
-              </select>
-            </label>
+            <div className="text-xs font-bold text-gray-700" data-testid="admin-consolidated-package-method-readonly">
+              روش ارسال بسته تجمیعی
+              <p className="mt-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-sm font-semibold text-gray-900">
+                {inheritedMethodLabel ?? "پس از انتخاب مرسوله مشخص می‌شود"}
+              </p>
+            </div>
             <label className="text-xs font-bold text-gray-700">
               کد رهگیری مرکزی (اختیاری)
               <input
@@ -369,20 +464,108 @@ export function AdminConsolidatedPackageSection({
               />
             </label>
           </div>
-          {error ? <p className="text-xs font-semibold text-red-700">{error}</p> : null}
+          {hasMethodMismatch || error ? (
+            <p className="text-xs font-semibold text-red-700" data-testid="admin-consolidated-package-method-error">
+              {hasMethodMismatch ? METHOD_MISMATCH_FA : error}
+            </p>
+          ) : null}
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" tone="secondary" onClick={() => setDialogOpen(false)}>انصراف</Button>
             <Button
               type="button"
-              disabled={pendingCode !== null || selectedSellerCount < 2 || !methodCode}
+              disabled={
+                pendingCode !== null
+                || selectedSellerCount < 2
+                || !anchorMethod
+                || hasMethodMismatch
+              }
               data-testid="admin-consolidated-package-submit"
-              onClick={() => void runPackageOp("create_consolidated_package", {
-                shipmentIds: selected,
-                shippingMethodCode: methodCode,
-                trackingReference: tracking.trim() || null,
-              })}
+              onClick={() => {
+                if (hasMethodMismatch || !anchorMethod) {
+                  setError(METHOD_MISMATCH_FA);
+                  return;
+                }
+                void runPackageOp("create_consolidated_package", {
+                  shipmentIds: selected,
+                  // Backend inherits from members; send shared code for compatibility.
+                  shippingMethodCode: anchorMethod,
+                  trackingReference: tracking.trim() || null,
+                });
+              }}
             >
               ایجاد بسته تجمیعی
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={trackingDialogPkg !== null}
+        onClose={() => {
+          setTrackingDialogPkg(null);
+          setDispatchAfterTracking(false);
+          setTrackingDialogError(null);
+        }}
+        title={dispatchAfterTracking ? "ثبت کد رهگیری و ارسال" : "ثبت کد رهگیری بسته تجمیعی"}
+        showCloseButton={false}
+      >
+        <div className="space-y-3" data-testid="admin-consolidated-package-tracking-dialog">
+          <p className="text-xs text-gray-600">
+            {dispatchAfterTracking
+              ? "قبل از ارسال بسته تجمیعی باید کد رهگیری مرکزی ثبت شود. می‌توانید مقدار پیشنهادی را بپذیرید یا خودتان وارد کنید."
+              : "کد رهگیری مرکزی را وارد کنید یا با تولید خودکار یک کد بسازید."}
+          </p>
+          {trackingDialogPkg ? (
+            <p className="font-mono text-[11px] text-gray-500" dir="ltr">
+              {trackingDialogPkg.packageNumber}
+            </p>
+          ) : null}
+          <label className="block text-xs font-bold text-gray-700">
+            کد رهگیری مرکزی
+            <input
+              className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm"
+              dir="ltr"
+              value={packageTrackingInput}
+              onChange={(e) => setPackageTrackingInput(e.target.value)}
+              data-testid="admin-consolidated-package-tracking-input"
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              tone="secondary"
+              data-testid="admin-consolidated-package-tracking-autofill"
+              onClick={() => {
+                if (!trackingDialogPkg) return;
+                setPackageTrackingInput(suggestPackageTracking(trackingDialogPkg));
+                setTrackingDialogError(null);
+              }}
+            >
+              تولید خودکار
+            </Button>
+          </div>
+          {trackingDialogError ? (
+            <p className="text-xs font-semibold text-red-700">{trackingDialogError}</p>
+          ) : null}
+          <div className="flex justify-end gap-2 pt-1">
+            <Button
+              type="button"
+              tone="secondary"
+              onClick={() => {
+                setTrackingDialogPkg(null);
+                setDispatchAfterTracking(false);
+                setTrackingDialogError(null);
+              }}
+            >
+              انصراف
+            </Button>
+            <Button
+              type="button"
+              disabled={pendingCode !== null || !packageTrackingInput.trim()}
+              data-testid="admin-consolidated-package-tracking-submit"
+              onClick={() => void submitPackageTracking()}
+            >
+              {dispatchAfterTracking ? "ثبت و ارسال" : "ثبت کد رهگیری"}
             </Button>
           </div>
         </div>

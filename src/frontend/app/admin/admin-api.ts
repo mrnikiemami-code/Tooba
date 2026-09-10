@@ -76,6 +76,8 @@ export interface AdminShipment {
   trackingReference: string | null;
   itemCount: number;
   lines: AdminShipmentLine[];
+  shippingMethodCode?: string | null;
+  shippingMethodLabel?: string | null;
   activePackageId?: string | null;
   activePackageNumber?: string | null;
   packageLockedReasonFa?: string | null;
@@ -631,6 +633,8 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
           if (!orderLineId) return [];
           return [{ orderLineId, quantity: number(prop(line, "quantity", "Quantity")) }];
         }),
+        shippingMethodCode: text(prop(row, "shippingMethodCode", "ShippingMethodCode")) || null,
+        shippingMethodLabel: text(prop(row, "shippingMethodLabel", "ShippingMethodLabel")) || null,
         activePackageId: text(prop(row, "activePackageId", "ActivePackageId")) || null,
         activePackageNumber: text(prop(row, "activePackageNumber", "ActivePackageNumber")) || null,
         packageLockedReasonFa: text(prop(row, "packageLockedReasonFa", "PackageLockedReasonFa")) || null,

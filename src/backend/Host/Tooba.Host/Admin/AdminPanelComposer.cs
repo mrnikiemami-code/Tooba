@@ -232,6 +232,8 @@ public sealed class AdminPanelComposer
                 membershipByShipment.TryGetValue(s.ShipmentId, out var membership);
                 var canAdd = multiSeller
                     && s.Status == Tooba.Fulfillment.Domain.ShipmentStatus.Created
+                    && s.DispatchedAt is null
+                    && !string.IsNullOrWhiteSpace(s.ShippingMethodCode)
                     && !memberOfAnyPackage.ContainsKey(s.ShipmentId);
                 return new AdminShipmentView(
                     s.ShipmentId,

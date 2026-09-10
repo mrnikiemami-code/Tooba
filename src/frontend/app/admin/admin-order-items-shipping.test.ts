@@ -304,6 +304,22 @@ test("consolidated package section is multi-seller only and maps package lock fi
   assert.match(section, /sellerOrders\.length >= 2|distinctSellerCount/);
   assert.match(section, /create_consolidated_package/);
   assert.match(section, /executeAdminOrderOperation/);
+  assert.match(section, /روش ارسال بسته تجمیعی/);
+  assert.match(section, /admin-consolidated-package-method-readonly/);
+  assert.match(section, /روش ارسال مرسوله‌های انتخاب‌شده باید یکسان باشد/);
+  assert.match(section, /assign_consolidated_package_tracking/);
+  assert.match(section, /ثبت کد رهگیری/);
+  assert.match(section, /تولید خودکار/);
+  assert.match(section, /admin-consolidated-package-tracking-dialog/);
+  assert.doesNotMatch(section, /admin-consolidated-package-method"/);
+  assert.match(panel, /packageLocked/);
+  assert.match(panel, /canTrack = !packageLocked/);
+  assert.match(panel, /AdminAssignShipmentTrackingModal/);
+  assert.match(panel, /admin-shipment-tracking-dialog|setTrackingTarget/);
+  const trackingModal = readFileSync(join(dir, "admin-assign-shipment-tracking-modal.tsx"), "utf8");
+  assert.match(trackingModal, /تولید خودکار/);
+  assert.match(trackingModal, /کد تکراری مجاز نیست/);
+  assert.match(trackingModal, /suggestShipmentTracking/);
 
   const detail = mapAdminOrderDetail({
     checkoutId: "c1",

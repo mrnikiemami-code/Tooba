@@ -286,15 +286,32 @@ public sealed class ConsolidatedPackage
         UpdatedAt = now;
     }
 
+    /// <summary>کد رهگیری مرکزی را در وضعیت Created تنظیم یا به‌روز می‌کند.</summary>
+    public void AssignTracking(string trackingReference, DateTimeOffset now)
+    {
+        if (Status != ConsolidatedPackageStatus.Created)
+        {
+            throw new InvalidOperationException("fulfillment.package.tracking_locked");
+        }
+
+        if (string.IsNullOrWhiteSpace(trackingReference))
+        {
+            throw new InvalidOperationException("fulfillment.package.tracking_required");
+        }
+
+        TrackingReference = trackingReference.Trim();
+        UpdatedAt = now;
+    }
+
     /// <summary>کد رهگیری مرکزی را در صورت خالی بودن تنظیم می‌کند.</summary>
     public void AssignTrackingIfMissing(string? trackingReference, DateTimeOffset now)
     {
-        if (Status is ConsolidatedPackageStatus.Cancelled or ConsolidatedPackageStatus.Delivered)
+        if (!string.IsNullOrWhiteSpace(TrackingReference) || string.IsNullOrWhiteSpace(trackingReference))
         {
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(TrackingReference) || string.IsNullOrWhiteSpace(trackingReference))
+        if (Status != ConsolidatedPackageStatus.Created)
         {
             return;
         }

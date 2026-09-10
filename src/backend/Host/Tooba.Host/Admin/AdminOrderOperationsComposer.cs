@@ -51,6 +51,7 @@ public sealed class AdminOrderOperationsComposer
         "deliver_shipment",
         "create_consolidated_package",
         "cancel_consolidated_package",
+        "assign_consolidated_package_tracking",
         "dispatch_consolidated_package",
         "deliver_consolidated_package",
     };
@@ -322,6 +323,7 @@ public sealed class AdminOrderOperationsComposer
                 "deliver_shipment" => await DeliverAsync(request, actorUserId, cancellationToken),
                 "create_consolidated_package" => await CreateConsolidatedPackageAsync(checkoutId, request, actorUserId, cancellationToken),
                 "cancel_consolidated_package" => await CancelConsolidatedPackageAsync(request, actorUserId, cancellationToken),
+                "assign_consolidated_package_tracking" => await AssignConsolidatedPackageTrackingAsync(request, actorUserId, cancellationToken),
                 "dispatch_consolidated_package" => await DispatchConsolidatedPackageAsync(request, actorUserId, cancellationToken),
                 "deliver_consolidated_package" => await DeliverConsolidatedPackageAsync(request, actorUserId, cancellationToken),
                 "request_return" => await RequestReturnAsync(group, request, cancellationToken),
@@ -535,6 +537,7 @@ public sealed class AdminOrderOperationsComposer
 
                 if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
                     && shipment.Status == ShipmentStatus.Created
+                    && !lockedByPackage
                     && HasAny(effective, "order.handle", "fulfillment.manage"))
                 {
                     actions.Add(Action(
@@ -689,14 +692,16 @@ public sealed class AdminOrderOperationsComposer
         }
 
         var permission = Prefer(effective, "order.handle", "fulfillment.manage");
-        var eligibleSellerIds = fulfillments
+        var eligibleByMethod = fulfillments
             .SelectMany(f => f.Shipments
                 .Where(s => s.Status == ShipmentStatus.Created
+                    && s.DispatchedAt is null
+                    && !string.IsNullOrWhiteSpace(s.ShippingMethodCode)
                     && !membershipByShipment.ContainsKey(s.ShipmentId))
-                .Select(_ => f.SellerPartyId))
-            .Distinct()
-            .ToArray();
-        if (eligibleSellerIds.Length >= 2)
+                .Select(s => (f.SellerPartyId, Method: s.ShippingMethodCode.Trim())))
+            .GroupBy(x => x.Method, StringComparer.OrdinalIgnoreCase)
+            .Any(g => g.Select(x => x.SellerPartyId).Distinct().Count() >= 2);
+        if (eligibleByMethod)
         {
             actions.Add(Action(
                 "create_consolidated_package",
@@ -725,6 +730,22 @@ public sealed class AdminOrderOperationsComposer
                 true,
                 $"بسته {package.PackageNumber} ابطال شود؟ عضویت مرسوله‌ها آزاد می‌شود.",
                 consolidatedPackageId: package.ConsolidatedPackageId));
+            if (string.IsNullOrWhiteSpace(package.TrackingReference))
+            {
+                actions.Add(Action(
+                    "assign_consolidated_package_tracking",
+                    "ثبت کد رهگیری بسته",
+                    "Assign consolidated package tracking",
+                    null,
+                    null,
+                    null,
+                    null,
+                    permission,
+                    true,
+                    $"کد رهگیری مرکزی برای بسته {package.PackageNumber} ثبت شود؟",
+                    consolidatedPackageId: package.ConsolidatedPackageId));
+            }
+
             actions.Add(Action(
                 "dispatch_consolidated_package",
                 "ارسال بسته تجمیعی",
@@ -1080,18 +1101,11 @@ public sealed class AdminOrderOperationsComposer
         }
 
         var methodCode = request.ShippingMethodCode?.Trim();
-        if (string.IsNullOrWhiteSpace(methodCode))
-        {
-            throw new PlatformHttpException(
-                400,
-                FulfillmentOpToFa("fulfillment.package.shipping_method_required"),
-                "fulfillment.package.shipping_method_required");
-        }
 
         return await _fulfillment.CreateConsolidatedPackageAsync(
             checkoutId,
             shipmentIds,
-            methodCode,
+            string.IsNullOrWhiteSpace(methodCode) ? null : methodCode,
             request.TrackingReference,
             request.Reason,
             actorUserId,
@@ -1105,6 +1119,27 @@ public sealed class AdminOrderOperationsComposer
     {
         var packageId = RequireConsolidatedPackageId(request);
         return await _fulfillment.CancelConsolidatedPackageAsync(packageId, actorUserId, cancellationToken);
+    }
+
+    private async Task<object> AssignConsolidatedPackageTrackingAsync(
+        AdminOrderOperationRequest request,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        var packageId = RequireConsolidatedPackageId(request);
+        if (string.IsNullOrWhiteSpace(request.TrackingReference))
+        {
+            throw new PlatformHttpException(
+                400,
+                FulfillmentOpToFa("fulfillment.package.tracking_required"),
+                "fulfillment.package.tracking_required");
+        }
+
+        return await _fulfillment.AssignConsolidatedPackageTrackingAsync(
+            packageId,
+            request.TrackingReference.Trim(),
+            actorUserId,
+            cancellationToken);
     }
 
     private async Task<object> DispatchConsolidatedPackageAsync(
@@ -2124,6 +2159,7 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.dispatch.invalid_state" => "ارسال در وضعیت فعلی مرسوله مجاز نیست.",
         "fulfillment.dispatch.tracking_required" => "بدون کد رهگیری نمی‌توان ارسال کرد.",
         "fulfillment.dispatch.already_dispatched" => "این مرسوله قبلاً ارسال شده است.",
+        "fulfillment.tracking.duplicate" => "این کد رهگیری قبلاً ثبت شده است.",
         "fulfillment.pack.after_delivered" => "پس از تحویل کامل نمی‌توان بسته‌بندی کرد.",
         "fulfillment.process.after_delivered" => "پس از تحویل کامل نمی‌توان پردازش را ادامه داد.",
         "fulfillment.shipment.void_after_dispatch" => "پس از ارسال نمی‌توان مرسوله را ابطال کرد.",
@@ -2143,7 +2179,11 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.package.deliver_before_dispatch" => "قبل از ارسال نمی‌توان بسته تجمیعی را تحویل داد.",
         "fulfillment.package.member_state_changed" => "وضعیت مرسوله‌های عضو تغییر کرده است؛ عملیات را تازه کنید.",
         "fulfillment.package.not_found" => "بسته تجمیعی پیدا نشد.",
-        "fulfillment.package.shipping_method_required" => "روش ارسال مرکزی الزامی است.",
+        "fulfillment.package.shipping_method_required" => "روش ارسال مرسوله‌های عضو برای بسته تجمیعی الزامی است.",
+        "fulfillment.package.shipping_method_mismatch" =>
+            "برای ایجاد بسته تجمیعی، روش ارسال مرسوله‌های انتخاب‌شده باید یکسان باشد.",
+        "fulfillment.package.tracking_required" => "برای ارسال بسته تجمیعی باید کد رهگیری مرکزی ثبت شود.",
+        "fulfillment.package.tracking_locked" => "پس از ارسال بسته تجمیعی، تغییر کد رهگیری مجاز نیست.",
         "fulfillment.package.checkout_required" => "شناسه سفارش برای بسته تجمیعی الزامی است.",
         _ => "این عملیات در وضعیت فعلی سفارش مجاز نیست.",
     };
@@ -2170,6 +2210,8 @@ public sealed class AdminOrderOperationsComposer
             ("fulfillment.process.after_delivered", FulfillmentOpToFa("fulfillment.process.after_delivered")),
         "تعداد محموله از باقیمانده بسته‌بندی‌شده بیشتر است." =>
             ("fulfillment.allocation.conflict", FulfillmentOpToFa("fulfillment.allocation.conflict")),
+        "این کد پیگیری قبلاً ثبت شده است." =>
+            ("fulfillment.tracking.duplicate", FulfillmentOpToFa("fulfillment.tracking.duplicate")),
         "inventory.reservation.not_active" =>
             ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
         "فقط رزرو Held قابل آزادسازی یا مصرف است." =>

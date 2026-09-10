@@ -263,12 +263,13 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
         var rebuilt = await directory.CreateConsolidatedPackageAsync(
             checkoutId,
             [ready[0].ShipmentId, ready[1].ShipmentId],
-            "tipax",
+            null,
             null,
             null,
             actor,
             CancellationToken.None);
         Assert.Equal(ConsolidatedPackageStatus.Created, rebuilt.Status);
+        Assert.Equal("post", rebuilt.ShippingMethodCode);
         Assert.NotEqual(created.ConsolidatedPackageId, rebuilt.ConsolidatedPackageId);
 
         var all = await directory.GetPackagesForCheckoutAsync(checkoutId, CancellationToken.None);
@@ -454,6 +455,7 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
             CancellationToken.None);
 
         var ready = new List<(Guid FulfillmentId, Guid ShipmentId)>();
+        const string postMeta = """{"recipientName":"Test Buyer","destinationAddress":"Tehran Address 1","recipientPhone":"09121234567","postalCode":"1234567890"}""";
         foreach (var sellerOrderId in new[] { soA.SellerOrderId, soB.SellerOrderId })
         {
             var unit = await directory.GetBySellerOrderAsync(sellerOrderId, CancellationToken.None);
@@ -463,13 +465,110 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
             var shipped = await directory.CreateShipmentAsync(
                 unit.FulfillmentId,
                 actor,
-                "Carrier Demo",
+                "پست",
                 [new ShipmentLineCommand(unit.Items[0].OrderLineId, 1)],
-                CancellationToken.None);
+                CancellationToken.None,
+                shippingMethodCode: "post",
+                providerMetadataJson: postMeta);
             ready.Add((unit.FulfillmentId, shipped.Shipments.Single().ShipmentId));
         }
 
         return (directory, fulfillmentDb, checkoutId, actor, ready);
+    }
+
+    [SkippableFact]
+    public async Task Create_rejects_mixed_shipping_methods_and_inherits_shared_method()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        var (directory, _, checkoutId, actor, ready) = await SeedTwoSellerReadyShipmentsAsync(dbSuffix: "method");
+        const string tipaxMeta = """{"recipientName":"Test Buyer","fullAddress":"Tehran Address Tipax","recipientPhone":"09121234567"}""";
+
+        // Replace second seller shipment with tipax so methods diverge.
+        var second = ready[1];
+        await directory.CancelShipmentAsync(second.FulfillmentId, second.ShipmentId, actor, CancellationToken.None);
+        var unitB = await directory.GetAsync(second.FulfillmentId, CancellationToken.None);
+        Assert.NotNull(unitB);
+        var tipax = await directory.CreateShipmentAsync(
+            second.FulfillmentId,
+            actor,
+            "تیپاکس",
+            [new ShipmentLineCommand(unitB!.Items[0].OrderLineId, 1)],
+            CancellationToken.None,
+            shippingMethodCode: "tipax",
+            providerMetadataJson: tipaxMeta);
+        var tipaxShipmentId = tipax.Shipments.Single(s => s.Status == ShipmentStatus.Created).ShipmentId;
+
+        var mixed = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.CreateConsolidatedPackageAsync(
+                checkoutId,
+                [ready[0].ShipmentId, tipaxShipmentId],
+                null,
+                null,
+                null,
+                actor,
+                CancellationToken.None));
+        Assert.Equal("fulfillment.package.shipping_method_mismatch", mixed.Message);
+
+        // Recreate matching tipax on first seller and succeed with inherited method.
+        await directory.CancelShipmentAsync(ready[0].FulfillmentId, ready[0].ShipmentId, actor, CancellationToken.None);
+        var unitA = await directory.GetAsync(ready[0].FulfillmentId, CancellationToken.None);
+        Assert.NotNull(unitA);
+        var tipaxA = await directory.CreateShipmentAsync(
+            ready[0].FulfillmentId,
+            actor,
+            "تیپاکس",
+            [new ShipmentLineCommand(unitA!.Items[0].OrderLineId, 1)],
+            CancellationToken.None,
+            shippingMethodCode: "tipax",
+            providerMetadataJson: tipaxMeta);
+        var tipaxAId = tipaxA.Shipments.Single(s => s.Status == ShipmentStatus.Created).ShipmentId;
+        var created = await directory.CreateConsolidatedPackageAsync(
+            checkoutId,
+            [tipaxAId, tipaxShipmentId],
+            null,
+            "CENTRAL-TIPAX",
+            null,
+            actor,
+            CancellationToken.None);
+        Assert.Equal("tipax", created.ShippingMethodCode);
+        Assert.Equal(ConsolidatedPackageStatus.Created, created.Status);
+
+        var lockedAssign = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            directory.AssignTrackingAsync(
+                tipaxA.FulfillmentId,
+                tipaxAId,
+                actor,
+                "SHOULD-FAIL",
+                CancellationToken.None));
+        Assert.Equal("fulfillment.shipment.locked_by_consolidated_package", lockedAssign.Message);
+    }
+
+    [Fact]
+    public void Domain_assign_tracking_only_while_created()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var package = ConsolidatedPackage.Create(
+            Guid.NewGuid(),
+            [(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()), (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid())],
+            "post",
+            "پست",
+            null,
+            null,
+            null,
+            now);
+        package.AssignTracking("CENTRAL-ABC", now.AddSeconds(1));
+        Assert.Equal("CENTRAL-ABC", package.TrackingReference);
+
+        package.MarkDispatched(
+            now.AddMinutes(1),
+            new Dictionary<Guid, ShipmentStatus>
+            {
+                [package.Members[0].ShipmentId] = ShipmentStatus.Dispatched,
+                [package.Members[1].ShipmentId] = ShipmentStatus.Dispatched,
+            });
+        var locked = Assert.Throws<InvalidOperationException>(() =>
+            package.AssignTracking("CENTRAL-XYZ", now.AddMinutes(2)));
+        Assert.Equal("fulfillment.package.tracking_locked", locked.Message);
     }
 
     private static OrderDbContext CreateOrderDb(string connectionString, ICurrentCommerceContext commerce)

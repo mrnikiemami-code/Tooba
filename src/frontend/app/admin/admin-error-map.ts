@@ -378,6 +378,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "بدون کد رهگیری نمی‌توان ارسال کرد.",
     en: "A tracking reference is required before dispatch.",
   },
+  "fulfillment.tracking.duplicate": {
+    fa: "این کد رهگیری قبلاً ثبت شده است.",
+    en: "This tracking code is already registered.",
+  },
   "fulfillment.dispatch.already_dispatched": {
     fa: "این مرسوله قبلاً ارسال شده است.",
     en: "This shipment has already been dispatched.",
@@ -443,8 +447,20 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     en: "The consolidated package was not found.",
   },
   "fulfillment.package.shipping_method_required": {
-    fa: "روش ارسال مرکزی الزامی است.",
-    en: "A central shipping method is required.",
+    fa: "روش ارسال مرسوله‌های عضو برای بسته تجمیعی الزامی است.",
+    en: "Member shipments must have a shipping method for the consolidated package.",
+  },
+  "fulfillment.package.shipping_method_mismatch": {
+    fa: "برای ایجاد بسته تجمیعی، روش ارسال مرسوله‌های انتخاب‌شده باید یکسان باشد.",
+    en: "Selected shipments must share the same shipping method to create a consolidated package.",
+  },
+  "fulfillment.package.tracking_required": {
+    fa: "برای ارسال بسته تجمیعی باید کد رهگیری مرکزی ثبت شود.",
+    en: "A central tracking code is required before dispatching the consolidated package.",
+  },
+  "fulfillment.package.tracking_locked": {
+    fa: "پس از ارسال بسته تجمیعی، تغییر کد رهگیری مجاز نیست.",
+    en: "Consolidated package tracking cannot be changed after dispatch.",
   },
   "fulfillment.package.checkout_required": {
     fa: "شناسه سفارش برای بسته تجمیعی الزامی است.",

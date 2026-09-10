@@ -342,17 +342,45 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         string trackingReference,
         CancellationToken cancellationToken)
     {
+        await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
+        return await AssignTrackingCoreAsync(
+            fulfillmentId,
+            shipmentId,
+            actorUserId,
+            trackingReference,
+            cancellationToken);
+    }
+
+    private async Task<FulfillmentSnapshot> AssignTrackingCoreAsync(
+        Guid fulfillmentId,
+        Guid shipmentId,
+        Guid actorUserId,
+        string trackingReference,
+        CancellationToken cancellationToken)
+    {
         _ = actorUserId;
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        unit.AssignTracking(shipmentId, trackingReference, DateTimeOffset.UtcNow);
+        var normalized = trackingReference.Trim();
+        var duplicate = await _db.Shipments.AsNoTracking()
+            .AnyAsync(
+                x => x.ShipmentId != shipmentId
+                    && x.TrackingReference != null
+                    && x.TrackingReference.ToLower() == normalized.ToLower(),
+                cancellationToken);
+        if (duplicate)
+        {
+            throw new InvalidOperationException("fulfillment.tracking.duplicate");
+        }
+
+        unit.AssignTracking(shipmentId, normalized, DateTimeOffset.UtcNow);
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException)
         {
-            throw new InvalidOperationException("این کد پیگیری قبلاً ثبت شده است.");
+            throw new InvalidOperationException("fulfillment.tracking.duplicate");
         }
 
         _telemetry.RecordTrackingAssigned();
@@ -371,14 +399,26 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         await _guard.EnsureCanMutateAsync(cancellationToken);
         await EnsureShipmentNotLockedByPackageAsync(shipmentId, cancellationToken);
         var unit = await LoadMutableAsync(fulfillmentId, cancellationToken);
-        unit.CorrectTracking(shipmentId, trackingReference, DateTimeOffset.UtcNow);
+        var normalized = trackingReference.Trim();
+        var duplicate = await _db.Shipments.AsNoTracking()
+            .AnyAsync(
+                x => x.ShipmentId != shipmentId
+                    && x.TrackingReference != null
+                    && x.TrackingReference.ToLower() == normalized.ToLower(),
+                cancellationToken);
+        if (duplicate)
+        {
+            throw new InvalidOperationException("fulfillment.tracking.duplicate");
+        }
+
+        unit.CorrectTracking(shipmentId, normalized, DateTimeOffset.UtcNow);
         try
         {
             await _db.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException)
         {
-            throw new InvalidOperationException("این کد پیگیری قبلاً ثبت شده است.");
+            throw new InvalidOperationException("fulfillment.tracking.duplicate");
         }
 
         _telemetry.RecordTrackingAssigned();
@@ -768,7 +808,7 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     public async Task<ConsolidatedPackageSnapshot> CreateConsolidatedPackageAsync(
         Guid checkoutId,
         IReadOnlyList<Guid> shipmentIds,
-        string shippingMethodCode,
+        string? shippingMethodCode,
         string? trackingReference,
         string? note,
         Guid actorUserId,
@@ -785,10 +825,6 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         {
             throw new InvalidOperationException("fulfillment.package.duplicate_shipment");
         }
-
-        var definition = ShippingMethodRegistry.Find(shippingMethodCode)
-            ?? throw new InvalidOperationException("fulfillment.package.shipping_method_required");
-        var methodLabel = ShippingMethodRegistry.ResolveLabel(definition.Code, null);
 
         var units = await _db.Fulfillments
             .Where(x => x.CheckoutId == checkoutId)
@@ -815,9 +851,12 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         }
 
         var memberSpecs = new List<(Guid ShipmentId, Guid SellerPartyId, Guid FulfillmentId)>(shipments.Count);
+        var inheritedMethodCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string? inheritedLabel = null;
         foreach (var shipment in shipments)
         {
-            if (shipment.Status != ShipmentStatus.Created)
+            if (shipment.Status != ShipmentStatus.Created
+                || shipment.DispatchedAt is not null)
             {
                 throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
             }
@@ -829,8 +868,37 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 throw new InvalidOperationException("fulfillment.package.shipment_not_eligible");
             }
 
+            var shipmentMethod = (shipment.ShippingMethodCode ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(shipmentMethod))
+            {
+                throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+            }
+
+            inheritedMethodCodes.Add(shipmentMethod);
+            inheritedLabel ??= string.IsNullOrWhiteSpace(shipment.ShippingMethodLabel)
+                ? null
+                : shipment.ShippingMethodLabel.Trim();
             memberSpecs.Add((shipment.ShipmentId, unit.SellerPartyId, unit.FulfillmentId));
         }
+
+        if (inheritedMethodCodes.Count != 1)
+        {
+            throw new InvalidOperationException("fulfillment.package.shipping_method_mismatch");
+        }
+
+        var inheritedCode = inheritedMethodCodes.Single();
+        var requestedCode = shippingMethodCode?.Trim();
+        if (!string.IsNullOrWhiteSpace(requestedCode)
+            && !string.Equals(requestedCode, inheritedCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("fulfillment.package.shipping_method_mismatch");
+        }
+
+        var definition = ShippingMethodRegistry.Find(inheritedCode)
+            ?? throw new InvalidOperationException("fulfillment.package.shipping_method_required");
+        var methodLabel = string.IsNullOrWhiteSpace(inheritedLabel)
+            ? ShippingMethodRegistry.ResolveLabel(definition.Code, null)
+            : inheritedLabel;
 
         var now = DateTimeOffset.UtcNow;
         var package = ConsolidatedPackage.Create(
@@ -870,6 +938,22 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
         package.Cancel(DateTimeOffset.UtcNow);
         await _db.SaveChangesAsync(cancellationToken);
         _telemetry.RecordTransition("consolidated_package_cancelled");
+        return await MapPackageSnapshotAsync(package, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<ConsolidatedPackageSnapshot> AssignConsolidatedPackageTrackingAsync(
+        Guid consolidatedPackageId,
+        string trackingReference,
+        Guid actorUserId,
+        CancellationToken cancellationToken)
+    {
+        _ = actorUserId;
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var package = await LoadMutablePackageAsync(consolidatedPackageId, cancellationToken);
+        package.AssignTracking(trackingReference, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        _telemetry.RecordTransition("consolidated_package_tracking_assigned");
         return await MapPackageSnapshotAsync(package, cancellationToken);
     }
 
@@ -915,11 +999,13 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
             if (string.IsNullOrWhiteSpace(shipment.TrackingReference)
                 && !string.IsNullOrWhiteSpace(package.TrackingReference))
             {
-                await AssignTrackingAsync(
+                var baseCode = package.TrackingReference!.Trim();
+                var memberCode = $"{baseCode}-{member.ShipmentId.ToString("N")[..8].ToUpperInvariant()}";
+                await AssignTrackingCoreAsync(
                     member.FulfillmentId,
                     member.ShipmentId,
                     actorUserId,
-                    package.TrackingReference!,
+                    memberCode,
                     cancellationToken);
             }
 

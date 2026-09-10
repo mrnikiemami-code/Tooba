@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { MoreHorizontal, Package, Truck } from "lucide-react";
 import { toast } from "react-toastify";
-import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminOrderLine, type AdminSellerOrder } from "./admin-api";
+import { formatAdminMoney, formatAdminStatus, type AdminOrderDetail, type AdminOrderLine, type AdminSellerOrder, type AdminShipment } from "./admin-api";
 import { AdminCreateShipmentModal } from "./admin-create-shipment-modal";
 import { AdminConsolidatedPackageSection } from "./admin-consolidated-package-section";
+import {
+  AdminAssignShipmentTrackingModal,
+} from "./admin-assign-shipment-tracking-modal";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import {
   canonicalReturnDisplay,
@@ -111,6 +114,10 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
   const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [openKebabLineId, setOpenKebabLineId] = useState<string | null>(null);
   const [shipmentModalSellerId, setShipmentModalSellerId] = useState<string | null>(null);
+  const [trackingTarget, setTrackingTarget] = useState<{
+    seller: AdminSellerOrder;
+    shipment: AdminShipment;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -238,7 +245,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       carrierDisplayName?: string;
       trackingReference?: string;
     },
-  ) {
+  ): Promise<boolean> {
     const actions = [
       ...(opsBySeller[seller.id] ?? []),
       ...(opsBySeller.__checkout__ ?? []),
@@ -246,7 +253,7 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
     const action = actionFor(actions, code, seller.id, opts?.shipmentId, opts?.orderLineId);
     if (!action) {
       toast.error("این عملیات در وضعیت فعلی برای این فروشنده مجاز نیست.");
-      return;
+      return false;
     }
     setPendingCode(`${seller.id}:${code}:${opts?.shipmentId ?? ""}`);
     const result = await executeAdminOrderOperation(checkoutId, {
@@ -264,11 +271,19 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
       const raw = result.message ?? "order.operation.failed";
       const fa = /^[a-z0-9._-]+$/i.test(raw) ? mapAdminErrorMessage(raw, "fa") : raw;
       toast.error(fa);
-      return;
+      return false;
     }
     toast.success(`عملیات ${action.labelFa} انجام شد.`);
     onCompleted?.();
+    return true;
   }
+
+  const existingTrackingCodes = detail.sellerOrders.flatMap((s) =>
+    (s.shipments ?? [])
+      .filter((sh) => sh.shipmentId !== trackingTarget?.shipment.shipmentId)
+      .map((sh) => sh.trackingReference)
+      .filter((t): t is string => Boolean(t && t.trim())),
+  );
 
   const modalSeller = detail.sellerOrders.find((s) => s.id === shipmentModalSellerId) ?? null;
 
@@ -620,10 +635,17 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                   ) : (
                     <ul className="mt-2 space-y-2">
                       {shipments.map((shipment) => {
-                        const canCancel = Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId));
-                        const canTrack = Boolean(actionFor(actions, "assign_tracking", seller.id, shipment.shipmentId));
-                        const canDispatch = Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId));
-                        const canDeliver = Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId));
+                        const packageLocked = Boolean(
+                          shipment.packageLockedReasonFa || shipment.activePackageNumber,
+                        );
+                        const canCancel = !packageLocked
+                          && Boolean(actionFor(actions, "cancel_shipment", seller.id, shipment.shipmentId));
+                        const canTrack = !packageLocked
+                          && Boolean(actionFor(actions, "assign_tracking", seller.id, shipment.shipmentId));
+                        const canDispatch = !packageLocked
+                          && Boolean(actionFor(actions, "dispatch_shipment", seller.id, shipment.shipmentId));
+                        const canDeliver = !packageLocked
+                          && Boolean(actionFor(actions, "deliver_shipment", seller.id, shipment.shipmentId));
                         const shipmentCancelled =
                           shipment.status === "Cancelled" || shipment.status === "Canceled";
                         return (
@@ -681,13 +703,8 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
                                   type="button"
                                   className="rounded border border-gray-200 px-2 py-1 text-[10px] font-bold text-gray-700 disabled:opacity-50"
                                   disabled={pendingCode !== null}
-                                  onClick={() => {
-                                    const tracking = `TRK-${shipment.shipmentId.slice(0, 8)}`;
-                                    void runSellerOp(seller, "assign_tracking", {
-                                      shipmentId: shipment.shipmentId,
-                                      trackingReference: tracking,
-                                    });
-                                  }}
+                                  data-testid={`admin-order-shipment-assign-tracking-${shipment.shipmentId}`}
+                                  onClick={() => setTrackingTarget({ seller, shipment })}
                                 >
                                   ثبت کد رهگیری
                                 </button>
@@ -770,6 +787,26 @@ export function AdminOrderItemsShippingPanel({ detail, checkoutId, onCompleted }
           onCompleted={() => {
             setShipmentModalSellerId(null);
             onCompleted?.();
+          }}
+        />
+      ) : null}
+
+      {trackingTarget ? (
+        <AdminAssignShipmentTrackingModal
+          key={trackingTarget.shipment.shipmentId}
+          open
+          seller={trackingTarget.seller}
+          shipment={trackingTarget.shipment}
+          pending={pendingCode !== null}
+          existingTrackingCodes={existingTrackingCodes}
+          onClose={() => setTrackingTarget(null)}
+          onSubmit={async (trackingReference) => {
+            const ok = await runSellerOp(trackingTarget.seller, "assign_tracking", {
+              shipmentId: trackingTarget.shipment.shipmentId,
+              trackingReference,
+            });
+            if (ok) setTrackingTarget(null);
+            return ok;
           }}
         />
       ) : null}
