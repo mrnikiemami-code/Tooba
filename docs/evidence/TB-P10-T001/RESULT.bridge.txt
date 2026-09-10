@@ -1,0 +1,103 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T001
+
+Status:
+PASS
+
+Summary:
+Storefront Cart foundation connected to real Host Cart APIs while preserving locked Shopeiva UI. Product-card Add-to-Cart uses addOfferToCart(primaryOfferId) with toast + «اضافه شد». Header badge uses real itemCount; bag opens Shopeiva-style mini-cart drawer (qty/remove/total authoritative; تکمیل خرید → /cart). /cart remains Host-backed; recommendations use live home feed cards with same ATC path. No free-shipping fabrication. Checkout plan T001→T004 persisted. Locks LOCK-SF-001…005. Focused tests 11/0. Runtime A–F PASS. Commits 60a140eb (shipping WIP preserved) then 479ae402 on origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T002.
+
+Applicable-Locks:
+- Product != Offer; price/stock not on Product
+- Backend-authoritative Pricing/Cart totals
+- Cart reservation lifecycle preserved
+- Decimal quantity policy preserved
+- Shopeiva DOM/layout locked; no redesign
+- No fake/static commercial data in connected flow
+- LOCK-SF-001…005 in TOOBA-LOCKS.md
+
+Discovery:
+docs/evidence/TB-P10-T001/discovery.md
+Card ATC was display-only; mini-cart missing (Link-only); /cart already Host-backed; recommendations absent.
+
+Cart-API:
+docs/evidence/TB-P10-T001/cart-api.md
+/v1/storefront/cart create/get/add/patch/delete with guest secret + version.
+
+Add-To-Cart:
+storefront-product-card.tsx → addOfferToCart; toast + isAdded; no trusted frontend price.
+
+Header-Cart:
+storefront-header.tsx badge from loadStorefrontCart itemCount; CART_CHANGED_EVENT refresh.
+
+Mini-Cart:
+docs/evidence/TB-P10-T001/mini-cart.md
+storefront-mini-cart.tsx drawer; Host lines/qty/remove/total; CTA /cart.
+
+Cart-Page:
+docs/evidence/TB-P10-T001/cart-page.md
+StorefrontShopeivaCart real lines/totals; coupon via Host preview when capable.
+
+Pricing-Integrity:
+docs/evidence/TB-P10-T001/pricing-integrity.md
+All amounts from Cart projection; no Product.Price shortcut; no Rial/Toman conversion bug found.
+
+Quantity:
++/- / input via changeCartLineQuantity; unit step/decimal from Host line projection.
+
+Recommendations:
+docs/evidence/TB-P10-T001/recommendations.md
+Live home feed (newArrivals/featured/specialOffers); StorefrontProductCardView ATC.
+
+Guest-Auth:
+docs/evidence/TB-P10-T001/guest-auth.md
+sessionStorage cartId+guestSecret; refresh continuity; no cross-cart; merge policy not invented.
+
+Error-UX:
+docs/evidence/TB-P10-T001/error-ux.md
+toCustomerCartMessage localized; no GUID/enum/JSON leak.
+
+Performance:
+docs/evidence/TB-P10-T001/performance.md
+Aggregate Cart projection for header/mini-cart/page; no per-line N+1.
+
+Focused-Validation:
+docs/evidence/TB-P10-T001/focused-validation.md
+Passed=11 Failed=0 (storefront-cart-api + storefront-cart-ui.guard + recovery guard).
+
+Runtime-Smoke:
+docs/evidence/TB-P10-T001/runtime-smoke.md
+A–F PASS on :5088/:3000; raw runtime-smoke-raw.json. Note: empty published rails; ATC via sellable Offer LIVE-A.
+
+Visual-Smoke:
+docs/evidence/TB-P10-T001/visual-smoke.md
+Mini-cart + cart page composition preserved (blue Tooba accent); USER_VISUAL_ACCEPTED=NO.
+
+Checkout-Plan:
+docs/architecture/STOREFRONT-CHECKOUT-PLAN.md
+T001 Cart / T002 Shipping / T003 Payment / T004 E2E hardening.
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-001…005
+
+Recovery-SoT:
+docs/evidence/TB-P10-T001/recovery-sot.md
+Phase P10; Last Architect-accepted TB-P09-T022-R4; Last Implementation TB-P10-T001; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T002.
+
+Git:
+479ae4022283e73e2f56852a6f9fea21c3742328 on origin/main; HEAD==origin/main; prior WIP 60a140eb preserved
+
+Architectural-Concerns:
+Empty published storefront product rails limits browser card/recommendation visual demo until catalog publish restored; Host ATC path proven.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending Architect visual accept.
+
+Blockers:
+None for T001 acceptance.
+
+END_TOOBA_TASK_RESULT
