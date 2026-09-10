@@ -78,3 +78,37 @@ test("customer cart message hides Held reservation wording", () => {
   assert.equal(hidden.includes("Held"), false);
   assert.match(hidden, /موجودی/);
 });
+
+test("cart mapper keeps quantity policy fields for mini-cart and /cart", () => {
+  const cart = mapStorefrontCart({
+    cartId: "cart-2",
+    version: 1,
+    market: "IR",
+    currency: "IRR",
+    channel: "Marketplace",
+    itemCount: 1.5,
+    subtotalExclusiveOfTax: 150000,
+    lines: [
+      {
+        lineId: "line-2",
+        offerId: "offer-2",
+        catalogVariantId: "variant-2",
+        sellerPartyId: "seller-2",
+        title: "وزن‌دار",
+        sellerDisplayName: "فروشنده",
+        quantity: 1.5,
+        unitAmountExclusiveOfTax: 100000,
+        lineAmountExclusiveOfTax: 150000,
+        currency: "IRR",
+        quotedTaxExclusive: true,
+        quantityDecimalPlaces: 2,
+        quantityStep: 0.5,
+        unitDisplayName: "کیلوگرم",
+      },
+    ],
+  });
+  assert.equal(cart?.itemCount, 1.5);
+  assert.equal(cart?.lines[0]?.quantityDecimalPlaces, 2);
+  assert.equal(cart?.lines[0]?.quantityStep, 0.5);
+  assert.equal(cart?.lines[0]?.unitDisplayName, "کیلوگرم");
+});

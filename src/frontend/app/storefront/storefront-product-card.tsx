@@ -3,7 +3,9 @@
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { Eye, Heart, Share2, ShoppingBag, Sparkles, Star, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
+import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
 
@@ -17,6 +19,7 @@ function discountPercent(card: StorefrontProductCard): number | null {
 
 /**
  * کارت کالای خانوادهٔ Shopeiva. مبلغ و موجودی از Offer/Inventory است نه از Product.
+ * ATC واقعی به Cart Host وصل است؛ قیمت از کارت به‌عنوان حقیقت تسویه ارسال نمی‌شود.
  */
 export function StorefrontProductCardView({
   card,
@@ -30,6 +33,8 @@ export function StorefrontProductCardView({
   const wishlist = useStorefrontWishlist();
   const register = wishlist.register;
   const [note, setNote] = useState<string | null>(null);
+  const [atcBusy, setAtcBusy] = useState(false);
+  const [atcAdded, setAtcAdded] = useState(false);
   const saved = wishlist.membership.has(card.productId);
   const busy = wishlist.pending.has(card.productId);
   const discount = discountPercent(card);
@@ -48,8 +53,33 @@ export function StorefrontProductCardView({
     void navigator.clipboard.writeText(url);
   };
 
+  async function handleAddToCart(event: React.MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!card.inStock || !card.primaryOfferId || atcBusy) {
+      return;
+    }
+    setAtcBusy(true);
+    setNote(null);
+    try {
+      await addOfferToCart(card.primaryOfferId, 1);
+      setAtcAdded(true);
+      toast.success("به سبد اضافه شد", { autoClose: 2200 });
+      window.setTimeout(() => setAtcAdded(false), 1800);
+    } catch (cause) {
+      const message = toCustomerCartMessage(cause);
+      setNote(message);
+      toast.error(message);
+    } finally {
+      setAtcBusy(false);
+    }
+  }
+
   return (
-    <article className="group relative flex flex-col rounded-2xl overflow-hidden bg-white border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+    <article
+      className="group relative flex flex-col rounded-2xl overflow-hidden bg-white border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      data-testid="storefront-product-card"
+    >
       <Link href={productHref} className="flex flex-1 flex-col">
         <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -112,7 +142,7 @@ export function StorefrontProductCardView({
             </div>
           ) : null}
         </div>
-        <div className="flex-1 flex flex-col p-3 gap-1.5 min-h-[140px]">
+        <div className="flex-1 flex flex-col p-3 gap-1.5 min-h-[108px]">
           <h3 className="text-xs sm:text-sm font-bold text-gray-800 line-clamp-2 leading-snug min-h-[36px] group-hover:text-[#2563EB]">
             {card.title}
           </h3>
@@ -137,16 +167,27 @@ export function StorefrontProductCardView({
               </span>
             ) : null}
           </div>
-          <span
-            className={`mt-auto inline-flex items-center justify-center gap-1 h-8 rounded-lg text-[11px] font-bold ${
-              card.inStock ? "bg-[#2563EB] text-white hover:bg-[#1d4ed8]" : "bg-gray-100 text-gray-400"
-            }`}
-          >
-            <ShoppingBag className="w-3 h-3" />
-            {card.inStock ? "افزودن به سبد" : "ناموجود"}
-          </span>
         </div>
       </Link>
+      <div className="px-3 pb-3">
+        <button
+          type="button"
+          disabled={!card.inStock || !card.primaryOfferId || atcBusy}
+          onClick={(event) => void handleAddToCart(event)}
+          data-testid="product-card-atc"
+          data-atc-state={atcAdded ? "added" : atcBusy ? "busy" : "idle"}
+          className={`w-full inline-flex items-center justify-center gap-1 h-8 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-60 ${
+            card.inStock
+              ? atcAdded
+                ? "bg-emerald-600 text-white"
+                : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+              : "bg-gray-100 text-gray-400"
+          }`}
+        >
+          <ShoppingBag className="w-3 h-3" />
+          {!card.inStock ? "ناموجود" : atcAdded ? "اضافه شد" : atcBusy ? "…" : "افزودن به سبد"}
+        </button>
+      </div>
       {note ? <span role="status" className="px-3 pb-2 text-[10px] text-red-600">{note}</span> : null}
     </article>
   );

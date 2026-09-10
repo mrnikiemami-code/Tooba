@@ -32,11 +32,13 @@ import {
 import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
 import { loadStorefrontMegaMenu, type StorefrontMegaMenuItem } from "../admin/catalog-mega-menu-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
+import { StorefrontMiniCartDrawer } from "./storefront-mini-cart.tsx";
 import { LocaleSwitcher } from "../../lib/i18n/LocaleSwitcher.tsx";
 
 /**
  * هدر Shopeiva با نوار پرومو، جستجو، مگامنوی رده‌ای زنده Catalog و سبد.
  * مگامنو hierarchy رده است؛ کارت محصول و قیمت داخل مگامنو نمی‌آید.
+ * کلیک روی آیکون سبد کشوی مینی‌سبد واقعی را باز می‌کند.
  */
 export function StorefrontShopeivaHeader({
   categories,
@@ -78,6 +80,7 @@ export function StorefrontShopeivaHeader({
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(navigationRoots[0]?.categoryId ?? null);
   const [cartCount, setCartCount] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
   const [brands, setBrands] = useState<StorefrontBrandItem[]>([]);
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -244,18 +247,26 @@ export function StorefrontShopeivaHeader({
               <User className="w-4 h-4" />
               میزکار
             </Link>
-            <Link
-              href="/cart"
+            <button
+              type="button"
               className="relative w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-600"
               aria-label="سبد خرید"
+              aria-expanded={cartOpen}
+              data-testid="header-cart-button"
+              onClick={() => setCartOpen(true)}
             >
               <ShoppingBag className="w-5 h-5" />
-              <span className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2563EB] text-white text-[10px] font-bold flex items-center justify-center">
+              <span
+                className="absolute -top-0.5 -left-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2563EB] text-white text-[10px] font-bold flex items-center justify-center"
+                data-testid="header-cart-badge"
+              >
                 {cartCount.toLocaleString("fa-IR")}
               </span>
-            </Link>
+            </button>
           </div>
         </div>
+
+        <StorefrontMiniCartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
 
         <nav className="hidden lg:flex items-center gap-1 pb-2" aria-label="ناوبری اصلی فروشگاه">
           <div onMouseEnter={openMegaMenu} onMouseLeave={scheduleMegaClose}>

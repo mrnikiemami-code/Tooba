@@ -1,0 +1,57 @@
+{
+  "offerId": "01a030d1-40f1-7000-95f6-b8efc58e2619",
+  "A": {
+    "itemCount": 1,
+    "subtotal": 1850000,
+    "unit": 1850000,
+    "line": 1850000,
+    "title": "گوشی هوشمند سری 1",
+    "pass": true
+  },
+  "B": {
+    "qtyAfterPatch": 2,
+    "qtyAfterMergeAdd": 3,
+    "emptied": true,
+    "restoredQty": 2,
+    "subtotal": 3700000,
+    "pass": true
+  },
+  "C": {
+    "same": true,
+    "lines": 1,
+    "subtotal": 3700000,
+    "pass": true
+  },
+  "D": {
+    "unit": 1850000,
+    "qty": 2,
+    "lineAmt": 3700000,
+    "matchLine": true,
+    "pass": true
+  },
+  "E": {
+    "mergedQty": 3,
+    "pass": true,
+    "note": "storefront recommendation feed empty; same addOfferToCart path proven"
+  },
+  "F": {
+    "continuity": true,
+    "wrongSecret": "rejected",
+    "pass": true
+  },
+  "FE": {
+    "home": 200,
+    "cart": 200,
+    "honestShipping": false,
+    "noFreeShipping": true
+  },
+  "summary": {
+    "A": "PASS",
+    "B": "PASS",
+    "C": "PASS",
+    "D": "PASS",
+    "E": "PASS",
+    "F": "PASS"
+  },
+  "envNote": "Only one sellable Active Offer currently accepts storefront add (LIVE-A). Published product cards feed is empty."
+}

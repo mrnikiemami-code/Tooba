@@ -164,3 +164,20 @@ Paid-order cancellation starts the existing Payment refund workflow without a Re
 
 ### LOCK-RET-007 — One Return domain and one Refund implementation
 Admin `مرجوعی‌ها و بازگشت وجه` is a work queue over existing Return/Refund aggregates and Admin order operations. Do not create a second Return or Refund subsystem.
+
+## Storefront Checkout Journey (P10)
+
+### LOCK-SF-001 — Shopeiva UI contract for storefront checkout
+Storefront Cart / Shipping / Payment journeys reuse the purchased Shopeiva structure (layout, drawer, overlays, CTA placement). Tooba accent may stay `#2563EB`. Do not redesign parallel checkout UI.
+
+### LOCK-SF-002 — Checkout price is backend-authoritative
+Displayed cart/checkout money comes from Host Cart / Pricing / Checkout projections. Frontend must not treat Product card display price as trusted checkout truth and must not invent authoritative totals by local multiplication.
+
+### LOCK-SF-003 — Storefront does not trust card/display price
+Add-to-Cart sends Offer identity + quantity only. Unit/line amounts and subtotals are returned by Cart projection after Pricing quote.
+
+### LOCK-SF-004 — Shipping and payment options are Store-enabled
+Later Shipping (T002) and Payment (T003) option lists come from Store/Admin-enabled configuration and existing Tooba registries. Template-only carriers or card forms must not be presented as live choices.
+
+### LOCK-SF-005 — Delivery slot never earlier than calculated minimum
+When delivery date/time selection exists, the customer may choose a later valid slot than the calculated minimum readiness, but must not choose earlier.

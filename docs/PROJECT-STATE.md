@@ -21,7 +21,7 @@ main
 Current Phase:
 
 ```text
-P09 — Order Operations / Returns
+P10 — Storefront Checkout Journey
 ```
 
 Pipeline Mode:
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P09-T021-R1
+TB-P09-T022-R4
 ```
 
 Prior accepted catalog wave:
@@ -62,13 +62,13 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T022-R4
+TB-P10-T001
 ```
 
 Current Issued Task:
 
 ```text
-(none)
+TB-P10-T001
 ```
 
 Current Repair Task:
@@ -80,7 +80,8 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T022-R4 — Paid-order reservation REAL runtime proof (TTL/expiry/dispatch/cancel-restore/decimal); USER_VISUAL_ACCEPTED=NO
+TB-P10-T001 — Storefront Cart foundation (real ATC, mini-cart, /cart recommendations); USER_VISUAL_ACCEPTED=NO
+TB-P09-T022-R4 — Paid-order reservation REAL runtime proof (TTL/expiry/dispatch/cancel-restore/decimal); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R3 — Paid-order reservation commit clears cart TTL (ExpiresAt=null); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R2 — Customer Tracking UI Proof (owned session + consolidated package primary rendering); USER_VISUAL_ACCEPTED=NO
 TB-P09-T022-R1 — Consolidated Package visual runtime repair (FE Admin 500 readiness + real browser smoke); under repair via R2; USER_VISUAL_ACCEPTED=NO
@@ -155,7 +156,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P09-T021-R1
+TB-P09-T022-R4
 ```
 
 USER_VISUAL_ACCEPTED:
@@ -167,7 +168,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T002)
 ```
 
 Current Gate:

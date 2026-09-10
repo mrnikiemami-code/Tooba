@@ -33,12 +33,18 @@ import {
   writeStoredCouponCode,
   toCustomerCheckoutMessage,
 } from "./storefront-checkout-api.ts";
+import { StorefrontProductCardView } from "./storefront-product-card.tsx";
+import type { StorefrontProductCard } from "./storefront-model.ts";
 
 /**
  * سبد خرید با پوستهٔ Shopeiva روی حقیقت Cart Host.
  * کوپن از Host ارزیابی می‌شود؛ تخفیف جعلی در UI ساخته نمی‌شود.
  */
-export function StorefrontShopeivaCart() {
+export function StorefrontShopeivaCart({
+  recommendations = [],
+}: {
+  recommendations?: StorefrontProductCard[];
+}) {
   const [cart, setCart] = useState<StorefrontCartPage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -115,7 +121,14 @@ export function StorefrontShopeivaCart() {
   const itemCount = cart?.itemCount ?? 0;
   const subtotal = cart?.subtotalExclusiveOfTax ?? 0;
   const currency = cart?.currency ?? "IRR";
-  const discountPercent = 0;
+  const discountPercent =
+    couponDiscount != null && couponDiscount > 0 && subtotal > 0
+      ? Math.min(100, Math.round((couponDiscount / subtotal) * 100))
+      : 0;
+  const cartProductIds = new Set((cart?.lines ?? []).map((line) => line.productId).filter(Boolean));
+  const recommendationCards = recommendations
+    .filter((card) => card.inStock && card.primaryOfferId && !cartProductIds.has(card.productId))
+    .slice(0, 8);
 
   return (
     <div className="pb-10" data-testid="cart-page">
@@ -217,8 +230,8 @@ export function StorefrontShopeivaCart() {
                   روش ارسال
                 </h4>
                 <p className="text-xs text-gray-500 leading-6">
-                  انتخاب حامل و هزینهٔ ارسال در مرحلهٔ تسویه از حقیقت Host انجام می‌شود. در سبد، نرخ چندحامل جعلی نمایش داده
-                  نمی‌شود.
+                  هزینه و روش ارسال در مرحلهٔ ارسال از حقیقت Host محاسبه می‌شود. در سبد، ارسال رایگان یا نرخ چندحامل جعلی
+                  نمایش داده نمی‌شود.
                 </p>
               </div>
             </div>
@@ -311,6 +324,26 @@ export function StorefrontShopeivaCart() {
       )}
 
       <CartBenefits />
+
+      {recommendationCards.length > 0 ? (
+        <section className="pt-8 md:pt-10" data-testid="cart-recommendations" aria-labelledby="cart-recommendations-title">
+          <div className="flex items-end justify-between gap-3 mb-4">
+            <div>
+              <h2 id="cart-recommendations-title" className="text-lg md:text-xl font-black text-gray-900">
+                پیشنهاد برای شما
+              </h2>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
+                کالاهای زنده از ویترین فروشگاه؛ افزودن به سبد همان مسیر Host است.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {recommendationCards.map((card) => (
+              <StorefrontProductCardView key={card.productId} card={card} showHoverActions={false} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
