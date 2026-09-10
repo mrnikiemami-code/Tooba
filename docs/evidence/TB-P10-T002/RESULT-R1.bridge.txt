@@ -1,0 +1,74 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T002-R1
+
+Parent-Task:
+TB-P10-T002
+
+Status:
+PASS
+
+Summary:
+Real multi-seller Scenario E proven at runtime on Host :5088 / FE :3000. Cart with 2 distinct Sellers (KG prep 1d + Arman prep 3d) yields sellerCount=2, maxSellerPreparationDays=3, earliest delivery = today(UTC)+max(1,3)+lead. Earlier forged date rejected (shipping.delivery.too_early); min/later accepted. Authoritative multi-seller shipping quotes (post:express 200000 / post:standard 120000 IRR). Tipax deactivate omitted + unavailable reject then restored. Draft persistence + continue → /fa/payment 200 with checkout snapshot. Focused 13/13. Commit ec73ba08 on origin/main. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T003. No Shipping redesign. No Payment implementation.
+
+Applicable-Locks:
+- LOCK-SF-001… shipping locks preserved
+- Product != Offer
+- seller-specific fulfillment readiness (max prep across sellers)
+- Store-enabled shipping methods only
+- shipping price backend-authoritative
+- earliest delivery never before all required seller readiness
+- no fake methods/rates/dates
+- Shopeiva UI locked
+- backend-authoritative validation
+- dynamic language registry
+- no raw IDs/codes in normal customer UI
+
+MultiSeller-Fixture:
+docs/evidence/TB-P10-T002/r1-multiseller-fixture.md
+Cart 01a08c19-1233-7000-bdba-ae0d7b02b96c; Seller A 01a03826-97c5-7000-ad15-c9d141b1f32e (prep 1); Seller B 01a030d1-40cb-7000-8abe-6d31739956c5 (prep 3); one Store; valid offers/inventory.
+
+MultiSeller-Runtime:
+docs/evidence/TB-P10-T002/r1-multiseller-runtime.md
+Projection sellerCount=2 maxPrep=3; single coherent projection; both sellers one checkout; no per-seller FE waterfall.
+
+Delivery-Minimum-Runtime:
+docs/evidence/TB-P10-T002/r1-delivery-minimum-runtime.md
+Minimum 2026-09-15; earlier 2026-09-14 → 400 shipping.delivery.too_early; exact min + later OK.
+
+Shipping-Price-Runtime:
+docs/evidence/TB-P10-T002/r1-shipping-price-runtime.md
+post:express 200000; post:standard 120000 IRR; backend-authoritative; no free/static fallback.
+
+Constraint-Failure:
+docs/evidence/TB-P10-T002/r1-constraint-failure.md
+Tipax deactivated → omitted from projection; forged tipax:express → 400 shipping.method.unavailable; restored.
+
+Persistence-Handoff:
+docs/evidence/TB-P10-T002/r1-handoff.md
+Draft retained after refresh; commit checkout 01a08c19-2975-7000-8a86-4ca0a327dcab; /fa/payment 200; no Payment methods added.
+
+Focused-Validation:
+docs/evidence/TB-P10-T002/r1-focused-validation.md
+Passed=13 Failed=0 (StorefrontShippingCalculatorTests 6 + storefront-shipping-api 4 + recovery 3); git diff --check clean.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T002/r1-recovery-sot.md
+Phase P10; Last Architect-accepted TB-P10-T001; Last Implementation TB-P10-T002-R1; Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T003.
+
+Git:
+ec73ba08379979ba007bb4f554187e5d15d2d25c on origin/main; HEAD==origin/main
+
+Architectural-Concerns:
+Prep-day differentiation for runtime used Development appsettings overrides + evidence scripts; no product-code defect found. Storefront method eligibility remains Store-scoped for whole cart (seller readiness via max prep / delivery gate).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no UI redesign in R1.
+
+Blockers:
+None.
+
+END_TOOBA_TASK_RESULT
