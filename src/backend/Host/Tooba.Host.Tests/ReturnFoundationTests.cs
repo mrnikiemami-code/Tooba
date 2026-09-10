@@ -131,7 +131,7 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
         var lineId = (await orderDb.Lines.AsNoTracking().SingleAsync()).LineId;
         var lineUnitPrice = (await orderDb.Lines.AsNoTracking().SingleAsync()).UnitPriceSnapshot;
 
-        var paymentBridge = new OrderPaymentBridge(orderDb);
+        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
         var paymentGateways = new PaymentGatewayRegistry([new FakePaymentGateway()]);
         var paymentDirectory = new PaymentDirectory(
             paymentDb,
@@ -410,6 +410,9 @@ public sealed class ReturnFoundationTests : IAsyncLifetime
     private sealed class RecordingInventoryGateway : IFulfillmentInventoryGateway
     {
         public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 
     private sealed class RecordingReturnInventoryGateway : IReturnInventoryGateway

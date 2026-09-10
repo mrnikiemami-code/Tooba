@@ -156,7 +156,7 @@ public sealed class WalletCheckoutRefundTests : IAsyncLifetime
 
         var checkout = SeedCheckout(orderDb, buyer, actor, seller, 80_000m, Guid.NewGuid(), now);
         await orderDb.SaveChangesAsync();
-        var paymentBridge = new OrderPaymentBridge(orderDb);
+        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
         var actorCtx = new PaymentGatewayActorContext();
         var gateways = new PaymentGatewayRegistry([new FakePaymentGateway(), new WalletPaymentGateway(wallets, actorCtx)]);
         var payments = new PaymentDirectory(paymentDb, new OpenPaymentUseCaseGuard(), paymentBridge, gateways, actorCtx);

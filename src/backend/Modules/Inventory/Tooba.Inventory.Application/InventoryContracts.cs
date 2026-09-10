@@ -117,4 +117,7 @@ public interface IInventoryDirectory
     /// رزرو Held را از OnHand کم می‌کند.
     /// </summary>
     Task ConsumeAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>رزرو Held سفارش پرداخت‌شده را از TTL سبد خارج می‌کند (ExpiresAt=null). Idempotent.</summary>
+    Task<ReservationReceipt> CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken);
 }

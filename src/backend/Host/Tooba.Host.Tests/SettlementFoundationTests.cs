@@ -118,7 +118,7 @@ public sealed class SettlementFoundationTests : IAsyncLifetime
         await orderDb.SaveChangesAsync();
         var sellerOrderId = checkout.SellerOrders.Single().SellerOrderId;
 
-        var paymentBridge = new OrderPaymentBridge(orderDb);
+        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
         var paymentDirectory = new PaymentDirectory(
             paymentDb,
             new OpenPaymentUseCaseGuard(),

@@ -597,5 +597,8 @@ public sealed class ConsolidatedPackageTests : IAsyncLifetime
     {
         public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

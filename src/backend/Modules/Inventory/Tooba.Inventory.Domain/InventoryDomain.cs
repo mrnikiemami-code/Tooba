@@ -317,7 +317,7 @@ public sealed class StockReservation
     /// <summary>
     /// مهلت UTC آزادسازی خودکار؛ تهی یعنی بدون انقضای زمانی در این رزرو.
     /// </summary>
-    public DateTimeOffset? ExpiresAt { get; init; }
+    public DateTimeOffset? ExpiresAt { get; private set; }
 
     /// <summary>
     /// رزرو Held می‌سازد.
@@ -352,6 +352,32 @@ public sealed class StockReservation
             UpdatedAt = now,
             ExpiresAt = expiresAt,
         };
+    }
+
+    /// <summary>
+    /// رزرو Held سفارش پرداخت‌شده را از TTL سبد خارج می‌کند (ExpiresAt=null). Idempotent.
+    /// Released/Consumed را زنده نمی‌کند.
+    /// </summary>
+    public void CommitForPaidOrder(DateTimeOffset now)
+    {
+        if (Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
+        {
+            throw new InvalidOperationException("inventory.reservation.not_active");
+        }
+
+        if (Status != StockReservationStatus.Held)
+        {
+            throw new InvalidOperationException("inventory.reservation.not_active");
+        }
+
+        if (ExpiresAt is null)
+        {
+            UpdatedAt = now;
+            return;
+        }
+
+        ExpiresAt = null;
+        UpdatedAt = now;
     }
 
     /// <summary>

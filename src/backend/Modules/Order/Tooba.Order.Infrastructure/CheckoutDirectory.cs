@@ -312,6 +312,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
 
                     var previous = await _inventory.FindReservationAsync(previousId, cancellationToken)
                         ?? throw new InvalidOperationException("order.restore.inventory_failed");
+                    // Restore reacquires a durable hold (expiresAt: null) — not cart TTL.
+                    // Paid/pending restored reservations must not be eligible for ReleaseExpiredHoldsAsync.
                     var receipt = await _inventory.ReserveAsync(
                         previous.StockItemId,
                         previous.Quantity,

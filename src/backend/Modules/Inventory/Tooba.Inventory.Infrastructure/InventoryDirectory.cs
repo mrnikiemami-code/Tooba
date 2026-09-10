@@ -338,4 +338,18 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         position.SyncQuantities(position.OnHand, position.Reserved, now);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public async Task<ReservationReceipt> CommitReservationForPaidOrderAsync(
+        Guid reservationId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var reservation = await _db.Reservations.SingleOrDefaultAsync(x => x.ReservationId == reservationId, cancellationToken)
+            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+        reservation.CommitForPaidOrder(DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+        return await FindReservationAsync(reservationId, cancellationToken)
+            ?? throw new InvalidOperationException("inventory.reservation.not_found");
+    }
 }

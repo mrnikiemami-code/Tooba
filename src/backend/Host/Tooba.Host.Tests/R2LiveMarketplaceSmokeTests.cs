@@ -63,7 +63,7 @@ public sealed class R2LiveMarketplaceSmokeTests
         await orderDb.SaveChangesAsync();
         var sellerOrderId = checkout.SellerOrders.Single().SellerOrderId;
 
-        var paymentBridge = new OrderPaymentBridge(orderDb);
+        var paymentBridge = new OrderPaymentBridge(orderDb, new UnusedInventoryDirectory());
         var paymentDirectory = new PaymentDirectory(
             paymentDb,
             new OpenPaymentUseCaseGuard(),

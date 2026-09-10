@@ -643,6 +643,16 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
                 throw new InvalidOperationException("fulfillment فقط برای سفارش Paid ساخته می‌شود.");
             }
 
+            foreach (var line in handoff.Lines)
+            {
+                if (line.ReservationId is not { } reservationId)
+                {
+                    continue;
+                }
+
+                await _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
+            }
+
             var unit = FulfillmentUnit.CreateFromPaidOrder(
                 handoff.SellerOrderId,
                 handoff.CheckoutId,

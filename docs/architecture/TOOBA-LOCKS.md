@@ -127,6 +127,21 @@ For Orders with an active Consolidated Package (Created / Dispatched / Delivered
 ### LOCK-OPS-023 — Customer/guest tracking respects existing ownership proof
 Customer fulfillment/tracking projection must reuse the existing ownership/guest-access model: authenticated owned Orders, Development/Testing customer-panel actor seams including `StorefrontGuestActorId`, and/or existing `X-Tooba-Guest-Secret` cart credential proof bound to the Order's CartId. Arbitrary anonymous OrderId/ShipmentId/PackageId guessing must not expose data. Forbidden/unowned access stays 404 without leakage.
 
+### LOCK-OPS-024 — Paid-order inventory hold is not cart TTL
+After verified payment success, Inventory reservations bound to paid Order lines must leave the cart hold TTL (`ExpiresAt` cleared / null). Cart-style timed holds must not remain eligible for `ReleaseExpiredHoldsAsync` after payment.
+
+### LOCK-OPS-025 — Inventory owns paid-order reservation commit
+Promotion of a paid-order reservation out of cart TTL is owned by Inventory (`CommitReservationForPaidOrder` / `CommitReservationForPaidOrderAsync`). Order/Payment/Fulfillment call the Inventory contract; they do not mutate reservation expiry columns directly.
+
+### LOCK-OPS-026 — Expiry worker excludes committed paid holds
+`ReleaseExpiredHoldsAsync` only releases Held reservations with non-null `ExpiresAt` that are past due. Committed paid holds (`ExpiresAt = null`) must never be released by the expiry worker.
+
+### LOCK-OPS-027 — Never resurrect Released/Consumed reservations
+`CommitForPaidOrder` must not resurrect Released or Consumed reservations. Those states stay historical; callers receive `inventory.reservation.not_active`.
+
+### LOCK-OPS-028 — Cancelled-order restore reacquires durable (non-TTL) holds
+Checkout restore after whole-order cancel reacquires inventory via `ReserveAsync` with `expiresAt: null` so restored paid/pending holds are durable and not cart-TTL-eligible.
+
 ## Returns / Refunds
 
 ### LOCK-RET-001 — Return and Refund are independent lifecycles

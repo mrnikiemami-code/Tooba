@@ -2167,6 +2167,8 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
         "fulfillment.work_queue.row_mismatch" => "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
         "inventory.reservation.not_active" => "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
+        "inventory.reservation.not_found" => "رزرو موجودی این سفارش پیدا نشد. اطلاعات سفارش را تازه‌سازی کنید.",
+        "inventory.reservation.stock_mismatch" => "مصرف رزرو با موجودی هم‌خوان نبود.",
         "fulfillment.shipment.locked_by_consolidated_package" =>
             "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",
         "fulfillment.package.requires_multi_seller" => "بسته تجمیعی حداقل به دو فروشندهٔ متمایز نیاز دارد.",
@@ -2214,8 +2216,14 @@ public sealed class AdminOrderOperationsComposer
             ("fulfillment.tracking.duplicate", FulfillmentOpToFa("fulfillment.tracking.duplicate")),
         "inventory.reservation.not_active" =>
             ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
+        "inventory.reservation.not_found" =>
+            ("inventory.reservation.not_found", FulfillmentOpToFa("inventory.reservation.not_found")),
+        "مصرف رزرو با موجودی هم‌خوان نبود." =>
+            ("inventory.reservation.stock_mismatch", FulfillmentOpToFa("inventory.reservation.stock_mismatch")),
         "فقط رزرو Held قابل آزادسازی یا مصرف است." =>
             ("inventory.reservation.not_active", FulfillmentOpToFa("inventory.reservation.not_active")),
+        "رزرو پیدا نشد." =>
+            ("inventory.reservation.not_found", FulfillmentOpToFa("inventory.reservation.not_found")),
         _ when message.StartsWith("fulfillment.", StringComparison.Ordinal) =>
             (message, FulfillmentOpToFa(message)),
         _ when message.StartsWith("inventory.", StringComparison.Ordinal) =>

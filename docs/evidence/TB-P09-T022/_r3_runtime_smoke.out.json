@@ -1,0 +1,11 @@
+﻿{
+  "task": "TB-P09-T022-R3",
+  "host": "http://127.0.0.1:5088",
+  "hostUp": false,
+  "notes": [
+    "Host unreachable: fetch failed",
+    "Promotion path: OrderPaymentBridge.ApplyVerifiedSuccessAsync → CommitReservationForPaidOrderAsync (ExpiresAt=null).",
+    "Expiry worker: ReleaseExpiredHoldsAsync WHERE expires_at IS NOT NULL — committed paid holds excluded.",
+    "Primary proof: PaidOrderReservationLifecycleTests (unit + PostgresSerial)."
+  ]
+}

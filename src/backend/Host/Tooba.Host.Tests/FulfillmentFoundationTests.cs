@@ -454,5 +454,8 @@ public sealed class FulfillmentFoundationTests : IAsyncLifetime
             ConsumedReservations.Add(reservationId);
             return Task.CompletedTask;
         }
+
+        public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

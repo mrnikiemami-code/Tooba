@@ -402,6 +402,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
     en: "This order's inventory reservation is no longer active. Refresh the order or review reservation status.",
   },
+  "inventory.reservation.not_found": {
+    fa: "رزرو موجودی این سفارش پیدا نشد. اطلاعات سفارش را تازه‌سازی کنید.",
+    en: "This order's inventory reservation was not found. Refresh the order.",
+  },
+  "inventory.reservation.stock_mismatch": {
+    fa: "مصرف رزرو با موجودی هم‌خوان نبود.",
+    en: "Reservation consumption did not match stock quantities.",
+  },
   "fulfillment.shipment.locked_by_consolidated_package": {
     fa: "این مرسوله عضو بسته تجمیعی است و عملیات ارسال باید از طریق همان بسته انجام شود.",
     en: "This shipment belongs to a consolidated package; shipping actions must go through that package.",

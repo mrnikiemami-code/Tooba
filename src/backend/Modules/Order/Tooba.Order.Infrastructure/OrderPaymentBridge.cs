@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Tooba.Inventory.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
@@ -12,13 +13,15 @@ namespace Tooba.Order.Infrastructure;
 public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentProjection
 {
     private readonly OrderDbContext _db;
+    private readonly IInventoryDirectory _inventory;
 
     /// <summary>
-    /// پل را به schema order وصل می‌کند.
+    /// پل را به schema order و قرارداد Inventory وصل می‌کند.
     /// </summary>
-    public OrderPaymentBridge(OrderDbContext db)
+    public OrderPaymentBridge(OrderDbContext db, IInventoryDirectory inventory)
     {
         _db = db;
+        _inventory = inventory;
     }
 
     /// <inheritdoc />
@@ -62,6 +65,7 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
         _ = paymentId;
         var group = await _db.Checkouts
             .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
             ?? throw new InvalidOperationException("checkout برای تصویر پرداخت پیدا نشد.");
 
@@ -73,6 +77,15 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             }
 
             order.RecordVerifiedPayment();
+            foreach (var line in order.Lines)
+            {
+                if (line.ReservationId is not { } reservationId)
+                {
+                    continue;
+                }
+
+                await _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
+            }
         }
 
         await _db.SaveChangesAsync(cancellationToken);

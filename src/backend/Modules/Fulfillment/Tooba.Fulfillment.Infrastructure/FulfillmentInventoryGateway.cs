@@ -18,4 +18,8 @@ public sealed class FulfillmentInventoryGateway : IFulfillmentInventoryGateway
     /// <inheritdoc />
     public Task ConsumeReservationAsync(Guid reservationId, CancellationToken cancellationToken) =>
         _inventory.ConsumeAsync(reservationId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken) =>
+        _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
 }
