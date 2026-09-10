@@ -10,7 +10,8 @@ public sealed record PayableCheckoutSnapshot(
     Guid CheckoutId,
     OrderPaymentMode Mode,
     string Currency,
-    IReadOnlyList<PayableSellerOrderSnapshot> SellerOrders);
+    IReadOnlyList<PayableSellerOrderSnapshot> SellerOrders,
+    decimal ShippingAmount = 0m);
 
 /// <summary>
 /// حالت تجاری سفارش از دید پرداخت. با Status درگاه یکی نیست.

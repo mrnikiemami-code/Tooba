@@ -3,29 +3,40 @@
 /**
  * روش پرداخت Shopeiva-locked — هندسه PaymentMethods.jsx بدون کارت جعلی/شارژ.
  * کیف پول فقط وقتی Host canPayFullyWithWallet بدهد؛ mixed tender ادعا نمی‌شود.
+ * درگاه/دستی فقط وقتی در کاتالوگ Host (Store-enabled) باشند.
  */
 
 import { CheckCircle, CreditCard, Landmark, ShieldCheck, Wallet } from "lucide-react";
 import { formatOfferAmount } from "./storefront-api.ts";
 import type { StorefrontPaymentMethodId, StorefrontWalletQuote } from "./storefront-payment-api.ts";
 
-const ACCENT = "#2563EB";
+const DEFAULT_ACCENT = "#2563EB";
 
 export function StorefrontPaymentMethodPicker({
   selected,
   onChange,
   quote,
   showMixedDeferred = true,
+  hostEnabledCodes,
+  accent = DEFAULT_ACCENT,
 }: {
   selected: StorefrontPaymentMethodId;
   onChange: (id: StorefrontPaymentMethodId) => void;
   quote: StorefrontWalletQuote | null;
   /** اگر mixed LIVE نیست، نشان «به‌زودی» یا پنهان — پیش‌فرض نشان deferred. */
   showMixedDeferred?: boolean;
+  /** کدهای فعال از GET /payment-methods؛ اگر نیاید رفتار قبلی (gateway همیشه) حفظ می‌شود. */
+  hostEnabledCodes?: string[];
+  accent?: string;
 }) {
   const walletEligible = Boolean(quote?.canPayFullyWithWallet);
   const mixedLive = Boolean(quote?.mixedTenderAvailable);
-  const manualEnabled = Boolean(quote?.manualCardToCardEnabled);
+  const manualEnabled = hostEnabledCodes
+    ? hostEnabledCodes.map((c) => c.toLowerCase()).includes("manual") || Boolean(quote?.manualCardToCardEnabled)
+    : Boolean(quote?.manualCardToCardEnabled);
+  const gatewayEnabled = hostEnabledCodes
+    ? hostEnabledCodes.map((c) => c.toLowerCase()).includes("gateway")
+    : true;
 
   return (
     <section
@@ -36,24 +47,27 @@ export function StorefrontPaymentMethodPicker({
       <div className="flex items-center gap-2.5 mb-1">
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${ACCENT}1A` }}
+          style={{ backgroundColor: `${accent}1A` }}
         >
-          <CreditCard className="w-4 h-4" style={{ color: ACCENT }} />
+          <CreditCard className="w-4 h-4" style={{ color: accent }} />
         </div>
         <h2 className="text-base md:text-lg font-bold text-gray-900">روش پرداخت</h2>
       </div>
 
-      <MethodRow
-        id="gateway"
-        selected={selected === "gateway"}
-        onSelect={() => onChange("gateway")}
-        title="درگاه بانکی"
-        subtitle="پرداخت امن پس از ثبت سفارش — بدون کارت جعلی در صفحه"
-        icon={ShieldCheck}
-        iconClass="text-[#2563EB]"
-        iconBg="bg-[#2563EB]/10"
-        testId="payment-method-gateway"
-      />
+      {gatewayEnabled ? (
+        <MethodRow
+          id="gateway"
+          selected={selected === "gateway"}
+          onSelect={() => onChange("gateway")}
+          title="درگاه بانکی"
+          subtitle="پرداخت امن پس از ثبت سفارش — بدون کارت جعلی در صفحه"
+          icon={ShieldCheck}
+          iconClass="text-[#2563EB]"
+          iconBg="bg-[#2563EB]/10"
+          accent={accent}
+          testId="payment-method-gateway"
+        />
+      ) : null}
 
       {walletEligible ? (
         <MethodRow
@@ -69,6 +83,7 @@ export function StorefrontPaymentMethodPicker({
           icon={Wallet}
           iconClass="text-violet-500"
           iconBg="bg-violet-50"
+          accent={accent}
           testId="payment-method-wallet"
         />
       ) : null}
@@ -83,6 +98,7 @@ export function StorefrontPaymentMethodPicker({
           icon={Landmark}
           iconClass="text-amber-600"
           iconBg="bg-amber-50"
+          accent={accent}
           testId="payment-method-manual"
         />
       ) : null}
@@ -123,7 +139,7 @@ export function StorefrontPaymentMethodPicker({
 
       {!walletEligible && quote && quote.balance > 0 && !quote.canPayFullyWithWallet ? (
         <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2" data-testid="payment-wallet-insufficient">
-          موجودی کیف پول برای پوشش کامل مبلغ کافی نیست. فقط درگاه بانکی فعال است.
+          موجودی کیف پول برای پوشش کامل مبلغ کافی نیست. فقط روش‌های فعال فروشگاه در دسترس است.
         </p>
       ) : null}
     </section>
@@ -139,6 +155,7 @@ function MethodRow({
   icon: Icon,
   iconClass,
   iconBg,
+  accent,
   testId,
 }: {
   id: string;
@@ -149,6 +166,7 @@ function MethodRow({
   icon: typeof CreditCard;
   iconClass: string;
   iconBg: string;
+  accent: string;
   testId: string;
 }) {
   return (
@@ -159,9 +177,14 @@ function MethodRow({
       data-method={id}
       className={`w-full flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl border-2 transition-all text-right ${
         selected
-          ? "border-[#2563EB] bg-[#2563EB]/5 shadow-sm shadow-[#2563EB]/10"
+          ? "shadow-sm"
           : "border-gray-200 hover:border-gray-300"
       }`}
+      style={
+        selected
+          ? { borderColor: accent, backgroundColor: `${accent}0D`, boxShadow: `0 1px 8px ${accent}1A` }
+          : undefined
+      }
     >
       <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
         <Icon className={`w-5 h-5 md:w-6 md:h-6 ${iconClass}`} />
@@ -172,8 +195,9 @@ function MethodRow({
       </div>
       <div
         className={`shrink-0 w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-          selected ? "border-[#2563EB] bg-[#2563EB]" : "border-gray-300"
+          selected ? "" : "border-gray-300"
         }`}
+        style={selected ? { borderColor: accent, backgroundColor: accent } : undefined}
       >
         {selected ? <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" /> : null}
       </div>

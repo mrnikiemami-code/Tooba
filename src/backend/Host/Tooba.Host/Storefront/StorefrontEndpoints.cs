@@ -428,6 +428,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status400BadRequest, "Bad Request", "payment.wallet.mixed_deferred");
         }
 
+        if (text.Contains("payment.method.unavailable", StringComparison.Ordinal)
+            || text.Contains("کارت به کارت در این فروشگاه فعال نیست", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.method.unavailable");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
@@ -437,6 +443,7 @@ public static class StorefrontEndpoints
         "payment.missing" => "پرداخت پیدا نشد.",
         "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
         "payment.wallet.mixed_deferred" => "پرداخت ترکیبی کیف پول هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.",
+        "payment.method.unavailable" => "این روش پرداخت برای فروشگاه فعال نیست.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 

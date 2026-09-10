@@ -95,15 +95,24 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             throw new InvalidOperationException("ارز پرداخت باید با تصویر سفارش یکی باشد؛ تبدیل ارز در Payment نیست.");
         }
 
-        var amount = pending.Sum(x => x.PayableAmount);
+        var merchandise = pending.Sum(x => x.PayableAmount);
+        var shipping = Math.Max(0m, payable.ShippingAmount);
+        var amount = merchandise + shipping;
         var gateway = _gateways.Resolve(command.ProviderCode);
+        // مبلغ ارسال checkout در مجموع پرداخت جمع می‌شود؛ تا مدل تخصیص ارسال جدا آماده شود
+        // موقتاً به اولین سفارش Pending افزوده می‌شود تا Σ allocations == amount حفظ شود.
+        var allocationRows = pending
+            .Select((x, index) => (
+                x.SellerOrderId,
+                Amount: index == 0 ? x.PayableAmount + shipping : x.PayableAmount))
+            .ToArray();
         var payment = CustomerPayment.Open(
             payable.CheckoutId,
             amount,
             payable.Currency,
             gateway.ProviderCode,
             key,
-            pending.Select(x => (x.SellerOrderId, x.PayableAmount)).ToArray(),
+            allocationRows,
             DateTimeOffset.UtcNow);
         _actorContext.ActorUserId = command.ActorUserId;
         var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);

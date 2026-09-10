@@ -1,0 +1,96 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T003
+
+Parent-Task:
+TB-P10-T002-R1
+
+Status:
+PASS
+
+Summary:
+Storefront /payment connected to real Host payment configuration: Store-enabled methods only (gateway gated by Mode; manual when enabled; wallet quote-gated), fake card-number/CVV/expiry fields absent, checkout summary + final payable backend-authoritative including shipping, payment initiate on existing shipping-committed checkout with idempotent replay, manual Pending + Sandbox gateway redirect (no fake Production PSP success). Focused tests green. Runtime A–G PASS on :5088/:3000. USER_VISUAL_ACCEPTED=NO. Worker IDLE. No TB-P10-T004.
+
+Applicable-Locks:
+docs/evidence/TB-P10-T003/applicable-locks.md
+LOCK-SF-001…004 preserved; LOCK-SF-007…010 added (no template card credentials; payable/initiate authoritative; idempotent commit/initiate; success backend-verified).
+
+Discovery:
+docs/evidence/TB-P10-T003/discovery.md
+
+Payment-Projection:
+docs/evidence/TB-P10-T003/payment-projection.md
+
+Payment-Methods:
+docs/evidence/TB-P10-T003/payment-methods.md
+
+Card-Form-Removal:
+docs/evidence/TB-P10-T003/card-form-removal.md
+
+Payment-Pricing-Integrity:
+docs/evidence/TB-P10-T003/payment-pricing-integrity.md
+Payment amount == checkout payable (shipping included via OrderPaymentBridge).
+
+Checkout-Commit:
+docs/evidence/TB-P10-T003/checkout-commit.md
+Order created at shipping commit; /payment initiates Payment attempt only.
+
+Manual-Payment:
+docs/evidence/TB-P10-T003/manual-payment.md
+
+Gateway:
+docs/evidence/TB-P10-T003/gateway.md
+Sandbox applicable in Dev; unconfigured Production fail-closed / omitted.
+
+Idempotency:
+docs/evidence/TB-P10-T003/idempotency.md
+
+Guest-Auth:
+docs/evidence/TB-P10-T003/guest-auth.md
+
+Error-UX:
+docs/evidence/TB-P10-T003/error-ux.md
+
+Performance:
+docs/evidence/TB-P10-T003/performance.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T003/focused-validation.md
+Backend catalog+payment focused suite PASS; FE payment tests 11/11; recovery 3/3.
+
+Runtime-Smoke:
+docs/evidence/TB-P10-T003/runtime-smoke.md
+A–G PASS; raw runtime-smoke-raw.json
+
+Visual-Smoke:
+docs/evidence/TB-P10-T003/visual-smoke.md
+USER_VISUAL_ACCEPTED=NO
+
+Checkout-Plan:
+docs/architecture/STOREFRONT-CHECKOUT-PLAN.md
+T003 implemented; T004 not started.
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md
+LOCK-SF-007…010 added as non-duplicates.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T003/recovery-sot.md
+Phase P10; Last Architect-accepted TB-P10-T002-R1; Last Implementation TB-P10-T003; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T004.
+
+Git:
+(see commit after push)
+
+Architectural-Concerns:
+Shipping amount temporarily allocated onto first pending seller order so Payment allocation sum equals payable until a dedicated shipping allocation model exists. COD not invented. Terms checkbox absent (no legal contract).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending Architect visual accept.
+
+Blockers:
+None.
+
+END_TOOBA_TASK_RESULT

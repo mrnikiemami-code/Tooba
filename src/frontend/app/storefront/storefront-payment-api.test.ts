@@ -119,3 +119,11 @@ test("customer payment message maps wallet insufficient", () => {
   );
   assert.match(msg, /موجودی/);
 });
+
+test("customer payment message maps unavailable method", () => {
+  const msg = toCustomerPaymentMessage(
+    new StorefrontCartApiError(400, "payment.method.unavailable", "gateway"),
+  );
+  assert.match(msg, /روش پرداخت/);
+  assert.equal(msg.includes("gateway"), false);
+});

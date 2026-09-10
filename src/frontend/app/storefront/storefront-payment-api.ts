@@ -274,6 +274,8 @@ export function toCustomerPaymentMessage(error: unknown): string {
         return "موجودی کیف پول برای پرداخت کامل کافی نیست.";
       case "payment.wallet.unavailable":
         return "پرداخت با کیف پول در حال حاضر در دسترس نیست.";
+      case "payment.method.unavailable":
+        return "این روش پرداخت برای فروشگاه فعال نیست.";
       case "wallet.quote.missing":
         return "اطلاعات کیف پول برای این سفارش در دسترس نیست.";
       default:

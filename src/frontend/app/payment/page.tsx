@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * مسیر پرداخت — قالب handoff تا T003. روش پرداخت در این Task پیاده نمی‌شود.
+ * مسیر پرداخت ویترین — روش‌های Store-enabled واقعی (TB-P10-T003).
  */
 export default async function PaymentPage() {
   const home = await loadStorefrontHome();

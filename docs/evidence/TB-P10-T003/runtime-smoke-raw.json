@@ -1,0 +1,76 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-method-projection",
+      "ok": true,
+      "status": 200,
+      "codes": [
+        "gateway",
+        "manual"
+      ]
+    },
+    {
+      "name": "shipping-commit",
+      "ok": true,
+      "checkoutId": "01a08c45-9581-7000-a3de-6159980aea8d",
+      "payable": 201088,
+      "saveStatus": 200,
+      "commitStatus": 200,
+      "lineStatus": 200,
+      "projectionStatus": 200
+    },
+    {
+      "name": "A-fe-payment",
+      "ok": true,
+      "status": 200,
+      "hasCvv": false
+    },
+    {
+      "name": "pricing-integrity",
+      "ok": true,
+      "payable": 201088
+    },
+    {
+      "name": "B-manual",
+      "ok": true,
+      "status": 200,
+      "paymentId": "85a01ba6-87c8-4f9a-91c8-0ab3dc5d19f8",
+      "amount": 201088,
+      "payable": 201088,
+      "provider": "manual"
+    },
+    {
+      "name": "D-idempotency",
+      "ok": true,
+      "status": 200,
+      "paymentId2": "85a01ba6-87c8-4f9a-91c8-0ab3dc5d19f8"
+    },
+    {
+      "name": "C-gateway-sandbox",
+      "ok": true,
+      "status": 200,
+      "redirect": "/payment/sandbox?ref=fake-9ae07f96cb014aeabf629aefeaa0ea92&checkoutId=01a08c45-9946-7000-bf57-841e810b8be3",
+      "applicable": true,
+      "na": false
+    },
+    {
+      "name": "E-wrong-guest",
+      "ok": true,
+      "status": 400,
+      "code": "checkout.rejected"
+    },
+    {
+      "name": "G-refresh-methods",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "F-amount-not-trusted",
+      "ok": true,
+      "status": 200,
+      "amount": 201088,
+      "payableF": 201088
+    }
+  ]
+}

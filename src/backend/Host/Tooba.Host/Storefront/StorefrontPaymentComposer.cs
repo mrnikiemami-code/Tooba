@@ -67,13 +67,16 @@ public sealed class StorefrontPaymentComposer
 
     /// <summary>
     /// روش‌های پرداخت فعال برای ویترین (پیکربندی فروشگاه/محیط).
+    /// درگاه فقط وقتی Mode عملیاتی باشد (Sandbox یا Webhook پیکربندی‌شده)؛ Disabled/ناقص حذف می‌شود.
     /// </summary>
     public StorefrontPaymentMethodsPage ListPaymentMethods()
     {
-        var methods = new List<StorefrontPaymentMethodOption>
+        var methods = new List<StorefrontPaymentMethodOption>();
+        if (IsOnlineGatewayOffered())
         {
-            new("gateway", "درگاه بانکی", "پرداخت آنلاین از طریق درگاه"),
-        };
+            methods.Add(new("gateway", "درگاه بانکی", "پرداخت آنلاین از طریق درگاه"));
+        }
+
         if (_gatewayOptions.ManualCardToCardEnabled)
         {
             methods.Add(new(
@@ -83,6 +86,31 @@ public sealed class StorefrontPaymentComposer
         }
 
         return new StorefrontPaymentMethodsPage(methods, _gatewayOptions.ManualCardToCardEnabled);
+    }
+
+    /// <summary>
+    /// آیا درگاه آنلاین برای انتخاب مشتری در ویترین پیشنهاد می‌شود؟
+    /// </summary>
+    internal bool IsOnlineGatewayOffered()
+    {
+        var mode = (_gatewayOptions.Mode ?? string.Empty).Trim();
+        if (mode.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (mode.Equals("Sandbox", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (mode.Equals("Webhook", StringComparison.OrdinalIgnoreCase))
+        {
+            return !string.IsNullOrWhiteSpace(_gatewayOptions.InitiateBaseUrl)
+                && !string.IsNullOrWhiteSpace(_gatewayOptions.WebhookSigningSecret);
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -134,6 +162,24 @@ public sealed class StorefrontPaymentComposer
             }
 
             providerCode = ManualPaymentGateway.ProviderCodeValue;
+        }
+        else if (!string.IsNullOrWhiteSpace(providerCodeOverride)
+            && providerCodeOverride.Trim().Equals("gateway", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsOnlineGatewayOffered())
+            {
+                throw new InvalidOperationException("payment.method.unavailable");
+            }
+
+            providerCode = _gatewayOptions.DefaultProvider;
+        }
+        else if (!useWallet && string.IsNullOrWhiteSpace(providerCodeOverride))
+        {
+            // پیش‌فرض درگاه — فقط وقتی در کاتالوگ فروشگاه پیشنهاد شده باشد.
+            if (!IsOnlineGatewayOffered())
+            {
+                throw new InvalidOperationException("payment.method.unavailable");
+            }
         }
 
         var initiated = await _payments.InitiateAsync(
