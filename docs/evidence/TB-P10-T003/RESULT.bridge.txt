@@ -82,7 +82,7 @@ docs/evidence/TB-P10-T003/recovery-sot.md
 Phase P10; Last Architect-accepted TB-P10-T002-R1; Last Implementation TB-P10-T003; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T004.
 
 Git:
-(see commit after push)
+9a776899184888cedf0622049db242501bd8b722 on origin/main; HEAD==origin/main
 
 Architectural-Concerns:
 Shipping amount temporarily allocated onto first pending seller order so Payment allocation sum equals payable until a dedicated shipping allocation model exists. COD not invented. Terms checkbox absent (no legal contract).
