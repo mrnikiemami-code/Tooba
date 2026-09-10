@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P09-T022-R1
+TB-P09-T022-R2
 ```
 
 Current Issued Task:
@@ -80,8 +80,9 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
-TB-P09-T022-R1 — Consolidated Package visual runtime repair (FE Admin 500 readiness + real browser smoke); USER_VISUAL_ACCEPTED=NO
-TB-P09-T022 — Consolidated Package admin/runtime completion (central package lifecycle + history); under repair via R1; USER_VISUAL_ACCEPTED=NO
+TB-P09-T022-R2 — Customer Tracking UI Proof (owned session + consolidated package primary rendering); USER_VISUAL_ACCEPTED=NO
+TB-P09-T022-R1 — Consolidated Package visual runtime repair (FE Admin 500 readiness + real browser smoke); under repair via R2; USER_VISUAL_ACCEPTED=NO
+TB-P09-T022 — Consolidated Package admin/runtime completion (central package lifecycle + history); under repair via R2; USER_VISUAL_ACCEPTED=NO
 TB-P09-T021-R1 — Consolidated Package customer tracking access/projection repair; Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P09-T021 — Consolidated Package foundation (multi-seller master package orchestration); under repair via R1; USER_VISUAL_ACCEPTED=NO
 TB-P09-T020-R2 — Cancel/Restore reservation rebinding + localized inventory error UX; USER_VISUAL_ACCEPTED=NO

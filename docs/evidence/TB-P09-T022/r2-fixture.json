@@ -1,0 +1,39 @@
+{
+  "task": "TB-P09-T022-R2",
+  "email": "r2.customer.1789015757792@example.test",
+  "registerStatus": 201,
+  "userId": "01a089a6-1463-7000-b1aa-0024ab6d1016",
+  "loginStatus": 200,
+  "checkoutId": "01a089a6-154f-7000-9586-bc1463ac6c8b",
+  "guestSecret": "[redacted]",
+  "cartId": "01a089a6-14c9-7000-8193-5f831d09cd05",
+  "paymentStatus": 200,
+  "confirmStatus": 200,
+  "placedByForced": true,
+  "members": [
+    {
+      "sellerOrderId": "01a089a6-1556-7000-b9e1-03564b3bc5a6",
+      "fulfillmentId": "a000102c-4fe6-4f36-addc-80caa0c11320",
+      "shipmentId": "55d50977-6398-4b82-bcf6-f26fe8e34c79"
+    },
+    {
+      "sellerOrderId": "01a089a6-155b-7000-8c37-2d225284b98b",
+      "fulfillmentId": "3e6fd020-9c99-4ff9-99d1-85436762d72a",
+      "shipmentId": "50f06096-fb64-4019-9196-e48d340d3e0d"
+    }
+  ],
+  "packageNumber": "MP-01A089AA19B2",
+  "initialPackageId": "01a089a6-1cf4-7000-9640-84036d55fa27",
+  "initialPackageNumber": "MP-01A089A61CF4",
+  "initialPreferredTracking": "CENTRAL-T022-R2",
+  "rebuiltPackageNumber": "MP-01A089AA19B2",
+  "rebuiltPreferredTracking": "CENTRAL-T022-R2-REBUILT",
+  "ownedFulfillments": {
+    "status": 200,
+    "preferred": "CENTRAL-T022-R2-REBUILT",
+    "packageNumber": "MP-01A089AA19B2"
+  },
+  "foreignStatus": 404,
+  "guestActorAloneStatus": 404,
+  "secretsNote": "password/accessToken/refreshToken/guestSecretRaw kept only in untracked .tmp-r2-fixture-secrets.json"
+}
