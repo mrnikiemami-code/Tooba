@@ -1,0 +1,106 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-multiseller-commit",
+      "ok": true,
+      "checkoutId": "01a08c5a-6a86-7000-9960-9140f249fa2f",
+      "sellers": [
+        {
+          "sellerOrderId": "01a08c5a-6a8f-7000-8a7a-2ca3053a45f9",
+          "sellerPartyId": "01a03826-97c5-7000-ad15-c9d141b1f32e",
+          "name": "تجارت الکترونیک پارس",
+          "payable": 1359.5
+        },
+        {
+          "sellerOrderId": "01a08c5a-6a96-7000-a51c-0ee629d0c2cd",
+          "sellerPartyId": "01a030d1-40cb-7000-8abe-6d31739956c5",
+          "name": "فروشگاه آرمان",
+          "payable": 2016500
+        }
+      ],
+      "shippingAmount": 200000,
+      "payable": 2217859.5
+    },
+    {
+      "name": "A-allocation",
+      "ok": true,
+      "amount": 2217859.5,
+      "allocs": [
+        {
+          "targetKind": "SellerOrder",
+          "sellerOrderId": "01a08c5a-6a8f-7000-8a7a-2ca3053a45f9",
+          "amount": 1359.5
+        },
+        {
+          "targetKind": "StoreShipping",
+          "sellerOrderId": "00000000-0000-7000-9000-00000000a11c",
+          "amount": 200000
+        },
+        {
+          "targetKind": "SellerOrder",
+          "sellerOrderId": "01a08c5a-6a96-7000-a51c-0ee629d0c2cd",
+          "amount": 2016500
+        }
+      ],
+      "shippingOnSeller": false
+    },
+    {
+      "name": "D-idempotency",
+      "ok": true,
+      "paymentId2": "a8c81283-3383-4a08-8039-b7dd2282404d"
+    },
+    {
+      "name": "B-ordering-independence",
+      "ok": true,
+      "forward": [
+        {
+          "name": "تجارت الکترونیک پارس",
+          "merchandise": 1359.5,
+          "allocated": 1359.5
+        },
+        {
+          "name": "فروشگاه آرمان",
+          "merchandise": 2016500,
+          "allocated": 2016500
+        }
+      ],
+      "reversed": [
+        {
+          "name": "فروشگاه آرمان",
+          "merchandise": 2016500,
+          "allocated": 2016500
+        },
+        {
+          "name": "تجارت الکترونیک پارس",
+          "merchandise": 1359.5,
+          "allocated": 1359.5
+        }
+      ],
+      "shippingForward": 200000,
+      "shippingReversed": 200000
+    },
+    {
+      "name": "C-settlement-semantics",
+      "ok": true,
+      "note": "seller allocation == seller merchandise; shipping excluded from seller buckets"
+    },
+    {
+      "name": "E-single-store",
+      "ok": true,
+      "payable": 201359.5,
+      "allocs": [
+        {
+          "targetKind": "StoreShipping",
+          "sellerOrderId": "00000000-0000-7000-9000-00000000a11c",
+          "amount": 200000
+        },
+        {
+          "targetKind": "SellerOrder",
+          "sellerOrderId": "01a08c5a-6e64-7000-9215-3d8c60ad4821",
+          "amount": 1359.5
+        }
+      ]
+    }
+  ]
+}

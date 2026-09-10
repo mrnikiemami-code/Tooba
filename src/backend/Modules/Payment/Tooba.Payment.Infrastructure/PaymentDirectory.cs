@@ -99,13 +99,19 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var shipping = Math.Max(0m, payable.ShippingAmount);
         var amount = merchandise + shipping;
         var gateway = _gateways.Resolve(command.ProviderCode);
-        // مبلغ ارسال checkout در مجموع پرداخت جمع می‌شود؛ تا مدل تخصیص ارسال جدا آماده شود
-        // موقتاً به اولین سفارش Pending افزوده می‌شود تا Σ allocations == amount حفظ شود.
+        // تخصیص فروشنده فقط مبلغ کالا؛ ارسال به باکت StoreShipping (نه اولین فروشنده).
         var allocationRows = pending
-            .Select((x, index) => (
-                x.SellerOrderId,
-                Amount: index == 0 ? x.PayableAmount + shipping : x.PayableAmount))
-            .ToArray();
+            .OrderBy(x => x.SellerOrderId)
+            .Select(x => (PaymentAllocationTargetKind.SellerOrder, x.SellerOrderId, x.PayableAmount))
+            .ToList();
+        if (shipping > 0m)
+        {
+            allocationRows.Add((
+                PaymentAllocationTargetKind.StoreShipping,
+                PaymentAllocation.StoreShippingTargetId,
+                shipping));
+        }
+
         var payment = CustomerPayment.Open(
             payable.CheckoutId,
             amount,
@@ -242,7 +248,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             payment.Currency,
             payment.Status,
             payment.ProviderCode,
-            allocations.Select(x => new PaymentAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency)).ToArray());
+            allocations.Select(x => new PaymentAllocationSnapshot(
+                x.SellerOrderId,
+                x.AllocatedAmount,
+                x.Currency,
+                x.TargetKind)).ToArray());
     }
 
     /// <inheritdoc />
@@ -277,7 +287,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             payment.Currency,
             payment.Status,
             payment.ProviderCode,
-            allocations.Select(x => new PaymentAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency)).ToArray());
+            allocations.Select(x => new PaymentAllocationSnapshot(
+                x.SellerOrderId,
+                x.AllocatedAmount,
+                x.Currency,
+                x.TargetKind)).ToArray());
     }
 
     /// <inheritdoc />

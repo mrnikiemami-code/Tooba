@@ -188,8 +188,8 @@ Displayed checkout payable and initiated payment amount come from Host checkout/
 ### LOCK-SF-009 — Checkout commit / payment initiation is idempotent
 Shipping commit and payment initiation reuse canonical idempotency keys so duplicate submits cannot create duplicate Orders or duplicate payment attempts beyond replay semantics.
 
-### LOCK-SF-010 — Payment success is backend/provider-verified only
-UI must not mark Paid from redirect alone. Success follows Host payment status after gateway/manual verification.
+### LOCK-SF-011 — Marketplace shipping charge attribution
+A customer shipping charge must never be attributed to an arbitrary Seller by collection ordering / first-Seller shortcut. Non-seller shipping uses explicit Store/platform (`StoreShipping`) ownership so payment allocation balance is not achieved by falsifying seller ownership.
 
 ### LOCK-SF-005 — Delivery slot never earlier than calculated minimum
 When delivery date/time selection exists, the customer may choose a later valid slot than the calculated minimum readiness, but must not choose earlier. Minimum is backend-calculated as max(seller preparation days) + method lead days. Frontend must not spoof an earlier date/time.

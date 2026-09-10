@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T003
+TB-P10-T003-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T003-R1 — Payment shipping StoreShipping allocation (no first-seller shortcut); USER_VISUAL_ACCEPTED=NO
 TB-P10-T003 — Storefront Payment (Store-enabled methods, no fake card form, authoritative payable+initiate); USER_VISUAL_ACCEPTED=NO
 TB-P10-T002-R1 — Storefront Shipping multi-seller runtime gate (Scenario E real 2+ sellers); Architect-accepted; USER_VISUAL_ACCEPTED=NO
 TB-P10-T002 — Storefront Shipping (addresses, Store-enabled methods, delivery minimum, /payment handoff); USER_VISUAL_ACCEPTED=NO

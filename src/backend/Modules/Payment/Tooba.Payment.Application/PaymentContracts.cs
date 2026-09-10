@@ -293,7 +293,11 @@ public interface IPaymentAdminDirectory
 /// <summary>
 /// تخصیص خواندنی.
 /// </summary>
-public sealed record PaymentAllocationSnapshot(Guid SellerOrderId, decimal AllocatedAmount, string Currency);
+public sealed record PaymentAllocationSnapshot(
+    Guid SellerOrderId,
+    decimal AllocatedAmount,
+    string Currency,
+    PaymentAllocationTargetKind TargetKind = PaymentAllocationTargetKind.SellerOrder);
 
 /// <summary>
 /// ارکستراسیون پرداخت. مبلغ را از سفارش می‌خواند نه از کلاینت.

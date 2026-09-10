@@ -511,7 +511,11 @@ public sealed record StorefrontPaymentPage(
 /// <summary>
 /// تخصیص نمایشی پرداخت به سفارش فروشنده. تسویه فروشنده نیست.
 /// </summary>
-public sealed record StorefrontPaymentAllocationView(Guid SellerOrderId, decimal AllocatedAmount, string Currency);
+public sealed record StorefrontPaymentAllocationView(
+    Guid SellerOrderId,
+    decimal AllocatedAmount,
+    string Currency,
+    string TargetKind);
 
 /// <summary>
 /// تکمیل sandbox/dev. Outcome موفقیت درگاه نیست؛ Host هنوز Verify می‌کند.

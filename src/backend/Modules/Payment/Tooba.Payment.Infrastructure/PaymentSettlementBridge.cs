@@ -39,6 +39,7 @@ public sealed class PaymentSettlementBridge : IPaymentSettlementReader
             .Where(x => x.PaymentId == paymentId)
             .ToListAsync(cancellationToken);
         return allocations
+            .Where(x => x.TargetKind == PaymentAllocationTargetKind.SellerOrder)
             .Select(x => new PaymentSettlementAllocationSnapshot(x.SellerOrderId, x.AllocatedAmount, x.Currency))
             .ToArray();
     }

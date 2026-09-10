@@ -305,7 +305,11 @@ public sealed class StorefrontPaymentComposer
             payment.Status.ToString(),
             payment.ProviderCode,
             payment.Allocations
-                .Select(x => new StorefrontPaymentAllocationView(x.SellerOrderId, x.AllocatedAmount, x.Currency))
+                .Select(x => new StorefrontPaymentAllocationView(
+                    x.SellerOrderId,
+                    x.AllocatedAmount,
+                    x.Currency,
+                    x.TargetKind.ToString()))
                 .ToArray());
     }
 

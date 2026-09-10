@@ -87,6 +87,8 @@ public sealed class PaymentDbContext : DbContext
             entity.Property(x => x.AllocationId).ValueGeneratedNever();
             entity.Property(x => x.Currency).HasMaxLength(8);
             entity.Property(x => x.AllocatedAmount).HasPrecision(19, 4);
+            entity.Property(x => x.TargetKind).HasConversion<string>().HasMaxLength(32);
+            entity.HasIndex(x => new { x.PaymentId, x.TargetKind, x.SellerOrderId });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
         modelBuilder.Entity<PaymentWebhookInboxRecord>(entity =>

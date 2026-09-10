@@ -80,10 +80,29 @@ public enum PaymentAttemptStatus
 }
 
 /// <summary>
-/// تخصیص مبلغ یک پرداخت مشتری روی سفارش فروشنده. تسویه/پayout نیست.
+/// هدف مالی تخصیص پرداخت. فروشنده و هزینهٔ ارسال فروشگاه را قاطی نمی‌کند.
+/// </summary>
+public enum PaymentAllocationTargetKind
+{
+    /// <summary>سهم سفارش فروشنده.</summary>
+    SellerOrder = 0,
+
+    /// <summary>
+    /// هزینهٔ ارسال متعلق به Store/platform؛ به SellerOrder نسبت داده نمی‌شود.
+    /// </summary>
+    StoreShipping = 1,
+}
+
+/// <summary>
+/// تخصیص مبلغ یک پرداخت مشتری روی سفارش فروشنده یا هزینهٔ ارسال Store. تسویه/payout نیست.
 /// </summary>
 public sealed class PaymentAllocation
 {
+    /// <summary>
+    /// شناسهٔ پایدار هدف StoreShipping (نه SellerOrder).
+    /// </summary>
+    public static readonly Guid StoreShippingTargetId = Guid.Parse("00000000-0000-7000-9000-00000000a11c");
+
     /// <summary>
     /// سازندهٔ EF.
     /// </summary>
@@ -102,7 +121,12 @@ public sealed class PaymentAllocation
     public Guid PaymentId { get; init; }
 
     /// <summary>
-    /// سفارش فروشنده؛ FK به schema سفارش نیست.
+    /// نوع هدف تخصیص.
+    /// </summary>
+    public PaymentAllocationTargetKind TargetKind { get; init; }
+
+    /// <summary>
+    /// سفارش فروشنده وقتی TargetKind=SellerOrder؛ برای StoreShipping همان StoreShippingTargetId.
     /// </summary>
     public Guid SellerOrderId { get; init; }
 
@@ -117,20 +141,53 @@ public sealed class PaymentAllocation
     public string Currency { get; init; } = string.Empty;
 
     /// <summary>
-    /// تخصیص را می‌سازد.
+    /// آیا این تخصیص متعلق به SellerOrder است؟
+    /// </summary>
+    public bool IsSellerOrder => TargetKind == PaymentAllocationTargetKind.SellerOrder;
+
+    /// <summary>
+    /// تخصیص فروشنده را می‌سازد.
     /// </summary>
     public static PaymentAllocation Create(Guid paymentId, Guid sellerOrderId, decimal amount, string currency)
+        => Create(paymentId, PaymentAllocationTargetKind.SellerOrder, sellerOrderId, amount, currency);
+
+    /// <summary>
+    /// تخصیص هزینهٔ ارسال Store را می‌سازد.
+    /// </summary>
+    public static PaymentAllocation CreateStoreShipping(Guid paymentId, decimal amount, string currency)
+        => Create(paymentId, PaymentAllocationTargetKind.StoreShipping, StoreShippingTargetId, amount, currency);
+
+    /// <summary>
+    /// تخصیص را می‌سازد.
+    /// </summary>
+    public static PaymentAllocation Create(
+        Guid paymentId,
+        PaymentAllocationTargetKind targetKind,
+        Guid targetId,
+        decimal amount,
+        string currency)
     {
         if (amount <= 0)
         {
             throw new InvalidOperationException("تخصیص پرداخت باید مبلغ مثبت داشته باشد.");
         }
 
+        if (targetKind == PaymentAllocationTargetKind.SellerOrder && targetId == Guid.Empty)
+        {
+            throw new InvalidOperationException("تخصیص فروشنده بدون SellerOrderId ساخته نمی‌شود.");
+        }
+
+        if (targetKind == PaymentAllocationTargetKind.StoreShipping && targetId != StoreShippingTargetId)
+        {
+            throw new InvalidOperationException("هدف StoreShipping باید شناسهٔ پایدار Store باشد.");
+        }
+
         return new PaymentAllocation
         {
             AllocationId = Guid.NewGuid(),
             PaymentId = paymentId,
-            SellerOrderId = sellerOrderId,
+            TargetKind = targetKind,
+            SellerOrderId = targetId,
             AllocatedAmount = amount,
             Currency = currency,
         };
@@ -334,6 +391,29 @@ public sealed class CustomerPayment : IHasDomainEvents
         string idempotencyKey,
         IReadOnlyList<(Guid SellerOrderId, decimal Amount)> allocations,
         DateTimeOffset at)
+        => Open(
+            checkoutId,
+            amount,
+            currency,
+            providerCode,
+            idempotencyKey,
+            allocations
+                .Select(x => (PaymentAllocationTargetKind.SellerOrder, x.SellerOrderId, x.Amount))
+                .ToArray(),
+            at);
+
+    /// <summary>
+    /// پرداخت را از تصویر سفارش می‌سازد. مبلغ ورودی مشتری پذیرفته نمی‌شود.
+    /// تخصیص‌ها می‌توانند SellerOrder یا StoreShipping باشند؛ جمع باید برابر مبلغ باشد.
+    /// </summary>
+    public static CustomerPayment Open(
+        Guid checkoutId,
+        decimal amount,
+        string currency,
+        string providerCode,
+        string idempotencyKey,
+        IReadOnlyList<(PaymentAllocationTargetKind TargetKind, Guid TargetId, decimal Amount)> allocations,
+        DateTimeOffset at)
     {
         if (amount <= 0)
         {
@@ -342,17 +422,22 @@ public sealed class CustomerPayment : IHasDomainEvents
 
         if (allocations.Count == 0)
         {
-            throw new InvalidOperationException("پرداخت بدون تخصیص فروشنده ساخته نمی‌شود.");
+            throw new InvalidOperationException("پرداخت بدون تخصیص ساخته نمی‌شود.");
         }
 
         if (allocations.Sum(x => x.Amount) != amount)
         {
-            throw new InvalidOperationException("جمع تخصیص فروشنده‌ها باید دقیقاً برابر مبلغ پرداخت باشد.");
+            throw new InvalidOperationException("جمع تخصیص‌ها باید دقیقاً برابر مبلغ پرداخت باشد.");
         }
 
         if (allocations.Any(x => x.Amount <= 0))
         {
-            throw new InvalidOperationException("تخصیص فروشنده نمی‌تواند صفر یا منفی باشد.");
+            throw new InvalidOperationException("تخصیص نمی‌تواند صفر یا منفی باشد.");
+        }
+
+        if (!allocations.Any(x => x.TargetKind == PaymentAllocationTargetKind.SellerOrder))
+        {
+            throw new InvalidOperationException("پرداخت بدون تخصیص فروشنده ساخته نمی‌شود.");
         }
 
         var payment = new CustomerPayment
@@ -369,7 +454,12 @@ public sealed class CustomerPayment : IHasDomainEvents
         };
         foreach (var row in allocations)
         {
-            payment._allocations.Add(PaymentAllocation.Create(payment.PaymentId, row.SellerOrderId, row.Amount, currency));
+            payment._allocations.Add(PaymentAllocation.Create(
+                payment.PaymentId,
+                row.TargetKind,
+                row.TargetId,
+                row.Amount,
+                currency));
         }
 
         payment._domainEvents.Add(new PaymentCreatedDomainEvent(payment.PaymentId, payment.CheckoutId));
@@ -422,7 +512,7 @@ public sealed class CustomerPayment : IHasDomainEvents
             Amount,
             Currency,
             transactionReference,
-            _allocations.Select(x => x.SellerOrderId).ToArray()));
+            _allocations.Where(x => x.IsSellerOrder).Select(x => x.SellerOrderId).ToArray()));
         return true;
     }
 

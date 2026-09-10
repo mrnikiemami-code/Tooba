@@ -1,0 +1,2 @@
+﻿# R1 shipping allocation discovery
+Payment requires sum(allocations)==payable. Prior T003 shortcut added shipping onto first SellerOrder, which settlement accrues as seller credit. Shipping financially owned by Store/platform checkout charge (CheckoutGroup.ShippingAmount), not a Seller. Settlement treats SellerOrder allocation as seller payable — first-seller shortcut would inflate Seller #1. No prior OrderCharge allocation existed. Minimal addition: PaymentAllocationTargetKind.StoreShipping with stable StoreShippingTargetId; settlement reader returns SellerOrder only.
