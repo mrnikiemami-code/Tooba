@@ -37,6 +37,17 @@ public sealed class StorefrontShippingCalculatorTests
     }
 
     [Fact]
+    public void Delivery_date_sublabel_is_jalali_persian_digits()
+    {
+        // 2026-09-14 Gregorian ≈ 1405/06/23 Jalali
+        var label = StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(new DateOnly(2026, 9, 14));
+        Assert.Contains("۱۴۰۵", label);
+        Assert.DoesNotContain("2026", label);
+        Assert.Equal("امروز", StorefrontShippingCalculator.FormatDeliveryDateLabelFa(new DateOnly(2026, 9, 14), new DateOnly(2026, 9, 14)));
+        Assert.Equal("فردا", StorefrontShippingCalculator.FormatDeliveryDateLabelFa(new DateOnly(2026, 9, 15), new DateOnly(2026, 9, 14)));
+    }
+
+    [Fact]
     public void Forged_earlier_delivery_is_rejected_later_accepted()
     {
         var min = new DateOnly(2026, 9, 12);

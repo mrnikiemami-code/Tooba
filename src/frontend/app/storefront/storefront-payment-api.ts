@@ -247,8 +247,13 @@ export function mapStorefrontPayment(payload: unknown): StorefrontPaymentPage | 
   };
 }
 
-function paymentIdempotencyKey(checkoutId: string): string {
-  const scoped = `${PAYMENT_IDEMPOTENCY_KEY}.${checkoutId}`;
+/**
+ * کلید idempotency را به‌ازای checkout + روش پرداخت نگه می‌دارد.
+ * تعویض gateway ↔ manual ↔ wallet نباید پرداخت قبلی را replay کند.
+ */
+function paymentIdempotencyKey(checkoutId: string, providerCode: string): string {
+  const provider = providerCode.trim().toLowerCase() || "gateway";
+  const scoped = `${PAYMENT_IDEMPOTENCY_KEY}.${checkoutId}.${provider}`;
   const existing = window.sessionStorage.getItem(scoped);
   if (existing) {
     return existing;
@@ -325,21 +330,19 @@ export async function startStorefrontPayment(
   if (!session.cartId) {
     throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای شروع پرداخت پیدا نشد.");
   }
-  const providerCode = options?.providerCode?.trim();
+  const providerCode = options?.providerCode?.trim() || "gateway";
   const body: Record<string, string | boolean> = {
     cartId: session.cartId,
-    idempotencyKey: paymentIdempotencyKey(checkoutId),
+    idempotencyKey: paymentIdempotencyKey(checkoutId, providerCode),
+    providerCode,
   };
-  if (providerCode) {
-    body.providerCode = providerCode;
-    if (providerCode.toLowerCase() === WALLET_PROVIDER_CODE) {
-      body.useWallet = true;
-    }
+  if (providerCode.toLowerCase() === WALLET_PROVIDER_CODE) {
+    body.useWallet = true;
   }
   const response = await fetch(`/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/payments`, {
     method: "POST",
     cache: "no-store",
-    headers: providerCode?.toLowerCase() === WALLET_PROVIDER_CODE ? storefrontActorHeaders() : cartHeaders(),
+    headers: providerCode.toLowerCase() === WALLET_PROVIDER_CODE ? storefrontActorHeaders() : cartHeaders(),
     body: JSON.stringify(body),
   });
   const payload = await parseJson(response);

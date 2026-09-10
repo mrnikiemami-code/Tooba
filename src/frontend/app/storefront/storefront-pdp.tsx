@@ -19,7 +19,7 @@ import {
   Star,
   Truck,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
 import { formatOfferAmount, loadStorefrontDetail, loadStorefrontQuestions, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
@@ -34,7 +34,7 @@ import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
  */
 export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDetailPage }) {
-  const router = useRouter();
+  const localizePath = useLocalizedPath();
   const [currentDetail, setCurrentDetail] = useState(detail);
   const [qtyText, setQtyText] = useState("1");
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews" | "qa" | "bulk">("intro");
@@ -273,8 +273,8 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                         return;
                       }
                       await addOfferToCart(offer.offerId, qty);
-                      setNote("به سبد زنده اضافه شد.");
-                      router.push("/cart");
+                      setNote(`محصول ${currentDetail.title} به سبد خرید اضافه شد`);
+                      window.location.assign(localizePath("/cart"));
                     } catch (cause) {
                       setNote(toCustomerCartMessage(cause));
                     } finally {

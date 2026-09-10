@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
+import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { Eye, Heart, Share2, ShoppingBag, Sparkles, Star, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -32,6 +34,8 @@ export function StorefrontProductCardView({
 }) {
   const wishlist = useStorefrontWishlist();
   const register = wishlist.register;
+  const router = useRouter();
+  const localizePath = useLocalizedPath();
   const [note, setNote] = useState<string | null>(null);
   const [atcBusy, setAtcBusy] = useState(false);
   const [atcAdded, setAtcAdded] = useState(false);
@@ -45,12 +49,18 @@ export function StorefrontProductCardView({
   const handleShare = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const url = `${window.location.origin}${productHref}`;
+    const url = `${window.location.origin}${localizePath(productHref)}`;
     if (navigator.share) {
       void navigator.share({ title: card.title, url });
       return;
     }
     void navigator.clipboard.writeText(url);
+  };
+
+  const handleViewProduct = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    router.push(localizePath(productHref));
   };
 
   async function handleAddToCart(event: React.MouseEvent) {
@@ -64,7 +74,7 @@ export function StorefrontProductCardView({
     try {
       await addOfferToCart(card.primaryOfferId, 1);
       setAtcAdded(true);
-      toast.success("به سبد اضافه شد", { autoClose: 2200 });
+      toast.success(`محصول ${card.title} به سبد خرید اضافه شد`, { autoClose: 2800 });
       window.setTimeout(() => setAtcAdded(false), 1800);
     } catch (cause) {
       const message = toCustomerCartMessage(cause);
@@ -131,14 +141,14 @@ export function StorefrontProductCardView({
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>
-              <Link
-                href={productHref}
+              <button
+                type="button"
                 aria-label={`مشاهده ${card.title}`}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-gray-600"
-                onClick={(event) => event.stopPropagation()}
+                onClick={handleViewProduct}
               >
                 <Eye className="w-3.5 h-3.5" />
-              </Link>
+              </button>
             </div>
           ) : null}
         </div>

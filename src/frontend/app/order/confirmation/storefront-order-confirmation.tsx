@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CheckCircle, Copy, Home, ShieldCheck, ShoppingBag } from "lucide-react";
 import { formatOfferAmount } from "../../storefront/storefront-api.ts";
@@ -10,7 +10,7 @@ import {
   toCustomerCheckoutMessage,
   type StorefrontCheckoutPage,
 } from "../../storefront/storefront-checkout-api.ts";
-import { bootstrapCartSessionFromQuery } from "../../storefront/storefront-cart-api.ts";
+import { bootstrapCartSessionFromQuery, clearCartSession } from "../../storefront/storefront-cart-api.ts";
 import { StorefrontPaymentMethodPicker } from "../../storefront/storefront-payment-methods.tsx";
 import {
   loadStorefrontPaymentMethods,
@@ -38,6 +38,7 @@ export function StorefrontOrderConfirmation() {
 
 function ConfirmationBody() {
   const params = useSearchParams();
+  const router = useRouter();
   const checkoutId = params.get("checkoutId");
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [quote, setQuote] = useState<StorefrontWalletQuote | null>(null);
@@ -91,6 +92,16 @@ function ConfirmationBody() {
     };
   }, [checkoutId, params]);
 
+  const paid = page?.paymentState === "Paid";
+
+  // فقط بعد از Paid؛ قبل از early-return تا ترتیب Hooks ثابت بماند.
+  useEffect(() => {
+    if (!paid) {
+      return;
+    }
+    clearCartSession();
+  }, [paid]);
+
   if (!page) {
     return (
       <div className="py-16 text-center" data-testid="order-confirmation">
@@ -105,7 +116,6 @@ function ConfirmationBody() {
   const current = page;
   const reference =
     current.sellerOrders.map((order) => order.orderNumber).join("، ") || current.checkoutId || "—";
-  const paid = current.paymentState === "Paid";
 
   async function pay() {
     if (!current.checkoutId) {
@@ -120,10 +130,15 @@ function ConfirmationBody() {
     try {
       const initiated = await startStorefrontPayment(current.checkoutId, {
         providerCode:
-          method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : undefined,
+          method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : "gateway",
       });
       if (requiresProviderRedirect(initiated)) {
-        window.location.assign(initiated.redirectUrl);
+        const redirectUrl = initiated.redirectUrl;
+        if (redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+          router.push(redirectUrl);
+          return;
+        }
+        window.location.assign(redirectUrl);
         return;
       }
       window.location.assign(

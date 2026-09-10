@@ -20,14 +20,25 @@ export function readCartSession(): { cartId: string | null; guestSecret: string 
 }
 
 /**
+ * اعلام تغییر محتوای سبد برای UI (نشان هدر / مینی‌سبد / صفحهٔ سبد).
+ * فقط بعد از جهش واقعی فراخوانی شود — نه بعد از GET معمولی؛ وگرنه حلقهٔ رفرش ساخته می‌شود.
+ */
+export function notifyCartChanged(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new Event(CART_CHANGED_EVENT));
+}
+
+/**
  * پس از ساخت سبد، فقط شناسه و راز را ذخیره می‌کند.
+ * به‌تنهایی رویداد UI شلیک نمی‌کند.
  */
 export function writeCartSession(cartId: string, guestSecret: string | null | undefined): void {
   window.sessionStorage.setItem(CART_ID_KEY, cartId);
   if (guestSecret) {
     window.sessionStorage.setItem(GUEST_SECRET_KEY, guestSecret);
   }
-  window.dispatchEvent(new Event(CART_CHANGED_EVENT));
 }
 
 /**
@@ -47,6 +58,7 @@ export function bootstrapCartSessionFromQuery(params: {
     return false;
   }
   writeCartSession(cartId, guestSecret);
+  notifyCartChanged();
   return true;
 }
 
@@ -56,7 +68,7 @@ export function bootstrapCartSessionFromQuery(params: {
 export function clearCartSession(): void {
   window.sessionStorage.removeItem(CART_ID_KEY);
   window.sessionStorage.removeItem(GUEST_SECRET_KEY);
-  window.dispatchEvent(new Event(CART_CHANGED_EVENT));
+  notifyCartChanged();
 }
 
 /**
@@ -306,6 +318,7 @@ export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
 
 /**
  * Offer انتخاب‌شده را با تعداد به سبد زنده اضافه می‌کند.
+ * نشست سبد فقط بعد از Paid پاک می‌شود، نه اینجا.
  */
 export async function addOfferToCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
   const cart = await ensureStorefrontCart();
@@ -315,7 +328,9 @@ export async function addOfferToCart(offerId: string, quantity: number): Promise
     headers: cartHeaders(cart.version),
     body: JSON.stringify({ offerId, quantity }),
   });
-  return parseCartResponse(response);
+  const next = await parseCartResponse(response);
+  notifyCartChanged();
+  return next;
 }
 
 /**
@@ -329,7 +344,9 @@ export async function changeCartLineQuantity(lineId: string, quantity: number): 
     headers: cartHeaders(cart.version),
     body: JSON.stringify({ quantity }),
   });
-  return parseCartResponse(response);
+  const next = await parseCartResponse(response);
+  notifyCartChanged();
+  return next;
 }
 
 /**
@@ -342,5 +359,7 @@ export async function removeCartLine(lineId: string): Promise<StorefrontCartPage
     cache: "no-store",
     headers: cartHeaders(cart.version),
   });
-  return parseCartResponse(response);
+  const next = await parseCartResponse(response);
+  notifyCartChanged();
+  return next;
 }

@@ -21,6 +21,7 @@ import {
 import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
+  CART_CHANGED_EVENT,
   changeCartLineQuantity,
   loadStorefrontCart,
   removeCartLine,
@@ -66,6 +67,38 @@ export function StorefrontShopeivaCart({
         setCart(null);
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let inflight = false;
+    const refresh = () => {
+      if (inflight) {
+        return;
+      }
+      inflight = true;
+      void loadStorefrontCart()
+        .then((page) => {
+          if (!cancelled) {
+            setCart(page);
+            setError(null);
+            setCouponDiscount(null);
+          }
+        })
+        .catch((cause: unknown) => {
+          if (!cancelled) {
+            setError(toCustomerCartMessage(cause));
+          }
+        })
+        .finally(() => {
+          inflight = false;
+        });
+    };
+    window.addEventListener(CART_CHANGED_EVENT, refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(CART_CHANGED_EVENT, refresh);
+    };
   }, []);
 
   async function applyCoupon() {

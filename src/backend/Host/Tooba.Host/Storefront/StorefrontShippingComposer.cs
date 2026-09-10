@@ -67,31 +67,6 @@ public sealed class StorefrontShippingComposer
         var maxPrep = StorefrontShippingCalculator.MaxSellerPreparationDays(sellerIds, _shippingOptions);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var methods = await LoadEligibleMethodsAsync(cart.SubtotalExclusiveOfTax, provinceName, language, cancellationToken);
-        var selectedCode = string.IsNullOrWhiteSpace(methodCode)
-            ? null
-            : methodCode.Trim().ToLowerInvariant();
-        StorefrontShippingMethodView? selected = methods.FirstOrDefault(m => m.MethodCode == selectedCode);
-        if (selected is null && selectedCode is not null)
-        {
-            // روش جعلی/غیرفعال: قیمت و حداقل را از کلاینت قبول نمی‌کنیم.
-            selected = null;
-        }
-
-        DateOnly? minDate = selected is null
-            ? null
-            : StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, selected.LeadDays);
-        var dates = minDate is DateOnly min
-            ? StorefrontShippingCalculator.BuildDeliveryDates(min, _shippingOptions.DeliveryHorizonDays)
-                .Select(d => new StorefrontDeliveryDateOption(
-                    d.ToString("yyyy-MM-dd"),
-                    FormatFaDateLabel(d, today),
-                    FormatFaDateSub(d),
-                    d == min))
-                .ToList()
-            : [];
-        var timeWindows = StorefrontShippingCalculator.DayTimeWindows
-            .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
-            .ToList();
 
         var draft = await LoadDraftAsync(cart.CartId, guestSecret, cancellationToken);
         var revalidationMessage = (string?)null;
@@ -109,6 +84,29 @@ public sealed class StorefrontShippingComposer
                 draft = null;
             }
         }
+
+        var selectedCode = !string.IsNullOrWhiteSpace(methodCode)
+            ? methodCode.Trim().ToLowerInvariant()
+            : draft?.ShippingMethodCode?.Trim().ToLowerInvariant();
+        StorefrontShippingMethodView? selected = methods.FirstOrDefault(m =>
+            selectedCode is not null
+            && string.Equals(m.MethodCode, selectedCode, StringComparison.OrdinalIgnoreCase));
+
+        DateOnly? minDate = selected is null
+            ? null
+            : StorefrontShippingCalculator.ComputeMinimumDeliveryDate(today, maxPrep, selected.LeadDays);
+        var dates = minDate is DateOnly min
+            ? StorefrontShippingCalculator.BuildDeliveryDates(min, _shippingOptions.DeliveryHorizonDays)
+                .Select(d => new StorefrontDeliveryDateOption(
+                    d.ToString("yyyy-MM-dd"),
+                    StorefrontShippingCalculator.FormatDeliveryDateLabelFa(d, today),
+                    StorefrontShippingCalculator.FormatDeliveryDateSubLabelFa(d),
+                    d == min))
+                .ToList()
+            : [];
+        var timeWindows = StorefrontShippingCalculator.DayTimeWindows
+            .Select(t => new StorefrontDeliveryTimeOption(t.Value, t.LabelFa))
+            .ToList();
 
         return new StorefrontShippingProjection(
             cart.CartId,
@@ -389,7 +387,14 @@ public sealed class StorefrontShippingComposer
             price,
             rate.LeadDays,
             price == 0m,
-            rate.LeadDays == 0 ? "آماده امروز" : $"حدود {ToPersianDigits(rate.LeadDays)} روز"));
+            rate.LeadDays == 0 ? "آماده امروز" : $"حدود {ToPersianLeadDays(rate.LeadDays)} روز"));
+    }
+
+    private static string ToPersianLeadDays(int days)
+    {
+        var raw = Math.Max(0, days).ToString();
+        var chars = raw.Select(c => c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c).ToArray();
+        return new string(chars);
     }
 
     private async Task<StorefrontCartPage> RequireCartAsync(Guid cartId, string? guestSecret, CancellationToken cancellationToken)
@@ -488,27 +493,4 @@ public sealed class StorefrontShippingComposer
             draft.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
             draft.SelectedDeliveryTimeWindow,
             draft.CustomerNote);
-
-    private static string FormatFaDateLabel(DateOnly date, DateOnly today)
-    {
-        var delta = date.DayNumber - today.DayNumber;
-        return delta switch
-        {
-            0 => "امروز",
-            1 => "فردا",
-            2 => "پس‌فردا",
-            _ => FormatFaDateSub(date),
-        };
-    }
-
-    private static string FormatFaDateSub(DateOnly date) =>
-        ToPersianDigits($"{date.Month}/{date.Day}");
-
-    private static string ToPersianDigits(int n) => ToPersianDigits(n.ToString());
-
-    private static string ToPersianDigits(string input)
-    {
-        var chars = input.Select(c => c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c).ToArray();
-        return new string(chars);
-    }
 }

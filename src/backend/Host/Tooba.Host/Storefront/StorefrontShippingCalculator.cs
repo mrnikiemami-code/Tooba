@@ -107,6 +107,48 @@ public static class StorefrontShippingCalculator
         return Enumerable.Range(0, days).Select(offset => minimum.AddDays(offset)).ToArray();
     }
 
+    /// <summary>برچسب نسبی فارسی برای روز نسبت به امروز تقویمی.</summary>
+    public static string FormatDeliveryDateLabelFa(DateOnly date, DateOnly today)
+    {
+        var delta = date.DayNumber - today.DayNumber;
+        return delta switch
+        {
+            0 => "امروز",
+            1 => "فردا",
+            2 => "پس‌فردا",
+            _ => PersianWeekdayName(date.DayOfWeek),
+        };
+    }
+
+    /// <summary>زیرنویس جلالی با ارقام فارسی — API value همچنان yyyy-MM-dd میلادی است.</summary>
+    public static string FormatDeliveryDateSubLabelFa(DateOnly date)
+    {
+        var calendar = new System.Globalization.PersianCalendar();
+        var dt = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var year = calendar.GetYear(dt);
+        var month = calendar.GetMonth(dt);
+        var day = calendar.GetDayOfMonth(dt);
+        return ToPersianDigits($"{year}/{month}/{day}");
+    }
+
+    private static string PersianWeekdayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Saturday => "شنبه",
+        DayOfWeek.Sunday => "یکشنبه",
+        DayOfWeek.Monday => "دوشنبه",
+        DayOfWeek.Tuesday => "سه‌شنبه",
+        DayOfWeek.Wednesday => "چهارشنبه",
+        DayOfWeek.Thursday => "پنجشنبه",
+        DayOfWeek.Friday => "جمعه",
+        _ => "—",
+    };
+
+    private static string ToPersianDigits(string input)
+    {
+        var chars = input.Select(c => c is >= '0' and <= '9' ? (char)('۰' + (c - '0')) : c).ToArray();
+        return new string(chars);
+    }
+
     /// <summary>رد تاریخ زودتر از حداقل.</summary>
     public static void EnsureDeliveryNotEarlier(DateOnly selected, DateOnly minimum)
     {

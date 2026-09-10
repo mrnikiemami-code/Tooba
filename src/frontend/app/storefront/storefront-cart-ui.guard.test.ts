@@ -15,6 +15,7 @@ test("product card ATC is a real button wired to addOfferToCart", () => {
   assert.match(cardSource, /data-testid="product-card-atc"/);
   assert.match(cardSource, /addOfferToCart\(card\.primaryOfferId/);
   assert.match(cardSource, /from "react-toastify"/);
+  assert.match(cardSource, /محصول \$\{card\.title\} به سبد خرید اضافه شد/);
   assert.match(cardSource, /اضافه شد/);
   assert.match(cardSource, /#2563EB/);
   assert.doesNotMatch(cardSource, /#E53935/);
@@ -36,7 +37,8 @@ test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {
   assert.match(miniCartSource, /removeCartLine/);
   assert.match(miniCartSource, /loadStorefrontCart/);
   assert.match(miniCartSource, /تکمیل خرید/);
-  assert.match(miniCartSource, /href="\/cart"/);
+  assert.match(miniCartSource, /localizePath\("\/cart"\)/);
+  assert.match(miniCartSource, /data-testid="mini-cart-checkout-cta"/);
   assert.match(miniCartSource, /max-w-sm/);
   assert.match(miniCartSource, /#2563EB/);
 });
@@ -49,4 +51,6 @@ test("cart page recommendations use live feed cards with working ATC reuse", () 
   assert.match(cartPageSource, /featuredProducts/);
   assert.match(cartSource, /cart-shipping-honest/);
   assert.match(cartSource, /ارسال رایگان یا نرخ چندحامل جعلی/);
+  assert.match(cartSource, /CART_CHANGED_EVENT/);
+  assert.match(cartSource, /addEventListener\(CART_CHANGED_EVENT/);
 });

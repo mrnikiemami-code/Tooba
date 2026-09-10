@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { formatOfferAmount } from "../../storefront/storefront-api.ts";
+import { clearCartSession } from "../../storefront/storefront-cart-api.ts";
 import { loadStorefrontCheckout, type StorefrontCheckoutPage } from "../../storefront/storefront-checkout-api.ts";
 import {
   loadStorefrontPayment,
@@ -70,6 +71,14 @@ function ResultBody() {
   const paid = checkout?.paymentState === "Paid";
   const failed = payment?.status === "Failed" || payment?.status === "Cancelled";
   const pending = !paid && !failed;
+
+  useEffect(() => {
+    if (!paid) {
+      return;
+    }
+    // پس از Paid، نشست سبد مهمان را پاک می‌کنیم تا نشان هدر و /cart خالی شوند.
+    clearCartSession();
+  }, [paid]);
 
   return (
     <div className="py-10 max-w-lg mx-auto space-y-4">

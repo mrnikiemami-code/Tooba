@@ -2,7 +2,7 @@
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { formatOfferAmount } from "../storefront/storefront-api.ts";
 import {
@@ -29,6 +29,7 @@ import {
  */
 export function StorefrontPaymentHandoff() {
   const params = useSearchParams();
+  const router = useRouter();
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [quote, setQuote] = useState<StorefrontWalletQuote | null>(null);
   const [enabledCodes, setEnabledCodes] = useState<string[]>([]);
@@ -103,7 +104,14 @@ export function StorefrontPaymentHandoff() {
           method === "wallet" ? WALLET_PROVIDER_CODE : method === "manual" ? "manual" : "gateway",
       });
       if (requiresProviderRedirect(initiated)) {
-        window.location.assign(initiated.redirectUrl);
+        // مسیر داخلی (sandbox): push تا Back مرورگر به /payment برگردد.
+        // درگاه خارجی: assign کامل لازم است.
+        const redirectUrl = initiated.redirectUrl;
+        if (redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+          router.push(redirectUrl);
+          return;
+        }
+        window.location.assign(redirectUrl);
         return;
       }
       const awaiting =

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { StorefrontCartApiError, addOfferToCart } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
@@ -10,7 +10,7 @@ import type { StorefrontProductDetailPage } from "./storefront-model.ts";
  * جعبه خرید PDP. جهش Cart را جعل نمی‌کند و تا API سبد فقط آمادهٔ اتصال است.
  */
 export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPage }) {
-  const router = useRouter();
+  const localizePath = useLocalizedPath();
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const offer = detail.primaryOffer;
@@ -39,7 +39,8 @@ export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPa
             setNote(null);
             try {
               await addOfferToCart(offer.offerId, 1);
-              router.push("/cart");
+              setNote(`محصول ${detail.title} به سبد خرید اضافه شد`);
+              window.location.assign(localizePath("/cart"));
             } catch (cause) {
               setNote(cause instanceof StorefrontCartApiError ? cause.detail ?? cause.message : "افزودن به سبد شکست خورد.");
             } finally {

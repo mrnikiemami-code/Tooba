@@ -68,8 +68,11 @@ function SandboxBody() {
           شبیه‌سازی پرداخت ناموفق
         </button>
         <p className="text-center">
-          <Link href={checkoutId ? `/order/confirmation?checkoutId=${checkoutId}` : "/cart"} className="text-[#2563EB] text-xs">
-            بازگشت
+          <Link
+            href={checkoutId ? `/payment?checkoutId=${encodeURIComponent(checkoutId)}` : "/payment"}
+            className="text-[#2563EB] text-xs"
+          >
+            بازگشت به پرداخت
           </Link>
         </p>
       </div>

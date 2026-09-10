@@ -24,6 +24,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
+import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { readCartSession } from "./storefront-cart-api.ts";
 import {
@@ -62,6 +63,20 @@ const emptyAddress: AddressForm = {
 
 function toPersianDigits(n: string | number): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]!);
+}
+
+/** برچسب نمایشی تاریخ تحویل — جلالی؛ value API همچنان میلادی می‌ماند. */
+function deliveryDateUi(isoDate: string): { label: string; subLabel: string } {
+  const subLabel = formatJalaliDate(`${isoDate}T12:00:00`, "fa");
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const selected = Date.parse(`${isoDate}T12:00:00Z`);
+  const today = Date.parse(`${todayIso}T12:00:00Z`);
+  if (!Number.isFinite(selected) || !Number.isFinite(today)) {
+    return { label: subLabel, subLabel };
+  }
+  const delta = Math.round((selected - today) / 86_400_000);
+  const label = delta === 0 ? "امروز" : delta === 1 ? "فردا" : delta === 2 ? "پس‌فردا" : subLabel;
+  return { label, subLabel };
 }
 
 function iconFor(method: StorefrontShippingMethod) {
@@ -107,6 +122,14 @@ export function StorefrontShopeivaShipping() {
     if (page.revalidationMessage) {
       setError(page.revalidationMessage);
     }
+
+    const clampDate = (candidate: string | null | undefined) => {
+      const min = page.minimumDeliveryDate;
+      if (!min) return candidate ?? "";
+      if (!candidate || candidate < min) return min;
+      return candidate;
+    };
+
     if (page.draft) {
       setAddress({
         recipientName: page.draft.recipientName,
@@ -118,17 +141,18 @@ export function StorefrontShopeivaShipping() {
       });
       setSavedAddressId(page.draft.savedAddressId);
       setUseSavedAddress(Boolean(page.draft.savedAddressId));
-      setMethodCode(page.draft.shippingMethodCode);
-      setDeliveryDate(page.draft.selectedDeliveryDate ?? "");
+      setMethodCode(page.selectedMethodCode ?? page.draft.shippingMethodCode);
+      setDeliveryDate(clampDate(page.draft.selectedDeliveryDate));
       setDeliveryTime(page.draft.selectedDeliveryTimeWindow ?? "");
       setNotes(page.draft.customerNote ?? "");
     } else if (method) {
       setMethodCode(method);
-      if (page.minimumDeliveryDate && (!deliveryDate || deliveryDate < page.minimumDeliveryDate)) {
-        setDeliveryDate(page.minimumDeliveryDate);
-      }
+      setDeliveryDate((prev) => clampDate(prev));
+    } else if (page.selectedMethodCode) {
+      setMethodCode(page.selectedMethodCode);
+      setDeliveryDate((prev) => clampDate(prev));
     }
-  }, [deliveryDate]);
+  }, []);
 
   useEffect(() => {
     void refreshProjection().catch((cause: unknown) => setError(toCustomerShippingMessage(cause)));
@@ -515,29 +539,55 @@ export function StorefrontShopeivaShipping() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2 pr-1">تاریخ تحویل</label>
-                    <div className="flex flex-wrap gap-2">
-                      {projection.deliveryDates.map((d) => {
-                        const disabled = Boolean(projection.minimumDeliveryDate && d.value < projection.minimumDeliveryDate);
-                        const selected = deliveryDate === d.value;
-                        return (
-                          <button
-                            key={d.value}
-                            type="button"
-                            disabled={disabled}
-                            onClick={() => setDeliveryDate(d.value)}
-                            className={`flex-1 min-w-[5.5rem] text-center p-3 rounded-2xl border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                              selected
-                                ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]"
-                                : "border-gray-200 text-gray-500 bg-gray-50"
-                            }`}
-                            data-testid={`shipping-date-${d.value}`}
-                          >
-                            <p className="text-xs md:text-sm font-bold">{d.label}</p>
-                            <p className="text-[10px] md:text-xs opacity-70">{d.subLabel}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {projection.deliveryDates.length === 0 ? (
+                      <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-3">
+                        ابتدا روش ارسال را انتخاب کنید تا نزدیک‌ترین تاریخ مجاز فروشگاه نمایش داده شود.
+                      </p>
+                    ) : (
+                      <>
+                        {projection.minimumDeliveryDate ? (
+                          <p className="text-[11px] text-gray-500 mb-2">
+                            زودتر از{" "}
+                            <span className="font-bold text-gray-700">
+                              {formatJalaliDate(`${projection.minimumDeliveryDate}T12:00:00`, "fa")}
+                            </span>{" "}
+                            قابل انتخاب نیست.
+                          </p>
+                        ) : null}
+                        <div className="flex flex-wrap gap-2">
+                          {projection.deliveryDates.map((d) => {
+                            const disabled = Boolean(
+                              projection.minimumDeliveryDate && d.value < projection.minimumDeliveryDate,
+                            );
+                            const selected = deliveryDate === d.value;
+                            const ui = deliveryDateUi(d.value);
+                            return (
+                              <button
+                                key={d.value}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => {
+                                  if (disabled) return;
+                                  setDeliveryDate(d.value);
+                                }}
+                                title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : ui.subLabel}
+                                className={`flex-1 min-w-[5.5rem] text-center p-3 rounded-2xl border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                                  selected
+                                    ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]"
+                                    : "border-gray-200 text-gray-500 bg-gray-50"
+                                }`}
+                                data-testid={`shipping-date-${d.value}`}
+                              >
+                                <p className="text-xs md:text-sm font-bold">{ui.label}</p>
+                                <p className="text-[10px] md:text-xs opacity-70" dir="ltr">
+                                  {ui.subLabel}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2 pr-1">ساعت تحویل</label>
