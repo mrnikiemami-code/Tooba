@@ -720,6 +720,17 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
             </div>
           </section>
 
+          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-3 py-2.5">
+              <div>
+                <h2 className="text-sm font-black text-gray-900">سابقه پرداخت‌ها / واریزها</h2>
+              </div>
+            </div>
+            <div className="p-2 [&_.ag-root-wrapper]:min-h-[140px]">
+              <AppDataGrid {...historyGridProps} />
+            </div>
+          </section>
+
           <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" data-testid="admin-order-history-section">
             <div className="border-b border-gray-200 px-3 py-2.5">
               <h2 className="text-sm font-black text-gray-900">تاریخچه عملیات</h2>
@@ -738,18 +749,6 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                   مشاهده بیشتر
                 </button>
               ) : null}
-            </div>
-          </section>
-
-          <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-3 py-2.5">
-              <div>
-                <h2 className="text-sm font-black text-gray-900">سابقه پرداخت‌ها / واریزها</h2>
-                <p className="text-xs text-gray-500">رویدادهای مالی واقعی checkout</p>
-              </div>
-            </div>
-            <div className="p-2 [&_.ag-root-wrapper]:min-h-[140px]">
-              <AppDataGrid {...historyGridProps} />
             </div>
           </section>
         </div>
