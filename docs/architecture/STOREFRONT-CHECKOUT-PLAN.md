@@ -45,7 +45,7 @@ Cart → Shipping → Payment → Order final technical gate:
 - FA/EN shell smoke; visual smoke without marking USER_VISUAL_ACCEPTED
 - Focused Host/FE suites green
 
-## T004-R2 — Payment completion repair (IMPLEMENTED — THIS TASK)
+## T004-R2 — Payment completion repair (IMPLEMENTED)
 
 P10 final payment-completion repair (not T005):
 
@@ -54,6 +54,10 @@ P10 final payment-completion repair (not T005):
 - Manual submit stays Pending until Admin confirm/reject
 - Converted cart presents empty lines so completed checkout cannot reuse cart for a second Order
 - Order result with human order number + مشاهده سفارش
+
+## T004-R3 — Payment completion runtime proof (IMPLEMENTED — THIS TASK)
+
+Runtime A–J proof of R2 payment completion. Minimal defect: checkout GetAsync must not treat Converted empty cart as checkout.cart.empty so payment initiate/result still work. Not T005.
 
 ## Non-goals for T004
 

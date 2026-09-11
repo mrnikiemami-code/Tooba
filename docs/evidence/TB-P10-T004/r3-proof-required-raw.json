@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "requirement": "Required",
+  "missingProofStatus": 400,
+  "missingCode": "payment.proof.required",
+  "uploadStatus": 200,
+  "mediaAssetId": "01a08f13-3582-7000-b8c4-27f553135159",
+  "submitStatus": "Pending",
+  "checkoutId": "01a08f13-338b-7000-8bd0-08320896076c",
+  "paymentId": "70e18266-7fdd-41fa-9604-88df997afd6b"
+}

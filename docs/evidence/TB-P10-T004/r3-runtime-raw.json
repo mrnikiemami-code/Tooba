@@ -1,0 +1,149 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "runtime-ready",
+      "ok": true,
+      "proofRequirement": "Optional",
+      "hostHealth": true
+    },
+    {
+      "name": "auth-ready",
+      "ok": true,
+      "aUserId": "01a08f12-026c-7000-bb9b-68f2b68322e8",
+      "bUserId": "01a08f12-02dc-7000-a58a-0f06b62af83e"
+    },
+    {
+      "name": "A-sandbox-success",
+      "ok": true,
+      "checkoutId": "01a08f12-0535-7000-aa77-0268cdb0dfbd",
+      "paymentId": "2856bf30-85c4-4f4f-9d33-785018f99e5e",
+      "orderNumber": "TB-20260911060518-01-0c895a",
+      "payable": 201088,
+      "paymentAmount": 201088,
+      "cartEmpty": true,
+      "redirect": "/payment/sandbox?paymentId=2856bf30-85c4-4f4f-9d33-785018f99e5e&attemptId=295b8981-2378-479a-a162-cacde94a34bd&ref=fake-2856bf3085c44f4f9d33785018f99e5e-4c6485c2b30c4d9d8b0f13253daab234&checkoutId=01a08f12-0535-7000-aa77-0268cdb0dfbd",
+      "refreshStillSucceeded": "Succeeded",
+      "orderLink": 200,
+      "feResult": 200
+    },
+    {
+      "name": "B-sandbox-failure-retry",
+      "ok": true,
+      "checkoutId": "01a08f12-1d5c-7000-9d67-c263f6558cae",
+      "paymentId": "b5b4f5a2-a4e1-4b47-93ca-19b295997418",
+      "attempt1": "2242db12-a544-477e-aa25-df99b9acea7f",
+      "attempt2": "40035490-555c-4e3b-b839-b08590130cf3",
+      "samePayment": true,
+      "failStatus": "Failed",
+      "retryStatus": "Succeeded",
+      "feFail": 200
+    },
+    {
+      "name": "C-manual-tracking",
+      "ok": true,
+      "checkoutId": "01a08f12-2698-7000-9d06-7453592b2b0c",
+      "paymentId": "1e00d91e-c67b-4068-a590-5155c6f2277e",
+      "missingStatus": 400,
+      "orderNumber": "TB-20260911060526-01-72f9ea"
+    },
+    {
+      "name": "E-admin-confirm",
+      "ok": true,
+      "confirmStatus": 200,
+      "confirmBody": "Succeeded",
+      "hasTrackingInAdmin": true,
+      "checkoutId": "01a08f12-2698-7000-9d06-7453592b2b0c"
+    },
+    {
+      "name": "F-admin-reject-retry",
+      "ok": true,
+      "checkoutId": "01a08f12-304c-7000-8cdc-ab681d499007",
+      "paymentId": "d49dc5e4-b352-4504-9d9e-c42fdaa76d9e",
+      "historyRefs": [
+        "TRK-R3-F-OLD",
+        "TRK-R3-F-NEW"
+      ]
+    },
+    {
+      "name": "G-guest",
+      "ok": true,
+      "checkoutId": "01a08f12-3208-7000-a208-b5f32e078dc7",
+      "paymentId": "dab3129d-09eb-4b08-b7a2-6ddcbf76d7b4",
+      "wrongStatus": 401
+    },
+    {
+      "name": "H-authenticated",
+      "ok": true,
+      "own": 200,
+      "foreign": 404,
+      "foreignPay": 401,
+      "feOrder": 200
+    },
+    {
+      "name": "I-security-foreign-media",
+      "ok": true,
+      "status": 403,
+      "code": "payment.proof.foreign",
+      "checkoutId": "01a08f12-34c6-7000-9e55-26eb148a08c1"
+    },
+    {
+      "name": "J-financial",
+      "ok": true,
+      "payable": 201088,
+      "paymentAmount": 201088,
+      "allocSum": 201088,
+      "shipping": 200000,
+      "shippingAllocCount": 1
+    },
+    {
+      "name": "visual-smoke-http",
+      "ok": true,
+      "adminStatus": 200,
+      "sandboxHasCardFields": false
+    }
+  ],
+  "secretsOmitted": true,
+  "at": "2026-09-11T06:05:17.248Z",
+  "A": {
+    "checkoutId": "01a08f12-0535-7000-aa77-0268cdb0dfbd",
+    "paymentId": "2856bf30-85c4-4f4f-9d33-785018f99e5e",
+    "payable": 201088,
+    "orderNumber": "TB-20260911060518-01-0c895a",
+    "cartId": "01a08f12-048f-7000-b6ad-3d5028bccba5"
+  },
+  "B": {
+    "checkoutId": "01a08f12-1d5c-7000-9d67-c263f6558cae",
+    "paymentId": "b5b4f5a2-a4e1-4b47-93ca-19b295997418"
+  },
+  "C": {
+    "checkoutId": "01a08f12-2698-7000-9d06-7453592b2b0c",
+    "paymentId": "1e00d91e-c67b-4068-a590-5155c6f2277e",
+    "cartId": "01a08f12-25f0-7000-8347-4fe8f7b2625e",
+    "authGuest": "09d9edb21c0db28e4714eec232ee4b1a55be9ed5742d9f37a12f4aa963c40b69"
+  },
+  "E": {
+    "checkoutId": "01a08f12-2698-7000-9d06-7453592b2b0c",
+    "paymentId": "1e00d91e-c67b-4068-a590-5155c6f2277e",
+    "confirmStatus": 200
+  },
+  "F": {
+    "checkoutId": "01a08f12-304c-7000-8cdc-ab681d499007",
+    "paymentId": "d49dc5e4-b352-4504-9d9e-c42fdaa76d9e"
+  },
+  "G": {
+    "checkoutId": "01a08f12-3208-7000-a208-b5f32e078dc7",
+    "paymentId": "dab3129d-09eb-4b08-b7a2-6ddcbf76d7b4",
+    "guestSecretPresent": true
+  },
+  "I": {
+    "foreignMediaStatus": 403,
+    "checkoutId": "01a08f12-34c6-7000-9e55-26eb148a08c1",
+    "paymentId": "de8de1f7-1690-4fe6-a810-69c20101fd22",
+    "cartId": "01a08f12-3422-7000-89a1-f82fcc9782a7"
+  },
+  "J": {
+    "checkoutId": "01a08f12-35da-7000-92b2-b4ada3ad48d4",
+    "payable": 201088
+  }
+}

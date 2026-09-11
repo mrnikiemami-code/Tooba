@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "methods": {
+    "methods": [
+      {
+        "code": "manual",
+        "labelFa": "کارت به کارت",
+        "descriptionFa": "پرداخت دستی؛ سفارش پس از تأیید واریز توسط فروشگاه تکمیل می‌شود"
+      }
+    ],
+    "manualCardToCardEnabled": true,
+    "manualProofRequirement": "Optional",
+    "manualPaymentInstructions": "مبلغ را به حساب اعلام‌شده فروشگاه واریز کنید و شماره پیگیری پرداخت را ثبت کنید."
+  },
+  "payGatewayStatus": 400,
+  "payGatewayCode": "payment.method.unavailable",
+  "payManualStatus": 200,
+  "sandboxStatus": 403,
+  "sandboxCode": "payment.sandbox.unavailable"
+}

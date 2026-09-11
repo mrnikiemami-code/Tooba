@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R2
+TB-P10-T004-R3
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R3 — Payment Completion Runtime Proof (A–J + Converted-cart payment GetAsync fix); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R2 — Storefront Payment Completion Repair (sandbox simulator + card-to-card proof/tracking + cart finalization); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R1 — Authenticated Checkout Runtime Proof (real session E2E + payment actor ownership fix); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004 — Storefront Checkout Final Gate (Cart→Shipping→Payment→Order E2E hardening); under repair via R1; USER_VISUAL_ACCEPTED=NO

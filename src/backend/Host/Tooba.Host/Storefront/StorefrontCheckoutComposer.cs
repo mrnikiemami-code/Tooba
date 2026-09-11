@@ -120,7 +120,11 @@ public sealed class StorefrontCheckoutComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
-        var cart = await RequireCartAsync(cartId, guestSecret, cancellationToken);
+        // Do not use RequireCartAsync here: after shipping commit the cart is Converted and
+        // storefront cart GET intentionally returns empty lines (payment-retry / header finalization).
+        // Payment initiate/result still need the Order snapshot owned by the same CartId.
+        var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("سبد پیدا نشد.");
         var actor = ResolvePlacementActor(usingSavedAddress: false);
         var snapshot = await _checkouts.GetCheckoutAsync(
             checkoutId,
