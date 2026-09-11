@@ -39,6 +39,11 @@ public sealed class PaymentDbContext : DbContext
     public DbSet<PaymentAllocation> Allocations => Set<PaymentAllocation>();
 
     /// <summary>
+    /// دارایی‌های مدرک واریز متصل به پرداخت دستی.
+    /// </summary>
+    public DbSet<PaymentProofAsset> ProofAssets => Set<PaymentProofAsset>();
+
+    /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -78,7 +83,16 @@ public sealed class PaymentDbContext : DbContext
             entity.Property(x => x.ProviderRequestReference).HasMaxLength(128);
             entity.Property(x => x.ProviderTransactionReference).HasMaxLength(128);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.CustomerTransferReference).HasMaxLength(64);
             entity.HasIndex(x => x.ProviderTransactionReference).IsUnique().HasFilter("provider_transaction_reference IS NOT NULL");
+        });
+        modelBuilder.Entity<PaymentProofAsset>(entity =>
+        {
+            entity.ToTable("proof_assets");
+            entity.HasKey(x => x.ProofAssetRowId);
+            entity.Property(x => x.ProofAssetRowId).ValueGeneratedNever();
+            entity.HasIndex(x => x.MediaAssetId).IsUnique();
+            entity.HasIndex(x => x.PaymentId);
         });
         modelBuilder.Entity<PaymentAllocation>(entity =>
         {

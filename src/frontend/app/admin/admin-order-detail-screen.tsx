@@ -592,6 +592,17 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                   <InfoRow label="وضعیت درگاه"><span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${paymentStatusBadge(detail.payment.providerCode?.toLowerCase() === "manual" && detail.payment.status === "Pending" ? "PendingManualConfirmation" : detail.payment.status).className}`}>{formatAdminStatus(detail.payment.providerCode?.toLowerCase() === "manual" && detail.payment.status === "Pending" ? "PendingManualConfirmation" : detail.payment.status)}</span></InfoRow>
                   <InfoRow label="تاریخ پرداخت">{formatAdminDate(detail.payment.completedAt ?? detail.payment.createdAt)}</InfoRow>
                   <InfoRow label="مبلغ قابل پرداخت">{formatAdminMoney(detail.payment.amount, detail.payment.currency)}</InfoRow>
+                  {detail.payment.customerTransferReference ? (
+                    <InfoRow label="شماره پیگیری پرداخت"><span dir="ltr">{detail.payment.customerTransferReference}</span></InfoRow>
+                  ) : null}
+                  {detail.payment.proofMediaAssetId ? (
+                    <InfoRow label="مدرک پرداخت">
+                      <a className="text-[#2563EB] text-xs font-bold" href={`/v1/media/${detail.payment.proofMediaAssetId}`} target="_blank" rel="noreferrer">مشاهده مدرک</a>
+                    </InfoRow>
+                  ) : null}
+                  {detail.payment.evidenceSubmittedAt ? (
+                    <InfoRow label="زمان ثبت مشتری">{formatAdminDate(detail.payment.evidenceSubmittedAt)}</InfoRow>
+                  ) : null}
                 </dl>
               ) : (
                 <p className="mt-3 text-sm text-gray-500">پرداخت ثبت‌شده‌ای برای این checkout وجود ندارد.</p>

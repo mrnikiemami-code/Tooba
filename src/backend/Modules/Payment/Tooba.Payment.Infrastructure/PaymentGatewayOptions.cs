@@ -60,4 +60,36 @@ public sealed class PaymentGatewayOptions
     /// بدون دادهٔ کارت/حساب در سورس؛ فقط قابلیت روش پرداخت.
     /// </summary>
     public bool ManualCardToCardEnabled { get; set; }
+
+    /// <summary>
+    /// الزام آپلود مدرک واریز: Disabled / Optional / Required. سراسری سخت‌کد نیست.
+    /// </summary>
+    public string ManualProofRequirement { get; set; } = "Optional";
+
+    /// <summary>
+    /// دستورالعمل کارت/حساب قابل نمایش مشتری. شناسهٔ داخلی پیکربندی نیست.
+    /// </summary>
+    public string ManualPaymentInstructions { get; set; } =
+        "مبلغ را به حساب اعلام‌شده فروشگاه واریز کنید و شماره پیگیری پرداخت را ثبت کنید.";
+
+    /// <summary>
+    /// نام فروشگاه برای صفحهٔ شبیه‌ساز سندباکس.
+    /// </summary>
+    public string StoreDisplayName { get; set; } = "Tooba";
+
+    /// <summary>
+    /// الزام مدرک را به مقدار پایدار نگاشت می‌کند.
+    /// </summary>
+    public string NormalizedManualProofRequirement()
+    {
+        var raw = (ManualProofRequirement ?? string.Empty).Trim();
+        if (raw.Equals("Disabled", StringComparison.OrdinalIgnoreCase)
+            || raw.Equals("Required", StringComparison.OrdinalIgnoreCase)
+            || raw.Equals("Optional", StringComparison.OrdinalIgnoreCase))
+        {
+            return char.ToUpperInvariant(raw[0]) + raw[1..].ToLowerInvariant();
+        }
+
+        return "Optional";
+    }
 }

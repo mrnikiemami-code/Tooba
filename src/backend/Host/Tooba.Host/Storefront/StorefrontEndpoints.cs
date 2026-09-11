@@ -40,10 +40,11 @@ public static class StorefrontEndpoints
         group.MapGet("/checkout/{checkoutId:guid}/wallet-quote", GetWalletQuoteAsync);
         group.MapGet("/payment-methods", ListPaymentMethodsAsync);
         group.MapGet("/payments/{paymentId:guid}", GetPaymentAsync);
-        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
-        {
-            group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
-        }
+        group.MapGet("/payments/{paymentId:guid}/sandbox", GetSandboxContextAsync);
+        group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/manual-evidence", SubmitManualEvidenceAsync);
+        group.MapPost("/payments/{paymentId:guid}/manual-retry", RetryManualPaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/proof", UploadManualProofAsync).DisableAntiforgery();
     }
 
     private static async Task<IResult> GetHomeAsync(
@@ -373,6 +374,18 @@ public static class StorefrontEndpoints
         });
     }
 
+    private static Task<IResult> GetSandboxContextAsync(
+        Guid paymentId,
+        Guid cartId,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.GetSandboxContextAsync(
+            paymentId,
+            cartId,
+            ReadGuestSecret(request),
+            cancellationToken));
+
     private static Task<IResult> CompleteSandboxPaymentAsync(
         Guid paymentId,
         StorefrontSandboxPaymentRequest body,
@@ -387,6 +400,83 @@ public static class StorefrontEndpoints
             body.ProviderRequestReference,
             body.Outcome,
             cancellationToken));
+
+    private static Task<IResult> SubmitManualEvidenceAsync(
+        Guid paymentId,
+        StorefrontManualEvidenceRequest body,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.SubmitManualEvidenceAsync(
+            paymentId,
+            body.CartId,
+            ReadGuestSecret(request),
+            body.TransferReference,
+            body.ProofMediaAssetId,
+            cancellationToken));
+
+    private static Task<IResult> RetryManualPaymentAsync(
+        Guid paymentId,
+        StorefrontPaymentCartRequest body,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.RetryManualAsync(
+            paymentId,
+            body.CartId,
+            ReadGuestSecret(request),
+            cancellationToken));
+
+    private static async Task<IResult> UploadManualProofAsync(
+        Guid paymentId,
+        Guid cartId,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!request.HasFormContentType)
+            {
+                return Results.Json(
+                    new { title = "Bad Request", errorCode = "payment.proof.required", detail = "فایل مدرک پرداخت لازم است." },
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var form = await request.ReadFormAsync(cancellationToken);
+            var file = form.Files.GetFile("file") ?? form.Files.FirstOrDefault();
+            if (file is null)
+            {
+                return Results.Json(
+                    new { title = "Bad Request", errorCode = "payment.proof.required", detail = "فایل مدرک پرداخت لازم است." },
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            await using var stream = file.OpenReadStream();
+            var mediaAssetId = await composer.UploadManualProofAsync(
+                paymentId,
+                cartId,
+                ReadGuestSecret(request),
+                stream,
+                file.FileName,
+                file.ContentType ?? string.Empty,
+                cancellationToken);
+            return Results.Json(new { mediaAssetId });
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapPaymentException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+        catch (Tooba.BuildingBlocks.PlatformHttpException platform)
+        {
+            return Results.Json(
+                new { title = platform.Title, errorCode = platform.ErrorCode, detail = platform.Title },
+                statusCode: platform.StatusCode);
+        }
+    }
 
     private static async Task<IResult> ExecutePaymentAsync<T>(Func<Task<T>> action)
     {
@@ -434,6 +524,26 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status400BadRequest, "Bad Request", "payment.method.unavailable");
         }
 
+        if (text.Contains("شماره پیگیری پرداخت الزامی است", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.tracking.required");
+        }
+
+        if (text.Contains("payment.proof.required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "payment.proof.required");
+        }
+
+        if (text.Contains("payment.proof.foreign", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.proof.foreign");
+        }
+
+        if (text.Contains("payment.sandbox.unavailable", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.sandbox.unavailable");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
@@ -444,6 +554,10 @@ public static class StorefrontEndpoints
         "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
         "payment.wallet.mixed_deferred" => "پرداخت ترکیبی کیف پول هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.",
         "payment.method.unavailable" => "این روش پرداخت برای فروشگاه فعال نیست.",
+        "payment.tracking.required" => "شماره پیگیری پرداخت الزامی است.",
+        "payment.proof.required" => "بارگذاری مدرک پرداخت الزامی است.",
+        "payment.proof.foreign" => "مدرک پرداخت معتبر نیست.",
+        "payment.sandbox.unavailable" => "درگاه آزمایشی در این محیط در دسترس نیست.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 

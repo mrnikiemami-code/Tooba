@@ -38,6 +38,33 @@ export interface StorefrontPaymentPage {
   currency: string;
   status: string;
   providerCode: string;
+  customerTransferReference?: string | null;
+  proofMediaAssetId?: string | null;
+  evidenceSubmittedAt?: string | null;
+  orderNumber?: string | null;
+  manualProofRequirement?: string;
+  manualPaymentInstructions?: string;
+  canSubmitManualEvidence?: boolean;
+  canRetryManual?: boolean;
+  evidenceHistory?: Array<{
+    attemptId: string;
+    attemptStatus: string;
+    customerTransferReference?: string | null;
+    proofMediaAssetId?: string | null;
+    evidenceSubmittedAt?: string | null;
+    failureCode?: string | null;
+  }>;
+}
+
+export interface StorefrontSandboxContext {
+  paymentId: string;
+  checkoutId: string;
+  storeName: string;
+  orderNumber: string;
+  amount: number;
+  currency: string;
+  providerLabel: string;
+  sandbox: boolean;
 }
 
 /**
@@ -63,6 +90,8 @@ export type StorefrontPaymentMethodId = "gateway" | "wallet" | "manual";
 export interface StorefrontPaymentMethodsPage {
   methods: Array<{ code: string; labelFa: string; descriptionFa: string }>;
   manualCardToCardEnabled: boolean;
+  manualProofRequirement?: string;
+  manualPaymentInstructions?: string;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -198,6 +227,8 @@ export async function loadStorefrontPaymentMethods(): Promise<StorefrontPaymentM
   return {
     methods,
     manualCardToCardEnabled: Boolean(readProp(item ?? {}, "manualCardToCardEnabled", "ManualCardToCardEnabled")),
+    manualProofRequirement: asString(readProp(item ?? {}, "manualProofRequirement", "ManualProofRequirement"), "Optional"),
+    manualPaymentInstructions: asString(readProp(item ?? {}, "manualPaymentInstructions", "ManualPaymentInstructions")),
   };
 }
 
@@ -244,7 +275,20 @@ export function mapStorefrontPayment(payload: unknown): StorefrontPaymentPage | 
     currency: asString(readProp(item, "currency", "Currency"), "IRR"),
     status: asString(readProp(item, "status", "Status")),
     providerCode: asString(readProp(item, "providerCode", "ProviderCode")),
+    customerTransferReference: asString(readProp(item, "customerTransferReference", "CustomerTransferReference")) || null,
+    proofMediaAssetId: asString(readProp(item, "proofMediaAssetId", "ProofMediaAssetId")) || null,
+    evidenceSubmittedAt: asString(readProp(item, "evidenceSubmittedAt", "EvidenceSubmittedAt")) || null,
+    orderNumber: asString(readProp(item, "orderNumber", "OrderNumber")) || null,
+    manualProofRequirement: asString(readProp(item, "manualProofRequirement", "ManualProofRequirement"), "Optional"),
+    manualPaymentInstructions: asString(readProp(item, "manualPaymentInstructions", "ManualPaymentInstructions")),
+    canSubmitManualEvidence: Boolean(readProp(item, "canSubmitManualEvidence", "CanSubmitManualEvidence")),
+    canRetryManual: Boolean(readProp(item, "canRetryManual", "CanRetryManual")),
   };
+}
+
+export function resetStorefrontPaymentIdempotency(checkoutId: string, providerCode: string): void {
+  const provider = providerCode.trim().toLowerCase() || "gateway";
+  window.sessionStorage.removeItem(`${PAYMENT_IDEMPOTENCY_KEY}.${checkoutId}.${provider}`);
 }
 
 /**
@@ -281,6 +325,14 @@ export function toCustomerPaymentMessage(error: unknown): string {
         return "پرداخت با کیف پول در حال حاضر در دسترس نیست.";
       case "payment.method.unavailable":
         return "این روش پرداخت برای فروشگاه فعال نیست.";
+      case "payment.tracking.required":
+        return "شماره پیگیری پرداخت الزامی است.";
+      case "payment.proof.required":
+        return "بارگذاری مدرک پرداخت الزامی است.";
+      case "payment.proof.foreign":
+        return "مدرک پرداخت معتبر نیست.";
+      case "payment.sandbox.unavailable":
+        return "درگاه آزمایشی در این محیط در دسترس نیست.";
       case "wallet.quote.missing":
         return "اطلاعات کیف پول برای این سفارش در دسترس نیست.";
       default:
@@ -406,4 +458,103 @@ export async function completeStorefrontSandboxPayment(
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تأیید پرداخت نامعتبر بود.");
   }
   return mapped;
+}
+
+export async function loadStorefrontSandboxContext(paymentId: string): Promise<StorefrontSandboxContext> {
+  const session = readCartSession();
+  if (!session.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای مشاهدهٔ درگاه پیدا نشد.");
+  }
+  const response = await fetch(
+    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox?cartId=${encodeURIComponent(session.cartId)}`,
+    { cache: "no-store", headers: cartHeaders() },
+  );
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.sandbox.unavailable");
+  const item = asRecord(payload);
+  if (!item) {
+    throw new StorefrontCartApiError(500, "payment.missing", "پاسخ درگاه نامعتبر بود.");
+  }
+  return {
+    paymentId: asString(readProp(item, "paymentId", "PaymentId")),
+    checkoutId: asString(readProp(item, "checkoutId", "CheckoutId")),
+    storeName: asString(readProp(item, "storeName", "StoreName"), "Tooba"),
+    orderNumber: asString(readProp(item, "orderNumber", "OrderNumber")),
+    amount: asNumber(readProp(item, "amount", "Amount")),
+    currency: asString(readProp(item, "currency", "Currency"), "IRR"),
+    providerLabel: asString(readProp(item, "providerLabel", "ProviderLabel"), "درگاه بانکی"),
+    sandbox: Boolean(readProp(item, "sandbox", "Sandbox")),
+  };
+}
+
+export async function submitStorefrontManualEvidence(
+  paymentId: string,
+  transferReference: string,
+  proofMediaAssetId?: string | null,
+): Promise<StorefrontPaymentPage> {
+  const session = readCartSession();
+  if (!session.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای ثبت پرداخت پیدا نشد.");
+  }
+  const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-evidence`, {
+    method: "POST",
+    cache: "no-store",
+    headers: cartHeaders(),
+    body: JSON.stringify({
+      cartId: session.cartId,
+      transferReference,
+      proofMediaAssetId: proofMediaAssetId || null,
+    }),
+  });
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.rejected");
+  const mappedEvidence = mapStorefrontPayment(payload);
+  if (!mappedEvidence) {
+    throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ ثبت پرداخت نامعتبر بود.");
+  }
+  return mappedEvidence;
+}
+
+export async function retryStorefrontManualPayment(paymentId: string): Promise<StorefrontPaymentPage> {
+  const session = readCartSession();
+  if (!session.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای تلاش مجدد پیدا نشد.");
+  }
+  const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-retry`, {
+    method: "POST",
+    cache: "no-store",
+    headers: cartHeaders(),
+    body: JSON.stringify({ cartId: session.cartId }),
+  });
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.rejected");
+  const mappedRetry = mapStorefrontPayment(payload);
+  if (!mappedRetry) {
+    throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تلاش مجدد نامعتبر بود.");
+  }
+  return mappedRetry;
+}
+
+export async function uploadStorefrontManualProof(paymentId: string, file: File): Promise<string> {
+  const session = readCartSession();
+  if (!session.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای بارگذاری مدرک پیدا نشد.");
+  }
+  const form = new FormData();
+  form.append("file", file);
+  const headers = { ...(cartHeaders() as Record<string, string>) };
+  delete headers["Content-Type"];
+  delete headers["content-type"];
+  const response = await fetch(
+    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/proof?cartId=${encodeURIComponent(session.cartId)}`,
+    { method: "POST", cache: "no-store", headers, body: form },
+  );
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.proof.required");
+  const item = asRecord(payload);
+  const id = asString(readProp(item ?? {}, "mediaAssetId", "MediaAssetId"));
+  if (!id) {
+    throw new StorefrontCartApiError(500, "payment.proof.required", "بارگذاری مدرک ناموفق بود.");
+  }
+  return id;
 }

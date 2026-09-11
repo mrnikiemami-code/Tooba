@@ -254,7 +254,10 @@ public sealed record AdminPaymentOpsView(
     string? LastFailureCode,
     bool ReconcileEligible,
     bool ConfirmDepositEligible = false,
-    bool RejectDepositEligible = false);
+    bool RejectDepositEligible = false,
+    string? CustomerTransferReference = null,
+    Guid? ProofMediaAssetId = null,
+    DateTimeOffset? EvidenceSubmittedAt = null);
 
 /// <summary>
 /// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.

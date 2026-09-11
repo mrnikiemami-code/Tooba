@@ -18,3 +18,19 @@ test("payment method picker can hide gateway when host omits it", () => {
   assert.match(source, /hostEnabledCodes/);
   assert.doesNotMatch(source, /CVV|cardNumber|expiryMonth/);
 });
+
+test("sandbox simulator uses success and failure CTAs without card fields", () => {
+  const source = fs.readFileSync(path.join(root, "app/payment/sandbox/storefront-payment-sandbox.tsx"), "utf8");
+  assert.match(source, /پرداخت موفق/);
+  assert.match(source, /پرداخت ناموفق/);
+  assert.match(source, /SANDBOX \/ TEST/);
+  assert.doesNotMatch(source, /CVV|cardNumber|expiry|cvv/);
+});
+
+test("payment result requires tracking number copy and manual submit CTA", () => {
+  const source = fs.readFileSync(path.join(root, "app/payment/result/storefront-payment-result.tsx"), "utf8");
+  assert.match(source, /شماره پیگیری پرداخت الزامی است/);
+  assert.match(source, /ثبت اطلاعات پرداخت/);
+  assert.match(source, /مشاهده سفارش/);
+  assert.match(source, /تلاش مجدد برای پرداخت/);
+});

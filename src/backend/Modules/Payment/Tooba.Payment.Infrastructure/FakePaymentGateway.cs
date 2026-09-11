@@ -30,7 +30,7 @@ public sealed class FakePaymentGateway : IPaymentGateway
     {
         _ = amount;
         _ = currency;
-        var reference = $"fake-{paymentId:N}";
+        var reference = $"fake-{paymentId:N}-{Guid.NewGuid():N}";
         return Task.FromResult(new GatewayInitiation(reference, $"/payment/sandbox?ref={Uri.EscapeDataString(reference)}", DateTimeOffset.UtcNow.AddMinutes(15)));
     }
 

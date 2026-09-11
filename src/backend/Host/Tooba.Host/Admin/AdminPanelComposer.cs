@@ -285,7 +285,10 @@ public sealed class AdminPanelComposer
                 paymentOps.LastFailureCode,
                 paymentOps.ReconcileEligible,
                 paymentOps.ConfirmDepositEligible,
-                paymentOps.RejectDepositEligible);
+                paymentOps.RejectDepositEligible,
+                paymentOps.CustomerTransferReference,
+                paymentOps.ProofMediaAssetId,
+                paymentOps.EvidenceSubmittedAt);
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var settlementByOrder = await _settlement.ListEntriesBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);

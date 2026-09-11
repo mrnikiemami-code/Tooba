@@ -252,6 +252,26 @@ public sealed class PaymentAttempt
     public string? FailureCode { get; private set; }
 
     /// <summary>
+    /// شماره پیگیری واریز مشتری (کارت‌به‌کارت). شماره پیگیری سفارش نیست.
+    /// </summary>
+    public string? CustomerTransferReference { get; private set; }
+
+    /// <summary>
+    /// شناسهٔ دارایی رسانه برای مدرک واریز؛ مسیر فایل خام ذخیره نمی‌شود.
+    /// </summary>
+    public Guid? ProofMediaAssetId { get; private set; }
+
+    /// <summary>
+    /// زمان ثبت مدرک/پیگیری توسط مشتری.
+    /// </summary>
+    public DateTimeOffset? EvidenceSubmittedAt { get; private set; }
+
+    /// <summary>
+    /// سقف طول شماره پیگیری پرداخت.
+    /// </summary>
+    public const int CustomerTransferReferenceMaxLength = 64;
+
+    /// <summary>
     /// تلاش را پس از شروع درگاه می‌سازد.
     /// </summary>
     public static PaymentAttempt Initiate(Guid paymentId, string providerCode, string requestReference, DateTimeOffset at)
@@ -295,6 +315,84 @@ public sealed class PaymentAttempt
         FailureCode = failureCode;
         Status = PaymentAttemptStatus.VerifiedFailed;
         CompletedAt = at;
+    }
+
+    /// <summary>
+    /// مدرک کارت‌به‌کارت را روی تلاش Initiated ثبت می‌کند؛ تلاش تاریخی را بازنویسی نمی‌کند.
+    /// </summary>
+    public void SubmitCustomerEvidence(string transferReference, Guid? proofMediaAssetId, DateTimeOffset at)
+    {
+        var trimmed = (transferReference ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new InvalidOperationException("شماره پیگیری پرداخت الزامی است.");
+        }
+
+        if (trimmed.Length > CustomerTransferReferenceMaxLength)
+        {
+            throw new InvalidOperationException("شماره پیگیری پرداخت الزامی است.");
+        }
+
+        if (Status != PaymentAttemptStatus.Initiated)
+        {
+            throw new InvalidOperationException("payment.manual.evidence.immutable");
+        }
+
+        if (EvidenceSubmittedAt is not null)
+        {
+            var sameRef = string.Equals(CustomerTransferReference, trimmed, StringComparison.Ordinal);
+            var sameProof = ProofMediaAssetId == proofMediaAssetId;
+            if (sameRef && sameProof)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException("payment.manual.evidence.duplicate");
+        }
+
+        CustomerTransferReference = trimmed;
+        ProofMediaAssetId = proofMediaAssetId;
+        EvidenceSubmittedAt = at;
+    }
+}
+
+/// <summary>
+/// دارایی مدرک واریز متصل به پرداخت؛ فقط MediaAssetId نگه داشته می‌شود.
+/// </summary>
+public sealed class PaymentProofAsset
+{
+    /// <summary>سازندهٔ EF.</summary>
+    private PaymentProofAsset()
+    {
+    }
+
+    /// <summary>شناسهٔ ردیف اتصال.</summary>
+    public Guid ProofAssetRowId { get; init; }
+
+    /// <summary>پرداخت مالک.</summary>
+    public Guid PaymentId { get; init; }
+
+    /// <summary>دارایی Media آپلودشده برای همین پرداخت.</summary>
+    public Guid MediaAssetId { get; init; }
+
+    /// <summary>زمان اتصال.</summary>
+    public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>اتصال مدرک را می‌سازد.</summary>
+    public static PaymentProofAsset Attach(Guid paymentId, Guid mediaAssetId, DateTimeOffset at)
+    {
+        if (paymentId == Guid.Empty || mediaAssetId == Guid.Empty)
+        {
+            throw new InvalidOperationException("payment.proof.invalid");
+        }
+
+        return new PaymentProofAsset
+        {
+            ProofAssetRowId = Guid.NewGuid(),
+            PaymentId = paymentId,
+            MediaAssetId = mediaAssetId,
+            CreatedAt = at,
+        };
     }
 }
 
@@ -486,6 +584,30 @@ public sealed class CustomerPayment : IHasDomainEvents
         UpdatedAt = at;
         _domainEvents.Add(new PaymentInitiatedDomainEvent(PaymentId, attempt.AttemptId, requestReference));
         return attempt;
+    }
+
+    /// <summary>
+    /// شماره پیگیری و مدرک کارت‌به‌کارت را روی آخرین تلاش Initiated ثبت می‌کند.
+    /// </summary>
+    public void SubmitManualEvidence(string transferReference, Guid? proofMediaAssetId, DateTimeOffset at)
+    {
+        if (!string.Equals(ProviderCode, "manual", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("payment.method.not_manual");
+        }
+
+        if (Status != PaymentStatus.Pending)
+        {
+            throw new InvalidOperationException("payment.manual.submit.invalid_state");
+        }
+
+        var attempt = _attempts
+            .Where(x => x.Status == PaymentAttemptStatus.Initiated)
+            .OrderByDescending(x => x.CreatedAt)
+            .FirstOrDefault()
+            ?? throw new InvalidOperationException("payment.attempt.missing");
+        attempt.SubmitCustomerEvidence(transferReference, proofMediaAssetId, at);
+        UpdatedAt = at;
     }
 
     /// <summary>

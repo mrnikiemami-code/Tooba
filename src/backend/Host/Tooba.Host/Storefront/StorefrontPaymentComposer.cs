@@ -1,6 +1,9 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Tooba.Media.Application;
 using Tooba.Payment.Application;
+using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure;
 using Tooba.Wallet.Application;
 
@@ -17,6 +20,8 @@ public sealed class StorefrontPaymentComposer
     private readonly IWalletDirectory _wallets;
     private readonly PaymentGatewayOptions _gatewayOptions;
     private readonly CurrentAuthenticatedSession _session;
+    private readonly IHostEnvironment _environment;
+    private readonly IMediaDirectory _media;
     private readonly ILogger<StorefrontPaymentComposer> _logger;
 
     /// <summary>
@@ -29,6 +34,8 @@ public sealed class StorefrontPaymentComposer
         IWalletDirectory wallets,
         IOptions<PaymentGatewayOptions> gatewayOptions,
         CurrentAuthenticatedSession session,
+        IHostEnvironment environment,
+        IMediaDirectory media,
         ILogger<StorefrontPaymentComposer> logger)
     {
         _checkouts = checkouts;
@@ -36,6 +43,8 @@ public sealed class StorefrontPaymentComposer
         _wallets = wallets;
         _gatewayOptions = gatewayOptions.Value;
         _session = session;
+        _environment = environment;
+        _media = media;
         _logger = logger;
     }
 
@@ -103,8 +112,19 @@ public sealed class StorefrontPaymentComposer
                 "پرداخت دستی؛ سفارش پس از تأیید واریز توسط فروشگاه تکمیل می‌شود"));
         }
 
-        return new StorefrontPaymentMethodsPage(methods, _gatewayOptions.ManualCardToCardEnabled);
+        return new StorefrontPaymentMethodsPage(
+            methods,
+            _gatewayOptions.ManualCardToCardEnabled,
+            _gatewayOptions.NormalizedManualProofRequirement(),
+            _gatewayOptions.ManualPaymentInstructions ?? string.Empty);
     }
+
+    /// <summary>
+    /// آیا شبیه‌ساز سندباکس در این محیط مجاز است؟ Production هرگز بله نیست.
+    /// </summary>
+    public bool IsSandboxSimulatorEnabled()
+        => !_environment.IsProduction()
+            && (_gatewayOptions.Mode ?? string.Empty).Trim().Equals("Sandbox", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// آیا درگاه آنلاین برای انتخاب مشتری در ویترین پیشنهاد می‌شود؟
@@ -317,20 +337,39 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("دسترسی به پرداخت بدون هویت سفارش رد شد.");
         }
 
-        return new StorefrontPaymentPage(
+        return MapPaymentPage(payment, checkout);
+    }
+
+    /// <summary>
+    /// زمینهٔ شبیه‌ساز سندباکس. Production هرگز صفحه/اقدام جعلی PSP ندارد.
+    /// </summary>
+    public async Task<StorefrontSandboxContextPage> GetSandboxContextAsync(
+        Guid paymentId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        if (!IsSandboxSimulatorEnabled())
+        {
+            throw new InvalidOperationException("payment.sandbox.unavailable");
+        }
+
+        var payment = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        var checkout = await _checkouts.GetAsync(payment.CheckoutId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+        var orderNumber = checkout.SellerOrders.Select(x => x.OrderNumber).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? checkout.CheckoutId?.ToString("N")[..12]
+            ?? "—";
+        return new StorefrontSandboxContextPage(
             payment.PaymentId,
             payment.CheckoutId,
+            string.IsNullOrWhiteSpace(_gatewayOptions.StoreDisplayName) ? "Tooba" : _gatewayOptions.StoreDisplayName,
+            orderNumber,
             payment.Amount,
             payment.Currency,
-            payment.Status.ToString(),
-            payment.ProviderCode,
-            payment.Allocations
-                .Select(x => new StorefrontPaymentAllocationView(
-                    x.SellerOrderId,
-                    x.AllocatedAmount,
-                    x.Currency,
-                    x.TargetKind.ToString()))
-                .ToArray());
+            "درگاه بانکی (آزمایشی)",
+            Sandbox: true);
     }
 
     /// <summary>
@@ -345,6 +384,11 @@ public sealed class StorefrontPaymentComposer
         string outcome,
         CancellationToken cancellationToken)
     {
+        if (!IsSandboxSimulatorEnabled())
+        {
+            throw new InvalidOperationException("payment.sandbox.unavailable");
+        }
+
         var before = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
 
@@ -369,5 +413,118 @@ public sealed class StorefrontPaymentComposer
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
         _ = before;
         return after;
+    }
+
+    /// <summary>
+    /// آپلود مدرک واریز با سیاست Media موجود و اتصال به همان پرداخت.
+    /// </summary>
+    public async Task<Guid> UploadManualProofAsync(
+        Guid paymentId,
+        Guid cartId,
+        string? guestSecret,
+        Stream stream,
+        string fileName,
+        string contentType,
+        CancellationToken cancellationToken)
+    {
+        _ = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        var actor = ResolvePaymentActor();
+        var asset = await _media.UploadAsync(stream, fileName, contentType, actor, cancellationToken);
+        await _payments.RegisterProofAssetAsync(paymentId, actor, null, asset.MediaAssetId, cancellationToken);
+        return asset.MediaAssetId;
+    }
+
+    /// <summary>
+    /// ثبت شماره پیگیری کارت‌به‌کارت. Succeeded نمی‌سازد.
+    /// </summary>
+    public async Task<StorefrontPaymentPage> SubmitManualEvidenceAsync(
+        Guid paymentId,
+        Guid cartId,
+        string? guestSecret,
+        string transferReference,
+        Guid? proofMediaAssetId,
+        CancellationToken cancellationToken)
+    {
+        _ = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        var requirement = _gatewayOptions.NormalizedManualProofRequirement();
+        if (requirement.Equals("Required", StringComparison.OrdinalIgnoreCase) && proofMediaAssetId is null)
+        {
+            throw new InvalidOperationException("payment.proof.required");
+        }
+
+        if (requirement.Equals("Disabled", StringComparison.OrdinalIgnoreCase))
+        {
+            proofMediaAssetId = null;
+        }
+
+        await _payments.SubmitManualEvidenceAsync(
+            paymentId,
+            ResolvePaymentActor(),
+            null,
+            transferReference,
+            proofMediaAssetId,
+            cancellationToken);
+        return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+    }
+
+    /// <summary>
+    /// تلاش مجدد پس از رد ادمین روی همان سفارش/پرداخت.
+    /// </summary>
+    public async Task<StorefrontPaymentPage> RetryManualAsync(
+        Guid paymentId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        _ = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await _payments.RetryManualAfterRejectionAsync(paymentId, ResolvePaymentActor(), null, cancellationToken);
+        return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+    }
+
+    private StorefrontPaymentPage MapPaymentPage(PaymentSnapshot payment, StorefrontCheckoutPage checkout)
+    {
+        var orderNumber = checkout.SellerOrders.Select(x => x.OrderNumber).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+        var history = (payment.EvidenceHistory ?? [])
+            .Select(x => new StorefrontManualEvidenceHistoryItem(
+                x.AttemptId,
+                x.AttemptStatus.ToString(),
+                x.CustomerTransferReference,
+                x.ProofMediaAssetId,
+                x.EvidenceSubmittedAt,
+                x.FailureCode))
+            .ToArray();
+        var manual = ManualPaymentGateway.IsManual(payment.ProviderCode);
+        var canSubmit = manual
+            && payment.Status == PaymentStatus.Pending
+            && payment.EvidenceSubmittedAt is null;
+        var canRetry = manual && payment.Status == PaymentStatus.Failed;
+        return new StorefrontPaymentPage(
+            payment.PaymentId,
+            payment.CheckoutId,
+            payment.Amount,
+            payment.Currency,
+            payment.Status.ToString(),
+            payment.ProviderCode,
+            payment.Allocations
+                .Select(x => new StorefrontPaymentAllocationView(
+                    x.SellerOrderId,
+                    x.AllocatedAmount,
+                    x.Currency,
+                    x.TargetKind.ToString()))
+                .ToArray(),
+            payment.CustomerTransferReference,
+            payment.ProofMediaAssetId,
+            payment.EvidenceSubmittedAt,
+            orderNumber,
+            _gatewayOptions.NormalizedManualProofRequirement(),
+            _gatewayOptions.ManualPaymentInstructions ?? string.Empty,
+            canSubmit,
+            canRetry,
+            history);
     }
 }

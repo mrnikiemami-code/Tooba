@@ -162,6 +162,8 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<Tooba.Wallet.Application.IWalletDirectory>(),
         sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tooba.Payment.Infrastructure.PaymentGatewayOptions>>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
+        sp.GetRequiredService<IHostEnvironment>(),
+        sp.GetRequiredService<Tooba.Media.Application.IMediaDirectory>(),
         sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();

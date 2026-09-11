@@ -203,6 +203,20 @@ public interface IPaymentUseCaseGuard
 /// <summary>
 /// تصویر خواندنی پرداخت.
 /// </summary>
+/// <summary>
+/// مدرک کارت‌به‌کارت روی یک تلاش پرداخت.
+/// </summary>
+public sealed record PaymentManualEvidenceSnapshot(
+    Guid AttemptId,
+    PaymentAttemptStatus AttemptStatus,
+    string? CustomerTransferReference,
+    Guid? ProofMediaAssetId,
+    DateTimeOffset? EvidenceSubmittedAt,
+    string? FailureCode);
+
+/// <summary>
+/// تصویر خواندنی پرداخت.
+/// </summary>
 public sealed record PaymentSnapshot(
     Guid PaymentId,
     Guid CheckoutId,
@@ -210,7 +224,11 @@ public sealed record PaymentSnapshot(
     string Currency,
     PaymentStatus Status,
     string ProviderCode,
-    IReadOnlyList<PaymentAllocationSnapshot> Allocations);
+    IReadOnlyList<PaymentAllocationSnapshot> Allocations,
+    string? CustomerTransferReference = null,
+    Guid? ProofMediaAssetId = null,
+    DateTimeOffset? EvidenceSubmittedAt = null,
+    IReadOnlyList<PaymentManualEvidenceSnapshot>? EvidenceHistory = null);
 
 /// <summary>
 /// تصویر عملیاتی مدیر برای پرداخت (بدون راز/payload خام).
@@ -233,7 +251,10 @@ public sealed record PaymentOperationalSnapshot(
     bool RejectDepositEligible,
     bool RestoreDepositEligible = false,
     bool HasManualDepositRejection = false,
-    bool UnconfirmDepositEligible = false);
+    bool UnconfirmDepositEligible = false,
+    string? CustomerTransferReference = null,
+    Guid? ProofMediaAssetId = null,
+    DateTimeOffset? EvidenceSubmittedAt = null);
 
 /// <summary>
 /// بازرسی/Reconcile پرداخت برای اپراتور (AdminPanelAccess).
@@ -325,6 +346,36 @@ public interface IPaymentDirectory
     /// </summary>
     Task<PaymentSnapshot?> GetLatestForCheckoutAsync(
         Guid checkoutId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// دارایی Media آپلودشده را به پرداخت جاری می‌چسباند تا مدرک خارجی قابل اتصال نباشد.
+    /// </summary>
+    Task RegisterProofAssetAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// ثبت شماره پیگیری و مدرک کارت‌به‌کارت. Succeeded نمی‌سازد.
+    /// </summary>
+    Task SubmitManualEvidenceAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        string transferReference,
+        Guid? proofMediaAssetId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پس از رد ادمین، تلاش جدید Initiated می‌سازد؛ تلاش ردشده تاریخی می‌ماند.
+    /// </summary>
+    Task RetryManualAfterRejectionAsync(
+        Guid paymentId,
         Guid actorUserId,
         Guid? buyerPartyId,
         CancellationToken cancellationToken);

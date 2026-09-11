@@ -215,6 +215,9 @@ export interface AdminPaymentOps {
   completedAt: string | null;
   lastFailureCode: string | null;
   reconcileEligible: boolean;
+  customerTransferReference?: string | null;
+  proofMediaAssetId?: string | null;
+  evidenceSubmittedAt?: string | null;
 }
 
 export interface AdminSellerRow {
@@ -302,6 +305,7 @@ export function formatAdminPaymentProvider(providerCode: string | null | undefin
     wallet: "کیف پول",
     fake: "درگاه آزمایشی",
     webhook: "درگاه وب‌هوک",
+    manual: "کارت به کارت",
     "fail-closed": "درگاه غیرفعال",
   };
   const normalized = code.toLowerCase();
@@ -817,6 +821,9 @@ function mapAdminPaymentOps(value: unknown): AdminPaymentOps | null {
     completedAt: text(prop(item, "completedAt", "CompletedAt")) || null,
     lastFailureCode: text(prop(item, "lastFailureCode", "LastFailureCode")) || null,
     reconcileEligible: Boolean(prop(item, "reconcileEligible", "ReconcileEligible")),
+    customerTransferReference: text(prop(item, "customerTransferReference", "CustomerTransferReference")) || null,
+    proofMediaAssetId: text(prop(item, "proofMediaAssetId", "ProofMediaAssetId")) || null,
+    evidenceSubmittedAt: text(prop(item, "evidenceSubmittedAt", "EvidenceSubmittedAt")) || null,
   };
 }
 

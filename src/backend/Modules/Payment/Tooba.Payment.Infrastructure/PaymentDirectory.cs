@@ -50,28 +50,50 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);
         var key = command.IdempotencyKey.Trim();
-        var existing = await _db.Payments.AsNoTracking().FirstOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
+        var existing = await _db.Payments.FirstOrDefaultAsync(x => x.IdempotencyKey == key, cancellationToken);
         if (existing is not null)
         {
             await EnsureActorCanSeeAsync(existing, command.ActorUserId, command.BuyerPartyId, cancellationToken);
-            var prior = await _db.Attempts
-                .AsNoTracking()
-                .OrderByDescending(x => x.CreatedAt)
-                .FirstAsync(x => x.PaymentId == existing.PaymentId, cancellationToken);
-            var replayGateway = _gateways.Resolve(existing.ProviderCode);
+            var priorAttempts = await _db.Attempts
+                .Where(x => x.PaymentId == existing.PaymentId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+            foreach (var loaded in priorAttempts)
+            {
+                existing.AttachLoadedAttempt(loaded);
+            }
+
             _actorContext.ActorUserId = command.ActorUserId;
-            var replayInitiation = await replayGateway.InitiateAsync(
-                existing.PaymentId,
-                existing.Amount,
-                existing.Currency,
-                cancellationToken);
+            var replayGateway = _gateways.Resolve(existing.ProviderCode);
+            if (existing.Status == PaymentStatus.Failed)
+            {
+                var retryInitiation = await replayGateway.InitiateAsync(
+                    existing.PaymentId,
+                    existing.Amount,
+                    existing.Currency,
+                    cancellationToken);
+                var retryAttempt = existing.RecordInitiation(retryInitiation.ProviderRequestReference, DateTimeOffset.UtcNow);
+                _db.Attempts.Add(retryAttempt);
+                await _db.SaveChangesAsync(cancellationToken);
+                return new PaymentInitiationResult(
+                    existing.PaymentId,
+                    retryAttempt.AttemptId,
+                    existing.Status,
+                    existing.ProviderCode,
+                    retryAttempt.ProviderRequestReference,
+                    ResolveRedirectUrl(replayGateway, existing.PaymentId, retryAttempt.AttemptId, retryAttempt.ProviderRequestReference, retryInitiation.RedirectUrl),
+                    existing.Amount,
+                    existing.Currency);
+            }
+
+            var prior = priorAttempts.OrderByDescending(x => x.CreatedAt).First();
             return new PaymentInitiationResult(
                 existing.PaymentId,
                 prior.AttemptId,
                 existing.Status,
                 existing.ProviderCode,
                 prior.ProviderRequestReference,
-                ResolveRedirectUrl(replayGateway, existing.PaymentId, prior.AttemptId, prior.ProviderRequestReference, replayInitiation.RedirectUrl),
+                ResolveRedirectUrl(replayGateway, existing.PaymentId, prior.AttemptId, prior.ProviderRequestReference, null),
                 existing.Amount,
                 existing.Currency);
         }
@@ -241,18 +263,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
 
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
         var allocations = await _db.Allocations.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);
-        return new PaymentSnapshot(
-            payment.PaymentId,
-            payment.CheckoutId,
-            payment.Amount,
-            payment.Currency,
-            payment.Status,
-            payment.ProviderCode,
-            allocations.Select(x => new PaymentAllocationSnapshot(
-                x.SellerOrderId,
-                x.AllocatedAmount,
-                x.Currency,
-                x.TargetKind)).ToArray());
+        var attempts = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == paymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return ToSnapshot(payment, allocations, attempts);
     }
 
     /// <inheritdoc />
@@ -280,18 +295,101 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var allocations = await _db.Allocations.AsNoTracking()
             .Where(x => x.PaymentId == payment.PaymentId)
             .ToListAsync(cancellationToken);
-        return new PaymentSnapshot(
-            payment.PaymentId,
-            payment.CheckoutId,
-            payment.Amount,
-            payment.Currency,
-            payment.Status,
-            payment.ProviderCode,
-            allocations.Select(x => new PaymentAllocationSnapshot(
-                x.SellerOrderId,
-                x.AllocatedAmount,
-                x.Currency,
-                x.TargetKind)).ToArray());
+        var attempts = await _db.Attempts.AsNoTracking()
+            .Where(x => x.PaymentId == payment.PaymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return ToSnapshot(payment, allocations, attempts);
+    }
+
+    /// <inheritdoc />
+    public async Task RegisterProofAssetAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        Guid mediaAssetId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        if (!ManualPaymentGateway.IsManual(payment.ProviderCode))
+        {
+            throw new InvalidOperationException("payment.method.not_manual");
+        }
+
+        if (payment.Status != PaymentStatus.Pending)
+        {
+            throw new InvalidOperationException("payment.manual.submit.invalid_state");
+        }
+
+        var duplicate = await _db.ProofAssets.AnyAsync(x => x.MediaAssetId == mediaAssetId, cancellationToken);
+        if (duplicate)
+        {
+            var owned = await _db.ProofAssets.AnyAsync(
+                x => x.MediaAssetId == mediaAssetId && x.PaymentId == paymentId,
+                cancellationToken);
+            if (!owned)
+            {
+                throw new InvalidOperationException("payment.proof.foreign");
+            }
+
+            return;
+        }
+
+        _db.ProofAssets.Add(PaymentProofAsset.Attach(paymentId, mediaAssetId, DateTimeOffset.UtcNow));
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task SubmitManualEvidenceAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        string transferReference,
+        Guid? proofMediaAssetId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        var attempts = await _db.Attempts
+            .Where(x => x.PaymentId == paymentId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        foreach (var loaded in attempts)
+        {
+            payment.AttachLoadedAttempt(loaded);
+        }
+
+        if (proofMediaAssetId is Guid assetId)
+        {
+            var owned = await _db.ProofAssets.AnyAsync(
+                x => x.PaymentId == paymentId && x.MediaAssetId == assetId,
+                cancellationToken);
+            if (!owned)
+            {
+                throw new InvalidOperationException("payment.proof.foreign");
+            }
+        }
+
+        payment.SubmitManualEvidence(transferReference, proofMediaAssetId, DateTimeOffset.UtcNow);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RetryManualAfterRejectionAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        CancellationToken cancellationToken)
+    {
+        var payment = await _db.Payments.AsNoTracking().SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        await RestoreDepositAsync(paymentId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -379,6 +477,10 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException("payment.attempt.missing");
+        if (string.IsNullOrWhiteSpace(attempt.CustomerTransferReference))
+        {
+            throw new InvalidOperationException("شماره پیگیری پرداخت الزامی است.");
+        }
 
         payment.AttachLoadedAttempt(attempt);
         var allocations = await _db.Allocations.Where(x => x.PaymentId == payment.PaymentId).ToListAsync(cancellationToken)
@@ -618,6 +720,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             && payment.Status == PaymentStatus.Failed
             && hasManualRejection;
         var unconfirmEligible = manual && payment.Status == PaymentStatus.Succeeded;
+        var evidenceReady = !string.IsNullOrWhiteSpace(attempt?.CustomerTransferReference);
         return new PaymentOperationalSnapshot(
             payment.PaymentId,
             payment.CheckoutId,
@@ -632,11 +735,45 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             payment.CompletedAt,
             attempt?.FailureCode,
             payment.Status == PaymentStatus.Pending,
-            ConfirmDepositEligible: manualPending,
+            ConfirmDepositEligible: manualPending && evidenceReady,
             RejectDepositEligible: manualPending,
             RestoreDepositEligible: restoreEligible,
             HasManualDepositRejection: hasManualRejection,
-            UnconfirmDepositEligible: unconfirmEligible);
+            UnconfirmDepositEligible: unconfirmEligible,
+            CustomerTransferReference: attempt?.CustomerTransferReference,
+            ProofMediaAssetId: attempt?.ProofMediaAssetId,
+            EvidenceSubmittedAt: attempt?.EvidenceSubmittedAt);
+    }
+
+    private static PaymentSnapshot ToSnapshot(
+        CustomerPayment payment,
+        IReadOnlyList<PaymentAllocation> allocations,
+        IReadOnlyList<PaymentAttempt> attempts)
+    {
+        var latest = attempts.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+        var history = attempts.Select(x => new PaymentManualEvidenceSnapshot(
+            x.AttemptId,
+            x.Status,
+            x.CustomerTransferReference,
+            x.ProofMediaAssetId,
+            x.EvidenceSubmittedAt,
+            x.FailureCode)).ToArray();
+        return new PaymentSnapshot(
+            payment.PaymentId,
+            payment.CheckoutId,
+            payment.Amount,
+            payment.Currency,
+            payment.Status,
+            payment.ProviderCode,
+            allocations.Select(x => new PaymentAllocationSnapshot(
+                x.SellerOrderId,
+                x.AllocatedAmount,
+                x.Currency,
+                x.TargetKind)).ToArray(),
+            latest?.CustomerTransferReference,
+            latest?.ProofMediaAssetId,
+            latest?.EvidenceSubmittedAt,
+            history);
     }
 
     private async Task EnsureActorCanSeeAsync(
@@ -659,14 +796,14 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         string providerRequestReference,
         string? gatewayRedirect)
     {
-        if (!string.IsNullOrWhiteSpace(gatewayRedirect))
-        {
-            return gatewayRedirect;
-        }
-
         if (gateway is FakePaymentGateway or FakeFailingPaymentGateway)
         {
             return ComposeSandboxRedirect(paymentId, attemptId, providerRequestReference);
+        }
+
+        if (!string.IsNullOrWhiteSpace(gatewayRedirect))
+        {
+            return gatewayRedirect;
         }
 
         return "/payment/result?paymentId=" + paymentId.ToString("D")

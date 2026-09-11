@@ -45,9 +45,20 @@ Cart → Shipping → Payment → Order final technical gate:
 - FA/EN shell smoke; visual smoke without marking USER_VISUAL_ACCEPTED
 - Focused Host/FE suites green
 
+## T004-R2 — Payment completion repair (IMPLEMENTED — THIS TASK)
+
+P10 final payment-completion repair (not T005):
+
+- Sandbox/Development simulator page with Success/Failure actions; Host Verify is truth
+- Manual/card-to-card customer tracking number + configurable proof upload
+- Manual submit stays Pending until Admin confirm/reject
+- Converted cart presents empty lines so completed checkout cannot reuse cart for a second Order
+- Order result with human order number + مشاهده سفارش
+
 ## Non-goals for T004
 
 - No TB-P10-T005
 - No redesign of Shopeiva checkout layout
 - No Consolidated Package work
 - No inventing COD or new provider types
+- No real external PSP

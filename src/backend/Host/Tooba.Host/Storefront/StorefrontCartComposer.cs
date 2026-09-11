@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Cart.Application;
+using Tooba.Cart.Domain;
 using Tooba.Catalog.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
@@ -195,6 +196,20 @@ public sealed class StorefrontCartComposer
         }
 
         var subtotal = lines.Sum(item => item.LineAmountExclusiveOfTax ?? 0);
+        if (snapshot.Status == CartStatus.Converted)
+        {
+            return new StorefrontCartPage(
+                snapshot.CartId,
+                snapshot.Version,
+                snapshot.Market,
+                snapshot.Currency,
+                snapshot.Channel.ToString(),
+                0,
+                0,
+                Array.Empty<StorefrontCartLineView>(),
+                guestSecret);
+        }
+
         return new StorefrontCartPage(
             snapshot.CartId,
             snapshot.Version,

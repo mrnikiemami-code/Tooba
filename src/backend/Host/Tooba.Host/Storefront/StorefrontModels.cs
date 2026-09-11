@@ -479,7 +479,9 @@ public sealed record StorefrontPaymentMethodOption(
 /// <summary>فهرست روش‌های پرداخت فعال برای فروشگاه/محیط جاری.</summary>
 public sealed record StorefrontPaymentMethodsPage(
     IReadOnlyList<StorefrontPaymentMethodOption> Methods,
-    bool ManualCardToCardEnabled);
+    bool ManualCardToCardEnabled,
+    string ManualProofRequirement = "Optional",
+    string ManualPaymentInstructions = "");
 
 /// <summary>
 /// نتیجهٔ شروع پرداخت. Redirect به صفحهٔ sandbox/dev است نه بانک واقعی؛ full-wallet بدون PSP.
@@ -506,7 +508,45 @@ public sealed record StorefrontPaymentPage(
     string Currency,
     string Status,
     string ProviderCode,
-    IReadOnlyList<StorefrontPaymentAllocationView> Allocations);
+    IReadOnlyList<StorefrontPaymentAllocationView> Allocations,
+    string? CustomerTransferReference = null,
+    Guid? ProofMediaAssetId = null,
+    DateTimeOffset? EvidenceSubmittedAt = null,
+    string? OrderNumber = null,
+    string ManualProofRequirement = "Optional",
+    string ManualPaymentInstructions = "",
+    bool CanSubmitManualEvidence = false,
+    bool CanRetryManual = false,
+    IReadOnlyList<StorefrontManualEvidenceHistoryItem>? EvidenceHistory = null);
+
+/// <summary>تاریخچهٔ مدرک کارت‌به‌کارت برای صفحهٔ نتیجه.</summary>
+public sealed record StorefrontManualEvidenceHistoryItem(
+    Guid AttemptId,
+    string AttemptStatus,
+    string? CustomerTransferReference,
+    Guid? ProofMediaAssetId,
+    DateTimeOffset? EvidenceSubmittedAt,
+    string? FailureCode);
+
+/// <summary>زمینهٔ صفحهٔ شبیه‌ساز سندباکس.</summary>
+public sealed record StorefrontSandboxContextPage(
+    Guid PaymentId,
+    Guid CheckoutId,
+    string StoreName,
+    string OrderNumber,
+    decimal Amount,
+    string Currency,
+    string ProviderLabel,
+    bool Sandbox);
+
+/// <summary>ثبت شماره پیگیری و مدرک کارت‌به‌کارت.</summary>
+public sealed record StorefrontManualEvidenceRequest(
+    Guid CartId,
+    string TransferReference,
+    Guid? ProofMediaAssetId);
+
+/// <summary>درخواست وابسته به سبد برای تلاش مجدد دستی.</summary>
+public sealed record StorefrontPaymentCartRequest(Guid CartId);
 
 /// <summary>
 /// تخصیص نمایشی پرداخت به سفارش فروشنده. تسویه فروشنده نیست.

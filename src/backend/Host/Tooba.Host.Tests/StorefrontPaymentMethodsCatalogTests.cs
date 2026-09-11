@@ -1,3 +1,5 @@
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Tooba.Payment.Infrastructure;
@@ -70,6 +72,28 @@ public sealed class StorefrontPaymentMethodsCatalogTests
         Assert.DoesNotContain(page.Methods, m => m.Code == "manual");
     }
 
+    [Fact]
+    public void Production_environment_does_not_enable_sandbox_simulator()
+    {
+        var composer = new Storefront.StorefrontPaymentComposer(
+            checkouts: null!,
+            payments: null!,
+            wallets: null!,
+            gatewayOptions: Options.Create(new PaymentGatewayOptions { Mode = "Sandbox" }),
+            session: new CurrentAuthenticatedSession(),
+            environment: new TestHostEnvironment { EnvironmentName = Environments.Production },
+            media: null!,
+            logger: NullLogger<Storefront.StorefrontPaymentComposer>.Instance);
+        Assert.False(composer.IsSandboxSimulatorEnabled());
+    }
+
+    [Fact]
+    public void Development_sandbox_mode_enables_simulator()
+    {
+        var composer = CreateComposer(new PaymentGatewayOptions { Mode = "Sandbox" });
+        Assert.True(composer.IsSandboxSimulatorEnabled());
+    }
+
     private static Storefront.StorefrontPaymentComposer CreateComposer(PaymentGatewayOptions options)
     {
         return new Storefront.StorefrontPaymentComposer(
@@ -78,6 +102,16 @@ public sealed class StorefrontPaymentMethodsCatalogTests
             wallets: null!,
             gatewayOptions: Options.Create(options),
             session: new CurrentAuthenticatedSession(),
+            environment: new TestHostEnvironment(),
+            media: null!,
             logger: NullLogger<Storefront.StorefrontPaymentComposer>.Instance);
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "Tooba.Host.Tests";
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

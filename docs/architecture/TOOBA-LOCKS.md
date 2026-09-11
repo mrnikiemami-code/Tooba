@@ -196,3 +196,24 @@ When delivery date/time selection exists, the customer may choose a later valid 
 
 ### LOCK-SF-006 — Shipping price is backend-authoritative
 Displayed shipping cost comes from Host shipping quote/configuration (Rates). Frontend must not invent authoritative rates, treat template amounts as truth, or present free shipping unless the real rule/config yields zero.
+
+### LOCK-SF-012 — Sandbox simulator is Development/Sandbox only
+The Tooba-hosted payment simulator exists only when Gateway Mode is Sandbox and the Host is not Production. Production never fakes PSP success and never exposes simulator Success/Failure actions.
+
+### LOCK-SF-013 — Online payment success is backend-authoritative including simulator
+Simulator Success/Failure buttons call Host Verify. Frontend outcome text is not Payment truth.
+
+### LOCK-SF-014 — Manual/card-to-card transfer reference is mandatory
+Customer payment tracking/reference number (`شماره پیگیری پرداخت`) is required, trimmed, max 64. It is not the Order tracking number.
+
+### LOCK-SF-015 — Payment proof requirement is method-configurable
+Manual/card-to-card proof upload is Disabled / Optional / Required on Store payment-method configuration. Do not hardcode globally.
+
+### LOCK-SF-016 — Manual customer submit is Pending/AwaitingConfirmation
+Customer proof submission never marks Payment Succeeded. Admin ConfirmDeposit remains the success boundary.
+
+### LOCK-SF-017 — Checkout cart finalization prevents duplicate Order on payment retry
+After Order commit the Cart is Converted. Storefront GET of a Converted cart returns empty lines. Payment retry operates on the committed Order/Payment, not a second Order from the same cart.
+
+### LOCK-SF-018 — Manual evidence history is immutable across reject/retry
+Rejected manual attempts keep their transfer reference and proof MediaAssetId. Retry creates a new Initiated attempt.
