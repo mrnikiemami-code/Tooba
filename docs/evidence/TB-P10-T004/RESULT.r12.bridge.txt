@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R12
+
+Parent-Task:
+TB-P10-T004-R11
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+P10 lifecycle gate: Cart has no hard reservation; Order commit starts the hold; online/manual/timeout/late-money/reject-retry/recover/multi-seller/1.25/last-unit/admin SupplyStatus and ownership all coexist. Runtime A–P ok=true. No new product features. R11 payable invariant unchanged. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…065 preserved (cart≠hold, commit-boundary reserve, R5–R11 unpaid/finance/StoreShipping, no resurrection).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r12-recovery-start.md
+
+Lifecycle-Matrix:
+docs/evidence/TB-P10-T004/r12-lifecycle-matrix.md — no contradiction
+
+Settings-Effective-Policy:
+docs/evidence/TB-P10-T004/r12-settings-effective-policy.md
+
+Deployment-Readiness:
+docs/evidence/TB-P10-T004/r12-deployment-readiness.md
+
+Dead-Code-Audit:
+docs/evidence/TB-P10-T004/r12-dead-code-audit.md — no unsafe deletions
+
+Runtime:
+docs/evidence/TB-P10-T004/r12-runtime.md + r12-runtime-raw.json
+
+Browser-Network:
+docs/evidence/TB-P10-T004/r12-browser-network.md
+
+Security:
+docs/evidence/TB-P10-T004/r12-security.md
+
+Financial:
+docs/evidence/TB-P10-T004/r12-financial.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r12-focused-validation.md
+
+AntiPattern-Final:
+docs/evidence/TB-P10-T004/r12-antipattern-final.md — CLEAN
+
+Future-Enhancements:
+docs/evidence/TB-P10-T004/r12-future-enhancements.md
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r12-recovery-sot.md — Architect R11; Impl R12; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no Home/PDP change
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

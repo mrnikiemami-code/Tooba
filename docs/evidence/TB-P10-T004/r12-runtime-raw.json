@@ -1,0 +1,139 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-online-success",
+      "ok": true,
+      "cartReserves": 0,
+      "commit": 200,
+      "paid": "Succeeded",
+      "holds": 1
+    },
+    {
+      "name": "B-online-fail-retry",
+      "ok": true,
+      "samePayment": true,
+      "newAttempt": true,
+      "paid": "Succeeded"
+    },
+    {
+      "name": "C-timeout-retry-pay",
+      "ok": true,
+      "expireHolds": 0,
+      "retry": 200,
+      "oldRes": "01a0940c-88a7-7000-8b2f-c8935ef519a6",
+      "newRes": "01a0940c-936d-7000-850d-4bba183a1338",
+      "paid": "Succeeded"
+    },
+    {
+      "name": "D-timeout-unavailable",
+      "ok": true,
+      "retry": 409
+    },
+    {
+      "name": "E-late-captured",
+      "ok": true,
+      "complete": 200,
+      "paid": "Succeeded",
+      "holds": 1
+    },
+    {
+      "name": "F-manual-normal",
+      "ok": true,
+      "evidence": 200,
+      "confirm": 200,
+      "paid": "Succeeded"
+    },
+    {
+      "name": "G-manual-reject-retry",
+      "ok": true,
+      "reject": 200,
+      "retry": 200,
+      "evidence2": 200,
+      "oldRes": "01a0940d-1851-7000-93cd-334b0c426caf",
+      "newRes": "01a0940d-1a26-7000-8004-e76a8a065f4c",
+      "afterRejectHolds": 0,
+      "oldStatus": "Released"
+    },
+    {
+      "name": "H-review-expiry-reacquire",
+      "ok": true,
+      "confirm": 200,
+      "oldRes": "01a0940d-1ce8-7000-b151-2b99b34cc5b3",
+      "newRes": "01a0940d-1ecc-7000-9fdc-aefc909f7099",
+      "paid": "Succeeded"
+    },
+    {
+      "name": "I-review-expiry-unavailable",
+      "ok": true,
+      "confirm": 400,
+      "oldRes": "01a0940d-22b2-7000-a59c-cb4ca8840c0c"
+    },
+    {
+      "name": "J-multiseller-shipping",
+      "ok": true,
+      "sellers": 2,
+      "payable": 2217588,
+      "sellerAlloc": 2017588,
+      "shippingAlloc": 200000
+    },
+    {
+      "name": "K-decimal-1.25",
+      "ok": true,
+      "cart": 1.25,
+      "order": 1.25,
+      "reservation": 1.25
+    },
+    {
+      "name": "L-cart-no-hard-reserve",
+      "ok": true,
+      "cartReserves": 0,
+      "recentKgHoldsBeforeCommit": 6,
+      "afterCommitHolds": 1
+    },
+    {
+      "name": "M-last-unit-race",
+      "ok": true,
+      "win": 200,
+      "lose": 409,
+      "reserved": 94.75,
+      "onHand": 94.75
+    },
+    {
+      "name": "N-admin-supply",
+      "ok": true,
+      "orders": 200,
+      "payments": 200,
+      "sample": "Reserved"
+    },
+    {
+      "name": "O-historical-recover",
+      "ok": true,
+      "recover": "Recovered",
+      "oldRes": "01a0940d-36cd-7000-bb0b-b0cf822ea0f6",
+      "newRes": "01a0940d-3a56-7000-b7e3-7473d892af1b"
+    },
+    {
+      "name": "P-result-and-ownership",
+      "ok": true,
+      "owned": 200,
+      "naked": 400,
+      "wrongGuest": 401,
+      "emptyCart": 401,
+      "clientEnsure": 401
+    },
+    {
+      "name": "settings-roundtrip",
+      "ok": true,
+      "get": 200,
+      "put": 200
+    }
+  ],
+  "at": "2026-09-12T05:17:16.695Z",
+  "secretsOmitted": true
+}

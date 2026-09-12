@@ -133,6 +133,7 @@ test("shouldPoll stops for Succeeded Failed Cancelled", async () => {
   assert.equal(shouldPollStorefrontPayment({ status: "Succeeded", providerCode: "fake" } as never), false);
   assert.equal(shouldPollStorefrontPayment({ status: "Failed", providerCode: "fake" } as never), false);
   assert.equal(shouldPollStorefrontPayment({ status: "Cancelled", providerCode: "fake" } as never), false);
+  assert.equal(shouldPollStorefrontPayment({ status: "Expired", providerCode: "fake" } as never), false);
 });
 
 test("shouldPoll stops for manual AwaitingAdmin and awaiting customer form", async () => {
