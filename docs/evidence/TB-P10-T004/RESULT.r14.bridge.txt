@@ -1,0 +1,76 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R14
+
+Parent-Task:
+TB-P10-T004-R13
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Payment Succeeded is terminal for new initiation. New online/manual/wallet keys after success return 409 payment.already_succeeded with customer FA. Same-key and sandbox Verify replay stay 200 without a new attempt. Manual evidence after confirm is blocked. Failed/Rejected/Expired retries still 200. Checkout GET overlays Paid + CanInitiatePayment=false. Runtime A–G ok=true. HEAD==origin/main after push. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…072 preserved. Added LOCK-SF-073…075 (Succeeded terminal for initiate/retry/evidence; shared backend capability; duplicate success delivery ≠ new initiation).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r14-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r14-payment-initiation-discovery.md
+
+Payment-Capability:
+docs/evidence/TB-P10-T004/r14-payment-capability.md
+
+API-Guard:
+docs/evidence/TB-P10-T004/r14-api-guard.md
+
+Manual-Guard:
+docs/evidence/TB-P10-T004/r14-manual-guard.md
+
+Frontend-UX:
+Checkout mapper canInitiatePayment; handoff pay() no-ops when paid or canInitiatePayment=false; payment.already_succeeded FA copy.
+
+Concurrency:
+docs/evidence/TB-P10-T004/r14-concurrency.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r14-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r14-runtime.md + r14-runtime-raw.json — A–G PASS
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r14-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-073…075
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r14-recovery-sot.md — Architect R13; Impl R14; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD ccd09679ef5fbc49e030f34def20574da1abb006; HEAD==origin/main after push yes; leftover local PDP/shipping/catalog dirty not task-owned
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+none — USER_VISUAL_ACCEPTED=NO; Home/PDP not redesigned
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
