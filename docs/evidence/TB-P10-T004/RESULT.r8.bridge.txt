@@ -65,7 +65,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r8-recovery-sot.md — Architect R7; Impl R8; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD pending-commit; HEAD==origin/main after push
+branch main; HEAD 34523d426e7374a6a00716af6fb643c659bd18be; HEAD==origin/main yes
 
 Architectural-Concerns:
 none for this UX wiring
