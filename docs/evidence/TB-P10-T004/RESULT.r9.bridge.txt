@@ -74,7 +74,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r9-recovery-sot.md — Architect R8; Impl R9; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD pending-commit; HEAD==origin/main after push
+branch main; HEAD 58babaa4385d66a2665588d7f9785ba505e8327b; HEAD==origin/main yes
 
 Architectural-Concerns:
 Shipping commit remains the Order-creation boundary by lock; reservation now starts there instead of AddToCart.
