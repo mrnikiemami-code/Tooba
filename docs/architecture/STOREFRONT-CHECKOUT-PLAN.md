@@ -1,4 +1,4 @@
-# Storefront Checkout Plan (P10)
+﻿# Storefront Checkout Plan (P10)
 
 ```text
 Phase: P10 — Storefront Checkout Journey
@@ -66,6 +66,8 @@ Stop 401 loop after Cart finalization: Payment/Order ownership independent of mu
 ## T004-R5 — Manual payment review reservation lifecycle (IMPLEMENTED — THIS TASK)
 
 After manual proof submit, inventory promotes from Cart TTL to ManualPaymentReviewHoldHours (default 24h). Admin confirm within window commits durable paid hold. Reject releases; retry reacquirers. Late confirm never resurrects Released; reacquire or actionable inventory.manual_review.unavailable. Not T005.
+
+R6: historical Cart-TTL defect Orders audit Class A/B/C; recover via new reservations + rebind; atomic; no mass startup mutation.
 
 ## Non-goals for T004
 

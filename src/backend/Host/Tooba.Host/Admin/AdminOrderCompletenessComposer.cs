@@ -752,6 +752,19 @@ public sealed class AdminOrderCompletenessComposer
         var notes = await _checkout.ListNotesAsync(group.CheckoutId, Guid.Empty, 50, cancellationToken);
         foreach (var note in notes)
         {
+            if (TryMapInventoryRecoveryNote(note.Body, out var kind, out var labelFa, out var labelEn))
+            {
+                entries.Add(Draft(
+                    note.CreatedAt,
+                    kind,
+                    labelFa,
+                    labelEn,
+                    note.CreatedByUserId == Guid.Empty ? null : note.CreatedByUserId,
+                    Truncate(note.Body, 120),
+                    Truncate(note.Body, 120)));
+                continue;
+            }
+
             entries.Add(Draft(
                 note.CreatedAt,
                 "operational_note",
@@ -766,6 +779,55 @@ public sealed class AdminOrderCompletenessComposer
             .OrderByDescending(x => x.OccurredAt)
             .ThenBy(x => x.Kind, StringComparer.Ordinal)
             .ToList();
+    }
+
+    private static bool TryMapInventoryRecoveryNote(
+        string body,
+        out string kind,
+        out string labelFa,
+        out string labelEn)
+    {
+        kind = string.Empty;
+        labelFa = string.Empty;
+        labelEn = string.Empty;
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return false;
+        }
+
+        if (body.StartsWith(OrderInventoryRecoveryComposer.NotePrefixRequested, StringComparison.Ordinal))
+        {
+            kind = "inventory_recovery_requested";
+            labelFa = "درخواست بازیابی موجودی";
+            labelEn = "Inventory Recovery Requested";
+            return true;
+        }
+
+        if (body.StartsWith(OrderInventoryRecoveryComposer.NotePrefixSucceeded, StringComparison.Ordinal))
+        {
+            kind = "inventory_recovery_succeeded";
+            labelFa = "بازیابی موجودی موفق";
+            labelEn = "Inventory Recovery Succeeded";
+            return true;
+        }
+
+        if (body.StartsWith(OrderInventoryRecoveryComposer.NotePrefixFailed, StringComparison.Ordinal))
+        {
+            kind = "inventory_recovery_failed_insufficient";
+            labelFa = "شکست بازیابی موجودی — کمبود موجودی";
+            labelEn = "Inventory Recovery Failed — Insufficient Inventory";
+            return true;
+        }
+
+        if (body.StartsWith(OrderInventoryRecoveryComposer.NotePrefixManual, StringComparison.Ordinal))
+        {
+            kind = "inventory_recovery_manual_review";
+            labelFa = "بازیابی موجودی نیازمند بررسی دستی";
+            labelEn = "Inventory Recovery Requires Manual Review";
+            return true;
+        }
+
+        return false;
     }
 
     private async Task<IReadOnlyDictionary<Guid, ActorLabel>> ResolveActorLabelsAsync(

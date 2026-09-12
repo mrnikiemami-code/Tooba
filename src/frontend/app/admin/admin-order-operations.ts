@@ -58,6 +58,8 @@ export type AdminOrderOperationsPage = {
   returnEligibility: unknown[];
   lineCapabilities: AdminOrderLineCapability[];
   sellerCapabilities: AdminSellerCapability[];
+  inventoryRecoveryWarningFa?: string | null;
+  inventoryRecoveryClass?: string | null;
 };
 
 export type AdminOrderOperationRequest = {
@@ -137,6 +139,10 @@ function mapPage(raw: unknown): AdminOrderOperationsPage | null {
       : [],
     lineCapabilities: mapLineCaps(row.lineCapabilities ?? row.LineCapabilities),
     sellerCapabilities: mapSellerCaps(row.sellerCapabilities ?? row.SellerCapabilities),
+    inventoryRecoveryWarningFa:
+      asString(row.inventoryRecoveryWarningFa) ?? asString(row.InventoryRecoveryWarningFa),
+    inventoryRecoveryClass:
+      asString(row.inventoryRecoveryClass) ?? asString(row.InventoryRecoveryClass),
   };
 }
 

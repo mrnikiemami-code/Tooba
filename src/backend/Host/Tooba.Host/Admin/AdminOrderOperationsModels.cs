@@ -44,7 +44,9 @@ public sealed record AdminOrderOperationsPage(
     IReadOnlyList<AdminOrderOperationAction> Actions,
     IReadOnlyList<ReturnEligibilityResult> ReturnEligibility,
     IReadOnlyList<AdminOrderLineCapability>? LineCapabilities = null,
-    IReadOnlyList<AdminSellerCapability>? SellerCapabilities = null);
+    IReadOnlyList<AdminSellerCapability>? SellerCapabilities = null,
+    string? InventoryRecoveryWarningFa = null,
+    string? InventoryRecoveryClass = null);
 
 /// <summary>انتخاب خط/تعداد برای عملیات seller-scoped.</summary>
 public sealed record AdminOrderLineSelection(Guid OrderLineId, decimal Quantity);

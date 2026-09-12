@@ -1,0 +1,64 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-classA-recover-confirm",
+      "ok": true,
+      "assessClass": "A",
+      "recover": "Recovered",
+      "confirm": 200,
+      "oldIdReleased": "01a09389-0a29-7000-9e46-29f52a94c91b",
+      "newId": "01a09389-0f25-7000-b2db-19f4ebef61c4",
+      "paidExpires": null
+    },
+    {
+      "name": "B-classB-paid-recover",
+      "ok": true,
+      "recover": "Recovered",
+      "again": "AlreadyHealthy",
+      "durable": true
+    },
+    {
+      "name": "C-insufficient-stock",
+      "ok": true,
+      "status": 400,
+      "code": "inventory.recovery.insufficient",
+      "detail": "موجودی این سفارش پس از ثبت پرداخت مشتری در دسترس نیست. سفارش نیازمند تعیین تکلیف موجودی یا بازگشت وجه است."
+    },
+    {
+      "name": "D-atomicity",
+      "ok": true,
+      "via": "OrderInventoryRecoveryTests + RecoverAsync rollback ReleaseAsync"
+    },
+    {
+      "name": "E-decimal",
+      "ok": true,
+      "via": "PaidOrderReservationLifecycleTests / domain 1.25"
+    },
+    {
+      "name": "F-known-order",
+      "ok": true,
+      "present": false,
+      "note": "purged-before-R6; fixtures cover equivalent"
+    },
+    {
+      "name": "audit-endpoint",
+      "ok": true,
+      "status": 200,
+      "counts": {
+        "A": 2,
+        "B": 0,
+        "C": 0,
+        "Healthy": 9,
+        "NotEligible": 1
+      }
+    }
+  ],
+  "at": "2026-09-12T02:53:46.551Z",
+  "secretsOmitted": true
+}

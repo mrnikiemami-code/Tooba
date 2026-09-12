@@ -241,3 +241,18 @@ ConfirmDeposit within an active review hold commits ExpiresAt=null paid-order se
 
 ### LOCK-SF-026 — Rejected/expired review holds are never resurrected
 Admin reject releases the Held review reservation. Review-hold expiry releases via the expiry worker. Late Confirm never resurrects Released/Consumed rows; it must authoritatively reacquire or fail with inventory.manual_review.unavailable.
+
+### LOCK-SF-027 — Historical Cart-TTL defect recovery uses new reservations only
+Historical paid/manual-review Orders with Released reservations are recovered by authoritative reacquire + rebind; Released rows are never resurrected.
+
+### LOCK-SF-028 — Inventory recovery is atomic across remaining lines
+RecoverOrderInventoryReservation acquires all required remaining lines or rolls back every newly acquired reservation from that attempt.
+
+### LOCK-SF-029 — Paid-but-unrecoverable inventory blocks fulfillment
+When Class B recovery cannot reacquire stock, fulfillment remains blocked pending explicit operational resolution (replenish/retry or cancel/refund).
+
+### LOCK-SF-030 — Historical recovery never rewrites financial history
+Inventory recovery mutates reservation bindings only; Payment amounts, settlement, refunds, and Order identity stay unchanged.
+
+### LOCK-SF-031 — No automatic mass recovery on startup/migration
+Historical audit/recovery runs only via explicit Admin/maintenance commands; never as unbounded EF startup migration.

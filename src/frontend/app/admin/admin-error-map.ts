@@ -406,6 +406,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
     en: "Inventory for this order is no longer available during payment review. Check order status and refund handling.",
   },
+  "inventory.recovery.insufficient": {
+    fa: "موجودی این سفارش پس از ثبت پرداخت مشتری در دسترس نیست. سفارش نیازمند تعیین تکلیف موجودی یا بازگشت وجه است.",
+    en: "Inventory is unavailable after the customer payment was recorded. Resolve stock or refund the order.",
+  },
+  "inventory.recovery.required": {
+    fa: "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد.",
+    en: "This order's inventory reservation from the prior lifecycle is invalid and requires recovery.",
+  },
   "inventory.reservation.not_found": {
     fa: "رزرو موجودی این سفارش پیدا نشد. اطلاعات سفارش را تازه‌سازی کنید.",
     en: "This order's inventory reservation was not found. Refresh the order.",

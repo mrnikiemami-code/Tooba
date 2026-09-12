@@ -37,6 +37,7 @@ import {
 } from "./admin-api";
 import { AdminOrderItemsShippingPanel } from "./admin-order-items-shipping-panel";
 import { AdminOrderOperationsMenu } from "./admin-order-operations-menu";
+import { loadAdminOrderOperations } from "./admin-order-operations";
 import { paymentStatusBadge, resolveOrderStatusCard, resolvePaymentStatusCard } from "./admin-order-status-cards";
 import {
   addAdminOrderNote,
@@ -554,6 +555,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
         </div>
       </header>
       {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}
+      <InventoryRecoveryBanner checkoutId={checkoutId} />
 
       {result.state === "error" ? (
         <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
@@ -767,5 +769,32 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
         <p className="text-sm text-gray-500">در حال بارگذاری…</p>
       )}
     </main>
+  );
+}
+
+function InventoryRecoveryBanner({ checkoutId }: { checkoutId: string }) {
+  const [warning, setWarning] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void loadAdminOrderOperations(checkoutId).then((result) => {
+      if (cancelled) return;
+      if (result.state === "ok" && result.data?.inventoryRecoveryWarningFa) {
+        setWarning(result.data.inventoryRecoveryWarningFa);
+      } else {
+        setWarning(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [checkoutId]);
+  if (!warning) return null;
+  return (
+    <p
+      data-testid="admin-order-inventory-recovery-warning"
+      className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900"
+    >
+      {warning}
+    </p>
   );
 }

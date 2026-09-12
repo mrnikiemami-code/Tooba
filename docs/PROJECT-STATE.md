@@ -1,4 +1,4 @@
-# Tooba — Project State
+﻿# Tooba — Project State
 
 Project:
 
@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R4
+TB-P10-T004-R5
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R5
+TB-P10-T004-R6
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R6 — Historical Paid/Manual Orders Inventory Recovery; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R5 — Manual Payment Review Reservation Lifecycle; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R4 — Payment Result Ownership + Polling Repair (stop 401 after cart finalize); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R3 — Payment Completion Runtime Proof (A–J + Converted-cart payment GetAsync fix); USER_VISUAL_ACCEPTED=NO
@@ -166,7 +167,7 @@ TB-P07-T043 — Order Detail visual fidelity polish; T042-R1 data wiring preserv
 Last Architect-Accepted Task:
 
 ```text
-TB-P10-T004-R4
+TB-P10-T004-R5
 ```
 
 USER_VISUAL_ACCEPTED:

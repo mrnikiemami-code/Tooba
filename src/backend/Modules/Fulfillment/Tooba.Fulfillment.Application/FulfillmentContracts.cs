@@ -252,6 +252,11 @@ public interface IFulfillmentDirectory
     /// </summary>
     Task ReactivateAfterOrderRestoreAsync(Guid checkoutId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// فقط مرجع رزرو فعال را از Order handoff فعلی بازمی‌بندد (بدون تغییر وضعیت Cancelled).
+    /// </summary>
+    Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken);
+
     /// <summary>بسته‌های تجمیعی یک checkout (شامل تاریخی).</summary>
     Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
         Guid checkoutId,

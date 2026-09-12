@@ -14,11 +14,31 @@ public static class AdminOrderOperationsEndpoints
     public static void MapAdminOrderOperationsEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/v1/admin/orders");
+        group.MapGet("/inventory-recovery/audit", AuditInventoryRecoveryAsync);
+        group.MapGet("/{checkoutId:guid}/inventory-recovery", AssessInventoryRecoveryAsync);
         group.MapGet("/{checkoutId:guid}/operations", ListOperationsAsync);
         group.MapPost("/{checkoutId:guid}/operations", ExecuteOperationAsync);
         group.MapGet("/{checkoutId:guid}/return-eligibility", ListReturnEligibilityAsync);
         app.MapGet("/v1/admin/shipping-methods", ListShippingMethodsAsync);
     }
+
+    private static async Task<IResult> AuditInventoryRecoveryAsync(
+        OrderInventoryRecoveryComposer recovery,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        int? take,
+        CancellationToken cancellationToken)
+    {
+        _ = session;
+        _ = tenant;
+        return Results.Json(await recovery.AuditAsync(take ?? 50, cancellationToken));
+    }
+
+    private static async Task<IResult> AssessInventoryRecoveryAsync(
+        Guid checkoutId,
+        OrderInventoryRecoveryComposer recovery,
+        CancellationToken cancellationToken) =>
+        Results.Json(await recovery.AssessCheckoutAsync(checkoutId, cancellationToken));
 
     private static async Task<IResult> ListShippingMethodsAsync(
         FulfillmentDbContext db,

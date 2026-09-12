@@ -1,0 +1,88 @@
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R6
+
+Parent-Task:
+TB-P10-T004-R5
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Historical paid/manual Orders with Released reservations (Cart-TTL defect) can be audited (Class A/B/C) and safely recovered via OrderInventoryRecoveryComposer: new Inventory reservations + OrderLine ReplaceReservation + Fulfillment rebind; never resurrect Released; atomic multi-line with rollback; Class A review hold / Class B durable paid; insufficient stock → inventory.recovery.insufficient + fulfillment lock; Admin warning + recover_inventory_reservation; bounded audit endpoint; no startup mass mutation. Runtime A–F ok=true. Focused recovery tests + guard green. Locks SF-027…031. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…026 preserved; LOCK-SF-027 historical recover via new reservations; LOCK-SF-028 atomic multi-line; LOCK-SF-029 paid-unrecoverable blocks fulfillment; LOCK-SF-030 no financial rewrite; LOCK-SF-031 no startup mass recovery.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r6-recovery-start.md
+
+Historical-Audit:
+docs/evidence/TB-P10-T004/r6-historical-audit.md + GET /v1/admin/orders/inventory-recovery/audit
+
+Classification:
+docs/evidence/TB-P10-T004/r6-classification.md — A/B/C
+
+Recovery-Command:
+docs/evidence/TB-P10-T004/r6-recovery-command.md — RecoverAsync / recover_inventory_reservation
+
+Atomicity:
+docs/evidence/TB-P10-T004/r6-atomicity.md
+
+Manual-AwaitingAdmin:
+docs/evidence/TB-P10-T004/r6-manual-awaiting-admin.md
+
+Paid-Order:
+docs/evidence/TB-P10-T004/r6-paid-order.md
+
+Insufficient-Stock:
+docs/evidence/TB-P10-T004/r6-insufficient-stock.md
+
+Known-Order:
+docs/evidence/TB-P10-T004/r6-known-order.md — TB-20260912010851-01-456f7b purged locally; fixtures cover
+
+Admin-UX:
+docs/evidence/TB-P10-T004/r6-admin-ux.md
+
+Concurrency:
+docs/evidence/TB-P10-T004/r6-concurrency.md — idempotent AlreadyHealthy
+
+Financial-Safety:
+docs/evidence/TB-P10-T004/r6-financial-safety.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r6-focused-validation.md — OrderInventoryRecoveryTests 4; recovery-staleness 4; runtime ok
+
+Runtime:
+docs/evidence/TB-P10-T004/r6-runtime.md + r6-runtime-raw.json
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-027…031
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r6-recovery-sot.md — Architect R5; Impl R6; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD __ENDING_HEAD__; HEAD==origin/main yes
+
+Architectural-Concerns:
+none for this repair
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; minimal Admin warning only
+
+Blockers:
+none
+
+END_TOOBA_TASK_RESULT

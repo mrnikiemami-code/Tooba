@@ -750,6 +750,30 @@ public sealed class FulfillmentDirectory : IFulfillmentDirectory
     }
 
     /// <inheritdoc />
+    public async Task RebindActiveReservationsFromOrderAsync(Guid checkoutId, CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var units = await _db.Fulfillments
+            .Where(x => x.CheckoutId == checkoutId)
+            .ToListAsync(cancellationToken);
+        if (units.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var unitRow in units)
+        {
+            var unit = await LoadMutableAsync(unitRow.FulfillmentId, cancellationToken);
+            var handoff = await _orders.GetHandoffAsync(unit.SellerOrderId, cancellationToken)
+                ?? throw new InvalidOperationException("سفارش برای fulfillment پیدا نشد.");
+            var reservations = handoff.Lines.ToDictionary(x => x.OrderLineId, x => x.ReservationId);
+            unit.RebindActiveReservations(reservations);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ConsolidatedPackageSnapshot>> GetPackagesForCheckoutAsync(
         Guid checkoutId,
         CancellationToken cancellationToken)

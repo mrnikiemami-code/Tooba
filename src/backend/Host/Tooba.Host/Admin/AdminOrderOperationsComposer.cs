@@ -74,6 +74,7 @@ public sealed class AdminOrderOperationsComposer
     private readonly IOrderPaymentProjection _orderPayments;
     private readonly ISettlementDirectory _settlement;
     private readonly ShippingMethodsOptions _shippingMethods;
+    private readonly OrderInventoryRecoveryComposer _inventoryRecovery;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsComposer(
@@ -88,6 +89,7 @@ public sealed class AdminOrderOperationsComposer
         IPaymentAdminDirectory payments,
         IOrderPaymentProjection orderPayments,
         ISettlementDirectory settlement,
+        OrderInventoryRecoveryComposer inventoryRecovery,
         ShippingMethodsOptions? shippingMethods = null)
     {
         _orders = orders;
@@ -101,6 +103,7 @@ public sealed class AdminOrderOperationsComposer
         _payments = payments;
         _orderPayments = orderPayments;
         _settlement = settlement;
+        _inventoryRecovery = inventoryRecovery;
         _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
 
@@ -145,6 +148,8 @@ public sealed class AdminOrderOperationsComposer
         ProjectWholeOrderCancel(actions, group, fulfillments, effective, blockedBySellerPayout);
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
         ProjectConsolidatedPackageActions(actions, group, fulfillments, packages, membershipByShipment, effective);
+        var recovery = await _inventoryRecovery.AssessCheckoutAsync(checkoutId, cancellationToken);
+        ProjectInventoryRecovery(actions, recovery, effective);
         var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
         var lineCaps = new List<AdminOrderLineCapability>();
         var sellerCaps = new List<AdminSellerCapability>();
@@ -152,11 +157,43 @@ public sealed class AdminOrderOperationsComposer
         {
             var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
             var projected = AdminFulfillmentCapabilityProjector.Project(order, fulfillment, collapsed);
-            lineCaps.AddRange(projected.Lines);
-            sellerCaps.Add(projected.Seller);
+            if (recovery.NeedsRecovery || recovery.ClassCode is "C")
+            {
+                sellerCaps.Add(projected.Seller with
+                {
+                    SelectionAllowed = false,
+                    PaymentLocked = true,
+                    InfoMessageFa = "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد.",
+                    ShipmentCreationPossible = false,
+                });
+                foreach (var line in projected.Lines)
+                {
+                    lineCaps.Add(line with
+                    {
+                        Selectable = false,
+                        LockedReasonCode = "inventory.recovery.required",
+                        LockedReasonFa = "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد.",
+                    });
+                }
+            }
+            else
+            {
+                lineCaps.AddRange(projected.Lines);
+                sellerCaps.Add(projected.Seller);
+            }
         }
 
-        return new AdminOrderOperationsPage(checkoutId, collapsed, eligibility, lineCaps, sellerCaps);
+        var warning = recovery.NeedsRecovery || recovery.ClassCode is "C"
+            ? "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد."
+            : null;
+        return new AdminOrderOperationsPage(
+            checkoutId,
+            collapsed,
+            eligibility,
+            lineCaps,
+            sellerCaps,
+            warning,
+            recovery.ClassCode is "A" or "B" or "C" ? recovery.ClassCode : null);
     }
 
     /// <summary>eligibility همهٔ سفارش‌های فروشندهٔ یک checkout.</summary>
@@ -283,6 +320,16 @@ public sealed class AdminOrderOperationsComposer
             return await RestoreCancelledOrderAsync(group, actorUserId, cancellationToken);
         }
 
+        if (code == "recover_inventory_reservation")
+        {
+            if (!Has(effective, "payment.reconcile"))
+            {
+                throw new PlatformHttpException(403, "مجوز انجام این عملیات وجود ندارد.", "order.operation.denied");
+            }
+
+            return await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken);
+        }
+
         var page = await ListAsync(checkoutId, actorUserId, cancellationToken);
         var projected = page.Actions.FirstOrDefault(a =>
             string.Equals(a.Code, request.Code, StringComparison.OrdinalIgnoreCase)
@@ -332,6 +379,7 @@ public sealed class AdminOrderOperationsComposer
                 "retry_refund" => await RetryRefundAsync(request, actorUserId, cancellationToken),
                 "confirm_deposit" => await ConfirmDepositForCheckoutAsync(group, cancellationToken),
                 "reject_deposit" => await RejectDepositForCheckoutAsync(checkoutId, cancellationToken),
+                "recover_inventory_reservation" => await RecoverInventoryReservationAsync(checkoutId, actorUserId, request, cancellationToken),
                 _ => throw new PlatformHttpException(400, "کد عملیات نامعتبر است.", "order.operation.invalid"),
             };
         }
@@ -1309,6 +1357,39 @@ public sealed class AdminOrderOperationsComposer
                 "تأیید واریز این سفارش به حالت انتظار برگردد؟"));
         }
     }
+
+    private void ProjectInventoryRecovery(
+        List<AdminOrderOperationAction> actions,
+        OrderInventoryRecoveryAssessment recovery,
+        EffectiveAccessDto effective)
+    {
+        if (!Has(effective, "payment.reconcile"))
+        {
+            return;
+        }
+
+        if (recovery.NeedsRecovery && recovery.ClassCode is "A" or "B")
+        {
+            actions.Add(Action(
+                "recover_inventory_reservation",
+                "بازیابی رزرو موجودی",
+                "Recover inventory reservation",
+                null,
+                null,
+                null,
+                null,
+                "payment.reconcile",
+                true,
+                "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست. بازیابی از موجودی فعلی انجام شود؟"));
+        }
+    }
+
+    private async Task<object> RecoverInventoryReservationAsync(
+        Guid checkoutId,
+        Guid actorUserId,
+        AdminOrderOperationRequest request,
+        CancellationToken cancellationToken) =>
+        await _inventoryRecovery.RecoverAsync(checkoutId, actorUserId, request.Reason, cancellationToken);
 
     private void ProjectWholeOrderCancel(
         List<AdminOrderOperationAction> actions,
@@ -2289,6 +2370,7 @@ internal static class AdminOrderWholeOrderActions
         "reject_deposit",
         "restore_deposit",
         "unconfirm_deposit",
+        "recover_inventory_reservation",
         "restore_cancelled_order",
     };
 
