@@ -46,6 +46,19 @@ test("checkout mapper keeps backend totals and pending payment", () => {
   assert.equal(page?.paymentState, "PendingPayment");
   assert.equal(page?.payableAmount, 109000);
   assert.equal(page?.sellerOrders[0]?.orderNumber, "TB-1");
+  assert.equal(page?.canInitiatePayment, true);
+});
+
+test("paid checkout capability disables initiation", () => {
+  const page = mapStorefrontCheckout({
+    checkoutId: "chk-paid",
+    cartId: "cart-1",
+    paymentState: "Paid",
+    canInitiatePayment: false,
+    payableAmount: 1,
+    sellerOrders: [],
+  });
+  assert.equal(page?.canInitiatePayment, false);
 });
 
 test("post-commit ownership failure is never order-registration-failed", () => {

@@ -68,6 +68,12 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
 
             _actorContext.ActorUserId = command.ActorUserId;
             var replayGateway = _gateways.Resolve(existing.ProviderCode);
+            if (existing.Status != PaymentStatus.Succeeded
+                && await HasSucceededPaymentForCheckoutAsync(existing.CheckoutId, cancellationToken))
+            {
+                throw AlreadySucceeded();
+            }
+
             if (existing.Status == PaymentStatus.Failed)
             {
                 var retryInitiation = await replayGateway.InitiateAsync(
@@ -90,6 +96,25 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                     existing.Currency);
             }
 
+            if (existing.Status == PaymentStatus.Succeeded)
+            {
+                var priorSucceeded = priorAttempts.OrderByDescending(x => x.CreatedAt).First();
+                return new PaymentInitiationResult(
+                    existing.PaymentId,
+                    priorSucceeded.AttemptId,
+                    existing.Status,
+                    existing.ProviderCode,
+                    priorSucceeded.ProviderRequestReference,
+                    ResolveRedirectUrl(replayGateway, existing.PaymentId, priorSucceeded.AttemptId, priorSucceeded.ProviderRequestReference, null),
+                    existing.Amount,
+                    existing.Currency);
+            }
+
+            if (await HasSucceededPaymentForCheckoutAsync(existing.CheckoutId, cancellationToken))
+            {
+                throw AlreadySucceeded();
+            }
+
             var prior = priorAttempts.OrderByDescending(x => x.CreatedAt).First();
             return new PaymentInitiationResult(
                 existing.PaymentId,
@@ -102,6 +127,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                 existing.Currency);
         }
 
+        if (await HasSucceededPaymentForCheckoutAsync(command.CheckoutId, cancellationToken))
+        {
+            throw AlreadySucceeded();
+        }
+
         var payable = await _orders.GetPayableAsync(command.CheckoutId, command.ActorUserId, command.BuyerPartyId, cancellationToken)
             ?? throw new InvalidOperationException("checkout قابل پرداخت پیدا نشد.");
         if (payable.Mode != OrderPaymentMode.OnlinePurchase)
@@ -112,7 +142,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var pending = payable.SellerOrders.Where(x => x.PendingPayment).ToArray();
         if (pending.Length == 0)
         {
-            throw new InvalidOperationException("این سفارش قبلاً پرداخت شده است.");
+            throw AlreadySucceeded();
         }
 
         if (pending.Select(x => x.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1
@@ -308,6 +338,14 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     }
 
     /// <inheritdoc />
+    public Task<bool> HasSucceededPaymentForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+        _db.Payments.AsNoTracking()
+            .AnyAsync(x => x.CheckoutId == checkoutId && x.Status == PaymentStatus.Succeeded, cancellationToken);
+
+    internal static InvalidOperationException AlreadySucceeded() =>
+        new("پرداخت این سفارش قبلاً با موفقیت انجام شده است.");
+
+    /// <inheritdoc />
     public async Task RegisterProofAssetAsync(
         Guid paymentId,
         Guid actorUserId,
@@ -360,6 +398,11 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
         await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        if (payment.Status == PaymentStatus.Succeeded)
+        {
+            throw AlreadySucceeded();
+        }
+
         var attempts = await _db.Attempts
             .Where(x => x.PaymentId == paymentId)
             .OrderBy(x => x.CreatedAt)

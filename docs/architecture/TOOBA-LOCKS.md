@@ -379,3 +379,12 @@ Proofs are keyed by checkoutId (and paymentId for result). Proof A does not auth
 
 ### LOCK-SF-072 — Post-commit ownership failure is never “Order registration failed”
 `checkout.access.denied` / `payment.access.denied` map to a payment-access message. After a successful commit, Host must not emit checkout.rejected / «ثبت سفارش انجام نشد».
+
+### LOCK-SF-073 — Payment Succeeded is terminal for initiation and retry
+A checkout with any Succeeded Payment cannot start a new online/manual/wallet/sandbox initiation, cannot accept new manual evidence, and cannot retry. Failed/Rejected/Expired retries remain valid only when no Succeeded Payment exists.
+
+### LOCK-SF-074 — Initiation eligibility is backend-authoritative and shared
+`HasSucceededPaymentForCheckoutAsync` plus Host checkout `CanInitiatePayment` are the capability. Frontend must not infer pay-again from labels. All initiate/evidence/retry endpoints share this rule.
+
+### LOCK-SF-075 — Duplicate success delivery is not a new initiation
+Idempotent replay of the same Succeeded payment/key or Verify callback remains 200 without a new attempt. A new idempotency key or provider after success is `payment.already_succeeded` (409), never 200.

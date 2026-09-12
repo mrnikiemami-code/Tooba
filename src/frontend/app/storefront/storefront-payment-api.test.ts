@@ -106,6 +106,14 @@ test("payment mapper does not invent succeeded", () => {
   assert.equal(page?.status, "Pending");
 });
 
+test("already succeeded payment message is customer-safe", () => {
+  const msg = toCustomerPaymentMessage(
+    new StorefrontCartApiError(409, "payment.already_succeeded", "پرداخت این سفارش قبلاً با موفقیت انجام شده است."),
+  );
+  assert.match(msg, /با موفقیت انجام شده/);
+  assert.equal(msg.includes("already_succeeded"), false);
+});
+
 test("post-commit payment ownership is not order-registration-failed", () => {
   const msg = toCustomerPaymentMessage(
     new StorefrontCartApiError(

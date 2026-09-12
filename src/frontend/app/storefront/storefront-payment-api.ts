@@ -334,7 +334,8 @@ export function toCustomerPaymentMessage(error: unknown): string {
   if (error instanceof StorefrontCartApiError) {
     switch (error.errorCode) {
       case "payment.already-paid":
-        return "این سفارش قبلاً پرداخت شده است.";
+      case "payment.already_succeeded":
+        return "پرداخت این سفارش قبلاً با موفقیت انجام شده است.";
       case "payment.missing":
         return "پرداخت پیدا نشد.";
       case "payment.guest.invalid":

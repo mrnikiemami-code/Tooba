@@ -76,14 +76,14 @@ export function StorefrontPaymentHandoff() {
     };
   }, [params]);
 
-  const paid = page?.paymentState === "Paid";
+  const paid = page?.paymentState === "Paid" || page?.canInitiatePayment === false;
   const hasAnyMethod = useMemo(() => {
     if (quote?.canPayFullyWithWallet) return true;
     return enabledCodes.includes("gateway") || enabledCodes.includes("manual");
   }, [enabledCodes, quote]);
 
   async function pay() {
-    if (!page?.checkoutId || !method) return;
+    if (!page?.checkoutId || !method || paid) return;
     if (method === "wallet" && !quote?.canPayFullyWithWallet) {
       setError("پرداخت کامل با کیف پول برای این سفارش ممکن نیست.");
       return;

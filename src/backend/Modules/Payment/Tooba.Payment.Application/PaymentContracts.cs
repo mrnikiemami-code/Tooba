@@ -367,6 +367,11 @@ public interface IPaymentDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// آیا این checkout حداقل یک پرداخت Succeeded دارد. مالکیت جداگانه است.
+    /// </summary>
+    Task<bool> HasSucceededPaymentForCheckoutAsync(Guid checkoutId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// دارایی Media آپلودشده را به پرداخت جاری می‌چسباند تا مدرک خارجی قابل اتصال نباشد.
     /// </summary>
     Task RegisterProofAssetAsync(

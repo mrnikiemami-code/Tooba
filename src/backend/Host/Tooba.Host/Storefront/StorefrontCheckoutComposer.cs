@@ -343,6 +343,9 @@ public sealed class StorefrontCheckoutComposer
                 lines);
         }).ToList();
 
+        var paymentState = sellers.Count > 0 && sellers.All(x => string.Equals(x.Status, "Paid", StringComparison.Ordinal))
+            ? "Paid"
+            : "PendingPayment";
         return new StorefrontCheckoutPage(
             persisted ? snapshot.CheckoutId : null,
             snapshot.CartId,
@@ -350,9 +353,7 @@ public sealed class StorefrontCheckoutComposer
             snapshot.Market,
             snapshot.Currency,
             snapshot.Channel.ToString(),
-            sellers.Count > 0 && sellers.All(x => string.Equals(x.Status, "Paid", StringComparison.Ordinal))
-                ? "Paid"
-                : "PendingPayment",
+            paymentState,
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode,
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodLabel) ? DefaultShippingLabel : snapshot.ShippingMethodLabel,
             snapshot.RecipientName,
@@ -366,7 +367,8 @@ public sealed class StorefrontCheckoutComposer
             sellers.Sum(x => x.TaxAmount),
             snapshot.ShippingAmount,
             sellers.Sum(x => x.PayableAmount) + snapshot.ShippingAmount,
-            sellers);
+            sellers,
+            !string.Equals(paymentState, "Paid", StringComparison.Ordinal));
     }
 
     private static void ValidateShipping(StorefrontCheckoutShippingInput shipping)

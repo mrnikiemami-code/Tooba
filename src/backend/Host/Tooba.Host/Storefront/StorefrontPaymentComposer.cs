@@ -181,11 +181,6 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("سفارش پیدا نشد.");
         }
 
-        if (string.Equals(checkout.PaymentState, "Paid", StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException("این سفارش قبلاً پرداخت شده است.");
-        }
-
         var providerCode = _gatewayOptions.DefaultProvider;
         var actor = ResolvePaymentActor();
         if (useWallet)
@@ -463,8 +458,14 @@ public sealed class StorefrontPaymentComposer
         Guid? proofMediaAssetId,
         CancellationToken cancellationToken)
     {
-        _ = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+        var opened = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        if (string.Equals(opened.Status, "Succeeded", StringComparison.Ordinal)
+            || await _payments.HasSucceededPaymentForCheckoutAsync(opened.CheckoutId, cancellationToken))
+        {
+            throw new InvalidOperationException("پرداخت این سفارش قبلاً با موفقیت انجام شده است.");
+        }
+
         var requirement = _gatewayOptions.NormalizedManualProofRequirement();
         if (requirement.Equals("Required", StringComparison.OrdinalIgnoreCase) && proofMediaAssetId is null)
         {
@@ -506,8 +507,14 @@ public sealed class StorefrontPaymentComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
-        _ = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+        var current = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        if (string.Equals(current.Status, "Succeeded", StringComparison.Ordinal)
+            || await _payments.HasSucceededPaymentForCheckoutAsync(current.CheckoutId, cancellationToken))
+        {
+            throw new InvalidOperationException("پرداخت این سفارش قبلاً با موفقیت انجام شده است.");
+        }
+
         await _payments.RetryManualAfterRejectionAsync(paymentId, ResolvePaymentActor(), null, cancellationToken);
         return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
@@ -526,11 +533,13 @@ public sealed class StorefrontPaymentComposer
                 x.FailureCode))
             .ToArray();
         var manual = ManualPaymentGateway.IsManual(payment.ProviderCode);
-        var canSubmit = manual
+        var succeeded = payment.Status == PaymentStatus.Succeeded;
+        var canSubmit = !succeeded
+            && manual
             && payment.Status == PaymentStatus.Pending
             && payment.EvidenceSubmittedAt is null;
-        var canRetry = manual && payment.Status == PaymentStatus.Failed;
-        var canRetryUnpaid = payment.Status == PaymentStatus.Expired;
+        var canRetry = !succeeded && manual && payment.Status == PaymentStatus.Failed;
+        var canRetryUnpaid = !succeeded && payment.Status == PaymentStatus.Expired;
         return new StorefrontPaymentPage(
             payment.PaymentId,
             payment.CheckoutId,
@@ -568,6 +577,12 @@ public sealed class StorefrontPaymentComposer
     {
         var page = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        if (string.Equals(page.Status, "Succeeded", StringComparison.Ordinal)
+            || await _payments.HasSucceededPaymentForCheckoutAsync(page.CheckoutId, cancellationToken))
+        {
+            throw new InvalidOperationException("پرداخت این سفارش قبلاً با موفقیت انجام شده است.");
+        }
+
         await RetryUnpaidCoreAsync(paymentId, page.CheckoutId, cancellationToken);
         return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");

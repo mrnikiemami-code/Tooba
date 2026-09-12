@@ -320,13 +320,21 @@ public static class StorefrontEndpoints
         Guid checkoutId,
         Guid cartId,
         StorefrontCheckoutComposer composer,
+        Tooba.Payment.Application.IPaymentDirectory payments,
         HttpRequest request,
         CancellationToken cancellationToken)
     {
         return await ExecuteCheckoutAsync(async () =>
         {
-            var page = await composer.GetAsync(checkoutId, cartId, ReadGuestSecret(request), cancellationToken);
-            return page ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+            var page = await composer.GetAsync(checkoutId, cartId, ReadGuestSecret(request), cancellationToken)
+                ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+            if (page.CheckoutId is Guid id
+                && await payments.HasSucceededPaymentForCheckoutAsync(id, cancellationToken))
+            {
+                return page with { PaymentState = "Paid", CanInitiatePayment = false };
+            }
+
+            return page;
         });
     }
 
@@ -509,9 +517,10 @@ public static class StorefrontEndpoints
     private static (int Status, string Title, string Code) MapPaymentException(InvalidOperationException exception)
     {
         var text = exception.Message;
-        if (text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
+        if (text.Contains("قبلاً با موفقیت", StringComparison.Ordinal)
+            || text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
         {
-            return (StatusCodes.Status409Conflict, "Conflict", "payment.already-paid");
+            return (StatusCodes.Status409Conflict, "Conflict", "payment.already_succeeded");
         }
 
         if (text.Contains("پیدا نشد", StringComparison.Ordinal))
@@ -579,7 +588,8 @@ public static class StorefrontEndpoints
 
     private static string MapPaymentCustomerDetail(string code) => code switch
     {
-        "payment.already-paid" => "این سفارش قبلاً پرداخت شده است.",
+        "payment.already-paid" => "پرداخت این سفارش قبلاً با موفقیت انجام شده است.",
+        "payment.already_succeeded" => "پرداخت این سفارش قبلاً با موفقیت انجام شده است.",
         "payment.missing" => "پرداخت پیدا نشد.",
         "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
         "payment.access.denied" =>

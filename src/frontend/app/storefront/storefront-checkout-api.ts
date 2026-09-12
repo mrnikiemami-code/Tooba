@@ -92,6 +92,7 @@ export interface StorefrontCheckoutPage {
   shippingAmount: number;
   payableAmount: number;
   sellerOrders: StorefrontSellerOrder[];
+  canInitiatePayment: boolean;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -186,6 +187,9 @@ export function mapStorefrontCheckout(payload: unknown): StorefrontCheckoutPage 
           };
         })
       : [],
+    canInitiatePayment: readProp(item, "canInitiatePayment", "CanInitiatePayment") === false
+      ? false
+      : asString(readProp(item, "paymentState", "PaymentState"), "PendingPayment") !== "Paid",
   };
 }
 

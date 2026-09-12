@@ -1,0 +1,89 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "setup-initiate",
+      "ok": true,
+      "status": 200,
+      "paymentId": "bfb947ad-e3e5-417f-9f0a-704c1c4a0493",
+      "checkoutId": "01a096f4-9296-7000-98e3-42459318d8cf"
+    },
+    {
+      "name": "setup-sandbox-success",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "ui-paid-capability",
+      "ok": true,
+      "status": 200,
+      "canInitiate": false,
+      "paymentState": "Paid"
+    },
+    {
+      "name": "A-manual-after-success",
+      "ok": true,
+      "status": 409,
+      "code": "payment.already_succeeded",
+      "detail": "پرداخت این سفارش قبلاً با موفقیت انجام شده است.",
+      "pays": 1,
+      "attempts": 1
+    },
+    {
+      "name": "B-online-after-success",
+      "ok": true,
+      "status": 409,
+      "code": "payment.already_succeeded"
+    },
+    {
+      "name": "same-key-replay-after-success",
+      "ok": true,
+      "status": 200,
+      "paymentId": "bfb947ad-e3e5-417f-9f0a-704c1c4a0493"
+    },
+    {
+      "name": "evidence-after-sandbox-success",
+      "ok": true,
+      "status": 409,
+      "code": "payment.already_succeeded"
+    },
+    {
+      "name": "G-duplicate-success",
+      "ok": true,
+      "status": 200,
+      "pays": 1
+    },
+    {
+      "name": "C-manual-confirm-then-evidence",
+      "ok": true,
+      "initiate": 200,
+      "evidence1": 200,
+      "confirm": 200,
+      "paid": "Succeeded",
+      "evidence2": 409,
+      "code": "payment.already_succeeded"
+    },
+    {
+      "name": "D-failed-then-retry",
+      "ok": true,
+      "status": 200,
+      "paymentId": "43ae8cc7-66d4-4248-b346-657ea7fd8396"
+    },
+    {
+      "name": "E-rejected-manual-retry",
+      "ok": true,
+      "reject": 200,
+      "retry": 200,
+      "evidence2": 200
+    },
+    {
+      "name": "F-expired-unpaid-retry",
+      "ok": true,
+      "expired": "Expired",
+      "retry": 200,
+      "checkoutId": "01a096f4-a348-7000-87a1-fec954269225"
+    }
+  ],
+  "at": "2026-09-12T18:50:05.109Z",
+  "host": "http://127.0.0.1:5099"
+}
