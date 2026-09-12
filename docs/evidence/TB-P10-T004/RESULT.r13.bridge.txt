@@ -74,7 +74,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r13-recovery-sot.md — Architect R12; Impl R13; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD recorded after push; HEAD==origin/main yes
+branch main; HEAD 7bad77732d55098197497893dea921c2c1a2e362; HEAD==origin/main after push yes; leftover local PDP/shipping/catalog dirty not task-owned
 
 Architectural-Concerns:
 Manual initiate after sandbox Succeeded on the same checkout returned 200 (pre-existing initiate-on-paid behavior). R13 did not add a second Order (replay commit 400).
