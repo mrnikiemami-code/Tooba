@@ -127,3 +127,38 @@ test("customer payment message maps unavailable method", () => {
   assert.match(msg, /روش پرداخت/);
   assert.equal(msg.includes("gateway"), false);
 });
+
+test("shouldPoll stops for Succeeded Failed Cancelled", async () => {
+  const { shouldPollStorefrontPayment } = await import("./storefront-payment-api.ts");
+  assert.equal(shouldPollStorefrontPayment({ status: "Succeeded", providerCode: "fake" } as never), false);
+  assert.equal(shouldPollStorefrontPayment({ status: "Failed", providerCode: "fake" } as never), false);
+  assert.equal(shouldPollStorefrontPayment({ status: "Cancelled", providerCode: "fake" } as never), false);
+});
+
+test("shouldPoll stops for manual AwaitingAdmin and awaiting customer form", async () => {
+  const { shouldPollStorefrontPayment } = await import("./storefront-payment-api.ts");
+  assert.equal(
+    shouldPollStorefrontPayment({
+      status: "Pending",
+      providerCode: "manual",
+      evidenceSubmittedAt: "2026-09-11T00:00:00Z",
+      canSubmitManualEvidence: false,
+    } as never),
+    false,
+  );
+  assert.equal(
+    shouldPollStorefrontPayment({
+      status: "Pending",
+      providerCode: "manual",
+      canSubmitManualEvidence: true,
+    } as never),
+    false,
+  );
+});
+
+test("shouldPoll continues for transient online Pending/Processing/Verifying", async () => {
+  const { shouldPollStorefrontPayment } = await import("./storefront-payment-api.ts");
+  assert.equal(shouldPollStorefrontPayment({ status: "Pending", providerCode: "fake" } as never), true);
+  assert.equal(shouldPollStorefrontPayment({ status: "Processing", providerCode: "fake" } as never), true);
+  assert.equal(shouldPollStorefrontPayment({ status: "Verifying", providerCode: "fake" } as never), true);
+});

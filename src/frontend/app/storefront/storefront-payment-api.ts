@@ -2,7 +2,7 @@ import {
   CUSTOMER_DEV_ACTOR_HEADER,
   DEFAULT_CUSTOMER_DEV_ACTOR_ID,
 } from "../customer-panel/customer-api.ts";
-import { cartHeaders, readCartSession, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
+import { cartHeaders, readCartSession, readPaymentResultProof, resolvePaymentResultAccess, StorefrontCartApiError, toCustomerCartMessage, writePaymentResultProof } from "./storefront-cart-api.ts";
 
 const PAYMENT_IDEMPOTENCY_KEY = "tooba.storefront.paymentIdempotency";
 
@@ -408,15 +408,20 @@ export async function startStorefrontPayment(
 
 /**
  * تصویر پرداخت را از Host می‌خواند.
+ * پس از نهایی‌شدن سبد، از اثبات نتیجهٔ پرداخت (cart متعهد + guest secret) استفاده می‌کند نه سبد فعال جدید.
  */
 export async function loadStorefrontPayment(paymentId: string): Promise<StorefrontPaymentPage> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای مشاهدهٔ پرداخت پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای مشاهده پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(
-    `/v1/storefront/payments/${encodeURIComponent(paymentId)}?cartId=${encodeURIComponent(session.cartId)}`,
-    { cache: "no-store", headers: cartHeaders() },
+    `/v1/storefront/payments/${encodeURIComponent(paymentId)}?cartId=${encodeURIComponent(access.cartId)}`,
+    { cache: "no-store", headers },
   );
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.missing");
@@ -424,8 +429,39 @@ export async function loadStorefrontPayment(paymentId: string): Promise<Storefro
   if (!mapped) {
     throw new StorefrontCartApiError(500, "payment.missing", "پاسخ پرداخت نامعتبر بود.");
   }
+  const session = readCartSession();
+  if (session.cartId && session.guestSecret) {
+    writePaymentResultProof({
+      paymentId: mapped.paymentId,
+      checkoutId: mapped.checkoutId,
+      cartId: session.cartId,
+      guestSecret: session.guestSecret,
+    });
+  }
   return mapped;
 }
+
+/** آیا وضعیت پرداخت هنوز به‌صورت ناهمگام ممکن است عوض شود و نیاز به poll دارد. */
+export function shouldPollStorefrontPayment(payment: StorefrontPaymentPage | null | undefined): boolean {
+  if (!payment) {
+    return false;
+  }
+  const status = (payment.status ?? "").toLowerCase();
+  if (status === "succeeded" || status === "failed" || status === "cancelled") {
+    return false;
+  }
+  const manual = (payment.providerCode ?? "").toLowerCase() === "manual";
+  if (manual) {
+    // AwaitingAdmin یا منتظر فرم مشتری — Admin/کاربر ممکن است ساعت‌ها بعد عمل کند.
+    if (payment.evidenceSubmittedAt || payment.canSubmitManualEvidence) {
+      return false;
+    }
+  }
+  // Pending آنلاین / در حال Verify
+  return status === "pending" || status === "processing" || status === "verifying";
+}
+
+export { readPaymentResultProof, writePaymentResultProof, resolvePaymentResultAccess };
 
 /**
  * تکمیل sandbox/dev. موفقیت را UI اعلام نمی‌کند؛ Host Verify می‌کند.
@@ -436,16 +472,20 @@ export async function completeStorefrontSandboxPayment(
   providerRequestReference: string,
   outcome: "success" | "failure",
 ): Promise<StorefrontPaymentPage> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای تکمیل پرداخت پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تکمیل پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox/complete`, {
     method: "POST",
     cache: "no-store",
-    headers: cartHeaders(),
+    headers,
     body: JSON.stringify({
-      cartId: session.cartId,
+      cartId: access.cartId,
       attemptId,
       providerRequestReference,
       outcome,
@@ -457,17 +497,30 @@ export async function completeStorefrontSandboxPayment(
   if (!mapped) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تأیید پرداخت نامعتبر بود.");
   }
+  const session = readCartSession();
+  if (session.cartId && session.guestSecret) {
+    writePaymentResultProof({
+      paymentId: mapped.paymentId,
+      checkoutId: mapped.checkoutId,
+      cartId: session.cartId,
+      guestSecret: session.guestSecret,
+    });
+  }
   return mapped;
 }
 
 export async function loadStorefrontSandboxContext(paymentId: string): Promise<StorefrontSandboxContext> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای مشاهدهٔ درگاه پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای مشاهدهٔ درگاه پیدا نشد.");
+  }
+  const headers: Record<string, string> = {};
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(
-    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox?cartId=${encodeURIComponent(session.cartId)}`,
-    { cache: "no-store", headers: cartHeaders() },
+    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox?cartId=${encodeURIComponent(access.cartId)}`,
+    { cache: "no-store", headers },
   );
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.sandbox.unavailable");
@@ -492,16 +545,20 @@ export async function submitStorefrontManualEvidence(
   transferReference: string,
   proofMediaAssetId?: string | null,
 ): Promise<StorefrontPaymentPage> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای ثبت پرداخت پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای ثبت پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-evidence`, {
     method: "POST",
     cache: "no-store",
-    headers: cartHeaders(),
+    headers,
     body: JSON.stringify({
-      cartId: session.cartId,
+      cartId: access.cartId,
       transferReference,
       proofMediaAssetId: proofMediaAssetId || null,
     }),
@@ -512,19 +569,32 @@ export async function submitStorefrontManualEvidence(
   if (!mappedEvidence) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ ثبت پرداخت نامعتبر بود.");
   }
+  const session = readCartSession();
+  if (session.cartId && session.guestSecret) {
+    writePaymentResultProof({
+      paymentId: mappedEvidence.paymentId,
+      checkoutId: mappedEvidence.checkoutId,
+      cartId: session.cartId,
+      guestSecret: session.guestSecret,
+    });
+  }
   return mappedEvidence;
 }
 
 export async function retryStorefrontManualPayment(paymentId: string): Promise<StorefrontPaymentPage> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای تلاش مجدد پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تلاش مجدد پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-retry`, {
     method: "POST",
     cache: "no-store",
-    headers: cartHeaders(),
-    body: JSON.stringify({ cartId: session.cartId }),
+    headers,
+    body: JSON.stringify({ cartId: access.cartId }),
   });
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.rejected");
@@ -536,17 +606,18 @@ export async function retryStorefrontManualPayment(paymentId: string): Promise<S
 }
 
 export async function uploadStorefrontManualProof(paymentId: string, file: File): Promise<string> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای بارگذاری مدرک پیدا نشد.");
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای بارگذاری مدرک پیدا نشد.");
   }
   const form = new FormData();
   form.append("file", file);
-  const headers = { ...(cartHeaders() as Record<string, string>) };
-  delete headers["Content-Type"];
-  delete headers["content-type"];
+  const headers: Record<string, string> = {};
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+  }
   const response = await fetch(
-    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/proof?cartId=${encodeURIComponent(session.cartId)}`,
+    `/v1/storefront/payments/${encodeURIComponent(paymentId)}/proof?cartId=${encodeURIComponent(access.cartId)}`,
     { method: "POST", cache: "no-store", headers, body: form },
   );
   const payload = await parseJson(response);

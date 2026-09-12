@@ -55,9 +55,13 @@ P10 final payment-completion repair (not T005):
 - Converted cart presents empty lines so completed checkout cannot reuse cart for a second Order
 - Order result with human order number + مشاهده سفارش
 
-## T004-R3 — Payment completion runtime proof (IMPLEMENTED — THIS TASK)
+## T004-R3 — Payment completion runtime proof (IMPLEMENTED)
 
 Runtime A–J proof of R2 payment completion. Minimal defect: checkout GetAsync must not treat Converted empty cart as checkout.cart.empty so payment initiate/result still work. Not T005.
+
+## T004-R4 — Payment result ownership + polling repair (IMPLEMENTED — THIS TASK)
+
+Stop 401 loop after Cart finalization: Payment/Order ownership independent of mutable active Cart; state-aware result polling (no rapid-poll on AwaitingAdmin/terminal); narrow guest committed proof survives Cart clear. Not T005.
 
 ## Non-goals for T004
 

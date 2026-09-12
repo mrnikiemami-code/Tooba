@@ -217,3 +217,15 @@ After Order commit the Cart is Converted. Storefront GET of a Converted cart ret
 
 ### LOCK-SF-018 — Manual evidence history is immutable across reject/retry
 Rejected manual attempts keep their transfer reference and proof MediaAssetId. Retry creates a new Initiated attempt.
+
+### LOCK-SF-019 — Payment/Order result ownership is independent of mutable active Cart
+Once Order/Payment exists, storefront Payment GET and result refresh authorize via authenticated session or committed guest Order/Payment proof. A new empty active Cart must not authorize a prior Payment.
+
+### LOCK-SF-020 — Payment result polling is state-aware
+Storefront payment-result polls only while status can change asynchronously (Pending/Processing/Verifying without manual AwaitingAdmin). Succeeded, Failed, Rejected, Cancelled, and manual AwaitingAdmin/terminal states must not rapid-poll.
+
+### LOCK-SF-021 — Manual AwaitingAdmin does not rapid-poll for Admin confirmation
+After customer manual evidence submit, the result shows در انتظار تایید without 1.5s polling. Customer may refresh/reopen Order later; Admin may act minutes/hours later.
+
+### LOCK-SF-022 — Narrow guest committed-order/payment proof survives Cart finalization
+Guest payment-result access may retain only store-scoped Order/Payment-scoped committed cartId + guest secret proof across Cart clear. Wrong proof, paymentId alone, foreign customer, and cross-store access remain denied.

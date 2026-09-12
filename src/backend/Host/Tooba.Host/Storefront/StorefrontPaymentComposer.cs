@@ -312,7 +312,9 @@ public sealed class StorefrontPaymentComposer
     }
 
     /// <summary>
-    /// تصویر پرداخت را پس از اثبات مالکیت سبد/سفارش برمی‌گرداند.
+    /// تصویر پرداخت را پس از مالکیت سفارش/پرداخت برمی‌گرداند.
+    /// پس از نهایی‌شدن سبد، به سبد فعال جدید وابسته نیست (R4).
+    /// cartId اختیاری/سازگاری است؛ مالکیت مهمان با راز روی Cart متعهد سفارش است.
     /// </summary>
     public async Task<StorefrontPaymentPage?> GetAsync(
         Guid paymentId,
@@ -320,6 +322,7 @@ public sealed class StorefrontPaymentComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
+        _ = cartId;
         var actor = ResolvePaymentActor();
         var payment = await _payments.GetAsync(
             paymentId,
@@ -331,7 +334,10 @@ public sealed class StorefrontPaymentComposer
             return null;
         }
 
-        var checkout = await _checkouts.GetAsync(payment.CheckoutId, cartId, guestSecret, cancellationToken);
+        var checkout = await _checkouts.GetOwnedForPaymentResultAsync(
+            payment.CheckoutId,
+            guestSecret,
+            cancellationToken);
         if (checkout is null)
         {
             throw new InvalidOperationException("دسترسی به پرداخت بدون هویت سفارش رد شد.");

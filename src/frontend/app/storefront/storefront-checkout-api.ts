@@ -1,4 +1,4 @@
-import { cartHeaders, readCartSession, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
+import { cartHeaders, readCartSession, resolvePaymentResultAccess, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 
 const IDEMPOTENCY_KEY = "tooba.storefront.checkoutIdempotency";
@@ -283,14 +283,18 @@ export async function submitStorefrontCheckout(
   return parseCheckout(response);
 }
 
-export async function loadStorefrontCheckout(checkoutId: string): Promise<StorefrontCheckoutPage> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "checkout.missing", "سبد برای مشاهدهٔ سفارش پیدا نشد.");
+export async function loadStorefrontCheckout(checkoutId: string, paymentId?: string | null): Promise<StorefrontCheckoutPage> {
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "checkout.missing", "مالکیت سفارش برای مشاهده پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   const response = await fetch(
-    `/v1/storefront/checkout/${checkoutId}?cartId=${encodeURIComponent(session.cartId)}`,
-    { cache: "no-store", headers: cartHeaders() },
+    `/v1/storefront/checkout/${checkoutId}?cartId=${encodeURIComponent(access.cartId)}`,
+    { cache: "no-store", headers },
   );
   return parseCheckout(response);
 }

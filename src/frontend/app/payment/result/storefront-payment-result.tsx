@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { formatOfferAmount } from "../../storefront/storefront-api.ts";
-import { clearCartSession, ensureStorefrontCart } from "../../storefront/storefront-cart-api.ts";
+import { clearCartSession, ensureStorefrontCart, readCartSession, writePaymentResultProof } from "../../storefront/storefront-cart-api.ts";
 import { loadStorefrontCheckout, type StorefrontCheckoutPage } from "../../storefront/storefront-checkout-api.ts";
 import {
   loadStorefrontPayment,
   resetStorefrontPaymentIdempotency,
   retryStorefrontManualPayment,
+  shouldPollStorefrontPayment,
   submitStorefrontManualEvidence,
   toCustomerPaymentMessage,
   uploadStorefrontManualProof,
@@ -45,33 +46,73 @@ function ResultBody() {
       return;
     }
     let cancelled = false;
-    async function refresh() {
+    let timer: number | null = null;
+    let hardStop: number | null = null;
+    let inFlight = false;
+
+    function stopPolling() {
+      if (timer != null) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+      if (hardStop != null) {
+        window.clearTimeout(hardStop);
+        hardStop = null;
+      }
+    }
+
+    async function refresh(): Promise<boolean> {
+      if (inFlight || cancelled) {
+        return false;
+      }
+      inFlight = true;
       try {
         const nextPayment = await loadStorefrontPayment(resolvedPaymentId);
         if (cancelled) {
-          return;
+          return false;
         }
         setPayment(nextPayment);
+        setError(null);
         const orderId = checkoutId || nextPayment.checkoutId;
         if (orderId) {
-          const nextCheckout = await loadStorefrontCheckout(orderId);
+          const nextCheckout = await loadStorefrontCheckout(orderId, resolvedPaymentId);
           if (!cancelled) {
             setCheckout(nextCheckout);
           }
         }
+        if (!shouldPollStorefrontPayment(nextPayment)) {
+          stopPolling();
+          return false;
+        }
+        return true;
       } catch (cause: unknown) {
         if (!cancelled) {
           setError(toCustomerPaymentMessage(cause));
+          stopPolling();
         }
+        return false;
+      } finally {
+        inFlight = false;
       }
     }
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 1500);
-    const stop = window.setTimeout(() => window.clearInterval(timer), 20000);
+
+    void refresh().then((shouldContinue) => {
+      if (cancelled || !shouldContinue) {
+        return;
+      }
+      timer = window.setInterval(() => {
+        void refresh().then((keepGoing) => {
+          if (!keepGoing) {
+            stopPolling();
+          }
+        });
+      }, 1500);
+      hardStop = window.setTimeout(() => stopPolling(), 20000);
+    });
+
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
-      window.clearTimeout(stop);
+      stopPolling();
     };
   }, [paymentId, checkoutId]);
 
@@ -89,9 +130,18 @@ function ResultBody() {
     if (!paid && !awaitingAdmin) {
       return;
     }
+    const session = readCartSession();
+    if (paymentId && payment?.checkoutId && session.cartId && session.guestSecret) {
+      writePaymentResultProof({
+        paymentId,
+        checkoutId: payment.checkoutId,
+        cartId: session.cartId,
+        guestSecret: session.guestSecret,
+      });
+    }
     clearCartSession();
     void ensureStorefrontCart().catch(() => undefined);
-  }, [paid, awaitingAdmin]);
+  }, [paid, awaitingAdmin, paymentId, payment?.checkoutId]);
 
   const orderHref = useMemo(() => {
     const id = checkout?.checkoutId || payment?.checkoutId;

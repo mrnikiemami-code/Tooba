@@ -64,11 +64,80 @@ export function bootstrapCartSessionFromQuery(params: {
 
 /**
  * نشست سبد را پاک می‌کند. برای خالی شدن پس از حذف همهٔ خطوط لازم نیست مگر سبد منقضی شود.
+ * اثبات نتیجهٔ پرداخت (paymentResultProof) را پاک نمی‌کند.
  */
 export function clearCartSession(): void {
   window.sessionStorage.removeItem(CART_ID_KEY);
   window.sessionStorage.removeItem(GUEST_SECRET_KEY);
   notifyCartChanged();
+}
+
+const PAYMENT_RESULT_PROOF_KEY = "tooba.storefront.paymentResultProof";
+
+export type StorefrontPaymentResultProof = {
+  paymentId: string;
+  checkoutId: string;
+  cartId: string;
+  guestSecret: string;
+};
+
+/**
+ * قبل از clear سبد فعال، اثبات باریک سفارش/پرداخت متعهد را نگه می‌دارد.
+ */
+export function writePaymentResultProof(proof: StorefrontPaymentResultProof): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const paymentId = proof.paymentId?.trim();
+  const checkoutId = proof.checkoutId?.trim();
+  const cartId = proof.cartId?.trim();
+  const guestSecret = proof.guestSecret?.trim();
+  if (!paymentId || !checkoutId || !cartId || !guestSecret) {
+    return;
+  }
+  window.sessionStorage.setItem(
+    PAYMENT_RESULT_PROOF_KEY,
+    JSON.stringify({ paymentId, checkoutId, cartId, guestSecret }),
+  );
+}
+
+/**
+ * اثبات نتیجهٔ پرداخت برای همان paymentId (یا آخرین ذخیره).
+ */
+export function readPaymentResultProof(paymentId?: string | null): StorefrontPaymentResultProof | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const raw = window.sessionStorage.getItem(PAYMENT_RESULT_PROOF_KEY);
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw) as StorefrontPaymentResultProof;
+    if (!parsed?.paymentId || !parsed.cartId || !parsed.guestSecret) {
+      return null;
+    }
+    if (paymentId && parsed.paymentId !== paymentId) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * هدر/شناسهٔ مالکیت برای خواندن Payment/Checkout پس از نهایی‌شدن سبد.
+ */
+export function resolvePaymentResultAccess(paymentId?: string | null): {
+  cartId: string | null;
+  guestSecret: string | null;
+} {
+  const proof = readPaymentResultProof(paymentId);
+  if (proof) {
+    return { cartId: proof.cartId, guestSecret: proof.guestSecret };
+  }
+  return readCartSession();
 }
 
 /**

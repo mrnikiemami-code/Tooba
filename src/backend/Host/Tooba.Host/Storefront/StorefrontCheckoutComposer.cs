@@ -120,9 +120,14 @@ public sealed class StorefrontCheckoutComposer
         string? guestSecret,
         CancellationToken cancellationToken)
     {
-        // Do not use RequireCartAsync here: after shipping commit the cart is Converted and
-        // storefront cart GET intentionally returns empty lines (payment-retry / header finalization).
-        // Payment initiate/result still need the Order snapshot owned by the same CartId.
+        // Prefer committed-order ownership that survives active-cart finalization (R4).
+        var owned = await GetOwnedForPaymentResultAsync(checkoutId, guestSecret, cancellationToken);
+        if (owned is not null)
+        {
+            return owned;
+        }
+
+        // Pre-finalization / legacy path: client cartId must still match checkout.CartId.
         var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("سبد پیدا نشد.");
         var actor = ResolvePlacementActor(usingSavedAddress: false);
@@ -137,6 +142,56 @@ public sealed class StorefrontCheckoutComposer
 
         return MapPage(snapshot, cart, persisted: true);
     }
+
+    /// <summary>
+    /// مالکیت نتیجهٔ پرداخت/سفارش پس از Converted شدن سبد.
+    /// احرازشده: OrderAccess روی نشست. مهمان: راز مهمان روی CartId متعهد سفارش (نه سبد فعال جدید).
+    /// </summary>
+    public async Task<StorefrontCheckoutPage?> GetOwnedForPaymentResultAsync(
+        Guid checkoutId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var actor = ResolvePlacementActor(usingSavedAddress: false);
+        var snapshot = await _checkouts.GetCheckoutAsync(
+            checkoutId,
+            new OrderAccess(null, actor),
+            cancellationToken);
+        if (snapshot is null)
+        {
+            return null;
+        }
+
+        if (_session.IsAuthenticated && _session.UserId is Guid userId && userId != Guid.Empty)
+        {
+            return MapPage(snapshot, StubCartPage(snapshot), persisted: true);
+        }
+
+        if (string.IsNullOrWhiteSpace(guestSecret))
+        {
+            return null;
+        }
+
+        var committedCart = await _carts.GetAsync(snapshot.CartId, guestSecret, cancellationToken);
+        if (committedCart is null)
+        {
+            return null;
+        }
+
+        return MapPage(snapshot, committedCart, persisted: true);
+    }
+
+    private static StorefrontCartPage StubCartPage(CheckoutSnapshot snapshot) =>
+        new(
+            snapshot.CartId,
+            0,
+            snapshot.Market,
+            snapshot.Currency,
+            snapshot.Channel.ToString(),
+            0,
+            0,
+            Array.Empty<StorefrontCartLineView>(),
+            null);
 
     /// <summary>
     /// فیلدهای ارسال را از دفترچه تصویربرداری می‌کند یا اعتبارسنجی درون‌خطی مهمان را نگه می‌دارد.

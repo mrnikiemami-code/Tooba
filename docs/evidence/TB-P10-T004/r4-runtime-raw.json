@@ -1,0 +1,127 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-manual-submit",
+      "ok": true,
+      "status": 200,
+      "paymentStatus": "Pending",
+      "evidenceSubmitted": true
+    },
+    {
+      "name": "A-poll-with-committed-proof",
+      "ok": true,
+      "statuses": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "no401": true
+    },
+    {
+      "name": "A-new-empty-cart-denied",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "name": "B-refresh-after-finalize",
+      "ok": true,
+      "status": 200,
+      "paymentStatus": "Pending",
+      "samePayment": true,
+      "sameCheckout": true
+    },
+    {
+      "name": "C-admin-confirm",
+      "ok": true,
+      "confirmStatus": 200,
+      "paymentStatus": "Succeeded"
+    },
+    {
+      "name": "D-sandbox-success",
+      "ok": true,
+      "completeStatus": 200,
+      "ownedStatus": 200,
+      "paymentStatus": "Succeeded",
+      "freshDenied": 401
+    },
+    {
+      "name": "E-sandbox-failure-retry",
+      "ok": true,
+      "sameCheckout": true,
+      "samePayment": false,
+      "newAttempt": true,
+      "failOwnedStatus": 200,
+      "successStatus": "Succeeded"
+    },
+    {
+      "name": "F-authenticated",
+      "ok": true,
+      "status": 200,
+      "paymentStatus": "Pending"
+    },
+    {
+      "name": "G-guest-proof",
+      "ok": true,
+      "good": 200,
+      "wrong": 401
+    },
+    {
+      "name": "H-security",
+      "ok": true,
+      "foreign": 401,
+      "paymentIdAlone": 400,
+      "bogusCart": 401
+    },
+    {
+      "name": "polling-contract",
+      "ok": true
+    }
+  ],
+  "secretsOmitted": true,
+  "at": "2026-09-12T01:03:36.166Z",
+  "A": {
+    "paymentId": "40b12241-6fe6-4b8e-a7f6-1c4dfbb598c7",
+    "checkoutId": "01a09324-2c08-7000-9fdc-f12059a30b47"
+  },
+  "B": {
+    "refreshOk": true
+  },
+  "C": {
+    "succeeded": true
+  },
+  "D": {
+    "paymentId": "21092070-f239-47b1-adcf-f3c7b0a41a57",
+    "checkoutId": "01a09324-3d5f-7000-80bd-61627f2ad68c"
+  },
+  "E": {
+    "paymentId": "7f1fa612-a9f6-4fd8-b976-9473bafea589",
+    "retryPaymentId": "e8c1d145-a0a4-4642-b12d-1de0f8d6ba47",
+    "checkoutId": "01a09324-3f12-7000-9023-6fc9054e5a2d",
+    "sameCheckout": true
+  },
+  "F": {
+    "paymentId": "158298e4-d280-4cee-a945-d728535552bd",
+    "ok": true
+  },
+  "G": {
+    "paymentId": "3917727d-80ac-47a8-8ba9-0c3ee39cecd8",
+    "good": 200,
+    "wrong": 401
+  },
+  "H": {
+    "foreign": 401,
+    "paymentIdAlone": 400,
+    "bogusCart": 401
+  }
+}
