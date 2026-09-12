@@ -1,4 +1,4 @@
-PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+﻿PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
 
 BEGIN_TOOBA_TASK_RESULT
 
@@ -59,7 +59,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r5-recovery-sot.md — Phase P10; Architect TB-P10-T004-R4; Impl TB-P10-T004-R5; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005.
 
 Git:
-branch main; HEAD __ENDING_HEAD__; HEAD==origin/main yes; task tree committed (historical .tmp-* leftovers untracked).
+branch main; HEAD aa5ccc808e0f8f407f7ce270ecafcc4c2ad7a442; HEAD==origin/main yes; task tree committed (historical .tmp-* leftovers untracked).
 
 Architectural-Concerns:
 none for this repair; Inventory remains owner of reservation lifecycle.
