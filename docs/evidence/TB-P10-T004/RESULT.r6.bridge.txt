@@ -74,7 +74,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r6-recovery-sot.md — Architect R5; Impl R6; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD __ENDING_HEAD__; HEAD==origin/main yes
+branch main; HEAD dc4b8c7d058e14b50da46fca5bf4bd94e90dcc40; HEAD==origin/main yes
 
 Architectural-Concerns:
 none for this repair
