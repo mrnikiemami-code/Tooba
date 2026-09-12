@@ -56,7 +56,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r11-recovery-sot.md — Architect R10; Impl R11; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+branch main; HEAD 2aeed823cb1b416a9a9d035cb31efee673905905; HEAD==origin/main yes
 
 Architectural-Concerns:
 none — R10 payable/shipping projection concern is resolved and proven.
