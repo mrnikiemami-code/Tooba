@@ -97,4 +97,6 @@ public sealed record CustomerOrderDetailPage(
     string PostalAddress,
     string PostalCode,
     string ShippingMethodLabel,
-    IReadOnlyList<CustomerSellerOrderView> SellerOrders);
+    IReadOnlyList<CustomerSellerOrderView> SellerOrders,
+    Guid? PaymentId = null,
+    bool CanRetryUnpaid = false);

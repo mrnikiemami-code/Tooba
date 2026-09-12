@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Tooba.Host.Admin;
+using Tooba.Inventory.Application;
 using Tooba.Media.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
@@ -24,6 +26,8 @@ public sealed class StorefrontPaymentComposer
     private readonly IHostEnvironment _environment;
     private readonly IMediaDirectory _media;
     private readonly ILogger<StorefrontPaymentComposer> _logger;
+    private readonly OrderSupplyComposer? _supply;
+    private readonly IPaymentExpiryDirectory? _expiry;
 
     /// <summary>
     /// سازندهٔ ترکیب پرداخت ویترین.
@@ -38,7 +42,9 @@ public sealed class StorefrontPaymentComposer
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         IMediaDirectory media,
-        ILogger<StorefrontPaymentComposer> logger)
+        ILogger<StorefrontPaymentComposer> logger,
+        OrderSupplyComposer? supply = null,
+        IPaymentExpiryDirectory? expiry = null)
     {
         _checkouts = checkouts;
         _payments = payments;
@@ -49,6 +55,8 @@ public sealed class StorefrontPaymentComposer
         _environment = environment;
         _media = media;
         _logger = logger;
+        _supply = supply;
+        _expiry = expiry;
     }
 
     /// <summary>
@@ -522,6 +530,7 @@ public sealed class StorefrontPaymentComposer
             && payment.Status == PaymentStatus.Pending
             && payment.EvidenceSubmittedAt is null;
         var canRetry = manual && payment.Status == PaymentStatus.Failed;
+        var canRetryUnpaid = payment.Status == PaymentStatus.Expired;
         return new StorefrontPaymentPage(
             payment.PaymentId,
             payment.CheckoutId,
@@ -544,6 +553,46 @@ public sealed class StorefrontPaymentComposer
             _gatewayOptions.ManualPaymentInstructions ?? string.Empty,
             canSubmit,
             canRetry,
-            history);
+            history,
+            canRetryUnpaid);
+    }
+
+    /// <summary>
+    /// تلاش مجدد همان سفارش پس از مهلت پرداخت: EnsureOrderSupply سپس تلاش جدید.
+    /// </summary>
+    public async Task<StorefrontPaymentPage> RetryUnpaidAsync(
+        Guid paymentId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var page = await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await RetryUnpaidCoreAsync(paymentId, page.CheckoutId, cancellationToken);
+        return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+    }
+
+    /// <summary>EnsureOrderSupply + reopen روی همان PaymentId.</summary>
+    public async Task RetryUnpaidCoreAsync(Guid paymentId, Guid checkoutId, CancellationToken cancellationToken)
+    {
+        if (_supply is null || _expiry is null)
+        {
+            throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
+        }
+
+        var result = await _supply.EnsureAsync(
+            checkoutId,
+            OrderSupplyMode.EnsureUnpaidRetryHold,
+            allowReacquire: true,
+            reason: "unpaid-retry",
+            cancellationToken);
+        if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
+            || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
+        {
+            throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
+        }
+
+        await _expiry.ReopenExpiredForRetryAsync(paymentId, ResolvePaymentActor(), null, cancellationToken);
     }
 }

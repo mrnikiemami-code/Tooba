@@ -54,6 +54,7 @@ public sealed class OrderPaymentSucceededHandler : IIntegrationEventHandler<Paym
 
         var payable = await _db.Checkouts
             .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
             .SingleOrDefaultAsync(x => x.CheckoutId == integrationEvent.CheckoutId, cancellationToken)
             ?? throw new InvalidOperationException("checkout برای تصویر پرداخت پیدا نشد و رویداد مصرف‌شده علامت نمی‌خورد.");
 
@@ -65,8 +66,9 @@ public sealed class OrderPaymentSucceededHandler : IIntegrationEventHandler<Paym
             throw new InvalidOperationException("تخصیص پرداخت با سفارش‌های checkout یکی نیست.");
         }
 
+        var expectedAmount = targets.Sum(x => x.GrandTotalSnapshot) + payable.ShippingAmount;
         if (!string.Equals(payable.Currency, integrationEvent.Currency, StringComparison.OrdinalIgnoreCase)
-            || targets.Sum(x => x.GrandTotalSnapshot) != integrationEvent.Amount)
+            || expectedAmount != integrationEvent.Amount)
         {
             throw new InvalidOperationException("مبلغ یا ارز رویداد پرداخت با تصویر سفارش یکی نیست؛ Paid نمی‌شود.");
         }

@@ -43,6 +43,9 @@ public sealed class PaymentDbContext : DbContext
     /// </summary>
     public DbSet<PaymentProofAsset> ProofAssets => Set<PaymentProofAsset>();
 
+    /// <summary>override مهلت به‌ازای روش پرداخت.</summary>
+    public DbSet<PaymentMethodHoldOverride> MethodHoldOverrides => Set<PaymentMethodHoldOverride>();
+
     /// <summary>
     /// Outbox همین ماژول.
     /// </summary>
@@ -71,8 +74,15 @@ public sealed class PaymentDbContext : DbContext
             entity.Ignore(x => x.Attempts);
             entity.Ignore(x => x.Allocations);
             entity.HasIndex(x => x.IdempotencyKey).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.UnpaidTimeoutAt });
             entity.HasMany<PaymentAttempt>().WithOne().HasForeignKey(x => x.PaymentId);
             entity.HasMany<PaymentAllocation>().WithOne().HasForeignKey(x => x.PaymentId);
+        });
+        modelBuilder.Entity<PaymentMethodHoldOverride>(entity =>
+        {
+            entity.ToTable("payment_method_hold_overrides");
+            entity.HasKey(x => x.ProviderCode);
+            entity.Property(x => x.ProviderCode).HasMaxLength(64);
         });
         modelBuilder.Entity<PaymentAttempt>(entity =>
         {

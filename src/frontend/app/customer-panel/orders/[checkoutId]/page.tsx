@@ -10,6 +10,7 @@ import {
   formatCustomerMoney,
   formatCustomerOrderStatus,
   loadCustomerOrderDetail,
+  retryCustomerUnpaidOrder,
 } from "../../customer-api";
 import { loadCustomerFulfillments, type FulfillmentSnapshot } from "../../../fulfillment/fulfillment-api";
 import { FulfillmentShippingInfoBlock } from "../../../fulfillment/fulfillment-ui";
@@ -23,6 +24,8 @@ export default function CustomerOrderDetail() {
   const [page, setPage] = useState<CustomerOrderDetailPage | null | undefined>(undefined);
   const [fulfillments, setFulfillments] = useState<FulfillmentSnapshot[] | null | undefined>(undefined);
   const [returnModal, setReturnModal] = useState<{ sellerOrderId: string; items: FulfillmentSnapshot["items"] } | null>(null);
+  const [retryBusy, setRetryBusy] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     void loadCustomerOrderDetail(params.checkoutId).then(setPage);
@@ -96,6 +99,34 @@ export default function CustomerOrderDetail() {
             </span>
           </div>
         </div>
+        {page.paymentState === "PaymentExpired" || page.paymentState === "Expired" ? (
+          <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3" data-testid="customer-unpaid-expired">
+            <p className="text-sm font-bold text-amber-800">مهلت پرداخت این سفارش به پایان رسیده است.</p>
+            {page.canRetryUnpaid ? (
+              <button
+                type="button"
+                disabled={retryBusy}
+                data-testid="customer-unpaid-retry"
+                className="mt-3 inline-flex items-center rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+                onClick={() => {
+                  setRetryBusy(true);
+                  setRetryError(null);
+                  void retryCustomerUnpaidOrder(page.checkoutId).then((result) => {
+                    if (result.ok) {
+                      setPage(result.page);
+                    } else {
+                      setRetryError(result.message);
+                    }
+                    setRetryBusy(false);
+                  });
+                }}
+              >
+                تلاش مجدد پرداخت
+              </button>
+            ) : null}
+            {retryError ? <p className="mt-2 text-xs font-bold text-red-600">{retryError}</p> : null}
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 py-5">
           <Money label="جمع کالاها" amount={page.subtotal} currency={page.currency} />

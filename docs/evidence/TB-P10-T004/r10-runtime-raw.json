@@ -1,0 +1,110 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-online-unpaid-timeout",
+      "ok": true,
+      "commit": 200,
+      "pay": 200,
+      "beforeStatus": "Pending",
+      "afterStatus": "Expired",
+      "holdsBefore": 1,
+      "holdsAfter": 0,
+      "released": 26,
+      "orders": 1,
+      "attempts": 1
+    },
+    {
+      "name": "B-expired-retry-stock-available",
+      "ok": true,
+      "retry": 200,
+      "status": "Pending",
+      "holds": 1,
+      "oldReleased": 1,
+      "oldRes": "01a093f3-4447-7000-99d7-5034ef68ff1d",
+      "newRes": "01a093f3-5ce2-7000-aca3-041162c4a3ee",
+      "orders": 1,
+      "attempts": 2,
+      "pageStatus": "Pending"
+    },
+    {
+      "name": "C-expired-retry-stock-unavailable",
+      "ok": true,
+      "retry": 409,
+      "title": "{\"title\":\"Conflict\",\"errorCode\":\"payment.unpaid.supply_unavailable\",\"detail\":\"این سفارش در حال حاضر قابل تأمین نیست.\"}{\"title\":\"Conflict\",\"errorCode\":\"payment.unpaid.supply_unavailable\",\"detail\":\"این سفارش در حال حاضر قابل تأمین نیست.\"}",
+      "status": "Expired",
+      "holds": 0
+    },
+    {
+      "name": "D-manual-initial-timeout",
+      "ok": true,
+      "pay": 200,
+      "afterStatus": "Expired",
+      "holdsBefore": 1,
+      "holdsAfter": 0
+    },
+    {
+      "name": "E-manual-evidence-protected",
+      "ok": true,
+      "evidence": 200,
+      "status": "Pending",
+      "holds": 1
+    },
+    {
+      "name": "F-succeeded-untouched",
+      "ok": true,
+      "complete": 200,
+      "status": "Succeeded",
+      "holds": 1
+    },
+    {
+      "name": "G-timeout-then-late-success",
+      "ok": true,
+      "complete": 200,
+      "status": "Succeeded",
+      "holds": 1,
+      "orders": 1
+    },
+    {
+      "name": "G2-late-success-supply-unavailable",
+      "ok": true,
+      "complete": 200,
+      "status": "Succeeded",
+      "supply": "Unavailable"
+    },
+    {
+      "name": "H-admin-settings",
+      "ok": true,
+      "get": 200,
+      "put": 200,
+      "timeoutHours": 5,
+      "storeOnlineEffective": 3,
+      "fakeOverride": 5
+    },
+    {
+      "name": "I-admin-orders-payments",
+      "ok": true,
+      "orders": 200,
+      "payments": 200,
+      "expiredPayment": "Expired",
+      "orderPayment": "PendingPayment",
+      "supply": "AvailableForReacquire"
+    },
+    {
+      "name": "J-customer-expired-retry",
+      "ok": true,
+      "get": 200,
+      "paymentState": "PaymentExpired",
+      "canRetry": true,
+      "retry": 200,
+      "afterState": "PendingPayment"
+    }
+  ],
+  "at": "2026-09-12T04:49:47.467Z",
+  "secretsOmitted": true
+}

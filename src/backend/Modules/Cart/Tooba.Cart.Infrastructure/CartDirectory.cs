@@ -37,6 +37,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     private readonly IInventoryAvailabilityGateway _availability;
     private readonly ICatalogLookupGateway? _catalog;
     private readonly IQuantityNormalizer _normalizer;
+    private readonly ICartPersistenceHoursSource? _persistenceHours;
 
     /// <summary>
     /// دایرکتوری را به schema Cart و درزهای Offer/Pricing/Inventory وصل می‌کند.
@@ -50,7 +51,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         IInventoryAvailabilityGateway availability,
         ICatalogLookupGateway? catalog = null,
         IQuantityNormalizer? normalizer = null,
-        IOptions<CartLifetimeOptions>? lifetime = null)
+        IOptions<CartLifetimeOptions>? lifetime = null,
+        ICartPersistenceHoursSource? persistenceHours = null)
     {
         _db = db;
         _guard = guard;
@@ -60,6 +62,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _availability = availability;
         _catalog = catalog;
         _normalizer = normalizer ?? new QuantityNormalizer();
+        _persistenceHours = persistenceHours;
         var hours = Math.Clamp(lifetime?.Value.PersistenceHours ?? 168, 1, 24 * 90);
         _persistenceTtl = TimeSpan.FromHours(hours);
     }
@@ -88,7 +91,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         _ = CurrencyCode.Parse(currency);
         var now = DateTimeOffset.UtcNow;
-        var cart = ShoppingCart.CreateAuthenticated(userId, market, currency, channel, now, now.Add(_persistenceTtl));
+        var cart = ShoppingCart.CreateAuthenticated(userId, market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -105,7 +108,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _ = CurrencyCode.Parse(currency);
         var secret = CartCredentialHasher.CreateSecret();
         var now = DateTimeOffset.UtcNow;
-        var cart = ShoppingCart.CreateGuest(CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(_persistenceTtl));
+        var cart = ShoppingCart.CreateGuest(CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
         return new GuestCartCreated(await ToSnapshotAsync(cart, cancellationToken), secret);
@@ -146,7 +149,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             quote.PriceId,
             now);
         await EnsureSellableAsync(offer.OfferId, quantity, cancellationToken);
-        cart.RefreshExpiry(now.Add(_persistenceTtl), now);
+        cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
         cart.AddLine(line, now);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -295,7 +298,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         line.ReplaceHold(quantity, null, quote.Amount, quote.Currency, quote.TaxExclusive, quote.PriceId, now);
-        cart.RefreshExpiry(now.Add(_persistenceTtl), now);
+        cart.RefreshExpiry(now.Add(ResolvePersistenceTtl()), now);
         cart.RecordLineChanged(line.LineId, line.OfferId, quantity, now);
         await SaveCartAsync(cancellationToken);
         return await ToSnapshotAsync(cart, cancellationToken);
@@ -356,6 +359,16 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             cancellationToken)
             ?? throw new InvalidOperationException("نقل‌قول قیمت از قرارداد Pricing پیدا نشد؛ مبلغ روی Product/Offer نیست.");
         return (offer, quote, quantity);
+    }
+
+    private TimeSpan ResolvePersistenceTtl()
+    {
+        if (_persistenceHours is null)
+        {
+            return _persistenceTtl;
+        }
+
+        return TimeSpan.FromHours(Math.Clamp(_persistenceHours.ResolvePersistenceHours(), 1, 24 * 90));
     }
 
     private async Task EnsureSellableAsync(Guid offerId, decimal quantity, CancellationToken cancellationToken)

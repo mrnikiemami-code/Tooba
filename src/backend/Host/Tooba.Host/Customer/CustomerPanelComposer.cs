@@ -7,6 +7,8 @@ using Tooba.Identity.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Application;
+using Tooba.Host.Admin;
+using Tooba.Inventory.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
 using Tooba.Wishlist.Application;
@@ -27,6 +29,8 @@ public sealed class CustomerPanelComposer
     private readonly IAddressBookDirectory _addresses;
     private readonly ICustomerProfileDirectory _profiles;
     private readonly IIdentityContactLookup _identityContacts;
+    private readonly OrderSupplyComposer? _supply;
+    private readonly IPaymentExpiryDirectory? _expiry;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -39,7 +43,9 @@ public sealed class CustomerPanelComposer
         IWishlistDirectory wishlist,
         IAddressBookDirectory addresses,
         ICustomerProfileDirectory profiles,
-        IIdentityContactLookup identityContacts)
+        IIdentityContactLookup identityContacts,
+        OrderSupplyComposer? supply = null,
+        IPaymentExpiryDirectory? expiry = null)
     {
         _orders = orders;
         _catalog = catalog;
@@ -48,6 +54,8 @@ public sealed class CustomerPanelComposer
         _wishlist = wishlist;
         _addresses = addresses;
         _profiles = profiles;
+        _supply = supply;
+        _expiry = expiry;
         _identityContacts = identityContacts;
     }
 
@@ -242,7 +250,42 @@ public sealed class CustomerPanelComposer
             group.PostalAddress,
             group.PostalCode,
             group.ShippingMethodLabel,
-            sellerViews);
+            sellerViews,
+            payment?.PaymentId,
+            payment?.Status == PaymentStatus.Expired);
+    }
+
+    /// <summary>تلاش مجدد همان سفارش پس از مهلت پرداخت.</summary>
+    public async Task<CustomerOrderDetailPage?> RetryUnpaidAsync(
+        Guid actorUserId,
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var current = await GetOrderAsync(actorUserId, checkoutId, cancellationToken);
+        if (current is null || current.PaymentId is not { } paymentId || !current.CanRetryUnpaid)
+        {
+            return current;
+        }
+
+        if (_supply is null || _expiry is null)
+        {
+            throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
+        }
+
+        var result = await _supply.EnsureAsync(
+            checkoutId,
+            OrderSupplyMode.EnsureUnpaidRetryHold,
+            allowReacquire: true,
+            reason: "unpaid-retry",
+            cancellationToken);
+        if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
+            || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
+        {
+            throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
+        }
+
+        await _expiry.ReopenExpiredForRetryAsync(paymentId, actorUserId, null, cancellationToken);
+        return await GetOrderAsync(actorUserId, checkoutId, cancellationToken);
     }
 
     private async Task<string> ResolveDisplayNameAsync(
@@ -330,6 +373,7 @@ public sealed class CustomerPanelComposer
                 or PaymentStatus.Refunded
                 or PaymentStatus.RefundFailed => "Paid",
             PaymentStatus.Failed or PaymentStatus.Cancelled => "Failed",
+            PaymentStatus.Expired => "PaymentExpired",
             _ => "PendingPayment",
         };
 

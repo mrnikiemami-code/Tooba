@@ -44,6 +44,7 @@ public static class StorefrontEndpoints
         group.MapPost("/payments/{paymentId:guid}/sandbox/complete", CompleteSandboxPaymentAsync);
         group.MapPost("/payments/{paymentId:guid}/manual-evidence", SubmitManualEvidenceAsync);
         group.MapPost("/payments/{paymentId:guid}/manual-retry", RetryManualPaymentAsync);
+        group.MapPost("/payments/{paymentId:guid}/unpaid-retry", RetryUnpaidPaymentAsync);
         group.MapPost("/payments/{paymentId:guid}/proof", UploadManualProofAsync).DisableAntiforgery();
     }
 
@@ -427,6 +428,18 @@ public static class StorefrontEndpoints
             ReadGuestSecret(request),
             cancellationToken));
 
+    private static Task<IResult> RetryUnpaidPaymentAsync(
+        Guid paymentId,
+        StorefrontPaymentCartRequest body,
+        StorefrontPaymentComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecutePaymentAsync(() => composer.RetryUnpaidAsync(
+            paymentId,
+            body.CartId,
+            ReadGuestSecret(request),
+            cancellationToken));
+
     private static async Task<IResult> UploadManualProofAsync(
         Guid paymentId,
         Guid cartId,
@@ -544,6 +557,17 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status403Forbidden, "Forbidden", "payment.sandbox.unavailable");
         }
 
+        if (text.Contains("این سفارش در حال حاضر قابل تأمین نیست.", StringComparison.Ordinal)
+            || text.Contains("inventory.supply.unavailable", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "payment.unpaid.supply_unavailable");
+        }
+
+        if (text.Contains("payment.unpaid.retry.invalid_state", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "payment.unpaid.retry.invalid");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
@@ -558,6 +582,8 @@ public static class StorefrontEndpoints
         "payment.proof.required" => "بارگذاری مدرک پرداخت الزامی است.",
         "payment.proof.foreign" => "مدرک پرداخت معتبر نیست.",
         "payment.sandbox.unavailable" => "درگاه آزمایشی در این محیط در دسترس نیست.",
+        "payment.unpaid.supply_unavailable" => "این سفارش در حال حاضر قابل تأمین نیست.",
+        "payment.unpaid.retry.invalid" => "مهلت پرداخت این سفارش به پایان رسیده است.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 

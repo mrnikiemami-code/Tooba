@@ -91,6 +91,8 @@ export interface CustomerOrderDetailPage {
   postalCode: string;
   shippingMethodLabel: string;
   sellerOrders: CustomerSellerOrder[];
+  paymentId?: string | null;
+  canRetryUnpaid?: boolean;
 }
 
 function recordOf(value: unknown): Record<string, unknown> | null {
@@ -130,6 +132,10 @@ export function formatCustomerOrderStatus(status: string): string {
       return "در انتظار پرداخت";
     case "Failed":
       return "پرداخت ناموفق";
+    case "Expired":
+    case "PaymentExpired":
+    case "AwaitingPaymentExpired":
+      return "مهلت پرداخت این سفارش به پایان رسیده است.";
     case "ReservationRequested":
       return "در انتظار بررسی";
     case "Cancelled":
@@ -148,6 +154,9 @@ export function customerStatusClasses(status: string): string {
       return "bg-emerald-50 text-emerald-700";
     case "Failed":
     case "Cancelled":
+    case "Expired":
+    case "PaymentExpired":
+    case "AwaitingPaymentExpired":
       return "bg-red-50 text-red-700";
     default:
       return "bg-amber-50 text-amber-700";
@@ -280,6 +289,8 @@ export function mapCustomerOrderDetail(value: unknown): CustomerOrderDetailPage 
     postalCode: text(prop(item, "postalCode", "PostalCode")),
     shippingMethodLabel: text(prop(item, "shippingMethodLabel", "ShippingMethodLabel")),
     sellerOrders,
+    paymentId: nullableText(prop(item, "paymentId", "PaymentId")),
+    canRetryUnpaid: prop(item, "canRetryUnpaid", "CanRetryUnpaid") === true,
   };
 }
 
@@ -327,4 +338,27 @@ export async function loadCustomerOrders(): Promise<CustomerOrderListItem[] | nu
 export async function loadCustomerOrderDetail(checkoutId: string): Promise<CustomerOrderDetailPage | null> {
   const response = await read(`/api/customer/orders/${encodeURIComponent(checkoutId)}`);
   return response.ok ? mapCustomerOrderDetail(response.payload) : null;
+}
+
+/** تلاش مجدد همان سفارش پس از مهلت پرداخت. */
+export async function retryCustomerUnpaidOrder(
+  checkoutId: string,
+): Promise<{ ok: true; page: CustomerOrderDetailPage } | { ok: false; message: string }> {
+  try {
+    const response = await fetch(`/api/customer/orders/${encodeURIComponent(checkoutId)}/retry-unpaid`, {
+      method: "POST",
+      credentials: "include",
+      headers: headers(true),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const record = payload && typeof payload === "object" ? payload as Record<string, unknown> : null;
+      const detail = record ? String(record.detail ?? record.title ?? "") : "";
+      return { ok: false, message: detail || "این سفارش در حال حاضر قابل تأمین نیست." };
+    }
+    const page = mapCustomerOrderDetail(payload);
+    return page ? { ok: true, page } : { ok: false, message: "سفارش پیدا نشد." };
+  } catch {
+    return { ok: false, message: "امکان تلاش مجدد پرداخت الان وجود ندارد." };
+  }
 }

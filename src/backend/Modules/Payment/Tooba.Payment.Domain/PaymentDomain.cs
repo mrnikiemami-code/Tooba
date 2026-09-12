@@ -458,6 +458,11 @@ public sealed class CustomerPayment : IHasDomainEvents
     public DateTimeOffset UpdatedAt { get; private set; }
 
     /// <summary>
+    /// مهلت پرداخت نشده از سیاست Settings؛ پس از مدرک دستی یا موفقیت پاک می‌شود.
+    /// </summary>
+    public DateTimeOffset? UnpaidTimeoutAt { get; private set; }
+
+    /// <summary>
     /// زمان موفقیت تأییدشده.
     /// </summary>
     public DateTimeOffset? CompletedAt { get; private set; }
@@ -607,8 +612,52 @@ public sealed class CustomerPayment : IHasDomainEvents
             .FirstOrDefault()
             ?? throw new InvalidOperationException("payment.attempt.missing");
         attempt.SubmitCustomerEvidence(transferReference, proofMediaAssetId, at);
+        UnpaidTimeoutAt = null;
         UpdatedAt = at;
     }
+
+    /// <summary>مهلت unpaid را از سیاست Settings می‌نویسد؛ رزرو را زنده نمی‌کند.</summary>
+    public void AssignUnpaidTimeout(DateTimeOffset timeoutAt, DateTimeOffset at)
+    {
+        UnpaidTimeoutAt = timeoutAt;
+        UpdatedAt = at;
+    }
+
+    /// <summary>
+    /// مهلت پرداخت‌نشده را اعمال می‌کند. Succeeded، بازبینی مدرک دستی، و Cancel کاربر را لمس نمی‌کند.
+    /// </summary>
+    public bool ExpireUnpaidTimeout(DateTimeOffset at)
+    {
+        if (Status == PaymentStatus.Expired)
+        {
+            return false;
+        }
+
+        if (Status is PaymentStatus.Succeeded
+            or PaymentStatus.RefundPending
+            or PaymentStatus.Refunded
+            or PaymentStatus.RefundFailed
+            or PaymentStatus.Cancelled)
+        {
+            return false;
+        }
+
+        if (HasActiveManualEvidence())
+        {
+            return false;
+        }
+
+        Status = PaymentStatus.Expired;
+        UnpaidTimeoutAt = null;
+        UpdatedAt = at;
+        return true;
+    }
+
+    /// <summary>مدرک کارت‌به‌کارت ثبت‌شده روی تلاش Initiated جاری.</summary>
+    public bool HasActiveManualEvidence() =>
+        _attempts.Any(x =>
+            x.Status == PaymentAttemptStatus.Initiated
+            && !string.IsNullOrWhiteSpace(x.CustomerTransferReference));
 
     /// <summary>
     /// فقط پس از Verify درگاه Succeeded می‌شود. متن callback کافی نیست.
@@ -627,6 +676,7 @@ public sealed class CustomerPayment : IHasDomainEvents
         attempt.MarkVerifiedSuccess(transactionReference, at);
         Status = PaymentStatus.Succeeded;
         CompletedAt = at;
+        UnpaidTimeoutAt = null;
         UpdatedAt = at;
         _domainEvents.Add(new PaymentSucceededDomainEvent(
             PaymentId,

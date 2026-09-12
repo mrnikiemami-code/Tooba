@@ -517,7 +517,8 @@ public sealed record StorefrontPaymentPage(
     string ManualPaymentInstructions = "",
     bool CanSubmitManualEvidence = false,
     bool CanRetryManual = false,
-    IReadOnlyList<StorefrontManualEvidenceHistoryItem>? EvidenceHistory = null);
+    IReadOnlyList<StorefrontManualEvidenceHistoryItem>? EvidenceHistory = null,
+    bool CanRetryUnpaid = false);
 
 /// <summary>تاریخچهٔ مدرک کارت‌به‌کارت برای صفحهٔ نتیجه.</summary>
 public sealed record StorefrontManualEvidenceHistoryItem(

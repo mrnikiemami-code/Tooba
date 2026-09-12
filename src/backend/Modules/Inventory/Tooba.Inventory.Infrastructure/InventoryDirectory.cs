@@ -464,7 +464,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         if (evaluation.Status is OrderSupplyStatusKind.Reserved or OrderSupplyStatusKind.Fulfilled)
         {
             // Promote/commit in place when needed without new reservation.
-            if (request.Mode == OrderSupplyMode.EnsureReviewHold && request.ReviewExpiresAt is { } reviewAt)
+            if (IsTimedHold(request.Mode) && request.ReviewExpiresAt is { } reviewAt)
             {
                 foreach (var line in evaluation.Lines.Where(x => x.BoundReservationId is not null && x.LineStatus == OrderSupplyStatusKind.Reserved))
                 {
@@ -524,7 +524,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
                     {
                         await CommitReservationForPaidOrderAsync(existingEval.BoundReservationId.Value, cancellationToken);
                     }
-                    else if (request.Mode == OrderSupplyMode.EnsureReviewHold && request.ReviewExpiresAt is { } reviewAt)
+                    else if (IsTimedHold(request.Mode) && request.ReviewExpiresAt is { } reviewAt)
                     {
                         await PromoteReservationForManualPaymentReviewAsync(
                             existingEval.BoundReservationId.Value,
@@ -538,7 +538,7 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
 
                 var stockItemId = await ResolveStockItemIdAsync(input, cancellationToken)
                     ?? throw new InvalidOperationException("inventory.manual_review.unavailable");
-                DateTimeOffset? expiresAt = request.Mode == OrderSupplyMode.EnsureReviewHold
+                DateTimeOffset? expiresAt = IsTimedHold(request.Mode)
                     ? request.ReviewExpiresAt
                     : null;
                 // idempotency_key column is varchar(128); keep this compact.
@@ -726,6 +726,9 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         var availability = await GetAvailabilityAsync(line.OfferId, cancellationToken);
         return availability?.Locations.OrderByDescending(x => x.Available).FirstOrDefault()?.StockItemId;
     }
+
+    private static bool IsTimedHold(OrderSupplyMode mode) =>
+        mode is OrderSupplyMode.EnsureReviewHold or OrderSupplyMode.EnsureUnpaidRetryHold;
 
     private static OrderSupplyOutcome MapOutcome(OrderSupplyStatusKind status, bool mutated) =>
         status switch

@@ -10,6 +10,7 @@ public enum OrderSupplyMode
     EnsureReviewHold = 1,
     EnsurePaidDurable = 2,
     EnsureFulfillmentSupply = 3,
+    EnsureUnpaidRetryHold = 4,
 }
 
 /// <summary>نتیجهٔ کلی Ensure (mutative یا check).</summary>

@@ -71,6 +71,14 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
             ?? throw new InvalidOperationException("checkout برای تصویر پرداخت پیدا نشد.");
 
+        foreach (var order in group.SellerOrders)
+        {
+            if (!_db.Entry(order).Collection(x => x.Lines).IsLoaded)
+            {
+                await _db.Entry(order).Collection(x => x.Lines).LoadAsync(cancellationToken);
+            }
+        }
+
         foreach (var order in group.SellerOrders.Where(x => sellerOrderIds.Contains(x.SellerOrderId)))
         {
             if (group.Mode != OrderMode.OnlinePurchase)
@@ -79,15 +87,15 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             }
 
             order.RecordVerifiedPayment();
-            foreach (var line in order.Lines)
-            {
-                if (line.ReservationId is not { } reservationId)
-                {
-                    continue;
-                }
+        }
 
-                await CommitOrReacquireForPaidAsync(line, reservationId, cancellationToken);
-            }
+        try
+        {
+            await EnsurePaidDurableOrKeepPaidAsync(group, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // Late captured money stays Paid; SupplyStatus remains Unavailable.
         }
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -196,40 +204,44 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
         }
     }
 
-    private async Task CommitOrReacquireForPaidAsync(
-        OrderLine line,
-        Guid reservationId,
+    private async Task EnsurePaidDurableOrKeepPaidAsync(
+        CheckoutGroup group,
         CancellationToken cancellationToken)
     {
-        try
+        var lines = group.SellerOrders
+            .Where(x => x.Status != SellerOrderStatus.Cancelled)
+            .SelectMany(order => order.Lines)
+            .Select(line => new OrderSupplyLineInput(
+                line.LineId,
+                line.OfferId,
+                line.ReservationId,
+                line.Quantity,
+                line.UnitDisplaySnapshot,
+                line.UnitCodeSnapshot))
+            .ToArray();
+        if (lines.Length == 0)
         {
-            await _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
             return;
         }
-        catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active"
-            or "inventory.reservation.not_found")
-        {
-            // Late confirm: never resurrect Released; reacquire durable paid hold.
-        }
 
-        var previous = await _inventory.FindReservationAsync(reservationId, cancellationToken)
-            ?? throw new InvalidOperationException("inventory.manual_review.unavailable");
-
-        try
+        var result = await _inventory.EnsureOrderSupplyAsync(
+            new EnsureOrderSupplyRequest(
+                group.CheckoutId,
+                OrderSupplyMode.EnsurePaidDurable,
+                AllowReacquire: true,
+                Reason: "late-captured-payment",
+                CorrelationId: $"paid:{group.CheckoutId:N}",
+                ReviewExpiresAt: null,
+                lines),
+            cancellationToken);
+        foreach (var pair in result.NewBindingsByOrderLineId)
         {
-            var receipt = await _inventory.ReserveAsync(
-                previous.StockItemId,
-                previous.Quantity,
-                $"manual-confirm-{line.LineId:N}",
-                $"manual-confirm-{line.LineId:N}-{DateTimeOffset.UtcNow.UtcTicks}",
-                expiresAt: null,
-                cancellationToken);
-            line.ReplaceReservation(receipt.ReservationId);
-            await _inventory.CommitReservationForPaidOrderAsync(receipt.ReservationId, cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            throw new InvalidOperationException("inventory.manual_review.unavailable");
+            var orderLine = group.SellerOrders.SelectMany(o => o.Lines).Single(x => x.LineId == pair.Key);
+            if (orderLine.ReservationId != pair.Value)
+            {
+                orderLine.ReplaceReservation(pair.Value);
+            }
         }
     }
+
 }

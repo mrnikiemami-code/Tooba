@@ -37,6 +37,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>گرد کردن سراسری مقدار کالا.</summary>
     public DbSet<StoreQuantitySettings> StoreQuantitySettings => Set<StoreQuantitySettings>();
 
+    /// <summary>override فروشگاه برای ماندگاری سبد و مهلت پرداخت.</summary>
+    public DbSet<StoreHoldPolicySettings> StoreHoldPolicySettings => Set<StoreHoldPolicySettings>();
+
     /// <summary>
     /// گونه‌های Catalog.
     /// </summary>
@@ -513,6 +516,13 @@ public sealed class CatalogDbContext : DbContext
             entity.HasKey(x => x.SettingsId);
             entity.Property(x => x.SettingsId).ValueGeneratedNever();
             entity.Property(x => x.RoundingMode).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<StoreHoldPolicySettings>(entity =>
+        {
+            entity.ToTable("store_hold_policy_settings");
+            entity.HasKey(x => x.SettingsId);
+            entity.Property(x => x.SettingsId).ValueGeneratedNever();
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

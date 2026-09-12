@@ -34,6 +34,7 @@ public sealed class PaymentModule : IToobaModule
         services.AddScoped<IPaymentDirectory, PaymentDirectory>();
         services.AddScoped<IPaymentReconciliationDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
         services.AddScoped<IPaymentAdminDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
+        services.AddScoped<IPaymentExpiryDirectory>(sp => (PaymentDirectory)sp.GetRequiredService<IPaymentDirectory>());
         services.AddScoped<IPaymentSettlementReader, PaymentSettlementBridge>();
         services.AddScoped<IPaymentWebhookHandler, PaymentWebhookHandler>();
 

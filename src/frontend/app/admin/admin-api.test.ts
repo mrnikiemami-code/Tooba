@@ -203,6 +203,8 @@ test("enrichAdminOrderDetail counts lines not summed quantity", () => {
 
 test("uses Persian money and status labels", () => {
   assert.equal(formatAdminStatus("PendingPayment"), "در انتظار پرداخت");
+  assert.equal(formatAdminStatus("Expired"), "مهلت پرداخت پایان یافته");
+  assert.equal(formatAdminStatus("PaymentExpired"), "مهلت پرداخت پایان یافته");
   assert.equal(formatAdminStatus("Archived"), "بایگانی");
   assert.equal(formatAdminStatus("Delivered"), "تحویل‌شده");
   assert.equal(formatAdminStatus("Mixed"), "ترکیبی");

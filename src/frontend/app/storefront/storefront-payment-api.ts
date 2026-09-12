@@ -46,6 +46,7 @@ export interface StorefrontPaymentPage {
   manualPaymentInstructions?: string;
   canSubmitManualEvidence?: boolean;
   canRetryManual?: boolean;
+  canRetryUnpaid?: boolean;
   evidenceHistory?: Array<{
     attemptId: string;
     attemptStatus: string;
@@ -283,6 +284,7 @@ export function mapStorefrontPayment(payload: unknown): StorefrontPaymentPage | 
     manualPaymentInstructions: asString(readProp(item, "manualPaymentInstructions", "ManualPaymentInstructions")),
     canSubmitManualEvidence: Boolean(readProp(item, "canSubmitManualEvidence", "CanSubmitManualEvidence")),
     canRetryManual: Boolean(readProp(item, "canRetryManual", "CanRetryManual")),
+    canRetryUnpaid: Boolean(readProp(item, "canRetryUnpaid", "CanRetryUnpaid")),
   };
 }
 
@@ -333,6 +335,8 @@ export function toCustomerPaymentMessage(error: unknown): string {
         return "مدرک پرداخت معتبر نیست.";
       case "payment.sandbox.unavailable":
         return "درگاه آزمایشی در این محیط در دسترس نیست.";
+      case "payment.unpaid.supply_unavailable":
+        return "این سفارش در حال حاضر قابل تأمین نیست.";
       case "wallet.quote.missing":
         return "اطلاعات کیف پول برای این سفارش در دسترس نیست.";
       default:
@@ -447,7 +451,7 @@ export function shouldPollStorefrontPayment(payment: StorefrontPaymentPage | nul
     return false;
   }
   const status = (payment.status ?? "").toLowerCase();
-  if (status === "succeeded" || status === "failed" || status === "cancelled") {
+  if (status === "succeeded" || status === "failed" || status === "cancelled" || status === "expired") {
     return false;
   }
   const manual = (payment.providerCode ?? "").toLowerCase() === "manual";
@@ -598,6 +602,30 @@ export async function retryStorefrontManualPayment(paymentId: string): Promise<S
   });
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.rejected");
+  const mappedRetry = mapStorefrontPayment(payload);
+  if (!mappedRetry) {
+    throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تلاش مجدد نامعتبر بود.");
+  }
+  return mappedRetry;
+}
+
+export async function retryStorefrontUnpaidPayment(paymentId: string): Promise<StorefrontPaymentPage> {
+  const access = resolvePaymentResultAccess(paymentId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تلاش مجدد پیدا نشد.");
+  }
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+  }
+  const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/unpaid-retry`, {
+    method: "POST",
+    cache: "no-store",
+    headers,
+    body: JSON.stringify({ cartId: access.cartId }),
+  });
+  const payload = await parseJson(response);
+  throwIfFailed(response, payload, "payment.unpaid.supply_unavailable");
   const mappedRetry = mapStorefrontPayment(payload);
   if (!mappedRetry) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تلاش مجدد نامعتبر بود.");

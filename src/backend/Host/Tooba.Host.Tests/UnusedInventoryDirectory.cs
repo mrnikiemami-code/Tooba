@@ -58,7 +58,11 @@ internal sealed class UnusedInventoryDirectory : IInventoryDirectory
     public Task<EnsureOrderSupplyResult> EnsureOrderSupplyAsync(
         EnsureOrderSupplyRequest request,
         CancellationToken cancellationToken) =>
-        throw new NotSupportedException();
+        Task.FromResult(new EnsureOrderSupplyResult(
+            OrderSupplyOutcome.NotApplicable,
+            OrderSupplyStatusKind.NotApplicable,
+            [],
+            new Dictionary<Guid, Guid>()));
 
     public Task<OrderSupplyStatus> GetOrderSupplyStatusAsync(
         Guid checkoutId,

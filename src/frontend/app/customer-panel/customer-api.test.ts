@@ -33,6 +33,7 @@ test("customer payment presentation preserves backend pending paid and failed st
   assert.equal(formatCustomerOrderStatus("PendingPayment"), "در انتظار پرداخت");
   assert.equal(formatCustomerOrderStatus("Paid"), "پرداخت‌شده");
   assert.equal(formatCustomerOrderStatus("Failed"), "پرداخت ناموفق");
+  assert.equal(formatCustomerOrderStatus("PaymentExpired"), "مهلت پرداخت این سفارش به پایان رسیده است.");
   assert.match(customerStatusClasses("Failed"), /red/);
 });
 

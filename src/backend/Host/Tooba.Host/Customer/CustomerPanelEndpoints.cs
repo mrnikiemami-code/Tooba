@@ -23,6 +23,7 @@ public static class CustomerPanelEndpoints
         group.MapPut("/profile", UpdateProfileAsync);
         group.MapGet("/orders", ListOrdersAsync);
         group.MapGet("/orders/{checkoutId:guid}", GetOrderAsync);
+        group.MapPost("/orders/{checkoutId:guid}/retry-unpaid", RetryUnpaidAsync);
     }
 
     private static IResult GetDevContext(IHostEnvironment environment)
@@ -116,6 +117,44 @@ public static class CustomerPanelEndpoints
                 new { title = "Not Found", errorCode = "customer.order.missing" },
                 statusCode: StatusCodes.Status404NotFound)
             : Results.Json(page);
+    }
+
+    private static async Task<IResult> RetryUnpaidAsync(
+        Guid checkoutId,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        IHostEnvironment environment,
+        CustomerPanelComposer composer,
+        CancellationToken cancellationToken)
+    {
+        var actor = ResolveActor(request, session, environment);
+        if (actor is null)
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var page = await composer.RetryUnpaidAsync(actor.Value, checkoutId, cancellationToken);
+            return page is null
+                ? Results.Json(
+                    new { title = "Not Found", errorCode = "customer.order.missing" },
+                    statusCode: StatusCodes.Status404NotFound)
+                : Results.Json(page);
+        }
+        catch (InvalidOperationException ex) when (
+            ex.Message.Contains("قابل تأمین نیست", StringComparison.Ordinal)
+            || ex.Message.Contains("inventory.supply.unavailable", StringComparison.Ordinal))
+        {
+            return Results.Json(
+                new
+                {
+                    title = "این سفارش در حال حاضر قابل تأمین نیست.",
+                    errorCode = "payment.unpaid.supply_unavailable",
+                    detail = "این سفارش در حال حاضر قابل تأمین نیست.",
+                },
+                statusCode: StatusCodes.Status409Conflict);
+        }
     }
 
     private static Guid? ResolveActor(

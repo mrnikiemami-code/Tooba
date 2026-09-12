@@ -17,7 +17,7 @@ public sealed class OpenPaymentUseCaseGuard : IPaymentUseCaseGuard
 /// <summary>
 /// ارکستراسیون پرداخت در schema payment. مبلغ از تصویر سفارش است نه از کلاینت؛ OrderDbContext اینجا باز نمی‌شود.
 /// </summary>
-public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory, IPaymentAdminDirectory
+public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliationDirectory, IPaymentAdminDirectory, IPaymentExpiryDirectory
 {
     private readonly PaymentDbContext _db;
     private readonly IPaymentUseCaseGuard _guard;
@@ -25,6 +25,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
     private readonly IPaymentGatewayRegistry _gateways;
     private readonly PaymentGatewayActorContext _actorContext;
     private readonly IPaymentRefundGateway? _refundGateway;
+    private readonly ICommerceHoldPolicy? _holdPolicy;
 
     /// <summary>
     /// دایرکتوری را به schema payment و رجیستری درگاه وصل می‌کند. تصویر Paid سفارش از Outbox می‌آید نه از همین تراکنش.
@@ -35,7 +36,8 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         IPayableCheckoutReader orders,
         IPaymentGatewayRegistry gateways,
         PaymentGatewayActorContext actorContext,
-        IPaymentRefundGateway? refundGateway = null)
+        IPaymentRefundGateway? refundGateway = null,
+        ICommerceHoldPolicy? holdPolicy = null)
     {
         _db = db;
         _guard = guard;
@@ -43,6 +45,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         _gateways = gateways;
         _actorContext = actorContext;
         _refundGateway = refundGateway;
+        _holdPolicy = holdPolicy;
     }
 
     /// <inheritdoc />
@@ -73,6 +76,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
                     existing.Currency,
                     cancellationToken);
                 var retryAttempt = existing.RecordInitiation(retryInitiation.ProviderRequestReference, DateTimeOffset.UtcNow);
+                AssignUnpaidTimeout(existing, DateTimeOffset.UtcNow);
                 _db.Attempts.Add(retryAttempt);
                 await _db.SaveChangesAsync(cancellationToken);
                 return new PaymentInitiationResult(
@@ -145,6 +149,7 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
         _actorContext.ActorUserId = command.ActorUserId;
         var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
         var attempt = payment.RecordInitiation(initiation.ProviderRequestReference, DateTimeOffset.UtcNow);
+        AssignUnpaidTimeout(payment, DateTimeOffset.UtcNow);
         _db.Payments.Add(payment);
         _db.Allocations.AddRange(payment.Allocations);
         _db.Attempts.Add(attempt);
@@ -774,6 +779,102 @@ public sealed class PaymentDirectory : IPaymentDirectory, IPaymentReconciliation
             latest?.ProofMediaAssetId,
             latest?.EvidenceSubmittedAt,
             history);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> ExpireDueUnpaidAsync(
+        DateTimeOffset utcNow,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var limit = Math.Max(1, batchSize);
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        var paymentIds = await _db.Database
+            .SqlQuery<Guid>(
+                $"""
+                 SELECT p.payment_id AS "Value"
+                 FROM payment.payments AS p
+                 WHERE p.status IN ('Created', 'Pending', 'Failed')
+                   AND p.unpaid_timeout_at IS NOT NULL
+                   AND p.unpaid_timeout_at <= {utcNow}
+                 ORDER BY p.unpaid_timeout_at
+                 LIMIT {limit}
+                 FOR UPDATE SKIP LOCKED
+                 """)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (paymentIds.Count == 0)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return [];
+        }
+
+        var expiredCheckouts = new List<Guid>();
+        foreach (var paymentId in paymentIds)
+        {
+            var payment = await _db.Payments.SingleAsync(x => x.PaymentId == paymentId, cancellationToken)
+                .ConfigureAwait(false);
+            var attempts = await _db.Attempts
+                .Where(x => x.PaymentId == paymentId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var loaded in attempts)
+            {
+                payment.AttachLoadedAttempt(loaded);
+            }
+
+            if (payment.ExpireUnpaidTimeout(utcNow))
+            {
+                expiredCheckouts.Add(payment.CheckoutId);
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return expiredCheckouts;
+    }
+
+    /// <inheritdoc />
+    public async Task ReopenExpiredForRetryAsync(
+        Guid paymentId,
+        Guid actorUserId,
+        Guid? buyerPartyId,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        var payment = await _db.Payments.SingleOrDefaultAsync(x => x.PaymentId == paymentId, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await EnsureActorCanSeeAsync(payment, actorUserId, buyerPartyId, cancellationToken);
+        if (payment.Status != PaymentStatus.Expired)
+        {
+            throw new InvalidOperationException("payment.unpaid.retry.invalid_state");
+        }
+
+        var attempts = await _db.Attempts.Where(x => x.PaymentId == paymentId).ToListAsync(cancellationToken);
+        foreach (var loaded in attempts)
+        {
+            payment.AttachLoadedAttempt(loaded);
+        }
+
+        _actorContext.ActorUserId = actorUserId;
+        var gateway = _gateways.Resolve(payment.ProviderCode);
+        var initiation = await gateway.InitiateAsync(payment.PaymentId, payment.Amount, payment.Currency, cancellationToken);
+        var attempt = payment.RecordInitiation(initiation.ProviderRequestReference, DateTimeOffset.UtcNow);
+        AssignUnpaidTimeout(payment, DateTimeOffset.UtcNow);
+        _db.Attempts.Add(attempt);
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private void AssignUnpaidTimeout(CustomerPayment payment, DateTimeOffset now)
+    {
+        if (_holdPolicy is null)
+        {
+            return;
+        }
+
+        payment.AssignUnpaidTimeout(_holdPolicy.ResolveUnpaidTimeoutAt(payment.ProviderCode, now), now);
     }
 
     private async Task EnsureActorCanSeeAsync(

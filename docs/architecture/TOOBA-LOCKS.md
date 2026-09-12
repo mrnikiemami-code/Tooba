@@ -325,3 +325,27 @@ No polling or timer keeps a Cart hold alive.
 
 ### LOCK-SF-054 — Historical Cart reservations are not Order reservations
 Old cart:* holds may expire or release only when not bound to an Order. Order-bound holds are never cleaned as cart leftovers.
+
+### LOCK-SF-055 — Unpaid Order timeout is distinct from Cart lifetime and SupplyStatus
+PaymentExpired / unpaid timeout is not Cart:PersistenceHours and is not Order SupplyStatus.
+
+### LOCK-SF-056 — Unpaid timeout applies only when money has not been received
+No evidence-review and no Succeeded payment. Manual review uses R5 hold. Succeeded never unpaid-expires.
+
+### LOCK-SF-057 — Timeout releases the Order hold and retains history
+Expired unpaid releases the active Order reservation. Order and payment attempts are not deleted.
+
+### LOCK-SF-058 — Succeeded and manual-review payments are never unpaid-expired
+Unpaid worker is a no-op for Succeeded, refund, and evidence-submitted Pending.
+
+### LOCK-SF-059 — Expired unpaid retry uses the same Order and a NEW reservation
+Retry never duplicates checkout. EnsureOrderSupply creates a new hold. Released rows are not resurrected.
+
+### LOCK-SF-060 — Timeout versus payment-success races never lose captured money
+If money is captured after timeout, payment becomes Succeeded and Ensure/reacquire applies. Unavailable supply stays an operational paid-but-unsupplied state.
+
+### LOCK-SF-061 — Hold and timeout durations are editable through Settings UX
+Cart persistence, online hold, manual initial hold, and manual review hold: Payment Method override > Store override > platform. FA/EN labels, no raw keys.
+
+### LOCK-SF-062 — Frontend never decides expiry with client timers
+Expiry is worker/backend authoritative. UI only renders PaymentStatus.Expired / PaymentExpired.

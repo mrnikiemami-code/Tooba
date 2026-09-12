@@ -406,6 +406,14 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
     en: "Inventory for this order is no longer available during payment review. Check order status and refund handling.",
   },
+  "payment.unpaid.supply_unavailable": {
+    fa: "این سفارش در حال حاضر قابل تأمین نیست.",
+    en: "This order cannot currently be supplied.",
+  },
+  "hold.online.invalid": {
+    fa: "مقدار مهلت معتبر نیست.",
+    en: "The hold duration is not valid.",
+  },
   "inventory.supply.unavailable": {
     fa: "این سفارش در حال حاضر قابل تأمین نیست.",
     en: "This order cannot currently be supplied.",

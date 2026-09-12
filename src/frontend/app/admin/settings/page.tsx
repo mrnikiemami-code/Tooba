@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe2, Hash, Save, Settings, User } from "lucide-react";
+import { Clock, Globe2, Hash, Save, Settings, User } from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { type Locale } from "../../../lib/i18n/locale.ts";
 import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
@@ -18,8 +18,14 @@ import {
   saveStoreQuantitySettings,
   type QuantityRoundingMode,
 } from "../quantity-settings-api";
+import {
+  loadHoldPolicySettings,
+  saveHoldPolicySettings,
+  type HoldPolicySettingsView,
+  type PaymentMethodHoldView,
+} from "../hold-policy-settings-api";
 
-type AdminSettingsTab = "profile" | "locale" | "quantity";
+type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds";
 
 /**
  * تنظیمات اپراتور Admin — پروفایل شخصی + locale؛ بدون سوئیچ سراسری جعلی.
@@ -39,16 +45,25 @@ export default function AdminSettingsPage() {
   const [bio, setBio] = useState("");
   const [locale, setLocale] = useState<Locale>("fa");
   const [roundingMode, setRoundingMode] = useState<QuantityRoundingMode>("Nearest");
+  const [holds, setHolds] = useState<HoldPolicySettingsView | null>(null);
+  const [holdDraft, setHoldDraft] = useState({
+    cartPersistenceHours: "",
+    onlinePaymentHoldHours: "",
+    manualPaymentInitialHoldHours: "",
+    manualPaymentReviewHoldHours: "",
+  });
+  const [methodDraft, setMethodDraft] = useState<PaymentMethodHoldView[]>([]);
 
   async function refresh() {
     setDenied(false);
     setLoadError(null);
     setProfile(undefined);
     await prepareAdminDevActor();
-    const [profileResult, prefsResult, roundingResult] = await Promise.all([
+    const [profileResult, prefsResult, roundingResult, holdResult] = await Promise.all([
       loadOperatorProfile(),
       loadOperatorPreferences(),
       loadStoreQuantitySettings(),
+      loadHoldPolicySettings(),
     ]);
     if (profileResult.state === "denied") {
       setDenied(true);
@@ -74,6 +89,27 @@ export default function AdminSettingsPage() {
     if (roundingResult.ok) {
       setRoundingMode(roundingResult.data.globalRoundingMode);
     }
+    if (holdResult.ok) {
+      applyHoldView(holdResult.data);
+    }
+  }
+
+  function applyHoldView(view: HoldPolicySettingsView) {
+    setHolds(view);
+    setHoldDraft({
+      cartPersistenceHours: view.cartPersistence.hours == null ? "" : String(view.cartPersistence.hours),
+      onlinePaymentHoldHours: view.onlinePaymentHold.hours == null ? "" : String(view.onlinePaymentHold.hours),
+      manualPaymentInitialHoldHours: view.manualInitialHold.hours == null ? "" : String(view.manualInitialHold.hours),
+      manualPaymentReviewHoldHours: view.manualReviewHold.hours == null ? "" : String(view.manualReviewHold.hours),
+    });
+    setMethodDraft(view.methods);
+  }
+
+  function parseHours(raw: string): number | null {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   useEffect(() => {
@@ -152,6 +188,38 @@ export default function AdminSettingsPage() {
     setBusy(false);
   }
 
+  async function onSaveHolds() {
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const result = await saveHoldPolicySettings({
+      cartPersistenceHours: parseHours(holdDraft.cartPersistenceHours),
+      onlinePaymentHoldHours: parseHours(holdDraft.onlinePaymentHoldHours),
+      manualPaymentInitialHoldHours: parseHours(holdDraft.manualPaymentInitialHoldHours),
+      manualPaymentReviewHoldHours: parseHours(holdDraft.manualPaymentReviewHoldHours),
+      methods: methodDraft,
+    });
+    if (result.denied) {
+      setDenied(true);
+      setBusy(false);
+      return;
+    }
+    if (!result.ok) {
+      setError(result.message ?? "ذخیرهٔ مهلت پرداخت انجام نشد.");
+      setBusy(false);
+      return;
+    }
+    applyHoldView(result.data);
+    setSuccess("مهلت پرداخت و نگهداری سبد ذخیره شد.");
+    setBusy(false);
+  }
+
+  function onCancelHolds() {
+    if (holds) applyHoldView(holds);
+    setError(null);
+    setSuccess(null);
+  }
+
   if (denied) {
     return (
       <section data-testid="admin-settings-page">
@@ -205,6 +273,7 @@ export default function AdminSettingsPage() {
               { id: "profile" as const, label: "پروفایل", icon: User },
               { id: "locale" as const, label: "زبان", icon: Globe2 },
               { id: "quantity" as const, label: "مقدار", icon: Hash },
+              { id: "holds" as const, label: "مهلت‌ها", icon: Clock },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -228,7 +297,118 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="p-4 md:p-6">
-          {activeTab === "quantity" ? (
+          {activeTab === "holds" ? (
+            <form
+              className="space-y-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void onSaveHolds();
+              }}
+              data-testid="admin-settings-hold-form"
+            >
+              <p className="text-sm text-gray-500 leading-7" data-testid="admin-settings-hold-helper-fa">
+                مهلت‌ها از تنظیمات فروشگاه خوانده می‌شوند. خالی‌گذاشتن یعنی استفاده از مقدار پیش‌فرض سامانه. مدت نگهداری سبد موجودی را رزرو نمی‌کند.
+              </p>
+              <p className="text-xs text-gray-400 leading-6" dir="ltr" data-testid="admin-settings-hold-helper-en">
+                Store values override platform defaults. Empty inherits. Cart persistence does not reserve inventory.
+              </p>
+              {(
+                [
+                  ["cartPersistenceHours", holds?.cartPersistence, "ساعت"] as const,
+                  ["onlinePaymentHoldHours", holds?.onlinePaymentHold, "ساعت"] as const,
+                  ["manualPaymentInitialHoldHours", holds?.manualInitialHold, "ساعت"] as const,
+                  ["manualPaymentReviewHoldHours", holds?.manualReviewHold, "ساعت"] as const,
+                ]
+              ).map(([key, view, unit]) => (
+                <div key={key} className="rounded-xl border border-gray-100 p-4">
+                  <label className="text-sm font-medium text-gray-800">{view?.labelFa ?? key}</label>
+                  <p className="text-xs text-gray-500 mt-1">{view?.helperFa}</p>
+                  <p className="text-[11px] text-gray-400 mt-1" dir="ltr">{view?.labelEn} — {view?.helperEn}</p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={holdDraft[key]}
+                      onChange={(e) => setHoldDraft((current) => ({ ...current, [key]: e.target.value }))}
+                      disabled={busy}
+                      className="w-32 px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                      data-testid={`admin-settings-hold-${key}`}
+                    />
+                    <span className="text-xs text-gray-500">{unit}</span>
+                    <span className="text-xs text-gray-400">
+                      مؤثر: {view?.effectiveHours ?? "—"} {unit}
+                      {view?.source === "platform" ? " (پیش‌فرض سامانه)" : " (فروشگاه)"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-xl border border-gray-100 p-4 space-y-3" data-testid="admin-settings-hold-methods">
+                <p className="text-sm font-medium text-gray-800">override روش پرداخت</p>
+                <p className="text-xs text-gray-500">در صورت نیاز، مهلت هر روش پرداخت جداگانه ذخیره می‌شود.</p>
+                {methodDraft.map((method, index) => (
+                  <div key={method.providerCode} className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <p className="text-sm font-bold self-center">{method.labelFa}</p>
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="آنلاین"
+                      value={method.onlinePaymentHoldHours ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? null : Number(e.target.value);
+                        setMethodDraft((rows) => rows.map((row, i) => (i === index ? { ...row, onlinePaymentHoldHours: value } : row)));
+                      }}
+                      className="px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                      data-testid={`admin-settings-hold-method-${method.providerCode}-online`}
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="ثبت مدرک"
+                      value={method.manualPaymentInitialHoldHours ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? null : Number(e.target.value);
+                        setMethodDraft((rows) => rows.map((row, i) => (i === index ? { ...row, manualPaymentInitialHoldHours: value } : row)));
+                      }}
+                      className="px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                      data-testid={`admin-settings-hold-method-${method.providerCode}-initial`}
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      placeholder="بررسی"
+                      value={method.manualPaymentReviewHoldHours ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? null : Number(e.target.value);
+                        setMethodDraft((rows) => rows.map((row, i) => (i === index ? { ...row, manualPaymentReviewHoldHours: value } : row)));
+                      }}
+                      className="px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                      data-testid={`admin-settings-hold-method-${method.providerCode}-review`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="flex-1 py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-70"
+                  data-testid="admin-settings-save-holds"
+                >
+                  <Save className="w-4 h-4 inline-block ml-1" />
+                  ذخیره مهلت‌ها
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={onCancelHolds}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold"
+                  data-testid="admin-settings-cancel-holds"
+                >
+                  انصراف
+                </button>
+              </div>
+            </form>
+          ) : activeTab === "quantity" ? (
             <form
               className="space-y-4"
               onSubmit={(event) => {

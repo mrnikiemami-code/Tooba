@@ -25,6 +25,9 @@ test("rounding helper mentions historical invoices", () => {
   assert.match(settings, /فاکتورهای تاریخی/);
   assert.match(settings, /Historical orders and invoices/);
   assert.match(settings, /admin-settings-rounding-helper-en/);
+  assert.match(settings, /admin-settings-hold-form/);
+  assert.match(settings, /موجودی را رزرو نمی‌کند/);
+  assert.match(settings, /مهلت‌ها/);
 });
 
 test("offer form shows product unit and min max check", () => {

@@ -10,6 +10,8 @@ import {
   loadStorefrontPayment,
   resetStorefrontPaymentIdempotency,
   retryStorefrontManualPayment,
+  retryStorefrontUnpaidPayment,
+  retryStorefrontUnpaidPayment,
   shouldPollStorefrontPayment,
   submitStorefrontManualEvidence,
   toCustomerPaymentMessage,
@@ -118,6 +120,7 @@ function ResultBody() {
 
   const paid = checkout?.paymentState === "Paid" || payment?.status === "Succeeded";
   const failed = payment?.status === "Failed" || payment?.status === "Cancelled";
+  const unpaidExpired = payment?.status === "Expired";
   const manual = (payment?.providerCode ?? "").toLowerCase() === "manual";
   const awaitingSubmit = Boolean(payment?.canSubmitManualEvidence);
   const awaitingAdmin = manual && payment?.status === "Pending" && Boolean(payment?.evidenceSubmittedAt);
@@ -153,7 +156,9 @@ function ResultBody() {
 
   const statusLabel = paid
     ? "پرداخت موفق"
-    : failed && !manual
+    : unpaidExpired
+      ? "مهلت پرداخت این سفارش به پایان رسیده است."
+      : failed && !manual
       ? "پرداخت ناموفق"
       : awaitingSubmit
         ? "منتظر ثبت اطلاعات پرداخت"
@@ -180,6 +185,22 @@ function ResultBody() {
     setError(null);
     try {
       const next = await submitStorefrontManualEvidence(paymentId, trimmed, proofId);
+      setPayment(next);
+    } catch (cause: unknown) {
+      setError(toCustomerPaymentMessage(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRetryUnpaid() {
+    if (!paymentId) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await retryStorefrontUnpaidPayment(paymentId);
       setPayment(next);
     } catch (cause: unknown) {
       setError(toCustomerPaymentMessage(cause));
@@ -283,6 +304,27 @@ function ResultBody() {
               ثبت اطلاعات پرداخت
             </button>
           </form>
+        ) : null}
+
+        {unpaidExpired ? (
+          <div className="space-y-3" data-testid="payment-unpaid-expired">
+            {payment?.canRetryUnpaid ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void onRetryUnpaid()}
+                className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-bold disabled:opacity-50"
+                data-testid="payment-unpaid-retry"
+              >
+                تلاش مجدد پرداخت
+              </button>
+            ) : null}
+            {orderHref ? (
+              <Link href={orderHref} className="inline-flex px-5 py-2.5 rounded-xl border border-blue-200 text-[#2563EB] text-sm font-bold">
+                مشاهده سفارش
+              </Link>
+            ) : null}
+          </div>
         ) : null}
 
         {rejected ? (

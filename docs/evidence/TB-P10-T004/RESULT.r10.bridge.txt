@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R10
+
+Parent-Task:
+TB-P10-T004-R9
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Unpaid Orders no longer sit forever in PendingPayment after the Settings-driven hold expires. PaymentStatus.Expired / PaymentExpired releases the Order hold, keeps history, and retries the same Order with EnsureOrderSupply + a NEW reservation. Manual evidence stays on the R5 review hold; Succeeded never unpaid-expires. Late captured money applies EnsurePaidDurable; unavailable supply stays paid-but-unsupplied. Admin Settings «مهلت‌ها» and Admin/customer copy distinguish timeout from SupplyStatus. Runtime A–J ok=true. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…054 preserved; LOCK-SF-055…062 (unpaid timeout ≠ cart/SupplyStatus; money-not-received only; release hold keep history; Succeeded/review never unpaid-expire; same-Order NEW reservation; no lost captured money; Settings UX; no FE timers).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r10-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r10-unpaid-lifecycle-discovery.md
+
+Timeout-Policy:
+docs/evidence/TB-P10-T004/r10-timeout-policy.md
+
+Settings-UX:
+docs/evidence/TB-P10-T004/r10-settings-ux.md
+
+Expiry-Worker:
+docs/evidence/TB-P10-T004/r10-expiry-worker.md
+
+Retry:
+docs/evidence/TB-P10-T004/r10-retry.md
+
+Late-Payment-Race:
+docs/evidence/TB-P10-T004/r10-late-payment-race.md
+
+Admin-UX:
+docs/evidence/TB-P10-T004/r10-admin-ux.md
+
+Customer-UX:
+docs/evidence/TB-P10-T004/r10-customer-ux.md
+
+Performance:
+docs/evidence/TB-P10-T004/r10-performance.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r10-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r10-runtime.md + r10-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r10-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-055…062
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r10-recovery-sot.md — Architect R9; Impl R10; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+
+Architectural-Concerns:
+Storefront payable includes shipping; payment-succeeded projection must match seller totals plus ShippingAmount or inbox never applies Paid.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; Admin Settings tab and status copy only; no Storefront Home/PDP redesign
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

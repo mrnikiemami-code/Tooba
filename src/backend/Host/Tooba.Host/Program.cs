@@ -76,6 +76,7 @@ builder.Services.AddScoped<ICommerceContextAssigner>(sp => sp.GetRequiredService
 builder.Services.Configure<OutboxHostOptions>(builder.Configuration.GetSection("Tooba:Outbox"));
 builder.Services.Configure<CartExpiryHostOptions>(builder.Configuration.GetSection("Tooba:CartExpiry"));
 builder.Services.Configure<PaymentReconciliationHostOptions>(builder.Configuration.GetSection("Tooba:PaymentReconciliation"));
+builder.Services.Configure<UnpaidOrderExpiryHostOptions>(builder.Configuration.GetSection("Tooba:UnpaidOrderExpiry"));
 builder.Services.AddSingleton<BackgroundWorkerRegistry>();
 builder.Services.AddScoped<ILanguageReferenceGuard, ContentLanguageReferenceGuard>();
 builder.Services.AddOptions<MessagingHostOptions>()
@@ -111,10 +112,14 @@ builder.Services.AddScoped<OutboxSaveChangesInterceptor>();
 builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
+builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
     builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
-builder.Services.AddSingleton<Tooba.Order.Application.ICheckoutReservationHoldPolicy, CheckoutReservationHoldPolicy>();
+builder.Services.AddScoped<CommerceHoldPolicy>();
+builder.Services.AddScoped<Tooba.Payment.Application.ICommerceHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Cart.Application.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();
@@ -168,7 +173,9 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<Tooba.Media.Application.IMediaDirectory>(),
-        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>()));
+        sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>(),
+        sp.GetRequiredService<Tooba.Host.Admin.OrderSupplyComposer>(),
+        sp.GetRequiredService<Tooba.Payment.Application.IPaymentExpiryDirectory>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
@@ -373,6 +380,7 @@ app.UseMiddleware<SessionAuthenticationMiddleware>();
 app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapQuantitySettingsEndpoints();
+app.MapHoldPolicySettingsEndpoints();
 app.MapUnitOfMeasureEndpoints();
 app.MapShippingServiceEndpoints();
 app.MapCatalogAttributeEndpoints();

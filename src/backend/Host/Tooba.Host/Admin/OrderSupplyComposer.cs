@@ -8,6 +8,7 @@ using Tooba.Inventory.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Payment.Application;
 using Tooba.Payment.Infrastructure;
 
 namespace Tooba.Host.Admin;
@@ -22,31 +23,48 @@ public sealed class OrderSupplyComposer
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly FulfillmentDbContext _fulfillmentDb;
     private readonly PaymentGatewayOptions _paymentGateway;
+    private readonly ICommerceHoldPolicy? _holdPolicy;
 
     public OrderSupplyComposer(
         OrderDbContext orders,
         IInventoryDirectory inventory,
         IFulfillmentDirectory fulfillment,
         FulfillmentDbContext fulfillmentDb,
-        IOptions<PaymentGatewayOptions> paymentGateway)
+        IOptions<PaymentGatewayOptions> paymentGateway,
+        ICommerceHoldPolicy? holdPolicy = null)
     {
         _orders = orders;
         _inventory = inventory;
         _fulfillment = fulfillment;
         _fulfillmentDb = fulfillmentDb;
         _paymentGateway = paymentGateway.Value;
+        _holdPolicy = holdPolicy;
     }
 
     public DateTimeOffset ResolveManualReviewExpiresAt()
     {
+        if (_holdPolicy is not null)
+        {
+            return _holdPolicy.ResolveManualReviewExpiresAt(DateTimeOffset.UtcNow);
+        }
+
         var hours = Math.Clamp(_paymentGateway.ManualPaymentReviewHoldHours, 1, 24 * 30);
-        // Precedence: Payment:Gateway (method/store) overrides Inventory:OrderSupplyHolds platform defaults.
         if (_paymentGateway.OrderSupplyHoldOverrides is { } o && o.ManualPaymentReviewHoldHours is int ov)
         {
             hours = Math.Clamp(ov, 1, 24 * 30);
         }
 
         return DateTimeOffset.UtcNow.AddHours(hours);
+    }
+
+    public DateTimeOffset ResolveUnpaidRetryExpiresAt()
+    {
+        if (_holdPolicy is not null)
+        {
+            return _holdPolicy.ResolveInitialExpiresAt(DateTimeOffset.UtcNow);
+        }
+
+        return ResolveManualReviewExpiresAt();
     }
 
     public async Task<OrderSupplyStatus> GetStatusAsync(Guid checkoutId, CancellationToken cancellationToken)
@@ -136,9 +154,12 @@ public sealed class OrderSupplyComposer
         }
 
         var lines = await BuildLinesAsync(group, cancellationToken);
-        DateTimeOffset? reviewExpires = mode == OrderSupplyMode.EnsureReviewHold
-            ? ResolveManualReviewExpiresAt()
-            : null;
+        DateTimeOffset? reviewExpires = mode switch
+        {
+            OrderSupplyMode.EnsureReviewHold => ResolveManualReviewExpiresAt(),
+            OrderSupplyMode.EnsureUnpaidRetryHold => ResolveUnpaidRetryExpiresAt(),
+            _ => null,
+        };
         var result = await _inventory.EnsureOrderSupplyAsync(
             new EnsureOrderSupplyRequest(
                 checkoutId,

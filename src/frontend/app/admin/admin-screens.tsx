@@ -732,6 +732,7 @@ const receiptStatusEnumOptions = [
   { value: "Succeeded", label: formatAdminStatus("Succeeded") },
   { value: "Failed", label: formatAdminStatus("Failed") },
   { value: "Cancelled", label: formatAdminStatus("Cancelled") },
+  { value: "Expired", label: formatAdminStatus("Expired") },
 ];
 
 const receiptRowActions: AppGridRowAction<AdminReceiptRow>[] = [
