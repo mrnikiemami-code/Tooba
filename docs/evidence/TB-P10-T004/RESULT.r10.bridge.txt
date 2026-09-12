@@ -71,7 +71,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r10-recovery-sot.md — Architect R9; Impl R10; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+branch main; HEAD e91e066bc762f943f1760f391b1ca50f0c5101e8; HEAD==origin/main yes
 
 Architectural-Concerns:
 Storefront payable includes shipping; payment-succeeded projection must match seller totals plus ShippingAmount or inbox never applies Paid.
