@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R9
+
+Parent-Task:
+TB-P10-T004-R8
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Cart lifetime is separated from Inventory holds. AddToCart/GET validate availability only (Available/LimitedQuantity/Unavailable) and never ReserveAsync. Hard reservation starts at Shipping commit / SubmitCheckout after unique Order insert; failure deletes the unsold checkout and releases acquired holds. Cart:PersistenceHours=168; order holds stay Payment:Gateway settings. Historical cart:* holds are not extended. R5–R8 supply/confirm behavior preserved. Runtime A–G ok=true. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…046 preserved; LOCK-SF-047…054 added (cart vs hold lifetime, no ATC reserve, commit-boundary hold, atomic commit, Availability vs SupplyStatus, settings holds, no renewal polling, historical cart holds ≠ Order holds).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r9-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r9-current-cart-reservation-discovery.md
+
+Cart-Policy:
+docs/evidence/TB-P10-T004/r9-cart-policy.md
+
+Order-Commit-Boundary:
+docs/evidence/TB-P10-T004/r9-order-commit-boundary.md
+
+Settings:
+docs/evidence/TB-P10-T004/r9-settings.md
+
+Cart-Mutations:
+docs/evidence/TB-P10-T004/r9-cart-mutations.md
+
+Historical-Cart-Compatibility:
+docs/evidence/TB-P10-T004/r9-historical-cart-compatibility.md
+
+Checkout-Races:
+docs/evidence/TB-P10-T004/r9-checkout-races.md
+
+Payment-Regression:
+Online/manual initiate still operate on committed Order holds; R5 review / R7 EnsurePaidDurable unchanged.
+
+Admin-Supply-Regression:
+Orders grid still returns SupplyStatus (runtime F).
+
+Performance:
+docs/evidence/TB-P10-T004/r9-performance.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r9-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r9-runtime.md + r9-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r9-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-047…054
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r9-recovery-sot.md — Architect R8; Impl R9; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD pending-commit; HEAD==origin/main after push
+
+Architectural-Concerns:
+Shipping commit remains the Order-creation boundary by lock; reservation now starts there instead of AddToCart.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no Storefront redesign
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

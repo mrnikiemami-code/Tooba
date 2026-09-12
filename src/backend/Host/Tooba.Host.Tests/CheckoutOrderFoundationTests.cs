@@ -309,7 +309,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         var convertedCart = await cartDirA.GetCartAsync(multi.CartId, access, CancellationToken.None);
         Assert.Equal(CartStatus.Converted, convertedCart!.Status);
         Assert.Equal(CartConversionIntent.OnlinePurchase, convertedCart.ConversionIntent);
-        Assert.Equal(availableBefore, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
+        Assert.Equal(availableBefore - 1, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
 
         var replay = await checkoutA.SubmitAsync(command, CancellationToken.None);
         Assert.Equal(submitted.CheckoutId, replay.CheckoutId);
@@ -444,7 +444,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Equal(1, await orderA.Checkouts.AsNoTracking().CountAsync(x => x.CartId == concLined.CartId));
         Assert.Equal(1, await orderA.SellerOrders.AsNoTracking().CountAsync(x => x.CheckoutId == concResults[0].CheckoutId));
         Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(concLined.CartId, access, CancellationToken.None))!.Status);
-        Assert.Equal(availableBeforeConc, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
+        Assert.Equal(availableBeforeConc - 1, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
 
         var sameKeyCart = await cartDirA.CreateAuthenticatedAsync(actor, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
         var sameKeyLined = await cartDirA.AddOrIncreaseLineAsync(sameKeyCart.CartId, access, sameKeyCart.Version, offer2.OfferId, 1, CancellationToken.None);
@@ -460,7 +460,7 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         Assert.Equal(1, await orderA.Checkouts.AsNoTracking().CountAsync(x => x.CartId == sameKeyLined.CartId));
         Assert.Equal(1, await orderA.SellerOrders.AsNoTracking().CountAsync(x => x.CheckoutId == sameResults[0].CheckoutId));
         Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(sameKeyLined.CartId, access, CancellationToken.None))!.Status);
-        Assert.Equal(availableBeforeSame, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
+        Assert.Equal(availableBeforeSame - 1, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
     }
 
     private static CatalogDbContext CreateCatalogDb(string connectionString, ICurrentCommerceContext commerce)

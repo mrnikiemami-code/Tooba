@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-browse-beyond-old-ttl",
+      "ok": true,
+      "cartHolds": 0,
+      "reservedDelta": 0,
+      "commit": 200,
+      "orderHolds": 1
+    },
+    {
+      "name": "B-stock-lost",
+      "ok": true,
+      "cartLines": 1,
+      "commit": 409,
+      "orders": 0
+    },
+    {
+      "name": "C-last-unit-race",
+      "ok": true,
+      "win": 200,
+      "lose": 409,
+      "reservedNow": 1,
+      "onHand": 1
+    },
+    {
+      "name": "D-online-hold",
+      "ok": true,
+      "commit": 200,
+      "pay": 200
+    },
+    {
+      "name": "E-manual-hold",
+      "ok": true,
+      "commit": 200,
+      "pay": 200
+    },
+    {
+      "name": "F-admin-supply",
+      "ok": true,
+      "status": 200,
+      "rows": 29
+    },
+    {
+      "name": "G-performance",
+      "ok": true,
+      "addDelta": 0,
+      "getDelta": 0
+    }
+  ],
+  "at": "2026-09-12T04:07:02.679Z",
+  "secretsOmitted": true
+}

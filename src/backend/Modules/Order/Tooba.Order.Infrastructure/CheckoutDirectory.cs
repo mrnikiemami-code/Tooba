@@ -45,6 +45,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly ICatalogLookupGateway _catalog;
     private readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
     private readonly IReturnPolicyResolver _returnPolicies;
+    private readonly ICheckoutReservationHoldPolicy? _holdPolicy;
+    private readonly IInventoryAvailabilityGateway _availability;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -61,7 +63,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IPromotionEvaluator promotions,
         ICatalogLookupGateway catalog,
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
-        IReturnPolicyResolver? returnPolicies = null)
+        IReturnPolicyResolver? returnPolicies = null,
+        ICheckoutReservationHoldPolicy? holdPolicy = null,
+        IInventoryAvailabilityGateway? availability = null)
     {
         _db = db;
         _guard = guard;
@@ -75,6 +79,10 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _catalog = catalog;
         _cancelFulfillmentGate = cancelFulfillmentGate;
         _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
+        _holdPolicy = holdPolicy;
+        _availability = availability
+            ?? inventory as IInventoryAvailabilityGateway
+            ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
     }
 
     /// <inheritdoc />
@@ -110,7 +118,14 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
 
         var now = DateTimeOffset.UtcNow;
         var checkoutId = UuidV7.New();
-        var sellerOrders = await QuoteSellerOrdersAsync(cart, command, checkoutId, now, cancellationToken);
+        var sellerOrders = await QuoteSellerOrdersAsync(
+            cart,
+            command,
+            checkoutId,
+            now,
+            new Dictionary<Guid, Guid>(),
+            requireReservation: false,
+            cancellationToken);
 
         var group = CheckoutGroup.Submit(
             checkoutId,
@@ -145,6 +160,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         catch (DbUpdateException)
         {
             // بازندهٔ رقابت unique(cart_id) نباید موجودیت ردیابی‌شدهٔ خودش را برگرداند.
+            // رزرو با کلید idempotency مبتنی بر CartLine متعلق به برنده است؛ آزادسازی نمی‌شود.
             _db.ChangeTracker.Clear();
             var winner = await _db.Checkouts
                 .AsNoTracking()
@@ -152,11 +168,38 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 .ThenInclude(x => x.Lines)
                 .Where(x => x.CartId == command.CartId)
                 .OrderBy(x => x.SubmittedAt)
-                .FirstOrDefaultAsync(cancellationToken)
-                ?? throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
+                .FirstOrDefaultAsync(cancellationToken);
+            if (winner is null)
+            {
+                throw new InvalidOperationException("checkout تکراری سبد ذخیره شد ولی خوانده نشد.");
+            }
+
             EnsureAccess(winner, new OrderAccess(command.BuyerPartyId, command.PlacedByUserId));
             await ReconcileCartConversionAsync(winner, command, cancellationToken);
             return ToSnapshot(winner);
+        }
+
+        var reservations = new Dictionary<Guid, Guid>();
+        try
+        {
+            reservations = await ReserveCartLinesForOrderAsync(cart, now, cancellationToken);
+            BindReservationsToOrders(group, cart, reservations);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await ReleaseAcquiredAsync(reservations.Values, cancellationToken);
+            _db.Checkouts.Remove(group);
+            try
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                _db.ChangeTracker.Clear();
+            }
+
+            throw;
         }
 
         await ReconcileCartConversionAsync(group, command, cancellationToken);
@@ -181,7 +224,14 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
 
         var now = DateTimeOffset.UtcNow;
         var checkoutId = UuidV7.New();
-        var sellerOrders = await QuoteSellerOrdersAsync(cart, command, checkoutId, now, cancellationToken);
+        var sellerOrders = await QuoteSellerOrdersAsync(
+            cart,
+            command,
+            checkoutId,
+            now,
+            new Dictionary<Guid, Guid>(),
+            requireReservation: false,
+            cancellationToken);
         var group = CheckoutGroup.Submit(
             checkoutId,
             command.IdempotencyKey.Length == 0 ? "preview" : command.IdempotencyKey,
@@ -476,6 +526,103 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         await _db.SaveChangesAsync(cancellationToken);
     }
 
+    private async Task<Dictionary<Guid, Guid>> ReserveCartLinesForOrderAsync(
+        CartSnapshot cart,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var expiresAt = _holdPolicy?.ResolveInitialExpiresAt(now) ?? now.AddHours(2);
+        var stock = await _availability.GetAvailabilityBatchAsync(
+            cart.Lines.Select(x => x.OfferId).Distinct().ToArray(),
+            cancellationToken);
+        var acquired = new List<Guid>();
+        var map = new Dictionary<Guid, Guid>();
+        try
+        {
+            foreach (var cartLine in cart.Lines)
+            {
+                if (cartLine.ReservationId is { } existingId)
+                {
+                    var existing = await _inventory.FindReservationAsync(existingId, cancellationToken);
+                    if (existing is { Status: Tooba.Inventory.Domain.StockReservationStatus.Held }
+                        && existing.Quantity >= cartLine.Quantity
+                        && (existing.ExpiresAt is null || existing.ExpiresAt > now))
+                    {
+                        map[cartLine.LineId] = existingId;
+                        continue;
+                    }
+                }
+
+                if (!stock.TryGetValue(cartLine.OfferId, out var availability))
+                {
+                    throw new InvalidOperationException("inventory.supply.unavailable");
+                }
+
+                var location = availability.Locations
+                    .Where(x => x.Available >= cartLine.Quantity)
+                    .OrderByDescending(x => x.Available)
+                    .FirstOrDefault()
+                    ?? throw new InvalidOperationException("inventory.supply.unavailable");
+
+                var receipt = await _inventory.ReserveAsync(
+                    location.StockItemId,
+                    cartLine.Quantity,
+                    $"order-commit:{cart.CartId:N}",
+                    $"cc-{cart.CartId:N}-{cartLine.LineId:N}",
+                    expiresAt,
+                    cancellationToken);
+                acquired.Add(receipt.ReservationId);
+                map[cartLine.LineId] = receipt.ReservationId;
+            }
+
+            return map;
+        }
+        catch
+        {
+            await ReleaseAcquiredAsync(acquired, cancellationToken);
+            throw;
+        }
+    }
+
+    private static void BindReservationsToOrders(
+        CheckoutGroup group,
+        CartSnapshot cart,
+        IReadOnlyDictionary<Guid, Guid> reservationsByCartLineId)
+    {
+        var unused = group.SellerOrders.SelectMany(o => o.Lines).ToList();
+        foreach (var cartLine in cart.Lines)
+        {
+            if (!reservationsByCartLineId.TryGetValue(cartLine.LineId, out var reservationId))
+            {
+                throw new InvalidOperationException("inventory.supply.unavailable");
+            }
+
+            var orderLine = unused.FirstOrDefault(x =>
+                x.OfferId == cartLine.OfferId
+                && x.SellerPartyId == cartLine.SellerPartyId
+                && x.Quantity == cartLine.Quantity
+                && x.ReservationId is null)
+                ?? throw new InvalidOperationException("inventory.supply.unavailable");
+            orderLine.ReplaceReservation(reservationId);
+            unused.Remove(orderLine);
+        }
+    }
+
+    private async Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)
+    {
+        foreach (var reservationId in reservationIds.Distinct())
+        {
+            try
+            {
+                await _inventory.ReleaseAsync(reservationId, cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                // رزرو ممکن است قبلاً آزاد یا به سفارش برنده وصل شده باشد.
+            }
+        }
+    }
+
     /// <summary>
     /// قیمت، ترویج و مالیات را روی خطوط سبد دوباره ارزیابی می‌کند. نتیجه هنوز سفارش پایدار نیست.
     /// </summary>
@@ -484,6 +631,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         SubmitCheckoutCommand command,
         Guid checkoutId,
         DateTimeOffset now,
+        IReadOnlyDictionary<Guid, Guid> reservationsByCartLineId,
+        bool requireReservation,
         CancellationToken cancellationToken)
     {
         var sellerOrders = new List<SellerOrder>();
@@ -540,9 +689,11 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     throw new InvalidOperationException("PRICE_CHANGED");
                 }
 
-                if (cartLine.ReservationId is null)
+                reservationsByCartLineId.TryGetValue(cartLine.LineId, out var reservedId);
+                var reservationId = reservedId != Guid.Empty ? reservedId : cartLine.ReservationId;
+                if (requireReservation && reservationId is null)
                 {
-                    throw new InvalidOperationException("خط سبد بدون رزرو موجودی به سفارش تبدیل نمی‌شود.");
+                    throw new InvalidOperationException("inventory.supply.unavailable");
                 }
 
                 var lineExclusive = quote.Amount * cartLine.Quantity;
@@ -598,7 +749,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                     quote.Currency,
                     quote.TaxExclusive,
                     quote.PriceId,
-                    cartLine.ReservationId,
+                    reservationId,
                     tax.Outcome.ToString(),
                     tax.TaxRate,
                     tax.TaxAmount,

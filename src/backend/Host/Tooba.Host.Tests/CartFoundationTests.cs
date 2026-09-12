@@ -208,12 +208,14 @@ public sealed class CartFoundationTests : IAsyncLifetime
         Assert.Single(added.Lines);
         Assert.Equal(offer1.OfferId, added.Lines[0].OfferId);
         Assert.Equal(1, added.Lines[0].Quantity);
-        Assert.Equal(1, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
+        Assert.Null(added.Lines[0].ReservationId);
+        Assert.Equal(2, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
 
         var bumped = await cartDirA.AddOrIncreaseLineAsync(guest.Cart.CartId, guestAccess, added.Version, offer1.OfferId, 1, CancellationToken.None);
         Assert.Single(bumped.Lines);
         Assert.Equal(2, bumped.Lines[0].Quantity);
-        Assert.Equal(0, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
+        Assert.Null(bumped.Lines[0].ReservationId);
+        Assert.Equal(2, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
 
         var multiSeller = await cartDirA.AddOrIncreaseLineAsync(guest.Cart.CartId, guestAccess, bumped.Version, offer2.OfferId, 1, CancellationToken.None);
         Assert.Equal(2, multiSeller.Lines.Count);
@@ -228,7 +230,8 @@ public sealed class CartFoundationTests : IAsyncLifetime
             multiSeller.Lines.Single(x => x.OfferId == offer1.OfferId).LineId,
             1,
             CancellationToken.None);
-        Assert.Equal(1, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
+        Assert.Null(decreased.Lines.Single(x => x.OfferId == offer1.OfferId).ReservationId);
+        Assert.Equal(2, (await inventoryDirA.GetAvailabilityAsync(offer1.OfferId, CancellationToken.None))!.Available);
 
         var userId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var auth = await cartDirA.CreateAuthenticatedAsync(userId, "IR", "IRR", SalesChannel.Marketplace, CancellationToken.None);
@@ -264,10 +267,8 @@ public sealed class CartFoundationTests : IAsyncLifetime
         await cartA.SaveChangesAsync();
         await cartDirA.ExpireDueCartsAsync(DateTimeOffset.UtcNow, 20, CancellationToken.None);
         Assert.Equal(CartStatus.Expired, (await cartDirA.GetCartAsync(withLine.CartId, shortAccess, CancellationToken.None))!.Status);
-        Assert.Equal(4, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
-        var expiredHoldId = withLine.Lines.Single().ReservationId!.Value;
-        await inventoryDirA.ReleaseAsync(expiredHoldId, CancellationToken.None);
-        await inventoryDirA.ReleaseAsync(expiredHoldId, CancellationToken.None);
+        Assert.Equal(5, (await inventoryDirA.GetAvailabilityAsync(offer2.OfferId, CancellationToken.None))!.Available);
+        Assert.Null(withLine.Lines.Single().ReservationId);
 
         var outbox = await cartA.OutboxMessages.AsNoTracking().ToListAsync();
         Assert.Contains(outbox, row => row.EventType == CartCreatedIntegrationEvent.EventTypeName);

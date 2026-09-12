@@ -9,6 +9,19 @@ namespace Tooba.Cart.Application;
 public sealed record CartAccess(Guid? UserId, string? GuestSecret);
 
 /// <summary>
+/// دسترس‌پذیری کسب‌وکاری خط سبد. مفاهیم تأمین سفارش (Reserved/AvailableForReacquire) نیست.
+/// </summary>
+public enum CartLineAvailabilityKind
+{
+    /// <summary>موجودی خط را پوشش می‌دهد.</summary>
+    Available = 0,
+    /// <summary>موجودی مثبت است ولی کمتر از تعداد سبد.</summary>
+    LimitedQuantity = 1,
+    /// <summary>موجودی قابل‌فروش صفر است.</summary>
+    Unavailable = 2,
+}
+
+/// <summary>
 /// خط سبد برای خواندن و درز Checkout آینده. موجودیت EF نیست.
 /// </summary>
 public sealed record CartLineSnapshot(
@@ -22,7 +35,8 @@ public sealed record CartLineSnapshot(
     string? QuotedCurrency,
     bool QuotedTaxExclusive,
     Guid? PriceId,
-    DateTimeOffset QuotedAt);
+    DateTimeOffset QuotedAt,
+    CartLineAvailabilityKind Availability = CartLineAvailabilityKind.Available);
 
 /// <summary>
 /// نمای سبد بدون نشت EF. حقیقت تسویه یا سفارش نیست.
@@ -92,7 +106,7 @@ public interface ICartDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// خط Offer اضافه یا با همان Offer ادغام می‌کند پس از رزرو موجودی.
+    /// خط Offer اضافه یا ادغام می‌کند پس از اعتبارسنجی موجودی؛ رزرو سخت نمی‌سازد.
     /// </summary>
     Task<CartSnapshot> AddOrIncreaseLineAsync(
         Guid cartId,
@@ -103,7 +117,7 @@ public interface ICartDirectory
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// تعداد خط را عوض می‌کند. صفر یعنی حذف پس از آزادسازی رزرو.
+    /// تعداد خط را عوض می‌کند. صفر یعنی حذف؛ رزرو تاریخی سبد در صورت وجود آزاد می‌شود.
     /// </summary>
     Task<CartSnapshot> ChangeLineQuantityAsync(
         Guid cartId,

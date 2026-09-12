@@ -112,6 +112,9 @@ builder.Services.AddHostedService<OutboxDispatcherHostedService>();
 builder.Services.AddHostedService<CartExpiryHostedService>();
 builder.Services.AddHostedService<PaymentReconciliationHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
+builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
+    builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
+builder.Services.AddSingleton<Tooba.Order.Application.ICheckoutReservationHoldPolicy, CheckoutReservationHoldPolicy>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();

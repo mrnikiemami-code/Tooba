@@ -673,6 +673,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status404NotFound, "Not Found", "checkout.missing");
         }
 
+        if (text.Contains("inventory.supply.unavailable", StringComparison.Ordinal)
+            || text.Contains("قابل تأمین نیست", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.inventory.unavailable");
+        }
+
         if (text.Contains("PRICE_CHANGED", StringComparison.Ordinal) || text.Contains("قیمت", StringComparison.Ordinal))
         {
             return (StatusCodes.Status409Conflict, "Conflict", "checkout.price.changed");
@@ -708,6 +714,7 @@ public static class StorefrontEndpoints
 
     private static string MapCheckoutCustomerDetail(string code) => code switch
     {
+        "checkout.inventory.unavailable" => "موجودی یکی از کالاها برای ثبت سفارش کافی نیست.",
         "checkout.price.changed" => "قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید.",
         "checkout.tax.unavailable" => "محاسبهٔ مالیات این سفارش الان ممکن نیست. لطفاً دوباره تلاش کنید.",
         "checkout.cart.expired" => "سبد خرید منقضی شده است.",

@@ -44,6 +44,13 @@ public interface IInventoryAvailabilityGateway
     /// موجودی Offer را در پایگاه Tenant/Marketplace جاری جمع می‌کند.
     /// </summary>
     Task<InventoryAvailability?> GetAvailabilityAsync(Guid offerId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// موجودی چند Offer را در یک خواندن جمع می‌کند تا GET سبد N+1 نشود.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

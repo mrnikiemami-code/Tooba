@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Cart.Domain;
@@ -23,12 +24,11 @@ public sealed class OpenCartUseCaseGuard : ICartUseCaseGuard
 
 /// <summary>
 /// نوشتن سبد با قرارداد Offer/Pricing/Inventory. DbContext آن ماژول‌ها لمس نمی‌شود و تراکنش توزیع‌شده نیست.
-/// سیاست شکست: ابتدا رزرو Inventory؛ اگر persist سبد شکست بخورد رزرو با کلید idempotency در retry همان خط بازاستفاده می‌شود.
-/// اگر آزادسازی موفق و رزرو جدید شکست بخورد، تلاش جبران رزرو قبلی انجام می‌شود و خطا شفاف برمی‌گردد.
+/// سیاست شکست: اعتبارسنجی موجودی بدون رزرو سخت. رزرو تاریخی سبد فقط آزاد می‌شود و تمدید نمی‌شود.
 /// </summary>
 public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
 {
-    private static readonly TimeSpan HoldTtl = TimeSpan.FromMinutes(30);
+    private readonly TimeSpan _persistenceTtl;
     private readonly CartDbContext _db;
     private readonly ICartUseCaseGuard _guard;
     private readonly IOfferLookupGateway _offers;
@@ -49,7 +49,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         IInventoryDirectory inventory,
         IInventoryAvailabilityGateway availability,
         ICatalogLookupGateway? catalog = null,
-        IQuantityNormalizer? normalizer = null)
+        IQuantityNormalizer? normalizer = null,
+        IOptions<CartLifetimeOptions>? lifetime = null)
     {
         _db = db;
         _guard = guard;
@@ -59,6 +60,8 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _availability = availability;
         _catalog = catalog;
         _normalizer = normalizer ?? new QuantityNormalizer();
+        var hours = Math.Clamp(lifetime?.Value.PersistenceHours ?? 168, 1, 24 * 90);
+        _persistenceTtl = TimeSpan.FromHours(hours);
     }
 
     /// <inheritdoc />
@@ -71,7 +74,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         EnsureAccess(cart, access);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -85,10 +88,10 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         await _guard.EnsureCanMutateAsync(cancellationToken);
         _ = CurrencyCode.Parse(currency);
         var now = DateTimeOffset.UtcNow;
-        var cart = ShoppingCart.CreateAuthenticated(userId, market, currency, channel, now, now.Add(HoldTtl));
+        var cart = ShoppingCart.CreateAuthenticated(userId, market, currency, channel, now, now.Add(_persistenceTtl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -102,10 +105,10 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         _ = CurrencyCode.Parse(currency);
         var secret = CartCredentialHasher.CreateSecret();
         var now = DateTimeOffset.UtcNow;
-        var cart = ShoppingCart.CreateGuest(CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(HoldTtl));
+        var cart = ShoppingCart.CreateGuest(CartCredentialHasher.Hash(secret), market, currency, channel, now, now.Add(_persistenceTtl));
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync(cancellationToken);
-        return new GuestCartCreated(ToSnapshot(cart), secret);
+        return new GuestCartCreated(await ToSnapshotAsync(cart, cancellationToken), secret);
     }
 
     /// <inheritdoc />
@@ -142,12 +145,11 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             quote.TaxExclusive,
             quote.PriceId,
             now);
-        var hold = await ReserveForLineAsync(cart, line.LineId, offer.OfferId, quantity, now, cancellationToken);
-        line.ReplaceHold(quantity, hold.ReservationId, quote.Amount, quote.Currency, quote.TaxExclusive, quote.PriceId, now);
-        cart.RefreshExpiry(now.Add(HoldTtl), now);
+        await EnsureSellableAsync(offer.OfferId, quantity, cancellationToken);
+        cart.RefreshExpiry(now.Add(_persistenceTtl), now);
         cart.AddLine(line, now);
         await SaveCartAsync(cancellationToken);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -271,13 +273,13 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         EnsureAccess(cart, access);
         if (cart.Status == CartStatus.Converted)
         {
-            return ToSnapshot(cart);
+            return await ToSnapshotAsync(cart, cancellationToken);
         }
 
         cart.EnsureVersion(expectedVersion);
         cart.MarkConverted(intent, DateTimeOffset.UtcNow);
         await SaveCartAsync(cancellationToken);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     private async Task<CartSnapshot> ChangeLineCoreAsync(ShoppingCart cart, CartLine line, decimal quantity, CancellationToken cancellationToken)
@@ -285,47 +287,18 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         var now = DateTimeOffset.UtcNow;
         var (_, quote, normalized) = await ValidateOfferAndQuoteAsync(cart, line.OfferId, quantity, now, cancellationToken);
         quantity = normalized;
-        var previousReservation = line.ReservationId;
-        var previousQuantity = line.Quantity;
-        if (previousReservation is { } oldId)
+        await EnsureSellableAsync(line.OfferId, quantity, cancellationToken);
+        if (line.ReservationId is { } oldId)
         {
             await _inventory.ReleaseAsync(oldId, cancellationToken);
+            line.ClearReservation();
         }
 
-        try
-        {
-            var hold = await ReserveForLineAsync(cart, line.LineId, line.OfferId, quantity, now, cancellationToken);
-            line.ReplaceHold(quantity, hold.ReservationId, quote.Amount, quote.Currency, quote.TaxExclusive, quote.PriceId, now);
-        }
-        catch
-        {
-            if (previousReservation is not null)
-            {
-                try
-                {
-                    var restored = await ReserveForLineAsync(cart, line.LineId, line.OfferId, previousQuantity, now, cancellationToken);
-                    line.ReplaceHold(
-                        previousQuantity,
-                        restored.ReservationId,
-                        line.QuotedAmount ?? quote.Amount,
-                        line.QuotedCurrency ?? quote.Currency,
-                        line.QuotedTaxExclusive,
-                        line.PriceId ?? quote.PriceId,
-                        line.QuotedAt);
-                }
-                catch
-                {
-                    // جبران رزرو قبلی ممکن است موجودی را از دست داده باشد؛ خطای اصلی به فراخوان برمی‌گردد.
-                }
-            }
-
-            throw;
-        }
-
-        cart.RefreshExpiry(now.Add(HoldTtl), now);
+        line.ReplaceHold(quantity, null, quote.Amount, quote.Currency, quote.TaxExclusive, quote.PriceId, now);
+        cart.RefreshExpiry(now.Add(_persistenceTtl), now);
         cart.RecordLineChanged(line.LineId, line.OfferId, quantity, now);
         await SaveCartAsync(cancellationToken);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     private async Task<CartSnapshot> RemoveLineCoreAsync(ShoppingCart cart, CartLine line, CancellationToken cancellationToken)
@@ -338,7 +311,7 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
 
         cart.RemoveLine(line.LineId, DateTimeOffset.UtcNow);
         await SaveCartAsync(cancellationToken);
-        return ToSnapshot(cart);
+        return await ToSnapshotAsync(cart, cancellationToken);
     }
 
     private async Task<(OfferReference Offer, PriceQuote Quote, decimal Quantity)> ValidateOfferAndQuoteAsync(
@@ -385,30 +358,14 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         return (offer, quote, quantity);
     }
 
-    private async Task<ReservationReceipt> ReserveForLineAsync(
-        ShoppingCart cart,
-        Guid lineId,
-        Guid offerId,
-        decimal quantity,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
+    private async Task EnsureSellableAsync(Guid offerId, decimal quantity, CancellationToken cancellationToken)
     {
         var availability = await _availability.GetAvailabilityAsync(offerId, cancellationToken)
             ?? throw new InvalidOperationException("موجودی Offer از قرارداد Inventory پیدا نشد؛ جدول Inventory اینجا join نشد.");
-        var location = availability.Locations
-            .Where(x => x.Available >= quantity)
-            .OrderByDescending(x => x.Available)
-            .FirstOrDefault()
-            ?? throw new InvalidOperationException("موجودی قابل‌فروش برای خط سبد کافی نیست.");
-
-        var expiresAt = cart.ExpiresAt ?? now.Add(HoldTtl);
-        return await _inventory.ReserveAsync(
-            location.StockItemId,
-            quantity,
-            $"cart:{cart.CartId}",
-            $"cart:{cart.CartId}:line:{lineId}:q{quantity}",
-            expiresAt,
-            cancellationToken);
+        if (availability.Available < quantity)
+        {
+            throw new InvalidOperationException("موجودی قابل‌فروش برای خط سبد کافی نیست.");
+        }
     }
 
     private async Task ReleaseAllAsync(ShoppingCart cart, CancellationToken cancellationToken)
@@ -461,8 +418,13 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
     }
 
-    private static CartSnapshot ToSnapshot(ShoppingCart cart) =>
-        new(
+    private async Task<CartSnapshot> ToSnapshotAsync(ShoppingCart cart, CancellationToken cancellationToken)
+    {
+        var offerIds = cart.Lines.Select(x => x.OfferId).Distinct().ToArray();
+        var availability = offerIds.Length == 0
+            ? new Dictionary<Guid, InventoryAvailability>()
+            : await _availability.GetAvailabilityBatchAsync(offerIds, cancellationToken);
+        return new CartSnapshot(
             cart.CartId,
             cart.Status,
             cart.AccessKind,
@@ -473,16 +435,28 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             cart.ExpiresAt,
             cart.ConversionIntent,
             cart.Version,
-            cart.Lines.Select(line => new CartLineSnapshot(
-                line.LineId,
-                line.OfferId,
-                line.CatalogVariantId,
-                line.SellerPartyId,
-                line.Quantity,
-                line.ReservationId,
-                line.QuotedAmount,
-                line.QuotedCurrency,
-                line.QuotedTaxExclusive,
-                line.PriceId,
-                line.QuotedAt)).ToList());
+            cart.Lines.Select(line =>
+            {
+                availability.TryGetValue(line.OfferId, out var stock);
+                var available = stock?.Available ?? 0;
+                var kind = available >= line.Quantity
+                    ? CartLineAvailabilityKind.Available
+                    : available > 0
+                        ? CartLineAvailabilityKind.LimitedQuantity
+                        : CartLineAvailabilityKind.Unavailable;
+                return new CartLineSnapshot(
+                    line.LineId,
+                    line.OfferId,
+                    line.CatalogVariantId,
+                    line.SellerPartyId,
+                    line.Quantity,
+                    line.ReservationId,
+                    line.QuotedAmount,
+                    line.QuotedCurrency,
+                    line.QuotedTaxExclusive,
+                    line.PriceId,
+                    line.QuotedAt,
+                    kind);
+            }).ToList());
+    }
 }

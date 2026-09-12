@@ -115,6 +115,15 @@ public sealed record SubmitCheckoutCommand(
 public sealed record OrderAccess(Guid? BuyerPartyId, Guid? PlacedByUserId);
 
 /// <summary>
+/// مهلت رزرو اولیه پس از commit سفارش / شروع پرداخت. مدت جادویی در CheckoutDirectory نیست.
+/// </summary>
+public interface ICheckoutReservationHoldPolicy
+{
+    /// <summary>ExpiresAt رزرو اولیهٔ سفارش را از Settings برمی‌گرداند.</summary>
+    DateTimeOffset ResolveInitialExpiresAt(DateTimeOffset utcNow);
+}
+
+/// <summary>
 /// درز نگهبان مجوز Order. ماتریس نهایی فروشنده اینجا نیست.
 /// </summary>
 public interface IOrderUseCaseGuard

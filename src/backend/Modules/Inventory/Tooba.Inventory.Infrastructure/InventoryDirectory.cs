@@ -72,6 +72,45 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, InventoryAvailability>> GetAvailabilityBatchAsync(
+        IReadOnlyCollection<Guid> offerIds,
+        CancellationToken cancellationToken)
+    {
+        if (offerIds is null || offerIds.Count == 0)
+        {
+            return new Dictionary<Guid, InventoryAvailability>();
+        }
+
+        var distinct = offerIds.Distinct().ToArray();
+        var rows = await (
+            from position in _db.Positions.AsNoTracking()
+            join location in _db.Locations.AsNoTracking() on position.LocationId equals location.LocationId
+            where distinct.Contains(position.OfferId)
+            select new { position, location }).ToListAsync(cancellationToken);
+        return rows
+            .GroupBy(x => x.position.OfferId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var locations = group.Select(row => new LocationAvailability(
+                        row.position.StockItemId,
+                        row.location.LocationId,
+                        row.location.Code,
+                        row.position.OnHand,
+                        row.position.Reserved,
+                        row.position.OnHand - row.position.Reserved)).ToList();
+                    return new InventoryAvailability(
+                        group.Key,
+                        group.First().position.CatalogVariantId,
+                        locations.Sum(x => x.OnHand),
+                        locations.Sum(x => x.Reserved),
+                        locations.Sum(x => x.Available),
+                        locations);
+                });
+    }
+
+    /// <inheritdoc />
     public async Task<Guid> CreateLocationAsync(string code, string name, CancellationToken cancellationToken)
     {
         await _guard.EnsureCanMutateAsync(cancellationToken);

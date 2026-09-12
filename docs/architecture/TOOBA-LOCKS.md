@@ -301,3 +301,27 @@ No inventory.reservation.not_active, Released, or reservation GUIDs in Admin sup
 
 ### LOCK-SF-046 — Recovery action visibility is capability-driven
 recover_inventory_reservation is hidden when confirm can auto-reacquire.
+
+### LOCK-SF-047 — Cart persistence and Inventory reservation lifetime are separate
+Cart:PersistenceHours retains shopping state. Payment:Gateway hold hours govern Order-level reservations only.
+
+### LOCK-SF-048 — AddToCart and Cart read never create hard reservations
+Availability is validated; ReserveAsync is not called from Cart mutations or GET.
+
+### LOCK-SF-049 — Hard reservation starts at committed Order / payment boundary
+Shipping commit / SubmitCheckout is the first durable hold. Opening Cart or /shipping does not reserve.
+
+### LOCK-SF-050 — Checkout final commit secures all required inventory or fails
+No payable Order and no leftover reservations from a failed commit attempt.
+
+### LOCK-SF-051 — Cart uses Availability; Order uses SupplyStatus
+Available / LimitedQuantity / Unavailable stay on Cart. Reserved / AvailableForReacquire stay on Order.
+
+### LOCK-SF-052 — Order-level hold durations are Settings-driven
+OnlinePaymentHoldHours, ManualPaymentInitialHoldHours, ManualPaymentReviewHoldHours + store overrides. No magic TTL in new code.
+
+### LOCK-SF-053 — Cart browsing does not renew reservations
+No polling or timer keeps a Cart hold alive.
+
+### LOCK-SF-054 — Historical Cart reservations are not Order reservations
+Old cart:* holds may expire or release only when not bound to an Order. Order-bound holds are never cleaned as cart leftovers.
