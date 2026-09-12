@@ -382,5 +382,14 @@ public sealed class PaymentFoundationTests : IAsyncLifetime
 
         public Task RevertVerifiedSuccessAsync(Guid checkoutId, IReadOnlyList<Guid> sellerOrderIds, CancellationToken cancellationToken) =>
             Task.CompletedTask;
+
+        public Task PromoteReservationsForManualPaymentReviewAsync(
+            Guid checkoutId,
+            DateTimeOffset reviewExpiresAt,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
+        public Task ReleaseReservationsAfterManualRejectAsync(Guid checkoutId, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

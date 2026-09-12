@@ -1,0 +1,75 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-normal-manual-review",
+      "ok": true,
+      "evidence": 200,
+      "promoted": true,
+      "beforeExpires": "2026-09-12 03:03:36.907916+00",
+      "afterExpires": "2026-09-13 02:33:38.418987+00",
+      "midStatus": "Held",
+      "confirm": 200,
+      "paymentStatus": "Succeeded",
+      "paidExpires": null
+    },
+    {
+      "name": "B-admin-reject",
+      "ok": true,
+      "reject": 200,
+      "before": "Held",
+      "after": "Released"
+    },
+    {
+      "name": "C-retry-same-order",
+      "ok": true,
+      "retry": 200,
+      "evidence2": 200,
+      "reservation": "Held",
+      "samePayment": true
+    },
+    {
+      "name": "D-review-expiry-late-confirm",
+      "ok": true,
+      "lateStatus": 200,
+      "detail": null,
+      "paymentStatus": "succeeded",
+      "reacquireOrActionable": true
+    },
+    {
+      "name": "E-decimal",
+      "ok": true,
+      "via": "PaidOrderReservationLifecycleTests Manual_review_promote quantity 1.25"
+    },
+    {
+      "name": "sandbox-unaffected",
+      "ok": true,
+      "init": 200,
+      "complete": 200
+    }
+  ],
+  "secretsOmitted": true,
+  "at": "2026-09-12T02:33:36.825Z",
+  "A": {
+    "checkoutId": "01a09376-96cf-7000-97da-3ff49e15af76",
+    "paymentId": "a01de378-3662-42a3-805e-d0c9d5dd0a23"
+  },
+  "B": {
+    "checkoutId": "01a09376-9fad-7000-9835-29a0ed7a6712",
+    "paymentId": "accd4a30-a8af-4024-b236-a3d0f65fc675"
+  },
+  "C": {
+    "checkoutId": "01a09376-a39c-7000-8a56-2cd87952d233",
+    "paymentId": "f6965d41-5079-45b9-bbe5-66a77d8f83c1"
+  },
+  "D": {
+    "checkoutId": "01a09376-a706-7000-888f-70d8f4977674",
+    "paymentId": "c2502013-f3e0-4c66-ac18-3a6d91556def",
+    "lateStatus": 200
+  }
+}

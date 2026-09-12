@@ -381,6 +381,37 @@ public sealed class StockReservation
     }
 
     /// <summary>
+    /// رزرو Held را از TTL سبد به مهلت بررسی پرداخت دستی ارتقا می‌دهد. Released/Consumed را زنده نمی‌کند.
+    /// Idempotent: اگر مهلت فعلی ≥ مهلت بررسی باشد فقط UpdatedAt را تازه می‌کند.
+    /// </summary>
+    public void PromoteForManualPaymentReview(DateTimeOffset reviewExpiresAt, DateTimeOffset now)
+    {
+        if (Status is StockReservationStatus.Released or StockReservationStatus.Consumed)
+        {
+            throw new InvalidOperationException("inventory.reservation.not_active");
+        }
+
+        if (Status != StockReservationStatus.Held)
+        {
+            throw new InvalidOperationException("inventory.reservation.not_active");
+        }
+
+        if (reviewExpiresAt <= now)
+        {
+            throw new InvalidOperationException("inventory.reservation.review_expiry_invalid");
+        }
+
+        if (ExpiresAt is { } existing && existing >= reviewExpiresAt)
+        {
+            UpdatedAt = now;
+            return;
+        }
+
+        ExpiresAt = reviewExpiresAt;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
     /// وضعیت را عوض می‌کند.
     /// </summary>
     public void MoveTo(StockReservationStatus status, DateTimeOffset now)

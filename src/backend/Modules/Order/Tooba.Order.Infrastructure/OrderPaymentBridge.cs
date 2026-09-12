@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Application;
+using Tooba.Inventory.Domain;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
@@ -85,7 +86,7 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
                     continue;
                 }
 
-                await _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
+                await CommitOrReacquireForPaidAsync(line, reservationId, cancellationToken);
             }
         }
 
@@ -109,5 +110,126 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
         }
 
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PromoteReservationsForManualPaymentReviewAsync(
+        Guid checkoutId,
+        DateTimeOffset reviewExpiresAt,
+        CancellationToken cancellationToken)
+    {
+        var group = await _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
+            ?? throw new InvalidOperationException("checkout برای ارتقای رزرو پیدا نشد.");
+
+        foreach (var line in group.SellerOrders.SelectMany(x => x.Lines))
+        {
+            if (line.ReservationId is not { } reservationId)
+            {
+                continue;
+            }
+
+            var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
+            if (existing is { Status: StockReservationStatus.Held })
+            {
+                await _inventory.PromoteReservationForManualPaymentReviewAsync(
+                    reservationId,
+                    reviewExpiresAt,
+                    cancellationToken);
+                continue;
+            }
+
+            // Released/Consumed: never resurrect; authoritative reacquire under review TTL.
+            if (existing is null)
+            {
+                throw new InvalidOperationException("inventory.reservation.not_found");
+            }
+
+            try
+            {
+                var receipt = await _inventory.ReserveAsync(
+                    existing.StockItemId,
+                    existing.Quantity,
+                    $"manual-review-{line.LineId:N}",
+                    $"manual-review-{line.LineId:N}-{reviewExpiresAt.UtcTicks}",
+                    reviewExpiresAt,
+                    cancellationToken);
+                line.ReplaceReservation(receipt.ReservationId);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new InvalidOperationException("inventory.manual_review.unavailable");
+            }
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ReleaseReservationsAfterManualRejectAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken)
+    {
+        var group = await _db.Checkouts
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
+            ?? throw new InvalidOperationException("checkout برای آزادسازی رزرو پیدا نشد.");
+
+        foreach (var line in group.SellerOrders.SelectMany(x => x.Lines))
+        {
+            if (line.ReservationId is not { } reservationId)
+            {
+                continue;
+            }
+
+            var existing = await _inventory.FindReservationAsync(reservationId, cancellationToken);
+            if (existing is not { Status: StockReservationStatus.Held })
+            {
+                continue;
+            }
+
+            await _inventory.ReleaseAsync(reservationId, cancellationToken);
+        }
+    }
+
+    private async Task CommitOrReacquireForPaidAsync(
+        OrderLine line,
+        Guid reservationId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _inventory.CommitReservationForPaidOrderAsync(reservationId, cancellationToken);
+            return;
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active"
+            or "inventory.reservation.not_found")
+        {
+            // Late confirm: never resurrect Released; reacquire durable paid hold.
+        }
+
+        var previous = await _inventory.FindReservationAsync(reservationId, cancellationToken)
+            ?? throw new InvalidOperationException("inventory.manual_review.unavailable");
+
+        try
+        {
+            var receipt = await _inventory.ReserveAsync(
+                previous.StockItemId,
+                previous.Quantity,
+                $"manual-confirm-{line.LineId:N}",
+                $"manual-confirm-{line.LineId:N}-{DateTimeOffset.UtcNow.UtcTicks}",
+                expiresAt: null,
+                cancellationToken);
+            line.ReplaceReservation(receipt.ReservationId);
+            await _inventory.CommitReservationForPaidOrderAsync(receipt.ReservationId, cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new InvalidOperationException("inventory.manual_review.unavailable");
+        }
     }
 }

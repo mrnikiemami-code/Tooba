@@ -1,0 +1,73 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_TASK_RESULT
+
+Task-ID:
+TB-P10-T004-R5
+
+Parent-Task:
+TB-P10-T004-R4
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Manual Payment Review reservation lifecycle repaired. Successful manual evidence promotes Order-line Holds from Cart TTL to ManualPaymentReviewHoldHours (default 24h). Admin confirm within window commits durable paid (ExpiresAt=null). Reject releases Held review holds. Released never resurrected; late confirm authoritatively reacquirers or surfaces inventory.manual_review.unavailable with actionable FA UX. Runtime A–E + sandbox smoke PASS on Host :5088 (r5-runtime-raw.json ok=true). Domain/docker focused Host tests + recovery guard green. Locks SF-023…026. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…022 preserved; LOCK-SF-023 promote on proof; LOCK-SF-024 review lifetime independent of Cart TTL; LOCK-SF-025 confirm→durable paid; LOCK-SF-026 never resurrect Released/expired review holds.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r5-recovery-start.md — claim HEAD b8d411e7; branch main; HEAD==origin/main.
+
+Discovery:
+docs/evidence/TB-P10-T004/r5-manual-review-reservation-discovery.md — Cart TTL released review inventory while PendingPayment; CommitForPaidOrder → not_active.
+
+Review-Hold-Policy:
+docs/evidence/TB-P10-T004/r5-review-hold-policy.md — Payment:Gateway:ManualPaymentReviewHoldHours default 24.
+
+Inventory-Transition:
+docs/evidence/TB-P10-T004/r5-inventory-transition.md — PromoteForManualPaymentReview + OrderPaymentBridge promote/reacquire.
+
+Admin-Confirm:
+docs/evidence/TB-P10-T004/r5-admin-confirm.md — active hold Commit; late Released reacquire or inventory.manual_review.unavailable.
+
+Reject-Retry:
+docs/evidence/TB-P10-T004/r5-reject-retry.md — reject releases; retry evidence re-promotes; no duplicate Order.
+
+Review-Expiry:
+docs/evidence/TB-P10-T004/r5-review-expiry.md — longer ExpiresAt; worker still releases at review expiry.
+
+Error-UX:
+docs/evidence/TB-P10-T004/r5-error-ux.md — actionable FA; no raw Held/Released/GUID/not_active as normal copy.
+
+Runtime:
+docs/evidence/TB-P10-T004/r5-runtime.md + r5-runtime-raw.json — A–E + sandbox PASS.
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r5-focused-validation.md — Host lifecycle 8; catalog+lifecycle filter 14; recovery-staleness 4; git diff --check clean.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r5-recovery-sot.md — Phase P10; Architect TB-P10-T004-R4; Impl TB-P10-T004-R5; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005.
+
+Git:
+branch main; HEAD __ENDING_HEAD__; HEAD==origin/main yes; task tree committed (historical .tmp-* leftovers untracked).
+
+Architectural-Concerns:
+none for this repair; Inventory remains owner of reservation lifecycle.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no payment UI redesign.
+
+Blockers:
+none.
+
+END_TOOBA_TASK_RESULT

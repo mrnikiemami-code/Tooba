@@ -402,6 +402,10 @@ const ADMIN_ERROR_MESSAGES: Record<string, { fa: string; en: string }> = {
     fa: "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
     en: "This order's inventory reservation is no longer active. Refresh the order or review reservation status.",
   },
+  "inventory.manual_review.unavailable": {
+    fa: "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
+    en: "Inventory for this order is no longer available during payment review. Check order status and refund handling.",
+  },
   "inventory.reservation.not_found": {
     fa: "رزرو موجودی این سفارش پیدا نشد. اطلاعات سفارش را تازه‌سازی کنید.",
     en: "This order's inventory reservation was not found. Refresh the order.",

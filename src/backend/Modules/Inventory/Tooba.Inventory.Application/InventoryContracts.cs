@@ -120,4 +120,12 @@ public interface IInventoryDirectory
 
     /// <summary>رزرو Held سفارش پرداخت‌شده را از TTL سبد خارج می‌کند (ExpiresAt=null). Idempotent.</summary>
     Task<ReservationReceipt> CommitReservationForPaidOrderAsync(Guid reservationId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// رزرو Held را به مهلت بررسی پرداخت دستی ارتقا می‌دهد (جایگزین TTL سبد). Idempotent.
+    /// </summary>
+    Task<ReservationReceipt> PromoteReservationForManualPaymentReviewAsync(
+        Guid reservationId,
+        DateTimeOffset reviewExpiresAt,
+        CancellationToken cancellationToken);
 }

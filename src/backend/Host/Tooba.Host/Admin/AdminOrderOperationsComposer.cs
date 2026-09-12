@@ -1563,6 +1563,21 @@ public sealed class AdminOrderOperationsComposer
         {
             throw new PlatformHttpException(400, "تأیید واریز در این وضعیت مجاز نیست.", ex.Message);
         }
+        catch (InvalidOperationException ex) when (ex.Message is "inventory.manual_review.unavailable")
+        {
+            throw new PlatformHttpException(
+                400,
+                "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
+                "inventory.manual_review.unavailable");
+        }
+        catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active")
+        {
+            // Defensive only — normal within-review-window confirm must not surface this.
+            throw new PlatformHttpException(
+                400,
+                "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
+                "inventory.manual_review.unavailable");
+        }
     }
 
     private async Task<object> RejectDepositForCheckoutAsync(
@@ -1573,7 +1588,9 @@ public sealed class AdminOrderOperationsComposer
             ?? throw new PlatformHttpException(400, "پرداختی برای رد پیدا نشد.", "payment.missing");
         try
         {
-            return await _payments.RejectDepositAsync(payment.PaymentId, cancellationToken);
+            var result = await _payments.RejectDepositAsync(payment.PaymentId, cancellationToken);
+            await _orderPayments.ReleaseReservationsAfterManualRejectAsync(checkoutId, cancellationToken);
+            return result;
         }
         catch (InvalidOperationException ex) when (ex.Message is "payment.method.not_manual")
         {
@@ -2167,6 +2184,7 @@ public sealed class AdminOrderOperationsComposer
         "fulfillment.allocation.conflict" => "تعداد از باقیماندهٔ قابل تخصیص به مرسوله بیشتر است.",
         "fulfillment.work_queue.row_mismatch" => "ردیف انتخاب‌شده با دادهٔ سرور هم‌خوان نیست.",
         "inventory.reservation.not_active" => "رزرو موجودی این سفارش دیگر فعال نیست. اطلاعات سفارش را تازه‌سازی کنید یا وضعیت رزرو را بررسی کنید.",
+        "inventory.manual_review.unavailable" => "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
         "inventory.reservation.not_found" => "رزرو موجودی این سفارش پیدا نشد. اطلاعات سفارش را تازه‌سازی کنید.",
         "inventory.reservation.stock_mismatch" => "مصرف رزرو با موجودی هم‌خوان نبود.",
         "fulfillment.shipment.locked_by_consolidated_package" =>

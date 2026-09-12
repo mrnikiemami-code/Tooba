@@ -229,3 +229,15 @@ After customer manual evidence submit, the result shows در انتظار تای
 
 ### LOCK-SF-022 — Narrow guest committed-order/payment proof survives Cart finalization
 Guest payment-result access may retain only store-scoped Order/Payment-scoped committed cartId + guest secret proof across Cart clear. Wrong proof, paymentId alone, foreign customer, and cross-store access remain denied.
+
+### LOCK-SF-023 — Manual proof submission promotes inventory to Manual Payment Review hold
+After successful customer manual/card-to-card transfer reference/proof submit, inventory transitions from Cart TTL hold to Manual Payment Review hold via Inventory-owned PromoteReservationForManualPaymentReview. Released/Consumed reservations are never resurrected.
+
+### LOCK-SF-024 — Manual-review inventory lifetime is independent from Cart TTL
+While payment awaits Admin confirmation, reservation ExpiresAt follows ManualPaymentReviewHoldHours (store/gateway config; default 24h), not Cart HoldTtl.
+
+### LOCK-SF-025 — Admin confirm during active review hold commits durable paid reservation
+ConfirmDeposit within an active review hold commits ExpiresAt=null paid-order semantics. Confirm must not depend on original Cart TTL.
+
+### LOCK-SF-026 — Rejected/expired review holds are never resurrected
+Admin reject releases the Held review reservation. Review-hold expiry releases via the expiry worker. Late Confirm never resurrects Released/Consumed rows; it must authoritatively reacquire or fail with inventory.manual_review.unavailable.

@@ -78,6 +78,11 @@ public sealed class PaymentGatewayOptions
     public string StoreDisplayName { get; set; } = "Tooba";
 
     /// <summary>
+    /// مدت نگهداری موجودی پس از ثبت مدرک/پیگیری کارت‌به‌کارت تا تأیید ادمین (ساعت). پیش‌فرض تجاری ۲۴.
+    /// </summary>
+    public int ManualPaymentReviewHoldHours { get; set; } = 24;
+
+    /// <summary>
     /// الزام مدرک را به مقدار پایدار نگاشت می‌کند.
     /// </summary>
     public string NormalizedManualProofRequirement()

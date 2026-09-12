@@ -48,4 +48,10 @@ internal sealed class UnusedInventoryDirectory : IInventoryDirectory
         Guid reservationId,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException();
+
+    public Task<ReservationReceipt> PromoteReservationForManualPaymentReviewAsync(
+        Guid reservationId,
+        DateTimeOffset reviewExpiresAt,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }

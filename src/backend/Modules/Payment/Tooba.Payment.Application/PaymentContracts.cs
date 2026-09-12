@@ -74,6 +74,22 @@ public interface IOrderPaymentProjection
         Guid checkoutId,
         IReadOnlyList<Guid> sellerOrderIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پس از ثبت موفق مدرک/پیگیری دستی، رزرو خطوط را از TTL سبد به مهلت بررسی ارتقا می‌دهد؛
+    /// در صورت Released، بازگیری معتبر می‌کند (بدون زنده کردن رزرو قدیمی).
+    /// </summary>
+    Task PromoteReservationsForManualPaymentReviewAsync(
+        Guid checkoutId,
+        DateTimeOffset reviewExpiresAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// پس از رد واریز دستی، رزروهای Held بررسی را آزاد می‌کند (تاریخچهٔ Released حفظ می‌شود).
+    /// </summary>
+    Task ReleaseReservationsAfterManualRejectAsync(
+        Guid checkoutId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

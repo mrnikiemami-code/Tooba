@@ -78,6 +78,7 @@ public sealed class StorefrontPaymentMethodsCatalogTests
         var composer = new Storefront.StorefrontPaymentComposer(
             checkouts: null!,
             payments: null!,
+            orderPayments: null!,
             wallets: null!,
             gatewayOptions: Options.Create(new PaymentGatewayOptions { Mode = "Sandbox" }),
             session: new CurrentAuthenticatedSession(),
@@ -99,6 +100,7 @@ public sealed class StorefrontPaymentMethodsCatalogTests
         return new Storefront.StorefrontPaymentComposer(
             checkouts: null!,
             payments: null!,
+            orderPayments: null!,
             wallets: null!,
             gatewayOptions: Options.Create(options),
             session: new CurrentAuthenticatedSession(),

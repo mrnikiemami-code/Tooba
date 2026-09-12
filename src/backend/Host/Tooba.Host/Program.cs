@@ -159,6 +159,7 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
     new Tooba.Host.Storefront.StorefrontPaymentComposer(
         sp.GetRequiredService<StorefrontCheckoutComposer>(),
         sp.GetRequiredService<Tooba.Payment.Application.IPaymentDirectory>(),
+        sp.GetRequiredService<Tooba.Payment.Application.IOrderPaymentProjection>(),
         sp.GetRequiredService<Tooba.Wallet.Application.IWalletDirectory>(),
         sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Tooba.Payment.Infrastructure.PaymentGatewayOptions>>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),

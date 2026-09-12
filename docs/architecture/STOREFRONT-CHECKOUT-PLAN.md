@@ -59,9 +59,13 @@ P10 final payment-completion repair (not T005):
 
 Runtime A–J proof of R2 payment completion. Minimal defect: checkout GetAsync must not treat Converted empty cart as checkout.cart.empty so payment initiate/result still work. Not T005.
 
-## T004-R4 — Payment result ownership + polling repair (IMPLEMENTED — THIS TASK)
+## T004-R4 — Payment result ownership + polling repair (IMPLEMENTED)
 
 Stop 401 loop after Cart finalization: Payment/Order ownership independent of mutable active Cart; state-aware result polling (no rapid-poll on AwaitingAdmin/terminal); narrow guest committed proof survives Cart clear. Not T005.
+
+## T004-R5 — Manual payment review reservation lifecycle (IMPLEMENTED — THIS TASK)
+
+After manual proof submit, inventory promotes from Cart TTL to ManualPaymentReviewHoldHours (default 24h). Admin confirm within window commits durable paid hold. Reject releases; retry reacquirers. Late confirm never resurrects Released; reacquire or actionable inventory.manual_review.unavailable. Not T005.
 
 ## Non-goals for T004
 

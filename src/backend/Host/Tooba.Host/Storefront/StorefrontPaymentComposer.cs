@@ -17,6 +17,7 @@ public sealed class StorefrontPaymentComposer
 {
     private readonly StorefrontCheckoutComposer _checkouts;
     private readonly IPaymentDirectory _payments;
+    private readonly IOrderPaymentProjection _orderPayments;
     private readonly IWalletDirectory _wallets;
     private readonly PaymentGatewayOptions _gatewayOptions;
     private readonly CurrentAuthenticatedSession _session;
@@ -31,6 +32,7 @@ public sealed class StorefrontPaymentComposer
     internal StorefrontPaymentComposer(
         StorefrontCheckoutComposer checkouts,
         IPaymentDirectory payments,
+        IOrderPaymentProjection orderPayments,
         IWalletDirectory wallets,
         IOptions<PaymentGatewayOptions> gatewayOptions,
         CurrentAuthenticatedSession session,
@@ -40,6 +42,7 @@ public sealed class StorefrontPaymentComposer
     {
         _checkouts = checkouts;
         _payments = payments;
+        _orderPayments = orderPayments;
         _wallets = wallets;
         _gatewayOptions = gatewayOptions.Value;
         _session = session;
@@ -472,6 +475,16 @@ public sealed class StorefrontPaymentComposer
             transferReference,
             proofMediaAssetId,
             cancellationToken);
+
+        var hours = Math.Clamp(_gatewayOptions.ManualPaymentReviewHoldHours, 1, 24 * 30);
+        var reviewExpiresAt = DateTimeOffset.UtcNow.AddHours(hours);
+        var payment = await _payments.GetAsync(paymentId, ResolvePaymentActor(), null, cancellationToken)
+            ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
+        await _orderPayments.PromoteReservationsForManualPaymentReviewAsync(
+            payment.CheckoutId,
+            reviewExpiresAt,
+            cancellationToken);
+
         return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
     }

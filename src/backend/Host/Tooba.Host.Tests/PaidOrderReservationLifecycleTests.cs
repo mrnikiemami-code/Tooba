@@ -78,6 +78,37 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
     }
 
     [Fact]
+    public void PromoteForManualPaymentReview_extends_beyond_cart_ttl_and_is_idempotent()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var cartExpiry = now.AddMinutes(30);
+        var reviewExpiry = now.AddHours(24);
+        var hold = StockReservation.Hold(Guid.NewGuid(), 1.25m, "cart", null, now, cartExpiry);
+        Assert.Equal(cartExpiry, hold.ExpiresAt);
+
+        hold.PromoteForManualPaymentReview(reviewExpiry, now.AddSeconds(1));
+        Assert.Equal(reviewExpiry, hold.ExpiresAt);
+        Assert.Equal(StockReservationStatus.Held, hold.Status);
+        Assert.Equal(1.25m, hold.Quantity);
+
+        var updated = hold.UpdatedAt;
+        hold.PromoteForManualPaymentReview(reviewExpiry, now.AddSeconds(2));
+        Assert.Equal(reviewExpiry, hold.ExpiresAt);
+        Assert.True(hold.UpdatedAt >= updated);
+    }
+
+    [Fact]
+    public void PromoteForManualPaymentReview_rejects_released_without_resurrect()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var hold = StockReservation.Hold(Guid.NewGuid(), 1m, "cart", null, now, now.AddMinutes(30));
+        hold.MoveTo(StockReservationStatus.Released, now.AddSeconds(1));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            hold.PromoteForManualPaymentReview(now.AddHours(24), now.AddSeconds(2)));
+        Assert.Equal("inventory.reservation.not_active", ex.Message);
+    }
+
+    [Fact]
     public void CommitForPaidOrder_rejects_released_without_resurrect()
     {
         var now = DateTimeOffset.UtcNow;
@@ -169,7 +200,6 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
 
         var released = await inventoryDir.ReleaseExpiredHoldsAsync(DateTimeOffset.UtcNow.AddMinutes(5), 50, CancellationToken.None);
         Assert.Equal(0, released);
-
         var afterExpiry = await inventoryDir.FindReservationAsync(reserved.ReservationId, CancellationToken.None);
         Assert.NotNull(afterExpiry);
         Assert.Equal(StockReservationStatus.Held, afterExpiry!.Status);
@@ -178,6 +208,84 @@ public sealed class PaidOrderReservationLifecycleTests : IAsyncLifetime
 
         var availability = await inventoryDir.GetAvailabilityAsync(offerRef.OfferId, CancellationToken.None);
         Assert.Equal(1.25m, availability!.Reserved);
+    }
+
+    [SkippableFact]
+    public async Task Manual_review_promote_survives_original_cart_ttl_expiry_worker()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+
+        var cs = _container.GetConnectionString();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-manual-rev", "tenant-manual-rev"));
+
+        await using var catalog = CreateCatalogDb(cs, commerce);
+        await using var party = CreatePartyDb(cs, commerce);
+        await using var offer = CreateOfferDb(cs, commerce);
+        await using var inventory = CreateInventoryDb(cs, commerce);
+        await catalog.Database.MigrateAsync();
+        await party.Database.MigrateAsync();
+        await offer.Database.MigrateAsync();
+        await inventory.Database.MigrateAsync();
+
+        var catalogDir = new CatalogDirectory(catalog, new OpenCatalogUseCaseGuard());
+        var partyDir = new PartyDirectory(party);
+        var offerDir = new OfferDirectory(offer, new OpenOfferUseCaseGuard(), catalogDir, partyDir);
+        var inventoryDir = new InventoryDirectory(inventory, new OpenInventoryUseCaseGuard(), offerDir, catalogDir);
+
+        var names = new Dictionary<string, string> { ["fa-IR"] = "کالا", ["en-US"] = "Item" };
+        var product = await catalogDir.CreateProductAsync(CatalogProductKind.PhysicalGood, "manual-rev", null, names, CancellationToken.None);
+        var sizeId = await catalogDir.CreateAttributeDefinitionAsync(
+            "size-mr",
+            CatalogAttributeValueKind.Enumeration,
+            isVariantAxis: true,
+            new Dictionary<string, string> { ["en-US"] = "Size" },
+            CancellationToken.None);
+        var medium = await catalogDir.AddAttributeOptionAsync(sizeId, "m", new Dictionary<string, string> { ["en-US"] = "M" }, CancellationToken.None);
+        var variant = await catalogDir.CreateVariantAsync(product.ProductId, "MAN-REV-1", [(sizeId, "ignored", medium)], CancellationToken.None);
+        var seller = await partyDir.CreateOrganizationAsync("فروشنده manual-rev", null, CancellationToken.None);
+        var offerRef = await offerDir.CreateOfferAsync(variant.VariantId, seller.PartyId, SalesChannel.Marketplace, "MAN-REV-OFFER", CancellationToken.None);
+        var location = await inventoryDir.CreateLocationAsync("WH-MR", "ManualRev WH", CancellationToken.None);
+        var stock = await inventoryDir.OpenPositionAsync(offerRef.OfferId, location, CancellationToken.None);
+        await inventoryDir.AdjustAsync(stock, StockAdjustmentKind.Increase, 10m, "seed", null, CancellationToken.None);
+
+        var cartExpiry = DateTimeOffset.UtcNow.AddMinutes(30);
+        var reserved = await inventoryDir.ReserveAsync(
+            stock,
+            1.25m,
+            "cart-manual-rev",
+            "manual-rev-idem",
+            cartExpiry,
+            CancellationToken.None);
+        var reviewExpiry = DateTimeOffset.UtcNow.AddHours(24);
+        var promoted = await inventoryDir.PromoteReservationForManualPaymentReviewAsync(
+            reserved.ReservationId,
+            reviewExpiry,
+            CancellationToken.None);
+        Assert.Equal(StockReservationStatus.Held, promoted.Status);
+        Assert.True(promoted.ExpiresAt >= reviewExpiry.AddSeconds(-5));
+        Assert.Equal(1.25m, promoted.Quantity);
+
+        // Original cart TTL would have elapsed — review hold must remain Held.
+        await inventory.Reservations
+            .Where(x => x.ReservationId == reserved.ReservationId)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.ExpiresAt, DateTimeOffset.UtcNow.AddHours(23)));
+
+        var stillHeld = await inventoryDir.ReleaseExpiredHoldsAsync(DateTimeOffset.UtcNow, 50, CancellationToken.None);
+        Assert.Equal(0, stillHeld);
+        var live = await inventoryDir.FindReservationAsync(reserved.ReservationId, CancellationToken.None);
+        Assert.Equal(StockReservationStatus.Held, live!.Status);
+
+        await inventory.Reservations
+            .Where(x => x.ReservationId == reserved.ReservationId)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.ExpiresAt, DateTimeOffset.UtcNow.AddMinutes(-1)));
+        var released = await inventoryDir.ReleaseExpiredHoldsAsync(DateTimeOffset.UtcNow, 50, CancellationToken.None);
+        Assert.Equal(1, released);
+        var after = await inventoryDir.FindReservationAsync(reserved.ReservationId, CancellationToken.None);
+        Assert.Equal(StockReservationStatus.Released, after!.Status);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            inventoryDir.CommitReservationForPaidOrderAsync(reserved.ReservationId, CancellationToken.None));
     }
 
     [SkippableFact]
