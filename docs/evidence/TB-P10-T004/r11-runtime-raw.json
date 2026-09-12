@@ -1,0 +1,101 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-one-seller-shipping",
+      "ok": true,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "totalAlloc": 201088,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1",
+      "settlementVisible": 1088,
+      "inbox": 1
+    },
+    {
+      "name": "B-multiseller-shipping",
+      "ok": true,
+      "sellers": 2,
+      "payable": 2217588,
+      "sellerAlloc": 2017588,
+      "shippingAlloc": 200000,
+      "totalAlloc": 2217588,
+      "payStatus": "Succeeded",
+      "orderPaid": "2/2",
+      "settlementVisible": 2017588,
+      "shippingOnSeller": 0
+    },
+    {
+      "name": "shipping-zero",
+      "ok": true,
+      "payable": 1088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 0,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1"
+    },
+    {
+      "name": "C-manual-confirm",
+      "ok": true,
+      "evidence": 200,
+      "confirm": 200,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1",
+      "settlementVisible": 1088
+    },
+    {
+      "name": "D-sandbox-success",
+      "ok": true,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1"
+    },
+    {
+      "name": "E-expired-retry-then-success",
+      "ok": true,
+      "retry": 200,
+      "complete": 200,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1"
+    },
+    {
+      "name": "F-late-captured",
+      "ok": true,
+      "complete": 200,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "payStatus": "Succeeded",
+      "orderPaid": "1/1",
+      "inbox": 1
+    },
+    {
+      "name": "G-duplicate-succeeded",
+      "ok": true,
+      "firstInbox": 1,
+      "secondInbox": 1,
+      "complete1": 200,
+      "complete2": 200,
+      "payable": 201088,
+      "sellerAlloc": 1088,
+      "shippingAlloc": 200000,
+      "payStatus": "Succeeded"
+    }
+  ],
+  "at": "2026-09-12T05:09:14.577Z",
+  "secretsOmitted": true
+}

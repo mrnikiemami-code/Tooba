@@ -1,0 +1,70 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R11
+
+Parent-Task:
+TB-P10-T004-R10
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Paid projection now uses the canonical allocation equation: Payable = Σ seller merchandise + StoreShipping. Seller settlement stays merchandise-only. R10 shipping-mismatch concern is closed. Runtime A–G plus shipping-zero ok=true (one-seller 201088=1088+200000; two-seller 2217588=2017588+200000; inbox idempotent). HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…062 preserved; LOCK-SF-011 StoreShipping unchanged; LOCK-SF-063…065 added (canonical payable equality, StoreShipping excluded from seller payout, EventId-idempotent projection).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r11-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r11-paid-projection-discovery.md
+
+Financial-Invariant:
+docs/evidence/TB-P10-T004/r11-financial-invariant.md
+
+Payment-Succeeded-Projection:
+docs/evidence/TB-P10-T004/r11-payment-succeeded-projection.md
+
+MultiSeller-Shipping:
+docs/evidence/TB-P10-T004/r11-multiseller-shipping.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r11-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r11-runtime.md + r11-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r11-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-063…065
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r11-recovery-sot.md — Architect R10; Impl R11; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+
+Architectural-Concerns:
+none — R10 payable/shipping projection concern is resolved and proven.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no Storefront Home/PDP change
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

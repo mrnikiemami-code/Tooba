@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks;
+using Tooba.Order.Application;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
 
@@ -66,7 +67,9 @@ public sealed class OrderPaymentSucceededHandler : IIntegrationEventHandler<Paym
             throw new InvalidOperationException("تخصیص پرداخت با سفارش‌های checkout یکی نیست.");
         }
 
-        var expectedAmount = targets.Sum(x => x.GrandTotalSnapshot) + payable.ShippingAmount;
+        var expectedAmount = CheckoutPayableInvariant.CanonicalAmount(
+            targets.Select(x => x.GrandTotalSnapshot),
+            payable.ShippingAmount);
         if (!string.Equals(payable.Currency, integrationEvent.Currency, StringComparison.OrdinalIgnoreCase)
             || expectedAmount != integrationEvent.Amount)
         {

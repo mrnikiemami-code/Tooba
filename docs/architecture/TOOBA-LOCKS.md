@@ -349,3 +349,12 @@ Cart persistence, online hold, manual initial hold, and manual review hold: Paym
 
 ### LOCK-SF-062 — Frontend never decides expiry with client timers
 Expiry is worker/backend authoritative. UI only renders PaymentStatus.Expired / PaymentExpired.
+
+### LOCK-SF-063 — Paid projection equality uses canonical allocation targets
+Payment Succeeded applies Paid only when event amount equals Σ seller merchandise + StoreShipping (Order reconstructs this without opening PaymentDbContext). Seller-totals-only equality is forbidden.
+
+### LOCK-SF-064 — StoreShipping never contributes to seller payout
+Seller settlement and PaymentSucceeded SellerOrderIds include SellerOrder allocations only. Shipping stays on StoreShippingTargetId.
+
+### LOCK-SF-065 — Payment Succeeded projection is idempotent and allocation-order independent
+Inbox keys on EventId. Allocation row order must not change seller amounts or move shipping onto a seller.
