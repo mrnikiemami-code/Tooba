@@ -71,7 +71,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r7-recovery-sot.md — Architect R6; Impl R7; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD pending-commit; HEAD==origin/main after push
+branch main; HEAD ea11e7cfe6eb4c510d62937cc2d09482df849f5f; HEAD==origin/main yes
 
 Architectural-Concerns:
 none for this foundation; remaining Admin Orders/Payments supply UX is a later Architect-issued task
