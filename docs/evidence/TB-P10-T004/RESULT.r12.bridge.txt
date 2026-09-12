@@ -65,7 +65,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r12-recovery-sot.md — Architect R11; Impl R12; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
 
 Git:
-branch main; HEAD PLACEHOLDER; HEAD==origin/main yes
+branch main; HEAD b4e53dd5838a6c7c6040994a051bc02b1c3bfa48; HEAD==origin/main yes
 
 Architectural-Concerns:
 none
