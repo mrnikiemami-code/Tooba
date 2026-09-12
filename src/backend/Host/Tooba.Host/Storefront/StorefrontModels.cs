@@ -257,7 +257,8 @@ public sealed record StorefrontCartPage(
     decimal ItemCount,
     decimal SubtotalExclusiveOfTax,
     IReadOnlyList<StorefrontCartLineView> Lines,
-    string? GuestSecret);
+    string? GuestSecret,
+    string Status = "Active");
 
 /// <summary>
 /// ورودی افزودن خط از PDP. هویت خط Offer است.

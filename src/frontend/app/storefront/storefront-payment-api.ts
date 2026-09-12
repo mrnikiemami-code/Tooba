@@ -2,7 +2,20 @@ import {
   CUSTOMER_DEV_ACTOR_HEADER,
   DEFAULT_CUSTOMER_DEV_ACTOR_ID,
 } from "../customer-panel/customer-api.ts";
-import { cartHeaders, readCartSession, readPaymentResultProof, resolvePaymentResultAccess, StorefrontCartApiError, toCustomerCartMessage, writePaymentResultProof } from "./storefront-cart-api.ts";
+import {
+  cartHeaders,
+  cartHeadersFromAccess,
+  persistPaymentResultProofFromAccess,
+  readPaymentResultProof,
+  resolveCommittedCheckoutAccess,
+  resolvePaymentResultAccess,
+  StorefrontCartApiError,
+  toCustomerCartMessage,
+  writePaymentResultProof,
+} from "./storefront-cart-api.ts";
+
+const PAYMENT_ACCESS_DENIED =
+  "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.";
 
 const PAYMENT_IDEMPOTENCY_KEY = "tooba.storefront.paymentIdempotency";
 
@@ -184,7 +197,7 @@ export function mapStorefrontWalletQuote(payload: unknown): StorefrontWalletQuot
     return null;
   }
   const cartFromPayload = asString(readProp(item, "cartId", "CartId"));
-  const cartId = cartFromPayload || readCartSession().cartId || "";
+  const cartId = cartFromPayload;
   const mixedRaw = readProp(item, "mixedTenderAvailable", "MixedTenderAvailable");
   const balanceRaw = readProp(item, "walletBalance", "WalletBalance");
   const maxUsableRaw = readProp(item, "maxUsable", "MaxUsable");
@@ -248,8 +261,13 @@ export function requiresProviderRedirect(initiation: StorefrontPaymentInitiation
   return initiation.redirectUrl.trim().length > 0;
 }
 
-function storefrontActorHeaders(version?: number): Record<string, string> {
-  const headers: Record<string, string> = { ...(cartHeaders(version) as Record<string, string>) };
+function storefrontActorHeaders(
+  access?: { cartId: string | null; guestSecret: string | null },
+  version?: number,
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    ...((access ? cartHeadersFromAccess(access, version) : cartHeaders(version)) as Record<string, string>),
+  };
   if (typeof window !== "undefined") {
     const stored = window.localStorage.getItem("tooba.customerActorUserId");
     headers[CUSTOMER_DEV_ACTOR_HEADER] = stored || DEFAULT_CUSTOMER_DEV_ACTOR_ID;
@@ -321,6 +339,9 @@ export function toCustomerPaymentMessage(error: unknown): string {
         return "پرداخت پیدا نشد.";
       case "payment.guest.invalid":
         return "دسترسی به پرداخت معتبر نیست.";
+      case "payment.access.denied":
+      case "checkout.access.denied":
+        return PAYMENT_ACCESS_DENIED;
       case "payment.wallet.insufficient":
         return "موجودی کیف پول برای پرداخت کامل کافی نیست.";
       case "payment.wallet.unavailable":
@@ -352,14 +373,14 @@ export function toCustomerPaymentMessage(error: unknown): string {
  * نقل‌قول کیف‌پول را از Host می‌خواند (endpoint بک‌اند).
  */
 export async function loadStorefrontWalletQuote(checkoutId: string): Promise<StorefrontWalletQuote | null> {
-  const session = readCartSession();
-  if (!session.cartId) {
+  const access = resolveCommittedCheckoutAccess(checkoutId);
+  if (!access.cartId) {
     return null;
   }
   try {
     const response = await fetch(
-      `/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/wallet-quote?cartId=${encodeURIComponent(session.cartId)}`,
-      { cache: "no-store", headers: storefrontActorHeaders() },
+      `/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/wallet-quote?cartId=${encodeURIComponent(access.cartId)}`,
+      { cache: "no-store", headers: storefrontActorHeaders(access) },
     );
     if (response.status === 401 || response.status === 404) {
       return null;
@@ -382,23 +403,27 @@ export async function startStorefrontPayment(
   checkoutId: string,
   options?: { providerCode?: string },
 ): Promise<StorefrontPaymentInitiation> {
-  const session = readCartSession();
-  if (!session.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "سبد برای شروع پرداخت پیدا نشد.");
+  const access = resolveCommittedCheckoutAccess(checkoutId);
+  if (!access.cartId) {
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const providerCode = options?.providerCode?.trim() || "gateway";
   const body: Record<string, string | boolean> = {
-    cartId: session.cartId,
+    cartId: access.cartId,
     idempotencyKey: paymentIdempotencyKey(checkoutId, providerCode),
     providerCode,
   };
   if (providerCode.toLowerCase() === WALLET_PROVIDER_CODE) {
     body.useWallet = true;
   }
+  const headers =
+    providerCode.toLowerCase() === WALLET_PROVIDER_CODE
+      ? storefrontActorHeaders(access)
+      : (cartHeadersFromAccess(access) as Record<string, string>);
   const response = await fetch(`/v1/storefront/checkout/${encodeURIComponent(checkoutId)}/payments`, {
     method: "POST",
     cache: "no-store",
-    headers: providerCode.toLowerCase() === WALLET_PROVIDER_CODE ? storefrontActorHeaders() : cartHeaders(),
+    headers,
     body: JSON.stringify(body),
   });
   const payload = await parseJson(response);
@@ -407,6 +432,7 @@ export async function startStorefrontPayment(
   if (!mapped) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ شروع پرداخت نامعتبر بود.");
   }
+  persistPaymentResultProofFromAccess(mapped, access);
   return mapped;
 }
 
@@ -414,18 +440,16 @@ export async function startStorefrontPayment(
  * تصویر پرداخت را از Host می‌خواند.
  * پس از نهایی‌شدن سبد، از اثبات نتیجهٔ پرداخت (cart متعهد + guest secret) استفاده می‌کند نه سبد فعال جدید.
  */
-export async function loadStorefrontPayment(paymentId: string): Promise<StorefrontPaymentPage> {
-  const access = resolvePaymentResultAccess(paymentId);
+export async function loadStorefrontPayment(paymentId: string, checkoutId?: string | null): Promise<StorefrontPaymentPage> {
+  const access = checkoutId
+    ? resolveCommittedCheckoutAccess(checkoutId, paymentId)
+    : resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای مشاهده پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const response = await fetch(
     `/v1/storefront/payments/${encodeURIComponent(paymentId)}?cartId=${encodeURIComponent(access.cartId)}`,
-    { cache: "no-store", headers },
+    { cache: "no-store", headers: cartHeadersFromAccess(access) },
   );
   const payload = await parseJson(response);
   throwIfFailed(response, payload, "payment.missing");
@@ -433,15 +457,7 @@ export async function loadStorefrontPayment(paymentId: string): Promise<Storefro
   if (!mapped) {
     throw new StorefrontCartApiError(500, "payment.missing", "پاسخ پرداخت نامعتبر بود.");
   }
-  const session = readCartSession();
-  if (session.cartId && session.guestSecret) {
-    writePaymentResultProof({
-      paymentId: mapped.paymentId,
-      checkoutId: mapped.checkoutId,
-      cartId: session.cartId,
-      guestSecret: session.guestSecret,
-    });
-  }
+  persistPaymentResultProofFromAccess(mapped, access);
   return mapped;
 }
 
@@ -478,16 +494,12 @@ export async function completeStorefrontSandboxPayment(
 ): Promise<StorefrontPaymentPage> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تکمیل پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox/complete`, {
     method: "POST",
     cache: "no-store",
-    headers,
+    headers: cartHeadersFromAccess(access),
     body: JSON.stringify({
       cartId: access.cartId,
       attemptId,
@@ -501,27 +513,16 @@ export async function completeStorefrontSandboxPayment(
   if (!mapped) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تأیید پرداخت نامعتبر بود.");
   }
-  const session = readCartSession();
-  if (session.cartId && session.guestSecret) {
-    writePaymentResultProof({
-      paymentId: mapped.paymentId,
-      checkoutId: mapped.checkoutId,
-      cartId: session.cartId,
-      guestSecret: session.guestSecret,
-    });
-  }
+  persistPaymentResultProofFromAccess(mapped, access);
   return mapped;
 }
 
 export async function loadStorefrontSandboxContext(paymentId: string): Promise<StorefrontSandboxContext> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای مشاهدهٔ درگاه پیدا نشد.");
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
-  const headers: Record<string, string> = {};
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
-  }
+  const headers = cartHeadersFromAccess(access) as Record<string, string>;
   const response = await fetch(
     `/v1/storefront/payments/${encodeURIComponent(paymentId)}/sandbox?cartId=${encodeURIComponent(access.cartId)}`,
     { cache: "no-store", headers },
@@ -551,16 +552,12 @@ export async function submitStorefrontManualEvidence(
 ): Promise<StorefrontPaymentPage> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای ثبت پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-evidence`, {
     method: "POST",
     cache: "no-store",
-    headers,
+    headers: cartHeadersFromAccess(access),
     body: JSON.stringify({
       cartId: access.cartId,
       transferReference,
@@ -573,31 +570,19 @@ export async function submitStorefrontManualEvidence(
   if (!mappedEvidence) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ ثبت پرداخت نامعتبر بود.");
   }
-  const session = readCartSession();
-  if (session.cartId && session.guestSecret) {
-    writePaymentResultProof({
-      paymentId: mappedEvidence.paymentId,
-      checkoutId: mappedEvidence.checkoutId,
-      cartId: session.cartId,
-      guestSecret: session.guestSecret,
-    });
-  }
+  persistPaymentResultProofFromAccess(mappedEvidence, access);
   return mappedEvidence;
 }
 
 export async function retryStorefrontManualPayment(paymentId: string): Promise<StorefrontPaymentPage> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تلاش مجدد پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/manual-retry`, {
     method: "POST",
     cache: "no-store",
-    headers,
+    headers: cartHeadersFromAccess(access),
     body: JSON.stringify({ cartId: access.cartId }),
   });
   const payload = await parseJson(response);
@@ -612,16 +597,12 @@ export async function retryStorefrontManualPayment(paymentId: string): Promise<S
 export async function retryStorefrontUnpaidPayment(paymentId: string): Promise<StorefrontPaymentPage> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای تلاش مجدد پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const response = await fetch(`/v1/storefront/payments/${encodeURIComponent(paymentId)}/unpaid-retry`, {
     method: "POST",
     cache: "no-store",
-    headers,
+    headers: cartHeadersFromAccess(access),
     body: JSON.stringify({ cartId: access.cartId }),
   });
   const payload = await parseJson(response);
@@ -636,14 +617,12 @@ export async function retryStorefrontUnpaidPayment(paymentId: string): Promise<S
 export async function uploadStorefrontManualProof(paymentId: string, file: File): Promise<string> {
   const access = resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "payment.guest.invalid", "مالکیت پرداخت برای بارگذاری مدرک پیدا نشد.");
+    throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
   const form = new FormData();
   form.append("file", file);
-  const headers: Record<string, string> = {};
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
-  }
+  const headers = cartHeadersFromAccess(access) as Record<string, string>;
+  delete headers["content-type"];
   const response = await fetch(
     `/v1/storefront/payments/${encodeURIComponent(paymentId)}/proof?cartId=${encodeURIComponent(access.cartId)}`,
     { method: "POST", cache: "no-store", headers, body: form },

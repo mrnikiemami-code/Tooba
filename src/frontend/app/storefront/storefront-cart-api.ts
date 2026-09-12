@@ -63,16 +63,20 @@ export function bootstrapCartSessionFromQuery(params: {
 }
 
 /**
- * نشست سبد را پاک می‌کند. برای خالی شدن پس از حذف همهٔ خطوط لازم نیست مگر سبد منقضی شود.
- * اثبات نتیجهٔ پرداخت (paymentResultProof) را پاک نمی‌کند.
+ * فقط اشاره‌گر سبد فعال را پاک می‌کند. اثبات سفارش/پرداخت متعهد باقی می‌ماند.
  */
 export function clearCartSession(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
   window.sessionStorage.removeItem(CART_ID_KEY);
   window.sessionStorage.removeItem(GUEST_SECRET_KEY);
   notifyCartChanged();
 }
 
 const PAYMENT_RESULT_PROOF_KEY = "tooba.storefront.paymentResultProof";
+const COMMITTED_CHECKOUT_PROOFS_KEY = "tooba.storefront.committedCheckoutProofs";
+const COMMITTED_PROOF_STORE_KEY = "storefront";
 
 export type StorefrontPaymentResultProof = {
   paymentId: string;
@@ -81,8 +85,20 @@ export type StorefrontPaymentResultProof = {
   guestSecret: string;
 };
 
+export type StorefrontCommittedCheckoutProof = {
+  checkoutId: string;
+  cartId: string;
+  guestSecret: string;
+  storeKey: string;
+};
+
+export type StorefrontCommittedAccess = {
+  cartId: string | null;
+  guestSecret: string | null;
+};
+
 /**
- * قبل از clear سبد فعال، اثبات باریک سفارش/پرداخت متعهد را نگه می‌دارد.
+ * قبل از detach سبد فعال، اثبات باریک نتیجهٔ پرداخت را نگه می‌دارد.
  */
 export function writePaymentResultProof(proof: StorefrontPaymentResultProof): void {
   if (typeof window === "undefined") {
@@ -91,8 +107,8 @@ export function writePaymentResultProof(proof: StorefrontPaymentResultProof): vo
   const paymentId = proof.paymentId?.trim();
   const checkoutId = proof.checkoutId?.trim();
   const cartId = proof.cartId?.trim();
-  const guestSecret = proof.guestSecret?.trim();
-  if (!paymentId || !checkoutId || !cartId || !guestSecret) {
+  const guestSecret = proof.guestSecret?.trim() ?? "";
+  if (!paymentId || !checkoutId || !cartId) {
     return;
   }
   window.sessionStorage.setItem(
@@ -114,7 +130,7 @@ export function readPaymentResultProof(paymentId?: string | null): StorefrontPay
   }
   try {
     const parsed = JSON.parse(raw) as StorefrontPaymentResultProof;
-    if (!parsed?.paymentId || !parsed.cartId || !parsed.guestSecret) {
+    if (!parsed?.paymentId || !parsed.cartId) {
       return null;
     }
     if (paymentId && parsed.paymentId !== paymentId) {
@@ -126,18 +142,119 @@ export function readPaymentResultProof(paymentId?: string | null): StorefrontPay
   }
 }
 
+function readCommittedCheckoutProofMap(): Record<string, StorefrontCommittedCheckoutProof> {
+  if (typeof window === "undefined") {
+    return {};
+  }
+  const raw = window.sessionStorage.getItem(COMMITTED_CHECKOUT_PROOFS_KEY);
+  if (!raw) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(raw) as Record<string, StorefrontCommittedCheckoutProof>;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 /**
- * هدر/شناسهٔ مالکیت برای خواندن Payment/Checkout پس از نهایی‌شدن سبد.
+ * اثبات سفارش متعهد را به‌ازای checkoutId می‌نویسد و کلیدهای دیگر را بازنویسی نمی‌کند.
  */
-export function resolvePaymentResultAccess(paymentId?: string | null): {
-  cartId: string | null;
-  guestSecret: string | null;
-} {
+export function writeCommittedCheckoutProof(proof: StorefrontCommittedCheckoutProof): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const checkoutId = proof.checkoutId?.trim();
+  const cartId = proof.cartId?.trim();
+  const guestSecret = proof.guestSecret?.trim() ?? "";
+  const storeKey = (proof.storeKey?.trim() || COMMITTED_PROOF_STORE_KEY);
+  if (!checkoutId || !cartId) {
+    return;
+  }
+  const next = readCommittedCheckoutProofMap();
+  next[checkoutId] = { checkoutId, cartId, guestSecret, storeKey };
+  window.sessionStorage.setItem(COMMITTED_CHECKOUT_PROOFS_KEY, JSON.stringify(next));
+}
+
+export function readCommittedCheckoutProof(checkoutId: string): StorefrontCommittedCheckoutProof | null {
+  const id = checkoutId?.trim();
+  if (!id) {
+    return null;
+  }
+  const proof = readCommittedCheckoutProofMap()[id];
+  if (!proof?.checkoutId || !proof.cartId) {
+    return null;
+  }
+  if (proof.storeKey && proof.storeKey !== COMMITTED_PROOF_STORE_KEY) {
+    return null;
+  }
+  return proof;
+}
+
+/**
+ * مالکیت نتیجهٔ پرداخت. به سبد فعال جدید برنمی‌گردد.
+ */
+export function resolvePaymentResultAccess(paymentId?: string | null): StorefrontCommittedAccess {
   const proof = readPaymentResultProof(paymentId);
   if (proof) {
     return { cartId: proof.cartId, guestSecret: proof.guestSecret };
   }
-  return readCartSession();
+  return { cartId: null, guestSecret: null };
+}
+
+/**
+ * مالکیت پرداخت/checkout پس از commit. سبد فعال منبع اختیار نیست.
+ */
+export function resolveCommittedCheckoutAccess(
+  checkoutId: string,
+  paymentId?: string | null,
+): StorefrontCommittedAccess {
+  if (paymentId) {
+    const paymentProof = readPaymentResultProof(paymentId);
+    if (paymentProof && paymentProof.checkoutId === checkoutId) {
+      return { cartId: paymentProof.cartId, guestSecret: paymentProof.guestSecret };
+    }
+  }
+  const committed = readCommittedCheckoutProof(checkoutId);
+  if (committed) {
+    return { cartId: committed.cartId, guestSecret: committed.guestSecret };
+  }
+  return { cartId: null, guestSecret: null };
+}
+
+/**
+ * پس از commit موفق: اثبات سفارش را می‌نویسد و اشاره‌گر سبد فعال را جدا می‌کند.
+ */
+export function persistCommittedCheckoutAndDetachActiveCart(checkoutId: string, sourceCartId: string): void {
+  const session = readCartSession();
+  writeCommittedCheckoutProof({
+    checkoutId,
+    cartId: sourceCartId,
+    guestSecret: session.guestSecret ?? "",
+    storeKey: COMMITTED_PROOF_STORE_KEY,
+  });
+  clearCartSession();
+}
+
+export function persistPaymentResultProofFromAccess(
+  mapped: { paymentId: string; checkoutId: string },
+  access: StorefrontCommittedAccess,
+): void {
+  if (!access.cartId) {
+    return;
+  }
+  writePaymentResultProof({
+    paymentId: mapped.paymentId,
+    checkoutId: mapped.checkoutId,
+    cartId: access.cartId,
+    guestSecret: access.guestSecret ?? "",
+  });
+}
+
+export function isActiveShoppingCartStatus(status: string | null | undefined): boolean {
+  const normalized = (status ?? "Active").trim().toLowerCase();
+  return normalized === "active";
 }
 
 /**
@@ -177,6 +294,7 @@ export interface StorefrontCartPage {
   subtotalExclusiveOfTax: number;
   lines: StorefrontCartLine[];
   guestSecret: string | null;
+  status: string;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -226,6 +344,7 @@ export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
     itemCount: asNumber(readProp(item, "itemCount", "ItemCount")),
     subtotalExclusiveOfTax: asNumber(readProp(item, "subtotalExclusiveOfTax", "SubtotalExclusiveOfTax")),
     guestSecret: secretRaw == null ? null : asString(secretRaw),
+    status: asString(readProp(item, "status", "Status"), "Active"),
     lines: Array.isArray(linesRaw)
       ? linesRaw.map((row) => {
           const line = asRecord(row) ?? {};
@@ -328,19 +447,29 @@ async function parseCartResponse(response: Response): Promise<StorefrontCartPage
   if (!cart) {
     throw new StorefrontCartApiError(response.status, "cart.invalid", "پاسخ سبد نامعتبر است.");
   }
+  persistActiveCartSession(cart);
+  return cart;
+}
+
+function persistActiveCartSession(cart: StorefrontCartPage): void {
+  if (!isActiveShoppingCartStatus(cart.status)) {
+    return;
+  }
   if (cart.guestSecret) {
     writeCartSession(cart.cartId, cart.guestSecret);
   } else {
     writeCartSession(cart.cartId, readCartSession().guestSecret);
   }
-  return cart;
 }
 
 export function cartHeaders(version?: number): HeadersInit {
+  return cartHeadersFromAccess(readCartSession(), version);
+}
+
+export function cartHeadersFromAccess(access: StorefrontCommittedAccess, version?: number): HeadersInit {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const { guestSecret } = readCartSession();
-  if (guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = guestSecret;
+  if (access.guestSecret) {
+    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
   }
   if (version != null) {
     headers["X-Tooba-Cart-Version"] = String(version);
@@ -348,8 +477,17 @@ export function cartHeaders(version?: number): HeadersInit {
   return headers;
 }
 
+async function createFreshActiveCart(): Promise<StorefrontCartPage> {
+  const created = await fetch("/v1/storefront/cart", { method: "POST", cache: "no-store" });
+  return parseCartResponse(created);
+}
+
+function shouldRotateActiveCart(status: number): boolean {
+  return status === 401 || status === 403 || status === 404;
+}
+
 /**
- * سبد مهمان را می‌سازد اگر نشست نباشد.
+ * فقط سبد Active را برای خرید برمی‌گرداند. Converted/غیرقابل‌دسترسی rotate می‌شود.
  */
 export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
   const session = readCartSession();
@@ -359,15 +497,24 @@ export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
       headers: cartHeaders(),
     });
     if (existing.ok) {
+      const payload: unknown = await existing.json().catch(() => null);
+      const cart = mapStorefrontCart(payload);
+      if (cart && isActiveShoppingCartStatus(cart.status)) {
+        persistActiveCartSession(cart);
+        return cart;
+      }
+      clearCartSession();
+    } else if (shouldRotateActiveCart(existing.status)) {
+      clearCartSession();
+    } else {
       return parseCartResponse(existing);
     }
   }
-  const created = await fetch("/v1/storefront/cart", { method: "POST", cache: "no-store" });
-  return parseCartResponse(created);
+  return createFreshActiveCart();
 }
 
 /**
- * سبد جاری را می‌خواند. بدون نشست null است.
+ * سبد جاری را می‌خواند. بدون نشست یا سبد غیر Active مقدار null است.
  */
 export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
   const session = readCartSession();
@@ -378,16 +525,26 @@ export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
     cache: "no-store",
     headers: cartHeaders(),
   });
-  if (response.status === 404) {
+  if (shouldRotateActiveCart(response.status)) {
     clearCartSession();
     return null;
   }
-  return parseCartResponse(response);
+  if (!response.ok) {
+    return parseCartResponse(response);
+  }
+  const payload: unknown = await response.json().catch(() => null);
+  const cart = mapStorefrontCart(payload);
+  if (!cart || !isActiveShoppingCartStatus(cart.status)) {
+    clearCartSession();
+    return null;
+  }
+  persistActiveCartSession(cart);
+  return cart;
 }
 
 /**
  * Offer انتخاب‌شده را با تعداد به سبد زنده اضافه می‌کند.
- * نشست سبد فقط بعد از Paid پاک می‌شود، نه اینجا.
+ * سبد Converted اینجا نگه داشته نمی‌شود؛ ensure فقط Active می‌سازد.
  */
 export async function addOfferToCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
   const cart = await ensureStorefrontCart();

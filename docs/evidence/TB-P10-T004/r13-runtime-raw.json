@@ -1,0 +1,113 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "A-cart-created",
+      "ok": true,
+      "cartId": "01a096ea-b1c8-7000-a40f-627597619cdb"
+    },
+    {
+      "name": "A-commit",
+      "ok": true,
+      "status": 200,
+      "checkoutId": "01a096ea-b433-7000-955d-07c77a252981",
+      "sourceCartId": "01a096ea-b1c8-7000-a40f-627597619cdb"
+    },
+    {
+      "name": "A-source-converted",
+      "ok": true,
+      "status": 200,
+      "cartStatus": "Converted"
+    },
+    {
+      "name": "E-converted-mutation-rejected",
+      "ok": true,
+      "status": 409,
+      "code": "cart.version.conflict"
+    },
+    {
+      "name": "A-payment-page-owned",
+      "ok": true,
+      "status": 200,
+      "code": ""
+    },
+    {
+      "name": "F-id-alone-denied",
+      "ok": true,
+      "status": 403,
+      "code": "checkout.access.denied",
+      "detail": "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."
+    },
+    {
+      "name": "A-fresh-cart",
+      "ok": true,
+      "freshId": "01a096ea-b5df-7000-82ab-d41c9b9bad04"
+    },
+    {
+      "name": "F-new-secret-denied",
+      "ok": true,
+      "status": 403,
+      "code": "checkout.access.denied",
+      "detail": "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."
+    },
+    {
+      "name": "A-addtocart-new-active",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "A-initiate-owned",
+      "ok": true,
+      "status": 200,
+      "paymentId": "73ae63e5-3abe-4ade-82e8-baa3d607b549"
+    },
+    {
+      "name": "F-initiate-new-secret-denied",
+      "ok": true,
+      "status": 403,
+      "code": "payment.access.denied",
+      "detail": "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."
+    },
+    {
+      "name": "A-result-owned",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "F-result-new-secret-denied",
+      "ok": true,
+      "status": 401,
+      "code": "payment.guest.invalid"
+    },
+    {
+      "name": "C-sandbox-context",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "C-sandbox-success",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "B-manual-initiate",
+      "ok": true,
+      "status": 200,
+      "code": ""
+    },
+    {
+      "name": "D-auth-without-guest-secret",
+      "ok": true,
+      "status": 404,
+      "code": "checkout.missing"
+    },
+    {
+      "name": "H-no-duplicate-commit",
+      "ok": true,
+      "status": 400,
+      "code": "checkout.rejected"
+    }
+  ],
+  "at": "2026-09-12T18:39:18.342Z",
+  "host": "http://127.0.0.1:5098"
+}

@@ -79,6 +79,157 @@ test("customer cart message hides Held reservation wording", () => {
   assert.match(hidden, /موجودی/);
 });
 
+test("cart mapper defaults missing status to Active", () => {
+  const cart = mapStorefrontCart({
+    cartId: "cart-status",
+    version: 1,
+    lines: [],
+  });
+  assert.equal(cart?.status, "Active");
+  const converted = mapStorefrontCart({
+    cartId: "cart-converted",
+    version: 8,
+    status: "Converted",
+    lines: [],
+  });
+  assert.equal(converted?.status, "Converted");
+});
+
+function mockSession() {
+  const store = new Map<string, string>();
+  const sessionStorage: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    key(index) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    getItem(k) {
+      return store.has(k) ? store.get(k)! : null;
+    },
+    setItem(k, v) {
+      store.set(k, String(v));
+    },
+    removeItem(k) {
+      store.delete(k);
+    },
+  };
+  (globalThis as { window?: Window }).window = {
+    sessionStorage,
+    dispatchEvent: () => true,
+  } as unknown as Window;
+  return store;
+}
+
+test("committed checkout proofs are keyed by checkout and survive active cart detach", async () => {
+  const {
+    writeCartSession,
+    clearCartSession,
+    readCartSession,
+    writeCommittedCheckoutProof,
+    readCommittedCheckoutProof,
+    persistCommittedCheckoutAndDetachActiveCart,
+    resolveCommittedCheckoutAccess,
+    resolvePaymentResultAccess,
+  } = await import("./storefront-cart-api.ts");
+  mockSession();
+  writeCartSession("old-cart", "old-secret");
+  persistCommittedCheckoutAndDetachActiveCart("chk-a", "old-cart");
+  assert.deepEqual(readCartSession(), { cartId: null, guestSecret: null });
+  assert.equal(readCommittedCheckoutProof("chk-a")?.guestSecret, "old-secret");
+  writeCommittedCheckoutProof({
+    checkoutId: "chk-b",
+    cartId: "cart-b",
+    guestSecret: "secret-b",
+    storeKey: "storefront",
+  });
+  assert.equal(readCommittedCheckoutProof("chk-a")?.cartId, "old-cart");
+  assert.equal(readCommittedCheckoutProof("chk-b")?.cartId, "cart-b");
+  writeCartSession("new-cart", "new-secret");
+  const accessA = resolveCommittedCheckoutAccess("chk-a");
+  assert.deepEqual(accessA, { cartId: "old-cart", guestSecret: "old-secret" });
+  assert.notEqual(accessA.cartId, readCartSession().cartId);
+  assert.deepEqual(resolvePaymentResultAccess("pay-missing"), { cartId: null, guestSecret: null });
+});
+
+test("ensureStorefrontCart rotates Converted cart and never posts lines to it", async () => {
+  const { writeCartSession, ensureStorefrontCart, addOfferToCart, readCartSession } = await import(
+    "./storefront-cart-api.ts"
+  );
+  mockSession();
+  writeCartSession("converted-cart", "old-secret");
+  const calls: Array<{ url: string; method: string }> = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    calls.push({ url, method });
+    if (url.includes("/cart/converted-cart") && method === "GET") {
+      return new Response(
+        JSON.stringify({
+          cartId: "converted-cart",
+          version: 8,
+          status: "Converted",
+          lines: [],
+          guestSecret: "old-secret",
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/fresh-cart") && method === "GET") {
+      return new Response(
+        JSON.stringify({
+          cartId: "fresh-cart",
+          version: 1,
+          status: "Active",
+          lines: [],
+          guestSecret: "new-secret",
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.endsWith("/v1/storefront/cart") && method === "POST") {
+      return new Response(
+        JSON.stringify({
+          cartId: "fresh-cart",
+          version: 1,
+          status: "Active",
+          lines: [],
+          guestSecret: "new-secret",
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/fresh-cart/lines") && method === "POST") {
+      return new Response(
+        JSON.stringify({
+          cartId: "fresh-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 1 }],
+          guestSecret: "new-secret",
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response(JSON.stringify({ errorCode: "cart.rejected" }), { status: 400 });
+  }) as typeof fetch;
+  try {
+    const rotated = await ensureStorefrontCart();
+    assert.equal(rotated.cartId, "fresh-cart");
+    assert.equal(rotated.status, "Active");
+    assert.deepEqual(readCartSession(), { cartId: "fresh-cart", guestSecret: "new-secret" });
+    await addOfferToCart("o1", 1);
+    assert.equal(calls.some((c) => c.url.includes("converted-cart") && c.method === "POST"), false);
+    assert.equal(calls.some((c) => c.url.includes("fresh-cart/lines") && c.method === "POST"), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("cart mapper keeps quantity policy fields for mini-cart and /cart", () => {
   const cart = mapStorefrontCart({
     cartId: "cart-2",

@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R11
+TB-P10-T004-R12
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R12
+TB-P10-T004-R13
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R13 — Committed Checkout Ownership + Active Cart Rotation; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R12 — P10 Final Lifecycle Regression + Production Readiness; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R11 — Paid Projection Financial Consistency (seller totals + StoreShipping); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R10 — Unpaid Order Expiry + Hold Policy Settings UX; USER_VISUAL_ACCEPTED=NO

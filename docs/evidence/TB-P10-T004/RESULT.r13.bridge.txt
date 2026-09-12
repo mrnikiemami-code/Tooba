@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R13
+
+Parent-Task:
+TB-P10-T004-R12
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Post-commit Payment ownership is a Store+Checkout proof, not the Active Cart. Order commit detaches the converted source Cart; ensureStorefrontCart/AddToCart use a new Active Cart; Payment page/initiate/sandbox/result keep the committed secret. Ownership failures map to checkout.access.denied / payment.access.denied, never «ثبت سفارش انجام نشد». Runtime A–H ok=true. HEAD==origin/main after push. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…065 preserved. Added LOCK-SF-066…072 (separate cart vs proof lifecycles, detach on commit, Active-only ensure, Converted immutable, Store+Checkout proof, no false order-registration-failed).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r13-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r13-session-ownership-discovery.md
+
+Committed-Proof:
+docs/evidence/TB-P10-T004/r13-committed-proof.md
+
+Active-Cart-Rotation:
+docs/evidence/TB-P10-T004/r13-active-cart-rotation.md
+
+Payment-Page:
+docs/evidence/TB-P10-T004/r13-payment-page.md
+
+Guest-Runtime:
+docs/evidence/TB-P10-T004/r13-guest-runtime.md
+
+Authenticated-Runtime:
+docs/evidence/TB-P10-T004/r13-auth-runtime.md
+
+Browser-Navigation:
+docs/evidence/TB-P10-T004/r13-browser-navigation.md
+
+Security:
+docs/evidence/TB-P10-T004/r13-security.md
+
+Error-Mapping:
+docs/evidence/TB-P10-T004/r13-error-mapping.md
+
+Network:
+docs/evidence/TB-P10-T004/r13-network.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r13-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r13-runtime.md + r13-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r13-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-066…072
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r13-recovery-sot.md — Architect R12; Impl R13; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD recorded after push; HEAD==origin/main yes
+
+Architectural-Concerns:
+Manual initiate after sandbox Succeeded on the same checkout returned 200 (pre-existing initiate-on-paid behavior). R13 did not add a second Order (replay commit 400).
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; Home/PDP not changed in this Task.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

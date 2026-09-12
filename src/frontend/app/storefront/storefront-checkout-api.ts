@@ -1,4 +1,4 @@
-import { cartHeaders, readCartSession, resolvePaymentResultAccess, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
+import { cartHeaders, cartHeadersFromAccess, persistCommittedCheckoutAndDetachActiveCart, resolveCommittedCheckoutAccess, StorefrontCartApiError, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 
 const IDEMPOTENCY_KEY = "tooba.storefront.checkoutIdempotency";
@@ -230,7 +230,13 @@ export function toCustomerCheckoutMessage(error: unknown): string {
         return "اطلاعات ارسال کامل نیست.";
       case "checkout.cart.empty":
         return "سبد خرید خالی است.";
+      case "checkout.access.denied":
+      case "payment.access.denied":
+        return "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.";
       default:
+        if (error.errorCode === "checkout.rejected" && error.detail?.includes("ثبت سفارش انجام نشد")) {
+          return error.detail;
+        }
         return error.detail && !/Held|PRICE_CHANGED|TAX_/.test(error.detail)
           ? error.detail
           : "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.";
@@ -280,21 +286,25 @@ export async function submitStorefrontCheckout(
       couponCode: code || null,
     }),
   });
-  return parseCheckout(response);
+  const page = await parseCheckout(response);
+  if (page.checkoutId) {
+    persistCommittedCheckoutAndDetachActiveCart(page.checkoutId, page.cartId);
+  }
+  return page;
 }
 
 export async function loadStorefrontCheckout(checkoutId: string, paymentId?: string | null): Promise<StorefrontCheckoutPage> {
-  const access = resolvePaymentResultAccess(paymentId);
+  const access = resolveCommittedCheckoutAccess(checkoutId, paymentId);
   if (!access.cartId) {
-    throw new StorefrontCartApiError(401, "checkout.missing", "مالکیت سفارش برای مشاهده پیدا نشد.");
-  }
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (access.guestSecret) {
-    headers["X-Tooba-Guest-Secret"] = access.guestSecret;
+    throw new StorefrontCartApiError(
+      403,
+      "checkout.access.denied",
+      "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
+    );
   }
   const response = await fetch(
     `/v1/storefront/checkout/${checkoutId}?cartId=${encodeURIComponent(access.cartId)}`,
-    { cache: "no-store", headers },
+    { cache: "no-store", headers: cartHeadersFromAccess(access) },
   );
   return parseCheckout(response);
 }

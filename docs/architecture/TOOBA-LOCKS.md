@@ -358,3 +358,24 @@ Seller settlement and PaymentSucceeded SellerOrderIds include SellerOrder alloca
 
 ### LOCK-SF-065 — Payment Succeeded projection is idempotent and allocation-order independent
 Inbox keys on EventId. Allocation row order must not change seller amounts or move shipping onto a seller.
+
+### LOCK-SF-066 — Active shopping Cart and committed Order/Payment proof have separate lifecycles
+`tooba.storefront.cartId` / `guestSecret` authorize only the current Active Cart. Committed checkout/payment uses `committedCheckoutProofs` and R4 `paymentResultProof`. One browser object must not own both lifecycles.
+
+### LOCK-SF-067 — Successful Order commit detaches the active Cart from the converted source Cart
+After Submit/shipping commit succeeds, persist Store+Checkout-scoped proof, then clear the active-cart pointer. Converted source Cart stays immutable history.
+
+### LOCK-SF-068 — Payment/Order guest ownership after commit is independent of the active Cart
+GET/initiate/manual/sandbox/retry/result authorize the committed checkout via proof (or authenticated session). Current/new Active Cart id or secret is not post-commit ownership.
+
+### LOCK-SF-069 — ensureStorefrontCart returns or creates only Active carts for mutation
+Converted, Cancelled, Expired, or inaccessible current Cart rotates the active pointer and creates a new Active Cart. AddToCart must not POST against a Converted Cart. No cart.rejected retry loop.
+
+### LOCK-SF-070 — Converted carts remain immutable history
+Converted Cart lines cannot be mutated. A new Active Cart may coexist with an unpaid committed Order. Old guest secret is never copied into the new Cart.
+
+### LOCK-SF-071 — Committed proof is Store+Checkout scoped and cannot mutate Cart
+Proofs are keyed by checkoutId (and paymentId for result). Proof A does not authorize Order B. Proof cannot mutate any Cart. payment/order id alone is not authorization.
+
+### LOCK-SF-072 — Post-commit ownership failure is never “Order registration failed”
+`checkout.access.denied` / `payment.access.denied` map to a payment-access message. After a successful commit, Host must not emit checkout.rejected / «ثبت سفارش انجام نشد».

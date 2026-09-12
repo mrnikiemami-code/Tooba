@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { formatOfferAmount } from "../../storefront/storefront-api.ts";
-import { clearCartSession, ensureStorefrontCart, readCartSession, writePaymentResultProof } from "../../storefront/storefront-cart-api.ts";
+import {
+  clearCartSession,
+  persistPaymentResultProofFromAccess,
+  resolveCommittedCheckoutAccess,
+  writePaymentResultProof,
+} from "../../storefront/storefront-cart-api.ts";
 import { loadStorefrontCheckout, type StorefrontCheckoutPage } from "../../storefront/storefront-checkout-api.ts";
 import {
   loadStorefrontPayment,
   resetStorefrontPaymentIdempotency,
   retryStorefrontManualPayment,
-  retryStorefrontUnpaidPayment,
   retryStorefrontUnpaidPayment,
   shouldPollStorefrontPayment,
   submitStorefrontManualEvidence,
@@ -69,7 +73,7 @@ function ResultBody() {
       }
       inFlight = true;
       try {
-        const nextPayment = await loadStorefrontPayment(resolvedPaymentId);
+        const nextPayment = await loadStorefrontPayment(resolvedPaymentId, checkoutId);
         if (cancelled) {
           return false;
         }
@@ -133,17 +137,22 @@ function ResultBody() {
     if (!paid && !awaitingAdmin) {
       return;
     }
-    const session = readCartSession();
-    if (paymentId && payment?.checkoutId && session.cartId && session.guestSecret) {
-      writePaymentResultProof({
-        paymentId,
-        checkoutId: payment.checkoutId,
-        cartId: session.cartId,
-        guestSecret: session.guestSecret,
-      });
+    if (paymentId && payment?.checkoutId) {
+      const access = resolveCommittedCheckoutAccess(payment.checkoutId, paymentId);
+      persistPaymentResultProofFromAccess(
+        { paymentId, checkoutId: payment.checkoutId },
+        access,
+      );
+      if (access.cartId) {
+        writePaymentResultProof({
+          paymentId,
+          checkoutId: payment.checkoutId,
+          cartId: access.cartId,
+          guestSecret: access.guestSecret ?? "",
+        });
+      }
     }
     clearCartSession();
-    void ensureStorefrontCart().catch(() => undefined);
   }, [paid, awaitingAdmin, paymentId, payment?.checkoutId]);
 
   const orderHref = useMemo(() => {

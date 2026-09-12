@@ -106,6 +106,18 @@ test("payment mapper does not invent succeeded", () => {
   assert.equal(page?.status, "Pending");
 });
 
+test("post-commit payment ownership is not order-registration-failed", () => {
+  const msg = toCustomerPaymentMessage(
+    new StorefrontCartApiError(
+      403,
+      "payment.access.denied",
+      "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
+    ),
+  );
+  assert.match(msg, /دسترسی به اطلاعات پرداخت/);
+  assert.equal(msg.includes("ثبت سفارش انجام نشد"), false);
+});
+
 test("customer payment message hides gateway codes", () => {
   const hidden = toCustomerPaymentMessage(
     new StorefrontCartApiError(400, "payment.rejected", "GATEWAY_REJECTED"),

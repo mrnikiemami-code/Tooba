@@ -127,20 +127,18 @@ public sealed class StorefrontCheckoutComposer
             return owned;
         }
 
-        // Pre-finalization / legacy path: client cartId must still match checkout.CartId.
-        var cart = await _carts.GetAsync(cartId, guestSecret, cancellationToken)
-            ?? throw new InvalidOperationException("سبد پیدا نشد.");
+        _ = cartId;
         var actor = ResolvePlacementActor(usingSavedAddress: false);
         var snapshot = await _checkouts.GetCheckoutAsync(
             checkoutId,
             new OrderAccess(null, actor),
             cancellationToken);
-        if (snapshot is null || snapshot.CartId != cart.CartId)
+        if (snapshot is not null)
         {
-            return null;
+            throw new InvalidOperationException("checkout.access.denied");
         }
 
-        return MapPage(snapshot, cart, persisted: true);
+        return null;
     }
 
     /// <summary>
@@ -172,7 +170,7 @@ public sealed class StorefrontCheckoutComposer
             return null;
         }
 
-        var committedCart = await _carts.GetAsync(snapshot.CartId, guestSecret, cancellationToken);
+        var committedCart = await _carts.TryGetForOwnershipAsync(snapshot.CartId, guestSecret, cancellationToken);
         if (committedCart is null)
         {
             return null;
@@ -191,7 +189,8 @@ public sealed class StorefrontCheckoutComposer
             0,
             0,
             Array.Empty<StorefrontCartLineView>(),
-            null);
+            null,
+            "Converted");
 
     /// <summary>
     /// فیلدهای ارسال را از دفترچه تصویربرداری می‌کند یا اعتبارسنجی درون‌خطی مهمان را نگه می‌دارد.

@@ -56,6 +56,24 @@ public sealed class StorefrontCartComposer
     }
 
     /// <summary>
+    /// مالکیت سفارش متعهد: راز نامعتبر null است نه استثنا، تا پرداخت به checkout.rejected تبدیل نشود.
+    /// </summary>
+    public async Task<StorefrontCartPage?> TryGetForOwnershipAsync(
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await GetAsync(cartId, guestSecret, cancellationToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// خط Offer را اضافه یا افزایش می‌دهد.
     /// </summary>
     public async Task<StorefrontCartPage> AddLineAsync(
@@ -207,7 +225,8 @@ public sealed class StorefrontCartComposer
                 0,
                 0,
                 Array.Empty<StorefrontCartLineView>(),
-                guestSecret);
+                guestSecret,
+                snapshot.Status.ToString());
         }
 
         return new StorefrontCartPage(
@@ -219,7 +238,8 @@ public sealed class StorefrontCartComposer
             snapshot.Lines.Sum(item => item.Quantity),
             subtotal,
             lines,
-            guestSecret);
+            guestSecret,
+            snapshot.Status.ToString());
     }
 
     private async Task<Dictionary<Guid, string>> LoadProductNamesAsync(

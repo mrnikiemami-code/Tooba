@@ -48,6 +48,18 @@ test("checkout mapper keeps backend totals and pending payment", () => {
   assert.equal(page?.sellerOrders[0]?.orderNumber, "TB-1");
 });
 
+test("post-commit ownership failure is never order-registration-failed", () => {
+  const msg = toCustomerCheckoutMessage(
+    new StorefrontCartApiError(
+      403,
+      "checkout.access.denied",
+      "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
+    ),
+  );
+  assert.match(msg, /دسترسی به اطلاعات پرداخت/);
+  assert.equal(msg.includes("ثبت سفارش انجام نشد"), false);
+});
+
 test("customer checkout message hides technical tax codes", () => {
   const hidden = toCustomerCheckoutMessage(
     new StorefrontCartApiError(409, "checkout.tax.unavailable", "TAX_NO_APPLICABLE_RULE"),

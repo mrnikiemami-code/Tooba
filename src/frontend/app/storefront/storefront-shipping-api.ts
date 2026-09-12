@@ -1,4 +1,4 @@
-import { cartHeaders, readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { cartHeaders, persistCommittedCheckoutAndDetachActiveCart, readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import { readStoredCouponCode } from "./storefront-checkout-api.ts";
 import type { StorefrontCheckoutPage } from "./storefront-checkout-api.ts";
@@ -346,6 +346,7 @@ export async function commitShippingToPayment(
   }
   if (page.checkoutId) {
     writeStoredCheckoutId(page.checkoutId);
+    persistCommittedCheckoutAndDetachActiveCart(page.checkoutId, page.cartId);
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(SHIPPING_IDEMPOTENCY_KEY);
     }

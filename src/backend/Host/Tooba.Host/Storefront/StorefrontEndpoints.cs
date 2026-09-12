@@ -519,6 +519,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status404NotFound, "Not Found", "payment.missing");
         }
 
+        if (text.Contains("checkout.access.denied", StringComparison.Ordinal)
+            || text.Contains("payment.access.denied", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "payment.access.denied");
+        }
+
         if (text.Contains("دسترسی", StringComparison.Ordinal) || text.Contains("راز", StringComparison.Ordinal))
         {
             return (StatusCodes.Status401Unauthorized, "Unauthorized", "payment.guest.invalid");
@@ -576,6 +582,8 @@ public static class StorefrontEndpoints
         "payment.already-paid" => "این سفارش قبلاً پرداخت شده است.",
         "payment.missing" => "پرداخت پیدا نشد.",
         "payment.guest.invalid" => "دسترسی به پرداخت معتبر نیست.",
+        "payment.access.denied" =>
+            "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
         "payment.wallet.mixed_deferred" => "پرداخت ترکیبی کیف پول هنوز فعال نیست؛ موجودی باید کل مبلغ را پوشش دهد.",
         "payment.method.unavailable" => "این روش پرداخت برای فروشگاه فعال نیست.",
         "payment.tracking.required" => "شماره پیگیری پرداخت الزامی است.",
@@ -694,6 +702,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status403Forbidden, "Forbidden", "checkout.address.forbidden");
         }
 
+        if (text.Contains("checkout.access.denied", StringComparison.Ordinal)
+            || text.Contains("راز مهمان", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status403Forbidden, "Forbidden", "checkout.access.denied");
+        }
+
         if (text.Contains("پیدا نشد", StringComparison.Ordinal))
         {
             return (StatusCodes.Status404NotFound, "Not Found", "checkout.missing");
@@ -749,6 +763,8 @@ public static class StorefrontEndpoints
         "checkout.version.conflict" => "سبد هم‌زمان به‌روز شده است. صفحه را تازه کنید.",
         "checkout.missing" => "سفارش پیدا نشد.",
         "checkout.address.forbidden" => "این نشانی متعلق به مشتری جاری نیست.",
+        "checkout.access.denied" =>
+            "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
         _ => "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.",
     };
 
