@@ -26,7 +26,8 @@ public sealed record AdminOrderListItem(
     decimal PayableAmount,
     string Currency,
     string PaymentState,
-    string Status);
+    string Status,
+    string SupplyStatus = "NotApplicable");
 
 /// <summary>
 /// خط سفارش مدیر؛ مبلغ از snapshot سفارش می‌آید و قیمت جاری Product نیست.
@@ -206,7 +207,8 @@ public sealed record AdminReceiptListItem(
     string Status,
     string ProviderCode,
     DateTimeOffset CreatedAt,
-    DateTimeOffset? CompletedAt);
+    DateTimeOffset? CompletedAt,
+    string SupplyStatus = "NotApplicable");
 
 /// <summary>
 /// ماندهٔ تسویه با نام نمایشی فروشنده برای گرید Admin.

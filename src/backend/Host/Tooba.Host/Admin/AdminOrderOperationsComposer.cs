@@ -137,9 +137,10 @@ public sealed class AdminOrderOperationsComposer
         var actions = new List<AdminOrderOperationAction>();
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
         var blockedBySellerPayout = await HasSellerPayoutRestoreBlockAsync(sellerOrderIds, cancellationToken);
+        var supply = await _orderSupply.GetStatusAsync(checkoutId, cancellationToken);
         if (!IsCheckoutCancelled(group))
         {
-            ProjectPaymentActions(actions, payment, fulfillments, returns, effective, blockedBySellerPayout);
+            ProjectPaymentActions(actions, payment, fulfillments, returns, effective, blockedBySellerPayout, supply.Status);
         }
         foreach (var order in group.SellerOrders)
         {
@@ -153,7 +154,8 @@ public sealed class AdminOrderOperationsComposer
         ProjectRestoreCancelledOrder(actions, group, fulfillments, returns, effective, blockedBySellerPayout, payment?.Status);
         ProjectConsolidatedPackageActions(actions, group, fulfillments, packages, membershipByShipment, effective);
         var recovery = await _inventoryRecovery.AssessCheckoutAsync(checkoutId, cancellationToken);
-        ProjectInventoryRecovery(actions, recovery, effective);
+        var canConfirmDeposit = payment is { ConfirmDepositEligible: true } && Has(effective, "payment.reconcile");
+        ProjectInventoryRecovery(actions, recovery, effective, supply.Status, canConfirmDeposit);
         var collapsed = AdminOrderWholeOrderActions.Collapse(actions);
         var lineCaps = new List<AdminOrderLineCapability>();
         var sellerCaps = new List<AdminSellerCapability>();
@@ -190,6 +192,13 @@ public sealed class AdminOrderOperationsComposer
         var warning = recovery.NeedsRecovery || recovery.ClassCode is "C"
             ? "رزرو موجودی این سفارش از چرخه قبلی معتبر نیست و نیاز به بازیابی موجودی دارد."
             : null;
+        var canRecover = collapsed.Any(a => a.Code == "recover_inventory_reservation");
+        var shortage = supply.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
+            ? supply.Lines
+                .Where(x => x.Shortage > 0 || x.LineStatus is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable)
+                .Select(x => new AdminSupplyLineShortage(x.ItemTitle, x.UnitCode, x.Required, x.Available, x.Shortage))
+                .ToList()
+            : [];
         return new AdminOrderOperationsPage(
             checkoutId,
             collapsed,
@@ -197,7 +206,12 @@ public sealed class AdminOrderOperationsComposer
             lineCaps,
             sellerCaps,
             warning,
-            recovery.ClassCode is "A" or "B" or "C" ? recovery.ClassCode : null);
+            recovery.ClassCode is "A" or "B" or "C" ? recovery.ClassCode : null,
+            supply.Status.ToString(),
+            OrderSupplyComposer.MessageFa(supply.Status),
+            canConfirmDeposit,
+            canRecover,
+            shortage);
     }
 
     /// <summary>eligibility همهٔ سفارش‌های فروشندهٔ یک checkout.</summary>
@@ -1291,7 +1305,8 @@ public sealed class AdminOrderOperationsComposer
         IReadOnlyList<FulfillmentSnapshot> fulfillments,
         IReadOnlyList<ReturnRequest> returns,
         EffectiveAccessDto effective,
-        bool blockedBySellerPayout)
+        bool blockedBySellerPayout,
+        OrderSupplyStatusKind supplyStatus)
     {
         if (payment is null || !Has(effective, "payment.reconcile"))
         {
@@ -1300,6 +1315,14 @@ public sealed class AdminOrderOperationsComposer
 
         if (payment.ConfirmDepositEligible)
         {
+            var confirmMessage = supplyStatus switch
+            {
+                OrderSupplyStatusKind.AvailableForReacquire =>
+                    "موجودی قابل تأمین است و هنگام تأیید واریز به‌صورت خودکار رزرو می‌شود.",
+                OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable =>
+                    "این سفارش در حال حاضر قابل تأمین نیست.",
+                _ => "آیا واریز کارت‌به‌کارت این سفارش را تأیید می‌کنید؟",
+            };
             actions.Add(Action(
                 "confirm_deposit",
                 "تأیید واریز",
@@ -1310,7 +1333,7 @@ public sealed class AdminOrderOperationsComposer
                 null,
                 "payment.reconcile",
                 true,
-                "آیا واریز کارت‌به‌کارت این سفارش را تأیید می‌کنید؟"));
+                confirmMessage));
         }
 
         if (payment.RejectDepositEligible)
@@ -1365,9 +1388,16 @@ public sealed class AdminOrderOperationsComposer
     private void ProjectInventoryRecovery(
         List<AdminOrderOperationAction> actions,
         OrderInventoryRecoveryAssessment recovery,
-        EffectiveAccessDto effective)
+        EffectiveAccessDto effective,
+        OrderSupplyStatusKind supplyStatus,
+        bool canConfirmDeposit)
     {
         if (!Has(effective, "payment.reconcile"))
+        {
+            return;
+        }
+
+        if (canConfirmDeposit && supplyStatus is OrderSupplyStatusKind.Reserved or OrderSupplyStatusKind.AvailableForReacquire)
         {
             return;
         }

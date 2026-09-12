@@ -60,6 +60,17 @@ export type AdminOrderOperationsPage = {
   sellerCapabilities: AdminSellerCapability[];
   inventoryRecoveryWarningFa?: string | null;
   inventoryRecoveryClass?: string | null;
+  supplyStatus?: string | null;
+  supplyMessageFa?: string | null;
+  canConfirmDeposit?: boolean;
+  canRecoverInventory?: boolean;
+  supplyLines?: Array<{
+    itemTitle: string | null;
+    unitCode: string | null;
+    required: number;
+    available: number;
+    shortage: number;
+  }>;
 };
 
 export type AdminOrderOperationRequest = {
@@ -143,6 +154,23 @@ function mapPage(raw: unknown): AdminOrderOperationsPage | null {
       asString(row.inventoryRecoveryWarningFa) ?? asString(row.InventoryRecoveryWarningFa),
     inventoryRecoveryClass:
       asString(row.inventoryRecoveryClass) ?? asString(row.InventoryRecoveryClass),
+    supplyStatus: asString(row.supplyStatus) ?? asString(row.SupplyStatus),
+    supplyMessageFa: asString(row.supplyMessageFa) ?? asString(row.SupplyMessageFa),
+    canConfirmDeposit: Boolean(row.canConfirmDeposit ?? row.CanConfirmDeposit),
+    canRecoverInventory: Boolean(row.canRecoverInventory ?? row.CanRecoverInventory),
+    supplyLines: Array.isArray(row.supplyLines ?? row.SupplyLines)
+      ? ((row.supplyLines ?? row.SupplyLines) as unknown[]).flatMap((item) => {
+          if (!item || typeof item !== "object") return [];
+          const line = item as Record<string, unknown>;
+          return [{
+            itemTitle: asString(line.itemTitle) ?? asString(line.ItemTitle),
+            unitCode: asString(line.unitCode) ?? asString(line.UnitCode),
+            required: Number(line.required ?? line.Required ?? 0),
+            available: Number(line.available ?? line.Available ?? 0),
+            shortage: Number(line.shortage ?? line.Shortage ?? 0),
+          }];
+        })
+      : [],
   };
 }
 

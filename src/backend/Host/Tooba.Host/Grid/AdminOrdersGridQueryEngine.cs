@@ -15,12 +15,18 @@ internal sealed class AdminOrdersGridQueryEngine
     private readonly OrderDbContext _orders;
     private readonly PartyDbContext _parties;
     private readonly ReturnsDbContext _returns;
+    private readonly OrderSupplyComposer _supply;
 
-    public AdminOrdersGridQueryEngine(OrderDbContext orders, PartyDbContext parties, ReturnsDbContext returns)
+    public AdminOrdersGridQueryEngine(
+        OrderDbContext orders,
+        PartyDbContext parties,
+        ReturnsDbContext returns,
+        OrderSupplyComposer supply)
     {
         _orders = orders;
         _parties = parties;
         _returns = returns;
+        _supply = supply;
     }
 
     public async Task<GridPageResponse<AdminOrderListItem>> QueryAsync(
@@ -50,7 +56,9 @@ internal sealed class AdminOrdersGridQueryEngine
                 ? await ApplySellerNamesFilterAsync(q, filter, cancellationToken)
                 : filter.Field == "status"
                     ? await ApplyStatusFilterAsync(q, filter, cancellationToken)
-                    : ApplyFilter(q, filter);
+                    : filter.Field == "supply"
+                        ? await ApplySupplyFilterAsync(q, filter, cancellationToken)
+                        : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -412,10 +420,38 @@ internal sealed class AdminOrdersGridQueryEngine
         var returnsLookup = returnsBySellerOrder
             .GroupBy(x => x.SellerOrderId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
+        var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
         return rows
             .Where(r => byId.ContainsKey(r.CheckoutId))
-            .Select(r => MapOrderListItem(byId[r.CheckoutId], sellerNames, returnsLookup))
+            .Select(r => MapOrderListItem(
+                byId[r.CheckoutId],
+                sellerNames,
+                returnsLookup,
+                supply.TryGetValue(r.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable"))
             .ToList();
+    }
+
+    private async Task<IQueryable<CheckoutGroup>> ApplySupplyFilterAsync(
+        IQueryable<CheckoutGroup> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var wanted = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (wanted.Count == 0)
+        {
+            return source;
+        }
+
+        var ids = await source.Select(x => x.CheckoutId).ToListAsync(cancellationToken);
+        var statuses = await _supply.GetStatusesAsync(ids, cancellationToken);
+        var match = ids.Where(id =>
+                statuses.TryGetValue(id, out var st) && wanted.Contains(st.Status.ToString()))
+            .ToHashSet();
+        return source.Where(x => match.Contains(x.CheckoutId));
     }
 
     private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerNamesAsync(
@@ -438,7 +474,8 @@ internal sealed class AdminOrdersGridQueryEngine
     internal static AdminOrderListItem MapOrderListItem(
         CheckoutGroup group,
         IReadOnlyDictionary<Guid, string> sellerNames,
-        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnRequest>> returnsBySellerOrder)
+        IReadOnlyDictionary<Guid, IReadOnlyList<ReturnRequest>> returnsBySellerOrder,
+        string supplyStatus = "NotApplicable")
     {
         var orders = group.SellerOrders;
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
@@ -463,7 +500,8 @@ internal sealed class AdminOrdersGridQueryEngine
                 : orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Paid)
                     ? "Paid"
                     : "PendingPayment",
-            composedStatus);
+            composedStatus,
+            string.IsNullOrWhiteSpace(supplyStatus) ? "NotApplicable" : supplyStatus);
     }
 
     /// <summary>

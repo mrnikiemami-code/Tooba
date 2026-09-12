@@ -32,6 +32,7 @@ import {
   type AdminPromotionRow,
   type AdminReceiptRow,
 } from "./admin-api";
+import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions } from "./admin-order-supply";
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
@@ -374,6 +375,21 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
   { id: "lines", header: "تعداد اقلام", accessor: (row) => row.lineCount, cell: (row) => row.lineCount.toLocaleString("fa-IR"), width: 96, minWidth: 80, filterKind: "number", sortable: true },
   { id: "payment", header: "پرداخت", accessor: (row) => row.paymentState, cell: (row) => <Status value={row.paymentState} />, width: 130, minWidth: 105, filterKind: "status", enumOptions: orderPaymentEnumOptions },
   { id: "status", header: "وضعیت", accessor: (row) => row.status, cell: (row) => <Status value={row.status} />, width: 120, minWidth: 100, filterKind: "status", enumOptions: orderStatusEnumOptions },
+  {
+    id: "supply",
+    header: "وضعیت تأمین",
+    accessor: (row) => row.supplyStatus,
+    cell: (row) => (
+      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${adminSupplyBadgeClass(row.supplyStatus)}`}>
+        {formatAdminSupplyStatus(row.supplyStatus)}
+      </span>
+    ),
+    width: 140,
+    minWidth: 120,
+    filterKind: "status",
+    enumOptions: supplyStatusEnumOptions,
+    sortable: true,
+  },
   { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, filterKind: "money", sortable: true },
   { id: "created", header: "تاریخ", accessor: (row) => row.createdAt, cell: (row) => formatAdminDate(row.createdAt), width: 110, minWidth: 95, filterKind: "date", sortable: true },
   {
@@ -772,6 +788,21 @@ const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
     minWidth: 100,
     filterKind: "status",
     enumOptions: receiptStatusEnumOptions,
+  },
+  {
+    id: "supply",
+    header: "وضعیت تأمین",
+    accessor: (row) => row.supplyStatus,
+    cell: (row) => (
+      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${adminSupplyBadgeClass(row.supplyStatus)}`}>
+        {formatAdminSupplyStatus(row.supplyStatus)}
+      </span>
+    ),
+    width: 140,
+    minWidth: 120,
+    filterKind: "status",
+    enumOptions: supplyStatusEnumOptions,
+    sortable: true,
   },
   {
     id: "provider",

@@ -12,11 +12,16 @@ internal sealed class AdminPaymentsGridQueryEngine
 {
     private readonly PaymentDbContext _payments;
     private readonly OrderDbContext _orders;
+    private readonly OrderSupplyComposer _supply;
 
-    public AdminPaymentsGridQueryEngine(PaymentDbContext payments, OrderDbContext orders)
+    public AdminPaymentsGridQueryEngine(
+        PaymentDbContext payments,
+        OrderDbContext orders,
+        OrderSupplyComposer supply)
     {
         _payments = payments;
         _orders = orders;
+        _supply = supply;
     }
 
     public async Task<GridPageResponse<AdminReceiptListItem>> QueryAsync(
@@ -44,7 +49,9 @@ internal sealed class AdminPaymentsGridQueryEngine
 
         foreach (var filter in request.Filters)
         {
-            q = ApplyFilter(q, filter);
+            q = filter.Field == "supply"
+                ? await ApplySupplyFilterAsync(q, filter, cancellationToken)
+                : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -143,6 +150,7 @@ internal sealed class AdminPaymentsGridQueryEngine
             .Where(x => checkoutIds.Contains(x.CheckoutId))
             .ToListAsync(cancellationToken);
         var checkoutMap = checkouts.ToDictionary(x => x.CheckoutId);
+        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
 
         return rows.Select(payment =>
         {
@@ -157,6 +165,9 @@ internal sealed class AdminPaymentsGridQueryEngine
             var customer = checkout is null || string.IsNullOrWhiteSpace(checkout.RecipientName)
                 ? "مشتری توبا"
                 : checkout.RecipientName;
+            var supplyStatus = checkout is null
+                ? "NotApplicable"
+                : supply.TryGetValue(payment.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable";
             return new AdminReceiptListItem(
                 payment.PaymentId,
                 payment.CheckoutId,
@@ -167,7 +178,31 @@ internal sealed class AdminPaymentsGridQueryEngine
                 payment.Status.ToString(),
                 payment.ProviderCode,
                 payment.CreatedAt,
-                payment.CompletedAt);
+                payment.CompletedAt,
+                supplyStatus);
         }).ToList();
+    }
+
+    private async Task<IQueryable<CustomerPayment>> ApplySupplyFilterAsync(
+        IQueryable<CustomerPayment> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var wanted = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (wanted.Count == 0)
+        {
+            return source;
+        }
+
+        var checkoutIds = await source.Select(x => x.CheckoutId).Distinct().ToListAsync(cancellationToken);
+        var statuses = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
+        var match = checkoutIds.Where(id =>
+                statuses.TryGetValue(id, out var st) && wanted.Contains(st.Status.ToString()))
+            .ToHashSet();
+        return source.Where(x => match.Contains(x.CheckoutId));
     }
 }

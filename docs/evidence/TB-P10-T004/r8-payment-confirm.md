@@ -1,0 +1,1 @@
+AvailableForReacquire confirm message: موجودی قابل تأمین است و هنگام تأیید واریز به‌صورت خودکار رزرو می‌شود. Unavailable: این سفارش در حال حاضر قابل تأمین نیست. Backend EnsurePaidDurable remains authoritative.

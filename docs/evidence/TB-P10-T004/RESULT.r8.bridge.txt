@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R8
+
+Parent-Task:
+TB-P10-T004-R7
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Admin Orders and Payments expose batched business SupplyStatus (تأمین‌شده / قابل تأمین / غیرقابل تأمین / تأمین ناقص / تکمیل‌شده / نامرتبط). Order detail shows status + shortage diagnostics. confirm_deposit auto-reacquires on AvailableForReacquire and blocks Succeeded on Unavailable with «این سفارش در حال حاضر قابل تأمین نیست.» Recover action is capability-driven and hidden when confirm can reacquire. No N+1 list calls. Locks SF-041…046. Runtime A–G ok=true. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…040 preserved; LOCK-SF-041 Orders/Payments SupplyStatus; LOCK-SF-042 no N+1 list projection; LOCK-SF-043 confirm auto-reacquire; LOCK-SF-044 unavailable blocks Succeeded; LOCK-SF-045 no raw reservation UX; LOCK-SF-046 recovery capability-driven.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r8-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r8-admin-supply-ux-discovery.md
+
+Orders-Grid:
+docs/evidence/TB-P10-T004/r8-orders-grid.md
+
+Payments-Grid:
+docs/evidence/TB-P10-T004/r8-payments-grid.md
+
+Order-Detail:
+docs/evidence/TB-P10-T004/r8-order-detail.md
+
+Payment-Confirm:
+docs/evidence/TB-P10-T004/r8-payment-confirm.md
+
+Recovery-Action:
+docs/evidence/TB-P10-T004/r8-recovery-action.md
+
+Performance:
+docs/evidence/TB-P10-T004/r8-performance.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r8-focused-validation.md
+
+Runtime:
+docs/evidence/TB-P10-T004/r8-runtime.md + r8-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r8-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-041…046
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r8-recovery-sot.md — Architect R7; Impl R8; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD pending-commit; HEAD==origin/main after push
+
+Architectural-Concerns:
+none for this UX wiring
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; additive Admin columns/card only
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

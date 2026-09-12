@@ -283,3 +283,21 @@ Payment:Gateway hold hours + OrderSupplyHoldOverrides; no magic business TTL in 
 
 ### LOCK-SF-040 — UX consumes supply outcomes, not raw reservation state
 Normal Admin/customer UI must not receive reservation.not_active / Held / Released / GUID.
+
+### LOCK-SF-041 — Admin Orders and Payments expose business SupplyStatus
+List and detail surfaces show SupplyStatus distinct from PaymentStatus/OrderStatus.
+
+### LOCK-SF-042 — List supply projection must not use N+1 requests
+Orders/Payments grids batch supply in the page mapper; FE must not call supply-status per row.
+
+### LOCK-SF-043 — Confirm deposit auto-reacquires when supply is available
+AvailableForReacquire confirm uses canonical EnsurePaidDurable; no extra manual recovery click.
+
+### LOCK-SF-044 — Unavailable supply blocks payment confirmation success
+Payment remains not Succeeded; Admin sees business-safe shortage copy.
+
+### LOCK-SF-045 — Normal UX never exposes raw reservation lifecycle terminology
+No inventory.reservation.not_active, Released, or reservation GUIDs in Admin supply UX.
+
+### LOCK-SF-046 — Recovery action visibility is capability-driven
+recover_inventory_reservation is hidden when confirm can auto-reacquire.

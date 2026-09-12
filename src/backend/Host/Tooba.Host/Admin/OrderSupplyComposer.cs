@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
+using Tooba.Fulfillment.Infrastructure.Persistence;
 using Tooba.Inventory.Application;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -19,17 +20,20 @@ public sealed class OrderSupplyComposer
     private readonly OrderDbContext _orders;
     private readonly IInventoryDirectory _inventory;
     private readonly IFulfillmentDirectory _fulfillment;
+    private readonly FulfillmentDbContext _fulfillmentDb;
     private readonly PaymentGatewayOptions _paymentGateway;
 
     public OrderSupplyComposer(
         OrderDbContext orders,
         IInventoryDirectory inventory,
         IFulfillmentDirectory fulfillment,
+        FulfillmentDbContext fulfillmentDb,
         IOptions<PaymentGatewayOptions> paymentGateway)
     {
         _orders = orders;
         _inventory = inventory;
         _fulfillment = fulfillment;
+        _fulfillmentDb = fulfillmentDb;
         _paymentGateway = paymentGateway.Value;
     }
 
@@ -57,6 +61,61 @@ public sealed class OrderSupplyComposer
         var lines = await BuildLinesAsync(group, cancellationToken);
         return await _inventory.GetOrderSupplyStatusAsync(checkoutId, lines, cancellationToken);
     }
+
+    /// <summary>وضعیت تأمین چند checkout در یک بارگذاری Order/Fulfillment — بدون N+1 HTTP.</summary>
+    public async Task<IReadOnlyDictionary<Guid, OrderSupplyStatus>> GetStatusesAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, OrderSupplyStatus>();
+        if (checkoutIds.Count == 0)
+        {
+            return result;
+        }
+
+        var ids = checkoutIds.Distinct().ToList();
+        var groups = await _orders.Checkouts.AsNoTracking()
+            .Include(x => x.SellerOrders)
+            .ThenInclude(x => x.Lines)
+            .Where(x => ids.Contains(x.CheckoutId))
+            .ToListAsync(cancellationToken);
+        var shipped = await LoadShippedByLineAsync(ids, cancellationToken);
+        foreach (var group in groups)
+        {
+            if (group.SellerOrders.All(x => x.Status == SellerOrderStatus.Cancelled))
+            {
+                result[group.CheckoutId] = new OrderSupplyStatus(group.CheckoutId, OrderSupplyStatusKind.NotApplicable, []);
+                continue;
+            }
+
+            var lines = BuildLines(group, shipped);
+            result[group.CheckoutId] = await _inventory.GetOrderSupplyStatusAsync(
+                group.CheckoutId,
+                lines,
+                cancellationToken);
+        }
+
+        foreach (var id in ids)
+        {
+            if (!result.ContainsKey(id))
+            {
+                result[id] = new OrderSupplyStatus(id, OrderSupplyStatusKind.NotApplicable, []);
+            }
+        }
+
+        return result;
+    }
+
+    public static string MessageFa(OrderSupplyStatusKind status) =>
+        status switch
+        {
+            OrderSupplyStatusKind.Reserved => "موجودی موردنیاز این سفارش رزرو شده است.",
+            OrderSupplyStatusKind.AvailableForReacquire => "رزرو قبلی فعال نیست، اما موجودی لازم در حال حاضر قابل تأمین است.",
+            OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable =>
+                "یک یا چند قلم این سفارش در حال حاضر قابل تأمین نیست.",
+            OrderSupplyStatusKind.Fulfilled => "موجودی موردنیاز این سفارش تأمین و تکمیل شده است.",
+            _ => "تأمین موجودی برای این سفارش موضوعیت ندارد.",
+        };
 
     public async Task<EnsureOrderSupplyResult> EnsureAsync(
         Guid checkoutId,
@@ -115,26 +174,53 @@ public sealed class OrderSupplyComposer
         CheckoutGroup group,
         CancellationToken cancellationToken)
     {
-        var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
+        var shipped = await LoadShippedByLineAsync([group.CheckoutId], cancellationToken);
+        return BuildLines(group, shipped);
+    }
+
+    private static IReadOnlyList<OrderSupplyLineInput> BuildLines(
+        CheckoutGroup group,
+        IReadOnlyDictionary<Guid, decimal> shippedByLine)
+    {
         var lines = new List<OrderSupplyLineInput>();
         foreach (var order in group.SellerOrders.Where(x => x.Status != SellerOrderStatus.Cancelled))
         {
-            var fulfillment = fulfillments.FirstOrDefault(x => x.SellerOrderId == order.SellerOrderId);
             foreach (var line in order.Lines)
             {
-                var shipped = fulfillment?.Items.FirstOrDefault(i => i.OrderLineId == line.LineId)?.QuantityShipped ?? 0m;
-                var remaining = line.Quantity - shipped;
+                shippedByLine.TryGetValue(line.LineId, out var shipped);
                 lines.Add(new OrderSupplyLineInput(
                     line.LineId,
                     line.OfferId,
                     line.ReservationId,
-                    remaining,
+                    line.Quantity - shipped,
                     line.UnitDisplaySnapshot,
                     line.UnitCodeSnapshot));
             }
         }
 
         return lines;
+    }
+
+    private async Task<Dictionary<Guid, decimal>> LoadShippedByLineAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        CancellationToken cancellationToken)
+    {
+        var fulfillmentIds = await _fulfillmentDb.Fulfillments.AsNoTracking()
+            .Where(x => checkoutIds.Contains(x.CheckoutId))
+            .Select(x => x.FulfillmentId)
+            .ToListAsync(cancellationToken);
+        if (fulfillmentIds.Count == 0)
+        {
+            return [];
+        }
+
+        var rows = await _fulfillmentDb.Items.AsNoTracking()
+            .Where(x => fulfillmentIds.Contains(x.FulfillmentId))
+            .Select(x => new { x.OrderLineId, x.QuantityShipped })
+            .ToListAsync(cancellationToken);
+        return rows
+            .GroupBy(x => x.OrderLineId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.QuantityShipped));
     }
 
     private async Task<CheckoutGroup?> LoadGroupAsync(Guid checkoutId, CancellationToken cancellationToken) =>

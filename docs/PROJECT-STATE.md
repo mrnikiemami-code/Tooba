@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R6
+TB-P10-T004-R7
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R7
+TB-P10-T004-R8
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R8 — Admin Orders + Payments Supply UX; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R7 — Order Supply Capability Foundation; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R6 — Historical Paid/Manual Orders Inventory Recovery; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R5 — Manual Payment Review Reservation Lifecycle; USER_VISUAL_ACCEPTED=NO

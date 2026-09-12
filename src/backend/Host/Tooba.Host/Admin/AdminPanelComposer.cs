@@ -50,7 +50,8 @@ public sealed class AdminPanelComposer
         IPaymentAdminDirectory payments,
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
-        ReturnsDbContext returns)
+        ReturnsDbContext returns,
+        OrderSupplyComposer supply)
     {
         _catalog = catalog;
         _offers = offers;
@@ -60,10 +61,10 @@ public sealed class AdminPanelComposer
         _settlement = settlement;
         _fulfillment = fulfillment;
         _returns = returns;
-        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns);
+        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
-        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders);
+        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders, supply);
     }
 
     /// <summary>

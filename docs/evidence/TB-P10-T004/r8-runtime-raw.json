@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "C-payments-grid",
+      "ok": true,
+      "status": 200,
+      "supply": "AvailableForReacquire"
+    },
+    {
+      "name": "D-confirm-reacquire",
+      "ok": true,
+      "confirm": 200,
+      "paidExpires": null,
+      "recoverHidden": true,
+      "hint": "رزرو قبلی فعال نیست، اما موجودی لازم در حال حاضر قابل تأمین است."
+    },
+    {
+      "name": "A-orders-grid",
+      "ok": true,
+      "reserved": "Reserved",
+      "reacquire": "AvailableForReacquire",
+      "unavailable": "Unavailable"
+    },
+    {
+      "name": "B-order-detail",
+      "ok": true,
+      "status": "Unavailable"
+    },
+    {
+      "name": "E-confirm-unavailable",
+      "ok": true,
+      "status": 400,
+      "code": "inventory.supply.unavailable",
+      "paymentStatus": "pending"
+    },
+    {
+      "name": "F-recovery-capability",
+      "ok": true,
+      "canRecover": false,
+      "supply": "Reserved"
+    },
+    {
+      "name": "G-labels-rtl",
+      "ok": true
+    }
+  ],
+  "at": "2026-09-12T03:49:19.149Z",
+  "secretsOmitted": true
+}

@@ -46,7 +46,20 @@ public sealed record AdminOrderOperationsPage(
     IReadOnlyList<AdminOrderLineCapability>? LineCapabilities = null,
     IReadOnlyList<AdminSellerCapability>? SellerCapabilities = null,
     string? InventoryRecoveryWarningFa = null,
-    string? InventoryRecoveryClass = null);
+    string? InventoryRecoveryClass = null,
+    string? SupplyStatus = null,
+    string? SupplyMessageFa = null,
+    bool CanConfirmDeposit = false,
+    bool CanRecoverInventory = false,
+    IReadOnlyList<AdminSupplyLineShortage>? SupplyLines = null);
+
+/// <summary>کمبود خط تأمین برای Admin — بدون GUID رزرو.</summary>
+public sealed record AdminSupplyLineShortage(
+    string? ItemTitle,
+    string? UnitCode,
+    decimal Required,
+    decimal Available,
+    decimal Shortage);
 
 /// <summary>انتخاب خط/تعداد برای عملیات seller-scoped.</summary>
 public sealed record AdminOrderLineSelection(Guid OrderLineId, decimal Quantity);

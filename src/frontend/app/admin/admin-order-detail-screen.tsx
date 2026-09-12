@@ -29,6 +29,8 @@ import {
   formatAdminPaymentReference,
   formatAdminStatus,
   loadAdminOrderDetail,
+  loadAdminOrderSupply,
+  type AdminOrderSupplyStatus,
   type AdminFinancialEvent,
   type AdminFinancialSummary,
   type AdminOrderDetail,
@@ -51,6 +53,7 @@ import {
   type AdminOrderNote,
 } from "./admin-order-completeness";
 import { mapAdminErrorMessage } from "./admin-error-map";
+import { adminSupplyBadgeClass, adminSupplyMessageFa, formatAdminSupplyStatus } from "./admin-order-supply";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -435,6 +438,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
+  const [supply, setSupply] = useState<AdminOrderSupplyStatus | null>(null);
   const historyPageSize = 20;
   const refreshNotes = useCallback(() => {
     void loadAdminOrderNotes(checkoutId).then((res) => {
@@ -460,6 +464,9 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
 
   const refresh = () => {
     void loadAdminOrderDetail(checkoutId).then(setResult);
+    void loadAdminOrderSupply(checkoutId).then((res) => {
+      setSupply(res.state === "ok" ? res.data : null);
+    });
     refreshNotes();
     refreshHistory(1, false);
   };
@@ -556,6 +563,7 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
       </header>
       {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}
       <InventoryRecoveryBanner checkoutId={checkoutId} />
+      <OrderSupplyCard supply={supply} />
 
       {result.state === "error" ? (
         <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
@@ -604,6 +612,23 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                   ) : null}
                   {detail.payment.evidenceSubmittedAt ? (
                     <InfoRow label="زمان ثبت مشتری">{formatAdminDate(detail.payment.evidenceSubmittedAt)}</InfoRow>
+                  ) : null}
+                  {supply ? (
+                    <InfoRow label="وضعیت تأمین">
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${adminSupplyBadgeClass(supply.status)}`}>
+                        {formatAdminSupplyStatus(supply.status)}
+                      </span>
+                    </InfoRow>
+                  ) : null}
+                  {supply?.status === "AvailableForReacquire" ? (
+                    <p className="mt-2 text-xs text-amber-800" data-testid="admin-order-confirm-reacquire-hint">
+                      موجودی قابل تأمین است و هنگام تأیید واریز به‌صورت خودکار رزرو می‌شود.
+                    </p>
+                  ) : null}
+                  {supply?.status === "Unavailable" || supply?.status === "PartiallyUnavailable" ? (
+                    <p className="mt-2 text-xs text-red-700" data-testid="admin-order-confirm-unavailable-hint">
+                      این سفارش در حال حاضر قابل تأمین نیست.
+                    </p>
                   ) : null}
                 </dl>
               ) : (
@@ -769,6 +794,41 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
         <p className="text-sm text-gray-500">در حال بارگذاری…</p>
       )}
     </main>
+  );
+}
+
+function OrderSupplyCard({ supply }: { supply: AdminOrderSupplyStatus | null }) {
+  if (!supply) return null;
+  const showLines = supply.status === "Unavailable" || supply.status === "PartiallyUnavailable";
+  const lines = supply.lines.filter((line) => line.shortage > 0 || line.lineStatus === "Unavailable" || line.lineStatus === "PartiallyUnavailable");
+  return (
+    <section
+      className="mb-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+      data-testid="admin-order-supply-status"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-black text-gray-900">وضعیت تأمین سفارش</h2>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${adminSupplyBadgeClass(supply.status)}`}>
+          {formatAdminSupplyStatus(supply.status)}
+        </span>
+      </div>
+      <p className="mt-2 text-sm text-gray-700">{adminSupplyMessageFa(supply.status)}</p>
+      {showLines && lines.length > 0 ? (
+        <ul className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-100" data-testid="admin-order-supply-shortages">
+          {lines.map((line, index) => (
+            <li key={`${line.itemTitle ?? "line"}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
+              <span className="font-semibold text-gray-800">{line.itemTitle || "قلم"}</span>
+              <span className="text-gray-600">
+                لازم {line.required.toLocaleString("fa-IR")}
+                {line.unitCode ? ` ${line.unitCode}` : ""}
+                {" · "}موجود {line.available.toLocaleString("fa-IR")}
+                {" · "}کمبود {line.shortage.toLocaleString("fa-IR")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 

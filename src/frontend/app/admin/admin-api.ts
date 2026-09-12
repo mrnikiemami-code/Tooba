@@ -39,6 +39,7 @@ export interface AdminOrderRow {
   payableAmount: number;
   currency: string;
   createdAt: string;
+  supplyStatus: string;
 }
 
 export interface AdminOrderLine {
@@ -199,6 +200,7 @@ export interface AdminReceiptRow {
   providerCode: string;
   createdAt: string;
   completedAt: string | null;
+  supplyStatus: string;
 }
 
 export interface AdminPaymentOps {
@@ -509,6 +511,11 @@ export function formatAdminStatus(status: string): string {
     Completed: "تکمیل‌شده",
     RefundFailed: "شکست بازگشت وجه",
     RefundProcessing: "بازگشت وجه در انتظار",
+    Reserved: "تأمین‌شده",
+    AvailableForReacquire: "قابل تأمین",
+    Unavailable: "غیرقابل تأمین",
+    PartiallyUnavailable: "تأمین ناقص",
+    NotApplicable: "نامرتبط",
   };
   return labels[status] ?? (status || "نامشخص");
 }
@@ -572,6 +579,7 @@ export function mapAdminOrder(value: unknown): AdminOrderRow | null {
     payableAmount: number(prop(item, "payableAmount", "PayableAmount")),
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     createdAt: text(prop(item, "createdAt", "CreatedAt"), text(prop(item, "submittedAt", "SubmittedAt"))),
+    supplyStatus: text(prop(item, "supplyStatus", "SupplyStatus"), "NotApplicable"),
   };
 }
 
@@ -799,6 +807,7 @@ export function mapAdminReceipt(value: unknown): AdminReceiptRow | null {
     providerCode: text(prop(item, "providerCode", "ProviderCode")),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     completedAt: text(prop(item, "completedAt", "CompletedAt")) || null,
+    supplyStatus: text(prop(item, "supplyStatus", "SupplyStatus"), "NotApplicable"),
   };
 }
 
@@ -1091,6 +1100,64 @@ function mapAdminReviewGridItem(value: unknown): AdminReviewRow | null {
     status: text(prop(item, "status", "Status"), "Pending"),
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
   };
+}
+
+export type AdminOrderSupplyStatus = {
+  checkoutId: string;
+  status: string;
+  lines: Array<{
+    itemTitle: string | null;
+    unitCode: string | null;
+    required: number;
+    available: number;
+    shortage: number;
+    lineStatus: string;
+  }>;
+};
+
+/** تصویر CheckOnly تأمین سفارش — یک درخواست برای جزئیات. */
+export async function loadAdminOrderSupply(checkoutId: string): Promise<AdminResult<AdminOrderSupplyStatus>> {
+  try {
+    const response = await fetch(`/v1/admin/orders/${encodeURIComponent(checkoutId)}/supply-status`, {
+      headers: adminHeaders(),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return { state: "denied", data: null, status: response.status, message: "admin.authorization.denied" };
+    }
+    if (!response.ok) {
+      return { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+    }
+    const item = record(await response.json().catch(() => null));
+    const id = text(prop(item ?? {}, "checkoutId", "CheckoutId"));
+    if (!item || !id) {
+      return { state: "error", data: null, status: response.status, message: "admin.invalid-response" };
+    }
+    const rawLines = prop(item, "lines", "Lines");
+    return {
+      state: "ok",
+      status: response.status,
+      data: {
+        checkoutId: id,
+        status: text(prop(item, "status", "Status"), "NotApplicable"),
+        lines: Array.isArray(rawLines)
+          ? rawLines.flatMap((line) => {
+              const row = record(line);
+              if (!row) return [];
+              return [{
+                itemTitle: text(prop(row, "itemTitle", "ItemTitle")) || null,
+                unitCode: text(prop(row, "unitCode", "UnitCode")) || null,
+                required: number(prop(row, "required", "Required")),
+                available: number(prop(row, "available", "Available")),
+                shortage: number(prop(row, "shortage", "Shortage")),
+                lineStatus: text(prop(row, "lineStatus", "LineStatus"), "NotApplicable"),
+              }];
+            })
+          : [],
+      },
+    };
+  } catch {
+    return { state: "error", data: null, status: 0, message: "host-unreachable" };
+  }
 }
 
 /** Server GridQuery — سفارش‌های Admin. */
