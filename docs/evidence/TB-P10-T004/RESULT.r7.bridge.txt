@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R7
+
+Parent-Task:
+TB-P10-T004-R6
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Canonical Inventory EnsureOrderSupply (CheckOnly / EnsureReviewHold / EnsurePaidDurable / EnsureFulfillmentSupply) with outcomes AlreadyReserved/Reacquired/Unavailable/PartiallyUnavailable/NotApplicable/Conflict and supply statuses Reserved/AvailableForReacquire/Unavailable/PartiallyUnavailable/Fulfilled/NotApplicable. confirm_deposit calls EnsurePaidDurable first; Succeeded only on AlreadyReserved/Reacquired; else inventory.supply.unavailable + «این سفارش در حال حاضر قابل تأمین نیست.»; Released never resurrected; reacquire uses compact ReserveAsync keys. Hold hours from Payment:Gateway (+ OrderSupplyHoldOverrides). GET /v1/admin/orders/{checkoutId}/supply-status is CheckOnly. Runtime A–H ok=true. Focused 17 + guard 4/4. Locks SF-032…040. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…031 preserved; LOCK-SF-032 lifecycle ≠ one reservation instance; LOCK-SF-033 canonical EnsureOrderSupply; LOCK-SF-034 CheckOnly no mutate; LOCK-SF-035 reacquire creates new rows; LOCK-SF-036 auto-reacquire only under policy; LOCK-SF-037 atomic multi-line; LOCK-SF-038 SupplyStatus ≠ Payment/Order status; LOCK-SF-039 Settings hold policy; LOCK-SF-040 UX uses supply outcomes not raw reservation.not_active.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r7-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r7-supply-discovery.md
+
+Supply-Policy-Matrix:
+docs/evidence/TB-P10-T004/r7-supply-policy-matrix.md
+
+Settings-Policy:
+docs/evidence/TB-P10-T004/r7-settings-policy.md
+
+Ensure-Order-Supply:
+docs/evidence/TB-P10-T004/r7-ensure-order-supply.md
+
+Supply-Projection:
+docs/evidence/TB-P10-T004/r7-supply-projection.md
+
+Payment-Confirm-Integration:
+confirm_deposit → OrderSupplyComposer.EnsureAsync(EnsurePaidDurable, allowReacquire); payment Succeeded only after AlreadyReserved/Reacquired
+
+Atomicity:
+docs/evidence/TB-P10-T004/r7-atomicity.md
+
+Concurrency:
+docs/evidence/TB-P10-T004/r7-concurrency.md
+
+Error-Contract:
+docs/evidence/TB-P10-T004/r7-error-contract.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r7-focused-validation.md — OrderSupplyFoundation 5; lifecycle/recovery 12; guard 4; runtime ok
+
+Runtime:
+docs/evidence/TB-P10-T004/r7-runtime.md + r7-runtime-raw.json
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r7-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+TOOBA-LOCKS.md SF-032…040
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r7-recovery-sot.md — Architect R6; Impl R7; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD pending-commit; HEAD==origin/main after push
+
+Architectural-Concerns:
+none for this foundation; remaining Admin Orders/Payments supply UX is a later Architect-issued task
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; no Storefront/Admin redesign
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

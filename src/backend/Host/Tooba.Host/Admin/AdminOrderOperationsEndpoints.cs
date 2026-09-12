@@ -16,6 +16,7 @@ public static class AdminOrderOperationsEndpoints
         var group = app.MapGroup("/v1/admin/orders");
         group.MapGet("/inventory-recovery/audit", AuditInventoryRecoveryAsync);
         group.MapGet("/{checkoutId:guid}/inventory-recovery", AssessInventoryRecoveryAsync);
+        group.MapGet("/{checkoutId:guid}/supply-status", GetOrderSupplyStatusAsync);
         group.MapGet("/{checkoutId:guid}/operations", ListOperationsAsync);
         group.MapPost("/{checkoutId:guid}/operations", ExecuteOperationAsync);
         group.MapGet("/{checkoutId:guid}/return-eligibility", ListReturnEligibilityAsync);
@@ -39,6 +40,12 @@ public static class AdminOrderOperationsEndpoints
         OrderInventoryRecoveryComposer recovery,
         CancellationToken cancellationToken) =>
         Results.Json(await recovery.AssessCheckoutAsync(checkoutId, cancellationToken));
+
+    private static async Task<IResult> GetOrderSupplyStatusAsync(
+        Guid checkoutId,
+        OrderSupplyComposer supply,
+        CancellationToken cancellationToken) =>
+        Results.Json(await supply.GetStatusAsync(checkoutId, cancellationToken));
 
     private static async Task<IResult> ListShippingMethodsAsync(
         FulfillmentDbContext db,

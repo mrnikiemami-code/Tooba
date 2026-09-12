@@ -171,6 +171,7 @@ builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderOperationsComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.OrderInventoryRecoveryComposer>();
+builder.Services.AddScoped<Tooba.Host.Admin.OrderSupplyComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminFulfillmentWorkQueueComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminOrderCompletenessComposer>();
 builder.Services.AddScoped<Tooba.Host.Wishlist.WishlistComposer>();

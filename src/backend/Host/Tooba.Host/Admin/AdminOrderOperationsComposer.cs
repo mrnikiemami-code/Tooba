@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Tooba.AccessControl.Application;
 using Tooba.AccessControl.Domain;
 using Tooba.BuildingBlocks;
 using Tooba.Fulfillment.Application;
+using Tooba.Inventory.Application;
 using Tooba.Fulfillment.Domain;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
@@ -73,8 +74,9 @@ public sealed class AdminOrderOperationsComposer
     private readonly IPaymentAdminDirectory _payments;
     private readonly IOrderPaymentProjection _orderPayments;
     private readonly ISettlementDirectory _settlement;
-    private readonly ShippingMethodsOptions _shippingMethods;
     private readonly OrderInventoryRecoveryComposer _inventoryRecovery;
+    private readonly OrderSupplyComposer _orderSupply;
+    private readonly ShippingMethodsOptions _shippingMethods;
 
     /// <summary>ترکیب‌گر عملیات را به ماژول‌های موجود وصل می‌کند.</summary>
     public AdminOrderOperationsComposer(
@@ -90,6 +92,7 @@ public sealed class AdminOrderOperationsComposer
         IOrderPaymentProjection orderPayments,
         ISettlementDirectory settlement,
         OrderInventoryRecoveryComposer inventoryRecovery,
+        OrderSupplyComposer orderSupply,
         ShippingMethodsOptions? shippingMethods = null)
     {
         _orders = orders;
@@ -104,6 +107,7 @@ public sealed class AdminOrderOperationsComposer
         _orderPayments = orderPayments;
         _settlement = settlement;
         _inventoryRecovery = inventoryRecovery;
+        _orderSupply = orderSupply;
         _shippingMethods = shippingMethods ?? new ShippingMethodsOptions();
     }
 
@@ -1625,6 +1629,22 @@ public sealed class AdminOrderOperationsComposer
         var payment = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken)
             ?? throw new PlatformHttpException(400, "پرداختی برای تأیید پیدا نشد.", "payment.missing");
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
+
+        var supply = await _orderSupply.EnsureAsync(
+            checkoutId,
+            OrderSupplyMode.EnsurePaidDurable,
+            allowReacquire: true,
+            reason: "confirm_deposit",
+            cancellationToken);
+        if (supply.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable
+            || supply.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable)
+        {
+            throw new PlatformHttpException(
+                400,
+                "این سفارش در حال حاضر قابل تأمین نیست.",
+                "inventory.supply.unavailable");
+        }
+
         try
         {
             var result = await _payments.ConfirmDepositAsync(payment.PaymentId, cancellationToken);
@@ -1648,16 +1668,15 @@ public sealed class AdminOrderOperationsComposer
         {
             throw new PlatformHttpException(
                 400,
-                "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
-                "inventory.manual_review.unavailable");
+                "این سفارش در حال حاضر قابل تأمین نیست.",
+                "inventory.supply.unavailable");
         }
         catch (InvalidOperationException ex) when (ex.Message is "inventory.reservation.not_active")
         {
-            // Defensive only — normal within-review-window confirm must not surface this.
             throw new PlatformHttpException(
                 400,
-                "موجودی این سفارش در زمان بررسی پرداخت دیگر در دسترس نیست. لطفاً وضعیت سفارش و بازگشت وجه را بررسی کنید.",
-                "inventory.manual_review.unavailable");
+                "این سفارش در حال حاضر قابل تأمین نیست.",
+                "inventory.supply.unavailable");
         }
     }
 

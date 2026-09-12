@@ -1,0 +1,59 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "name": "A-active-review-confirm",
+      "ok": true,
+      "confirm": 200,
+      "paidExpires": null
+    },
+    {
+      "name": "B-released-reacquire-confirm",
+      "ok": true,
+      "confirm": 200,
+      "oldStatus": "Released",
+      "newId": "01a093b2-9e6c-7000-b205-165758712662"
+    },
+    {
+      "name": "C-unavailable-blocks-confirm",
+      "ok": true,
+      "status": 400,
+      "code": "inventory.supply.unavailable",
+      "paymentStatus": "pending"
+    },
+    {
+      "name": "D-checkonly-no-mutate",
+      "ok": true,
+      "status": 200,
+      "kind": "Reserved",
+      "before": "20",
+      "after": "20"
+    },
+    {
+      "name": "E-paid-ensure-durable",
+      "ok": true,
+      "outcome": "Recovered"
+    },
+    {
+      "name": "F-atomic-multiline",
+      "ok": true,
+      "via": "EnsureOrderSupply rollback ReleaseAsync"
+    },
+    {
+      "name": "G-decimal",
+      "ok": true,
+      "via": "PaidOrderReservationLifecycle + qty 1.25 path"
+    },
+    {
+      "name": "H-settings-precedence",
+      "ok": true
+    }
+  ],
+  "at": "2026-09-12T03:39:09.392Z",
+  "secretsOmitted": true
+}

@@ -256,3 +256,30 @@ Inventory recovery mutates reservation bindings only; Payment amounts, settlemen
 
 ### LOCK-SF-031 — No automatic mass recovery on startup/migration
 Historical audit/recovery runs only via explicit Admin/maintenance commands; never as unbounded EF startup migration.
+
+### LOCK-SF-032 — Order lifecycle is not coupled to one historical Reservation instance
+Guaranteed-supply operations reuse a valid hold or create NEW reservations; Released rows stay immutable history.
+
+### LOCK-SF-033 — Supply-guaranteed operations use canonical Inventory EnsureOrderSupply
+Callers do not invent replacement reservations around Payment/Admin/Fulfillment; they call EnsureOrderSupply.
+
+### LOCK-SF-034 — CheckOnly never mutates inventory
+GetOrderSupplyStatus / Mode=CheckOnly is side-effect-free.
+
+### LOCK-SF-035 — Reacquire always creates new reservations
+Released -> Held is forbidden. Reacquire uses ReserveAsync.
+
+### LOCK-SF-036 — Auto-reacquire only under explicit operation policy
+Confirm/late-confirm/paid-recovery/restore-allowed/recovery command may reacquire; arbitrary view/cart/cancelled/refunded/fulfilled may not.
+
+### LOCK-SF-037 — Whole-order supply recovery is atomic
+All remaining lines succeed or newly acquired reservations from the attempt are released.
+
+### LOCK-SF-038 — SupplyStatus is distinct from PaymentStatus/OrderStatus
+Reserved/AvailableForReacquire/Unavailable/PartiallyUnavailable/Fulfilled/NotApplicable.
+
+### LOCK-SF-039 — Hold durations resolve from Settings
+Payment:Gateway hold hours + OrderSupplyHoldOverrides; no magic business TTL in new code. Cart start timing unchanged in R7.
+
+### LOCK-SF-040 — UX consumes supply outcomes, not raw reservation state
+Normal Admin/customer UI must not receive reservation.not_active / Held / Released / GUID.

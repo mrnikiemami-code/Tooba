@@ -1,0 +1,1 @@
+﻿IInventoryDirectory.EnsureOrderSupplyAsync + OrderSupplyComposer facade. Modes CheckOnly/EnsureReviewHold/EnsurePaidDurable/EnsureFulfillmentSupply. Outcomes AlreadyReserved/Reacquired/Unavailable/PartiallyUnavailable/NotApplicable/Conflict. Released never resurrected; rollback ReleaseAsync on failure.

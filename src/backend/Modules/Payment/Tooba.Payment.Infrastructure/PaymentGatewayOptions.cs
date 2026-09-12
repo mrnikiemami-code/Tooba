@@ -1,4 +1,4 @@
-namespace Tooba.Payment.Infrastructure;
+﻿namespace Tooba.Payment.Infrastructure;
 
 /// <summary>
 /// پیکربندی درگاه پرداخت: Payment:Gateway
@@ -83,6 +83,26 @@ public sealed class PaymentGatewayOptions
     public int ManualPaymentReviewHoldHours { get; set; } = 24;
 
     /// <summary>
+    /// مهلت‌های تأمین سفارش (platform/store). اولویت با override صریح روش پرداخت است.
+    /// </summary>
+    public OrderSupplyHoldOverrideOptions? OrderSupplyHoldOverrides { get; set; }
+
+    /// <summary>
+    /// مهلت اولیهٔ نگهداری قبل از ثبت مدرک دستی (ساعت) — foundation R7؛ زمان شروع Cart را عوض نمی‌کند.
+    /// </summary>
+    public int ManualPaymentInitialHoldHours { get; set; } = 2;
+
+    /// <summary>
+    /// مهلت نگهداری پس از commit سفارش آنلاین تا تکمیل درگاه (ساعت).
+    /// </summary>
+    public int OnlinePaymentHoldHours { get; set; } = 2;
+
+    /// <summary>
+    /// مهلت سبد/پیش‌سفارش (دقیقه) — فقط مستندسازی/تنظیم؛ شروع رزرو سبد در R7 تغییر نمی‌کند.
+    /// </summary>
+    public int CartHoldMinutes { get; set; } = 30;
+
+    /// <summary>
     /// الزام مدرک را به مقدار پایدار نگاشت می‌کند.
     /// </summary>
     public string NormalizedManualProofRequirement()
@@ -97,4 +117,18 @@ public sealed class PaymentGatewayOptions
 
         return "Optional";
     }
+}
+
+/// <summary>Override سطح فروشگاه برای مهلت‌های تأمین.</summary>
+public sealed class OrderSupplyHoldOverrideOptions
+{
+    /// <summary>بازبینی دستی.</summary>
+    /// <summary>بازبینی دستی.</summary>
+    public int? ManualPaymentReviewHoldHours { get; set; }
+    /// <summary>مهلت اولیه دستی.</summary>
+    public int? ManualPaymentInitialHoldHours { get; set; }
+    /// <summary>مهلت آنلاین.</summary>
+    public int? OnlinePaymentHoldHours { get; set; }
+    /// <summary>مهلت سبد.</summary>
+    public int? CartHoldMinutes { get; set; }
 }

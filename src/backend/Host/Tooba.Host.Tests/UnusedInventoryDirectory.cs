@@ -54,4 +54,15 @@ internal sealed class UnusedInventoryDirectory : IInventoryDirectory
         DateTimeOffset reviewExpiresAt,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException();
+
+    public Task<EnsureOrderSupplyResult> EnsureOrderSupplyAsync(
+        EnsureOrderSupplyRequest request,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+
+    public Task<OrderSupplyStatus> GetOrderSupplyStatusAsync(
+        Guid checkoutId,
+        IReadOnlyList<OrderSupplyLineInput> lines,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }

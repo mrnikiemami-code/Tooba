@@ -128,4 +128,17 @@ public interface IInventoryDirectory
         Guid reservationId,
         DateTimeOffset reviewExpiresAt,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// قابلیت مرکزی تأمین سفارش: reuse hold معتبر یا بازگیری authoritative (بدون زنده کردن Released).
+    /// </summary>
+    Task<EnsureOrderSupplyResult> EnsureOrderSupplyAsync(
+        EnsureOrderSupplyRequest request,
+        CancellationToken cancellationToken);
+
+    /// <summary>تصویر تأمین بدون mutation (CheckOnly).</summary>
+    Task<OrderSupplyStatus> GetOrderSupplyStatusAsync(
+        Guid checkoutId,
+        IReadOnlyList<OrderSupplyLineInput> lines,
+        CancellationToken cancellationToken);
 }
