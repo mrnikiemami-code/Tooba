@@ -1,0 +1,16 @@
+{
+  "taskId": "TB-P10-T004-R15",
+  "serverClock": "2026-09-13T10:00:00Z",
+  "cases": {
+    "A": { "ok": true, "cycleNumber": 1, "status": "Active", "initialMinutes": 10 },
+    "B": { "ok": true, "cycleNumber": 1, "expiresAtUnchanged": "2026-09-13T10:10:00Z" },
+    "C": { "ok": true, "status": "Expired", "closedAt": "2026-09-13T10:10:00Z" },
+    "D": { "ok": true, "cycleNumber": 2, "retryMinutes": 5 },
+    "E": { "ok": true, "active": null, "reacquireFailed": true, "created": 3 },
+    "F": { "ok": true, "max": 3, "code": "inventory.reservation.retry_limit_reached" },
+    "G": { "ok": true, "status": "CommittedPaid" },
+    "H": { "ok": true, "manualReviewSameCycleNumber": 1 },
+    "I": { "ok": true, "initial": 3, "retry": 2, "max": 2 },
+    "J": { "ok": true, "quantity": 1.25 }
+  }
+}

@@ -31,6 +31,7 @@ public sealed class CustomerPanelComposer
     private readonly IIdentityContactLookup _identityContacts;
     private readonly OrderSupplyComposer? _supply;
     private readonly IPaymentExpiryDirectory? _expiry;
+    private readonly ReservationCycleCoordinator? _cycles;
 
     /// <summary>
     /// ترکیب‌گر را با مرزهای خواندن مستقل می‌سازد.
@@ -45,7 +46,8 @@ public sealed class CustomerPanelComposer
         ICustomerProfileDirectory profiles,
         IIdentityContactLookup identityContacts,
         OrderSupplyComposer? supply = null,
-        IPaymentExpiryDirectory? expiry = null)
+        IPaymentExpiryDirectory? expiry = null,
+        ReservationCycleCoordinator? cycles = null)
     {
         _orders = orders;
         _catalog = catalog;
@@ -56,6 +58,7 @@ public sealed class CustomerPanelComposer
         _profiles = profiles;
         _supply = supply;
         _expiry = expiry;
+        _cycles = cycles;
         _identityContacts = identityContacts;
     }
 
@@ -272,12 +275,14 @@ public sealed class CustomerPanelComposer
             throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
         }
 
-        var result = await _supply.EnsureAsync(
-            checkoutId,
-            OrderSupplyMode.EnsureUnpaidRetryHold,
-            allowReacquire: true,
-            reason: "unpaid-retry",
-            cancellationToken);
+        var result = _cycles is not null
+            ? await _cycles.EnsureRetryAfterExpiryAsync(checkoutId, cancellationToken)
+            : await _supply.EnsureAsync(
+                checkoutId,
+                OrderSupplyMode.EnsureUnpaidRetryHold,
+                allowReacquire: true,
+                reason: "unpaid-retry",
+                cancellationToken);
         if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
             || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
         {

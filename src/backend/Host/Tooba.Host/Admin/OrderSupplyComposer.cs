@@ -24,6 +24,7 @@ public sealed class OrderSupplyComposer
     private readonly FulfillmentDbContext _fulfillmentDb;
     private readonly PaymentGatewayOptions _paymentGateway;
     private readonly ICommerceHoldPolicy? _holdPolicy;
+    private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
     public OrderSupplyComposer(
         OrderDbContext orders,
@@ -31,7 +32,8 @@ public sealed class OrderSupplyComposer
         IFulfillmentDirectory fulfillment,
         FulfillmentDbContext fulfillmentDb,
         IOptions<PaymentGatewayOptions> paymentGateway,
-        ICommerceHoldPolicy? holdPolicy = null)
+        ICommerceHoldPolicy? holdPolicy = null,
+        IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _orders = orders;
         _inventory = inventory;
@@ -39,6 +41,7 @@ public sealed class OrderSupplyComposer
         _fulfillmentDb = fulfillmentDb;
         _paymentGateway = paymentGateway.Value;
         _holdPolicy = holdPolicy;
+        _cyclePolicy = cyclePolicy;
     }
 
     public DateTimeOffset ResolveManualReviewExpiresAt()
@@ -65,6 +68,25 @@ public sealed class OrderSupplyComposer
         }
 
         return ResolveManualReviewExpiresAt();
+    }
+
+    private async Task<DateTimeOffset> ResolveRetryExpiresAtAsync(
+        CheckoutGroup group,
+        CancellationToken cancellationToken)
+    {
+        if (_cyclePolicy is not null)
+        {
+            var policy = await _cyclePolicy.ResolveAsync(
+                group.SellerOrders
+                    .Where(x => x.Status != SellerOrderStatus.Cancelled)
+                    .SelectMany(x => x.Lines)
+                    .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                    .ToArray(),
+                cancellationToken);
+            return DateTimeOffset.UtcNow.AddMinutes(policy.RetryHoldMinutes);
+        }
+
+        return ResolveUnpaidRetryExpiresAt();
     }
 
     public async Task<OrderSupplyStatus> GetStatusAsync(Guid checkoutId, CancellationToken cancellationToken)
@@ -157,7 +179,8 @@ public sealed class OrderSupplyComposer
         DateTimeOffset? reviewExpires = mode switch
         {
             OrderSupplyMode.EnsureReviewHold => ResolveManualReviewExpiresAt(),
-            OrderSupplyMode.EnsureUnpaidRetryHold => ResolveUnpaidRetryExpiresAt(),
+            OrderSupplyMode.EnsureUnpaidRetryHold when allowReacquire =>
+                await ResolveRetryExpiresAtAsync(group, cancellationToken),
             _ => null,
         };
         var result = await _inventory.EnsureOrderSupplyAsync(

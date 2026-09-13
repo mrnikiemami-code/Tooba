@@ -572,6 +572,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status403Forbidden, "Forbidden", "payment.sandbox.unavailable");
         }
 
+        if (text.Contains("تعداد دفعات مجاز رزرو مجدد", StringComparison.Ordinal)
+            || text.Contains("inventory.reservation.retry_limit_reached", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "inventory.reservation.retry_limit_reached");
+        }
+
         if (text.Contains("این سفارش در حال حاضر قابل تأمین نیست.", StringComparison.Ordinal)
             || text.Contains("inventory.supply.unavailable", StringComparison.Ordinal))
         {
@@ -601,6 +607,8 @@ public static class StorefrontEndpoints
         "payment.proof.foreign" => "مدرک پرداخت معتبر نیست.",
         "payment.sandbox.unavailable" => "درگاه آزمایشی در این محیط در دسترس نیست.",
         "payment.unpaid.supply_unavailable" => "این سفارش در حال حاضر قابل تأمین نیست.",
+        "inventory.reservation.retry_limit_reached" =>
+            "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.",
         "payment.unpaid.retry.invalid" => "مهلت پرداخت این سفارش به پایان رسیده است.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };

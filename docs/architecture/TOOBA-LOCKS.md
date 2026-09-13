@@ -388,3 +388,30 @@ A checkout with any Succeeded Payment cannot start a new online/manual/wallet/sa
 
 ### LOCK-SF-075 — Duplicate success delivery is not a new initiation
 Idempotent replay of the same Succeeded payment/key or Verify callback remains 200 without a new attempt. A new idempotency key or provider after success is `payment.already_succeeded` (409), never 200.
+
+### LOCK-SF-076 — Reservation Cycle is not a Payment Attempt
+An Order-level Reservation Cycle is a distinct auditable lifetime. Creating or failing a Payment Attempt never opens, closes, numbers, or extends a cycle.
+
+### LOCK-SF-077 — Failed attempts inside an active cycle never reset the deadline
+While a cycle is Active, payment retries keep the same CycleNumber and the same server `ExpiresAt`. Timer reset/extension is forbidden.
+
+### LOCK-SF-078 — A new cycle starts only after the previous cycle ended and EnsureOrderSupply succeeds
+Retry after expiry calls canonical `EnsureOrderSupply`. A new numbered cycle is created only when reacquire is atomic and successful. Released/Expired reservation rows stay historical.
+
+### LOCK-SF-079 — Cycle history is immutable and CycleNumber is monotonic
+Cycle N never becomes N+1. Closed cycles are not rewritten. Concurrency cannot allocate duplicate cycle numbers for the same Order. Failed reacquire does not consume a cycle number.
+
+### LOCK-SF-080 — Initial and retry hold policies are distinct
+`InitialReservationHoldMinutes` applies to Cycle #1. `RetryReservationHoldMinutes` applies to later cycles. Magic TTLs in callers are forbidden.
+
+### LOCK-SF-081 — Reservation-cycle policy precedence is Offer > Category > Store > Platform
+Effective minutes and max cycles resolve Offer override, then Category, then Store, then Platform defaults.
+
+### LOCK-SF-082 — Multi-line orders use the shortest TTL and the strictest max cycles
+The Order takes the minimum Initial/Retry minutes and the minimum MaxReservationCycles across required lines. Supply remains atomic.
+
+### LOCK-SF-083 — MaxReservationCycles includes the initial cycle
+With Max=3 the Order may have #1 initial plus two retries. A further reacquire is `inventory.reservation.retry_limit_reached`.
+
+### LOCK-SF-084 — Frontend countdown is presentation only
+Server `ExpiresAt` and server now are authoritative. The client must not expire, extend, or release inventory. R15 does not add a lifecycle `setInterval`.

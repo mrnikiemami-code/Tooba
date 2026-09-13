@@ -40,6 +40,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>override فروشگاه برای ماندگاری سبد و مهلت پرداخت.</summary>
     public DbSet<StoreHoldPolicySettings> StoreHoldPolicySettings => Set<StoreHoldPolicySettings>();
 
+    /// <summary>override چرخه رزرو Offer/Category.</summary>
+    public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
+
     /// <summary>
     /// گونه‌های Catalog.
     /// </summary>
@@ -523,6 +526,15 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("store_hold_policy_settings");
             entity.HasKey(x => x.SettingsId);
             entity.Property(x => x.SettingsId).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>
+        {
+            entity.ToTable("reservation_cycle_policy_overrides");
+            entity.HasKey(x => x.OverrideId);
+            entity.Property(x => x.OverrideId).ValueGeneratedNever();
+            entity.Property(x => x.ScopeKind).HasMaxLength(16);
+            entity.HasIndex(x => new { x.ScopeKind, x.ScopeId }).IsUnique();
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

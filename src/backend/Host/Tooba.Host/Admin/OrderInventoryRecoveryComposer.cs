@@ -27,6 +27,8 @@ public sealed class OrderInventoryRecoveryComposer
     private readonly IPaymentAdminDirectory _payments;
     private readonly ICheckoutDirectory _checkout;
     private readonly PaymentGatewayOptions _gateway;
+    private readonly IReservationCycleDirectory? _cycles;
+    private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
     public OrderInventoryRecoveryComposer(
         OrderDbContext orders,
@@ -34,7 +36,9 @@ public sealed class OrderInventoryRecoveryComposer
         IFulfillmentDirectory fulfillment,
         IPaymentAdminDirectory payments,
         ICheckoutDirectory checkout,
-        IOptions<PaymentGatewayOptions> gateway)
+        IOptions<PaymentGatewayOptions> gateway,
+        IReservationCycleDirectory? cycles = null,
+        IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _orders = orders;
         _inventory = inventory;
@@ -42,6 +46,8 @@ public sealed class OrderInventoryRecoveryComposer
         _payments = payments;
         _checkout = checkout;
         _gateway = gateway.Value;
+        _cycles = cycles;
+        _cyclePolicy = cyclePolicy;
     }
 
     public async Task<OrderInventoryRecoveryAuditPage> AuditAsync(int take, CancellationToken cancellationToken)
@@ -126,6 +132,36 @@ public sealed class OrderInventoryRecoveryComposer
 
             await _orders.SaveChangesAsync(cancellationToken);
             await _fulfillment.RebindActiveReservationsFromOrderAsync(checkoutId, cancellationToken);
+            if (_cycles is not null)
+            {
+                var now = DateTimeOffset.UtcNow;
+                var policy = _cyclePolicy is null
+                    ? new ReservationCyclePolicySnapshot(120, 120, 3, "platform")
+                    : await _cyclePolicy.ResolveAsync(
+                        group.SellerOrders.SelectMany(x => x.Lines)
+                            .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                            .ToArray(),
+                        cancellationToken);
+                await _cycles.StartAsync(
+                    checkoutId,
+                    ReservationCycleReason.HistoricalRecovery,
+                    now,
+                    now.AddMinutes(Math.Max(1, policy.InitialHoldMinutes)),
+                    policy,
+                    acquired,
+                    actor: "historical-recovery",
+                    correlationId: $"cycle-hist:{checkoutId:N}",
+                    paymentAttemptId: null,
+                    cancellationToken);
+                if (assessment.ClassCode == "B")
+                {
+                    await _cycles.CloseActiveAsync(
+                        checkoutId,
+                        ReservationCycleStatus.CommittedPaid,
+                        now,
+                        cancellationToken);
+                }
+            }
             await _checkout.AddNoteAsync(checkoutId, actorUserId,
                 $"{NotePrefixSucceeded} class={assessment.ClassCode} lines={assessment.Lines.Count}", cancellationToken);
 

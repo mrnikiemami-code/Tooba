@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
+using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Application;
@@ -15,14 +16,22 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
 {
     private readonly OrderDbContext _db;
     private readonly IInventoryDirectory _inventory;
+    private readonly IReservationCycleDirectory? _cycles;
+    private readonly IReservationCyclePolicyResolver? _cyclePolicy;
 
     /// <summary>
     /// پل را به schema order و قرارداد Inventory وصل می‌کند.
     /// </summary>
-    public OrderPaymentBridge(OrderDbContext db, IInventoryDirectory inventory)
+    public OrderPaymentBridge(
+        OrderDbContext db,
+        IInventoryDirectory inventory,
+        IReservationCycleDirectory? cycles = null,
+        IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _db = db;
         _inventory = inventory;
+        _cycles = cycles;
+        _cyclePolicy = cyclePolicy;
     }
 
     /// <inheritdoc />
@@ -92,6 +101,10 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
         try
         {
             await EnsurePaidDurableOrKeepPaidAsync(group, cancellationToken);
+            if (_cycles is not null)
+            {
+                await CommitPaidCycleAsync(group, cancellationToken);
+            }
         }
         catch (Exception)
         {
@@ -172,6 +185,42 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
             }
         }
 
+        if (_cycles is not null)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var reservationIds = group.SellerOrders.SelectMany(x => x.Lines)
+                .Where(x => x.ReservationId is not null)
+                .Select(x => x.ReservationId!.Value)
+                .Distinct()
+                .ToArray();
+            var active = await _cycles.GetActiveAsync(checkoutId, cancellationToken);
+            if (active is not null)
+            {
+                await _cycles.TransitionManualReviewAsync(checkoutId, reviewExpiresAt, now, cancellationToken);
+            }
+            else
+            {
+                var policy = _cyclePolicy is null
+                    ? new ReservationCyclePolicySnapshot(120, 120, 3, "platform")
+                    : await _cyclePolicy.ResolveAsync(
+                        group.SellerOrders.SelectMany(x => x.Lines)
+                            .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                            .ToArray(),
+                        cancellationToken);
+                await _cycles.StartAsync(
+                    checkoutId,
+                    ReservationCycleReason.ManualReview,
+                    now,
+                    reviewExpiresAt,
+                    policy,
+                    reservationIds,
+                    actor: "manual-review",
+                    correlationId: $"cycle-review:{checkoutId:N}",
+                    paymentAttemptId: null,
+                    cancellationToken);
+            }
+        }
+
         await _db.SaveChangesAsync(cancellationToken);
     }
 
@@ -202,6 +251,58 @@ public sealed class OrderPaymentBridge : IPayableCheckoutReader, IOrderPaymentPr
 
             await _inventory.ReleaseAsync(reservationId, cancellationToken);
         }
+
+        if (_cycles is not null)
+        {
+            await _cycles.CloseActiveAsync(
+                checkoutId,
+                ReservationCycleStatus.ReleasedByPolicy,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+        }
+    }
+
+    private async Task CommitPaidCycleAsync(CheckoutGroup group, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var active = await _cycles!.GetActiveAsync(group.CheckoutId, cancellationToken);
+        if (active is null)
+        {
+            var policy = _cyclePolicy is null
+                ? new ReservationCyclePolicySnapshot(120, 120, 3, "platform")
+                : await _cyclePolicy.ResolveAsync(
+                    group.SellerOrders.SelectMany(x => x.Lines)
+                        .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                        .ToArray(),
+                    cancellationToken);
+            var reservationIds = group.SellerOrders.SelectMany(x => x.Lines)
+                .Where(x => x.ReservationId is not null)
+                .Select(x => x.ReservationId!.Value)
+                .Distinct()
+                .ToArray();
+            if (reservationIds.Length == 0)
+            {
+                return;
+            }
+
+            await _cycles.StartAsync(
+                group.CheckoutId,
+                ReservationCycleReason.LatePaymentRecovery,
+                now,
+                now.AddMinutes(Math.Max(1, policy.RetryHoldMinutes)),
+                policy,
+                reservationIds,
+                actor: "late-captured-payment",
+                correlationId: $"cycle-late:{group.CheckoutId:N}",
+                paymentAttemptId: null,
+                cancellationToken);
+        }
+
+        await _cycles.CloseActiveAsync(
+            group.CheckoutId,
+            ReservationCycleStatus.CommittedPaid,
+            now,
+            cancellationToken);
     }
 
     private async Task EnsurePaidDurableOrKeepPaidAsync(

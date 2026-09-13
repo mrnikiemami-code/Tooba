@@ -46,6 +46,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly ISellerOrderCancelFulfillmentGate _cancelFulfillmentGate;
     private readonly IReturnPolicyResolver _returnPolicies;
     private readonly ICheckoutReservationHoldPolicy? _holdPolicy;
+    private readonly IReservationCycleDirectory? _cycles;
+    private readonly IReservationCyclePolicyResolver? _cyclePolicy;
     private readonly IInventoryAvailabilityGateway _availability;
 
     /// <summary>
@@ -65,7 +67,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         ISellerOrderCancelFulfillmentGate cancelFulfillmentGate,
         IReturnPolicyResolver? returnPolicies = null,
         ICheckoutReservationHoldPolicy? holdPolicy = null,
-        IInventoryAvailabilityGateway? availability = null)
+        IInventoryAvailabilityGateway? availability = null,
+        IReservationCycleDirectory? cycles = null,
+        IReservationCyclePolicyResolver? cyclePolicy = null)
     {
         _db = db;
         _guard = guard;
@@ -80,6 +84,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _cancelFulfillmentGate = cancelFulfillmentGate;
         _returnPolicies = returnPolicies ?? new ReturnPolicyResolver(new ReturnPolicyOptions());
         _holdPolicy = holdPolicy;
+        _cycles = cycles;
+        _cyclePolicy = cyclePolicy;
         _availability = availability
             ?? inventory as IInventoryAvailabilityGateway
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
@@ -184,6 +190,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         {
             reservations = await ReserveCartLinesForOrderAsync(cart, now, cancellationToken);
             BindReservationsToOrders(group, cart, reservations);
+            await PrepareInitialCycleAsync(group, command.Mode, reservations.Values, now, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
         catch
@@ -326,6 +333,17 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             }
         }
 
+        if (_cycles is not null
+            && group.SellerOrders.Where(x => x.SellerOrderId != sellerOrderId)
+                .All(x => x.Status == SellerOrderStatus.Cancelled))
+        {
+            await _cycles.CloseActiveAsync(
+                group.CheckoutId,
+                ReservationCycleStatus.ReleasedByCancel,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+        }
+
         if (SellerOrderCancellationPolicy.IsOpenCancellable(order.Status))
         {
             order.Cancel();
@@ -389,6 +407,36 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             }
 
             await _db.SaveChangesAsync(cancellationToken);
+            if (_cycles is not null)
+            {
+                var policy = await ResolveCyclePolicyAsync(
+                    group.SellerOrders.SelectMany(x => x.Lines)
+                        .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                        .ToArray(),
+                    cancellationToken);
+                var reservationIds = acquired.Count > 0
+                    ? acquired
+                    : group.SellerOrders.SelectMany(x => x.Lines)
+                        .Where(x => x.ReservationId is not null)
+                        .Select(x => x.ReservationId!.Value)
+                        .ToList();
+                await _cycles.StartAsync(
+                    checkoutId,
+                    ReservationCycleReason.Restore,
+                    DateTimeOffset.UtcNow,
+                    DateTimeOffset.UtcNow.AddMinutes(Math.Max(1, policy.InitialHoldMinutes)),
+                    policy,
+                    reservationIds,
+                    actor: "restore",
+                    correlationId: $"cycle-restore:{checkoutId:N}",
+                    paymentAttemptId: null,
+                    cancellationToken);
+                await _cycles.CloseActiveAsync(
+                    checkoutId,
+                    ReservationCycleStatus.CommittedPaid,
+                    DateTimeOffset.UtcNow,
+                    cancellationToken);
+            }
         }
         catch
         {
@@ -531,7 +579,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var expiresAt = _holdPolicy?.ResolveInitialExpiresAt(now) ?? now.AddHours(2);
+        var expiresAt = await ResolveInitialCycleExpiresAtAsync(cart, now, cancellationToken);
         var stock = await _availability.GetAvailabilityBatchAsync(
             cart.Lines.Select(x => x.OfferId).Distinct().ToArray(),
             cancellationToken);
@@ -606,6 +654,65 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             orderLine.ReplaceReservation(reservationId);
             unused.Remove(orderLine);
         }
+    }
+
+    private async Task PrepareInitialCycleAsync(
+        CheckoutGroup group,
+        OrderMode mode,
+        IEnumerable<Guid> reservationIds,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (_cycles is null)
+        {
+            return;
+        }
+
+        var policy = await ResolveCyclePolicyAsync(
+            group.SellerOrders.SelectMany(x => x.Lines)
+                .Select(x => new ReservationCyclePolicyLine(x.OfferId, x.CategoryIdSnapshot))
+                .ToArray(),
+            cancellationToken);
+        _cycles.PrepareStart(
+            group.CheckoutId,
+            mode == OrderMode.OnlinePurchase
+                ? ReservationCycleReason.InitialPayment
+                : ReservationCycleReason.ManualInitial,
+            now,
+            now.AddMinutes(policy.InitialHoldMinutes),
+            policy,
+            reservationIds.Distinct().ToArray(),
+            actor: "order-commit",
+            correlationId: $"cycle:{group.CheckoutId:N}:1",
+            paymentAttemptId: null);
+    }
+
+    private async Task<DateTimeOffset> ResolveInitialCycleExpiresAtAsync(
+        CartSnapshot cart,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (_cyclePolicy is not null)
+        {
+            var policy = await ResolveCyclePolicyAsync(
+                cart.Lines.Select(x => new ReservationCyclePolicyLine(x.OfferId, null)).ToArray(),
+                cancellationToken);
+            return now.AddMinutes(policy.InitialHoldMinutes);
+        }
+
+        return _holdPolicy?.ResolveInitialExpiresAt(now) ?? now.AddHours(2);
+    }
+
+    private async Task<ReservationCyclePolicySnapshot> ResolveCyclePolicyAsync(
+        IReadOnlyList<ReservationCyclePolicyLine> lines,
+        CancellationToken cancellationToken)
+    {
+        if (_cyclePolicy is not null)
+        {
+            return await _cyclePolicy.ResolveAsync(lines, cancellationToken);
+        }
+
+        return new ReservationCyclePolicySnapshot(120, 120, 3, "platform");
     }
 
     private async Task ReleaseAcquiredAsync(IEnumerable<Guid> reservationIds, CancellationToken cancellationToken)

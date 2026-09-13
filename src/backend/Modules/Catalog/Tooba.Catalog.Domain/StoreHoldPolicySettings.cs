@@ -21,6 +21,15 @@ public sealed class StoreHoldPolicySettings
     /// <summary>مهلت بررسی مدرک کارت‌به‌کارت.</summary>
     public int? ManualPaymentReviewHoldHours { get; private set; }
 
+    /// <summary>مهلت چرخه رزرو اولیه (دقیقه).</summary>
+    public int? InitialReservationHoldMinutes { get; private set; }
+
+    /// <summary>مهلت چرخه retry (دقیقه).</summary>
+    public int? RetryReservationHoldMinutes { get; private set; }
+
+    /// <summary>سقف تعداد چرخه رزرو شامل اولیه.</summary>
+    public int? MaxReservationCycles { get; private set; }
+
     /// <summary>زمان به‌روزرسانی.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -43,6 +52,19 @@ public sealed class StoreHoldPolicySettings
         OnlinePaymentHoldHours = ClampOptional(onlinePaymentHoldHours, 1, 24 * 30);
         ManualPaymentInitialHoldHours = ClampOptional(manualPaymentInitialHoldHours, 1, 24 * 30);
         ManualPaymentReviewHoldHours = ClampOptional(manualPaymentReviewHoldHours, 1, 24 * 30);
+        UpdatedAt = now;
+    }
+
+    /// <summary>override چرخه رزرو فروشگاه را جدا از مهلت پرداخت ذخیره می‌کند.</summary>
+    public void ReplaceReservationCycle(
+        int? initialReservationHoldMinutes,
+        int? retryReservationHoldMinutes,
+        int? maxReservationCycles,
+        DateTimeOffset now)
+    {
+        InitialReservationHoldMinutes = ClampOptional(initialReservationHoldMinutes, 1, 24 * 60 * 30);
+        RetryReservationHoldMinutes = ClampOptional(retryReservationHoldMinutes, 1, 24 * 60 * 30);
+        MaxReservationCycles = ClampOptional(maxReservationCycles, 1, 20);
         UpdatedAt = now;
     }
 

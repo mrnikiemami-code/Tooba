@@ -1,6 +1,8 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Options;
 using Tooba.BuildingBlocks;
+using Tooba.Order.Application;
+using Tooba.Order.Domain;
 using Tooba.Payment.Application;
 using Tooba.Persistence;
 
@@ -96,14 +98,26 @@ internal sealed class UnpaidOrderExpiryHostedService : BackgroundService
                 assigner.Assign(_workerContext.FromPollTarget(target, Guid.NewGuid().ToString("N")));
                 var expiry = scope.ServiceProvider.GetRequiredService<IPaymentExpiryDirectory>();
                 var projection = scope.ServiceProvider.GetRequiredService<IOrderPaymentProjection>();
+                var cycles = scope.ServiceProvider.GetRequiredService<IReservationCycleDirectory>();
+                var now = DateTimeOffset.UtcNow;
+                await cycles.CloseExpiredDueAsync(now, cancellationToken).ConfigureAwait(false);
                 var checkoutIds = await expiry.ExpireDueUnpaidAsync(
-                    DateTimeOffset.UtcNow,
+                    now,
                     _options.BatchSize,
                     cancellationToken).ConfigureAwait(false);
                 foreach (var checkoutId in checkoutIds.Distinct())
                 {
                     await projection.ReleaseReservationsAfterManualRejectAsync(checkoutId, cancellationToken)
                         .ConfigureAwait(false);
+                    var active = await cycles.GetActiveAsync(checkoutId, cancellationToken).ConfigureAwait(false);
+                    if (active is not null)
+                    {
+                        await cycles.CloseActiveAsync(
+                            checkoutId,
+                            ReservationCycleStatus.ReleasedByPolicy,
+                            now,
+                            cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
                 total += checkoutIds.Count;

@@ -61,6 +61,12 @@ public sealed class OrderDbContext : DbContext
     /// <summary>مشاهده‌های Admin برای قفل حذف یادداشت.</summary>
     public DbSet<CheckoutAdminViewAck> AdminViewAcks => Set<CheckoutAdminViewAck>();
 
+    /// <summary>چرخه‌های رزرو سطح سفارش.</summary>
+    public DbSet<ReservationCycle> ReservationCycles => Set<ReservationCycle>();
+
+    /// <summary>رویدادهای ممیزی چرخه رزرو.</summary>
+    public DbSet<ReservationCycleEvent> ReservationCycleEvents => Set<ReservationCycleEvent>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -193,6 +199,30 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.ViewerUserId).IsRequired();
             entity.Property(x => x.ViewedAt).IsRequired();
             entity.HasIndex(x => new { x.CheckoutId, x.ViewedAt });
+        });
+        modelBuilder.Entity<ReservationCycle>(entity =>
+        {
+            entity.ToTable("reservation_cycles");
+            entity.HasKey(x => x.CycleId);
+            entity.Property(x => x.CycleId).ValueGeneratedNever();
+            entity.Property(x => x.Reason).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32);
+            entity.Property(x => x.Actor).HasMaxLength(128);
+            entity.Property(x => x.CorrelationId).HasMaxLength(128);
+            entity.Property(x => x.PolicySource).HasMaxLength(64);
+            entity.Property(x => x.ReservationIds).HasMaxLength(2048);
+            entity.HasIndex(x => new { x.CheckoutId, x.CycleNumber }).IsUnique();
+            entity.HasIndex(x => x.CorrelationId);
+            entity.HasIndex(x => new { x.CheckoutId, x.Status });
+        });
+        modelBuilder.Entity<ReservationCycleEvent>(entity =>
+        {
+            entity.ToTable("reservation_cycle_events");
+            entity.HasKey(x => x.EventId);
+            entity.Property(x => x.EventId).ValueGeneratedNever();
+            entity.Property(x => x.Kind).HasConversion<string>().HasMaxLength(48);
+            entity.Property(x => x.Detail).HasMaxLength(256);
+            entity.HasIndex(x => new { x.CheckoutId, x.OccurredAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

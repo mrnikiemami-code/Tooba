@@ -116,10 +116,14 @@ builder.Services.AddHostedService<UnpaidOrderExpiryHostedService>();
 builder.Services.AddToobaModules(builder.Configuration, builder.Environment);
 builder.Services.Configure<Tooba.Cart.Application.CartLifetimeOptions>(
     builder.Configuration.GetSection(Tooba.Cart.Application.CartLifetimeOptions.SectionName));
+builder.Services.Configure<Tooba.Order.Application.ReservationCycleOptions>(
+    builder.Configuration.GetSection(Tooba.Order.Application.ReservationCycleOptions.SectionName));
 builder.Services.AddScoped<CommerceHoldPolicy>();
 builder.Services.AddScoped<Tooba.Payment.Application.ICommerceHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Order.Application.ICheckoutReservationHoldPolicy>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
 builder.Services.AddScoped<Tooba.Cart.Application.ICartPersistenceHoursSource>(sp => sp.GetRequiredService<CommerceHoldPolicy>());
+builder.Services.AddScoped<Tooba.Order.Application.IReservationCyclePolicyResolver, ReservationCyclePolicyResolver>();
+builder.Services.AddScoped<ReservationCycleCoordinator>();
 builder.Services.AddScoped<Tooba.Host.Admin.ProductWorkspaceComposer>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminContentGridQueryEngine>();
 builder.Services.AddScoped<Tooba.Host.Grid.AdminPayoutGridQueryEngine>();
@@ -175,7 +179,8 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =
         sp.GetRequiredService<Tooba.Media.Application.IMediaDirectory>(),
         sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Tooba.Host.Storefront.StorefrontPaymentComposer>>(),
         sp.GetRequiredService<Tooba.Host.Admin.OrderSupplyComposer>(),
-        sp.GetRequiredService<Tooba.Payment.Application.IPaymentExpiryDirectory>()));
+        sp.GetRequiredService<Tooba.Payment.Application.IPaymentExpiryDirectory>(),
+        sp.GetRequiredService<ReservationCycleCoordinator>()));
 builder.Services.AddScoped<Tooba.Host.Seller.SellerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Customer.CustomerPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Admin.AdminPanelComposer>();

@@ -28,6 +28,7 @@ public sealed class StorefrontPaymentComposer
     private readonly ILogger<StorefrontPaymentComposer> _logger;
     private readonly OrderSupplyComposer? _supply;
     private readonly IPaymentExpiryDirectory? _expiry;
+    private readonly ReservationCycleCoordinator? _cycles;
 
     /// <summary>
     /// سازندهٔ ترکیب پرداخت ویترین.
@@ -44,7 +45,8 @@ public sealed class StorefrontPaymentComposer
         IMediaDirectory media,
         ILogger<StorefrontPaymentComposer> logger,
         OrderSupplyComposer? supply = null,
-        IPaymentExpiryDirectory? expiry = null)
+        IPaymentExpiryDirectory? expiry = null,
+        ReservationCycleCoordinator? cycles = null)
     {
         _checkouts = checkouts;
         _payments = payments;
@@ -57,6 +59,7 @@ public sealed class StorefrontPaymentComposer
         _logger = logger;
         _supply = supply;
         _expiry = expiry;
+        _cycles = cycles;
     }
 
     /// <summary>
@@ -596,12 +599,14 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
         }
 
-        var result = await _supply.EnsureAsync(
-            checkoutId,
-            OrderSupplyMode.EnsureUnpaidRetryHold,
-            allowReacquire: true,
-            reason: "unpaid-retry",
-            cancellationToken);
+        var result = _cycles is not null
+            ? await _cycles.EnsureRetryAfterExpiryAsync(checkoutId, cancellationToken)
+            : await _supply.EnsureAsync(
+                checkoutId,
+                OrderSupplyMode.EnsureUnpaidRetryHold,
+                allowReacquire: true,
+                reason: "unpaid-retry",
+                cancellationToken);
         if (result.Status is OrderSupplyStatusKind.Unavailable or OrderSupplyStatusKind.PartiallyUnavailable
             || result.Outcome is OrderSupplyOutcome.Unavailable or OrderSupplyOutcome.PartiallyUnavailable)
         {
