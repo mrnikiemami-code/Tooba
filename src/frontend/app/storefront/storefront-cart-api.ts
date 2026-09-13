@@ -189,6 +189,22 @@ export function listCommittedCheckoutProofs(): StorefrontCommittedCheckoutProof[
   });
 }
 
+export function removeCommittedCheckoutProof(checkoutId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const id = checkoutId?.trim();
+  if (!id) {
+    return;
+  }
+  const next = readCommittedCheckoutProofMap();
+  if (!(id in next)) {
+    return;
+  }
+  delete next[id];
+  window.sessionStorage.setItem(COMMITTED_CHECKOUT_PROOFS_KEY, JSON.stringify(next));
+}
+
 export function readCommittedCheckoutProof(checkoutId: string): StorefrontCommittedCheckoutProof | null {
   const id = checkoutId?.trim();
   if (!id) {

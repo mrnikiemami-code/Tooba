@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { StorefrontCartApiError } from "./storefront-cart-api.ts";
 import {
+  excludeDismissedPendingItems,
   formatCountdown,
   formatCountdownAccessibleLabel,
   mapStorefrontPendingPayments,
@@ -112,4 +113,52 @@ test("pending UX source keeps FA RTL EN LTR and no raw cycle enums", () => {
   assert.doesNotMatch(ui, /setInterval\(\(\) => fetch/);
   assert.match(ui, /heldPay/);
   assert.match(ui, /failedRetryable/);
+  assert.match(ui, /دیگر نمایش نده/);
+  assert.match(ui, /Don't show again/);
+  assert.match(ui, /pending-payment-hide/);
+});
+
+test("dismissed pending checkouts are excluded from the visible list", () => {
+  const page = mapStorefrontPendingPayments({
+    serverTime: "2026-09-13T10:00:00Z",
+    items: [
+      {
+        checkoutId: "keep-1",
+        cartId: "cart-1",
+        orderReference: "SO-1",
+        payableAmount: 1000,
+        currency: "IRR",
+        items: [],
+        paymentPresentation: "failedRetryable",
+        canInitiatePayment: true,
+        primaryAction: "pay",
+        reservationPresentation: "held",
+        secondsRemaining: 500,
+        serverTime: "2026-09-13T10:00:00Z",
+        holdEndsAt: "2026-09-13T10:08:20Z",
+        maxCycles: 3,
+        retryCountRemaining: 2,
+      },
+      {
+        checkoutId: "hide-1",
+        cartId: "cart-2",
+        orderReference: "SO-2",
+        payableAmount: 1000,
+        currency: "IRR",
+        items: [],
+        paymentPresentation: "failedRetryable",
+        canInitiatePayment: true,
+        primaryAction: "pay",
+        reservationPresentation: "held",
+        secondsRemaining: 500,
+        serverTime: "2026-09-13T10:00:00Z",
+        holdEndsAt: "2026-09-13T10:08:20Z",
+        maxCycles: 3,
+        retryCountRemaining: 2,
+      },
+    ],
+  });
+  const visible = excludeDismissedPendingItems(page?.items ?? [], ["hide-1"]);
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0]?.checkoutId, "keep-1");
 });

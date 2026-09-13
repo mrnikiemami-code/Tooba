@@ -1,11 +1,14 @@
 "use client";
 
-import { Clock, CreditCard } from "lucide-react";
+import { Clock, CreditCard, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
+  dismissPendingCheckout,
+  excludeDismissedPendingItems,
+  listDismissedPendingCheckoutIds,
   formatCountdown,
   formatCountdownAccessibleLabel,
   remainingSecondsFromServer,
@@ -34,6 +37,7 @@ function copy(locale: "fa" | "en") {
       ? "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است."
       : "No more inventory reservation retries remain for this order.",
     unavailable: fa ? "این سفارش در حال حاضر قابل تأمین نیست." : "This order cannot be supplied right now.",
+    hide: fa ? "دیگر نمایش نده" : "Don't show again",
     cycle: (n: number) => (fa ? `رزرو ${n}` : `Hold ${n}`),
   };
 }
@@ -100,8 +104,13 @@ export function StorefrontPendingPayments({
   const localizePath = useLocalizedPath();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Record<string, string>>({});
+  const [hiddenIds, setHiddenIds] = useState<string[]>([]);
+  const visibleItems = excludeDismissedPendingItems(items, [
+    ...listDismissedPendingCheckoutIds(),
+    ...hiddenIds,
+  ]);
 
-  if (items.length === 0) {
+  if (visibleItems.length === 0) {
     return null;
   }
 
@@ -133,6 +142,11 @@ export function StorefrontPendingPayments({
     }
   }
 
+  function onHide(item: StorefrontPendingPaymentItem) {
+    dismissPendingCheckout(item.checkoutId);
+    setHiddenIds((current) => (current.includes(item.checkoutId) ? current : [...current, item.checkoutId]));
+  }
+
   return (
     <section className="pt-8 md:pt-10" data-testid="pending-payment-section" dir={locale === "fa" ? "rtl" : "ltr"}>
       <div className="flex items-center gap-2 mb-4">
@@ -140,7 +154,7 @@ export function StorefrontPendingPayments({
         <h2 className="text-base md:text-xl font-black text-gray-900">{labels.title}</h2>
       </div>
       <div className="space-y-3">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const localMessage = messages[item.checkoutId];
           const heldPay = item.reservationPresentation === "held" && item.primaryAction === "pay";
           const statusCopy = heldPay
@@ -210,6 +224,15 @@ export function StorefrontPendingPayments({
                       {labels.retry}
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    data-testid="pending-payment-hide"
+                    className="mt-2 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs md:text-sm font-black hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 whitespace-nowrap"
+                    onClick={() => onHide(item)}
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    {labels.hide}
+                  </button>
                 </div>
               </div>
             </article>

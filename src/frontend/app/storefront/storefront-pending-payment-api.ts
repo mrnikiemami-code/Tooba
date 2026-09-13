@@ -1,8 +1,11 @@
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import {
   listCommittedCheckoutProofs,
+  removeCommittedCheckoutProof,
   StorefrontCartApiError,
 } from "./storefront-cart-api.ts";
+
+const DISMISSED_PENDING_KEY = "tooba.storefront.dismissedPendingCheckouts";
 
 export type StorefrontPendingPaymentLine = {
   title: string;
@@ -117,6 +120,43 @@ export function toCustomerPendingPaymentMessage(error: unknown, locale: "fa" | "
   return fa ? "امکان ادامه پرداخت این سفارش نیست." : "This order cannot continue to payment.";
 }
 
+export function listDismissedPendingCheckoutIds(): string[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(DISMISSED_PENDING_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export function excludeDismissedPendingItems(
+  items: StorefrontPendingPaymentItem[],
+  dismissedIds: Iterable<string> = listDismissedPendingCheckoutIds(),
+): StorefrontPendingPaymentItem[] {
+  const dismissed = new Set(
+    [...dismissedIds].map((value) => value.trim()).filter((value) => value.length > 0),
+  );
+  return items.filter((item) => !dismissed.has(item.checkoutId));
+}
+
+export function dismissPendingCheckout(checkoutId: string): void {
+  const id = checkoutId.trim();
+  if (!id || typeof window === "undefined") {
+    return;
+  }
+  const next = new Set(listDismissedPendingCheckoutIds());
+  next.add(id);
+  window.localStorage.setItem(DISMISSED_PENDING_KEY, JSON.stringify([...next]));
+  removeCommittedCheckoutProof(id);
+}
+
 export function mapStorefrontPendingPayments(payload: unknown): StorefrontPendingPaymentPage | null {
   const root = asRecord(payload);
   if (!root) {
@@ -185,11 +225,14 @@ function mapItem(value: unknown): StorefrontPendingPaymentItem | null {
 }
 
 export async function loadStorefrontPendingPayments(): Promise<StorefrontPendingPaymentPage> {
-  const proofs = listCommittedCheckoutProofs().map((proof) => ({
-    checkoutId: proof.checkoutId,
-    cartId: proof.cartId,
-    guestSecret: proof.guestSecret,
-  }));
+  const dismissed = new Set(listDismissedPendingCheckoutIds());
+  const proofs = listCommittedCheckoutProofs()
+    .filter((proof) => !dismissed.has(proof.checkoutId))
+    .map((proof) => ({
+      checkoutId: proof.checkoutId,
+      cartId: proof.cartId,
+      guestSecret: proof.guestSecret,
+    }));
   const headers = {
     ...customerAuthHeaders(true),
   };
@@ -213,5 +256,8 @@ export async function loadStorefrontPendingPayments(): Promise<StorefrontPending
   if (!mapped) {
     throw new StorefrontCartApiError(500, "pending.invalid", "پاسخ سفارش‌های در انتظار نامعتبر است.");
   }
-  return mapped;
+  return {
+    ...mapped,
+    items: excludeDismissedPendingItems(mapped.items, dismissed),
+  };
 }
