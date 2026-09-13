@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R16
+
+Parent-Task:
+TB-P10-T004-R15
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Cart shows a capability-driven در انتظار پرداخت section independent of Active Cart. Batched POST /v1/storefront/pending-payments projects unpaid owned Orders with server ExpiresAt countdown, pay/retry actions, and Manual AwaitingAdmin informational cards. Failed payment does not reset the hold. Expired retry uses EnsureRetryAfterExpiryAsync on the same Order. Guest uses committed proofs only. Runtime A–K ok=true. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…084 preserved. Added LOCK-SF-085…090 (pending independent of Active Cart; no countdown reset after fail; expired retry only after backend reacquire; capability-driven UI; independently scoped multi-order; no reservation polling).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r16-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r16-customer-pending-payment-discovery.md
+
+Pending-Payment-Projection:
+docs/evidence/TB-P10-T004/r16-pending-payment-projection.md
+
+Cart-Page:
+docs/evidence/TB-P10-T004/r16-cart-page.md
+
+Countdown:
+docs/evidence/TB-P10-T004/r16-countdown.md
+
+Retry-UX:
+docs/evidence/TB-P10-T004/r16-retry-ux.md
+
+Ownership:
+docs/evidence/TB-P10-T004/r16-ownership.md
+
+Network:
+docs/evidence/TB-P10-T004/r16-network.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r16-focused-validation.md — Host 24/24; frontend 30/30; recovery guard 4/4; git diff --check clean
+
+Runtime:
+docs/evidence/TB-P10-T004/r16-runtime.md + r16-runtime-raw.json — A–K PASS
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r16-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-085…090
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r16-recovery-sot.md — Architect R15; Impl R16; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD e3f5d5dbe43d841d035531f4fb3c294327dc1ff4; HEAD==origin/main after push yes; task-owned worktree clean
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO; Cart pending section added without Home/PDP redesign
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
