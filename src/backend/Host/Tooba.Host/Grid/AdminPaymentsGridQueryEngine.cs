@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
+using Tooba.Order.Application;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure.Persistence;
@@ -13,15 +14,18 @@ internal sealed class AdminPaymentsGridQueryEngine
     private readonly PaymentDbContext _payments;
     private readonly OrderDbContext _orders;
     private readonly OrderSupplyComposer _supply;
+    private readonly IReservationCycleDirectory _cycles;
 
     public AdminPaymentsGridQueryEngine(
         PaymentDbContext payments,
         OrderDbContext orders,
-        OrderSupplyComposer supply)
+        OrderSupplyComposer supply,
+        IReservationCycleDirectory cycles)
     {
         _payments = payments;
         _orders = orders;
         _supply = supply;
+        _cycles = cycles;
     }
 
     public async Task<GridPageResponse<AdminReceiptListItem>> QueryAsync(
@@ -51,7 +55,9 @@ internal sealed class AdminPaymentsGridQueryEngine
         {
             q = filter.Field == "supply"
                 ? await ApplySupplyFilterAsync(q, filter, cancellationToken)
-                : ApplyFilter(q, filter);
+                : filter.Field == "reservation"
+                    ? await ApplyReservationFilterAsync(q, filter, cancellationToken)
+                    : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -151,6 +157,14 @@ internal sealed class AdminPaymentsGridQueryEngine
             .ToListAsync(cancellationToken);
         var checkoutMap = checkouts.ToDictionary(x => x.CheckoutId);
         var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
+        var supplyByCheckout = supply.ToDictionary(
+            x => x.Key,
+            x => (string?)x.Value.Status.ToString());
+        var cycles = await _cycles.GetProjectionsAsync(
+            checkoutIds,
+            DateTimeOffset.UtcNow,
+            supplyByCheckout,
+            cancellationToken);
 
         return rows.Select(payment =>
         {
@@ -168,6 +182,9 @@ internal sealed class AdminPaymentsGridQueryEngine
             var supplyStatus = checkout is null
                 ? "NotApplicable"
                 : supply.TryGetValue(payment.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable";
+            var reservation = cycles.TryGetValue(payment.CheckoutId, out var projection)
+                ? AdminReservationCycleMapper.ToSummary(projection)
+                : AdminReservationCycleMapper.EmptySummary();
             return new AdminReceiptListItem(
                 payment.PaymentId,
                 payment.CheckoutId,
@@ -179,8 +196,50 @@ internal sealed class AdminPaymentsGridQueryEngine
                 payment.ProviderCode,
                 payment.CreatedAt,
                 payment.CompletedAt,
-                supplyStatus);
+                supplyStatus,
+                reservation.CompactLabelFa,
+                reservation.CompactLabelEn,
+                reservation.State,
+                reservation.CycleNumber,
+                reservation.RetryPossible,
+                reservation.NeedsReacquire,
+                reservation.RetryLimitReached);
         }).ToList();
+    }
+
+    private async Task<IQueryable<CustomerPayment>> ApplyReservationFilterAsync(
+        IQueryable<CustomerPayment> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var wanted = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (wanted.Count == 0)
+        {
+            return source;
+        }
+
+        var checkoutIds = await source.Select(x => x.CheckoutId).Distinct().ToListAsync(cancellationToken);
+        var supply = await _supply.GetStatusesAsync(checkoutIds, cancellationToken);
+        var supplyByCheckout = supply.ToDictionary(
+            x => x.Key,
+            x => (string?)x.Value.Status.ToString());
+        var cycles = await _cycles.GetProjectionsAsync(
+            checkoutIds,
+            DateTimeOffset.UtcNow,
+            supplyByCheckout,
+            cancellationToken);
+        var match = checkoutIds.Where(id =>
+        {
+            var summary = cycles.TryGetValue(id, out var projection)
+                ? AdminReservationCycleMapper.ToSummary(projection)
+                : AdminReservationCycleMapper.EmptySummary();
+            return wanted.Contains(summary.State) || wanted.Contains(summary.CompactLabelFa);
+        }).ToHashSet();
+        return source.Where(x => match.Contains(x.CheckoutId));
     }
 
     private async Task<IQueryable<CustomerPayment>> ApplySupplyFilterAsync(

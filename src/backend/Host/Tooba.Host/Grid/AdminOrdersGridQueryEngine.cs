@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tooba.BuildingBlocks.Grid;
 using Tooba.Host.Admin;
+using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
@@ -16,17 +17,20 @@ internal sealed class AdminOrdersGridQueryEngine
     private readonly PartyDbContext _parties;
     private readonly ReturnsDbContext _returns;
     private readonly OrderSupplyComposer _supply;
+    private readonly IReservationCycleDirectory _cycles;
 
     public AdminOrdersGridQueryEngine(
         OrderDbContext orders,
         PartyDbContext parties,
         ReturnsDbContext returns,
-        OrderSupplyComposer supply)
+        OrderSupplyComposer supply,
+        IReservationCycleDirectory cycles)
     {
         _orders = orders;
         _parties = parties;
         _returns = returns;
         _supply = supply;
+        _cycles = cycles;
     }
 
     public async Task<GridPageResponse<AdminOrderListItem>> QueryAsync(
@@ -58,7 +62,9 @@ internal sealed class AdminOrdersGridQueryEngine
                     ? await ApplyStatusFilterAsync(q, filter, cancellationToken)
                     : filter.Field == "supply"
                         ? await ApplySupplyFilterAsync(q, filter, cancellationToken)
-                        : ApplyFilter(q, filter);
+                        : filter.Field == "reservation"
+                            ? await ApplyReservationFilterAsync(q, filter, cancellationToken)
+                            : ApplyFilter(q, filter);
         }
 
         var advancedIds = await EvaluateAdvancedAsync(request.AdvancedFilter, cancellationToken);
@@ -421,13 +427,24 @@ internal sealed class AdminOrdersGridQueryEngine
             .GroupBy(x => x.SellerOrderId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ReturnRequest>)g.ToList());
         var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
+        var supplyByCheckout = supply.ToDictionary(
+            x => x.Key,
+            x => (string?)x.Value.Status.ToString());
+        var cycles = await _cycles.GetProjectionsAsync(
+            ids,
+            DateTimeOffset.UtcNow,
+            supplyByCheckout,
+            cancellationToken);
         return rows
             .Where(r => byId.ContainsKey(r.CheckoutId))
             .Select(r => MapOrderListItem(
                 byId[r.CheckoutId],
                 sellerNames,
                 returnsLookup,
-                supply.TryGetValue(r.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable"))
+                supply.TryGetValue(r.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable",
+                cycles.TryGetValue(r.CheckoutId, out var projection)
+                    ? AdminReservationCycleMapper.ToSummary(projection)
+                    : AdminReservationCycleMapper.EmptySummary()))
             .ToList();
     }
 
@@ -454,6 +471,41 @@ internal sealed class AdminOrdersGridQueryEngine
         return source.Where(x => match.Contains(x.CheckoutId));
     }
 
+    private async Task<IQueryable<CheckoutGroup>> ApplyReservationFilterAsync(
+        IQueryable<CheckoutGroup> source,
+        GridFilterRequest filter,
+        CancellationToken cancellationToken)
+    {
+        var wanted = (filter.Values ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filter.Value) ? [] : [filter.Value!])
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (wanted.Count == 0)
+        {
+            return source;
+        }
+
+        var ids = await source.Select(x => x.CheckoutId).ToListAsync(cancellationToken);
+        var supply = await _supply.GetStatusesAsync(ids, cancellationToken);
+        var supplyByCheckout = supply.ToDictionary(
+            x => x.Key,
+            x => (string?)x.Value.Status.ToString());
+        var cycles = await _cycles.GetProjectionsAsync(
+            ids,
+            DateTimeOffset.UtcNow,
+            supplyByCheckout,
+            cancellationToken);
+        var match = ids.Where(id =>
+        {
+            var summary = cycles.TryGetValue(id, out var projection)
+                ? AdminReservationCycleMapper.ToSummary(projection)
+                : AdminReservationCycleMapper.EmptySummary();
+            return wanted.Contains(summary.State) || wanted.Contains(summary.CompactLabelFa);
+        }).ToHashSet();
+        return source.Where(x => match.Contains(x.CheckoutId));
+    }
+
     private async Task<IReadOnlyDictionary<Guid, string>> LoadSellerNamesAsync(
         IReadOnlyCollection<Guid> sellerIds,
         CancellationToken cancellationToken)
@@ -475,9 +527,11 @@ internal sealed class AdminOrdersGridQueryEngine
         CheckoutGroup group,
         IReadOnlyDictionary<Guid, string> sellerNames,
         IReadOnlyDictionary<Guid, IReadOnlyList<ReturnRequest>> returnsBySellerOrder,
-        string supplyStatus = "NotApplicable")
+        string supplyStatus = "NotApplicable",
+        AdminReservationCycleSummary? reservation = null)
     {
         var orders = group.SellerOrders;
+        reservation ??= AdminReservationCycleMapper.EmptySummary();
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         var statuses = orders.Select(x => x.Status).Distinct().ToList();
         var relatedReturns = orders
@@ -501,7 +555,14 @@ internal sealed class AdminOrdersGridQueryEngine
                     ? "Paid"
                     : "PendingPayment",
             composedStatus,
-            string.IsNullOrWhiteSpace(supplyStatus) ? "NotApplicable" : supplyStatus);
+            string.IsNullOrWhiteSpace(supplyStatus) ? "NotApplicable" : supplyStatus,
+            reservation.CompactLabelFa,
+            reservation.CompactLabelEn,
+            reservation.State,
+            reservation.CycleNumber,
+            reservation.RetryPossible,
+            reservation.NeedsReacquire,
+            reservation.RetryLimitReached);
     }
 
     /// <summary>

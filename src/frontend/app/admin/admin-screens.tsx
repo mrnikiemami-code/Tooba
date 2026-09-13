@@ -33,6 +33,7 @@ import {
   type AdminReceiptRow,
 } from "./admin-api";
 import { adminSupplyBadgeClass, formatAdminSupplyStatus, supplyStatusEnumOptions } from "./admin-order-supply";
+import { reservationBadgeClass, reservationStateEnumOptions } from "./admin-reservation-cycle";
 export { AdminOrderDetailScreen } from "./admin-order-detail-screen";
 export { AdminContentScreen } from "./content-list";
 import {
@@ -388,6 +389,21 @@ function createOrderColumns(onOperationCompleted?: () => void): GridColumnDef<Ad
     minWidth: 120,
     filterKind: "status",
     enumOptions: supplyStatusEnumOptions,
+    sortable: true,
+  },
+  {
+    id: "reservation",
+    header: "رزرو موجودی",
+    accessor: (row) => row.reservationState,
+    cell: (row) => (
+      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationBadgeClass(row.reservationState)}`}>
+        {row.reservationLabel || "—"}
+      </span>
+    ),
+    width: 140,
+    minWidth: 118,
+    filterKind: "status",
+    enumOptions: reservationStateEnumOptions,
     sortable: true,
   },
   { id: "amount", header: "قابل پرداخت", accessor: (row) => row.payableAmount, cell: (row) => formatAdminMoney(row.payableAmount, row.currency), width: 150, minWidth: 120, filterKind: "money", sortable: true },
@@ -803,6 +819,30 @@ const receiptColumns: GridColumnDef<AdminReceiptRow>[] = [
     minWidth: 120,
     filterKind: "status",
     enumOptions: supplyStatusEnumOptions,
+    sortable: true,
+  },
+  {
+    id: "reservation",
+    header: "رزرو موجودی",
+    accessor: (row) => row.reservationState,
+    cell: (row) => (
+      <span className="inline-flex max-w-full flex-col gap-0.5">
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationBadgeClass(row.reservationState)}`}>
+          {row.reservationLabel || "—"}
+        </span>
+        {row.reservationRetryLimitReached ? (
+          <span className="text-[10px] text-rose-700">سقف رزرو</span>
+        ) : row.reservationNeedsReacquire ? (
+          <span className="text-[10px] text-amber-800">نیاز به رزرو مجدد</span>
+        ) : row.reservationRetryPossible ? (
+          <span className="text-[10px] text-gray-500">امکان تلاش مجدد</span>
+        ) : null}
+      </span>
+    ),
+    width: 150,
+    minWidth: 124,
+    filterKind: "status",
+    enumOptions: reservationStateEnumOptions,
     sortable: true,
   },
   {

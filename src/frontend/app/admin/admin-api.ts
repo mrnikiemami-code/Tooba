@@ -3,6 +3,14 @@
  */
 import type { GridServerQuery } from "../../design-system/data-grid/types.ts";
 import { postAdminGridQuery, type AdminGridQueryResult } from "../../design-system/app-data-grid/admin-grid-query-client.ts";
+import {
+  emptyReservationSummary,
+  type AdminReservationCycleAudit,
+  type AdminReservationCycleEventView,
+  type AdminReservationCycleHistoryRow,
+  type AdminReservationCycleSummary,
+  type AdminReservationShortageLine,
+} from "./admin-reservation-cycle.ts";
 export const ADMIN_DEV_ACTOR_HEADER = "X-Tooba-Dev-Actor-User-Id";
 export const ADMIN_ACTOR_STORAGE_KEY = "tooba.adminActorUserId";
 export const DEFAULT_ADMIN_ACTOR_ID = "";
@@ -40,6 +48,13 @@ export interface AdminOrderRow {
   currency: string;
   createdAt: string;
   supplyStatus: string;
+  reservationLabel: string;
+  reservationLabelEn: string;
+  reservationState: string;
+  reservationCycleNumber: number | null;
+  reservationRetryPossible: boolean;
+  reservationNeedsReacquire: boolean;
+  reservationRetryLimitReached: boolean;
 }
 
 export interface AdminOrderLine {
@@ -186,6 +201,7 @@ export interface AdminOrderDetail {
   financialEvents: AdminFinancialEvent[];
   financialSummary: AdminFinancialSummary;
   payment?: AdminPaymentOps | null;
+  reservationCycle?: AdminReservationCycleAudit | null;
 }
 
 export interface AdminReceiptRow {
@@ -201,6 +217,13 @@ export interface AdminReceiptRow {
   createdAt: string;
   completedAt: string | null;
   supplyStatus: string;
+  reservationLabel: string;
+  reservationLabelEn: string;
+  reservationState: string;
+  reservationCycleNumber: number | null;
+  reservationRetryPossible: boolean;
+  reservationNeedsReacquire: boolean;
+  reservationRetryLimitReached: boolean;
 }
 
 export interface AdminPaymentOps {
@@ -220,6 +243,13 @@ export interface AdminPaymentOps {
   customerTransferReference?: string | null;
   proofMediaAssetId?: string | null;
   evidenceSubmittedAt?: string | null;
+  reservationLabel?: string;
+  reservationLabelEn?: string;
+  reservationState?: string;
+  reservationCycleNumber?: number | null;
+  reservationRetryPossible?: boolean;
+  reservationNeedsReacquire?: boolean;
+  reservationRetryLimitReached?: boolean;
 }
 
 export interface AdminSellerRow {
@@ -582,6 +612,7 @@ export function mapAdminOrder(value: unknown): AdminOrderRow | null {
     currency: text(prop(item, "currency", "Currency"), "IRR"),
     createdAt: text(prop(item, "createdAt", "CreatedAt"), text(prop(item, "submittedAt", "SubmittedAt"))),
     supplyStatus: text(prop(item, "supplyStatus", "SupplyStatus"), "NotApplicable"),
+    ...mapReservationSummaryFields(item),
   };
 }
 
@@ -759,6 +790,7 @@ export function mapAdminOrderDetail(value: unknown): AdminOrderDetail | null {
     }),
     financialSummary: mapAdminFinancialSummary(prop(item, "financialSummary", "FinancialSummary")),
     payment: mapAdminPaymentOps(prop(item, "payment", "Payment")),
+    reservationCycle: mapAdminReservationCycleAudit(prop(item, "reservationCycle", "ReservationCycle")),
   };
   return enrichAdminOrderDetail(mapped);
 }
@@ -810,6 +842,7 @@ export function mapAdminReceipt(value: unknown): AdminReceiptRow | null {
     createdAt: text(prop(item, "createdAt", "CreatedAt")),
     completedAt: text(prop(item, "completedAt", "CompletedAt")) || null,
     supplyStatus: text(prop(item, "supplyStatus", "SupplyStatus"), "NotApplicable"),
+    ...mapReservationSummaryFields(item),
   };
 }
 
@@ -835,7 +868,100 @@ function mapAdminPaymentOps(value: unknown): AdminPaymentOps | null {
     customerTransferReference: text(prop(item, "customerTransferReference", "CustomerTransferReference")) || null,
     proofMediaAssetId: text(prop(item, "proofMediaAssetId", "ProofMediaAssetId")) || null,
     evidenceSubmittedAt: text(prop(item, "evidenceSubmittedAt", "EvidenceSubmittedAt")) || null,
+    ...mapReservationSummaryFields(item),
   };
+}
+
+function mapReservationSummaryFields(item: Record<string, unknown>): AdminReservationCycleSummary {
+  const fallback = emptyReservationSummary();
+  const cycleRaw = prop(item, "reservationCycleNumber", "ReservationCycleNumber");
+  const cycleNumber = cycleRaw === null || cycleRaw === undefined || cycleRaw === ""
+    ? null
+    : number(cycleRaw);
+  return {
+    reservationLabel: text(prop(item, "reservationLabel", "ReservationLabel"), fallback.reservationLabel),
+    reservationLabelEn: text(prop(item, "reservationLabelEn", "ReservationLabelEn"), fallback.reservationLabelEn),
+    reservationState: text(prop(item, "reservationState", "ReservationState"), fallback.reservationState),
+    reservationCycleNumber: cycleNumber === 0 && (cycleRaw === null || cycleRaw === undefined) ? null : cycleNumber || null,
+    reservationRetryPossible: Boolean(prop(item, "reservationRetryPossible", "ReservationRetryPossible")),
+    reservationNeedsReacquire: Boolean(prop(item, "reservationNeedsReacquire", "ReservationNeedsReacquire")),
+    reservationRetryLimitReached: Boolean(prop(item, "reservationRetryLimitReached", "ReservationRetryLimitReached")),
+  };
+}
+
+export function mapAdminReservationCycleAudit(value: unknown): AdminReservationCycleAudit | null {
+  const item = record(value);
+  if (!item) return null;
+  const statusFa = text(prop(item, "statusLabelFa", "StatusLabelFa"));
+  if (!statusFa) return null;
+  return {
+    statusLabelFa: statusFa,
+    statusLabelEn: text(prop(item, "statusLabelEn", "StatusLabelEn")),
+    reasonLabelFa: text(prop(item, "reasonLabelFa", "ReasonLabelFa"), "—"),
+    reasonLabelEn: text(prop(item, "reasonLabelEn", "ReasonLabelEn"), "—"),
+    currentCycleNumber: optionalNumber(prop(item, "currentCycleNumber", "CurrentCycleNumber")),
+    totalCyclesUsed: number(prop(item, "totalCyclesUsed", "TotalCyclesUsed")),
+    maxCycles: number(prop(item, "maxCycles", "MaxCycles")),
+    retryCountRemaining: number(prop(item, "retryCountRemaining", "RetryCountRemaining")),
+    startedAt: text(prop(item, "startedAt", "StartedAt")) || null,
+    expiresAt: text(prop(item, "expiresAt", "ExpiresAt")) || null,
+    serverTime: text(prop(item, "serverTime", "ServerTime")),
+    secondsRemaining: number(prop(item, "secondsRemaining", "SecondsRemaining")),
+    supplyStatus: text(prop(item, "supplyStatus", "SupplyStatus"), "NotApplicable"),
+    supplyStatusLabelFa: text(prop(item, "supplyStatusLabelFa", "SupplyStatusLabelFa")),
+    retryLimitReached: Boolean(prop(item, "retryLimitReached", "RetryLimitReached")),
+    canRetryReservation: Boolean(prop(item, "canRetryReservation", "CanRetryReservation")),
+    canExtendTimer: Boolean(prop(item, "canExtendTimer", "CanExtendTimer")),
+    history: array(prop(item, "history", "History")).flatMap((raw): AdminReservationCycleHistoryRow[] => {
+      const row = record(raw);
+      if (!row) return [];
+      return [{
+        cycleNumber: number(prop(row, "cycleNumber", "CycleNumber")),
+        statusLabelFa: text(prop(row, "statusLabelFa", "StatusLabelFa")),
+        statusLabelEn: text(prop(row, "statusLabelEn", "StatusLabelEn")),
+        reasonLabelFa: text(prop(row, "reasonLabelFa", "ReasonLabelFa"), "—"),
+        reasonLabelEn: text(prop(row, "reasonLabelEn", "ReasonLabelEn"), "—"),
+        startedAt: text(prop(row, "startedAt", "StartedAt")),
+        expiresAt: text(prop(row, "expiresAt", "ExpiresAt")),
+        endedAt: text(prop(row, "endedAt", "EndedAt")) || null,
+        effectiveHoldMinutes: number(prop(row, "effectiveHoldMinutes", "EffectiveHoldMinutes")),
+        effectiveMaxCycles: number(prop(row, "effectiveMaxCycles", "EffectiveMaxCycles")),
+        policySource: text(prop(row, "policySource", "PolicySource")),
+        policySourceLabelFa: text(prop(row, "policySourceLabelFa", "PolicySourceLabelFa")),
+        policySourceLabelEn: text(prop(row, "policySourceLabelEn", "PolicySourceLabelEn")),
+        paymentAttemptRef: text(prop(row, "paymentAttemptRef", "PaymentAttemptRef")) || null,
+      }];
+    }),
+    events: array(prop(item, "events", "Events")).flatMap((raw): AdminReservationCycleEventView[] => {
+      const row = record(raw);
+      if (!row) return [];
+      return [{
+        kindLabelFa: text(prop(row, "kindLabelFa", "KindLabelFa")),
+        kindLabelEn: text(prop(row, "kindLabelEn", "KindLabelEn")),
+        occurredAt: text(prop(row, "occurredAt", "OccurredAt")),
+        cycleNumber: optionalNumber(prop(row, "cycleNumber", "CycleNumber")),
+        detailFa: text(prop(row, "detailFa", "DetailFa")),
+        detailEn: text(prop(row, "detailEn", "DetailEn")),
+      }];
+    }),
+    shortages: array(prop(item, "shortages", "Shortages")).flatMap((raw): AdminReservationShortageLine[] => {
+      const row = record(raw);
+      if (!row) return [];
+      return [{
+        itemTitle: text(prop(row, "itemTitle", "ItemTitle"), "قلم"),
+        required: number(prop(row, "required", "Required")),
+        available: number(prop(row, "available", "Available")),
+        shortage: number(prop(row, "shortage", "Shortage")),
+        unitCode: text(prop(row, "unitCode", "UnitCode")) || null,
+      }];
+    }),
+  };
+}
+
+function optionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = number(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** فهرست فروشندگان را بدون ایجاد دادهٔ CRM نگاشت می‌کند. */

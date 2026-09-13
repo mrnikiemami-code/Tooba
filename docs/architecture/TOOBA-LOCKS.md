@@ -433,3 +433,21 @@ Each card uses its own committed proof or authenticated ownership, countdown, an
 
 ### LOCK-SF-090 — No polling maintains or decides reservation state
 Per-second or 1.5s API loops for reservation/expiry are forbidden. One refresh at local 00:00, user action, or navigation is allowed.
+
+### LOCK-SF-091 — Admin reservation-cycle audit is immutable backend history
+Admin رزرو موجودی reads `IReservationCycleDirectory` projection + append-only events. Frontend must not reconstruct cycles from current Reservation rows or Payment Attempt counts.
+
+### LOCK-SF-092 — Reservation Cycle status stays distinct from Payment/Order/Supply
+Admin must keep Order Status, Payment Status, SupplyStatus, and Reservation Cycle Status as separate fields. They must not be merged into one overloaded badge.
+
+### LOCK-SF-093 — Admin cannot reset or extend the reservation timer
+No «تمدید رزرو», timer reset, or direct `ExpiresAt` editor. Hold length changes only through a future explicit policy/task.
+
+### LOCK-SF-094 — Admin grid reservation projection is batched
+Orders and Payments grids load reservation summaries with `GetProjectionsAsync`. Per-row cycle/history HTTP or `GetProjectionAsync` inside a page map is forbidden.
+
+### LOCK-SF-095 — Retry-limit and reacquire-failure remain operationally visible
+When max cycles are used or reacquire fails, Admin Order Detail must show the business copy and shortage lines. These events must not be hidden or collapsed into a generic expired row.
+
+### LOCK-SF-096 — Stored cycle policy snapshot is the historical display source
+Effective hold minutes, max cycles, and policy source shown for a past cycle come from that stored cycle. Current Settings must not rewrite historical Admin policy display.

@@ -54,6 +54,15 @@ import {
 } from "./admin-order-completeness";
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { adminSupplyBadgeClass, adminSupplyMessageFa, formatAdminSupplyStatus } from "./admin-order-supply";
+import {
+  formatReservationCountdown,
+  pickReservationLabel,
+  remainingSecondsFromServer,
+  reservationBadgeClass,
+  shouldRefreshOnceAtZero,
+  type AdminReservationCycleAudit,
+  type AdminReservationLocale,
+} from "./admin-reservation-cycle";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -462,15 +471,15 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
     [checkoutId],
   );
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     void loadAdminOrderDetail(checkoutId).then(setResult);
     void loadAdminOrderSupply(checkoutId).then((res) => {
       setSupply(res.state === "ok" ? res.data : null);
     });
     refreshNotes();
     refreshHistory(1, false);
-  };
-  useEffect(refresh, [checkoutId, refreshNotes, refreshHistory]);
+  }, [checkoutId, refreshNotes, refreshHistory]);
+  useEffect(refresh, [checkoutId, refreshNotes, refreshHistory, refresh]);
 
   const openInvoice = async () => {
     setDocError(null);
@@ -564,6 +573,11 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
       {docError ? <p className="mb-3 text-sm text-red-600">{docError}</p> : null}
       <InventoryRecoveryBanner checkoutId={checkoutId} />
       <OrderSupplyCard supply={supply} />
+      <OrderReservationCycleCard
+        audit={detail?.reservationCycle ?? null}
+        locale={reservationLocale()}
+        onExpiredRefresh={refresh}
+      />
 
       {result.state === "error" ? (
         <ErrorState title="سفارش خوانده نشد" detail={result.message} onRetry={refresh} retryLabel={faWorkspaceMessages.retry} />
@@ -629,6 +643,23 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
                     <p className="mt-2 text-xs text-red-700" data-testid="admin-order-confirm-unavailable-hint">
                       این سفارش در حال حاضر قابل تأمین نیست.
                     </p>
+                  ) : null}
+                  {detail.payment.reservationLabel ? (
+                    <>
+                      <InfoRow label="رزرو موجودی">
+                        <span data-testid="admin-payment-reservation-label">{detail.payment.reservationLabel}</span>
+                      </InfoRow>
+                      <InfoRow label="امکان تلاش مجدد">
+                        {detail.payment.reservationRetryLimitReached
+                          ? "سقف رزرو استفاده شده"
+                          : detail.payment.reservationRetryPossible
+                            ? "بله"
+                            : "خیر"}
+                      </InfoRow>
+                      <InfoRow label="نیاز به رزرو مجدد">
+                        {detail.payment.reservationNeedsReacquire ? "بله" : "خیر"}
+                      </InfoRow>
+                    </>
                   ) : null}
                 </dl>
               ) : (
@@ -794,6 +825,196 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
         <p className="text-sm text-gray-500">در حال بارگذاری…</p>
       )}
     </main>
+  );
+}
+
+function reservationLocale(): AdminReservationLocale {
+  if (typeof document === "undefined") return "fa";
+  return document.documentElement.lang?.toLowerCase().startsWith("en") ? "en" : "fa";
+}
+
+function OrderReservationCycleCard({
+  audit,
+  locale,
+  onExpiredRefresh,
+}: {
+  audit: AdminReservationCycleAudit | null;
+  locale: AdminReservationLocale;
+  onExpiredRefresh: () => void;
+}) {
+  const receivedAt = useMemo(() => Date.now(), [audit?.serverTime, audit?.expiresAt, audit?.currentCycleNumber]);
+  const [seconds, setSeconds] = useState(() =>
+    audit ? remainingSecondsFromServer(audit.expiresAt, audit.serverTime, receivedAt) : 0,
+  );
+  const refreshed = useMemo(() => ({ done: false }), [audit?.serverTime, audit?.expiresAt]);
+  const isActive = Boolean(audit && audit.statusLabelFa === "رزرو فعال");
+
+  useEffect(() => {
+    if (!audit || !isActive) {
+      setSeconds(0);
+      return;
+    }
+    setSeconds(remainingSecondsFromServer(audit.expiresAt, audit.serverTime, receivedAt));
+    const timer = window.setInterval(() => {
+      setSeconds((prev) => {
+        const next = remainingSecondsFromServer(audit.expiresAt, audit.serverTime, receivedAt);
+        if (shouldRefreshOnceAtZero(prev, next, refreshed.done)) {
+          refreshed.done = true;
+          onExpiredRefresh();
+        }
+        return next;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [audit, isActive, onExpiredRefresh, receivedAt, refreshed]);
+
+  if (!audit) return null;
+  const dir = locale === "en" ? "ltr" : "rtl";
+  const status = pickReservationLabel(audit.statusLabelFa, audit.statusLabelEn, locale);
+  const reason = pickReservationLabel(audit.reasonLabelFa, audit.reasonLabelEn, locale);
+  const state = audit.statusLabelFa === "رزرو فعال"
+    ? "active"
+    : audit.statusLabelFa === "رزرو پس از پرداخت نهایی شد"
+      ? "committed"
+      : audit.statusLabelFa === "مهلت رزرو پایان یافته"
+        ? "expired"
+        : audit.statusLabelFa === "رزرو مجدد ناموفق"
+          ? "reacquireFailed"
+          : audit.statusLabelFa === "رزرو با لغو سفارش آزاد شد" || audit.statusLabelFa === "رزرو با سیاست آزاد شد"
+            ? "released"
+            : "none";
+
+  return (
+    <section
+      className="mb-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-4"
+      data-testid="admin-order-reservation-cycle"
+      dir={dir}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-black text-gray-900">
+          {locale === "en" ? "Inventory reservation" : "رزرو موجودی"}
+        </h2>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${reservationBadgeClass(state)}`}>
+          {status}
+        </span>
+      </div>
+      <dl className="mt-3 grid gap-2 text-xs text-gray-700 sm:grid-cols-2 xl:grid-cols-4">
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Cycle" : "چرخه جاری"}</dt>
+          <dd className="font-bold text-gray-900">{audit.currentCycleNumber ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Cycles used" : "چرخه‌های استفاده‌شده"}</dt>
+          <dd className="font-bold text-gray-900">{`${audit.totalCyclesUsed} / ${audit.maxCycles}`}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Retries remaining" : "تلاش باقی‌مانده"}</dt>
+          <dd className="font-bold text-gray-900">{audit.retryCountRemaining}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Reason" : "دلیل"}</dt>
+          <dd className="font-bold text-gray-900">{reason}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Started" : "شروع"}</dt>
+          <dd className="font-bold text-gray-900">{audit.startedAt ? formatAdminDate(audit.startedAt) : "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Expires" : "پایان مهلت"}</dt>
+          <dd className="font-bold text-gray-900">{audit.expiresAt ? formatAdminDate(audit.expiresAt) : "—"}</dd>
+        </div>
+        {isActive ? (
+          <div>
+            <dt className="text-gray-500">{locale === "en" ? "Remaining" : "مانده"}</dt>
+            <dd className="font-mono font-bold text-gray-900" data-testid="admin-reservation-countdown">
+              {formatReservationCountdown(seconds)}
+            </dd>
+          </div>
+        ) : null}
+        <div>
+          <dt className="text-gray-500">{locale === "en" ? "Supply status" : "وضعیت تأمین"}</dt>
+          <dd className="font-bold text-gray-900">{audit.supplyStatusLabelFa}</dd>
+        </div>
+      </dl>
+      {audit.retryLimitReached ? (
+        <p className="mt-3 text-sm font-medium text-rose-800" data-testid="admin-reservation-retry-limit">
+          {locale === "en"
+            ? "Maximum reservation cycles for this order have been used."
+            : "حداکثر دفعات رزرو این سفارش استفاده شده است."}
+        </p>
+      ) : null}
+      {audit.events.some((event) => event.detailFa.includes("رزرو مجدد به دلیل کمبود موجودی")) ? (
+        <p className="mt-2 text-sm font-medium text-rose-800" data-testid="admin-reservation-reacquire-failed">
+          {locale === "en"
+            ? "Reacquire failed because stock was insufficient."
+            : "رزرو مجدد به دلیل کمبود موجودی انجام نشد."}
+        </p>
+      ) : null}
+      {audit.shortages.length > 0 ? (
+        <ul className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-100" data-testid="admin-reservation-shortages">
+          {audit.shortages.map((line, index) => (
+            <li key={`${line.itemTitle}-${index}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
+              <span className="font-semibold text-gray-800">{line.itemTitle}</span>
+              <span className="text-gray-600">
+                {locale === "en" ? "required" : "لازم"} {line.required.toLocaleString(locale === "en" ? "en-US" : "fa-IR")}
+                {line.unitCode ? ` ${line.unitCode}` : ""}
+                {" · "}
+                {locale === "en" ? "available" : "موجود"} {line.available.toLocaleString(locale === "en" ? "en-US" : "fa-IR")}
+                {" · "}
+                {locale === "en" ? "shortage" : "کمبود"} {line.shortage.toLocaleString(locale === "en" ? "en-US" : "fa-IR")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {audit.history.length > 0 ? (
+        <ol className="mt-4 space-y-2" data-testid="admin-reservation-history">
+          {audit.history.map((row) => (
+            <li key={`cycle-${row.cycleNumber}-${row.startedAt}`} className="rounded-lg border border-gray-100 px-3 py-2 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong className="text-gray-900">
+                  {locale === "en" ? `Cycle #${row.cycleNumber}` : `چرخه #${row.cycleNumber}`}
+                  {" · "}
+                  {pickReservationLabel(row.statusLabelFa, row.statusLabelEn, locale)}
+                </strong>
+                <span className="text-gray-500">
+                  {pickReservationLabel(row.policySourceLabelFa, row.policySourceLabelEn, locale)}
+                  {" · "}
+                  {row.effectiveHoldMinutes}
+                  {locale === "en" ? " min" : " دقیقه"}
+                  {" · max "}
+                  {row.effectiveMaxCycles}
+                </span>
+              </div>
+              <p className="mt-1 text-gray-600">
+                {pickReservationLabel(row.reasonLabelFa, row.reasonLabelEn, locale)}
+                {" · "}
+                {formatAdminDate(row.startedAt)}
+                {" → "}
+                {formatAdminDate(row.endedAt ?? row.expiresAt)}
+                {row.paymentAttemptRef ? ` · ${row.paymentAttemptRef}` : ""}
+              </p>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {audit.events.length > 0 ? (
+        <ol className="mt-3 space-y-1.5" data-testid="admin-reservation-events">
+          {audit.events.map((event, index) => (
+            <li key={`${event.occurredAt}-${index}`} className="text-xs text-gray-600">
+              <span className="font-semibold text-gray-800">
+                {pickReservationLabel(event.kindLabelFa, event.kindLabelEn, locale)}
+              </span>
+              {event.cycleNumber ? ` #${event.cycleNumber}` : ""}
+              {" · "}
+              {formatAdminDate(event.occurredAt)}
+              {" — "}
+              {pickReservationLabel(event.detailFa, event.detailEn, locale)}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+    </section>
   );
 }
 

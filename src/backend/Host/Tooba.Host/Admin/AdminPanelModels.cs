@@ -27,7 +27,14 @@ public sealed record AdminOrderListItem(
     string Currency,
     string PaymentState,
     string Status,
-    string SupplyStatus = "NotApplicable");
+    string SupplyStatus = "NotApplicable",
+    string ReservationLabel = "—",
+    string ReservationLabelEn = "—",
+    string ReservationState = "none",
+    int? ReservationCycleNumber = null,
+    bool ReservationRetryPossible = false,
+    bool ReservationNeedsReacquire = false,
+    bool ReservationRetryLimitReached = false);
 
 /// <summary>
 /// خط سفارش مدیر؛ مبلغ از snapshot سفارش می‌آید و قیمت جاری Product نیست.
@@ -192,7 +199,8 @@ public sealed record AdminOrderDetailPage(
     IReadOnlyList<AdminFinancialEventView> FinancialEvents,
     AdminFinancialSummaryView FinancialSummary,
     AdminPaymentOpsView? Payment = null,
-    IReadOnlyList<AdminConsolidatedPackageView>? ConsolidatedPackages = null);
+    IReadOnlyList<AdminConsolidatedPackageView>? ConsolidatedPackages = null,
+    AdminReservationCycleAuditView? ReservationCycle = null);
 
 /// <summary>
 /// ردیف دریافت مشتری (پرداخت) برای گرید Admin.
@@ -208,7 +216,14 @@ public sealed record AdminReceiptListItem(
     string ProviderCode,
     DateTimeOffset CreatedAt,
     DateTimeOffset? CompletedAt,
-    string SupplyStatus = "NotApplicable");
+    string SupplyStatus = "NotApplicable",
+    string ReservationLabel = "—",
+    string ReservationLabelEn = "—",
+    string ReservationState = "none",
+    int? ReservationCycleNumber = null,
+    bool ReservationRetryPossible = false,
+    bool ReservationNeedsReacquire = false,
+    bool ReservationRetryLimitReached = false);
 
 /// <summary>
 /// ماندهٔ تسویه با نام نمایشی فروشنده برای گرید Admin.
@@ -259,7 +274,14 @@ public sealed record AdminPaymentOpsView(
     bool RejectDepositEligible = false,
     string? CustomerTransferReference = null,
     Guid? ProofMediaAssetId = null,
-    DateTimeOffset? EvidenceSubmittedAt = null);
+    DateTimeOffset? EvidenceSubmittedAt = null,
+    string ReservationLabel = "—",
+    string ReservationLabelEn = "—",
+    string ReservationState = "none",
+    int? ReservationCycleNumber = null,
+    bool ReservationRetryPossible = false,
+    bool ReservationNeedsReacquire = false,
+    bool ReservationRetryLimitReached = false);
 
 /// <summary>
 /// ردیف فروشنده از Party و شمارنده‌های جداگانهٔ Offer/Order.
@@ -270,6 +292,73 @@ public sealed record AdminSellerListItem(
     string Status,
     int ActiveOffers,
     int OrderCount);
+
+/// <summary>خلاصهٔ فشرده چرخه رزرو برای گرید.</summary>
+public sealed record AdminReservationCycleSummary(
+    string CompactLabelFa,
+    string CompactLabelEn,
+    string State,
+    int? CycleNumber,
+    bool RetryPossible,
+    bool NeedsReacquire,
+    bool RetryLimitReached);
+
+/// <summary>کمبود خط برای شکست بازتملک.</summary>
+public sealed record AdminReservationShortageLine(
+    string ItemTitle,
+    decimal Required,
+    decimal Available,
+    decimal Shortage,
+    string? UnitCode);
+
+/// <summary>رویداد ممیزی قابل نمایش.</summary>
+public sealed record AdminReservationCycleEventView(
+    string KindLabelFa,
+    string KindLabelEn,
+    DateTimeOffset OccurredAt,
+    int? CycleNumber,
+    string DetailFa,
+    string DetailEn);
+
+/// <summary>ردیف تاریخچهٔ immutable یک چرخه.</summary>
+public sealed record AdminReservationCycleHistoryRow(
+    int CycleNumber,
+    string StatusLabelFa,
+    string StatusLabelEn,
+    string ReasonLabelFa,
+    string ReasonLabelEn,
+    DateTimeOffset StartedAt,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset? EndedAt,
+    int EffectiveHoldMinutes,
+    int EffectiveMaxCycles,
+    string PolicySource,
+    string PolicySourceLabelFa,
+    string PolicySourceLabelEn,
+    string? PaymentAttemptRef);
+
+/// <summary>ممیزی رزرو موجودی روی جزئیات سفارش.</summary>
+public sealed record AdminReservationCycleAuditView(
+    string StatusLabelFa,
+    string StatusLabelEn,
+    string ReasonLabelFa,
+    string ReasonLabelEn,
+    int? CurrentCycleNumber,
+    int TotalCyclesUsed,
+    int MaxCycles,
+    int RetryCountRemaining,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset ServerTime,
+    int SecondsRemaining,
+    string SupplyStatus,
+    string SupplyStatusLabelFa,
+    bool RetryLimitReached,
+    bool CanRetryReservation,
+    bool CanExtendTimer,
+    IReadOnlyList<AdminReservationCycleHistoryRow> History,
+    IReadOnlyList<AdminReservationCycleEventView> Events,
+    IReadOnlyList<AdminReservationShortageLine> Shortages);
 
 /// <summary>
 /// مشتری صادقانهٔ عملیاتی بر پایهٔ User سفارش و آخرین snapshot گیرنده.

@@ -64,6 +64,8 @@ export type AdminOrderOperationsPage = {
   supplyMessageFa?: string | null;
   canConfirmDeposit?: boolean;
   canRecoverInventory?: boolean;
+  canRetryReservation?: boolean;
+  canExtendTimer?: boolean;
   supplyLines?: Array<{
     itemTitle: string | null;
     unitCode: string | null;
@@ -158,6 +160,8 @@ function mapPage(raw: unknown): AdminOrderOperationsPage | null {
     supplyMessageFa: asString(row.supplyMessageFa) ?? asString(row.SupplyMessageFa),
     canConfirmDeposit: Boolean(row.canConfirmDeposit ?? row.CanConfirmDeposit),
     canRecoverInventory: Boolean(row.canRecoverInventory ?? row.CanRecoverInventory),
+    canRetryReservation: Boolean(row.canRetryReservation ?? row.CanRetryReservation),
+    canExtendTimer: Boolean(row.canExtendTimer ?? row.CanExtendTimer),
     supplyLines: Array.isArray(row.supplyLines ?? row.SupplyLines)
       ? ((row.supplyLines ?? row.SupplyLines) as unknown[]).flatMap((item) => {
           if (!item || typeof item !== "object") return [];

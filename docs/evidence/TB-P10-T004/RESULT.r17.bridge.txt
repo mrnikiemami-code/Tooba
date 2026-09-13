@@ -1,0 +1,63 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T004-R17
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Admin Order Detail now has a رزرو موجودی audit section after the R8 supply card: human cycle status/reason, used/max, remaining time from server ExpiresAt, immutable history, reacquire-failure shortages, and retry-limit copy. Orders and Payments grids show a compact batched reservation column. Confirm still auto-reacquires; no timer extend or invented retry.
+
+Applicable-Locks:
+LOCK-SF-001…096. New: LOCK-SF-091 immutable admin audit; LOCK-SF-092 cycle ≠ Payment/Order/Supply; LOCK-SF-093 no admin timer extend/reset; LOCK-SF-094 grid no N+1; LOCK-SF-095 retry-limit and reacquire-fail visible; LOCK-SF-096 stored policy snapshot not current Settings.
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r17-recovery-start.md — start HEAD f9f0fdd4 == origin/main; expected previous e3f5d5db is R16 impl; docs commit after impl is not RECOVERY_CONFLICT.
+
+Discovery:
+docs/evidence/TB-P10-T004/r17-admin-reservation-audit-discovery.md — insert after OrderSupplyCard; separate grid column; payments concise only.
+
+Order-Detail:
+docs/evidence/TB-P10-T004/r17-order-detail.md — included on existing order GET.
+
+Cycle-History:
+docs/evidence/TB-P10-T004/r17-cycle-history.md — stored snapshots + events; all shortage lines.
+
+Orders-Grid:
+docs/evidence/TB-P10-T004/r17-orders-grid.md — GetProjectionsAsync; saved views preserved.
+
+Payments-Context:
+docs/evidence/TB-P10-T004/r17-payments-context.md — compact only; full audit stays on Order Detail.
+
+Capabilities:
+docs/evidence/TB-P10-T004/r17-capabilities.md — canRetryReservation/canExtendTimer false; Confirm path unchanged.
+
+Performance:
+docs/evidence/TB-P10-T004/r17-performance.md — one detail projection; grid batch; local countdown.
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r17-focused-validation.md — Host 39/39; FE 16/16 + R16 pending 4/4; recovery 4/4; git diff --check clean.
+
+Runtime:
+docs/evidence/TB-P10-T004/r17-runtime.md — A–J PASS via ToAudit/ToSummary + R15 projection equality.
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r17-antipattern-scan.md — CLEAN.
+
+Lock-Registry:
+LOCK-SF-091…096 added; non-duplicate of 001…090.
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r17-recovery-sot.md — Architect R16; Impl R17; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T005.
+
+Git:
+branch main; start f9f0fdd4868b34c72f26c450a8564a776e37cbac; ending HEAD recorded after push; HEAD==origin/main; task-owned tree clean.
+
+Architectural-Concerns:
+Coordinator still stores reacquire fail as Status.ToString() event detail; Admin uses supply-status lines for shortages rather than inventing structured event JSON.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Admin visual review not claimed.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT

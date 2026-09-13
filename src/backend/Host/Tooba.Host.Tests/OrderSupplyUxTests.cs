@@ -18,6 +18,10 @@ public sealed class OrderSupplyUxTests
         Assert.DoesNotContain("GetStatusAsync(r.CheckoutId", orders, StringComparison.Ordinal);
         var payments = Host(Path.Combine("Grid", "AdminPaymentsGridQueryEngine.cs"));
         Assert.Contains("GetStatusesAsync", payments, StringComparison.Ordinal);
+        Assert.Contains("GetProjectionsAsync", orders, StringComparison.Ordinal);
+        Assert.Contains("GetProjectionsAsync", payments, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetProjectionAsync(", orders, StringComparison.Ordinal);
+        Assert.DoesNotContain("GetProjectionAsync(", payments, StringComparison.Ordinal);
     }
 
     [Fact]

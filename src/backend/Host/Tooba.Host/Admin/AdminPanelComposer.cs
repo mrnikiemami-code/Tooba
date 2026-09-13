@@ -7,6 +7,7 @@ using Tooba.Fulfillment.Domain;
 using Tooba.Host.Grid;
 using Tooba.Offer.Domain;
 using Tooba.Offer.Infrastructure.Persistence;
+using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
@@ -33,6 +34,8 @@ public sealed class AdminPanelComposer
     private readonly ISettlementDirectory _settlement;
     private readonly IFulfillmentDirectory _fulfillment;
     private readonly ReturnsDbContext _returns;
+    private readonly OrderSupplyComposer _supply;
+    private readonly IReservationCycleDirectory _cycles;
     private readonly AdminOrdersGridQueryEngine _ordersGrid;
     private readonly AdminSellersGridQueryEngine _sellersGrid;
     private readonly AdminCustomersGridQueryEngine _customersGrid;
@@ -51,7 +54,8 @@ public sealed class AdminPanelComposer
         ISettlementDirectory settlement,
         IFulfillmentDirectory fulfillment,
         ReturnsDbContext returns,
-        OrderSupplyComposer supply)
+        OrderSupplyComposer supply,
+        IReservationCycleDirectory cycles)
     {
         _catalog = catalog;
         _offers = offers;
@@ -61,10 +65,12 @@ public sealed class AdminPanelComposer
         _settlement = settlement;
         _fulfillment = fulfillment;
         _returns = returns;
-        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply);
+        _supply = supply;
+        _cycles = cycles;
+        _ordersGrid = new AdminOrdersGridQueryEngine(orders, parties, returns, supply, cycles);
         _sellersGrid = new AdminSellersGridQueryEngine(offers, parties, orders);
         _customersGrid = new AdminCustomersGridQueryEngine(orders);
-        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders, supply);
+        _paymentsGrid = new AdminPaymentsGridQueryEngine(paymentDb, orders, supply, cycles);
     }
 
     /// <summary>
@@ -269,6 +275,16 @@ public sealed class AdminPanelComposer
         }).ToList();
         var listItem = await MapOrderListItemAsync(group, sellerNames, cancellationToken);
         var paymentOps = await _payments.GetLatestOperationalForCheckoutAsync(checkoutId, cancellationToken);
+        var supplyStatus = await _supply.GetStatusAsync(checkoutId, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var cycleProjection = await _cycles.GetProjectionAsync(
+            checkoutId,
+            now,
+            supplyStatus.Status.ToString(),
+            cancellationToken);
+        var cycleEvents = await _cycles.ListEventsAsync(checkoutId, cancellationToken);
+        var reservationAudit = AdminReservationCycleMapper.ToAudit(cycleProjection, cycleEvents, supplyStatus);
+        var reservationSummary = AdminReservationCycleMapper.ToSummary(cycleProjection);
         AdminPaymentOpsView? paymentView = paymentOps is null
             ? null
             : new AdminPaymentOpsView(
@@ -289,7 +305,14 @@ public sealed class AdminPanelComposer
                 paymentOps.RejectDepositEligible,
                 paymentOps.CustomerTransferReference,
                 paymentOps.ProofMediaAssetId,
-                paymentOps.EvidenceSubmittedAt);
+                paymentOps.EvidenceSubmittedAt,
+                reservationSummary.CompactLabelFa,
+                reservationSummary.CompactLabelEn,
+                reservationSummary.State,
+                reservationSummary.CycleNumber,
+                reservationSummary.RetryPossible,
+                reservationSummary.NeedsReacquire,
+                reservationSummary.RetryLimitReached);
 
         var sellerOrderIds = group.SellerOrders.Select(x => x.SellerOrderId).ToList();
         var settlementByOrder = await _settlement.ListEntriesBySellerOrderIdsAsync(sellerOrderIds, cancellationToken);
@@ -345,7 +368,8 @@ public sealed class AdminPanelComposer
             financialEvents,
             financialSummary,
             paymentView,
-            packageViews);
+            packageViews,
+            reservationAudit);
     }
 
     /// <summary>
