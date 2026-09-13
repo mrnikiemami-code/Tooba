@@ -11,4 +11,6 @@
 | branch | main |
 | no TB-P10-T005 | confirmed |
 
-Ending HEAD is recorded in `RESULT.r24-r1.bridge.txt` after commit + `git push origin main` + `HEAD==origin/main`.
+| ending HEAD | 6dd584f130cf81bbaf6fb47710177d9a2bd3e678 |
+
+`HEAD==origin/main` after push. Task-owned worktree clean. No TB-P10-T005.

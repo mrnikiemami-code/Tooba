@@ -1,0 +1,94 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24-R1
+
+Parent-Task:
+TB-P10-T004-R24
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+R24-R1 PASS. Login no longer empties the real Cart: leftover empty authenticated Active carts are abandoned and the guest cart is adopted, so Shipping and the header badge stay on the same Active cart until atomic COMMIT. Header reuses the Shopeiva account dropdown (پنل / سفارش‌ها / خروج) on all storefront routes. New addresses persist FirstName/LastName separately; legacy RecipientName rows do not crash and are not guessed-split. LOCK-SF-103 preserved. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…121. Especially 103 atomic; 104 hide; 105 cancel; 106–111 identity/login/merge; 117 Cart≠Session; 118 merge until COMMIT; 119 canonical header; 120 logout; 121 FirstName/LastName.
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T004-R24; Last Implementation at claim TB-P10-T004-R24; Repair TB-P10-T004-R24-R1; Worker tooba-worker-01; branch main; HEAD==origin/main 95b92d69e1e7bebfddb50ffd92956e8acb1ddfed; known/safe tree; USER_VISUAL_ACCEPTED=NO. Evidence r24-r1-recovery-start.md
+
+Cart-Continuity-Discovery:
+Empty post-login Cart was leftover empty authenticated Active cart + FE persist/clear of guestSecret + POST guest cart after 403/404. Shipping kept the guest cartId. Evidence r24-r1-cart-continuity-discovery.md
+
+Shopeiva-Account-Discovery:
+Purchased Header.jsx already has authenticated dropdown: پروفایل / سفارشات / خروج. Reused with Tooba routes /customer-panel, /customer-panel/orders, logout. Evidence r24-r1-shopeiva-account-discovery.md
+
+Cart-Merge-Repair:
+MergeAnonymousAfterLoginAsync abandons empty leftover auth cart and adopts guest (same cartId + draft). GET /v1/storefront/cart/current. Authenticated FE does not POST a guest cart; empty leftover does not clear guestSecret before merge. Evidence r24-r1-cart-merge-repair.md
+
+Header-Account:
+Canonical StorefrontAccountMenu on desktop + mobile. Logged-out ورود; logged-in حساب کاربری. Evidence r24-r1-header-account.md + r24-r1-header-account.png
+
+Logout:
+POST /api/auth/logout + CSRF; clearCartSession; notifyAuthChanged. Does not delete Orders. Guest after logout cannot see auth cart. Evidence r24-r1-logout.md
+
+Customer-Orders:
+Menu wires سفارش‌های من → existing /customer-panel/orders. Hidden pending card still listed in history. Evidence r24-r1-customer-orders.md
+
+Address-Name-Model:
+FirstName/LastName on shipping, checkout, AddressBook, order snapshot. Legacy RecipientName fallback; no guessed split. New addresses require both names. Evidence r24-r1-address-name-model.md + r24-r1-address-name-fields.png
+
+Atomic-Boundary-Regression:
+AtomicCheckoutCommitTests 2/2; cart stays Active until COMMIT; fault leaves lines. Evidence r24-r1-atomic-boundary-regression.md
+
+Security:
+Wrong user cannot read merged cart; logout does not leak; orders require auth; no cart-id takeover; session from /api/auth/me. Evidence r24-r1-security.md
+
+Network-Performance:
+One focused /api/auth/me + current-cart fetch; no auth/cart polling; merge only after OTP complete. Evidence r24-r1-network-performance.md
+
+Focused-Validation:
+storefront 56/56; critical-storefront 16/16; customer 33/33; Host atomic/merge/address/identity/pending PASS; recovery guard 4/4; git diff --check PASS. Evidence r24-r1-focused-validation.md
+
+Runtime:
+A–T PASS Host :5088 + FE :3000. Cart 01a09a96-edb4-7000-8dd7-1eafe33893b8 stayed Active itemCount=2 through login/shipping; checkout 01a09a9b-3880-7000-af7a-0a21d7de6ac7; badge 0 only after COMMIT. Evidence r24-r1-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r24-r1-antipattern-scan.md
+
+Lock-Registry:
+Added LOCK-SF-117…121. 001…116 preserved.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R24; Last Implementation TB-P10-T004-R24-R1; Current Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no TB-P10-T005. Evidence r24-r1-recovery-sot.md
+
+Git:
+expected previous HEAD 95b92d69e1e7bebfddb50ffd92956e8acb1ddfed
+claim HEAD 95b92d69e1e7bebfddb50ffd92956e8acb1ddfed
+ending HEAD 6dd584f130cf81bbaf6fb47710177d9a2bd3e678
+origin/main after push 6dd584f130cf81bbaf6fb47710177d9a2bd3e678
+HEAD==origin/main yes
+task-owned worktree clean after push
+no TB-P10-T005
+
+Architectural-Concerns:
+GET /v1/storefront/cart/current 404 after convert is expected (no empty replacement cart). Payment recipient display still falls back to saved-address RecipientName when a legacy address is selected. No TB-P10-T005.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. After selecting a legacy saved address, payment summary showed RecipientName «محمد لمامی» even though First/Last fields were filled. Header/account and split-name UI otherwise match Shopeiva reuse + Tooba blue.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
