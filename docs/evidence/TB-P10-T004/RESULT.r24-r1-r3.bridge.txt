@@ -1,0 +1,82 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24-R1-R3
+
+Parent-Task:
+TB-P10-T004-R24-R1-R2
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Storefront account + cart persistence repair PASS. Header shows mobile 09111111111 (no profile name). Logout hides the account Cart (badge ۰) without deleting it; DB stays Active/2 and re-login restores badge ۲. Shipping badge stays ۲ until atomic COMMIT; Payment then badge ۰. Injected commit 409 stays on Shipping with badge ۲. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…122 preserved. Added LOCK-SF-123 logout hides never deletes; LOCK-SF-124 canonical header identity; LOCK-SF-125 conversion visible only after COMMIT.
+
+Recovery-Start:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; Last Implementation at start TB-P10-T004-R24-R1-R2; Current Repair TB-P10-T004-R24-R1-R3; Worker tooba-worker-01; branch main; start HEAD==origin/main 6ca66a7271bc4ae3a0879dca04f134b6ba4a4647 matches expected previous HEAD; tracked dirty clean. Evidence r24-r1-r3-recovery-start.md
+
+Header-Identity-Discovery:
+/v1/auth/me previously lacked name/mobile. CustomerProfile DisplayName/First/Last + Identity mobile are now projected. Shipping recipient unused. Evidence r24-r1-r3-header-identity-discovery.md
+
+Logout-Cart-Discovery:
+Logout = revoke session + clearCartSession pointer only. No DB delete/convert/abandon. Evidence r24-r1-r3-logout-cart-discovery.md
+
+Account-Display:
+storefrontAccountLabel: name → mobile → generic. Runtime label 09111111111. Shared StorefrontAccountMenu. Evidence r24-r1-r3-account-display.md
+
+Logout-Cart-Persistence:
+Cart 01a09b32-787c-7000-91b9-0be7d96bf8c4 Active 2 after logout; anon GET 400; re-login badge ۲. AUTH_CHANGED drops stale badge loads. Evidence r24-r1-r3-logout-cart-persistence.md
+
+Conversion-Timeline:
+T3 1789310235839 click; T4 1789310235892 commit request; T8 1789310235973 commit 200; T9 1789310237948 Payment. Cart Converted only after COMMIT. Checkout 01a09b33-751e-7000-9977-1ad5999c8e35. Evidence r24-r1-r3-conversion-timeline.md
+
+Network:
+auth/me 96 mount/refresh not interval. merge 3. logout 1. commit 2 (200+injected 409). 14 anonymous /api/auth/me 401 after logout. Evidence r24-r1-r3-network.md
+
+Focused-Validation:
+test:storefront 62/62; test:critical-storefront 16/16; login guard PASS; Host identity/checkout focused 21/21; recovery guard 4/4; git diff --check PASS. Evidence r24-r1-r3-focused-validation.md
+
+Runtime:
+A–R PASS. Host :5088 + FE :3000. Screenshots header/dropdown/cart/anonymous/restore/shipping/payment. Evidence r24-r1-r3-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r24-r1-r3-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-123, LOCK-SF-124, LOCK-SF-125 added in TOOBA-LOCKS.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R24; Last Implementation TB-P10-T004-R24-R1-R3; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; branch main; HEAD==origin/main; no TB-P10-T005. CURRENT_TASK_ID=TB-P10-T004-R24-R1-R3; STALE includes R24-R1-R2. Evidence r24-r1-r3-recovery-sot.md
+
+Git:
+fix HEAD c7b317dbc8bde0e000404a08f1ec851aeaa279bc
+ending HEAD (docs follow-up)
+origin/main (after push)
+HEAD==origin/main yes
+branch main
+task-owned worktree clean
+no TB-P10-T005
+
+Architectural-Concerns:
+None. After COMMIT, Host current cart is empty until a new cart is created; that is post-commit rotation, not logout deletion.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO (Architect/user). Header identity is mobile because the Development profile has no name.
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT
