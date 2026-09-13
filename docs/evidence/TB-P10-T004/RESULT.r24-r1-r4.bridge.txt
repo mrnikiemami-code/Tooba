@@ -1,0 +1,81 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24-R1-R4
+
+Parent-Task:
+TB-P10-T004-R24-R1-R3
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Storefront auth/cart network churn repair PASS. R3 auth/me=96 was per-mount fetch multiplication (desktop+mobile menus, cart badge, requiresCheckoutLogin, AUTH/CART fan-out), not polling. merge=3 was the same login transition posting merge from login + header + cart. 14 anonymous 401s were remount probes after logout. Repair: one in-memory session cache with in-flight dedupe; logout marks known anonymous; one merge POST per login transition. Runtime: auth/me 16, 401 8, merge 1+1 (+Q), logout 1, commit 2. Idle counters flat. R3 identity/logout/conversion preserved. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…125 preserved. Added LOCK-SF-126 canonical session resolution / no anonymous 401 storm / one merge per login.
+
+Recovery-Start:
+Phase P10; Last Architect-accepted TB-P10-T004-R24; Last Implementation at start TB-P10-T004-R24-R1-R3; Current Repair TB-P10-T004-R24-R1-R4; Worker tooba-worker-01; branch main; start HEAD==origin/main cd4f441b0ed4b0d98a4093f2a91b0ad1bdffbfb2 matches expected previous HEAD; tracked dirty clean. Evidence r24-r1-r4-recovery-start.md
+
+Network-Root-Cause:
+R3 96/3/14 explained in r24-r1-r4-network-root-cause.md. Not interval. Not retry loop.
+
+Auth-State-Dedup:
+Shared loadStorefrontSession cache. Desktop+mobile reuse. Evidence r24-r1-r4-auth-state-dedup.md
+
+Anonymous-401:
+markStorefrontSessionAnonymous after logout. Idle after logout 401 4→4. Full goto may resolve once. Total 401=8. Evidence r24-r1-r4-anonymous-401.md
+
+Merge-Transition:
+C login 1; H re-login 1; Q guest-while-auth 1. Duplicate per login=0. Backend MergeAnonymousAfterLoginAsync already idempotent. Evidence r24-r1-r4-merge-transition.md
+
+Network-Budget:
+auth/me 16 (was 96). 401 8 (was 14). merge 3. logout 1. commit 2. Evidence r24-r1-r4-network-budget.md
+
+Idle-Stability:
+auth Home / auth Shipping / anon after logout / Payment: no growth of auth/me, cart/current, merge, or 401. Evidence r24-r1-r4-idle-stability.md
+
+R3-Regression:
+Header 09111111111; logout hides badge ۰ and keeps DB Active/2; re-login ۲; COMMIT converts; 409 stays on Shipping with badge ۲. Evidence r24-r1-r4-r3-regression.md
+
+Focused-Validation:
+test:storefront 67/67; test:critical-storefront 16/16; login guard PASS; recovery guard 4/4; git diff --check PASS. Evidence r24-r1-r4-focused-validation.md
+
+Runtime:
+A–J + idle + Q PASS. Host :5088 + FE :3000. Evidence r24-r1-r4-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r24-r1-r4-antipattern-scan.md
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R24; Last Implementation TB-P10-T004-R24-R1-R4; Current Issued/Repair (none); USER_VISUAL_ACCEPTED=NO; Worker IDLE; branch main; HEAD==origin/main; no TB-P10-T005. CURRENT_TASK_ID=TB-P10-T004-R24-R1-R4; STALE includes R24-R1-R3. Evidence r24-r1-r4-recovery-sot.md
+
+Git:
+ending HEAD (docs follow-up)
+origin/main (after push)
+HEAD==origin/main yes
+branch main
+task-owned worktree clean
+no TB-P10-T005
+
+Architectural-Concerns:
+Full document navigation resets the in-memory session cache and may perform one necessary /api/auth/me. That is not a storm.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO (Architect/user).
+
+Blockers:
+None.
+
+END_TOOBA_WORKER_RESULT

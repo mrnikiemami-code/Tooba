@@ -1,0 +1,582 @@
+{
+  "accountCartId": "01a09b33-819c-7000-a3b6-2479c63c653f",
+  "label": "09111111111",
+  "net": {
+    "authMe": [
+      {
+        "t": 1789315896489,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315900434,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315933299,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315935575,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315937132,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315942854,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315950955,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315953735,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315969547,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315972126,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315974440,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315976746,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315978319,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315983529,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789315986664,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      },
+      {
+        "t": 1789316022468,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "route": "/api/auth/me"
+      }
+    ],
+    "merge": [
+      {
+        "t": 1789315937163,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/merge",
+        "route": "/v1/storefront/cart/merge"
+      },
+      {
+        "t": 1789315978364,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/merge",
+        "route": "/v1/storefront/cart/merge"
+      },
+      {
+        "t": 1789316016584,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/merge",
+        "route": "/v1/storefront/cart/merge"
+      }
+    ],
+    "logout": [
+      {
+        "t": 1789315960382,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/auth/logout",
+        "route": "/api/auth/logout"
+      }
+    ],
+    "commit": [
+      {
+        "t": 1789315988930,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/v1/storefront/shipping/commit",
+        "route": "/v1/storefront/shipping/commit"
+      },
+      {
+        "t": 1789316027548,
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/v1/storefront/shipping/commit",
+        "route": "/v1/storefront/shipping/commit"
+      }
+    ],
+    "cartCurrent": [
+      {
+        "t": 1789315937193,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315937193,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315939412,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315939412,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315939412,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315939412,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315942937,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315948426,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315948454,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315951019,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315951019,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315953800,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315953801,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315955207,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315978395,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315978395,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315980766,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315980766,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315980766,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315980766,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315983611,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315983611,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315986736,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315986736,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315988184,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789315989150,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316009991,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316009991,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316016237,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316016534,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316016728,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316022708,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316022709,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316024554,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      },
+      {
+        "t": 1789316026945,
+        "method": "GET",
+        "url": "http://127.0.0.1:3000/v1/storefront/cart/current",
+        "route": "/v1/storefront/cart/current"
+      }
+    ],
+    "authMe401": [
+      {
+        "t": 1789315896540,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315900931,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315933361,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315935626,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315970210,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315972171,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315974509,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      },
+      {
+        "t": 1789315976802,
+        "url": "http://127.0.0.1:3000/api/auth/me",
+        "status": 401
+      }
+    ],
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    ]
+  },
+  "totals": {
+    "authMe": 16,
+    "merge": 3,
+    "logout": 1,
+    "commit": 2,
+    "cartCurrent": 35,
+    "authMe401": 8
+  },
+  "log": {
+    "prep-login": {
+      "ok": true,
+      "detail": "01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "prep-cancel-open-unpaid": {
+      "ok": true,
+      "detail": "[]"
+    },
+    "prep-offers": {
+      "ok": true,
+      "detail": "ee4ee35e-ff04-4c3a-ba81-272e33055b14,fcae0f25-d0ed-4140-8156-f6ca61d6c654"
+    },
+    "A-anon-home": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa"
+    },
+    "B-plp": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/products"
+    },
+    "B-pdp-or-plp": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/products"
+    },
+    "B-cart": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/cart"
+    },
+    "C-login": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "C-merge-once": {
+      "ok": true,
+      "detail": "1"
+    },
+    "header-identity": {
+      "ok": true,
+      "detail": "09111111111"
+    },
+    "idle-auth-home": {
+      "ok": true,
+      "detail": "{\"start\":{\"authMe\":6,\"merge\":1,\"logout\":0,\"commit\":0,\"cartCurrent\":7,\"authMe401\":4},\"end\":{\"authMe\":6,\"merge\":1,\"logout\":0,\"commit\":0,\"cartCurrent\":7,\"authMe401\":4}}"
+    },
+    "atc-2": {
+      "ok": true,
+      "detail": "{\"status\":200,\"cartId\":\"01a09b33-819c-7000-a3b6-2479c63c653f\",\"lines\":2,\"itemCount\":2,\"reused\":true}"
+    },
+    "D-cart": {
+      "ok": true,
+      "detail": "۲"
+    },
+    "D-shipping": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "E-address-active": {
+      "ok": true,
+      "detail": "۲"
+    },
+    "idle-auth-shipping": {
+      "ok": true,
+      "detail": "{\"start\":{\"authMe\":8,\"merge\":1,\"logout\":0,\"commit\":0,\"cartCurrent\":14,\"authMe401\":4},\"end\":{\"authMe\":8,\"merge\":1,\"logout\":0,\"commit\":0,\"cartCurrent\":14,\"authMe401\":4}}"
+    },
+    "F-logout-once": {
+      "ok": true,
+      "detail": "1"
+    },
+    "F-anon-hidden": {
+      "ok": true,
+      "detail": "۰"
+    },
+    "F-db-still-active": {
+      "ok": true,
+      "detail": "Active|01a0996c-b8d9-7000-9854-80b3f59e8d7c|2"
+    },
+    "idle-anon-home": {
+      "ok": true,
+      "detail": "{\"start\":{\"authMe\":8,\"merge\":1,\"logout\":1,\"commit\":0,\"cartCurrent\":14,\"authMe401\":4},\"end\":{\"authMe\":8,\"merge\":1,\"logout\":1,\"commit\":0,\"cartCurrent\":14,\"authMe401\":4}}"
+    },
+    "F-no-401-storm": {
+      "ok": true,
+      "detail": "0"
+    },
+    "G-anon-nav": {
+      "ok": true,
+      "detail": "۰"
+    },
+    "H-relogin": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "H-merge-once": {
+      "ok": true,
+      "detail": "1"
+    },
+    "I-restored": {
+      "ok": true,
+      "detail": "۲"
+    },
+    "J-before-commit": {
+      "ok": true,
+      "detail": "۲"
+    },
+    "J-commit-once": {
+      "ok": true,
+      "detail": "1"
+    },
+    "J-payment": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/payment?checkoutId=01a09b8b-3e28-7000-94ed-e37517c5cbf5"
+    },
+    "J-badge-after": {
+      "ok": true,
+      "detail": "۰"
+    },
+    "J-converted": {
+      "ok": true,
+      "detail": "Converted"
+    },
+    "idle-payment": {
+      "ok": true,
+      "detail": "{\"start\":{\"authMe\":15,\"merge\":2,\"logout\":1,\"commit\":1,\"cartCurrent\":28,\"authMe401\":8},\"end\":{\"authMe\":15,\"merge\":2,\"logout\":1,\"commit\":1,\"cartCurrent\":28,\"authMe401\":8}}"
+    },
+    "Q-prep": {
+      "ok": true,
+      "detail": "{\"status\":200,\"cartId\":\"01a09b8b-a8bc-7000-9c15-253c13ac45a5\",\"lines\":2,\"itemCount\":2,\"guestSecret\":\"[redacted]\",\"errors\":[]}"
+    },
+    "Q-no-payment": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "Q-cart-intact": {
+      "ok": true,
+      "detail": "۲"
+    },
+    "budget-no-auth-interval": {
+      "ok": true,
+      "detail": "idle checks already proved no growth"
+    },
+    "budget-merge-per-transition": {
+      "ok": true,
+      "detail": "3"
+    },
+    "budget-logout": {
+      "ok": true,
+      "detail": "1"
+    },
+    "budget-401": {
+      "ok": true,
+      "detail": "8"
+    },
+    "budget-auth-me": {
+      "ok": true,
+      "detail": "16"
+    }
+  }
+}
