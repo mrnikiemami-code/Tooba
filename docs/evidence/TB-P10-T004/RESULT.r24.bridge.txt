@@ -1,0 +1,112 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R24
+
+Parent-Task:
+TB-P10-T004-R23
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=YES
+
+Summary:
+R24 PASS. Final integration gate only — no new product policy. Login/OTP, anonymous cart merge, AuthenticatedOnly, R21 atomic checkout, Cycle #1-only churn, MaxOpenUnpaid=2, hide still counts, cancel frees slot not churn, Admin Settings, concurrency last-slot/churn, manual AwaitingAdmin, flash-sale 3/1/2, security, financials, and deployment readiness proven. Runtime A–Z PASS. Anti-pattern CLEAN. No new locks. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…116 preserved. No new lock. Especially 103 atomic; 104 hide; 105 cancel; 106–111 identity/login/merge; 112–116 open-unpaid/churn.
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T004-R23; Last Implementation at claim TB-P10-T004-R23; Repair TB-P10-T004-R24; Worker tooba-worker-01; branch main; HEAD==origin/main d408e69374bc863390ebfea5a59de222d787ce13; known/safe tree; USER_VISUAL_ACCEPTED=YES. Evidence r24-recovery-start.md
+
+Integration-Discovery:
+Anonymous ATC → login gate → OTP → server merge (no reserve/order/pay) → shipping commit → TX limits → reserve → Cycle #1 → churn event → convert → COMMIT → payment later. Evidence r24-integration-discovery.md
+
+Lifecycle-Matrix:
+Matrix recorded for anonymous, login, merge, Cycle #1, inventory fail, 0/1/2 open, hide, cancel, churn max, retry, Cycle #2, manual, paid, logout. Evidence r24-lifecycle-matrix.md
+
+Atomic-Ordering:
+Identity + EnsureCanStartInitialReservationAsync before ReserveCartLinesForOrderAsync; churn written with Cycle #1; payment after COMMIT. Inventory fail 400 no event. Evidence r24-atomic-ordering.md
+
+Open-Unpaid:
+PendingPayment/Submitted count; hide still counts; cancel/paid do not; attempts never count; manual AwaitingAdmin counts. Evidence r24-open-unpaid.md
+
+Churn:
+One immutable CheckoutReservationCommit per Cycle #1; cancel/hide/pay/retry/Cycle #2 do not add or refund. Evidence r24-churn.md
+
+Cancel-Hide:
+Cancel frees slot not churn; hide presentation-only. Evidence r24-cancel-hide.md
+
+Concurrency:
+Same cart ≤1 Order; last open wins=1 blocks=1 winner 01a09993-b6b4-7000-94fa-015b2702ae07; last churn wins=1. Evidence r24-concurrency.md
+
+Manual-Payment:
+Manual order 01a09993-c0d4-7000-9fc5-041f25f03e11 stays PendingPayment open=1; no extra churn. Evidence r24-manual-payment.md
+
+Flash-Sale:
+Offer 47801c5c-7490-4782-912f-5c6cd5f3f879 policy 3/1/2; cancel/recreate hits churn before reserve. Evidence r24-flash-sale.md
+
+Customer-UX:
+Browser /fa/login RTL, /en/login LTR, /fa/cart; FA limit notice + pending/orders links; cart intact. Evidence r24-customer-ux.md
+
+Admin-UX:
+Settings expose identity, max open unpaid, window, max commits, reservation 3/1/2; GET/PUT/validation; unauthenticated 401. Evidence r24-admin-ux.md
+
+Observability:
+Stable codes + FA UI; CheckoutAbuseBlockEvent; inspectable commit rows. Evidence r24-observability.md
+
+Financial:
+StoreShipping excluded from seller payout; decimal 1.25 suite; paid projection 9685771.0000 IRR. Evidence r24-financial.md
+
+Security:
+Anon 401; admin 401; logout 204/401; Dev OTP environment-gated. Evidence r24-security.md
+
+Network-Performance:
+No checkout polling; local countdown; indexed count/window. Evidence r24-network-performance.md
+
+Deployment-Readiness:
+R23 migrations/indexes/defaults remain; no new migration; no startup mutation. Evidence r24-deployment-readiness.md
+
+Focused-Validation:
+Host 47; FE 22; critical-storefront 16; recovery guard 4; git diff --check clean. Evidence r24-focused-validation.md
+
+Runtime:
+A–Z PASS on Host :5088 + FE :3000. E 01a09993-9bdc-7000-b251-2b608e43d8d9; R winner 01a09993-b6b4-7000-94fa-015b2702ae07. Evidence r24-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r24-antipattern-scan.md
+
+Lock-Registry:
+No new lock; LOCK-SF-001…116 sufficient.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R23; Last Implementation TB-P10-T004-R24; Current Issued/Repair none; Worker IDLE; no TB-P10-T005. Evidence r24-recovery-sot.md
+
+Git:
+expected previous HEAD d408e69374bc863390ebfea5a59de222d787ce13
+claim HEAD d408e69374bc863390ebfea5a59de222d787ce13
+ending HEAD PENDING
+origin/main after push PENDING
+HEAD==origin/main yes
+task-owned worktree clean after push
+no TB-P10-T005
+
+Architectural-Concerns:
+Offer-level MaxReservationCommitsPerCustomerPerOfferInWindow remains a future extension only. Paid projection remains async via payment.succeeded outbox (Q waited for SellerOrder Paid). No TB-P10-T005 invented.
+
+Visual-Concerns:
+None. USER_VISUAL_ACCEPTED=YES. Critical storefront 16 green. Browser login/cart confirmed.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

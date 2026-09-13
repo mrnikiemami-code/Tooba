@@ -1,0 +1,320 @@
+{
+  "results": {
+    "host-health": {
+      "ok": true,
+      "detail": "200"
+    },
+    "fe-shipping": {
+      "ok": true,
+      "detail": "200"
+    },
+    "C-login-pages": {
+      "ok": true,
+      "detail": "200/200"
+    },
+    "A-anonymous-cart": {
+      "ok": true,
+      "detail": "200"
+    },
+    "B-login-gate": {
+      "ok": true,
+      "detail": "401"
+    },
+    "M-admin-get": {
+      "ok": true,
+      "detail": "{\"maxOpenUnpaidOrdersPerCustomer\":2,\"reservationCommitWindowMinutes\":30,\"maxCheckoutCommitsPerCustomerInWindow\":3,\"minOpenUnpaid\":1,\"maxOpenUnpaid\":20,\"minWindowMinutes\":1,\"maxWind"
+    },
+    "M-admin-save": {
+      "ok": true,
+      "detail": "200 {\"maxOpenUnpaidOrdersPerCustomer\":2,\"reservationCommitWindowMinutes\":30,\"maxCheckoutCommitsPerCustomerInWindow\":3,\"minOpenUnpaid\":1,\"maxOpenUnpaid\":20,\"minWindo"
+    },
+    "M-admin-validation": {
+      "ok": true,
+      "detail": "400 {\"title\":\"Bad Request\",\"errorCode\":\"settings.max_open_unpaid.invalid\"}"
+    },
+    "C-otp-login": {
+      "ok": true,
+      "detail": "200 01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "auth": {
+      "ok": true,
+      "detail": "200 01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "D-cart-merge": {
+      "ok": true,
+      "detail": "200 lines=1 res 34->34 orders 23->23"
+    },
+    "F-inventory-failure": {
+      "ok": true,
+      "detail": "400 checkout=none commits 22->22 res 34->34 {\"title\":\"Bad Request\",\"errorCode\":\"checkout.rejected\",\"detail\":\"ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.\"}"
+    },
+    "A-order-1": {
+      "ok": true,
+      "detail": "200 01a09993-9bdc-7000-b251-2b608e43d8d9"
+    },
+    "A-cycle1-event": {
+      "ok": true,
+      "detail": "one event"
+    },
+    "B-order-2": {
+      "ok": true,
+      "detail": "200 01a09993-9e24-7000-9da7-c181759d080a"
+    },
+    "open-count-2": {
+      "ok": true,
+      "detail": "open=2"
+    },
+    "C-third-blocked": {
+      "ok": true,
+      "detail": "409 {\"title\":\"Conflict\",\"errorCode\":\"checkout.open_unpaid_limit_reached\",\"detail\":\"شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.\",\"currentCount\":2,\"maxCount\":2}"
+    },
+    "C-cart-intact": {
+      "ok": true,
+      "detail": "res 36->36 status=Active"
+    },
+    "D-hide": {
+      "ok": true,
+      "detail": "first=409 second=200"
+    },
+    "D-still-blocked": {
+      "ok": true,
+      "detail": "409 {\"title\":\"Conflict\",\"errorCode\":\"checkout.open_unpaid_limit_reached\",\"detail\":\"شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های "
+    },
+    "D-hide-not-in-count": {
+      "ok": true,
+      "detail": "hide does not change open unpaid"
+    },
+    "E-cancel": {
+      "ok": true,
+      "detail": "200 {\"ok\":true,\"checkoutId\":\"01a09993-9e24-7000-9da7-c181759d080a\",\"alreadyCancelled\":false}"
+    },
+    "E-slot-freed": {
+      "ok": true,
+      "detail": "open=1"
+    },
+    "F-replacement": {
+      "ok": true,
+      "detail": "200 01a09993-a5bb-7000-9cc1-ed052e586a77"
+    },
+    "G-cancel-no-refund": {
+      "ok": true,
+      "detail": "22->25 cancel kept history"
+    },
+    "prep-churn-slot": {
+      "ok": true,
+      "detail": "200"
+    },
+    "churn-third-commit": {
+      "ok": true,
+      "detail": "409"
+    },
+    "H-churn-blocked": {
+      "ok": true,
+      "detail": "409 {\"title\":\"Conflict\",\"errorCode\":\"checkout.reservation_commit_limit_reached\",\"detail\":\"تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.\",\"currentCount\":3,\"maxCount\":3,\"nextAvaila"
+    },
+    "H-cart-intact": {
+      "ok": true,
+      "detail": "res 37->37"
+    },
+    "I-payment-start": {
+      "ok": true,
+      "detail": "200 4edae924-8df1-4f65-b643-bbc01b0f2855"
+    },
+    "I-retry-no-churn": {
+      "ok": true,
+      "detail": "200 commits 25->25"
+    },
+    "J-cycle2-no-new-commit": {
+      "ok": true,
+      "detail": "retry=200 events=1"
+    },
+    "K-pay-success": {
+      "ok": true,
+      "detail": "200 {\"paymentId\":\"74789b34-c2a6-4424-8c05-e7ed0ca0bb7e\",\"checkoutId\":\"01a09993-9bdc-7000-b251-2b608e43d8d9\",\"amount\":9685771.0000,\"currency\":\"IRR\",\"status\":\"Succeeded\",\"providerCode\":\""
+    },
+    "K-paid-frees-slot": {
+      "ok": true,
+      "detail": "status=Paid pay=200"
+    },
+    "L-prepared-last-slot": {
+      "ok": true,
+      "detail": "01a09993-b52b-7000-b8c7-05c00e6c91d1/01a09993-b56f-7000-b0d1-e4a47318bbfd"
+    },
+    "L-concurrent-one-winner": {
+      "ok": true,
+      "detail": "wins=1 blocks=1 409/200 {\"title\":\"Conflict\",\"errorCode\":\"checkout.open_unpaid_limit_reached\",\"detail\":\"ش/{\"checkoutId\":\"01a09993-b6b4-7000-94fa-015b2702ae07\",\"cartId\":\"01a09993-b56f-700"
+    },
+    "N-auth-still-enforced": {
+      "ok": true,
+      "detail": "401"
+    },
+    "V-security-anon-checkout": {
+      "ok": true,
+      "detail": "401"
+    },
+    "conc-same-cart": {
+      "ok": true,
+      "detail": "wins=0 409/409"
+    },
+    "S-concurrent-last-churn": {
+      "ok": true,
+      "detail": "wins=1 churnBlocks=1 409/200"
+    },
+    "T-flash-policy": {
+      "ok": true,
+      "detail": "200 {\"scope\":\"offer\",\"scopeId\":\"47801c5c-7490-4782-912f-5c6cd5f3f879\",\"initialHold\":{\"overrideValue\":3,\"effectiveValue\":3,\"s"
+    },
+    "P-manual-order": {
+      "ok": true,
+      "detail": "200 01a09993-c0d4-7000-9fc5-041f25f03e11"
+    },
+    "P-manual-awaiting": {
+      "ok": true,
+      "detail": "200 {\"paymentId\":\"6aff1be2-5add-4f94-99f4-87e3048f8928\",\"attemptId\":\"ab4e47b3-9ed9-4720-9e8e-779993981b3f\",\"checkoutId\":\"01a09993-c0d4-7000-9fc5"
+    },
+    "P-manual-counts-open": {
+      "ok": true,
+      "detail": "open=1"
+    },
+    "U-identity-settings": {
+      "ok": true,
+      "detail": "200"
+    },
+    "U-reservation-policy": {
+      "ok": true,
+      "detail": "200"
+    },
+    "V-admin-protected": {
+      "ok": true,
+      "detail": "401"
+    },
+    "Y-fe-cart": {
+      "ok": true,
+      "detail": "200"
+    },
+    "Y-no-new-polling": {
+      "ok": true,
+      "detail": "checkout source"
+    },
+    "Z-logout-isolation": {
+      "ok": true,
+      "detail": "204/401"
+    },
+    "W-financial-source": {
+      "ok": true,
+      "detail": "shipping on checkout page"
+    },
+    "W-financial-suite": {
+      "ok": true,
+      "detail": "allocation + decimal suites"
+    },
+    "X-decimal-contract": {
+      "ok": true,
+      "detail": "1.25 suite exists"
+    },
+    "AZ-A": {
+      "ok": true,
+      "detail": "200"
+    },
+    "AZ-B": {
+      "ok": true,
+      "detail": "401"
+    },
+    "AZ-C": {
+      "ok": true,
+      "detail": "200 01a0996c-b8d9-7000-9854-80b3f59e8d7c 200/200"
+    },
+    "AZ-D": {
+      "ok": true,
+      "detail": "200 lines=1 res 34->34 orders 23->23"
+    },
+    "AZ-E": {
+      "ok": true,
+      "detail": "200 01a09993-9bdc-7000-b251-2b608e43d8d9"
+    },
+    "AZ-F": {
+      "ok": true,
+      "detail": "400 checkout=none commits 22->22 res 34->34 {\"title\":\"Bad Request\",\"errorCode\":\"checkout.rejected\",\"detail\":\"ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.\"}"
+    },
+    "AZ-G": {
+      "ok": true,
+      "detail": "0/2 then first commit"
+    },
+    "AZ-H": {
+      "ok": true,
+      "detail": "1/2 then second commit"
+    },
+    "AZ-I": {
+      "ok": true,
+      "detail": "409 {\"title\":\"Conflict\",\"errorCode\":\"checkout.open_unpaid_limit_reached\",\"detail\":\"شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.\",\"currentCount\":2,\"maxCount\":2}"
+    },
+    "AZ-J": {
+      "ok": true,
+      "detail": "hide does not change open unpaid"
+    },
+    "AZ-K": {
+      "ok": true,
+      "detail": "open=1"
+    },
+    "AZ-L": {
+      "ok": true,
+      "detail": "22->25 cancel kept history"
+    },
+    "AZ-M": {
+      "ok": true,
+      "detail": "409 {\"title\":\"Conflict\",\"errorCode\":\"checkout.reservation_commit_limit_reached\",\"detail\":\"تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.\",\"currentCount\":3,\"maxCount\":3,\"nextAvaila"
+    },
+    "AZ-N": {
+      "ok": true,
+      "detail": "200 commits 25->25"
+    },
+    "AZ-O": {
+      "ok": true,
+      "detail": "retry=200 events=1"
+    },
+    "AZ-P": {
+      "ok": true,
+      "detail": "open=1"
+    },
+    "AZ-Q": {
+      "ok": true,
+      "detail": "status=Paid pay=200"
+    },
+    "AZ-R": {
+      "ok": true,
+      "detail": "wins=1 blocks=1 409/200 {\"title\":\"Conflict\",\"errorCode\":\"checkout.open_unpaid_limit_reached\",\"detail\":\"ش/{\"checkoutId\":\"01a09993-b6b4-7000-94fa-015b2702ae07\",\"cartId\":\"01a09993-b56f-700"
+    },
+    "AZ-S": {
+      "ok": true,
+      "detail": "wins=1 churnBlocks=1 409/200"
+    },
+    "AZ-T": {
+      "ok": true,
+      "detail": "200 {\"scope\":\"offer\",\"scopeId\":\"47801c5c-7490-4782-912f-5c6cd5f3f879\",\"initialHold\":{\"overrideValue\":3,\"effectiveValue\":3,\"s"
+    },
+    "AZ-U": {
+      "ok": true,
+      "detail": "admin settings"
+    },
+    "AZ-V": {
+      "ok": true,
+      "detail": "auth + admin protect"
+    },
+    "AZ-W": {
+      "ok": true,
+      "detail": "financial"
+    },
+    "AZ-X": {
+      "ok": true,
+      "detail": "1.25 suite exists"
+    },
+    "AZ-Y": {
+      "ok": true,
+      "detail": "checkout source"
+    },
+    "AZ-Z": {
+      "ok": true,
+      "detail": "204/401"
+    }
+  }
+}
