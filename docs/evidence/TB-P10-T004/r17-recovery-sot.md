@@ -7,6 +7,7 @@ Current Issued/Repair: none
 USER_VISUAL_ACCEPTED=NO
 Worker: tooba-worker-01 — IDLE
 branch: main
+impl HEAD: 54e40d17
 no TB-P10-T005
 
 Updated `docs/ai/TOOBA-RECOVERY-CONTEXT.md`, `docs/PROJECT-STATE.md`, `docs/ai/recovery-staleness.guard.test.mjs` (`CURRENT_TASK_ID=TB-P10-T004-R17`, Architect R16, Impl R17, STALE includes R16).

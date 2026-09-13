@@ -50,7 +50,7 @@ Recovery-SoT:
 docs/evidence/TB-P10-T004/r17-recovery-sot.md — Architect R16; Impl R17; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; Worker IDLE; no T005.
 
 Git:
-branch main; start f9f0fdd4868b34c72f26c450a8564a776e37cbac; ending HEAD recorded after push; HEAD==origin/main; task-owned tree clean.
+branch main; start f9f0fdd4868b34c72f26c450a8564a776e37cbac; impl 54e40d17; ending HEAD recorded in follow-up docs commit; HEAD==origin/main; task-owned tree clean.
 
 Architectural-Concerns:
 Coordinator still stores reacquire fail as Status.ToString() event detail; Admin uses supply-status lines for shortages rather than inventing structured event JSON.
