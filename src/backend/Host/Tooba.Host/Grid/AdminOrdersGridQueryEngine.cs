@@ -7,6 +7,7 @@ using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Party.Infrastructure.Persistence;
 using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Grid;
 
@@ -543,7 +544,7 @@ internal sealed class AdminOrdersGridQueryEngine
             group.CheckoutId,
             references.Count == 0 ? group.CheckoutId.ToString("N")[..12] : string.Join(" / ", references),
             group.SubmittedAt,
-            string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+            StorefrontRecipientNames.DisplayOrFallback(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
             orders.Count,
             FormatSellerDisplayNames(orders, sellerNames),
             InvoiceHeaderSemantics.LineCount(orders),

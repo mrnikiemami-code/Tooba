@@ -17,6 +17,7 @@ using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Admin;
 
@@ -356,7 +357,7 @@ public sealed class AdminPanelComposer
             group.SellerOrders.Sum(x => x.DiscountSnapshot),
             group.SellerOrders.Sum(x => x.GrandTotalSnapshot),
             group.SellerOrders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            group.RecipientName,
+            StorefrontRecipientNames.Display(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
             group.ContactMobile,
             group.ProvinceName,
             group.CityName,
@@ -405,7 +406,7 @@ public sealed class AdminPanelComposer
     public async Task<IReadOnlyList<AdminCustomerListItem>> ListCustomersAsync(CancellationToken cancellationToken)
     {
         var rows = await _orders.Checkouts.AsNoTracking()
-            .Select(x => new { x.PlacedByUserId, x.RecipientName, x.ContactMobile, x.SubmittedAt })
+            .Select(x => new { x.PlacedByUserId, x.RecipientName, x.RecipientFirstName, x.RecipientLastName, x.ContactMobile, x.SubmittedAt })
             .ToListAsync(cancellationToken);
         return rows.GroupBy(x => x.PlacedByUserId)
             .Select(group =>
@@ -413,7 +414,7 @@ public sealed class AdminPanelComposer
                 var latest = group.OrderByDescending(x => x.SubmittedAt).First();
                 return new AdminCustomerListItem(
                     group.Key,
-                    string.IsNullOrWhiteSpace(latest.RecipientName) ? "مشتری توبا" : latest.RecipientName,
+                    StorefrontRecipientNames.DisplayOrFallback(latest.RecipientFirstName, latest.RecipientLastName, latest.RecipientName),
                     string.IsNullOrWhiteSpace(latest.ContactMobile) ? null : latest.ContactMobile,
                     group.Count(),
                     latest.SubmittedAt,
@@ -769,7 +770,7 @@ public sealed class AdminPanelComposer
                     "CustomerReceipt",
                     payment.Amount,
                     payment.Currency,
-                    string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+                    StorefrontRecipientNames.DisplayOrFallback(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
                     payment.ProviderTransactionReference
                         ?? payment.ProviderRequestReference
                         ?? payment.PaymentId.ToString("N")[..12],
@@ -794,7 +795,7 @@ public sealed class AdminPanelComposer
                     "CustomerRefund",
                     refund.Amount,
                     refund.Currency,
-                    string.IsNullOrWhiteSpace(group.RecipientName) ? "مشتری توبا" : group.RecipientName,
+                    StorefrontRecipientNames.DisplayOrFallback(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
                     string.IsNullOrWhiteSpace(refund.Reference)
                         ? refund.RefundAttemptId.ToString("N")[..12]
                         : refund.Reference!,

@@ -510,7 +510,7 @@ public sealed class StorefrontShippingComposer
         new(
             draft.CartId,
             draft.CartVersion,
-            draft.RecipientName,
+            StorefrontRecipientNames.Display(draft.FirstName, draft.LastName, draft.RecipientName),
             draft.ContactMobile,
             draft.ProvinceName,
             draft.CityName,

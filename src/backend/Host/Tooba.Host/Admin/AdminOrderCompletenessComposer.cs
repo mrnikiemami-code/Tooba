@@ -21,6 +21,7 @@ using Tooba.Returns.Domain;
 using Tooba.Returns.Infrastructure.Persistence;
 using Tooba.Settlement.Application;
 using Tooba.Settlement.Domain;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Admin;
 
@@ -1099,7 +1100,8 @@ public sealed class AdminOrderCompletenessComposer
         sb.Append("<h1>فاکتور فروش</h1>");
         sb.Append("<p class=\"meta\">شماره سفارش: <strong dir=\"ltr\">").Append(WebUtility.HtmlEncode(reference)).Append("</strong></p>");
         sb.Append("<p class=\"meta\">تاریخ: <span dir=\"ltr\">").Append(group.SubmittedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)).Append(" UTC</span></p>");
-        sb.Append("<p class=\"meta\">گیرنده: ").Append(WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(group.RecipientName) ? "—" : group.RecipientName));
+        var recipientDisplay = StorefrontRecipientNames.Display(group.RecipientFirstName, group.RecipientLastName, group.RecipientName);
+        sb.Append("<p class=\"meta\">گیرنده: ").Append(WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(recipientDisplay) ? "—" : recipientDisplay));
         sb.Append(" · ").Append(WebUtility.HtmlEncode(group.ContactMobile));
         sb.Append("<br/>").Append(WebUtility.HtmlEncode($"{group.ProvinceName}، {group.CityName}"));
         sb.Append("<br/>").Append(WebUtility.HtmlEncode(group.PostalAddress)).Append("</p>");

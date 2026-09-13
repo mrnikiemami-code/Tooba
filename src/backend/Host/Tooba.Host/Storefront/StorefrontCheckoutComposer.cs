@@ -214,7 +214,13 @@ public sealed class StorefrontCheckoutComposer
             throw new InvalidOperationException("نشانی ذخیره‌شده متعلق به این مشتری نیست یا پیدا نشد.");
         }
 
-        var names = StorefrontRecipientNames.Resolve(saved.FirstName, saved.LastName, saved.RecipientName);
+        var names = StorefrontRecipientNames.ResolveExplicitOverLegacy(
+            shipping.FirstName,
+            shipping.LastName,
+            shipping.RecipientName,
+            saved.FirstName,
+            saved.LastName,
+            saved.RecipientName);
         var snapshot = new StorefrontCheckoutShippingInput(
             names.Recipient,
             saved.ContactMobile,
@@ -222,7 +228,7 @@ public sealed class StorefrontCheckoutComposer
             saved.CityName,
             saved.PostalAddress,
             saved.PostalCode,
-            shipping.SavedAddressId,
+            null,
             names.First,
             names.Last);
         return new StorefrontCheckoutPlacement(actor, snapshot);
@@ -362,7 +368,7 @@ public sealed class StorefrontCheckoutComposer
             paymentState,
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodCode) ? DefaultShippingCode : snapshot.ShippingMethodCode,
             string.IsNullOrWhiteSpace(snapshot.ShippingMethodLabel) ? DefaultShippingLabel : snapshot.ShippingMethodLabel,
-            snapshot.RecipientName,
+            StorefrontRecipientNames.Display(snapshot.RecipientFirstName, snapshot.RecipientLastName, snapshot.RecipientName),
             snapshot.ContactMobile,
             snapshot.ProvinceName,
             snapshot.CityName,

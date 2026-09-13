@@ -5,6 +5,7 @@ using Tooba.Order.Application;
 using Tooba.Order.Infrastructure.Persistence;
 using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Grid;
 
@@ -176,9 +177,9 @@ internal sealed class AdminPaymentsGridQueryEngine
             var reference = references.Count == 0
                 ? payment.CheckoutId.ToString("N")[..12]
                 : string.Join(" / ", references);
-            var customer = checkout is null || string.IsNullOrWhiteSpace(checkout.RecipientName)
+            var customer = checkout is null
                 ? "مشتری توبا"
-                : checkout.RecipientName;
+                : StorefrontRecipientNames.DisplayOrFallback(checkout.RecipientFirstName, checkout.RecipientLastName, checkout.RecipientName);
             var supplyStatus = checkout is null
                 ? "NotApplicable"
                 : supply.TryGetValue(payment.CheckoutId, out var st) ? st.Status.ToString() : "NotApplicable";

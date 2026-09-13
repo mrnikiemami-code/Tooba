@@ -10,6 +10,7 @@ import {
   listCustomerAddresses,
   mapCustomerAddress,
   mapCustomerAddressList,
+  recipientDisplayName,
   setDefaultCustomerAddress,
   shippingFromCustomerAddress,
   toCustomerAddressWritePayload,
@@ -92,6 +93,21 @@ test("create and edit payloads omit empty optional fields and keep isDefault", (
     isDefault: false,
   });
   assert.equal(edited.isDefault, false);
+});
+
+test("recipientDisplayName prefers first+last and does not split legacy RecipientName", () => {
+  assert.equal(
+    recipientDisplayName({ firstName: "محمد", lastName: "امامی", recipientName: "محمد لمامی" }),
+    "محمد امامی",
+  );
+  assert.equal(
+    recipientDisplayName({ firstName: "", lastName: "", recipientName: "محمد لمامی" }),
+    "محمد لمامی",
+  );
+  assert.equal(
+    recipientDisplayName({ firstName: "محمد", lastName: "", recipientName: "محمد لمامی" }),
+    "محمد لمامی",
+  );
 });
 
 test("saved address fills checkout shipping snapshot fields", () => {

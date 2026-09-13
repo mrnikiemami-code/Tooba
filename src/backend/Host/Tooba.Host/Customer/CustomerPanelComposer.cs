@@ -12,6 +12,7 @@ using Tooba.Inventory.Application;
 using Tooba.Payment.Application;
 using Tooba.Payment.Domain;
 using Tooba.Wishlist.Application;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host.Customer;
 
@@ -102,7 +103,7 @@ public sealed class CustomerPanelComposer
         var contact = await _identityContacts.GetContactAsync(actorUserId, cancellationToken);
         var address = FormatShippingAddress(latest);
         var displayName = stored?.DisplayName
-            ?? (string.IsNullOrWhiteSpace(latest?.RecipientName) ? "مشتری توبا" : latest!.RecipientName);
+            ?? StorefrontRecipientNames.DisplayOrFallback(latest?.RecipientFirstName, latest?.RecipientLastName, latest?.RecipientName);
         var mobile = contact.Mobile
             ?? (string.IsNullOrWhiteSpace(latest?.ContactMobile) ? null : latest!.ContactMobile);
         return new CustomerProfilePage(
@@ -248,7 +249,7 @@ public sealed class CustomerPanelComposer
             group.SellerOrders.Sum(x => x.DiscountSnapshot),
             group.SellerOrders.Sum(x => x.GrandTotalSnapshot),
             group.SellerOrders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            group.RecipientName,
+            StorefrontRecipientNames.Display(group.RecipientFirstName, group.RecipientLastName, group.RecipientName),
             group.ContactMobile,
             group.ProvinceName,
             group.CityName,
@@ -308,7 +309,7 @@ public sealed class CustomerPanelComposer
 
         return groups
             .OrderByDescending(x => x.SubmittedAt)
-            .Select(x => x.RecipientName)
+            .Select(x => StorefrontRecipientNames.Display(x.RecipientFirstName, x.RecipientLastName, x.RecipientName))
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
             ?? "مشتری توبا";
     }

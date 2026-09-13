@@ -1,0 +1,87 @@
+{
+  "checkoutId": "01a09aae-37d0-7000-89cd-a22cebf0a90f",
+  "cartId": "01a09aae-35cb-7000-a54d-6c9ee875ebd1",
+  "savedAddressId": "01a09a72-0fd0-7000-b93f-907016579c4a",
+  "results": {
+    "host-health": {
+      "ok": true,
+      "detail": "5088"
+    },
+    "fe": {
+      "ok": true,
+      "detail": "3000 /fa/shipping"
+    },
+    "A-login": {
+      "ok": true,
+      "detail": "200 01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "B-cart-current": {
+      "ok": true,
+      "detail": "404 items=none"
+    },
+    "B-guest-line": {
+      "ok": true,
+      "detail": "200 offer=47801c5c-7490-4782-912f-5c6cd5f3f879"
+    },
+    "B-cart-populated": {
+      "ok": true,
+      "detail": "200 lines=1 cart=01a09aae-35cb-7000-a54d-6c9ee875ebd1"
+    },
+    "D-legacy-create": {
+      "ok": true,
+      "detail": "existing محمد لمامی"
+    },
+    "D-legacy-readable": {
+      "ok": true,
+      "detail": "01a09a72-0fd0-7000-b93f-907016579c4a"
+    },
+    "C-shipping-proj": {
+      "ok": true,
+      "detail": "200 min=2026-09-18"
+    },
+    "E-explicit-save": {
+      "ok": true,
+      "detail": "200 محمد امامی محمد امامی {\"cartId\":\"01a09aae-35cb-7000-a54d-6c9ee875ebd1\",\"cartVersion\":4,\"recipientName\":\"محمد امامی\",\"contactMobile\":\"09111111111\",\"provinceName\":\"تهران\",\"cityName\":\"تهران\",\"postalAddress"
+    },
+    "F-commit": {
+      "ok": true,
+      "detail": "200 01a09aae-37d0-7000-89cd-a22cebf0a90f {\"checkoutId\":\"01a09aae-37d0-7000-89cd-a22cebf0a90f\",\"cartId\":\"01a09aae-35cb-7000-a54d-6c9ee875ebd1\",\"cartVersion\":4,\"market\":\"IR\",\"currency\":\"IRR\",\"channel\":\"M"
+    },
+    "G-payment-summary": {
+      "ok": false,
+      "detail": "name=محمد امامی first=undefined last=undefined"
+    },
+    "G-payment-get": {
+      "ok": true,
+      "detail": "200 محمد امامی"
+    },
+    "H-customer-order": {
+      "ok": true,
+      "detail": "200 محمد امامی"
+    },
+    "I-admin-order": {
+      "ok": true,
+      "detail": "200 محمد امامی {\"checkoutId\":\"01a09aae-37d0-7000-89cd-a22cebf0a90f\",\"reference\":\"TB-20260913121143-01-e1a190\",\"submittedAt\":\"2026-09-13"
+    },
+    "snapshot-independent": {
+      "ok": true,
+      "detail": "محمد امامی|محمد|امامی"
+    },
+    "J-historical-fallback": {
+      "ok": true,
+      "detail": "01a09a9b-3880-7000-af7a-0a21d7de6ac7 محمد لمامی"
+    },
+    "K-cart-after-commit": {
+      "ok": true,
+      "detail": "404 undefined"
+    },
+    "K-header-fa": {
+      "ok": true,
+      "detail": "home 200"
+    },
+    "K-header-en": {
+      "ok": true,
+      "detail": "en 200"
+    }
+  }
+}

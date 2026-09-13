@@ -526,3 +526,6 @@ Customer logout is always available when authenticated, uses the canonical sessi
 
 ### LOCK-SF-121 — New addresses store FirstName and LastName separately
 New shipping addresses persist FirstName and LastName independently. Committed order recipient snapshots keep both. Historical RecipientName-only rows remain readable without guessing a split.
+
+### LOCK-SF-122 — Explicit FirstName/LastName are canonical
+For new or updated checkout recipient data and committed Order snapshots, FirstName and LastName are the canonical source. Display is `FirstName + " " + LastName` when both are non-empty. Legacy RecipientName is a fallback only when those split fields are absent. Legacy names are never guessed-split, and RecipientName must not override non-empty FirstName/LastName.

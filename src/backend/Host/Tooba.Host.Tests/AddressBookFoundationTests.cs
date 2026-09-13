@@ -147,6 +147,63 @@ public sealed class AddressBookFoundationTests
         Assert.Equal("آدرس مالک", prepared.Shipping.PostalAddress);
     }
 
+    /// <summary>نشانی قدیمی فقط با RecipientName خوانا می‌ماند و شکستن حدسی انجام نمی‌شود.</summary>
+    [Fact]
+    public async Task Legacy_saved_address_keeps_recipient_name_without_guessed_split()
+    {
+        var owner = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2");
+        var ownId = Guid.Parse("dddddddd-dddd-4ddd-8ddd-ddddddddddd2");
+        var book = new MemoryAddressBook();
+        book.Rows.Add(new OwnedAddress
+        {
+            Owner = owner,
+            Record = new CustomerAddressRecord(
+                ownId, "محمد لمامی", "09121111111", "IR", "تهران", "تهران", "11111",
+                "آدرس مالک", null, "خانه", true, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow),
+        });
+
+        var prepared = await CreateComposer(book, owner).PrepareShippingAsync(
+            new StorefrontCheckoutShippingInput("ignored", "ignored", "ignored", "ignored", "ignored", "ignored", ownId),
+            CancellationToken.None);
+        Assert.Equal("محمد لمامی", prepared.Shipping.RecipientName);
+        Assert.Equal(string.Empty, prepared.Shipping.FirstName);
+        Assert.Equal(string.Empty, prepared.Shipping.LastName);
+        Assert.DoesNotContain("Split", typeof(StorefrontRecipientNames).GetMethods().Select(x => x.Name));
+    }
+
+    /// <summary>FirstName/LastName صریح روی نشانی قدیمی برنده است و RecipientName درخواست به‌تنهایی دفترچه را عوض نمی‌کند.</summary>
+    [Fact]
+    public async Task Explicit_first_last_win_over_legacy_saved_recipient_name()
+    {
+        var owner = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3");
+        var ownId = Guid.Parse("dddddddd-dddd-4ddd-8ddd-ddddddddddd3");
+        var book = new MemoryAddressBook();
+        book.Rows.Add(new OwnedAddress
+        {
+            Owner = owner,
+            Record = new CustomerAddressRecord(
+                ownId, "محمد لمامی", "09121111111", "IR", "تهران", "تهران", "11111",
+                "آدرس مالک", null, "خانه", true, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow),
+        });
+
+        var composer = CreateComposer(book, owner);
+        var ignoredRecipient = await composer.PrepareShippingAsync(
+            new StorefrontCheckoutShippingInput("علی رضایی", "ignored", "ignored", "ignored", "ignored", "ignored", ownId),
+            CancellationToken.None);
+        Assert.Equal("محمد لمامی", ignoredRecipient.Shipping.RecipientName);
+
+        var explicitNames = await composer.PrepareShippingAsync(
+            new StorefrontCheckoutShippingInput(
+                "محمد لمامی", "ignored", "ignored", "ignored", "ignored", "ignored", ownId, "محمد", "امامی"),
+            CancellationToken.None);
+        Assert.Equal("محمد", explicitNames.Shipping.FirstName);
+        Assert.Equal("امامی", explicitNames.Shipping.LastName);
+        Assert.Equal("محمد امامی", explicitNames.Shipping.RecipientName);
+        Assert.Equal("محمد امامی", StorefrontRecipientNames.Display(
+            explicitNames.Shipping.FirstName, explicitNames.Shipping.LastName, explicitNames.Shipping.RecipientName));
+        Assert.NotEqual("محمد لمامی", explicitNames.Shipping.RecipientName);
+    }
+
     private static StorefrontCheckoutComposer CreateComposer(
         IAddressBookDirectory directory,
         Guid? headerActor = null,
