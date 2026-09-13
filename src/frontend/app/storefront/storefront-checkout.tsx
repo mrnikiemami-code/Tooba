@@ -22,6 +22,8 @@ import {
   shippingFromCustomerAddress,
   type CustomerAddress,
 } from "../customer-panel/customer-address-api.ts";
+import { StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
 import {
   previewStorefrontCheckout,
   submitStorefrontCheckout,
@@ -54,6 +56,7 @@ export function StorefrontShopeivaCheckout() {
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);
   const [shipping, setShipping] = useState<StorefrontCheckoutShipping>(emptyShipping);
   const [error, setError] = useState<string | null>(null);
+  const [limitCode, setLimitCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[] | null>(null);
   const [useSavedAddress, setUseSavedAddress] = useState(false);
@@ -105,6 +108,7 @@ export function StorefrontShopeivaCheckout() {
     }
     setBusy(true);
     setError(null);
+    setLimitCode(null);
     try {
       const submitted = await submitStorefrontCheckout(session.cartId, page.cartVersion, shipping, savedAddressId);
       if (!submitted.checkoutId) {
@@ -113,6 +117,7 @@ export function StorefrontShopeivaCheckout() {
       router.push(`/order/confirmation?checkoutId=${submitted.checkoutId}`);
     } catch (cause) {
       setError(toCustomerCheckoutMessage(cause));
+      setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);
     } finally {
       setBusy(false);
     }
@@ -164,9 +169,9 @@ export function StorefrontShopeivaCheckout() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="lg:col-span-2 space-y-4">
             {error ? (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3" role="alert">
-                {error}
-              </p>
+              <div className="text-sm bg-red-50 border border-red-100 rounded-xl p-3" role="alert">
+                <StorefrontCheckoutLimitNotice errorCode={limitCode} message={error} />
+              </div>
             ) : null}
 
             {savedAddresses ? (

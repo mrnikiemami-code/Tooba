@@ -201,6 +201,11 @@ async function parseCheckout(response: Response): Promise<StorefrontCheckoutPage
       response.status,
       record ? asString(readProp(record, "errorCode", "ErrorCode")) || null : null,
       record ? asString(readProp(record, "detail", "Detail")) || null : null,
+      {
+        currentCount: Number(readProp(record ?? {}, "currentCount", "CurrentCount") ?? Number.NaN),
+        maxCount: Number(readProp(record ?? {}, "maxCount", "MaxCount") ?? Number.NaN),
+        nextAvailableAt: asString(readProp(record ?? {}, "nextAvailableAt", "NextAvailableAt")) || null,
+      },
     );
   }
   const page = mapStorefrontCheckout(payload);
@@ -223,9 +228,29 @@ export function checkoutIdempotencyKey(): string {
   return created;
 }
 
+export function humanizeCheckoutRetryAfter(iso: string | null | undefined): string | null {
+  if (!iso) {
+    return null;
+  }
+  const at = Date.parse(iso);
+  if (!Number.isFinite(at)) {
+    return null;
+  }
+  const minutes = Math.max(1, Math.ceil((at - Date.now()) / 60000));
+  return minutes === 1 ? "حدود یک دقیقه دیگر" : `حدود ${minutes} دقیقه دیگر`;
+}
+
 export function toCustomerCheckoutMessage(error: unknown): string {
   if (error instanceof StorefrontCartApiError) {
     switch (error.errorCode) {
+      case "checkout.open_unpaid_limit_reached":
+        return "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.";
+      case "checkout.reservation_commit_limit_reached": {
+        const wait = humanizeCheckoutRetryAfter(error.meta.nextAvailableAt);
+        return wait
+          ? `تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. ${wait} دوباره تلاش کنید.`
+          : "تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.";
+      }
       case "checkout.price.changed":
         return "قیمت یکی از کالاها تغییر کرده؛ لطفاً سفارش را دوباره بررسی کنید.";
       case "checkout.cart.expired":

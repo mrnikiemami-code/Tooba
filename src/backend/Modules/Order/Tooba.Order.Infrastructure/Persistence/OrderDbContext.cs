@@ -70,6 +70,15 @@ public sealed class OrderDbContext : DbContext
     /// <summary>ترجیح پنهان‌کردن کارت در انتظار پرداخت.</summary>
     public DbSet<PendingPaymentCardHide> PendingPaymentCardHides => Set<PendingPaymentCardHide>();
 
+    /// <summary>قفل سطری سقف سفارش/سهمیه رزرو برای هر مشتری.</summary>
+    public DbSet<CheckoutAbuseCustomerLock> CheckoutAbuseCustomerLocks => Set<CheckoutAbuseCustomerLock>();
+
+    /// <summary>رویداد تغییرناپذیر شروع رزرو Cycle #1.</summary>
+    public DbSet<CheckoutReservationCommit> CheckoutReservationCommits => Set<CheckoutReservationCommit>();
+
+    /// <summary>ممیزی مسدود شدن سقف سفارش باز یا سهمیه رزرو.</summary>
+    public DbSet<CheckoutAbuseBlockEvent> CheckoutAbuseBlockEvents => Set<CheckoutAbuseBlockEvent>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -234,6 +243,29 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.HideId).ValueGeneratedNever();
             entity.HasIndex(x => new { x.OwnerUserId, x.CheckoutId }).IsUnique();
             entity.HasIndex(x => new { x.GuestCartId, x.CheckoutId }).IsUnique();
+        });
+        modelBuilder.Entity<CheckoutAbuseCustomerLock>(entity =>
+        {
+            entity.ToTable("checkout_abuse_customer_locks");
+            entity.HasKey(x => x.CustomerId);
+            entity.Property(x => x.CustomerId).ValueGeneratedNever();
+        });
+        modelBuilder.Entity<CheckoutReservationCommit>(entity =>
+        {
+            entity.ToTable("checkout_reservation_commits");
+            entity.HasKey(x => x.EventId);
+            entity.Property(x => x.EventId).ValueGeneratedNever();
+            entity.Property(x => x.Source).HasMaxLength(64);
+            entity.HasIndex(x => x.CheckoutId).IsUnique();
+            entity.HasIndex(x => new { x.CustomerId, x.OccurredAt });
+        });
+        modelBuilder.Entity<CheckoutAbuseBlockEvent>(entity =>
+        {
+            entity.ToTable("checkout_abuse_block_events");
+            entity.HasKey(x => x.EventId);
+            entity.Property(x => x.EventId).ValueGeneratedNever();
+            entity.Property(x => x.Kind).HasMaxLength(32);
+            entity.HasIndex(x => new { x.CustomerId, x.OccurredAt });
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

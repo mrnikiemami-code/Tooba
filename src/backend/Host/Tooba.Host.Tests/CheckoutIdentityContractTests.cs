@@ -48,7 +48,6 @@ public sealed class CheckoutIdentityContractTests
         Assert.Contains("checkout-identity-policy", endpoints, StringComparison.Ordinal);
         Assert.Contains("_session.IsAuthenticated ? _session.UserId", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("type=\"password\"", login, StringComparison.Ordinal);
-        Assert.DoesNotContain("MaxOpenUnpaidOrders", endpoints, StringComparison.Ordinal);
         Assert.DoesNotContain("TB-P10-T005", endpoints, StringComparison.Ordinal);
     }
 

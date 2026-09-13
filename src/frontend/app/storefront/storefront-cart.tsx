@@ -202,11 +202,13 @@ export function StorefrontShopeivaCart({
 
       <CartHero itemCount={itemCount} subtotalLabel={formatOfferAmount(subtotal, currency)} discountPercent={discountPercent} />
 
-      <StorefrontPendingPayments
-        items={pendingItems}
-        onRefresh={refreshPending}
-        onRemoved={removePendingFromCart}
-      />
+      <div id="pending-payments">
+        <StorefrontPendingPayments
+          items={pendingItems}
+          onRefresh={refreshPending}
+          onRemoved={removePendingFromCart}
+        />
+      </div>
 
       {!cart || cart.lines.length === 0 ? (
         <CartEmpty error={error} hasPending={pendingItems.length > 0} locale={locale} />

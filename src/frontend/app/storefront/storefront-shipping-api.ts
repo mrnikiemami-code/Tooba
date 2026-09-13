@@ -1,6 +1,6 @@
 import { cartHeaders, persistCommittedCheckoutAndDetachActiveCart, readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
 import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
-import { readStoredCouponCode } from "./storefront-checkout-api.ts";
+import { readStoredCouponCode, toCustomerCheckoutMessage } from "./storefront-checkout-api.ts";
 import type { StorefrontCheckoutPage } from "./storefront-checkout-api.ts";
 
 const SHIPPING_IDEMPOTENCY_KEY = "tooba.storefront.shippingCommitIdempotency";
@@ -114,14 +114,19 @@ function asBool(value: unknown): boolean {
   return value === true;
 }
 
-async function readError(response: Response): Promise<string> {
-  try {
-    const body = asRecord(await response.json());
-    if (!body) return "خطای ارسال";
-    return asString(prop(body, "detail", "Detail") ?? prop(body, "title", "Title"), "خطای ارسال");
-  } catch {
-    return "خطای ارسال";
-  }
+async function throwShippingError(response: Response): Promise<never> {
+  const payload: unknown = await response.json().catch(() => null);
+  const body = asRecord(payload);
+  throw new StorefrontCartApiError(
+    response.status,
+    body ? asString(prop(body, "errorCode", "ErrorCode")) || null : null,
+    body ? asString(prop(body, "detail", "Detail") ?? prop(body, "title", "Title"), "خطای ارسال") : "خطای ارسال",
+    {
+      currentCount: asNumber(prop(body ?? {}, "currentCount", "CurrentCount"), Number.NaN),
+      maxCount: asNumber(prop(body ?? {}, "maxCount", "MaxCount"), Number.NaN),
+      nextAvailableAt: asString(prop(body ?? {}, "nextAvailableAt", "NextAvailableAt")) || null,
+    },
+  );
 }
 
 function mapMethod(value: unknown): StorefrontShippingMethod | null {
@@ -226,7 +231,15 @@ export function mapShippingProjection(value: unknown): StorefrontShippingProject
 }
 
 export function toCustomerShippingMessage(cause: unknown): string {
-  if (cause instanceof StorefrontCartApiError) return cause.message;
+  if (cause instanceof StorefrontCartApiError) {
+    if (
+      cause.errorCode === "checkout.open_unpaid_limit_reached"
+      || cause.errorCode === "checkout.reservation_commit_limit_reached"
+    ) {
+      return toCustomerCheckoutMessage(cause);
+    }
+    return cause.message;
+  }
   if (cause instanceof Error && cause.message) return cause.message;
   return "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.";
 }
@@ -252,7 +265,7 @@ export async function loadShippingProjection(input: {
     }),
   });
   if (!response.ok) {
-    throw new StorefrontCartApiError(response.status, await readError(response));
+    await throwShippingError(response);
   }
   return mapShippingProjection(await response.json());
 }
@@ -287,7 +300,7 @@ export async function saveShippingSelection(
     }),
   });
   if (!response.ok) {
-    throw new StorefrontCartApiError(response.status, await readError(response));
+    await throwShippingError(response);
   }
   const draft = mapDraft(await response.json());
   if (!draft) throw new StorefrontCartApiError(500, "پاسخ ذخیرهٔ ارسال نامعتبر است.");
@@ -338,7 +351,7 @@ export async function commitShippingToPayment(
     }),
   });
   if (!response.ok) {
-    throw new StorefrontCartApiError(response.status, await readError(response));
+    await throwShippingError(response);
   }
   const page = mapStorefrontCheckout(await response.json());
   if (!page) {

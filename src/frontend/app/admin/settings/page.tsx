@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Globe2, Hash, Save, Settings, ShieldCheck, User } from "lucide-react";
+import { Clock, Globe2, Hash, Save, Settings, ShieldAlert, ShieldCheck, User } from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { type Locale } from "../../../lib/i18n/locale.ts";
 import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
@@ -35,8 +35,13 @@ import {
   saveCheckoutIdentitySettings,
   type CheckoutIdentitySettingsView,
 } from "../checkout-identity-settings-api.ts";
+import {
+  loadCheckoutAbuseSettings,
+  saveCheckoutAbuseSettings,
+  type CheckoutAbuseSettingsView,
+} from "../checkout-abuse-settings-api.ts";
 
-type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds" | "identity";
+type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds" | "identity" | "limits";
 
 /**
  * تنظیمات اپراتور Admin — پروفایل شخصی + locale؛ بدون سوئیچ سراسری جعلی.
@@ -66,6 +71,12 @@ export default function AdminSettingsPage() {
   const [methodDraft, setMethodDraft] = useState<PaymentMethodHoldView[]>([]);
   const [identity, setIdentity] = useState<CheckoutIdentitySettingsView | null>(null);
   const [identityDraft, setIdentityDraft] = useState<"AuthenticatedOnly" | "GuestAllowed">("AuthenticatedOnly");
+  const [limits, setLimits] = useState<CheckoutAbuseSettingsView | null>(null);
+  const [limitsDraft, setLimitsDraft] = useState({
+    maxOpenUnpaidOrdersPerCustomer: "2",
+    reservationCommitWindowMinutes: "30",
+    maxCheckoutCommitsPerCustomerInWindow: "3",
+  });
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -80,12 +91,13 @@ export default function AdminSettingsPage() {
     setLoadError(null);
     setProfile(undefined);
     await prepareAdminDevActor();
-    const [profileResult, prefsResult, roundingResult, holdResult, identityResult] = await Promise.all([
+    const [profileResult, prefsResult, roundingResult, holdResult, identityResult, limitsResult] = await Promise.all([
       loadOperatorProfile(),
       loadOperatorPreferences(),
       loadStoreQuantitySettings(),
       loadHoldPolicySettings(),
       loadCheckoutIdentitySettings(),
+      loadCheckoutAbuseSettings(),
     ]);
     if (profileResult.state === "denied") {
       setDenied(true);
@@ -117,6 +129,14 @@ export default function AdminSettingsPage() {
     if (identityResult.ok) {
       setIdentity(identityResult.data);
       setIdentityDraft(identityResult.data.policy);
+    }
+    if (limitsResult.ok) {
+      setLimits(limitsResult.data);
+      setLimitsDraft({
+        maxOpenUnpaidOrdersPerCustomer: String(limitsResult.data.maxOpenUnpaidOrdersPerCustomer),
+        reservationCommitWindowMinutes: String(limitsResult.data.reservationCommitWindowMinutes),
+        maxCheckoutCommitsPerCustomerInWindow: String(limitsResult.data.maxCheckoutCommitsPerCustomerInWindow),
+      });
     }
   }
 
@@ -271,6 +291,43 @@ export default function AdminSettingsPage() {
     setBusy(false);
   }
 
+  async function onSaveLimits() {
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const maxOpen = Number(limitsDraft.maxOpenUnpaidOrdersPerCustomer);
+    const windowMinutes = Number(limitsDraft.reservationCommitWindowMinutes);
+    const maxCommits = Number(limitsDraft.maxCheckoutCommitsPerCustomerInWindow);
+    if (!Number.isInteger(maxOpen) || !Number.isInteger(windowMinutes) || !Number.isInteger(maxCommits)) {
+      setError("مقدار واردشده معتبر نیست.");
+      setBusy(false);
+      return;
+    }
+    const result = await saveCheckoutAbuseSettings({
+      maxOpenUnpaidOrdersPerCustomer: maxOpen,
+      reservationCommitWindowMinutes: windowMinutes,
+      maxCheckoutCommitsPerCustomerInWindow: maxCommits,
+    });
+    if (result.denied) {
+      setDenied(true);
+      setBusy(false);
+      return;
+    }
+    if (!result.ok) {
+      setError(result.message ?? "ذخیرهٔ محدودیت سفارش انجام نشد.");
+      setBusy(false);
+      return;
+    }
+    setLimits(result.data);
+    setLimitsDraft({
+      maxOpenUnpaidOrdersPerCustomer: String(result.data.maxOpenUnpaidOrdersPerCustomer),
+      reservationCommitWindowMinutes: String(result.data.reservationCommitWindowMinutes),
+      maxCheckoutCommitsPerCustomerInWindow: String(result.data.maxCheckoutCommitsPerCustomerInWindow),
+    });
+    setSuccess("محدودیت سفارش‌های باز و رزرو ذخیره شد.");
+    setBusy(false);
+  }
+
   function onCancelHolds() {
     if (holds) applyHoldView(holds);
     setError(null);
@@ -332,6 +389,7 @@ export default function AdminSettingsPage() {
               { id: "quantity" as const, label: "مقدار", icon: Hash },
               { id: "holds" as const, label: "مهلت‌ها", icon: Clock },
               { id: "identity" as const, label: "هویت خرید", icon: ShieldCheck },
+              { id: "limits" as const, label: "سفارش باز", icon: ShieldAlert },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -355,7 +413,74 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="p-4 md:p-6">
-          {activeTab === "identity" ? (
+          {activeTab === "limits" ? (
+            <form
+              className="space-y-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void onSaveLimits();
+              }}
+              data-testid="admin-settings-limits-form"
+            >
+              <h2 className="text-sm font-bold text-gray-900">کنترل سفارش‌های پرداخت‌نشده و سوءاستفاده از رزرو</h2>
+              <p className="text-sm text-gray-500 leading-7">
+                ظرفیت سفارش باز با تعداد سفارش‌های قابل پرداخت یا در انتظار بررسی اندازه‌گیری می‌شود. سهمیه رزرو جدا است و با لغو برنمی‌گردد.
+              </p>
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 leading-6">
+                لغو سفارش ظرفیت سفارش باز را آزاد می‌کند، اما سهمیه رزرو استفاده‌شده در بازه زمانی را بازنمی‌گرداند.
+              </p>
+              <label className="block rounded-xl border border-gray-100 p-4">
+                <span className="text-sm font-medium text-gray-800">حداکثر سفارش‌های بازِ پرداخت‌نشده</span>
+                <p className="text-xs text-gray-500 mt-1">هر مشتری همزمان حداکثر این تعداد سفارش قابل پرداخت یا در انتظار بررسی می‌تواند داشته باشد.</p>
+                <input
+                  type="number"
+                  min={limits?.minOpenUnpaid ?? 1}
+                  max={limits?.maxOpenUnpaid ?? 20}
+                  value={limitsDraft.maxOpenUnpaidOrdersPerCustomer}
+                  onChange={(event) => setLimitsDraft((current) => ({ ...current, maxOpenUnpaidOrdersPerCustomer: event.target.value }))}
+                  className="mt-3 w-32 px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                  data-testid="admin-settings-max-open-unpaid"
+                />
+              </label>
+              <label className="block rounded-xl border border-gray-100 p-4">
+                <span className="text-sm font-medium text-gray-800">بازه کنترل رزروهای پیاپی</span>
+                <p className="text-xs text-gray-500 mt-1">لغو سفارش سهمیه استفاده‌شده در این بازه را برنمی‌گرداند.</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={limits?.minWindowMinutes ?? 1}
+                    max={limits?.maxWindowMinutes ?? 10080}
+                    value={limitsDraft.reservationCommitWindowMinutes}
+                    onChange={(event) => setLimitsDraft((current) => ({ ...current, reservationCommitWindowMinutes: event.target.value }))}
+                    className="w-32 px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                    data-testid="admin-settings-commit-window"
+                  />
+                  <span className="text-xs text-gray-500">دقیقه</span>
+                </div>
+              </label>
+              <label className="block rounded-xl border border-gray-100 p-4">
+                <span className="text-sm font-medium text-gray-800">حداکثر شروع رزرو در این بازه</span>
+                <p className="text-xs text-gray-500 mt-1">هر شروع موفق رزرو اولیه یک سهمیه مصرف می‌کند؛ تلاش پرداخت روی همان سفارش سهمیه جدید نمی‌گیرد.</p>
+                <input
+                  type="number"
+                  min={limits?.minCommits ?? 1}
+                  max={limits?.maxCommits ?? 30}
+                  value={limitsDraft.maxCheckoutCommitsPerCustomerInWindow}
+                  onChange={(event) => setLimitsDraft((current) => ({ ...current, maxCheckoutCommitsPerCustomerInWindow: event.target.value }))}
+                  className="mt-3 w-32 px-3 py-2 bg-gray-50 rounded-xl text-sm border border-gray-200"
+                  data-testid="admin-settings-max-commits"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy || readOnly}
+                className="w-full py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-70"
+                data-testid="admin-settings-save-limits"
+              >
+                ذخیره محدودیت سفارش
+              </button>
+            </form>
+          ) : activeTab === "identity" ? (
             <form
               className="space-y-5"
               onSubmit={(event) => {

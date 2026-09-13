@@ -51,6 +51,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     private readonly IReservationCyclePolicyResolver? _cyclePolicy;
     private readonly IInventoryAvailabilityGateway _availability;
     private readonly ICheckoutCommitBarrier _commitBarrier;
+    private readonly ICheckoutAbuseGate _abuseGate;
 
     /// <summary>
     /// دایرکتوری را به schema order و درزهای ماژول‌های دیگر وصل می‌کند.
@@ -72,7 +73,8 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         IInventoryAvailabilityGateway? availability = null,
         IReservationCycleDirectory? cycles = null,
         IReservationCyclePolicyResolver? cyclePolicy = null,
-        ICheckoutCommitBarrier? commitBarrier = null)
+        ICheckoutCommitBarrier? commitBarrier = null,
+        ICheckoutAbuseGate? abuseGate = null)
     {
         _db = db;
         _guard = guard;
@@ -90,6 +92,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
         _cycles = cycles;
         _cyclePolicy = cyclePolicy;
         _commitBarrier = commitBarrier ?? new NullCheckoutCommitBarrier();
+        _abuseGate = abuseGate ?? new NullCheckoutAbuseGate();
         _availability = availability
             ?? inventory as IInventoryAvailabilityGateway
             ?? throw new InvalidOperationException("درز موجودی برای commit سفارش لازم است.");
@@ -138,6 +141,7 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             cancellationToken);
 
         Dictionary<Guid, Guid>? reservations = null;
+        var abuseSettings = await _abuseGate.LoadSettingsAsync(cancellationToken);
         try
         {
             using var scope = new TransactionScope(
@@ -145,6 +149,10 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
                 TransactionScopeAsyncFlowOption.Enabled);
 
+            await _abuseGate.EnsureCanStartInitialReservationAsync(
+                command.PlacedByUserId,
+                abuseSettings,
+                cancellationToken);
             reservations = await ReserveCartLinesForOrderAsync(cart, now, cancellationToken);
             await _commitBarrier.OnAfterReserveAsync(cancellationToken);
 
@@ -176,6 +184,13 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             BindReservationsToOrders(group, cart, reservations);
             _db.Checkouts.Add(group);
             await PrepareInitialCycleAsync(group, command.Mode, reservations.Values, now, cancellationToken);
+            var primaryOrderId = group.SellerOrders.Select(x => x.SellerOrderId).First();
+            _abuseGate.PrepareInitialCommit(
+                command.PlacedByUserId,
+                group.CheckoutId,
+                primaryOrderId,
+                abuseSettings,
+                now);
             try
             {
                 await _db.SaveChangesAsync(cancellationToken);

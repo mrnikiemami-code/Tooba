@@ -27,6 +27,10 @@ test("store settings expose reservation fields with save/cancel", () => {
   assert.match(settings, /admin-settings-save-holds/);
   assert.match(settings, /admin-settings-cancel-holds/);
   assert.match(settings, /ReservationPolicyEditor/);
+  assert.match(settings, /admin-settings-limits-form/);
+  assert.match(settings, /کنترل سفارش‌های پرداخت‌نشده و سوءاستفاده از رزرو/);
+  assert.match(settings, /admin-settings-max-open-unpaid/);
+  assert.doesNotMatch(settings, /MaxOpenUnpaidOrdersPerCustomer/);
 });
 
 test("category inherit/override surface exists", () => {

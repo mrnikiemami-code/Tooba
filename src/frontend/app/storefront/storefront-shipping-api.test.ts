@@ -65,7 +65,8 @@ test("shipping UI source has no hardcoded Shopeiva template method list", () => 
 
 test("cart CTA routes to /shipping", () => {
   const cart = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-cart.tsx"), "utf8");
-  assert.match(cart, /href="\/shipping"/);
+  assert.match(cart, /checkoutHref/);
+  assert.match(cart, /"\/shipping"/);
   assert.doesNotMatch(cart, /href="\/checkout"/);
 });
 

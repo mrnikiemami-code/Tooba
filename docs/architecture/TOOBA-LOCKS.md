@@ -496,3 +496,18 @@ Fixed Development mobile/OTP (`09111111111` / `123456`) is enabled only in Devel
 
 ### LOCK-SF-111 — Safe returnTo after login
 Login `returnTo` accepts only internal locale-prefixed paths. Open redirects, protocol-relative URLs, and guest/payment secrets in query are rejected.
+
+### LOCK-SF-112 — Open unpaid limit counts Orders
+`MaxOpenUnpaidOrdersPerCustomer` is scoped by Store + CustomerId and counts Seller Orders, never Payment Attempts.
+
+### LOCK-SF-113 — Hidden pending cards remain counted
+Hiding a pending-payment card does not change open-unpaid counting while the underlying Order is still open/unpaid.
+
+### LOCK-SF-114 — Cancel frees open capacity, not churn quota
+Successful customer cancel removes the Order from the open-unpaid count and releases the active reservation. It does not delete or refund the reservation-churn quota event.
+
+### LOCK-SF-115 — Churn event is Cycle #1 only
+Every new successful checkout that creates Reservation Cycle #1 writes one immutable `CheckoutReservationCommit`. Payment retries on the same Order and Cycle #2+ do not add another checkout-commit event.
+
+### LOCK-SF-116 — Limits are backend and concurrency-safe
+Open-unpaid and reservation-churn limits are enforced on the backend before inventory reservation and Order creation. Concurrent last-slot submissions cannot both succeed.

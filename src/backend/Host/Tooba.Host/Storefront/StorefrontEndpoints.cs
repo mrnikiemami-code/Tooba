@@ -1,4 +1,5 @@
 using Tooba.Host.Storefront;
+using Tooba.Order.Application;
 
 namespace Tooba.Host.Storefront;
 
@@ -429,38 +430,46 @@ public static class StorefrontEndpoints
         StorefrontShippingCommitRequest body,
         StorefrontShippingComposer composer,
         CheckoutIdentityGate gate,
+        ICheckoutAbuseGate abuse,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteCheckoutAsync(async () =>
-        {
-            await gate.EnsureCheckoutActorAsync(cancellationToken);
-            return await composer.CommitAsync(
-                body.CartId,
-                ReadGuestSecret(request),
-                body.ExpectedCartVersion,
-                body.IdempotencyKey,
-                body.CouponCode,
-                cancellationToken);
-        });
+        => ExecuteCheckoutAsync(
+            async () =>
+            {
+                await gate.EnsureCheckoutActorAsync(cancellationToken);
+                return await composer.CommitAsync(
+                    body.CartId,
+                    ReadGuestSecret(request),
+                    body.ExpectedCartVersion,
+                    body.IdempotencyKey,
+                    body.CouponCode,
+                    cancellationToken);
+            },
+            abuse,
+            cancellationToken);
 
     private static Task<IResult> SubmitCheckoutAsync(
         StorefrontSubmitCheckoutRequest body,
         StorefrontCheckoutComposer composer,
         CheckoutIdentityGate gate,
+        ICheckoutAbuseGate abuse,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteCheckoutAsync(async () =>
-        {
-            await gate.EnsureCheckoutActorAsync(cancellationToken);
-            return await composer.SubmitAsync(
-                body.CartId,
-                ReadGuestSecret(request),
-                body.ExpectedCartVersion,
-                body.IdempotencyKey,
-                body.Shipping,
-                body.CouponCode,
-                cancellationToken);
-        });
+        => ExecuteCheckoutAsync(
+            async () =>
+            {
+                await gate.EnsureCheckoutActorAsync(cancellationToken);
+                return await composer.SubmitAsync(
+                    body.CartId,
+                    ReadGuestSecret(request),
+                    body.ExpectedCartVersion,
+                    body.IdempotencyKey,
+                    body.Shipping,
+                    body.CouponCode,
+                    cancellationToken);
+            },
+            abuse,
+            cancellationToken);
 
     private static async Task<IResult> GetCheckoutAsync(
         Guid checkoutId,
@@ -794,11 +803,33 @@ public static class StorefrontEndpoints
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 
-    private static async Task<IResult> ExecuteCheckoutAsync(Func<Task<StorefrontCheckoutPage>> action)
+    private static async Task<IResult> ExecuteCheckoutAsync(
+        Func<Task<StorefrontCheckoutPage>> action,
+        ICheckoutAbuseGate? abuse = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             return Results.Json(await action());
+        }
+        catch (CheckoutAbuseLimitException exception)
+        {
+            if (abuse is not null)
+            {
+                await abuse.RecordBlockAsync(exception, cancellationToken);
+            }
+
+            return Results.Json(
+                new
+                {
+                    title = "Conflict",
+                    errorCode = exception.ErrorCode,
+                    detail = MapCheckoutCustomerDetail(exception.ErrorCode),
+                    currentCount = exception.CurrentCount,
+                    maxCount = exception.MaxCount,
+                    nextAvailableAt = exception.NextAvailableAt,
+                },
+                statusCode: StatusCodes.Status409Conflict);
         }
         catch (InvalidOperationException exception)
         {
@@ -830,6 +861,16 @@ public static class StorefrontEndpoints
         if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
         {
             return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        }
+
+        if (text.Contains("checkout.open_unpaid_limit_reached", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.open_unpaid_limit_reached");
+        }
+
+        if (text.Contains("checkout.reservation_commit_limit_reached", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.reservation_commit_limit_reached");
         }
 
         if (text.Contains("shipping.cart.forbidden", StringComparison.Ordinal)
@@ -896,6 +937,10 @@ public static class StorefrontEndpoints
         "shipping.note.too_long" => "توضیحات سفارش بیش از حد طولانی است.",
         "shipping.selection.required" => "ابتدا اطلاعات ارسال را تکمیل کنید.",
         "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
+        "checkout.open_unpaid_limit_reached" =>
+            "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.",
+        "checkout.reservation_commit_limit_reached" =>
+            "تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.",
         _ => "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.",
     };
 
@@ -910,6 +955,16 @@ public static class StorefrontEndpoints
         if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
         {
             return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        }
+
+        if (text.Contains("checkout.open_unpaid_limit_reached", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.open_unpaid_limit_reached");
+        }
+
+        if (text.Contains("checkout.reservation_commit_limit_reached", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "checkout.reservation_commit_limit_reached");
         }
 
         if (text.Contains("checkout.access.denied", StringComparison.Ordinal)
@@ -976,6 +1031,10 @@ public static class StorefrontEndpoints
         "checkout.access.denied" =>
             "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
         "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
+        "checkout.open_unpaid_limit_reached" =>
+            "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.",
+        "checkout.reservation_commit_limit_reached" =>
+            "تعداد دفعات مجاز شروع رزرو در بازه زمانی اخیر به پایان رسیده است. کمی بعد دوباره تلاش کنید.",
         _ => "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.",
     };
 

@@ -22,6 +22,11 @@ public sealed class AtomicCheckoutCommitTests
         Assert.Contains("ConvertAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("ReconcileCartConversionAsync(group, command", checkout, StringComparison.Ordinal);
         Assert.Contains("ReserveCartLinesForOrderAsync", checkout, StringComparison.Ordinal);
+        Assert.Contains("EnsureCanStartInitialReservationAsync", checkout, StringComparison.Ordinal);
+        Assert.True(
+            checkout.IndexOf("EnsureCanStartInitialReservationAsync", StringComparison.Ordinal)
+            < checkout.IndexOf("ReserveCartLinesForOrderAsync", StringComparison.Ordinal));
+        Assert.Contains("PrepareInitialCommit", checkout, StringComparison.Ordinal);
         Assert.Contains("PrepareInitialCycleAsync", checkout, StringComparison.Ordinal);
         Assert.DoesNotContain("_checkouts.SubmitAsync", payment, StringComparison.Ordinal);
         Assert.Contains("InitiateAsync", payment, StringComparison.Ordinal);

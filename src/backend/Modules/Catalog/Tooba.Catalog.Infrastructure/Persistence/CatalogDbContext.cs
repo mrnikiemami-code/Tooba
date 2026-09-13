@@ -43,6 +43,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>سیاست هویت مشتری در فرایند خرید.</summary>
     public DbSet<StoreCheckoutIdentitySettings> StoreCheckoutIdentitySettings => Set<StoreCheckoutIdentitySettings>();
 
+    /// <summary>سقف سفارش باز و سهمیه شروع رزرو.</summary>
+    public DbSet<StoreCheckoutAbuseSettings> StoreCheckoutAbuseSettings => Set<StoreCheckoutAbuseSettings>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -540,6 +543,13 @@ public sealed class CatalogDbContext : DbContext
             entity.HasKey(x => x.SettingsId);
             entity.Property(x => x.SettingsId).ValueGeneratedNever();
             entity.Property(x => x.Policy).HasConversion<string>().HasMaxLength(32);
+        });
+
+        modelBuilder.Entity<StoreCheckoutAbuseSettings>(entity =>
+        {
+            entity.ToTable("store_checkout_abuse_settings");
+            entity.HasKey(x => x.SettingsId);
+            entity.Property(x => x.SettingsId).ValueGeneratedNever();
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>

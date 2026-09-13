@@ -73,6 +73,16 @@ test("post-commit ownership failure is never order-registration-failed", () => {
   assert.equal(msg.includes("ثبت سفارش انجام نشد"), false);
 });
 
+test("open unpaid and churn messages stay business-safe", () => {
+  assert.equal(
+    toCustomerCheckoutMessage(new StorefrontCartApiError(409, "checkout.open_unpaid_limit_reached", "x")),
+    "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.",
+  );
+  const churn = toCustomerCheckoutMessage(new StorefrontCartApiError(409, "checkout.reservation_commit_limit_reached", "x"));
+  assert.match(churn, /شروع رزرو/);
+  assert.equal(churn.includes("checkout.reservation_commit_limit_reached"), false);
+});
+
 test("customer checkout message hides technical tax codes", () => {
   const hidden = toCustomerCheckoutMessage(
     new StorefrontCartApiError(409, "checkout.tax.unavailable", "TAX_NO_APPLICABLE_RULE"),

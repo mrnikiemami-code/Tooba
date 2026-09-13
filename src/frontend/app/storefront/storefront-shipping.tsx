@@ -26,7 +26,8 @@ import {
 } from "lucide-react";
 import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
-import { readCartSession } from "./storefront-cart-api.ts";
+import { readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
 import {
   createCustomerAddress,
   listCheckoutSavedAddresses,
@@ -119,6 +120,7 @@ export function StorefrontShopeivaShipping() {
   const [deliveryTime, setDeliveryTime] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [limitCode, setLimitCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newAddress, setNewAddress] = useState<AddressForm>(emptyAddress);
@@ -233,6 +235,7 @@ export function StorefrontShopeivaShipping() {
     if (!projection || !methodCode || !isValid) return;
     setBusy(true);
     setError(null);
+    setLimitCode(null);
     try {
       await saveShippingSelection(projection.cartId, projection.cartVersion, {
         recipientName: address.recipientName,
@@ -254,6 +257,7 @@ export function StorefrontShopeivaShipping() {
       router.push(`/payment?checkoutId=${encodeURIComponent(committed.checkoutId)}`);
     } catch (cause) {
       setError(toCustomerShippingMessage(cause));
+      setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);
     } finally {
       setBusy(false);
     }
@@ -321,9 +325,9 @@ export function StorefrontShopeivaShipping() {
       <section className="w-full bg-white">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-8 md:py-10">
           {error ? (
-            <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3" data-testid="shipping-error">
-              {error}
-            </p>
+            <div className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3" data-testid="shipping-error">
+              <StorefrontCheckoutLimitNotice errorCode={limitCode} message={error} />
+            </div>
           ) : null}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <div className="lg:col-span-2 space-y-4">

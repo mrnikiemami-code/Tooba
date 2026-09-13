@@ -421,16 +421,24 @@ export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
   };
 }
 
+export type StorefrontCartApiErrorMeta = {
+  currentCount?: number;
+  maxCount?: number;
+  nextAvailableAt?: string | null;
+};
+
 export class StorefrontCartApiError extends Error {
   readonly status: number;
   readonly errorCode: string | null;
   readonly detail: string | null;
+  readonly meta: StorefrontCartApiErrorMeta;
 
-  constructor(status: number, errorCode: string | null, detail: string | null) {
+  constructor(status: number, errorCode: string | null, detail?: string | null, meta?: StorefrontCartApiErrorMeta) {
     super(detail ?? errorCode ?? "خطای سبد");
     this.status = status;
     this.errorCode = errorCode;
-    this.detail = detail;
+    this.detail = detail ?? null;
+    this.meta = meta ?? {};
   }
 }
 

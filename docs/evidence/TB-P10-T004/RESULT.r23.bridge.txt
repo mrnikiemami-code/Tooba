@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R23
+
+Parent-Task:
+TB-P10-T004-R22-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=YES
+
+Summary:
+R23 PASS. Store+CustomerId MaxOpenUnpaidOrdersPerCustomer (default 2) counts SellerOrders via OpenUnpaidOrderPredicate, not Payment Attempts. Hide does not change count. Cancel frees the open slot and does not refund churn. Every successful Cycle #1 writes immutable CheckoutReservationCommit; Cycle #2+ and payment retries do not. Limits enforced inside the R21 TransactionScope before ReserveCartLinesForOrderAsync with CheckoutAbuseCustomerLocks. Admin section کنترل سفارش‌های پرداخت‌نشده و سوءاستفاده از رزرو works. Runtime A–N PASS. Anti-pattern CLEAN. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…111 preserved. Added LOCK-SF-112…116 (Order-count open unpaid; hide still counts; cancel frees slot not churn; Cycle #1-only churn event; backend concurrency-safe enforcement).
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T004-R22-R1; Last Implementation at claim TB-P10-T004-R22-R1; Repair TB-P10-T004-R23; Worker tooba-worker-01; branch main; HEAD==origin/main daa5b6cb8a9d1c449b247b3fc0332dd68af424ad; task expected previous HEAD c17bbf391a53c255508e5028c01bbe78985d5567 is the R22-R1 impl (docs SHA already on main); known/safe tree; USER_VISUAL_ACCEPTED=YES. Evidence r23-recovery-start.md
+
+Discovery:
+Real SellerOrder statuses mapped. PendingPayment/Submitted count; Paid/Cancelled/ReservationRequested do not. Payment Attempts never count. Manual review stays PendingPayment so still counts. Evidence r23-discovery.md
+
+Open-Unpaid-Policy:
+Canonical OpenUnpaidOrderPredicate. Default max 2, min 1, max 20, no clamp. 409 checkout.open_unpaid_limit_reached before reservation. Evidence r23-open-unpaid-policy.md
+
+Churn-Policy:
+Window 30 / max 3 defaults. Cycle #1 only. Cancel/hide/pay do not erase quota. 409 checkout.reservation_commit_limit_reached + nextAvailableAt. Offer-level cap not implemented (future). Evidence r23-churn-policy.md
+
+Churn-Audit:
+Immutable CheckoutReservationCommit CycleNumber=1. Runtime A one event; J Cycle #2 still one. Evidence r23-churn-audit.md
+
+Concurrency:
+Customer lock row inside TransactionScope. L last slot wins=1 blocks=1. Evidence r23-concurrency.md
+
+Admin-Settings:
+GET/PUT /v1/admin/settings/checkout-abuse/; FA labels only; validation 400; settings audit events. Evidence r23-admin-settings.md
+
+Customer-UX:
+FA messages; pending-payments + customer orders links; cart intact; no reserved-stock implication on churn. Evidence r23-customer-ux.md
+
+Observability:
+ReservationPolicyAuditEvent + CheckoutAbuseBlockEvent + inspectable commit rows. Evidence r23-observability.md
+
+Focused-Validation:
+Host abuse/atomic/identity 16; FE 22; critical-storefront 16; recovery guard 4; git diff --check clean. Evidence r23-focused-validation.md
+
+Runtime:
+A–N PASS on Host :5088 + FE :3000. A 01a09987-c777-7000-9025-9776bc703662; L winner 01a09987-e312-7000-895f-402f89b7d43b. Evidence r23-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r23-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-112…116 added; 001…111 untouched.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R22-R1; Last Implementation TB-P10-T004-R23; Current Issued/Repair none; Worker IDLE; no TB-P10-T005. Evidence r23-recovery-sot.md
+
+Git:
+expected previous HEAD c17bbf391a53c255508e5028c01bbe78985d5567
+claim HEAD daa5b6cb8a9d1c449b247b3fc0332dd68af424ad
+ending HEAD PLACEHOLDER_ENDING_HEAD
+origin/main after push PLACEHOLDER_ENDING_HEAD
+HEAD==origin/main yes
+task-owned worktree clean after push
+no TB-P10-T005
+
+Architectural-Concerns:
+Offer-level MaxReservationCommitsPerCustomerPerOfferInWindow is a future extension only. Paid projection remains async via payment.succeeded outbox (K waited for SellerOrder Paid). Planned next Architect task is TB-P10-T004-R24 (not implemented).
+
+Visual-Concerns:
+None for this repair. Admin/customer copy is FA; USER_VISUAL_ACCEPTED=YES is the task flag for already-accepted surfaces. Critical storefront guards green.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
