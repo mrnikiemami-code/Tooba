@@ -28,12 +28,43 @@ public sealed record ReservationCyclePolicySnapshot(
     int MaxCycles,
     string Source);
 
+/// <summary>یک لایهٔ حل‌شده با منبع جدا برای هر فیلد.</summary>
+public sealed record ReservationPolicyLayerPreview(
+    int InitialHoldMinutes,
+    string InitialSource,
+    int RetryHoldMinutes,
+    string RetrySource,
+    int MaxCycles,
+    string MaxSource);
+
+/// <summary>پیش‌نمایش Admin: override هر سطح + مؤثر backend-resolved.</summary>
+public sealed record ReservationPolicyPreview(
+    ReservationPolicyLayerPreview Platform,
+    ReservationPolicyLayerPreview AfterStore,
+    ReservationPolicyLayerPreview AfterCategory,
+    ReservationPolicyLayerPreview AfterOffer,
+    int? StoreInitialOverride,
+    int? StoreRetryOverride,
+    int? StoreMaxOverride,
+    int? CategoryInitialOverride,
+    int? CategoryRetryOverride,
+    int? CategoryMaxOverride,
+    int? OfferInitialOverride,
+    int? OfferRetryOverride,
+    int? OfferMaxOverride);
+
 /// <summary>حل Offer &gt; Category &gt; Store &gt; Platform و سپس حداقل چندخط.</summary>
 public interface IReservationCyclePolicyResolver
 {
     /// <summary>سیاست مؤثر خطوط لازم را برمی‌گرداند.</summary>
     Task<ReservationCyclePolicySnapshot> ResolveAsync(
         IReadOnlyList<ReservationCyclePolicyLine> lines,
+        CancellationToken cancellationToken);
+
+    /// <summary>پیش‌نمایش فیلدبه‌فیلد برای Admin؛ تقدم را فرانت محاسبه نمی‌کند.</summary>
+    Task<ReservationPolicyPreview> PreviewAsync(
+        Guid? offerId,
+        Guid? categoryId,
         CancellationToken cancellationToken);
 }
 

@@ -43,6 +43,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
+    /// <summary>ممیزی تغییر تنظیم سیاست رزرو.</summary>
+    public DbSet<ReservationPolicyAuditEvent> ReservationPolicyAuditEvents => Set<ReservationPolicyAuditEvent>();
+
     /// <summary>
     /// گونه‌های Catalog.
     /// </summary>
@@ -535,6 +538,18 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(x => x.OverrideId).ValueGeneratedNever();
             entity.Property(x => x.ScopeKind).HasMaxLength(16);
             entity.HasIndex(x => new { x.ScopeKind, x.ScopeId }).IsUnique();
+        });
+
+        modelBuilder.Entity<ReservationPolicyAuditEvent>(entity =>
+        {
+            entity.ToTable("reservation_policy_audit_events");
+            entity.HasKey(x => x.EventId);
+            entity.Property(x => x.EventId).ValueGeneratedNever();
+            entity.Property(x => x.Level).HasMaxLength(16);
+            entity.Property(x => x.Field).HasMaxLength(64);
+            entity.Property(x => x.OldOverride).HasMaxLength(32);
+            entity.Property(x => x.NewOverride).HasMaxLength(32);
+            entity.HasIndex(x => x.OccurredAt);
         });
 
         OutboxMessageMapping.Map(modelBuilder, Schema);

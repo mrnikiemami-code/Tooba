@@ -52,6 +52,7 @@ import { CategoryAttributesPanel } from "./category-attributes-panel.tsx";
 import { CategoryFacetsPanel } from "./category-facets-panel.tsx";
 import { CategoryMegaMenuPanel } from "./category-mega-menu-panel.tsx";
 import { CategoryProductsPanel } from "./category-products-panel.tsx";
+import { CategoryReservationPanel } from "./category-reservation-panel.tsx";
 import { MediaLibraryDialog } from "./media-library-dialog.tsx";
 import { mediaPreviewUrl, type MediaAssetDto } from "./media-api.ts";
 import { mapAdminErrorMessage } from "./admin-error-map.ts";
@@ -74,6 +75,7 @@ const TABS = [
   { id: "facets", label: "فیلترهای صفحه محصولات", implemented: true },
   { id: "mega-menu", label: "مگامنو", implemented: true },
   { id: "products", label: "محصولات", implemented: true },
+  { id: "reservation", label: "سیاست رزرو", implemented: true },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -1746,6 +1748,9 @@ export function CategoryAdminScreen() {
       if (categoryId) router.push(`${basePath}/${categoryId}`);
       return;
     }
+    if (activeTab === "reservation") {
+      return;
+    }
     if (activeTab === "general") handleEnterGeneralEdit();
     else if (activeTab === "translations") handleEnterTranslationEdit();
     else if (activeTab === "attributes") handleEnterAttributesEdit();
@@ -2181,6 +2186,12 @@ export function CategoryAdminScreen() {
                       || "دسته"
                     }
                     treeNodes={flatNodes}
+                    canEdit={formMode.canEdit}
+                  />
+                ) : null}
+                {activeTab === "reservation" && categoryId ? (
+                  <CategoryReservationPanel
+                    categoryId={categoryId}
                     canEdit={formMode.canEdit}
                   />
                 ) : null}

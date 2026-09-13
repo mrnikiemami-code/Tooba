@@ -309,6 +309,7 @@ test("Attributes tab: VIEW/EDIT, inherited/local, add/create, labels", () => {
 test("visible category tabs are functional — products real; seo/settings/history hidden", () => {
   const screen = fs.readFileSync(screenPath, "utf8");
   assert.match(screen, /id: "products", label: "محصولات", implemented: true/);
+  assert.match(screen, /id: "reservation", label: "سیاست رزرو", implemented: true/);
   assert.match(screen, /CategoryProductsPanel/);
   assert.match(screen, /id: "facets", label: "فیلترهای صفحه محصولات", implemented: true/);
   assert.match(screen, /id: "mega-menu", label: "مگامنو", implemented: true/);

@@ -18,6 +18,7 @@ import { ProductAttributesPanel } from "./product-attributes-panel";
 import { ProductMediaPanel } from "./product-media-panel";
 import { ProductSeoPanel } from "./product-seo-panel";
 import { ProductPublishingPanel } from "./product-publishing-panel";
+import { OfferReservationPanel } from "./offer-reservation-panel.tsx";
 import { buildPublishChecklist } from "./product-publishing-panel-model";
 import { ProductHistoryPanel } from "./product-history-panel";
 import { ProductTranslationsPanel, translationReadiness } from "./product-translations-panel";
@@ -1441,6 +1442,12 @@ function ProductWorkspaceScreenInner({
               <p className="mt-2 text-sm text-muted">
                 موجود {onHand} · رزرو {reserved} · {view.stock.length} محل
               </p>
+            </Card>
+            <Card data-testid="product-offer-reservation-policy">
+              <OfferReservationPanel
+                offers={view.offers}
+                canEdit={canMutateCatalog}
+              />
             </Card>
           </div>
         ) : null}

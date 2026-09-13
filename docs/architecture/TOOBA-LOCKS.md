@@ -451,3 +451,21 @@ When max cycles are used or reacquire fails, Admin Order Detail must show the bu
 
 ### LOCK-SF-096 — Stored cycle policy snapshot is the historical display source
 Effective hold minutes, max cycles, and policy source shown for a past cycle come from that stored cycle. Current Settings must not rewrite historical Admin policy display.
+
+### LOCK-SF-097 — Reservation policy is configurable at Store, Category, and Offer
+Admin can set `InitialReservationHoldMinutes`, `RetryReservationHoldMinutes`, and `MaxReservationCycles` at Store, Category, and Offer. Product is not a policy level. Cooldown and unrelated timers are not part of this policy.
+
+### LOCK-SF-098 — Reservation policy precedence stays Offer > Category > Store > Platform
+Effective resolution remains Offer override, then Category override, then Store default, then Platform default. Category parent-tree walk is not a policy level unless a later Task explicitly adds it.
+
+### LOCK-SF-099 — Clearing an override restores inheritance
+Removing a Store/Category/Offer override stores null and restores the parent policy. The UI must not persist a copied parent value as a new override.
+
+### LOCK-SF-100 — Effective reservation policy is backend-resolved
+Admin and Seller surfaces display effective values and per-field sources returned by the backend preview/resolver. Frontend must not re-implement Offer > Category > Store > Platform.
+
+### LOCK-SF-101 — Settings change future cycles only
+Changing reservation policy Settings must not rewrite an active cycle `ExpiresAt` or historical cycle policy snapshots. The next new cycle/order uses the updated policy.
+
+### LOCK-SF-102 — Seller reservation-policy mutation requires an explicit permission
+Admin may edit Store/Category/Offer reservation policy. Seller mutation is denied unless an explicit backend permission exists and is granted. Absence of that permission is deny.

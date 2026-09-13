@@ -396,6 +396,7 @@ app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapQuantitySettingsEndpoints();
 app.MapHoldPolicySettingsEndpoints();
+app.MapReservationPolicyAdminEndpoints();
 app.MapUnitOfMeasureEndpoints();
 app.MapShippingServiceEndpoints();
 app.MapCatalogAttributeEndpoints();

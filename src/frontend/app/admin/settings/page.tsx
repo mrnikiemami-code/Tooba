@@ -24,6 +24,12 @@ import {
   type HoldPolicySettingsView,
   type PaymentMethodHoldView,
 } from "../hold-policy-settings-api";
+import {
+  ReservationPolicyEditor,
+  draftFromView,
+  readReservationWrite,
+  type ReservationPolicyDraft,
+} from "../reservation-policy-editor.tsx";
 
 type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds";
 
@@ -53,6 +59,14 @@ export default function AdminSettingsPage() {
     manualPaymentReviewHoldHours: "",
   });
   const [methodDraft, setMethodDraft] = useState<PaymentMethodHoldView[]>([]);
+  const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
+    initial: "",
+    retry: "",
+    max: "",
+    inheritInitial: true,
+    inheritRetry: true,
+    inheritMax: true,
+  });
 
   async function refresh() {
     setDenied(false);
@@ -103,6 +117,9 @@ export default function AdminSettingsPage() {
       manualPaymentReviewHoldHours: view.manualReviewHold.hours == null ? "" : String(view.manualReviewHold.hours),
     });
     setMethodDraft(view.methods);
+    if (view.reservationCycle) {
+      setReservationDraft(draftFromView(view.reservationCycle));
+    }
   }
 
   function parseHours(raw: string): number | null {
@@ -192,12 +209,19 @@ export default function AdminSettingsPage() {
     setBusy(true);
     setError(null);
     setSuccess(null);
+    const reservation = readReservationWrite(reservationDraft);
+    if (!reservation.ok) {
+      setError(reservation.message);
+      setBusy(false);
+      return;
+    }
     const result = await saveHoldPolicySettings({
       cartPersistenceHours: parseHours(holdDraft.cartPersistenceHours),
       onlinePaymentHoldHours: parseHours(holdDraft.onlinePaymentHoldHours),
       manualPaymentInitialHoldHours: parseHours(holdDraft.manualPaymentInitialHoldHours),
       manualPaymentReviewHoldHours: parseHours(holdDraft.manualPaymentReviewHoldHours),
       methods: methodDraft,
+      ...reservation.body,
     });
     if (result.denied) {
       setDenied(true);
@@ -387,6 +411,17 @@ export default function AdminSettingsPage() {
                   </div>
                 ))}
               </div>
+              {holds?.reservationCycle ? (
+                <ReservationPolicyEditor
+                  view={holds.reservationCycle}
+                  draft={reservationDraft}
+                  onDraftChange={setReservationDraft}
+                  canEdit
+                  busy={busy}
+                  locale={locale === "en" ? "en" : "fa"}
+                  testId="admin-settings-reservation-policy"
+                />
+              ) : null}
               <div className="flex gap-3">
                 <button
                   type="submit"

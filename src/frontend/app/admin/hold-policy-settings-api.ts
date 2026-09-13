@@ -1,4 +1,5 @@
 import { adminHeaders } from "./admin-api";
+import { mapReservationPolicy, type ReservationPolicyEditorView } from "./reservation-policy-api";
 
 export interface HoldPolicyDurationView {
   hours: number | null;
@@ -25,6 +26,7 @@ export interface HoldPolicySettingsView {
   manualInitialHold: HoldPolicyDurationView;
   manualReviewHold: HoldPolicyDurationView;
   methods: PaymentMethodHoldView[];
+  reservationCycle: ReservationPolicyEditorView | null;
 }
 
 function readProp(record: Record<string, unknown>, camel: string, pascal: string): unknown {
@@ -83,6 +85,7 @@ function mapSettings(payload: unknown): HoldPolicySettingsView | null {
     methods: Array.isArray(methodsRaw)
       ? methodsRaw.map(mapMethod).filter((row): row is PaymentMethodHoldView => row !== null)
       : [],
+    reservationCycle: mapReservationPolicy(readProp(item, "reservationCycle", "ReservationCycle")),
   };
 }
 
@@ -106,6 +109,9 @@ export async function saveHoldPolicySettings(body: {
   manualPaymentInitialHoldHours: number | null;
   manualPaymentReviewHoldHours: number | null;
   methods: PaymentMethodHoldView[];
+  initialReservationHoldMinutes: number | null;
+  retryReservationHoldMinutes: number | null;
+  maxReservationCycles: number | null;
 }): Promise<{ ok: true; data: HoldPolicySettingsView } | { ok: false; denied?: boolean; message?: string }> {
   try {
     const response = await fetch("/v1/admin/settings/hold-policy", {

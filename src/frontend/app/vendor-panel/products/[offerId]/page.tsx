@@ -9,6 +9,7 @@ import {
   formatOfferStatus,
   formatUnits,
   loadSellerOfferDetail,
+  loadSellerReservationPolicy,
   patchSellerOffer,
   readSellerPartyId,
   writeSellerOfferInventory,
@@ -17,6 +18,8 @@ import {
   type SellerOfferDetail,
 } from "../../seller-api";
 import { SellerProductAttributesPanel } from "../../../admin/catalog-attribute-ui";
+import { ReservationPolicyEditor, draftFromView, type ReservationPolicyDraft } from "../../../admin/reservation-policy-editor.tsx";
+import type { ReservationPolicyEditorView } from "../../../admin/reservation-policy-api";
 
 /**
  * seam ویرایش Offer فروشنده؛ زمینهٔ Catalog فقط‌خواندنی است؛ قیمت و موجودی از Pricing/Inventory.
@@ -39,6 +42,15 @@ export default function VendorProductDetailPage() {
   const [maximumOrderQuantity, setMaximumOrderQuantity] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
+  const [reservation, setReservation] = useState<ReservationPolicyEditorView | null>(null);
+  const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
+    initial: "",
+    retry: "",
+    max: "",
+    inheritInitial: true,
+    inheritRetry: true,
+    inheritMax: true,
+  });
 
   function applyDetail(next: SellerOfferDetail) {
     setDetail(next);
@@ -68,6 +80,12 @@ export default function VendorProductDetailPage() {
       setDenied(Boolean(result.denied));
       if (result.detail) {
         applyDetail(result.detail);
+      }
+    });
+    void loadSellerReservationPolicy(sellerPartyId, offerId).then((policy) => {
+      if (policy.ok) {
+        setReservation(policy.data);
+        setReservationDraft(draftFromView(policy.data));
       }
     });
   }
@@ -351,6 +369,17 @@ export default function VendorProductDetailPage() {
               انصراف
             </button>
           </section>
+          {reservation ? (
+            <section className="rounded-2xl border border-border bg-surface-elevated p-5 shadow-sm" data-testid="seller-reservation-policy-readonly">
+              <ReservationPolicyEditor
+                view={reservation}
+                draft={reservationDraft}
+                onDraftChange={setReservationDraft}
+                canEdit={false}
+                locale="fa"
+              />
+            </section>
+          ) : null}
           <SellerProductAttributesPanel productId={detail.productId} />
         </div>
       ) : (

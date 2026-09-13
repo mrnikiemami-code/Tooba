@@ -573,6 +573,27 @@ export async function loadSellerOfferDetail(
 }
 
 /**
+ * سیاست رزرو مؤثر Offer را فقط‌خواندنی برمی‌گرداند؛ فروشنده مجوز mutation ندارد.
+ */
+export async function loadSellerReservationPolicy(
+  sellerPartyId: string,
+  offerId: string,
+): Promise<{ ok: true; data: import("../admin/reservation-policy-api").ReservationPolicyEditorView } | { ok: false; denied?: boolean }> {
+  try {
+    const { mapReservationPolicy } = await import("../admin/reservation-policy-api");
+    const response = await fetch(`/v1/seller/settings/reservation-policy/offers/${offerId}`, {
+      headers: sellerHeaders(sellerPartyId, currentActor()),
+    });
+    if (isDeniedStatus(response.status)) return { ok: false, denied: true };
+    if (!response.ok) return { ok: false };
+    const data = mapReservationPolicy(await readJson(response));
+    return data ? { ok: true, data } : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/**
  * SKU یا وضعیت Offer را با مرز سرور به‌روز می‌کند.
  */
 export async function patchSellerOffer(

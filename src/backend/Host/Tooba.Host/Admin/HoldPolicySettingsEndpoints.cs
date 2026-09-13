@@ -3,6 +3,7 @@ using Tooba.BuildingBlocks;
 using Tooba.Cart.Application;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Order.Application;
 using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure;
 using Tooba.Payment.Infrastructure.Persistence;
@@ -34,7 +35,8 @@ public sealed record HoldPolicySettingsView(
     HoldPolicyDurationView OnlinePaymentHold,
     HoldPolicyDurationView ManualInitialHold,
     HoldPolicyDurationView ManualReviewHold,
-    IReadOnlyList<PaymentMethodHoldView> Methods);
+    IReadOnlyList<PaymentMethodHoldView> Methods,
+    ReservationPolicyEditorView ReservationCycle);
 
 /// <summary>بدنهٔ ذخیره.</summary>
 public sealed record HoldPolicySettingsWriteRequest(
@@ -42,7 +44,10 @@ public sealed record HoldPolicySettingsWriteRequest(
     int? OnlinePaymentHoldHours,
     int? ManualPaymentInitialHoldHours,
     int? ManualPaymentReviewHoldHours,
-    IReadOnlyList<PaymentMethodHoldView>? Methods);
+    IReadOnlyList<PaymentMethodHoldView>? Methods,
+    int? InitialReservationHoldMinutes,
+    int? RetryReservationHoldMinutes,
+    int? MaxReservationCycles);
 
 /// <summary>تنظیم مهلت سبد/پرداخت روی معماری Settings موجود.</summary>
 public static class HoldPolicySettingsEndpoints
@@ -58,6 +63,7 @@ public static class HoldPolicySettingsEndpoints
     private static async Task<IResult> GetAsync(
         CatalogDbContext catalog,
         PaymentDbContext payments,
+        IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
         HttpRequest request,
@@ -71,7 +77,7 @@ public static class HoldPolicySettingsEndpoints
         {
             await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, payments, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, payments, resolver, gateway.Value, cart.Value, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -83,6 +89,7 @@ public static class HoldPolicySettingsEndpoints
         HoldPolicySettingsWriteRequest body,
         CatalogDbContext catalog,
         PaymentDbContext payments,
+        IReservationCyclePolicyResolver resolver,
         Microsoft.Extensions.Options.IOptions<PaymentGatewayOptions> gateway,
         Microsoft.Extensions.Options.IOptions<CartLifetimeOptions> cart,
         HttpRequest request,
@@ -94,7 +101,7 @@ public static class HoldPolicySettingsEndpoints
     {
         try
         {
-            await AdminPanelAccess.RequireAuthorizedAsync(
+            var actor = await AdminPanelAccess.RequireAuthorizedAsync(
                 request, session, tenant, guard, environment, cancellationToken);
             ValidateHours(body.CartPersistenceHours, 1, 24 * 90, "cart.persistence.invalid");
             ValidateHours(body.OnlinePaymentHoldHours, 1, 24 * 30, "hold.online.invalid");
@@ -115,6 +122,15 @@ public static class HoldPolicySettingsEndpoints
                 body.ManualPaymentInitialHoldHours,
                 body.ManualPaymentReviewHoldHours,
                 now);
+            ReservationPolicyAdminComposer.ReplaceStore(
+                store,
+                new ReservationPolicyWriteRequest(
+                    body.InitialReservationHoldMinutes,
+                    body.RetryReservationHoldMinutes,
+                    body.MaxReservationCycles),
+                actor,
+                now,
+                catalog);
 
             foreach (var method in body.Methods ?? [])
             {
@@ -144,7 +160,7 @@ public static class HoldPolicySettingsEndpoints
 
             await catalog.SaveChangesAsync(cancellationToken);
             await payments.SaveChangesAsync(cancellationToken);
-            return Results.Json(await BuildViewAsync(catalog, payments, gateway.Value, cart.Value, cancellationToken));
+            return Results.Json(await BuildViewAsync(catalog, payments, resolver, gateway.Value, cart.Value, cancellationToken));
         }
         catch (PlatformHttpException ex)
         {
@@ -155,6 +171,7 @@ public static class HoldPolicySettingsEndpoints
     private static async Task<HoldPolicySettingsView> BuildViewAsync(
         CatalogDbContext catalog,
         PaymentDbContext payments,
+        IReservationCyclePolicyResolver resolver,
         PaymentGatewayOptions gateway,
         CartLifetimeOptions cart,
         CancellationToken cancellationToken)
@@ -162,6 +179,9 @@ public static class HoldPolicySettingsEndpoints
         var store = await catalog.StoreHoldPolicySettings.AsNoTracking()
             .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
         var methods = await payments.MethodHoldOverrides.AsNoTracking().ToListAsync(cancellationToken);
+        var reservation = ReservationPolicyAdminComposer.ForStore(
+            await resolver.PreviewAsync(null, null, cancellationToken),
+            true);
         var platformCart = Math.Clamp(cart.PersistenceHours <= 0 ? 168 : cart.PersistenceHours, 1, 24 * 90);
         var platformOnline = Math.Clamp(gateway.OnlinePaymentHoldHours <= 0 ? 2 : gateway.OnlinePaymentHoldHours, 1, 24 * 30);
         var platformManual = Math.Clamp(gateway.ManualPaymentInitialHoldHours <= 0 ? 2 : gateway.ManualPaymentInitialHoldHours, 1, 24 * 30);
@@ -203,7 +223,8 @@ public static class HoldPolicySettingsEndpoints
             {
                 MethodView("fake", "درگاه آنلاین", "Online gateway", methods),
                 MethodView("manual", "کارت به کارت", "Card-to-card", methods),
-            });
+            },
+            reservation);
     }
 
     private static PaymentMethodHoldView MethodView(

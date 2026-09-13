@@ -84,6 +84,131 @@ public sealed class ReservationCyclePolicyResolver : IReservationCyclePolicyReso
         return tightest ?? storeSnap;
     }
 
+    public async Task<ReservationPolicyPreview> PreviewAsync(
+        Guid? offerId,
+        Guid? categoryId,
+        CancellationToken cancellationToken)
+    {
+        var platform = PlatformLayer();
+        var store = await _catalog.StoreHoldPolicySettings.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
+        var afterStore = Overlay(
+            platform,
+            store?.InitialReservationHoldMinutes,
+            store?.RetryReservationHoldMinutes,
+            store?.MaxReservationCycles,
+            "store");
+
+        ReservationCyclePolicyOverride? category = null;
+        if (categoryId is { } cid)
+        {
+            category = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
+                .SingleOrDefaultAsync(
+                    x => x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && x.ScopeId == cid,
+                    cancellationToken);
+        }
+
+        var afterCategory = Overlay(
+            afterStore,
+            category?.InitialReservationHoldMinutes,
+            category?.RetryReservationHoldMinutes,
+            category?.MaxReservationCycles,
+            "category");
+
+        ReservationCyclePolicyOverride? offer = null;
+        if (offerId is { } oid)
+        {
+            offer = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
+                .SingleOrDefaultAsync(
+                    x => x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && x.ScopeId == oid,
+                    cancellationToken);
+        }
+
+        var afterOffer = Overlay(
+            afterCategory,
+            offer?.InitialReservationHoldMinutes,
+            offer?.RetryReservationHoldMinutes,
+            offer?.MaxReservationCycles,
+            "offer");
+
+        return new ReservationPolicyPreview(
+            platform,
+            afterStore,
+            afterCategory,
+            afterOffer,
+            store?.InitialReservationHoldMinutes,
+            store?.RetryReservationHoldMinutes,
+            store?.MaxReservationCycles,
+            category?.InitialReservationHoldMinutes,
+            category?.RetryReservationHoldMinutes,
+            category?.MaxReservationCycles,
+            offer?.InitialReservationHoldMinutes,
+            offer?.RetryReservationHoldMinutes,
+            offer?.MaxReservationCycles);
+    }
+
+    /// <summary>یک بار store/overrides را می‌خواند و پیش‌نمایش چند Offer را برمی‌گرداند.</summary>
+    public async Task<IReadOnlyList<ReservationPolicyPreview>> PreviewManyAsync(
+        IReadOnlyList<(Guid OfferId, Guid? CategoryId)> lines,
+        CancellationToken cancellationToken)
+    {
+        var platform = PlatformLayer();
+        var store = await _catalog.StoreHoldPolicySettings.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.SettingsId == StoreHoldPolicySettings.SingletonId, cancellationToken);
+        var afterStore = Overlay(
+            platform,
+            store?.InitialReservationHoldMinutes,
+            store?.RetryReservationHoldMinutes,
+            store?.MaxReservationCycles,
+            "store");
+        var offerIds = lines.Select(x => x.OfferId).Distinct().ToArray();
+        var categoryIds = lines.Where(x => x.CategoryId is not null).Select(x => x.CategoryId!.Value).Distinct().ToArray();
+        var overrides = await _catalog.ReservationCyclePolicyOverrides.AsNoTracking()
+            .Where(x =>
+                (x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && offerIds.Contains(x.ScopeId))
+                || (x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && categoryIds.Contains(x.ScopeId)))
+            .ToListAsync(cancellationToken);
+
+        var result = new List<ReservationPolicyPreview>(lines.Count);
+        foreach (var line in lines)
+        {
+            var category = line.CategoryId is { } cid
+                ? overrides.FirstOrDefault(x =>
+                    x.ScopeKind == ReservationCyclePolicyOverride.CategoryScope && x.ScopeId == cid)
+                : null;
+            var offer = overrides.FirstOrDefault(x =>
+                x.ScopeKind == ReservationCyclePolicyOverride.OfferScope && x.ScopeId == line.OfferId);
+            var afterCategory = Overlay(
+                afterStore,
+                category?.InitialReservationHoldMinutes,
+                category?.RetryReservationHoldMinutes,
+                category?.MaxReservationCycles,
+                "category");
+            var afterOffer = Overlay(
+                afterCategory,
+                offer?.InitialReservationHoldMinutes,
+                offer?.RetryReservationHoldMinutes,
+                offer?.MaxReservationCycles,
+                "offer");
+            result.Add(new ReservationPolicyPreview(
+                platform,
+                afterStore,
+                afterCategory,
+                afterOffer,
+                store?.InitialReservationHoldMinutes,
+                store?.RetryReservationHoldMinutes,
+                store?.MaxReservationCycles,
+                category?.InitialReservationHoldMinutes,
+                category?.RetryReservationHoldMinutes,
+                category?.MaxReservationCycles,
+                offer?.InitialReservationHoldMinutes,
+                offer?.RetryReservationHoldMinutes,
+                offer?.MaxReservationCycles));
+        }
+
+        return result;
+    }
+
     private ReservationCyclePolicySnapshot Platform() =>
         new(
             ClampMinutes(_platform.InitialReservationHoldMinutes),
@@ -118,6 +243,29 @@ public sealed class ReservationCyclePolicyResolver : IReservationCyclePolicyReso
             && a.MaxCycles <= b.MaxCycles
                 ? a.Source
                 : $"{a.Source}+{b.Source}");
+
+    private ReservationPolicyLayerPreview PlatformLayer() =>
+        new(
+            ClampMinutes(_platform.InitialReservationHoldMinutes),
+            "platform",
+            ClampMinutes(_platform.RetryReservationHoldMinutes),
+            "platform",
+            ClampMax(_platform.MaxReservationCycles),
+            "platform");
+
+    private static ReservationPolicyLayerPreview Overlay(
+        ReservationPolicyLayerPreview fallback,
+        int? initial,
+        int? retry,
+        int? max,
+        string source) =>
+        new(
+            initial is int i ? ClampMinutes(i) : fallback.InitialHoldMinutes,
+            initial is not null ? source : fallback.InitialSource,
+            retry is int r ? ClampMinutes(r) : fallback.RetryHoldMinutes,
+            retry is not null ? source : fallback.RetrySource,
+            max is int m ? ClampMax(m) : fallback.MaxCycles,
+            max is not null ? source : fallback.MaxSource);
 
     private static int ClampMinutes(int value) => Math.Clamp(value <= 0 ? 120 : value, 1, 24 * 60 * 30);
 
