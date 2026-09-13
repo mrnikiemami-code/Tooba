@@ -9,6 +9,8 @@
 | USER_VISUAL_ACCEPTED | NO |
 | Worker | tooba-worker-01 — IDLE |
 | branch | main |
+| ending HEAD | fc25565208bbeb9d04cff62ef65fc047c0207ccd |
+| HEAD==origin/main | yes |
 | no TB-P10-T005 | yes |
 
 Updated `docs/ai/TOOBA-RECOVERY-CONTEXT.md`, `docs/PROJECT-STATE.md`, `docs/ai/recovery-staleness.guard.test.mjs` (`CURRENT_TASK_ID=TB-P10-T004-R24-R1-R1`; Architect R24; Impl R24-R1-R1; STALE includes R24-R1). Guard 4/4.
