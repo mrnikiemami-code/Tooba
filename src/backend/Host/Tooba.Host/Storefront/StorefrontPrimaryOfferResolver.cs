@@ -25,4 +25,23 @@ public static class StorefrontPrimaryOfferResolver
             .ThenBy(candidate => candidate.OfferId)
             .First();
     }
+
+    /// <summary>
+    /// گونهٔ درخواستی فقط وقتی انتخاب می‌شود که همان محصول باشد و حداقل یک Offer فعال داشته باشد؛
+    /// در غیر این صورت PDP روی گونهٔ قابل‌خرید می‌ماند و کل صفحه 404 نمی‌شود.
+    /// </summary>
+    public static Guid? ResolveVariantId(
+        Guid? requestedVariantId,
+        IReadOnlyCollection<Guid> productVariantIds,
+        IReadOnlyList<StorefrontOfferCandidate> candidates)
+    {
+        if (requestedVariantId is Guid requested
+            && productVariantIds.Contains(requested)
+            && candidates.Any(candidate => candidate.CatalogVariantId == requested))
+        {
+            return requested;
+        }
+
+        return Resolve(candidates)?.CatalogVariantId;
+    }
 }

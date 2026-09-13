@@ -718,7 +718,8 @@ export async function loadStorefrontListing(request: StorefrontListingRequest = 
 
 /**
  * PDP را از Host می‌خواند و در صورت انتخاب ترکیب، VariantId را فقط به درخواست
- * مقتدر Host می‌افزاید؛ انتخاب Offer در مرورگر انجام نمی‌شود.
+ * مقتدر Host می‌افزاید. تعویض فروشنده روی همان گونه از otherSellers ترکیب‌شدهٔ Host
+ * انجام می‌شود و مبلغ/موجودی جعل نمی‌شود.
  */
 export async function loadStorefrontDetail(slug: string, variantId?: string): Promise<StorefrontProductDetailPage | null> {
   const suffix = variantId ? `?variantId=${encodeURIComponent(variantId)}` : "";

@@ -24,7 +24,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { formatJalaliDate } from "../../design-system/app-data-grid/jalali.ts";
+import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { readCartSession } from "./storefront-cart-api.ts";
 import {
@@ -38,6 +38,7 @@ import {
   loadShippingProjection,
   saveShippingSelection,
   toCustomerShippingMessage,
+  type StorefrontDeliveryDateOption,
   type StorefrontProvinceOption,
   type StorefrontShippingMethod,
   type StorefrontShippingProjection,
@@ -65,18 +66,32 @@ function toPersianDigits(n: string | number): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]!);
 }
 
-/** برچسب نمایشی تاریخ تحویل — جلالی؛ value API همچنان میلادی می‌ماند. */
-function deliveryDateUi(isoDate: string): { label: string; subLabel: string } {
-  const subLabel = formatJalaliDate(`${isoDate}T12:00:00`, "fa");
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const selected = Date.parse(`${isoDate}T12:00:00Z`);
-  const today = Date.parse(`${todayIso}T12:00:00Z`);
-  if (!Number.isFinite(selected) || !Number.isFinite(today)) {
-    return { label: subLabel, subLabel };
-  }
-  const delta = Math.round((selected - today) / 86_400_000);
-  const label = delta === 0 ? "امروز" : delta === 1 ? "فردا" : delta === 2 ? "پس‌فردا" : subLabel;
-  return { label, subLabel };
+const JALALI_MONTHS = [
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند",
+];
+
+/** چیپ تاریخ: روز هفته از Host، روز و ماه جلالی فقط یک‌بار. */
+function deliveryChipParts(option: StorefrontDeliveryDateOption): { weekday: string; day: string; month: string } {
+  const jalaliFull = formatJalaliDate(`${option.value}T12:00:00`, "fa");
+  const parts = isoToJalaliDisplay(`${option.value}T12:00:00`);
+  const weekday =
+    option.label && option.label !== jalaliFull && option.label !== option.subLabel ? option.label : "روز";
+  return {
+    weekday,
+    day: parts ? toPersianDigits(parts.day) : option.subLabel,
+    month: parts ? JALALI_MONTHS[parts.month - 1] ?? "" : "",
+  };
 }
 
 function iconFor(method: StorefrontShippingMethod) {
@@ -532,13 +547,14 @@ export function StorefrontShopeivaShipping() {
 
               {/* Delivery */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="shipping-delivery">
-                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-3">
+                <h3 className="text-sm md:text-base font-black text-gray-900 flex items-center gap-2 mb-1">
                   <Calendar className="w-4 h-4 text-[#E53935]" />
                   زمان تحویل
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p className="text-[11px] text-gray-500 mb-4">روز و بازهٔ ساعت را مثل فروشگاه‌های بزرگ از ردیف زیر انتخاب کنید.</p>
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2 pr-1">تاریخ تحویل</label>
+                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">تاریخ تحویل</label>
                     {projection.deliveryDates.length === 0 ? (
                       <p className="text-xs text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded-xl p-3">
                         ابتدا روش ارسال را انتخاب کنید تا نزدیک‌ترین تاریخ مجاز فروشگاه نمایش داده شود.
@@ -546,21 +562,20 @@ export function StorefrontShopeivaShipping() {
                     ) : (
                       <>
                         {projection.minimumDeliveryDate ? (
-                          <p className="text-[11px] text-gray-500 mb-2">
-                            زودتر از{" "}
-                            <span className="font-bold text-gray-700">
+                          <p className="text-[11px] text-gray-500 mb-3">
+                            اولین نوبت ممکن:{" "}
+                            <span className="font-bold text-gray-800">
                               {formatJalaliDate(`${projection.minimumDeliveryDate}T12:00:00`, "fa")}
-                            </span>{" "}
-                            قابل انتخاب نیست.
+                            </span>
                           </p>
                         ) : null}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
                           {projection.deliveryDates.map((d) => {
                             const disabled = Boolean(
                               projection.minimumDeliveryDate && d.value < projection.minimumDeliveryDate,
                             );
                             const selected = deliveryDate === d.value;
-                            const ui = deliveryDateUi(d.value);
+                            const chip = deliveryChipParts(d);
                             return (
                               <button
                                 key={d.value}
@@ -570,18 +585,20 @@ export function StorefrontShopeivaShipping() {
                                   if (disabled) return;
                                   setDeliveryDate(d.value);
                                 }}
-                                title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : ui.subLabel}
-                                className={`flex-1 min-w-[5.5rem] text-center p-3 rounded-2xl border-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                                title={disabled ? "قبل از حداقل زمان فروشگاه مجاز نیست" : `${chip.weekday} ${chip.day} ${chip.month}`}
+                                className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                                   selected
-                                    ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]"
-                                    : "border-gray-200 text-gray-500 bg-gray-50"
+                                    ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935] shadow-sm"
+                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                                 }`}
                                 data-testid={`shipping-date-${d.value}`}
                               >
-                                <p className="text-xs md:text-sm font-bold">{ui.label}</p>
-                                <p className="text-[10px] md:text-xs opacity-70" dir="ltr">
-                                  {ui.subLabel}
-                                </p>
+                                <p className="text-[11px] font-medium">{chip.weekday}</p>
+                                <p className="mt-1 text-xl font-black leading-none tabular-nums">{chip.day}</p>
+                                <p className="mt-1 text-[10px] text-gray-500">{chip.month}</p>
+                                {d.isEarliest ? (
+                                  <p className="mt-1 text-[9px] font-bold text-[#E53935]">نزدیک‌ترین</p>
+                                ) : null}
                               </button>
                             );
                           })}
@@ -590,20 +607,33 @@ export function StorefrontShopeivaShipping() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2 pr-1">ساعت تحویل</label>
-                    <select
-                      value={deliveryTime}
-                      onChange={(e) => setDeliveryTime(e.target.value)}
-                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
-                      data-testid="shipping-time"
-                    >
-                      <option value="">محدوده زمانی را انتخاب کنید</option>
-                      {projection.deliveryTimeWindows.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-xs md:text-sm font-bold text-gray-700 mb-2">بازهٔ ساعت تحویل</label>
+                    <div className="flex flex-wrap gap-2" data-testid="shipping-time" role="radiogroup" aria-label="ساعت تحویل">
+                      {projection.deliveryTimeWindows.length === 0 ? (
+                        <p className="text-xs text-gray-500">بازه‌ای برای این روز اعلام نشده است.</p>
+                      ) : (
+                        projection.deliveryTimeWindows.map((t) => {
+                          const selected = deliveryTime === t.value;
+                          return (
+                            <button
+                              key={t.value}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              onClick={() => setDeliveryTime(t.value)}
+                              className={`inline-flex items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-xs font-bold transition-all ${
+                                selected
+                                  ? "border-[#E53935] bg-[#E53935]/5 text-[#E53935]"
+                                  : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
+                              }`}
+                            >
+                              <Clock className="size-3.5 shrink-0" />
+                              {t.label}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,0 +1,13 @@
+---
+description: Never spawn or resume workers that are not the single current Bridge task
+alwaysApply: true
+---
+
+# One Bridge task only — no leftover Working agents
+
+- Execute only the single current Bridge task on `tooba-main` after `BRIDGE-WAKE`.
+- Never launch, resume, or interrupt-resume historical Task subagents (especially TB-P09-T005, T007, T008, Wallet, GiftCard, Support tickets, Discover R1, or any other completed P09 work).
+- `Task resume` + `interrupt` on old agent IDs is forbidden: that restarts them.
+- Cursor Working panel ghosts from this long chat are not authorization to run those tasks again.
+- Do not poll or keep Working heartbeats for idle/old work.
+---

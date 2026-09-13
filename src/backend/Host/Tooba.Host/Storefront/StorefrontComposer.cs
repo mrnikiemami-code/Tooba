@@ -635,8 +635,34 @@ public sealed class StorefrontComposer
         }
 
         var (card, primary, others, shortDescription, fullDescription, brand, media, selectedVariantId, specifications, variants) = bundle.Value;
+        var relatedIds = new List<Guid>();
+        if (card.CategoryId is Guid relatedCategoryId)
+        {
+            relatedIds = await _catalog.ProductCategories.AsNoTracking()
+                .Where(x => x.CategoryId == relatedCategoryId && x.ProductId != product.ProductId)
+                .Select(x => x.ProductId)
+                .Distinct()
+                .Take(16)
+                .ToListAsync(cancellationToken);
+        }
+
+        if (relatedIds.Count < 10)
+        {
+            var extra = await _catalog.Products.AsNoTracking()
+                .Where(x =>
+                    x.Status == CatalogPublicationStatus.Published
+                    && x.ProductId != product.ProductId
+                    && !relatedIds.Contains(x.ProductId))
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => x.ProductId)
+                .Take(10 - relatedIds.Count)
+                .ToListAsync(cancellationToken);
+            relatedIds.AddRange(extra);
+        }
+
+        var relatedMap = await ComposeProductCardsAsync(relatedIds, cancellationToken);
         var relatedProducts = SelectRelatedProducts(
-            await BuildProductCardsAsync(cancellationToken),
+            relatedMap.Values.ToList(),
             product.ProductId,
             card.CategoryId);
         var reviewSummaries = await _reviews.GetPublishedSummariesAsync([product.ProductId], cancellationToken);
@@ -791,11 +817,6 @@ public sealed class StorefrontComposer
             return null;
         }
 
-        if (selectedVariantId is Guid requestedVariant && !variantIds.Contains(requestedVariant))
-        {
-            return null;
-        }
-
         var offers = await _offers.Offers.AsNoTracking()
             .Where(x => variantIds.Contains(x.CatalogVariantId) && x.Status == OfferStatus.Active)
             .ToListAsync(cancellationToken);
@@ -853,8 +874,10 @@ public sealed class StorefrontComposer
                 taxLabel));
         }
 
-        var chosenVariantId = selectedVariantId
-            ?? StorefrontPrimaryOfferResolver.Resolve(candidates)?.CatalogVariantId;
+        var chosenVariantId = StorefrontPrimaryOfferResolver.ResolveVariantId(
+            selectedVariantId,
+            variantIds,
+            candidates);
         if (chosenVariantId is null)
         {
             return null;

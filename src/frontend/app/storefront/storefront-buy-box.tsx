@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { toast } from "react-toastify";
 import { formatOfferAmount } from "./storefront-api.ts";
 import { StorefrontCartApiError, addOfferToCart } from "./storefront-cart-api.ts";
 import type { StorefrontProductDetailPage } from "./storefront-model.ts";
@@ -10,7 +10,6 @@ import type { StorefrontProductDetailPage } from "./storefront-model.ts";
  * جعبه خرید PDP. جهش Cart را جعل نمی‌کند و تا API سبد فقط آمادهٔ اتصال است.
  */
 export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPage }) {
-  const localizePath = useLocalizedPath();
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const offer = detail.primaryOffer;
@@ -39,10 +38,13 @@ export function StorefrontBuyBox({ detail }: { detail: StorefrontProductDetailPa
             setNote(null);
             try {
               await addOfferToCart(offer.offerId, 1);
-              setNote(`محصول ${detail.title} به سبد خرید اضافه شد`);
-              window.location.assign(localizePath("/cart"));
+              const added = `محصول ${detail.title} به سبد خرید اضافه شد`;
+              setNote(added);
+              toast.success(added, { autoClose: 2800 });
             } catch (cause) {
-              setNote(cause instanceof StorefrontCartApiError ? cause.detail ?? cause.message : "افزودن به سبد شکست خورد.");
+              const message = cause instanceof StorefrontCartApiError ? cause.detail ?? cause.message : "افزودن به سبد شکست خورد.";
+              setNote(message);
+              toast.error(message);
             } finally {
               setBusy(false);
             }

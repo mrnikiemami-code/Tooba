@@ -39,6 +39,14 @@ test("pdp guard keeps other sellers and related product seams", () => {
   assert.ok(pdpSource.includes('data-testid="pdp-related"'));
   assert.ok(pdpSource.includes("otherSellers"));
   assert.ok(pdpSource.includes("relatedProducts"));
+  assert.ok(pdpSource.includes('role="radiogroup"'));
+  assert.ok(pdpSource.includes("انتخاب فروشنده"));
+});
+
+test("pdp add-to-cart stays on the product page like Home", () => {
+  assert.doesNotMatch(pdpSource, /location\.assign/);
+  assert.doesNotMatch(pdpSource, /localizePath\("\/cart"\)/);
+  assert.match(pdpSource, /toast\.success/);
 });
 
 test("pdp guard forbids Product.Price / Product.Stock authority markers", () => {

@@ -13,6 +13,7 @@ public static class CatalogDemoDevEndpoints
     {
         var group = app.MapGroup("/v1/admin/catalog/demo");
         group.MapPost("/reset-and-seed", ResetAndSeedAsync);
+        group.MapPost("/seed-only", SeedOnlyAsync);
         group.MapGet("/status", StatusAsync);
         group.MapGet("/assignment-integrity", AssignmentIntegrityAsync);
         group.MapPost("/assignment-integrity/cleanup", AssignmentIntegrityCleanupAsync);
@@ -64,6 +65,56 @@ public static class CatalogDemoDevEndpoints
                 plan = result.Plan,
                 assignmentIntegrity = result.AssignmentIntegrity,
             });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Problem(
+                title: ex.Message,
+                statusCode: StatusCodes.Status400BadRequest,
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "catalog.demo.failed" });
+        }
+    }
+
+    private static async Task<IResult> SeedOnlyAsync(
+        CatalogDemoResetAndSeedHost host,
+        IHostEnvironment environment,
+        IOptions<CatalogDemoSeedOptions> options,
+        HttpRequest request,
+        CurrentAuthenticatedSession session,
+        ICurrentTenant tenant,
+        IAuthorizationGuard guard,
+        CancellationToken cancellationToken)
+    {
+        if (environment.IsProduction())
+        {
+            return Results.Problem(
+                title: "Catalog demo seed is blocked in Production.",
+                statusCode: StatusCodes.Status403Forbidden,
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "catalog.demo.production_blocked" });
+        }
+
+        if (!(environment.IsDevelopment() || environment.IsEnvironment("Testing")))
+        {
+            return Results.Problem(
+                title: "Catalog demo seed requires Development or Testing.",
+                statusCode: StatusCodes.Status403Forbidden,
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "catalog.demo.env_blocked" });
+        }
+
+        if (!options.Value.AllowResetAndSeed)
+        {
+            return Results.Problem(
+                title: "Catalog demo seed requires Tooba:CatalogDemo:AllowResetAndSeed=true.",
+                statusCode: StatusCodes.Status403Forbidden,
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "catalog.demo.opt_in_required" });
+        }
+
+        try
+        {
+            await AdminPanelAccess.RequireAuthorizedAsync(
+                request, session, tenant, guard, environment, cancellationToken);
+            var counts = await host.SeedOnlyAsync(cancellationToken);
+            return Results.Ok(new { counts });
         }
         catch (InvalidOperationException ex)
         {

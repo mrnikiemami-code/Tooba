@@ -165,6 +165,35 @@ public sealed class StorefrontCompositionTests
     }
 
     [Fact]
+    public void Requested_variant_without_offers_falls_back_to_shoppable_variant()
+    {
+        var shoppableVariant = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1");
+        var emptyVariant = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2");
+        var unknownVariant = Guid.Parse("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3");
+        var shoppable = new StorefrontOfferCandidate(
+            Guid.Parse("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"),
+            shoppableVariant,
+            Guid.Parse("cccccccc-cccc-4ccc-8ccc-ccccccccccc1"),
+            "آرمان",
+            "SKU-A",
+            1500000m,
+            "IRR",
+            "IR",
+            4,
+            "استاندارد");
+
+        Assert.Equal(
+            shoppableVariant,
+            StorefrontPrimaryOfferResolver.ResolveVariantId(emptyVariant, [shoppableVariant, emptyVariant], [shoppable]));
+        Assert.Equal(
+            shoppableVariant,
+            StorefrontPrimaryOfferResolver.ResolveVariantId(unknownVariant, [shoppableVariant, emptyVariant], [shoppable]));
+        Assert.Equal(
+            shoppableVariant,
+            StorefrontPrimaryOfferResolver.ResolveVariantId(shoppableVariant, [shoppableVariant, emptyVariant], [shoppable]));
+    }
+
+    [Fact]
     public void Detail_contract_exposes_cart_mutation_flag()
     {
         var names = typeof(StorefrontProductDetailPage).GetProperties().Select(item => item.Name).ToHashSet(StringComparer.Ordinal);

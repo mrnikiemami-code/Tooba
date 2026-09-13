@@ -858,6 +858,12 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status400BadRequest, "Bad Request", "cart.offer.unavailable");
         }
 
+        if (text.Contains("فقط سبد Active", StringComparison.Ordinal)
+            || text.Contains("قابل جهش خط", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "cart.rejected");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "cart.rejected");
     }
 

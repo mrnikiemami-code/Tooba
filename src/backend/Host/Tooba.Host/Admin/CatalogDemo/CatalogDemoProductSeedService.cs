@@ -70,7 +70,7 @@ public sealed class CatalogDemoProductSeedService
         var tagIds = await LoadTagMapAsync(cancellationToken);
         var categoryByFullKey = await LoadCategoryKeyMapAsync(cancellationToken);
         var mediaPools = new Dictionary<string, IReadOnlyList<Guid>>(StringComparer.Ordinal);
-        var leafSizes = new Dictionary<int, int> { [3] = 0, [4] = 0, [5] = 0 };
+        var leafSizes = new Dictionary<int, int> { [6] = 0, [8] = 0, [10] = 0 };
 
         var created = 0;
         var brandless = 0;
@@ -218,7 +218,7 @@ public sealed class CatalogDemoProductSeedService
                 created++;
                 if (created % 25 == 0)
                 {
-                    _logger.LogInformation("CatalogDemo products progress: {Count}/{Approx}", created, leaves.Count * 4);
+                    _logger.LogInformation("CatalogDemo products progress: {Count}/{Approx}", created, leaves.Count * 8);
                 }
             }
         }
@@ -674,13 +674,13 @@ public sealed class CatalogDemoProductSeedService
 
     private static int DeterministicLeafProductCount(string fullKey)
     {
-        // Varied 3/4/5 distribution (not uniform).
+        // Varied 6/8/10 distribution so storefront can pick across more seller listings.
         var bucket = StableHash(fullKey) % 10;
         return bucket switch
         {
-            < 4 => 3,
-            < 8 => 4,
-            _ => 5,
+            < 4 => 6,
+            < 8 => 8,
+            _ => 10,
         };
     }
 

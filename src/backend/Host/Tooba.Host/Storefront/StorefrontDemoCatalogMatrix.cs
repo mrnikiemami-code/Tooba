@@ -80,6 +80,8 @@ internal static class StorefrontDemoCatalogMatrix
         new("فروشگاه توبا مارکت", "Tooba Market Demo Legal"),
         new("تجارت الکترونیک پارس", "Pars E-Commerce Demo Legal"),
         new("خانه و کالای مهر", "Mehr Home Goods Demo Legal"),
+        new("فروشگاه نیلوا", "Nilva Demo Legal"),
+        new("کالاگستر پارس", "Kalagostar Pars Demo Legal"),
     ];
 
     /// <summary>

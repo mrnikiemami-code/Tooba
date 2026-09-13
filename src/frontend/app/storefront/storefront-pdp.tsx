@@ -1,10 +1,11 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Award,
   Bell,
+  Check,
   GitCompare,
   Headphones,
   Heart,
@@ -17,13 +18,19 @@ import {
   Shield,
   ShoppingBag,
   Star,
+  Store,
   Truck,
 } from "lucide-react";
-import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
+import { toast } from "react-toastify";
 import { formatQuantityDisplay, parseQuantityInput } from "../../lib/quantity-display.ts";
 import { formatOfferAmount, loadStorefrontDetail, loadStorefrontQuestions, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
-import type { StorefrontProductDetailPage } from "./storefront-model.ts";
+import type {
+  StorefrontAlternateOffer,
+  StorefrontOfferCandidate,
+  StorefrontProductDetailPage,
+  StorefrontVariantOption,
+} from "./storefront-model.ts";
 import { StorefrontProductCardView } from "./storefront-product-card.tsx";
 import { StorefrontPdpReviews } from "./storefront-pdp-reviews.tsx";
 import { StorefrontPdpQa } from "./storefront-pdp-qa.tsx";
@@ -34,9 +41,9 @@ import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
  * PDP سه ستونهٔ Shopeiva. CTA سبد جهش Cart را جعل نمی‌کند.
  */
 export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDetailPage }) {
-  const localizePath = useLocalizedPath();
   const [currentDetail, setCurrentDetail] = useState(detail);
   const [qtyText, setQtyText] = useState("1");
+  const [selectedOfferId, setSelectedOfferId] = useState(detail.primaryOffer.offerId);
   const [tab, setTab] = useState<"intro" | "full" | "specs" | "reviews" | "qa" | "bulk">("intro");
   const [qaCount, setQaCount] = useState(0);
   const [note, setNote] = useState<string | null>(null);
@@ -45,10 +52,21 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
   const registerWishlistProduct = wishlist.register;
   const wishlistSaved = wishlist.membership.has(currentDetail.productId);
   const wishlistBusy = wishlist.pending.has(currentDetail.productId);
-  const offer = currentDetail.primaryOffer;
+  const sellerChoices = useMemo(() => listSellerChoices(currentDetail), [currentDetail]);
+  const offer = resolveSelectedOffer(currentDetail, selectedOfferId);
+  const displayAmount =
+    offer.offerId === currentDetail.primaryOffer.offerId
+      ? (currentDetail.promotionalAmountExclusiveOfTax ?? offer.promotionalAmountExclusiveOfTax ?? offer.amountExclusiveOfTax)
+      : offer.amountExclusiveOfTax;
   const images = currentDetail.mediaAssetIds.length > 0 ? currentDetail.mediaAssetIds : [null];
   const [active, setActive] = useState(0);
+  const optionVariants = currentDetail.variants.filter((variant) => variant.options.length > 0);
 
+  useEffect(() => {
+    setCurrentDetail(detail);
+    setSelectedOfferId(detail.primaryOffer.offerId);
+  }, [detail]);
+  useEffect(() => setSelectedOfferId(currentDetail.primaryOffer.offerId), [currentDetail.selectedVariantId, currentDetail.primaryOffer.offerId]);
   useEffect(() => registerWishlistProduct(currentDetail.productId), [currentDetail.productId, registerWishlistProduct]);
   useEffect(() => {
     void loadStorefrontQuestions(currentDetail.slug).then((page) => setQaCount(page?.totalCount ?? 0));
@@ -120,39 +138,52 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                 <span className="text-[#2563EB]">مشاهده نظرات</span>
               </button>
             ) : null}
-            {currentDetail.variants.some((variant) => variant.options.length > 0) ? (
+            {optionVariants.length > 0 ? (
               <div className="space-y-2 min-w-0">
                 <p className="text-sm font-bold text-gray-700">انتخاب گزینه</p>
                 <div className="flex flex-wrap gap-2 max-w-full">
-                  {currentDetail.variants.filter((variant) => variant.options.length > 0).map((variant) => (
-                    <button
-                      key={variant.variantId}
-                      type="button"
-                      disabled={busy}
-                      aria-pressed={variant.variantId === currentDetail.selectedVariantId}
-                      className={`max-w-full rounded-xl border px-3 py-2 text-xs break-words ${
-                        variant.variantId === currentDetail.selectedVariantId
-                          ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
-                          : "border-gray-200 bg-white text-gray-700"
-                      }`}
-                      onClick={() => {
-                        void (async () => {
-                          setBusy(true);
-                          setNote(null);
-                          const selected = await loadStorefrontDetail(currentDetail.slug, variant.variantId);
-                          if (selected) {
-                            setCurrentDetail(selected);
-                            setQty(1);
-                          } else {
-                            setNote("دریافت اطلاعات این گزینه ممکن نشد.");
+                  {optionVariants.map((variant) => {
+                    const selected = variant.variantId === currentDetail.selectedVariantId;
+                    const shoppable = Boolean(variant.primaryOffer);
+                    return (
+                      <button
+                        key={variant.variantId}
+                        type="button"
+                        disabled={busy || !shoppable}
+                        aria-pressed={selected}
+                        aria-disabled={!shoppable}
+                        title={shoppable ? undefined : "این گزینه فعلاً توسط فروشنده‌ای عرضه نشده است."}
+                        className={`max-w-full rounded-xl border px-3 py-2 text-xs text-right ${
+                          selected
+                            ? "border-[#2563EB] bg-blue-50 text-[#2563EB]"
+                            : shoppable
+                              ? "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                              : "border-dashed border-gray-200 bg-gray-50 text-gray-400"
+                        }`}
+                        onClick={() => {
+                          if (!shoppable || selected) {
+                            return;
                           }
-                          setBusy(false);
-                        })();
-                      }}
-                    >
-                      {variant.options.map((option) => `${option.label}: ${option.value}`).join(" · ")}
-                    </button>
-                  ))}
+                          void (async () => {
+                            setBusy(true);
+                            setNote(null);
+                            const next = await loadStorefrontDetail(currentDetail.slug, variant.variantId);
+                            if (next) {
+                              setCurrentDetail(next);
+                              setSelectedOfferId(next.primaryOffer.offerId);
+                              setQtyText("1");
+                            } else {
+                              setNote("دریافت اطلاعات این گزینه ممکن نشد.");
+                            }
+                            setBusy(false);
+                          })();
+                        }}
+                      >
+                        <VariantOptionLabel options={variant.options} />
+                        {!shoppable ? <span className="mt-1 block text-[10px]">ناموجود</span> : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
@@ -249,10 +280,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               <p className="text-xs font-bold text-[#2563EB]">{currentDetail.promotionLabel ?? offer.promotionLabel}</p>
             ) : null}
             <p className="text-2xl font-black text-[#2563EB]">
-              {formatOfferAmount(
-                currentDetail.promotionalAmountExclusiveOfTax ?? offer.promotionalAmountExclusiveOfTax ?? offer.amountExclusiveOfTax,
-                offer.currency,
-              )}
+              {formatOfferAmount(displayAmount, offer.currency)}
             </p>
             {offer.availableUnits <= 0 ? (
               <button type="button" className="w-full py-3 rounded-xl font-bold text-sm bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center gap-2">
@@ -273,10 +301,13 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                         return;
                       }
                       await addOfferToCart(offer.offerId, qty);
-                      setNote(`محصول ${currentDetail.title} به سبد خرید اضافه شد`);
-                      window.location.assign(localizePath("/cart"));
+                      const added = `محصول ${currentDetail.title} به سبد خرید اضافه شد`;
+                      setNote(added);
+                      toast.success(added, { autoClose: 2800 });
                     } catch (cause) {
-                      setNote(toCustomerCartMessage(cause));
+                      const message = toCustomerCartMessage(cause);
+                      setNote(message);
+                      toast.error(message);
                     } finally {
                       setBusy(false);
                     }
@@ -288,17 +319,65 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
               </button>
             )}
             {note ? <p className="text-xs text-gray-500" role="status" aria-live="polite">{note}</p> : null}
-            {currentDetail.otherSellers.length > 0 ? (
-              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2" data-testid="pdp-other-sellers">
-                <strong className="text-xs">فروشندگان دیگر همین کالا</strong>
-                {currentDetail.otherSellers.map((seller) => (
-                  <p key={seller.offerId} className="text-xs text-gray-600">
-                    {seller.sellerDisplayName} · {formatOfferAmount(seller.amountExclusiveOfTax, seller.currency)} ·{" "}
-                    {seller.inStock ? "موجود" : "ناموجود"}
-                  </p>
-                ))}
+            <div className="pt-3 border-t border-dashed border-gray-200 space-y-2" data-testid="pdp-other-sellers">
+              <div className="flex items-center justify-between gap-2">
+                <strong className="text-xs">فروشندگان این کالا</strong>
+                <span className="text-[10px] text-gray-400">
+                  {sellerChoices.length.toLocaleString("fa-IR")} فروشنده
+                </span>
               </div>
-            ) : null}
+              <div className="space-y-2" role="radiogroup" aria-label="انتخاب فروشنده">
+                {sellerChoices.map((seller) => {
+                  const selected = seller.offerId === offer.offerId;
+                  return (
+                    <button
+                      key={seller.offerId}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      disabled={busy}
+                      onClick={() => {
+                        setSelectedOfferId(seller.offerId);
+                        setQtyText("1");
+                        setNote(null);
+                      }}
+                      className={`w-full rounded-xl border p-2.5 text-right transition-colors ${
+                        selected
+                          ? "border-[#2563EB] bg-blue-50 ring-1 ring-[#2563EB]/15"
+                          : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span
+                          className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
+                            selected ? "border-[#2563EB] bg-[#2563EB] text-white" : "border-gray-300 bg-white"
+                          }`}
+                        >
+                          {selected ? <Check className="size-2.5" strokeWidth={3} /> : null}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <Store className="size-3.5 shrink-0 text-gray-400" />
+                            <p className="truncate text-xs font-bold text-gray-800">{seller.sellerDisplayName}</p>
+                          </div>
+                          <p className={`mt-1 text-[11px] ${seller.inStock ? "text-emerald-600" : "text-red-500"}`}>
+                            {seller.inStock
+                              ? `موجود · ${seller.availableUnits.toLocaleString("fa-IR")} عدد`
+                              : "ناموجود"}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-left">
+                          <p className="text-xs font-black tabular-nums text-[#2563EB]" dir="ltr">
+                            {formatOfferAmount(seller.amountExclusiveOfTax, seller.currency)}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-gray-500">{selected ? "انتخاب‌شده" : "انتخاب"}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -408,4 +487,68 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
       ) : null}
     </div>
   );
+}
+
+function VariantOptionLabel({ options }: { options: StorefrontVariantOption[] }) {
+  return (
+    <span className="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5" dir="rtl">
+      {options.map((option, index) => (
+        <span key={`${option.label}-${option.value}`} className="inline-flex max-w-full items-center gap-1">
+          {index > 0 ? <span className="text-gray-300">·</span> : null}
+          <span className="text-gray-500">{cleanOptionText(option.label)}:</span>
+          <span dir="auto" className="break-words font-medium">
+            {cleanOptionText(option.value)}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function cleanOptionText(value: string): string {
+  const cleaned = value.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned || value;
+}
+
+type SellerChoice = StorefrontAlternateOffer & { isPrimary: boolean };
+
+function listSellerChoices(detail: StorefrontProductDetailPage): SellerChoice[] {
+  const primary: SellerChoice = {
+    offerId: detail.primaryOffer.offerId,
+    sellerDisplayName: detail.primaryOffer.sellerDisplayName,
+    amountExclusiveOfTax: detail.primaryOffer.amountExclusiveOfTax,
+    currency: detail.primaryOffer.currency,
+    availableUnits: detail.primaryOffer.availableUnits,
+    inStock: detail.primaryOffer.availableUnits > 0,
+    isPrimary: true,
+  };
+  const others = detail.otherSellers
+    .filter((seller) => seller.offerId !== primary.offerId)
+    .map((seller) => ({ ...seller, isPrimary: false }));
+  return [primary, ...others].sort((left, right) => {
+    if (left.inStock !== right.inStock) {
+      return left.inStock ? -1 : 1;
+    }
+    return left.amountExclusiveOfTax - right.amountExclusiveOfTax;
+  });
+}
+
+function resolveSelectedOffer(detail: StorefrontProductDetailPage, selectedOfferId: string): StorefrontOfferCandidate {
+  if (selectedOfferId === detail.primaryOffer.offerId) {
+    return detail.primaryOffer;
+  }
+  const alternate = detail.otherSellers.find((seller) => seller.offerId === selectedOfferId);
+  if (!alternate) {
+    return detail.primaryOffer;
+  }
+  return {
+    ...detail.primaryOffer,
+    offerId: alternate.offerId,
+    sellerDisplayName: alternate.sellerDisplayName,
+    amountExclusiveOfTax: alternate.amountExclusiveOfTax,
+    currency: alternate.currency,
+    availableUnits: alternate.availableUnits,
+    promotionalAmountExclusiveOfTax: null,
+    promotionLabel: null,
+  };
 }

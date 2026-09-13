@@ -230,6 +230,58 @@ test("ensureStorefrontCart rotates Converted cart and never posts lines to it", 
   }
 });
 
+test("addOfferToCart rotates when Host omits status and rejects Converted mutation", async () => {
+  const { writeCartSession, addOfferToCart, readCartSession } = await import("./storefront-cart-api.ts");
+  mockSession();
+  writeCartSession("stale-converted", "old-secret");
+  const calls: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    calls.push(`${method} ${url}`);
+    if (url.includes("/cart/stale-converted") && method === "GET") {
+      return new Response(
+        JSON.stringify({ cartId: "stale-converted", version: 4, lines: [], guestSecret: "old-secret" }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/stale-converted/lines") && method === "POST") {
+      return new Response(
+        JSON.stringify({ errorCode: "cart.rejected", detail: "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید." }),
+        { status: 400 },
+      );
+    }
+    if (url.endsWith("/v1/storefront/cart") && method === "POST") {
+      return new Response(
+        JSON.stringify({ cartId: "fresh-cart", version: 1, status: "Active", lines: [], guestSecret: "new-secret" }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/fresh-cart/lines") && method === "POST") {
+      return new Response(
+        JSON.stringify({
+          cartId: "fresh-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 1 }],
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response(JSON.stringify({ errorCode: "cart.rejected" }), { status: 400 });
+  }) as typeof fetch;
+  try {
+    const next = await addOfferToCart("o1", 1);
+    assert.equal(next.cartId, "fresh-cart");
+    assert.deepEqual(readCartSession(), { cartId: "fresh-cart", guestSecret: "new-secret" });
+    assert.equal(calls.some((row) => row.includes("stale-converted/lines")), true);
+    assert.equal(calls.some((row) => row.includes("fresh-cart/lines")), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("cart mapper keeps quantity policy fields for mini-cart and /cart", () => {
   const cart = mapStorefrontCart({
     cartId: "cart-2",

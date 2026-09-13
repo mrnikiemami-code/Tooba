@@ -155,7 +155,7 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         Assert.True(first.Counts.Brands >= 20);
         Assert.True(first.Counts.Tags >= 30);
         Assert.True(first.Counts.L3 > 0);
-        Assert.InRange(first.Counts.Products, 219, 365);
+        Assert.InRange(first.Counts.Products, 420, 720);
         Assert.Equal(0, first.AssignmentIntegrity.PrimaryAtL1OrL2);
         Assert.Equal(0, first.AssignmentIntegrity.DisplayAtL1OrL2);
         Assert.Equal(0, first.AssignmentIntegrity.DuplicatePrimaryAndAdditional);
@@ -192,7 +192,7 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
             }
         }
 
-        // Every L3 has 3–5 demo products (by slug suffix pattern demo-prod-{key}-{n}).
+        // Every L3 has 6–10 demo products (by slug suffix pattern demo-prod-{key}-{n}).
         var leafIds = demoCategoryIds
             .Where(id => CatalogCategoryTreeRules.GetCategoryLevel(id, parentMap) == 3)
             .ToList();
@@ -200,7 +200,7 @@ public sealed class CatalogDemoResetSeedTests : IAsyncLifetime
         {
             var count = await catalogDb.ProductCategories.AsNoTracking()
                 .CountAsync(pc => pc.CategoryId == leafId && pc.Role == CatalogProductCategoryRole.Primary);
-            Assert.InRange(count, 3, 5);
+            Assert.InRange(count, 6, 10);
         }
 
         var allLinks = await catalogDb.ProductCategories.AsNoTracking().ToListAsync();

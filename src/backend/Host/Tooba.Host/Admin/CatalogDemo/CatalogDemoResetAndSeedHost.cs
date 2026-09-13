@@ -74,7 +74,7 @@ public sealed class CatalogDemoResetAndSeedHost
         $"Seed exactly {CatalogDemoMatrix.Roots.Count} L1 roots with varied L2/L3.",
         $"Seed >= {CatalogDemoMatrix.Brands.Count} brands and {CatalogDemoMatrix.Tags.Count} tags.",
         "Seed attribute definitions/options, L3 schemas, selected facets, MegaMenu, category media.",
-        "Seed rich Draft publish-ready Products (3–5 per L3; TB-P07-T034); residual Published Products must not survive reset.",
+        "Seed rich Draft publish-ready Products (6–10 per L3); residual Published Products must not survive reset.",
         "Enforce L3-only Primary/display membership; zero L1/L2 product assignments (TB-P07-T037).",
     ];
 
@@ -209,10 +209,10 @@ public sealed class CatalogDemoResetAndSeedHost
             throw new InvalidOperationException($"Expected L3 leaves for product assignment; found {counts.L3}.");
         }
 
-        if (counts.Products < 219 || counts.Products > 365)
+        if (counts.Products < 420 || counts.Products > 720)
         {
             throw new InvalidOperationException(
-                $"Expected 219–365 demo products, found {counts.Products}.");
+                $"Expected 420–720 demo products, found {counts.Products}.");
         }
     }
 

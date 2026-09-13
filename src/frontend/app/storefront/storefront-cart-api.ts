@@ -547,6 +547,22 @@ export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
  * سبد Converted اینجا نگه داشته نمی‌شود؛ ensure فقط Active می‌سازد.
  */
 export async function addOfferToCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
+  try {
+    return await addOfferToActiveCart(offerId, quantity);
+  } catch (cause) {
+    if (!shouldRotateAfterAddFailure(cause)) {
+      throw cause;
+    }
+    clearCartSession();
+    return addOfferToActiveCart(offerId, quantity);
+  }
+}
+
+function shouldRotateAfterAddFailure(cause: unknown): boolean {
+  return cause instanceof StorefrontCartApiError && cause.errorCode === "cart.rejected";
+}
+
+async function addOfferToActiveCart(offerId: string, quantity: number): Promise<StorefrontCartPage> {
   const cart = await ensureStorefrontCart();
   const response = await fetch(`/v1/storefront/cart/${cart.cartId}/lines?expectedVersion=${cart.version}`, {
     method: "POST",

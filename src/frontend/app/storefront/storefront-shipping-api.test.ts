@@ -43,6 +43,15 @@ test("shipping projection maps store methods and never invents template carriers
   assert.ok(!page.methods.some((m) => m.methodCode === "pickup" || m.label === "ارسال اکسپرس"));
 });
 
+test("shipping date chips use Host weekday/date once and do not duplicate Jalali", () => {
+  const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  assert.match(source, /deliveryChipParts/);
+  assert.match(source, /option\.label/);
+  assert.match(source, /option\.subLabel/);
+  assert.doesNotMatch(source, /function deliveryDateUi/);
+  assert.match(source, /overflow-x-auto/);
+});
+
 test("shipping UI source has no hardcoded Shopeiva template method list", () => {
   const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
   assert.doesNotMatch(source, /shippingMethodsList/);
