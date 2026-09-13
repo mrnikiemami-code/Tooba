@@ -48,3 +48,24 @@ test("admin stays unprefixed", () => {
   assert.equal(planLocaleMiddleware("/admin/content", undefined, null).type, "pass");
   assert.equal(planLocaleMiddleware("/admin/languages", undefined, null).type, "pass");
 });
+
+test("login is a locale-prefixed public storefront path", () => {
+  assert.deepEqual(planLocaleMiddleware("/fa/login", undefined, null), {
+    type: "rewrite",
+    locale: "fa",
+    internalPath: "/login",
+  });
+  assert.deepEqual(planLocaleMiddleware("/en/login", undefined, null), {
+    type: "rewrite",
+    locale: "en",
+    internalPath: "/login",
+  });
+  assert.deepEqual(planLocaleMiddleware("/login", undefined, null), {
+    type: "redirect",
+    location: "/fa/login",
+  });
+});
+
+test("host API stays unprefixed", () => {
+  assert.equal(planLocaleMiddleware("/v1/storefront/cart", undefined, null).type, "pass");
+});

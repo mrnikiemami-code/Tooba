@@ -22,12 +22,14 @@ import {
   type StorefrontPaymentMethodId,
   type StorefrontWalletQuote,
 } from "../storefront/storefront-payment-api.ts";
+import { useCheckoutAuthGate } from "../storefront/use-checkout-auth-gate.ts";
 
 /**
  * پرداخت ویترین — handoff معتبر از Shipping + روش‌های Store-enabled واقعی.
  * فرم ورود شماره کارت / کد امنیتی / تاریخ انقضای قالب Shopeiva اینجا نیست و عمداً اضافه نمی‌شود.
  */
 export function StorefrontPaymentHandoff() {
+  useCheckoutAuthGate("/payment");
   const params = useSearchParams();
   const router = useRouter();
   const [page, setPage] = useState<StorefrontCheckoutPage | null>(null);

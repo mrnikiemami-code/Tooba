@@ -5,6 +5,16 @@ import { planLocaleMiddleware } from "./lib/i18n/middleware-locale.ts";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/v1/")) {
+    const session = request.cookies.get("tooba_session")?.value;
+    if (session && !request.headers.get("authorization")) {
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set("Authorization", `Bearer ${session}`);
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+    return NextResponse.next();
+  }
+
   const plan = planLocaleMiddleware(
     pathname,
     request.cookies.get(LOCALE_COOKIE_NAME)?.value,

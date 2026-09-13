@@ -266,7 +266,7 @@ public sealed class StorefrontCheckoutComposer
         return cart;
     }
 
-    private static SubmitCheckoutCommand BuildCommand(
+    private SubmitCheckoutCommand BuildCommand(
         StorefrontCartPage cart,
         string? guestSecret,
         string idempotencyKey,
@@ -282,7 +282,7 @@ public sealed class StorefrontCheckoutComposer
         string? customerNote = null) =>
         new(
             cart.CartId,
-            new CartAccess(null, guestSecret),
+            new CartAccess(_session.IsAuthenticated ? _session.UserId : null, guestSecret),
             cart.Version,
             OrderMode.OnlinePurchase,
             null,

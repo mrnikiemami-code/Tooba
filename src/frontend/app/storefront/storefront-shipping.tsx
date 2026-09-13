@@ -43,6 +43,7 @@ import {
   type StorefrontShippingMethod,
   type StorefrontShippingProjection,
 } from "./storefront-shipping-api.ts";
+import { useCheckoutAuthGate } from "./use-checkout-auth-gate.ts";
 
 type AddressForm = {
   recipientName: string;
@@ -105,6 +106,7 @@ function iconFor(method: StorefrontShippingMethod) {
  * مرحلهٔ ارسال Shopeiva با دادهٔ واقعی Host (روش‌ها، قیمت، حداقل تحویل، پیش‌نویس).
  */
 export function StorefrontShopeivaShipping() {
+  useCheckoutAuthGate("/shipping");
   const router = useRouter();
   const [projection, setProjection] = useState<StorefrontShippingProjection | null>(null);
   const [address, setAddress] = useState<AddressForm>(emptyAddress);

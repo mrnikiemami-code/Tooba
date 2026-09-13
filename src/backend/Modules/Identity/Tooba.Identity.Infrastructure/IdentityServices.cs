@@ -187,6 +187,34 @@ public sealed class IdentityAuthenticationService : IIdentityAuthenticationServi
     public Task RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken) =>
         _lifecycle.RevokeAllSessionsAsync(userId, reason, cancellationToken);
 
+    /// <inheritdoc />
+    public async Task<AuthenticationResult> EstablishSessionForUserAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var user = await _db.Users.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+        if (user is null)
+        {
+            await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_failure", OccurredAt = now }, cancellationToken);
+            return AuthenticationResult.Fail(AuthenticationOutcome.InvalidCredentials);
+        }
+
+        if (user.Status == UserAccountStatus.Disabled)
+        {
+            await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_failure", UserId = user.UserId, OccurredAt = now }, cancellationToken);
+            return AuthenticationResult.Fail(AuthenticationOutcome.Disabled);
+        }
+
+        if (user.Status == UserAccountStatus.Locked)
+        {
+            await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_failure", UserId = user.UserId, OccurredAt = now }, cancellationToken);
+            return AuthenticationResult.Fail(AuthenticationOutcome.Locked);
+        }
+
+        var ticket = await _lifecycle.EstablishSessionAsync(user, cancellationToken);
+        await _security.RecordAsync(new IdentitySecurityEvent { EventName = "login_success", UserId = user.UserId, OccurredAt = now }, cancellationToken);
+        return AuthenticationResult.Success(ticket);
+    }
+
     private void ValidatePassword(string password)
     {
         var policy = _policy.Value;

@@ -38,6 +38,8 @@ export function writeCartSession(cartId: string, guestSecret: string | null | un
   window.sessionStorage.setItem(CART_ID_KEY, cartId);
   if (guestSecret) {
     window.sessionStorage.setItem(GUEST_SECRET_KEY, guestSecret);
+  } else if (guestSecret === null) {
+    window.sessionStorage.removeItem(GUEST_SECRET_KEY);
   }
 }
 
@@ -307,6 +309,7 @@ export interface StorefrontCartLine {
   unitDisplayName: string | null;
   quantityDecimalPlaces: number;
   quantityStep: number | null;
+  availability: string;
 }
 
 /**
@@ -411,6 +414,7 @@ export function mapStorefrontCart(payload: unknown): StorefrontCartPage | null {
               const raw = readProp(line, "quantityStep", "QuantityStep");
               return raw == null || raw === "" ? null : asNumber(raw);
             })(),
+            availability: asString(readProp(line, "availability", "Availability"), "Available"),
           } satisfies StorefrontCartLine;
         })
       : [],
@@ -488,6 +492,27 @@ async function parseCartResponse(response: Response): Promise<StorefrontCartPage
   return cart;
 }
 
+export async function mergeStorefrontCartAfterLogin(): Promise<StorefrontCartPage | null> {
+  const session = readCartSession();
+  const response = await fetch("/v1/storefront/cart/merge", {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers: cartHeaders(),
+    body: JSON.stringify(session.cartId ? { cartId: session.cartId } : {}),
+  });
+  if (!response.ok) {
+    return null;
+  }
+  const cart = mapStorefrontCart(await response.json().catch(() => null));
+  if (!cart) {
+    return null;
+  }
+  writeCartSession(cart.cartId, null);
+  notifyCartChanged();
+  return cart;
+}
+
 function persistActiveCartSession(cart: StorefrontCartPage): void {
   if (!isActiveShoppingCartStatus(cart.status)) {
     return;
@@ -528,9 +553,10 @@ function shouldRotateActiveCart(status: number): boolean {
  */
 export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
   const session = readCartSession();
-  if (session.cartId && session.guestSecret) {
+  if (session.cartId && (session.guestSecret || (await fetch("/api/auth/me", { credentials: "include", cache: "no-store" })).ok)) {
     const existing = await fetch(`/v1/storefront/cart/${session.cartId}`, {
       cache: "no-store",
+      credentials: "include",
       headers: cartHeaders(),
     });
     if (existing.ok) {
@@ -555,11 +581,18 @@ export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
  */
 export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
   const session = readCartSession();
-  if (!session.cartId || !session.guestSecret) {
+  if (!session.cartId) {
     return null;
+  }
+  if (!session.guestSecret) {
+    const me = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
+    if (!me.ok) {
+      return null;
+    }
   }
   const response = await fetch(`/v1/storefront/cart/${session.cartId}`, {
     cache: "no-store",
+    credentials: "include",
     headers: cartHeaders(),
   });
   if (shouldRotateActiveCart(response.status)) {

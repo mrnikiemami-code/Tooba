@@ -243,17 +243,17 @@ public sealed class ShoppingCart : IHasDomainEvents
     /// <summary>
     /// گونهٔ مالکیت و دسترسی.
     /// </summary>
-    public CartAccessKind AccessKind { get; init; }
+    public CartAccessKind AccessKind { get; private set; }
 
     /// <summary>
     /// هویت User برای سبد واردشده.
     /// </summary>
-    public Guid? OwnerUserId { get; init; }
+    public Guid? OwnerUserId { get; private set; }
 
     /// <summary>
     /// هش SHA-256 راز مهمان؛ راز خام ذخیره نمی‌شود.
     /// </summary>
-    public string? GuestCredentialHash { get; init; }
+    public string? GuestCredentialHash { get; private set; }
 
     /// <summary>
     /// بازار تجاری سبد. Locale نیست.
@@ -444,6 +444,28 @@ public sealed class ShoppingCart : IHasDomainEvents
         ConversionIntent = intent;
         Touch(now);
         _domainEvents.Add(new CartConvertedDomainEvent(CartId, intent));
+    }
+
+    /// <summary>
+    /// سبد مهمان را به مالک احرازشده منتسب می‌کند و راز مهمان را باطل می‌کند.
+    /// </summary>
+    public void AdoptAuthenticatedOwner(Guid userId, DateTimeOffset now)
+    {
+        EnsureActive();
+        if (userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("سبد واردشده به UserId پایدار نیاز دارد.");
+        }
+
+        if (AccessKind != CartAccessKind.Guest)
+        {
+            throw new InvalidOperationException("فقط سبد مهمان قابل انتساب است.");
+        }
+
+        AccessKind = CartAccessKind.Authenticated;
+        OwnerUserId = userId;
+        GuestCredentialHash = null;
+        Touch(now);
     }
 
     /// <summary>

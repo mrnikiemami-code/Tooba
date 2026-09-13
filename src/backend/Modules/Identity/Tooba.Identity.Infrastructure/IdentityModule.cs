@@ -28,6 +28,10 @@ public sealed class IdentityModule : IToobaModule
         services.Configure<IdentityPasswordPolicyOptions>(configuration.GetSection("Identity:PasswordPolicy"));
         services.Configure<IdentityLifecycleOptions>(configuration.GetSection("Identity:Lifecycle"));
         services.Configure<OtpDeliveryOptions>(configuration.GetSection("Identity:OtpDelivery"));
+        services.Configure<DevelopmentOtpLoginFixtureOptions>(options =>
+        {
+            options.Enabled = environment.IsDevelopment() || environment.IsEnvironment("Testing");
+        });
         services.AddSingleton<OtpDeliveryInstrumentation>();
         services.AddSingleton<IOutboxModuleRegistration, IdentityOutboxRegistration>();
         services.AddSingleton<IPasswordHashingService, AspNetPasswordHashingService>();
@@ -60,6 +64,7 @@ public sealed class IdentityModule : IToobaModule
         services.AddScoped<IIdentityCredentialLifecycle>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentitySessionResolver>(sp => sp.GetRequiredService<IdentityLifecycleService>());
         services.AddScoped<IIdentityAuthenticationService, IdentityAuthenticationService>();
+        services.AddScoped<IIdentityOtpLoginService, IdentityOtpLoginService>();
         services.AddScoped<IIdentityContactLookup, EfIdentityContactLookup>();
         services.AddScoped<IExternalIdentityDirectory, EfExternalIdentityDirectory>();
         services.AddScoped<IMfaEnrollmentStore, EfMfaEnrollmentStore>();

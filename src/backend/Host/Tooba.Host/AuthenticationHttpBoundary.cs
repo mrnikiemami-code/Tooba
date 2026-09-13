@@ -85,25 +85,34 @@ internal sealed class SessionAuthenticationMiddleware
             return;
         }
 
-        if (context.Request.Headers.TryGetValue("Authorization", out var header))
+        if (TryReadSessionId(context, out var sessionId))
         {
-            var raw = header.ToString();
-            if (raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            var sessions = context.RequestServices.GetRequiredService<IIdentitySessionResolver>();
+            var identity = await sessions.ResolveAsync(sessionId, context.RequestAborted);
+            if (identity is not null)
             {
-                var token = raw["Bearer ".Length..].Trim();
-                if (Guid.TryParse(token, out var sessionId))
-                {
-                    var sessions = context.RequestServices.GetRequiredService<IIdentitySessionResolver>();
-                    var identity = await sessions.ResolveAsync(sessionId, context.RequestAborted);
-                    if (identity is not null)
-                    {
-                        current.Assign(identity);
-                    }
-                }
+                current.Assign(identity);
             }
         }
 
         await _next(context);
+    }
+
+    private static bool TryReadSessionId(HttpContext context, out Guid sessionId)
+    {
+        sessionId = Guid.Empty;
+        if (context.Request.Headers.TryGetValue("Authorization", out var header))
+        {
+            var raw = header.ToString();
+            if (raw.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                && Guid.TryParse(raw["Bearer ".Length..].Trim(), out sessionId))
+            {
+                return true;
+            }
+        }
+
+        return context.Request.Cookies.TryGetValue("tooba_session", out var cookie)
+            && Guid.TryParse(cookie, out sessionId);
     }
 }
 
@@ -240,6 +249,28 @@ internal static class AuthenticationHttpModels
         public Dictionary<string, JsonElement>? Extra { get; init; }
     }
 
+    /// <summary>درخواست ورود OTP مشتری با موبایل.</summary>
+    internal sealed class OtpLoginRequest
+    {
+        public string? Identifier { get; init; }
+        public string? TenantId { get; init; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Extra { get; init; }
+    }
+
+    /// <summary>تکمیل ورود OTP.</summary>
+    internal sealed class OtpLoginCompleteRequest
+    {
+        public string? Identifier { get; init; }
+        public Guid ChallengeId { get; init; }
+        public string? Secret { get; init; }
+        public string? TenantId { get; init; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Extra { get; init; }
+    }
+
     /// <summary>تغییر رمز فقط با نشست معتبر و رمز جاری.</summary>
     internal sealed class ChangePasswordRequest
     {
@@ -299,6 +330,8 @@ internal static class AuthenticationEndpointMapper
         group.MapPost("/password-reset/complete", CompleteResetAsync);
         group.MapPost("/identifier-verification/request", RequestVerificationAsync);
         group.MapPost("/identifier-verification/complete", CompleteVerificationAsync);
+        group.MapPost("/otp-login/request", RequestOtpLoginAsync);
+        group.MapPost("/otp-login/complete", CompleteOtpLoginAsync);
         group.MapPost("/password-change", ChangePasswordAsync);
         group.MapGet("/me", MeAsync);
     }
@@ -554,6 +587,69 @@ internal static class AuthenticationEndpointMapper
         }
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> RequestOtpLoginAsync(
+        HttpContext http,
+        AuthenticationHttpModels.OtpLoginRequest body,
+        IIdentityOtpLoginService otpLogin,
+        IAuthenticationThrottleSeam throttle)
+    {
+        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        {
+            return spoof;
+        }
+
+        if (RejectIfThrottled(http, throttle, "otp_login_request") is { } throttled)
+        {
+            return throttled;
+        }
+
+        try
+        {
+            var handle = await otpLogin.RequestLoginAsync(body.Identifier ?? "", http.RequestAborted);
+            return Results.Json(new { accepted = true, challengeId = handle.ChallengeId });
+        }
+        catch (ArgumentException)
+        {
+            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.validation.failed");
+        }
+        catch (InvalidOperationException)
+        {
+            return AuthProblem(http, StatusCodes.Status400BadRequest, "Bad Request", "identity.otp.delivery.unavailable");
+        }
+    }
+
+    private static async Task<IResult> CompleteOtpLoginAsync(
+        HttpContext http,
+        AuthenticationHttpModels.OtpLoginCompleteRequest body,
+        IIdentityOtpLoginService otpLogin,
+        IAuthenticationThrottleSeam throttle,
+        ILoggerFactory loggers)
+    {
+        if (RejectUntrustedTenant(http, body.TenantId, body.Extra) is { } spoof)
+        {
+            return spoof;
+        }
+
+        if (RejectIfThrottled(http, throttle, "otp_login_complete") is { } throttled)
+        {
+            return throttled;
+        }
+
+        var result = await otpLogin.CompleteLoginAsync(
+            body.Identifier ?? "",
+            body.ChallengeId,
+            body.Secret ?? "",
+            http.RequestAborted);
+        if (!result.Succeeded || result.Ticket is null || string.IsNullOrEmpty(result.Ticket.RefreshToken))
+        {
+            loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.failed");
+            return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.authentication.failed");
+        }
+
+        loggers.CreateLogger("Tooba.Auth").LogInformation("identity.otp_login.succeeded");
+        return Results.Json(ToSessionResponse(result.Ticket));
     }
 
     private static async Task<IResult> ChangePasswordAsync(

@@ -143,7 +143,18 @@ builder.Services.AddScoped<CatalogDemoProductSeedService>();
 builder.Services.AddScoped<CatalogDemoSeedService>();
 builder.Services.AddScoped<CatalogDemoResetAndSeedHost>();
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontComposer>();
-builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontCartComposer>();
+builder.Services.AddScoped(sp =>
+    new CheckoutIdentityGate(
+        sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>()));
+builder.Services.AddScoped(sp =>
+    new StorefrontCartComposer(
+        sp.GetRequiredService<Tooba.Cart.Application.ICartDirectory>(),
+        sp.GetRequiredService<Tooba.Cart.Application.ICartQueryGateway>(),
+        sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
+        sp.GetRequiredService<Tooba.Party.Application.IPartyLookupGateway>(),
+        sp.GetRequiredService<Tooba.Catalog.Application.ICatalogLookupGateway>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>()));
 builder.Services.AddScoped<StorefrontCheckoutComposer>(sp =>
     new StorefrontCheckoutComposer(
         sp.GetRequiredService<StorefrontCartComposer>(),
@@ -401,6 +412,7 @@ app.MapAuthenticationBoundary(enableCors: true);
 app.MapProductWorkspaceEndpoints();
 app.MapQuantitySettingsEndpoints();
 app.MapHoldPolicySettingsEndpoints();
+app.MapCheckoutIdentitySettingsEndpoints();
 app.MapReservationPolicyAdminEndpoints();
 app.MapUnitOfMeasureEndpoints();
 app.MapShippingServiceEndpoints();

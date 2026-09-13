@@ -69,6 +69,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
     private readonly IIdentitySecurityEventSink _security;
     private readonly ICurrentCommerceContext _commerce;
     private readonly IOtpSender _sender;
+    private readonly DevelopmentOtpLoginFixtureOptions _otpFixture;
 
     /// <summary>
     /// سرویس چرخهٔ عمر را به DbContext Tenant-aware و فرستندهٔ انتزاعی وصل می‌کند.
@@ -80,7 +81,8 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         IOptions<IdentityLifecycleOptions> lifecycle,
         IIdentitySecurityEventSink security,
         ICurrentCommerceContext commerce,
-        IOtpSender sender)
+        IOtpSender sender,
+        IOptions<DevelopmentOtpLoginFixtureOptions>? otpFixture = null)
     {
         _db = db;
         _hasher = hasher;
@@ -89,6 +91,7 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         _security = security;
         _commerce = commerce;
         _sender = sender;
+        _otpFixture = otpFixture?.Value ?? new DevelopmentOtpLoginFixtureOptions();
     }
 
     /// <summary>
@@ -260,6 +263,11 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         var raw = purpose == OtpPurpose.PasswordReset
             ? OpaqueSecretHasher.Generate()
             : OpaqueSecretHasher.GenerateNumericCode(8);
+        if (purpose == OtpPurpose.Login && TryDevelopmentLoginCode(destination, out var fixtureCode))
+        {
+            raw = fixtureCode;
+        }
+
         var handle = await PersistChallengeAsync(purpose, userId: null, destination, raw, cancellationToken);
         await _sender.SendAsync(purpose, destination, raw, cancellationToken);
         return handle;
@@ -485,6 +493,32 @@ public sealed class IdentityLifecycleService : IIdentityCredentialLifecycle, IOt
         challenge.ConsumedAt = now;
         await _db.SaveChangesAsync(cancellationToken);
         return ChallengeConsumeOutcome.Succeeded;
+    }
+
+    private bool TryDevelopmentLoginCode(string destination, out string code)
+    {
+        code = string.Empty;
+        if (!_otpFixture.Enabled)
+        {
+            return false;
+        }
+
+        try
+        {
+            var (_, actual) = LoginIdentifierNormalizer.Normalize(LoginIdentifierKind.Phone, destination);
+            var (_, fixture) = LoginIdentifierNormalizer.Normalize(LoginIdentifierKind.Phone, _otpFixture.Mobile);
+            if (!string.Equals(actual, fixture, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            code = _otpFixture.OneTimeCode;
+            return !string.IsNullOrWhiteSpace(code);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
     }
 
     private void ValidatePassword(string password)

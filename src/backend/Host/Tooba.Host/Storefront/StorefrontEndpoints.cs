@@ -24,8 +24,10 @@ public static class StorefrontEndpoints
         group.MapGet("/products/{slug}", GetDetailAsync);
         group.MapGet("/category-plp/{slug}", GetCategoryPlpAsync);
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
+        group.MapGet("/checkout-identity-policy", GetCheckoutIdentityPolicyAsync);
         group.MapPost("/cart", CreateGuestCartAsync);
         group.MapGet("/cart/{cartId:guid}", GetCartAsync);
+        group.MapPost("/cart/merge", MergeCartAfterLoginAsync);
         group.MapPost("/cart/{cartId:guid}/lines", AddCartLineAsync);
         group.MapPatch("/cart/{cartId:guid}/lines/{lineId:guid}", ChangeCartLineAsync);
         group.MapDelete("/cart/{cartId:guid}/lines/{lineId:guid}", RemoveCartLineAsync);
@@ -353,64 +355,112 @@ public static class StorefrontEndpoints
         }
     }
 
+    private static async Task<IResult> GetCheckoutIdentityPolicyAsync(
+        CheckoutIdentityGate gate,
+        CancellationToken cancellationToken)
+    {
+        var policy = await gate.GetEffectiveAsync(cancellationToken);
+        return Results.Json(new
+        {
+            policy = policy.ToString(),
+            cartAnonymousAllowed = true,
+            checkoutAuthenticationRequired = policy == Tooba.Catalog.Domain.CheckoutIdentityPolicyKind.AuthenticatedOnly,
+        });
+    }
+
+    private static Task<IResult> MergeCartAfterLoginAsync(
+        StorefrontMergeCartRequest? body,
+        StorefrontCartComposer composer,
+        HttpRequest request,
+        CancellationToken cancellationToken)
+        => ExecuteCartAsync(() => composer.MergeAfterLoginAsync(
+            body?.CartId,
+            ReadGuestSecret(request),
+            cancellationToken));
+
     private static Task<IResult> PreviewCheckoutAsync(
         Guid cartId,
         StorefrontCheckoutComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         string? couponCode = null,
         CancellationToken cancellationToken = default)
-        => ExecuteCheckoutAsync(() => composer.PreviewAsync(
-            cartId,
-            ReadGuestSecret(request),
-            couponCode ?? request.Query["couponCode"].FirstOrDefault(),
-            cancellationToken));
+        => ExecuteCheckoutAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.PreviewAsync(
+                cartId,
+                ReadGuestSecret(request),
+                couponCode ?? request.Query["couponCode"].FirstOrDefault(),
+                cancellationToken);
+        });
 
     private static Task<IResult> ProjectShippingAsync(
         StorefrontShippingProjectionRequest body,
         StorefrontShippingComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteShippingAsync(() => composer.ProjectAsync(
-            body.CartId,
-            ReadGuestSecret(request),
-            body.ProvinceName,
-            body.MethodCode,
-            body.Language,
-            cancellationToken));
+        => ExecuteShippingAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.ProjectAsync(
+                body.CartId,
+                ReadGuestSecret(request),
+                body.ProvinceName,
+                body.MethodCode,
+                body.Language,
+                cancellationToken);
+        });
 
     private static Task<IResult> SaveShippingSelectionAsync(
         StorefrontShippingSelectionRequest body,
         StorefrontShippingComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteShippingAsync(() => composer.SaveSelectionAsync(body, ReadGuestSecret(request), cancellationToken));
+        => ExecuteShippingAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.SaveSelectionAsync(body, ReadGuestSecret(request), cancellationToken);
+        });
 
     private static Task<IResult> CommitShippingAsync(
         StorefrontShippingCommitRequest body,
         StorefrontShippingComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteCheckoutAsync(() => composer.CommitAsync(
-            body.CartId,
-            ReadGuestSecret(request),
-            body.ExpectedCartVersion,
-            body.IdempotencyKey,
-            body.CouponCode,
-            cancellationToken));
+        => ExecuteCheckoutAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.CommitAsync(
+                body.CartId,
+                ReadGuestSecret(request),
+                body.ExpectedCartVersion,
+                body.IdempotencyKey,
+                body.CouponCode,
+                cancellationToken);
+        });
 
     private static Task<IResult> SubmitCheckoutAsync(
         StorefrontSubmitCheckoutRequest body,
         StorefrontCheckoutComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecuteCheckoutAsync(() => composer.SubmitAsync(
-            body.CartId,
-            ReadGuestSecret(request),
-            body.ExpectedCartVersion,
-            body.IdempotencyKey,
-            body.Shipping,
-            body.CouponCode,
-            cancellationToken));
+        => ExecuteCheckoutAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.SubmitAsync(
+                body.CartId,
+                ReadGuestSecret(request),
+                body.ExpectedCartVersion,
+                body.IdempotencyKey,
+                body.Shipping,
+                body.CouponCode,
+                cancellationToken);
+        });
 
     private static async Task<IResult> GetCheckoutAsync(
         Guid checkoutId,
@@ -438,28 +488,38 @@ public static class StorefrontEndpoints
         Guid checkoutId,
         StorefrontInitiatePaymentRequest body,
         StorefrontPaymentComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.InitiateAsync(
-            checkoutId,
-            body.CartId,
-            ReadGuestSecret(request),
-            body.IdempotencyKey,
-            body.WantsWallet,
-            body.ProviderCode,
-            cancellationToken));
+        => ExecutePaymentAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.InitiateAsync(
+                checkoutId,
+                body.CartId,
+                ReadGuestSecret(request),
+                body.IdempotencyKey,
+                body.WantsWallet,
+                body.ProviderCode,
+                cancellationToken);
+        });
 
     private static Task<IResult> GetWalletQuoteAsync(
         Guid checkoutId,
         Guid cartId,
         StorefrontPaymentComposer composer,
+        CheckoutIdentityGate gate,
         HttpRequest request,
         CancellationToken cancellationToken)
-        => ExecutePaymentAsync(() => composer.GetWalletQuoteAsync(
-            checkoutId,
-            cartId,
-            ReadGuestSecret(request),
-            cancellationToken));
+        => ExecutePaymentAsync(async () =>
+        {
+            await gate.EnsureCheckoutActorAsync(cancellationToken);
+            return await composer.GetWalletQuoteAsync(
+                checkoutId,
+                cartId,
+                ReadGuestSecret(request),
+                cancellationToken);
+        });
 
     private static Task<IResult> ListPaymentMethodsAsync(
         StorefrontPaymentComposer composer)
@@ -613,6 +673,11 @@ public static class StorefrontEndpoints
     private static (int Status, string Title, string Code) MapPaymentException(InvalidOperationException exception)
     {
         var text = exception.Message;
+        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        }
+
         if (text.Contains("قبلاً با موفقیت", StringComparison.Ordinal)
             || text.Contains("قبلاً پرداخت", StringComparison.Ordinal))
         {
@@ -725,6 +790,7 @@ public static class StorefrontEndpoints
         "order.cancel.unpaid_only" => "لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.",
         "order.cancel.forbidden" => "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
         "pending.hide.active_hold" => "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.",
+        "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 
@@ -761,6 +827,11 @@ public static class StorefrontEndpoints
     private static (int Status, string Title, string Code) MapShippingException(InvalidOperationException exception)
     {
         var text = exception.Message;
+        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        }
+
         if (text.Contains("shipping.cart.forbidden", StringComparison.Ordinal)
             || text.Contains("متعلق", StringComparison.Ordinal)
             || text.Contains("دفترچه", StringComparison.Ordinal))
@@ -824,6 +895,7 @@ public static class StorefrontEndpoints
         "shipping.delivery.slot_unavailable" => "بازهٔ زمانی تحویل دیگر در دسترس نیست.",
         "shipping.note.too_long" => "توضیحات سفارش بیش از حد طولانی است.",
         "shipping.selection.required" => "ابتدا اطلاعات ارسال را تکمیل کنید.",
+        "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
         _ => "امکان ادامهٔ مرحلهٔ ارسال وجود ندارد.",
     };
 
@@ -833,6 +905,11 @@ public static class StorefrontEndpoints
         if (text.Contains("متعلق", StringComparison.Ordinal) || text.Contains("دفترچه", StringComparison.Ordinal))
         {
             return (StatusCodes.Status403Forbidden, "Forbidden", "checkout.address.forbidden");
+        }
+
+        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
         }
 
         if (text.Contains("checkout.access.denied", StringComparison.Ordinal)
@@ -898,6 +975,7 @@ public static class StorefrontEndpoints
         "checkout.address.forbidden" => "این نشانی متعلق به مشتری جاری نیست.",
         "checkout.access.denied" =>
             "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید.",
+        "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
         _ => "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.",
     };
 
@@ -944,6 +1022,11 @@ public static class StorefrontEndpoints
     private static (int Status, string Title, string Code) MapCartException(InvalidOperationException exception)
     {
         var text = exception.Message;
+        if (text.Contains("checkout.authentication_required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status401Unauthorized, "Unauthorized", "checkout.authentication_required");
+        }
+
         if (text.Contains("پیدا نشد", StringComparison.Ordinal))
         {
             return (StatusCodes.Status404NotFound, "Not Found", "cart.missing");
@@ -1003,6 +1086,7 @@ public static class StorefrontEndpoints
         "cart.guest.invalid" => "دسترسی به سبد مهمان معتبر نیست.",
         "cart.missing" => "سبد پیدا نشد.",
         "cart.rejected" => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
+        "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
         _ => "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.",
     };
 }

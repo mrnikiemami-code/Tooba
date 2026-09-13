@@ -259,6 +259,42 @@ public interface IIdentityAuthenticationService
     /// همهٔ نشست‌های User را لغو می‌کند.
     /// </summary>
     Task RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// نشست را پس از اثبات OTP برای User فعال صادر می‌کند. رمز لازم نیست.
+    /// </summary>
+    Task<AuthenticationResult> EstablishSessionForUserAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// ورود مشتری با موبایل و OTP روی چالش پایدار Identity. فروشگاه رمز جدا نمی‌سازد.
+/// </summary>
+public interface IIdentityOtpLoginService
+{
+    /// <summary>
+    /// چالش ورود می‌سازد. وجود حساب در پاسخ عمومی لو نمی‌رود.
+    /// </summary>
+    Task<OtpChallengeHandle> RequestLoginAsync(string mobile, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// OTP را می‌سنجد، User را پیدا یا می‌سازد، و نشست جاری را صادر می‌کند.
+    /// </summary>
+    Task<AuthenticationResult> CompleteLoginAsync(string mobile, Guid challengeId, string oneTimeCode, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// OTP ثابت توسعه فقط وقتی Host محیط Development/Testing است. از appsettings Production خوانده نمی‌شود.
+/// </summary>
+public sealed class DevelopmentOtpLoginFixtureOptions
+{
+    /// <summary>فقط Development/Testing.</summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>موبایل ثابت توسعه.</summary>
+    public string Mobile { get; set; } = "09111111111";
+
+    /// <summary>کد ثابت توسعه؛ در Production اعمال نمی‌شود.</summary>
+    public string OneTimeCode { get; set; } = "123456";
 }
 
 /// <summary>

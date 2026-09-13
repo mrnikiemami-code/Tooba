@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Testcontainers.PostgreSql;
 using Tooba.Identity.Application;
 using Tooba.Identity.Domain;
@@ -276,6 +277,47 @@ public sealed class IdentityLifecycleTests : IAsyncLifetime
         Assert.Null(await authB.FindUserIdByIdentifierAsync(LoginIdentifierKind.Email, "life@example.com", CancellationToken.None));
         Assert.Empty(await dbB.Sessions.AsNoTracking().Where(x => x.UserId == created.UserId).ToListAsync());
         Assert.Empty(await dbB.Challenges.AsNoTracking().Where(x => x.UserId == created.UserId).ToListAsync());
+    }
+
+    [SkippableFact]
+    public async Task Development_otp_login_fixture_issues_session_without_password()
+    {
+        Skip.If(!_dockerAvailable || _container is null, "Docker/Testcontainers PostgreSQL is not available.");
+        await using var db = CreateDb(_container.GetConnectionString());
+        await db.Database.EnsureCreatedAsync();
+        var hasher = new AspNetPasswordHashingService();
+        var sink = new InMemoryIdentitySecurityEventSink();
+        var sender = new CapturingOtpSender();
+        var commerce = new FixedCommerceContext();
+        commerce.Assign(OutboxTestContextFactory.SingleStore("tenant-otp", "tenant-otp"));
+        var life = new IdentityLifecycleService(
+            db,
+            hasher,
+            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
+            Options.Create(new IdentityLifecycleOptions()),
+            sink,
+            commerce,
+            sender,
+            Options.Create(new DevelopmentOtpLoginFixtureOptions { Enabled = true }));
+        var auth = new IdentityAuthenticationService(
+            db,
+            hasher,
+            Options.Create(new IdentityPasswordPolicyOptions { MinimumLength = 10 }),
+            sink,
+            life);
+        var otpLogin = new IdentityOtpLoginService(db, life, auth);
+        var handle = await otpLogin.RequestLoginAsync("09111111111", CancellationToken.None);
+        var failed = await otpLogin.CompleteLoginAsync("09111111111", handle.ChallengeId, "000000", CancellationToken.None);
+        Assert.False(failed.Succeeded);
+        var second = await otpLogin.RequestLoginAsync("09111111111", CancellationToken.None);
+        var ok = await otpLogin.CompleteLoginAsync("09111111111", second.ChallengeId, "123456", CancellationToken.None);
+        Assert.True(ok.Succeeded);
+        Assert.NotNull(ok.Ticket?.RefreshToken);
+        var phoneUserId = await auth.FindUserIdByIdentifierAsync(LoginIdentifierKind.Phone, "09111111111", CancellationToken.None);
+        Assert.NotNull(phoneUserId);
+        Assert.DoesNotContain(
+            await db.Identifiers.AsNoTracking().Where(x => x.UserId == phoneUserId).ToListAsync(),
+            x => x.Kind == LoginIdentifierKind.Email);
     }
 
     private static IdentityDbContext CreateDb(string connectionString)

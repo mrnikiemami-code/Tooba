@@ -610,6 +610,13 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
         public Task<int> ExpireDueCartsAsync(DateTimeOffset utcNow, int batchSize, CancellationToken cancellationToken) =>
             _inner.ExpireDueCartsAsync(utcNow, batchSize, cancellationToken);
 
+        public Task<CartMergeResult> MergeAnonymousAfterLoginAsync(
+            Guid userId,
+            Guid? anonymousCartId,
+            string? guestSecret,
+            CancellationToken cancellationToken) =>
+            _inner.MergeAnonymousAfterLoginAsync(userId, anonymousCartId, guestSecret, cancellationToken);
+
         public Task<CartSnapshot> ConvertAsync(Guid cartId, CartAccess access, int expectedVersion, CartConversionIntent intent, CancellationToken cancellationToken)
         {
             if (Interlocked.Increment(ref _converts) == 1)

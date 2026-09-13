@@ -243,7 +243,8 @@ public sealed record StorefrontCartLineView(
     string? UnitCode = null,
     string? UnitDisplayName = null,
     int QuantityDecimalPlaces = 0,
-    decimal? QuantityStep = null);
+    decimal? QuantityStep = null,
+    string Availability = "Available");
 
 /// <summary>
 /// صفحهٔ سبد زنده. جمع‌ها برآورد بدون مالیات از نقل‌قول سبد هستند نه تسویهٔ Checkout.
@@ -264,6 +265,9 @@ public sealed record StorefrontCartPage(
 /// ورودی افزودن خط از PDP. هویت خط Offer است.
 /// </summary>
 public sealed record StorefrontAddCartLineRequest(Guid OfferId, decimal Quantity);
+
+/// <summary>ادغام سبد مهمان پس از ورود؛ CartId بدون راز مهمان پذیرفته نیست.</summary>
+public sealed record StorefrontMergeCartRequest(Guid? CartId);
 
 /// <summary>
 /// ورودی تغییر تعداد خط. صفر یعنی حذف.

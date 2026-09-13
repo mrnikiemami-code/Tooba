@@ -31,6 +31,8 @@ import {
 import { loadStorefrontPendingPayments, type StorefrontPendingPaymentItem } from "./storefront-pending-payment-api.ts";
 import { StorefrontPendingPayments } from "./storefront-pending-payments.tsx";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
+import { loginPath } from "../../lib/auth/login-return-to.ts";
+import { requiresCheckoutLogin } from "./storefront-identity-api.ts";
 import {
   previewStorefrontCheckout,
   readStoredCouponCode,
@@ -60,6 +62,7 @@ export function StorefrontShopeivaCart({
   const [pendingItems, setPendingItems] = useState<StorefrontPendingPaymentItem[]>([]);
   const removedPendingIds = useRef(new Set<string>());
   const locale = useLocale();
+  const [checkoutHref, setCheckoutHref] = useState("/shipping");
   const applyPendingItems = useCallback((items: StorefrontPendingPaymentItem[]) => {
     setPendingItems(items.filter((item) => !removedPendingIds.current.has(item.checkoutId)));
   }, []);
@@ -88,7 +91,10 @@ export function StorefrontShopeivaCart({
     void loadStorefrontPendingPayments()
       .then((page) => applyPendingItems(page.items))
       .catch(() => setPendingItems([]));
-  }, []);
+    void requiresCheckoutLogin().then((needsLogin) => {
+      setCheckoutHref(needsLogin ? loginPath(locale, `/${locale}/shipping`) : "/shipping");
+    });
+  }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -234,6 +240,13 @@ export function StorefrontShopeivaCart({
                             {line.title}
                           </Link>
                           <p className="text-[11px] text-gray-500 mt-1">فروشنده: {line.sellerDisplayName}</p>
+                          {line.availability && line.availability !== "Available" ? (
+                            <p className="text-[11px] text-amber-700 mt-1" data-testid="cart-line-availability">
+                              {line.availability === "Unavailable"
+                                ? (locale === "en" ? "Currently unavailable" : "این کالا فعلاً موجود نیست")
+                                : (locale === "en" ? "Limited quantity available" : "موجودی کمتر از تعداد سبد است")}
+                            </p>
+                          ) : null}
                         </div>
                         <button
                           type="button"
@@ -327,7 +340,7 @@ export function StorefrontShopeivaCart({
                     </p>
                   </div>
                   <Link
-                    href="/shipping"
+                    href={checkoutHref}
                     className="mt-4 w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-[#2563EB] text-white hover:bg-[#1d4ed8] shadow-lg shadow-[#2563EB]/25"
                     data-testid="cart-checkout-cta"
                   >

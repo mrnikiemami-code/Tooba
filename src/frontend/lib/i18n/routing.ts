@@ -14,6 +14,7 @@ export const LOCALE_HEADER_NAME = "x-tooba-locale";
 
 /** مسیرهای SEO-عمومی که باید prefix locale داشته باشند. */
 export const PUBLIC_STOREFRONT_PREFIXES = [
+  "/login",
   "/products",
   "/category",
   "/blogs",
@@ -41,6 +42,7 @@ export const LOCALE_EXCLUDED_PREFIXES = [
   "/customer-panel",
   "/vendor-panel",
   "/api",
+  "/v1",
   "/design-system",
   "/payment/sandbox",
   "/_next",

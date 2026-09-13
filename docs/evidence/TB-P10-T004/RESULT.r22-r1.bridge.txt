@@ -1,0 +1,89 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R22-R1
+
+Parent-Task:
+TB-P10-T004-R22
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=YES
+
+Summary:
+R22-R1 PASS. First canonical locale Login (`/fa/login`, `/en/login`) is mobile+OTP on existing Identity/session/BFF cookies. Development fixture 09111111111/123456 is environment-gated. Default CheckoutIdentityPolicy AuthenticatedOnly; Cart stays anonymous; Shipping/Checkout/Payment and submit are backend-gated with checkout.authentication_required. Anonymous cart merge is server-authoritative (adopt or merge-by-offer, decimal kept, no Reservation/Order/Payment). Authenticated checkout Convert now uses session CartAccess so R21 atomic shipping-commit still works. Admin Settings هویت خرید works. Runtime A–O on :5088+:3000 PASS. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…105 preserved. Added LOCK-SF-106…111 (canonical OTP login, AuthenticatedOnly default, backend gate, server merge, env-gated fixture, safe returnTo).
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T004-R21-R1; Repair TB-P10-T004-R22-R1; Worker tooba-worker-01; branch main; claim HEAD==origin/main dba67566abce8425cce41a70a6ac877ce5dd38d5 match; USER_VISUAL_ACCEPTED=YES. Evidence r22-r1-recovery-start.md
+
+Auth-Discovery:
+Reused Host OTP+session, BFF cookies, locale /login prefix. No second stack. Evidence r22-r1-auth-discovery.md
+
+Login-Page:
+Canonical StorefrontShell page; FA RTL / EN LTR; no password UI. Evidence r22-r1-login-page.md
+
+OTP-Login:
+Identity OTP request/complete + session. Fixture Dev/Testing only. Evidence r22-r1-otp-login.md
+
+Identity-Policy:
+Default AuthenticatedOnly; Admin GuestAllowed with warning. Evidence r22-r1-identity-policy.md
+
+Login-Gate:
+FE redirect + backend 401 checkout.authentication_required / برای ادامه فرایند خرید وارد حساب خود شوید. Evidence r22-r1-login-gate.md
+
+Cart-Merge:
+POST /v1/storefront/cart/merge; adopt or merge; no stock reserve; unavailable lines kept. Evidence r22-r1-cart-merge.md
+
+Security:
+No open redirect; no fixture in Production; no cross-user merge; session CartAccess on checkout. Evidence r22-r1-security.md
+
+Admin-Settings:
+هویت مشتری در فرایند خرید. Runtime N/O PASS. Evidence r22-r1-admin-settings.md
+
+Focused-Validation:
+Host identity/checkout contracts + OTP fixture green; FE login/returnTo/locale + critical-storefront green; recovery guard green; git diff --check clean. Evidence r22-r1-focused-validation.md
+
+Runtime:
+A–O PASS on Host :5088 + FE :3000. Checkout 01a09970-6b4d-7000-a12e-0235b2e15d66. Browser OTP → /fa/shipping. Evidence r22-r1-runtime.md
+
+Visual-Smoke:
+Login smoke FA/EN + OTP step + Shopeiva shell. USER_VISUAL_ACCEPTED=YES unchanged for prior surfaces. Evidence r22-r1-visual-smoke.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r22-r1-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-106…111 added; 001…105 untouched.
+
+Recovery-SoT:
+Phase P10; Architect-accepted TB-P10-T004-R21-R1; Last Implementation TB-P10-T004-R22-R1; Current Issued/Repair none; Worker IDLE; no TB-P10-T005. Evidence r22-r1-recovery-sot.md
+
+Git:
+expected previous HEAD dba67566abce8425cce41a70a6ac877ce5dd38d5
+ending HEAD recorded after push
+HEAD==origin/main yes after fetch
+task-owned worktree clean
+no TB-P10-T005
+
+Architectural-Concerns:
+None for this repair. R23 MaxOpenUnpaidOrders not implemented.
+
+Visual-Concerns:
+New Login is smoke-only. Screenshot renderer garbles some FA glyphs; a11y tree is correct RTL/LTR. USER_VISUAL_ACCEPTED=YES is the task flag for already-accepted surfaces.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

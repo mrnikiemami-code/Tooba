@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R20-R1
+TB-P10-T004-R21-R1
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R21-R1
+TB-P10-T004-R22-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R22-R1 — First canonical Login + checkout identity policy + cart merge; USER_VISUAL_ACCEPTED=YES
 TB-P10-T004-R21-R1 — Accepted pending-order UX + atomic checkout commit gate; USER_VISUAL_ACCEPTED=YES
 TB-P10-T004-R20-R1 — Visual Gate Repair (long-hold countdown + Admin history localization); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R20 — Reservation UX Visual Runtime Gate; USER_VISUAL_ACCEPTED=NO

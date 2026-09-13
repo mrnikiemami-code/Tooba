@@ -264,6 +264,78 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
     }
 
     /// <inheritdoc />
+    public async Task<CartMergeResult> MergeAnonymousAfterLoginAsync(
+        Guid userId,
+        Guid? anonymousCartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        await _guard.EnsureCanMutateAsync(cancellationToken);
+        if (userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("سبد واردشده به UserId پایدار نیاز دارد.");
+        }
+
+        ShoppingCart? guest = null;
+        if (anonymousCartId is Guid cartId && cartId != Guid.Empty)
+        {
+            if (string.IsNullOrWhiteSpace(guestSecret))
+            {
+                throw new InvalidOperationException("راز مهمان نامعتبر است؛ CartId به‌تنهایی مجوز نیست و راز خام در پایگاه نیست.");
+            }
+
+            guest = await LoadRequiredAsync(cartId, cancellationToken);
+            if (guest.AccessKind == CartAccessKind.Authenticated)
+            {
+                if (guest.OwnerUserId != userId)
+                {
+                    throw new InvalidOperationException("سبد واردشده بدون UserId مطابق قابل‌دسترسی نیست؛ CartId Bearer نیست.");
+                }
+
+                return new CartMergeResult(await ToSnapshotAsync(guest, cancellationToken), false, (await ToSnapshotAsync(guest, cancellationToken)).Lines);
+            }
+
+            EnsureAccess(guest, new CartAccess(null, guestSecret));
+        }
+
+        var authenticated = await _db.Carts
+            .Include(x => x.Lines)
+            .Where(x => x.OwnerUserId == userId && x.Status == CartStatus.Active && x.AccessKind == CartAccessKind.Authenticated)
+            .OrderByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (guest is null)
+        {
+            authenticated ??= await CreateAuthenticatedCoreAsync(userId, "IR", "IRR", SalesChannel.Marketplace, cancellationToken);
+            var empty = await ToSnapshotAsync(authenticated, cancellationToken);
+            return new CartMergeResult(empty, false, empty.Lines);
+        }
+
+        if (authenticated is null)
+        {
+            guest.AdoptAuthenticatedOwner(userId, DateTimeOffset.UtcNow);
+            await SaveCartAsync(cancellationToken);
+            var adopted = await ToSnapshotAsync(guest, cancellationToken);
+            return new CartMergeResult(adopted, true, adopted.Lines);
+        }
+
+        foreach (var line in guest.Lines.ToList())
+        {
+            await MergeLineWithoutReservationAsync(authenticated, line, cancellationToken);
+        }
+
+        if (guest.CartId != authenticated.CartId)
+        {
+            await ReleaseAllAsync(guest, cancellationToken);
+            guest.Abandon(DateTimeOffset.UtcNow);
+        }
+
+        await SaveCartAsync(cancellationToken);
+        var merged = await ToSnapshotAsync(authenticated, cancellationToken);
+        return new CartMergeResult(merged, false, merged.Lines);
+    }
+
+    /// <inheritdoc />
     public async Task<CartSnapshot> ConvertAsync(
         Guid cartId,
         CartAccess access,
@@ -369,6 +441,75 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         }
 
         return TimeSpan.FromHours(Math.Clamp(_persistenceHours.ResolvePersistenceHours(), 1, 24 * 90));
+    }
+
+    private async Task<ShoppingCart> CreateAuthenticatedCoreAsync(
+        Guid userId,
+        string market,
+        string currency,
+        SalesChannel channel,
+        CancellationToken cancellationToken)
+    {
+        _ = CurrencyCode.Parse(currency);
+        var now = DateTimeOffset.UtcNow;
+        var cart = ShoppingCart.CreateAuthenticated(userId, market, currency, channel, now, now.Add(ResolvePersistenceTtl()));
+        _db.Carts.Add(cart);
+        await _db.SaveChangesAsync(cancellationToken);
+        return cart;
+    }
+
+    private async Task MergeLineWithoutReservationAsync(
+        ShoppingCart target,
+        CartLine source,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var existing = target.FindLineByOffer(source.OfferId);
+        var quantity = (existing?.Quantity ?? 0) + source.Quantity;
+        decimal quotedAmount = source.QuotedAmount ?? 0;
+        var quotedCurrency = source.QuotedCurrency ?? target.Currency;
+        var taxExclusive = source.QuotedTaxExclusive;
+        var priceId = source.PriceId ?? Guid.Empty;
+        try
+        {
+            var (_, quote, normalized) = await ValidateOfferAndQuoteAsync(target, source.OfferId, quantity, now, cancellationToken);
+            quantity = normalized;
+            quotedAmount = quote.Amount;
+            quotedCurrency = quote.Currency;
+            taxExclusive = quote.TaxExclusive;
+            priceId = quote.PriceId;
+        }
+        catch (InvalidOperationException)
+        {
+            // خط ادغام‌شده حذف نمی‌شود؛ موجودی/قیمت در snapshot بازتاب می‌شود.
+        }
+
+        if (existing is not null)
+        {
+            if (existing.ReservationId is { } oldId)
+            {
+                await _inventory.ReleaseAsync(oldId, cancellationToken);
+                existing.ClearReservation();
+            }
+
+            existing.ReplaceHold(quantity, null, quotedAmount, quotedCurrency, taxExclusive, priceId, now);
+            target.RecordLineChanged(existing.LineId, existing.OfferId, quantity, now);
+            return;
+        }
+
+        var line = CartLine.Open(
+            target.CartId,
+            source.OfferId,
+            source.CatalogVariantId,
+            source.SellerPartyId,
+            quantity,
+            null,
+            quotedAmount,
+            quotedCurrency,
+            taxExclusive,
+            priceId,
+            now);
+        target.AddLine(line, now);
     }
 
     private async Task EnsureSellableAsync(Guid offerId, decimal quantity, CancellationToken cancellationToken)

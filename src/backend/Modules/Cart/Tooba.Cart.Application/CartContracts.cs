@@ -157,4 +157,21 @@ public interface ICartDirectory
         int expectedVersion,
         CartConversionIntent intent,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// سبد مهمان اثبات‌شده را پس از ورود با سبد احرازشده ادغام می‌کند. رزرو/سفارش/پرداخت ساخته نمی‌شود.
+    /// </summary>
+    Task<CartMergeResult> MergeAnonymousAfterLoginAsync(
+        Guid userId,
+        Guid? anonymousCartId,
+        string? guestSecret,
+        CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// نتیجهٔ ادغام ورود. خط ناموجود حذف خاموش نمی‌شود.
+/// </summary>
+public sealed record CartMergeResult(
+    CartSnapshot Cart,
+    bool AdoptedAnonymousCart,
+    IReadOnlyList<CartLineSnapshot> Lines);

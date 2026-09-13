@@ -478,3 +478,21 @@ Hiding a pending-payment card must not mutate Order, Payment, Supply, Reservatio
 
 ### LOCK-SF-105 — Customer cancel uses canonical lifecycle
 Customer لغو سفارش uses canonical Order cancellation and releases active supply through the backend lifecycle. It is never implemented as presentation-only hide.
+
+### LOCK-SF-106 — Canonical customer login is locale-aware mobile+OTP
+Customer login is `/fa/login` and `/en/login` using the existing Identity OTP + session architecture. Do not add a storefront password form, login modal, or a second auth stack.
+
+### LOCK-SF-107 — Default checkout identity is AuthenticatedOnly
+Store `CheckoutIdentityPolicy` defaults to AuthenticatedOnly. GuestAllowed is an explicit Admin setting. Cart may stay anonymous; Shipping, Checkout, and Payment require authentication under AuthenticatedOnly.
+
+### LOCK-SF-108 — Checkout auth gate is backend-enforced
+Frontend redirect to Login is not sufficient. Shipping projection/commit, checkout submit, and payment initiation/access reject anonymous callers under AuthenticatedOnly with `checkout.authentication_required`.
+
+### LOCK-SF-109 — Anonymous cart merge is server-authoritative
+After login, anonymous cart merge uses server-proven guest ownership. It does not create Reservation, Order, or Payment, does not overwrite an authenticated Active cart, and does not silently drop unavailable lines.
+
+### LOCK-SF-110 — Development OTP fixture is environment-gated
+Fixed Development mobile/OTP (`09111111111` / `123456`) is enabled only in Development/Testing. Production must not accept that fixed code unless the real configured provider issued it.
+
+### LOCK-SF-111 — Safe returnTo after login
+Login `returnTo` accepts only internal locale-prefixed paths. Open redirects, protocol-relative URLs, and guest/payment secrets in query are rejected.

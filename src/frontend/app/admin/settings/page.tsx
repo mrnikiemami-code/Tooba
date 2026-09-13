@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Globe2, Hash, Save, Settings, User } from "lucide-react";
+import { Clock, Globe2, Hash, Save, Settings, ShieldCheck, User } from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { type Locale } from "../../../lib/i18n/locale.ts";
 import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
@@ -30,8 +30,13 @@ import {
   readReservationWrite,
   type ReservationPolicyDraft,
 } from "../reservation-policy-editor.tsx";
+import {
+  loadCheckoutIdentitySettings,
+  saveCheckoutIdentitySettings,
+  type CheckoutIdentitySettingsView,
+} from "../checkout-identity-settings-api.ts";
 
-type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds";
+type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds" | "identity";
 
 /**
  * تنظیمات اپراتور Admin — پروفایل شخصی + locale؛ بدون سوئیچ سراسری جعلی.
@@ -59,6 +64,8 @@ export default function AdminSettingsPage() {
     manualPaymentReviewHoldHours: "",
   });
   const [methodDraft, setMethodDraft] = useState<PaymentMethodHoldView[]>([]);
+  const [identity, setIdentity] = useState<CheckoutIdentitySettingsView | null>(null);
+  const [identityDraft, setIdentityDraft] = useState<"AuthenticatedOnly" | "GuestAllowed">("AuthenticatedOnly");
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -73,11 +80,12 @@ export default function AdminSettingsPage() {
     setLoadError(null);
     setProfile(undefined);
     await prepareAdminDevActor();
-    const [profileResult, prefsResult, roundingResult, holdResult] = await Promise.all([
+    const [profileResult, prefsResult, roundingResult, holdResult, identityResult] = await Promise.all([
       loadOperatorProfile(),
       loadOperatorPreferences(),
       loadStoreQuantitySettings(),
       loadHoldPolicySettings(),
+      loadCheckoutIdentitySettings(),
     ]);
     if (profileResult.state === "denied") {
       setDenied(true);
@@ -105,6 +113,10 @@ export default function AdminSettingsPage() {
     }
     if (holdResult.ok) {
       applyHoldView(holdResult.data);
+    }
+    if (identityResult.ok) {
+      setIdentity(identityResult.data);
+      setIdentityDraft(identityResult.data.policy);
     }
   }
 
@@ -238,6 +250,27 @@ export default function AdminSettingsPage() {
     setBusy(false);
   }
 
+  async function onSaveIdentity() {
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const result = await saveCheckoutIdentitySettings(identityDraft);
+    if (result.denied) {
+      setDenied(true);
+      setBusy(false);
+      return;
+    }
+    if (!result.ok) {
+      setError(result.message ?? "ذخیرهٔ هویت خرید انجام نشد.");
+      setBusy(false);
+      return;
+    }
+    setIdentity(result.data);
+    setIdentityDraft(result.data.policy);
+    setSuccess("هویت مشتری در فرایند خرید ذخیره شد.");
+    setBusy(false);
+  }
+
   function onCancelHolds() {
     if (holds) applyHoldView(holds);
     setError(null);
@@ -298,6 +331,7 @@ export default function AdminSettingsPage() {
               { id: "locale" as const, label: "زبان", icon: Globe2 },
               { id: "quantity" as const, label: "مقدار", icon: Hash },
               { id: "holds" as const, label: "مهلت‌ها", icon: Clock },
+              { id: "identity" as const, label: "هویت خرید", icon: ShieldCheck },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -321,7 +355,60 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="p-4 md:p-6">
-          {activeTab === "holds" ? (
+          {activeTab === "identity" ? (
+            <form
+              className="space-y-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void onSaveIdentity();
+              }}
+              data-testid="admin-settings-identity-form"
+            >
+              <h2 className="text-sm font-bold text-gray-900">هویت مشتری در فرایند خرید</h2>
+              <p className="text-sm text-gray-500 leading-7">
+                سبد می‌تواند ناشناس بماند. ارسال، تسویه و پرداخت در حالت ورود الزامی نیازمند حساب مشتری است.
+              </p>
+              <label className="flex items-start gap-3 rounded-xl border border-gray-100 p-4">
+                <input
+                  type="radio"
+                  name="checkout-identity"
+                  checked={identityDraft === "AuthenticatedOnly"}
+                  onChange={() => setIdentityDraft("AuthenticatedOnly")}
+                  data-testid="admin-settings-identity-authenticated"
+                />
+                <span>
+                  <span className="block text-sm font-bold">ورود الزامی</span>
+                  <span className="block text-xs text-gray-500">پیش‌فرض فروشگاه</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-3 rounded-xl border border-gray-100 p-4">
+                <input
+                  type="radio"
+                  name="checkout-identity"
+                  checked={identityDraft === "GuestAllowed"}
+                  onChange={() => setIdentityDraft("GuestAllowed")}
+                  data-testid="admin-settings-identity-guest"
+                />
+                <span>
+                  <span className="block text-sm font-bold">خرید مهمان مجاز</span>
+                  <span className="block text-xs text-amber-700 mt-1">
+                    خرید مهمان می‌تواند کنترل سفارش‌های پرداخت‌نشده و محدودیت‌های رزرو موجودی را کاهش دهد.
+                  </span>
+                </span>
+              </label>
+              {identity?.warningFa && identityDraft === "GuestAllowed" ? (
+                <p className="text-xs text-amber-700">{identity.warningFa}</p>
+              ) : null}
+              <button
+                type="submit"
+                disabled={busy || readOnly}
+                className="w-full py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold disabled:opacity-70"
+                data-testid="admin-settings-save-identity"
+              >
+                ذخیره هویت خرید
+              </button>
+            </form>
+          ) : activeTab === "holds" ? (
             <form
               className="space-y-5"
               onSubmit={(event) => {

@@ -40,6 +40,9 @@ public sealed class CatalogDbContext : DbContext
     /// <summary>override فروشگاه برای ماندگاری سبد و مهلت پرداخت.</summary>
     public DbSet<StoreHoldPolicySettings> StoreHoldPolicySettings => Set<StoreHoldPolicySettings>();
 
+    /// <summary>سیاست هویت مشتری در فرایند خرید.</summary>
+    public DbSet<StoreCheckoutIdentitySettings> StoreCheckoutIdentitySettings => Set<StoreCheckoutIdentitySettings>();
+
     /// <summary>override چرخه رزرو Offer/Category.</summary>
     public DbSet<ReservationCyclePolicyOverride> ReservationCyclePolicyOverrides => Set<ReservationCyclePolicyOverride>();
 
@@ -529,6 +532,14 @@ public sealed class CatalogDbContext : DbContext
             entity.ToTable("store_hold_policy_settings");
             entity.HasKey(x => x.SettingsId);
             entity.Property(x => x.SettingsId).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<StoreCheckoutIdentitySettings>(entity =>
+        {
+            entity.ToTable("store_checkout_identity_settings");
+            entity.HasKey(x => x.SettingsId);
+            entity.Property(x => x.SettingsId).ValueGeneratedNever();
+            entity.Property(x => x.Policy).HasConversion<string>().HasMaxLength(32);
         });
 
         modelBuilder.Entity<ReservationCyclePolicyOverride>(entity =>

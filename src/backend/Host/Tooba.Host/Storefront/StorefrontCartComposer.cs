@@ -19,22 +19,25 @@ public sealed class StorefrontCartComposer
     private readonly CatalogDbContext _catalog;
     private readonly IPartyLookupGateway _parties;
     private readonly ICatalogLookupGateway _catalogLookup;
+    private readonly CurrentAuthenticatedSession _session;
 
     /// <summary>
     /// سازندهٔ ترکیب سبد فروشگاه.
     /// </summary>
-    public StorefrontCartComposer(
+    internal StorefrontCartComposer(
         ICartDirectory carts,
         ICartQueryGateway cartQueries,
         CatalogDbContext catalog,
         IPartyLookupGateway parties,
-        ICatalogLookupGateway catalogLookup)
+        ICatalogLookupGateway catalogLookup,
+        CurrentAuthenticatedSession session)
     {
         _carts = carts;
         _cartQueries = cartQueries;
         _catalog = catalog;
         _parties = parties;
         _catalogLookup = catalogLookup;
+        _session = session;
     }
 
     /// <summary>
@@ -210,7 +213,8 @@ public sealed class StorefrontCartComposer
                 policy?.UnitCode,
                 policy?.UnitDisplayName ?? policy?.UnitShortName,
                 policy?.DecimalPlaces ?? 0,
-                policy?.Step));
+                policy?.Step,
+                line.Availability.ToString()));
         }
 
         var subtotal = lines.Sum(item => item.LineAmountExclusiveOfTax ?? 0);
@@ -263,5 +267,30 @@ public sealed class StorefrontCartComposer
                 group => group.OrderBy(item => item.Locale.StartsWith("fa", StringComparison.OrdinalIgnoreCase) ? 0 : 1).First().Value);
     }
 
-    private static CartAccess Access(string? guestSecret) => new(null, guestSecret);
+    /// <summary>
+    /// ادغام سبد مهمان اثبات‌شده پس از ورود. رزرو/سفارش/پرداخت ساخته نمی‌شود.
+    /// </summary>
+    public async Task<StorefrontCartPage> MergeAfterLoginAsync(
+        Guid? anonymousCartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        if (!_session.IsAuthenticated || _session.UserId is not Guid userId || userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("checkout.authentication_required");
+        }
+
+        var merged = await _carts.MergeAnonymousAfterLoginAsync(
+            userId,
+            anonymousCartId,
+            guestSecret,
+            cancellationToken);
+        return await PresentAsync(merged.Cart, guestSecret: null, cancellationToken);
+    }
+
+    private CartAccess Access(string? guestSecret)
+    {
+        var userId = _session.IsAuthenticated ? _session.UserId : null;
+        return new CartAccess(userId, guestSecret);
+    }
 }

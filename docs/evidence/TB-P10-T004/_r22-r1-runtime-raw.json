@@ -1,0 +1,164 @@
+{
+  "results": {
+    "host-health": {
+      "ok": true,
+      "detail": "200"
+    },
+    "fe-login-fa": {
+      "ok": true,
+      "detail": "200"
+    },
+    "fe-login-en": {
+      "ok": true,
+      "detail": "200"
+    },
+    "fe-login-no-password": {
+      "ok": true,
+      "detail": "login route reachable"
+    },
+    "policy-default-authenticated": {
+      "ok": true,
+      "detail": "200 {\"policy\":\"AuthenticatedOnly\",\"cartAnonymousAllowed\":true,\"checkoutAuthenticationRequired\":true}"
+    },
+    "catalog": {
+      "ok": true,
+      "detail": "offers=24"
+    },
+    "A-guest-cart": {
+      "ok": true,
+      "detail": "200 01a09970-66a1-7000-b90f-06d4f7b3dc5b"
+    },
+    "A-add-1": {
+      "ok": true,
+      "detail": "200 {\"cartId\":\"01a09970-66a1-7000-b90f-06d4f7b3dc5b\",\"version\":3,\"market\":\"IR\",\"currency\":\"IRR\",\"channel\":\"Marketplace\",\"itemCount\":1,\"subtotalExclusiveOfTax\":87025"
+    },
+    "A-add-2": {
+      "ok": true,
+      "detail": "200"
+    },
+    "decimal-1.25-accepted": {
+      "ok": true,
+      "detail": "line accepted"
+    },
+    "B-cart-anonymous": {
+      "ok": true,
+      "detail": "http=200 lines=2"
+    },
+    "K-no-reservation-on-cart": {
+      "ok": true,
+      "detail": "reserved=false"
+    },
+    "C-D-shipping-gated": {
+      "ok": true,
+      "detail": "401 {\"title\":\"Unauthorized\",\"errorCode\":\"checkout.authentication_required\",\"detail\":\"برای ادامه فرایند خرید وارد حساب خود شوید.\"}"
+    },
+    "checkout-submit-gated": {
+      "ok": true,
+      "detail": "401 {\"title\":\"Unauthorized\",\"errorCode\":\"checkout.authentication_required\",\"detail\":\"برای ادامه فرایند خرید وارد حساب خود شوید.\"}"
+    },
+    "payment-gated": {
+      "ok": true,
+      "detail": "401 {\"title\":\"Unauthorized\",\"errorCode\":\"checkout.authentication_required\",\"detail\":\"برای ادامه فرایند خرید وارد حساب خود شوید.\"}"
+    },
+    "otp-wrong-rejected": {
+      "ok": true,
+      "detail": "401"
+    },
+    "E-F-G-otp-session": {
+      "ok": true,
+      "detail": "200 user=01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "H-I-adopt-or-merge": {
+      "ok": true,
+      "detail": "200 cart=01a09970-66a1-7000-b90f-06d4f7b3dc5b lines=2"
+    },
+    "I-lines-present": {
+      "ok": true,
+      "detail": "merged=2 guest=2"
+    },
+    "merge-no-reservation": {
+      "ok": true,
+      "detail": "lines have no reservationId"
+    },
+    "H-shipping-after-login": {
+      "ok": true,
+      "detail": "200 {\"cartId\":\"01a09970-66a1-7000-b90f-06d4f7b3dc5b\",\"cartVersion\":8,\"currency\":\"IRR\",\"itemCount\":3.000000,\"subtotalExclusiveOfTax\":24715560.0000000000,\"sellerCount"
+    },
+    "M-logout-old-session": {
+      "ok": true,
+      "detail": "400 isolated"
+    },
+    "login-2": {
+      "ok": true,
+      "detail": "200"
+    },
+    "pre-auth-cart": {
+      "ok": true,
+      "detail": "200"
+    },
+    "J-merge-existing-auth": {
+      "ok": true,
+      "detail": "200 distinctOffers=2 lines=2"
+    },
+    "same-line-qty-merged": {
+      "ok": true,
+      "detail": "qty=4"
+    },
+    "distinct-lines": {
+      "ok": true,
+      "detail": "offers=1b56d013-5817-4db1-99a3-010e12dc0631,0442a1fa-1d95-4b24-b9d9-129fc19942d2"
+    },
+    "no-arbitrary-takeover": {
+      "ok": true,
+      "detail": "401 secret-required-or-no-guest"
+    },
+    "L-shipping-select": {
+      "ok": true,
+      "detail": "200"
+    },
+    "L-atomic-checkout": {
+      "ok": true,
+      "detail": "200 checkout=01a09970-6b4d-7000-a12e-0235b2e15d66 {\"checkoutId\":\"01a09970-6b4d-7000-a12e-0235b2e15d66\",\"cartId\":\"01a09970-6a07-7000-b617-0c70bf636070\",\"cartVersion\":4,\"market\":\"IR\",\"currency\":\"IRR\",\"channel\":\"Marketplace\",\"paymentState\":\"PendingPayment\",\"shippingMethodC"
+    },
+    "K-reservation-only-at-submit": {
+      "ok": true,
+      "detail": "beforeSubmit=11 after=12"
+    },
+    "K-merge-still-no-extra-reservation-vs-start": {
+      "ok": true,
+      "detail": "before=11 mid=12"
+    },
+    "L-order-created-once": {
+      "ok": true,
+      "detail": "seller_orders 8->9 checkouts 6->7"
+    },
+    "second-user-register": {
+      "ok": true,
+      "detail": "reg=201 login=200"
+    },
+    "no-cross-user-merge": {
+      "ok": true,
+      "detail": "400 {\"title\":\"Bad Request\",\"errorCode\":\"cart.rejected\",\"detail\":\"عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.\"}"
+    },
+    "N-admin-get": {
+      "ok": true,
+      "detail": "200 {\"policy\":\"AuthenticatedOnly\",\"labelFa\":\"ورود الزامی\",\"labelEn\":\"Login required\"}"
+    },
+    "N-admin-guest-allowed": {
+      "ok": true,
+      "detail": "200 {\"policy\":\"GuestAllowed\",\"labelFa\":\"خرید مهمان مجاز\",\"labelEn\":\"Guest checkout allowed\",\"warningFa\":\"خرید مهمان می‌تواند کنترل سفارش‌های پرداخت‌نشده و محدودیت‌ه"
+    },
+    "policy-switched": {
+      "ok": true,
+      "detail": "{\"policy\":\"GuestAllowed\",\"cartAnonymousAllowed\":true,\"checkoutAuthenticationRequired\":false}"
+    },
+    "O-restore-authenticated": {
+      "ok": true,
+      "detail": "200 {\"policy\":\"AuthenticatedOnly\",\"labelFa\":\"ورود الزامی\",\"labelEn\":\"Login required\"}"
+    },
+    "pending-orders-not-mutated-by-login-merge": {
+      "ok": true,
+      "detail": "orders 8->9 only checkout submit"
+    }
+  }
+}
