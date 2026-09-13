@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R20
+TB-P10-T004-R20-R1
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R20-R1 — Visual Gate Repair (long-hold countdown + Admin history localization); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R20 — Reservation UX Visual Runtime Gate; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R19 — Reservation Lifecycle Final Integration Gate; USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R18 — Reservation Policy Admin UX; USER_VISUAL_ACCEPTED=NO

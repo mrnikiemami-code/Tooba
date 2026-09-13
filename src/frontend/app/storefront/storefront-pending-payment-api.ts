@@ -81,12 +81,7 @@ export function remainingSecondsFromServer(
   return Math.max(0, Math.floor((end - (server + elapsed)) / 1000));
 }
 
-export function formatCountdown(totalSeconds: number): string {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const minutes = Math.floor(safe / 60);
-  const seconds = safe % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
+export { formatCountdown, formatCountdownAccessibleLabel } from "../../lib/reservation-countdown.ts";
 
 export function shouldRefreshOnceAtZero(previousSeconds: number, nextSeconds: number, alreadyRefreshed: boolean): boolean {
   return !alreadyRefreshed && previousSeconds > 0 && nextSeconds <= 0;

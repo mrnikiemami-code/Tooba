@@ -83,6 +83,8 @@ test("countdown uses server ExpiresAt and refreshes once at zero", () => {
     510,
   );
   assert.equal(formatReservationCountdown(75), "01:15");
+  assert.equal(formatReservationCountdown(3600), "01:00:00");
+  assert.doesNotMatch(formatReservationCountdown(86400), /1440/);
   assert.equal(shouldRefreshOnceAtZero(2, 0, false), true);
   assert.equal(shouldRefreshOnceAtZero(0, 0, true), false);
   assert.match(detail, /remainingSecondsFromServer/);

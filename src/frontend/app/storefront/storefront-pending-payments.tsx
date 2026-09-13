@@ -7,6 +7,7 @@ import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
   formatCountdown,
+  formatCountdownAccessibleLabel,
   remainingSecondsFromServer,
   shouldRefreshOnceAtZero,
   toCustomerPendingPaymentMessage,
@@ -44,6 +45,7 @@ function ReservationCountdown({
   item: StorefrontPendingPaymentItem;
   onExpire: () => void;
 }) {
+  const locale = useLocale();
   const receivedAt = useRef(Date.now());
   const refreshed = useRef(false);
   const previous = useRef(item.secondsRemaining);
@@ -73,7 +75,13 @@ function ReservationCountdown({
   }, [item.holdEndsAt, item.serverTime, onExpire]);
 
   return (
-    <p className="text-lg md:text-2xl font-black tabular-nums text-[#2563EB] tracking-wide" dir="ltr" data-testid="pending-payment-countdown">
+    <p
+      className="text-lg md:text-2xl font-black tabular-nums text-[#2563EB] tracking-wide"
+      dir="ltr"
+      data-testid="pending-payment-countdown"
+      aria-label={formatCountdownAccessibleLabel(seconds, locale)}
+      aria-live="off"
+    >
       {formatCountdown(seconds)}
     </p>
   );

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { StorefrontCartApiError } from "./storefront-cart-api.ts";
 import {
   formatCountdown,
+  formatCountdownAccessibleLabel,
   mapStorefrontPendingPayments,
   remainingSecondsFromServer,
   shouldRefreshOnceAtZero,
@@ -21,10 +22,18 @@ test("countdown is derived from server ExpiresAt and counts locally", () => {
   assert.equal(remainingSecondsFromServer(holdEndsAt, serverTime, received, received), 600);
   assert.equal(remainingSecondsFromServer(holdEndsAt, serverTime, received, received + 90_000), 510);
   assert.equal(formatCountdown(570), "09:30");
+  assert.equal(formatCountdown(3599), "59:59");
+  assert.equal(formatCountdown(3600), "01:00:00");
+  assert.equal(formatCountdown(86340), "23:59:00");
+  assert.equal(formatCountdown(86400), "24:00:00");
+  assert.doesNotMatch(formatCountdown(86400), /1440/);
+  assert.doesNotMatch(formatCountdown(86340), /1439/);
   assert.equal(formatCountdown(0), "00:00");
   assert.equal(shouldRefreshOnceAtZero(1, 0, false), true);
   assert.equal(shouldRefreshOnceAtZero(1, 0, true), false);
   assert.equal(shouldRefreshOnceAtZero(0, 0, false), false);
+  assert.match(formatCountdownAccessibleLabel(86340, "fa"), /۲۳ ساعت و ۵۹ دقیقه تا پایان مهلت رزرو/);
+  assert.match(formatCountdownAccessibleLabel(86400, "en"), /1 day/);
 });
 
 test("failed payment mapping does not invent a new timer", () => {

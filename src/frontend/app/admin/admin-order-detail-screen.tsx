@@ -55,6 +55,7 @@ import {
 import { mapAdminErrorMessage } from "./admin-error-map";
 import { adminSupplyBadgeClass, adminSupplyMessageFa, formatAdminSupplyStatus } from "./admin-order-supply";
 import {
+  formatCountdownAccessibleLabel,
   formatReservationCountdown,
   pickReservationLabel,
   remainingSecondsFromServer,
@@ -63,6 +64,7 @@ import {
   type AdminReservationCycleAudit,
   type AdminReservationLocale,
 } from "./admin-reservation-cycle";
+import { presentOperationalHistoryEntry } from "./admin-operational-history-presentation";
 
 function Denied({ retry }: { retry: () => void }) {
   return (
@@ -392,22 +394,27 @@ function OperationalHistoryTimeline({
         <p className="text-sm text-gray-500">رویدادی در این محدوده نیست.</p>
       ) : (
         <ol className="space-y-3" data-testid="admin-order-operational-history">
-          {filtered.map((entry, index) => (
+          {filtered.map((entry, index) => {
+            const presented = presentOperationalHistoryEntry(entry, reservationLocale());
+            return (
             <li
               key={`${entry.kind}-${entry.occurredAt}-${index}`}
               className="rounded-xl border border-gray-100 p-3 text-sm"
               data-testid={`admin-order-history-${entry.kind}`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold text-gray-900">{entry.labelFa}</span>
+                <span className="font-semibold text-gray-900">{presented.label}</span>
                 <span className="text-xs text-gray-500" dir="ltr">
-                  {formatJalaliDateTime(entry.occurredAt, "fa")}
+                  {formatJalaliDateTime(entry.occurredAt, reservationLocale())}
                 </span>
               </div>
-              {entry.summaryFa ? <p className="mt-1 text-gray-600">{entry.summaryFa}</p> : null}
-              <p className="mt-2 text-xs text-gray-500">{entry.actorDisplayFa}</p>
+              {presented.summary ? <p className="mt-1 text-gray-600">{presented.summary}</p> : null}
+              <p className="mt-2 text-xs text-gray-500">
+                {reservationLocale() === "en" ? entry.actorDisplayEn : entry.actorDisplayFa}
+              </p>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
     </div>
@@ -830,7 +837,9 @@ export function AdminOrderDetailScreen({ checkoutId }: { checkoutId: string }) {
 
 function reservationLocale(): AdminReservationLocale {
   if (typeof document === "undefined") return "fa";
-  return document.documentElement.lang?.toLowerCase().startsWith("en") ? "en" : "fa";
+  if (document.documentElement.lang?.toLowerCase().startsWith("en")) return "en";
+  if (typeof location !== "undefined" && /^\/en(\/|$)/.test(location.pathname)) return "en";
+  return "fa";
 }
 
 function OrderReservationCycleCard({
@@ -926,7 +935,12 @@ function OrderReservationCycleCard({
         {isActive ? (
           <div>
             <dt className="text-gray-500">{locale === "en" ? "Remaining" : "مانده"}</dt>
-            <dd className="font-mono font-bold text-gray-900" data-testid="admin-reservation-countdown">
+            <dd
+              className="font-mono font-bold text-gray-900"
+              data-testid="admin-reservation-countdown"
+              aria-label={formatCountdownAccessibleLabel(seconds, locale)}
+              aria-live="off"
+            >
               {formatReservationCountdown(seconds)}
             </dd>
           </div>
