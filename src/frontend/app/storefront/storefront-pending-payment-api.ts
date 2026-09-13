@@ -1,7 +1,12 @@
-import { customerAuthHeaders } from "../customer-panel/customer-api.ts";
 import {
+  CUSTOMER_DEV_ACTOR_HEADER,
+  DEFAULT_CUSTOMER_DEV_ACTOR_ID,
+  customerAuthHeaders,
+} from "../customer-panel/customer-api.ts";
+import {
+  cartHeadersFromAccess,
   listCommittedCheckoutProofs,
-  removeCommittedCheckoutProof,
+  resolveCommittedCheckoutAccess,
   StorefrontCartApiError,
 } from "./storefront-cart-api.ts";
 
@@ -111,6 +116,18 @@ export function toCustomerPendingPaymentMessage(error: unknown, locale: "fa" | "
         return fa
           ? "دسترسی به اطلاعات پرداخت این سفارش تأیید نشد. لطفاً از بخش سفارش‌ها دوباره وارد پرداخت شوید."
           : "Access to this order payment was not confirmed.";
+      case "order.cancel.forbidden":
+        return fa
+          ? "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست."
+          : "This order cannot be cancelled after shipment.";
+      case "order.cancel.unpaid_only":
+        return fa
+          ? "لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است."
+          : "This order can be cancelled from the cart only before successful payment.";
+      case "pending.hide.active_hold":
+        return fa
+          ? "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد."
+          : "This card cannot be hidden while the inventory hold is still active.";
       default:
         if (error.detail && !/Held|reservation|Active|Expired|retry_limit/i.test(error.detail)) {
           return error.detail;
@@ -136,6 +153,10 @@ export function listDismissedPendingCheckoutIds(): string[] {
   }
 }
 
+export function canDismissPendingCard(item: Pick<StorefrontPendingPaymentItem, "reservationPresentation">): boolean {
+  return item.reservationPresentation === "ended";
+}
+
 export function excludeDismissedPendingItems(
   items: StorefrontPendingPaymentItem[],
   dismissedIds: Iterable<string> = listDismissedPendingCheckoutIds(),
@@ -154,7 +175,6 @@ export function dismissPendingCheckout(checkoutId: string): void {
   const next = new Set(listDismissedPendingCheckoutIds());
   next.add(id);
   window.localStorage.setItem(DISMISSED_PENDING_KEY, JSON.stringify([...next]));
-  removeCommittedCheckoutProof(id);
 }
 
 export function mapStorefrontPendingPayments(payload: unknown): StorefrontPendingPaymentPage | null {
@@ -225,9 +245,7 @@ function mapItem(value: unknown): StorefrontPendingPaymentItem | null {
 }
 
 export async function loadStorefrontPendingPayments(): Promise<StorefrontPendingPaymentPage> {
-  const dismissed = new Set(listDismissedPendingCheckoutIds());
   const proofs = listCommittedCheckoutProofs()
-    .filter((proof) => !dismissed.has(proof.checkoutId))
     .map((proof) => ({
       checkoutId: proof.checkoutId,
       cartId: proof.cartId,
@@ -256,8 +274,74 @@ export async function loadStorefrontPendingPayments(): Promise<StorefrontPending
   if (!mapped) {
     throw new StorefrontCartApiError(500, "pending.invalid", "پاسخ سفارش‌های در انتظار نامعتبر است.");
   }
-  return {
-    ...mapped,
-    items: excludeDismissedPendingItems(mapped.items, dismissed),
+  return mapped;
+}
+
+export async function hideStorefrontPendingCard(item: StorefrontPendingPaymentItem): Promise<void> {
+  if (!canDismissPendingCard(item)) {
+    throw new StorefrontCartApiError(409, "pending.hide.active_hold", "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.");
+  }
+  const access = resolveCommittedCheckoutAccess(item.checkoutId, item.paymentId);
+  const cartId = access.cartId || item.cartId;
+  const headers: Record<string, string> = {
+    ...customerAuthHeaders(true),
+    ...(cartHeadersFromAccess({
+      cartId: cartId || null,
+      guestSecret: access.guestSecret,
+    }) as Record<string, string>),
   };
+  if (typeof window !== "undefined") {
+    headers[CUSTOMER_DEV_ACTOR_HEADER] =
+      window.localStorage.getItem("tooba.customerActorUserId") || DEFAULT_CUSTOMER_DEV_ACTOR_ID;
+  }
+  const query = cartId ? `?cartId=${encodeURIComponent(cartId)}` : "";
+  const response = await fetch(`/v1/storefront/checkout/${encodeURIComponent(item.checkoutId)}/hide-pending-card${query}`, {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers,
+    body: JSON.stringify(cartId ? { cartId } : {}),
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const record = asRecord(payload);
+    throw new StorefrontCartApiError(
+      response.status,
+      record ? asString(readProp(record, "errorCode", "ErrorCode")) || null : null,
+      record ? asString(readProp(record, "detail", "Detail")) || null : null,
+    );
+  }
+}
+
+export async function cancelStorefrontPendingCheckout(item: StorefrontPendingPaymentItem): Promise<void> {
+  const access = resolveCommittedCheckoutAccess(item.checkoutId, item.paymentId);
+  const cartId = access.cartId || item.cartId;
+  const headers: Record<string, string> = {
+    ...customerAuthHeaders(true),
+    ...(cartHeadersFromAccess({
+      cartId: cartId || null,
+      guestSecret: access.guestSecret,
+    }) as Record<string, string>),
+  };
+  if (typeof window !== "undefined") {
+    headers[CUSTOMER_DEV_ACTOR_HEADER] =
+      window.localStorage.getItem("tooba.customerActorUserId") || DEFAULT_CUSTOMER_DEV_ACTOR_ID;
+  }
+  const query = cartId ? `?cartId=${encodeURIComponent(cartId)}` : "";
+  const response = await fetch(`/v1/storefront/checkout/${encodeURIComponent(item.checkoutId)}/cancel${query}`, {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers,
+    body: JSON.stringify(cartId ? { cartId } : {}),
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const record = asRecord(payload);
+    throw new StorefrontCartApiError(
+      response.status,
+      record ? asString(readProp(record, "errorCode", "ErrorCode")) || null : null,
+      record ? asString(readProp(record, "detail", "Detail")) || null : null,
+    );
+  }
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Tooba.Catalog.Application;
 using Tooba.Inventory.Application;
 using Tooba.Inventory.Domain;
@@ -240,7 +241,15 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
         _db.Reservations.Add(hold);
         position.RecordReserved(hold.ReservationId, quantity);
         position.SyncQuantities(position.OnHand, position.Reserved, now);
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsReservationIdempotencyConflict(ex))
+        {
+            throw new InvalidOperationException("inventory.reservation.conflict");
+        }
+
         return new ReservationReceipt(hold.ReservationId, stockItemId, position.OfferId, quantity, hold.Status, hold.ExpiresAt);
     }
 
@@ -740,4 +749,19 @@ public sealed class InventoryDirectory : IInventoryDirectory, IInventoryAvailabi
             OrderSupplyStatusKind.PartiallyUnavailable => OrderSupplyOutcome.PartiallyUnavailable,
             _ => OrderSupplyOutcome.NotApplicable,
         };
+
+    private static bool IsReservationIdempotencyConflict(DbUpdateException ex)
+    {
+        for (var inner = ex.InnerException; inner is not null; inner = inner.InnerException)
+        {
+            if (inner is PostgresException pg
+                && pg.SqlState == PostgresErrorCodes.UniqueViolation
+                && string.Equals(pg.ConstraintName, "ix_reservations_idempotency_key", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

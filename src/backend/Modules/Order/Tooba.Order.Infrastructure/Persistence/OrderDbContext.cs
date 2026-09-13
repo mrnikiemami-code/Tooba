@@ -67,6 +67,9 @@ public sealed class OrderDbContext : DbContext
     /// <summary>رویدادهای ممیزی چرخه رزرو.</summary>
     public DbSet<ReservationCycleEvent> ReservationCycleEvents => Set<ReservationCycleEvent>();
 
+    /// <summary>ترجیح پنهان‌کردن کارت در انتظار پرداخت.</summary>
+    public DbSet<PendingPaymentCardHide> PendingPaymentCardHides => Set<PendingPaymentCardHide>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -223,6 +226,14 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Kind).HasConversion<string>().HasMaxLength(48);
             entity.Property(x => x.Detail).HasMaxLength(256);
             entity.HasIndex(x => new { x.CheckoutId, x.OccurredAt });
+        });
+        modelBuilder.Entity<PendingPaymentCardHide>(entity =>
+        {
+            entity.ToTable("pending_payment_card_hides");
+            entity.HasKey(x => x.HideId);
+            entity.Property(x => x.HideId).ValueGeneratedNever();
+            entity.HasIndex(x => new { x.OwnerUserId, x.CheckoutId }).IsUnique();
+            entity.HasIndex(x => new { x.GuestCartId, x.CheckoutId }).IsUnique();
         });
         OutboxMessageMapping.Map(modelBuilder, Schema);
     }

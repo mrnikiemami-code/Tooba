@@ -400,12 +400,13 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             actor,
             "idem-repair-fail",
             "IR-NAT");
-        var persistedWithoutConvert = await checkoutFail.SubmitAsync(repairCommand, CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => checkoutFail.SubmitAsync(repairCommand, CancellationToken.None));
         Assert.Equal(CartStatus.Active, (await cartDirA.GetCartAsync(repairLined.CartId, access, CancellationToken.None))!.Status);
-        var reconciled = await checkoutA.SubmitAsync(repairCommand, CancellationToken.None);
-        Assert.Equal(persistedWithoutConvert.CheckoutId, reconciled.CheckoutId);
+        Assert.Equal(0, await orderA.Checkouts.CountAsync(x => x.CartId == repairLined.CartId));
+        var committedAfterFault = await checkoutA.SubmitAsync(repairCommand, CancellationToken.None);
         Assert.Equal(CartStatus.Converted, (await cartDirA.GetCartAsync(repairLined.CartId, access, CancellationToken.None))!.Status);
-        Assert.Equal(90000m, persistedWithoutConvert.SellerOrders.SelectMany(x => x.Lines).First().UnitPriceSnapshot);
+        Assert.Equal(90000m, committedAfterFault.SellerOrders.SelectMany(x => x.Lines).First().UnitPriceSnapshot);
+        var persistedWithoutConvert = committedAfterFault;
 
         var differentKey = repairCommand with { IdempotencyKey = "idem-repair-other-key" };
         var reused = await checkoutA.SubmitAsync(differentKey, CancellationToken.None);

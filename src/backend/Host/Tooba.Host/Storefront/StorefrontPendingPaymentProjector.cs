@@ -69,6 +69,11 @@ public static class StorefrontPendingPaymentProjector
             return null;
         }
 
+        if (cycle is { CurrentStatus: ReservationCycleStatus.ReleasedByCancel })
+        {
+            return null;
+        }
+
         if (payment is not null && IsTerminalHidden(payment.Status))
         {
             return null;

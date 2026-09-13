@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   CUSTOMER_DEV_ACTOR_HEADER,
   customerStatusClasses,
@@ -34,7 +37,9 @@ test("customer payment presentation preserves backend pending paid and failed st
   assert.equal(formatCustomerOrderStatus("Paid"), "پرداخت‌شده");
   assert.equal(formatCustomerOrderStatus("Failed"), "پرداخت ناموفق");
   assert.equal(formatCustomerOrderStatus("PaymentExpired"), "مهلت پرداخت این سفارش به پایان رسیده است.");
+  assert.equal(formatCustomerOrderStatus("Cancelled"), "لغو شده");
   assert.match(customerStatusClasses("Failed"), /red/);
+  assert.match(customerStatusClasses("Cancelled"), /red/);
 });
 
 test("customer dashboard exposes capability availability without fake counts", () => {
@@ -149,4 +154,12 @@ test("customer profile maps editable capability from backend", () => {
   assert.equal(page?.editable, true);
   assert.equal(page?.emailEditable, false);
   assert.equal(CUSTOMER_DEV_ACTOR_HEADER, "X-Tooba-Dev-Actor-User-Id");
+});
+
+test("customer orders list has a cancelled filter tab", () => {
+  const source = fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "orders/page.tsx"),
+    "utf8",
+  );
+  assert.match(source, /"لغو شده"/);
 });

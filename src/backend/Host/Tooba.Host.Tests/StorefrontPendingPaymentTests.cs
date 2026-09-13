@@ -154,6 +154,18 @@ public sealed class StorefrontPendingPaymentTests
     }
 
     [Fact]
+    public void Released_by_cancel_is_hidden_even_if_seller_status_lags()
+    {
+        var checkout = Guid.NewGuid();
+        var page = StorefrontPendingPaymentProjector.Project(
+            [Checkout(checkout, "SO-REL")],
+            Pay(checkout, PaymentStatus.Pending, "sandbox"),
+            Cycle(checkout, 1, ReservationCycleStatus.ReleasedByCancel, 0),
+            Now);
+        Assert.Empty(page.Items);
+    }
+
+    [Fact]
     public void Composer_batches_projections_and_does_not_use_active_cart_secret()
     {
         var root = FindRepoRoot();
@@ -170,6 +182,20 @@ public sealed class StorefrontPendingPaymentTests
         Assert.Contains("listCommittedCheckoutProofs", pendingApi, StringComparison.Ordinal);
         Assert.DoesNotContain("readCartSession()", pendingApi, StringComparison.Ordinal);
         Assert.Contains("/pending-payments", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/checkout/{checkoutId:guid}/cancel", endpoints, StringComparison.Ordinal);
+        Assert.Contains("/checkout/{checkoutId:guid}/hide-pending-card", endpoints, StringComparison.Ordinal);
+        Assert.Contains("ReadOptionalCartIdAsync", endpoints, StringComparison.Ordinal);
+        Assert.Contains("HidePendingCardAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("PendingPaymentCardHides", composer, StringComparison.Ordinal);
+        Assert.Contains("pending.hide.active_hold", composer, StringComparison.Ordinal);
+        Assert.Contains("LoadHiddenCheckoutIdsAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("CancelSellerOrderAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("AbortForCheckoutCancelAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("CloseOrStartRefundForOrderCancelAsync", composer, StringComparison.Ordinal);
+        Assert.Contains("ReleasedByCancel", File.ReadAllText(Path.Combine(root, "src", "backend", "Host", "Tooba.Host", "Storefront", "StorefrontPendingPaymentProjector.cs")), StringComparison.Ordinal);
+        Assert.Contains("cancelStorefrontPendingCheckout", pendingApi, StringComparison.Ordinal);
+        Assert.Contains("لغو سفارش", pendingUi, StringComparison.Ordinal);
+        Assert.Contains("window.confirm", pendingUi, StringComparison.Ordinal);
         Assert.Contains("StorefrontPendingPayments", cart, StringComparison.Ordinal);
         Assert.Contains("سبد فعال شما خالی است", cart, StringComparison.Ordinal);
         Assert.Contains("در انتظار پرداخت", pendingUi, StringComparison.Ordinal);

@@ -469,3 +469,12 @@ Changing reservation policy Settings must not rewrite an active cycle `ExpiresAt
 
 ### LOCK-SF-102 — Seller reservation-policy mutation requires an explicit permission
 Admin may edit Store/Category/Offer reservation policy. Seller mutation is denied unless an explicit backend permission exists and is granted. Absence of that permission is deny.
+
+### LOCK-SF-103 — Checkout commit is atomic
+Required inventory reservation, Order aggregate creation, Reservation Cycle #1, and source Cart conversion commit together. Frontend clears or converts Cart only after an authoritative backend commit. External payment initiation stays outside the database transaction.
+
+### LOCK-SF-104 — Pending-card hide is presentation only
+Hiding a pending-payment card must not mutate Order, Payment, Supply, Reservation, or future open-unpaid counting. Source of truth is backend and customer-scoped. Hide is denied while the reservation hold is still active.
+
+### LOCK-SF-105 — Customer cancel uses canonical lifecycle
+Customer لغو سفارش uses canonical Order cancellation and releases active supply through the backend lifecycle. It is never implemented as presentation-only hide.

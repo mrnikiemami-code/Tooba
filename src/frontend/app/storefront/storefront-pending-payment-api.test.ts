@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { StorefrontCartApiError } from "./storefront-cart-api.ts";
 import {
+  canDismissPendingCard,
   excludeDismissedPendingItems,
   formatCountdown,
   formatCountdownAccessibleLabel,
@@ -93,6 +94,10 @@ test("customer pending errors never use checkout registration copy", () => {
     toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "payment.already_succeeded", "x"), "en"),
     /already been paid/,
   );
+  assert.match(
+    toCustomerPendingPaymentMessage(new StorefrontCartApiError(409, "order.cancel.forbidden", "x")),
+    /پس از ارسال کالا/,
+  );
 });
 
 test("pending UX source keeps FA RTL EN LTR and no raw cycle enums", () => {
@@ -116,6 +121,22 @@ test("pending UX source keeps FA RTL EN LTR and no raw cycle enums", () => {
   assert.match(ui, /دیگر نمایش نده/);
   assert.match(ui, /Don't show again/);
   assert.match(ui, /pending-payment-hide/);
+  assert.match(ui, /canDismissPendingCard/);
+  assert.match(ui, /لغو سفارش/);
+  assert.match(ui, /Cancel order/);
+  assert.match(ui, /pending-payment-cancel/);
+  assert.match(ui, /window\.confirm/);
+  assert.match(ui, /onRemoved\?\.\(item\.checkoutId\)/);
+  assert.match(ui, /toast\.success\(labels\.cancelDone/);
+  assert.match(ui, /سفارش شما لغو گردید/);
+  assert.match(api, /cancelStorefrontPendingCheckout/);
+  assert.match(api, /hideStorefrontPendingCard/);
+  assert.match(api, /hide-pending-card/);
+  assert.match(api, /resolveCommittedCheckoutAccess/);
+  assert.match(api, /CUSTOMER_DEV_ACTOR_HEADER/);
+  assert.match(api, /cartId=\$\{encodeURIComponent\(cartId\)\}/);
+  assert.doesNotMatch(api, /removeCommittedCheckoutProof/);
+  assert.doesNotMatch(api, /readCartSession\(\)/);
 });
 
 test("dismissed pending checkouts are excluded from the visible list", () => {
@@ -161,4 +182,10 @@ test("dismissed pending checkouts are excluded from the visible list", () => {
   const visible = excludeDismissedPendingItems(page?.items ?? [], ["hide-1"]);
   assert.equal(visible.length, 1);
   assert.equal(visible[0]?.checkoutId, "keep-1");
+});
+
+test("hide is only available after the reservation timer ends", () => {
+  assert.equal(canDismissPendingCard({ reservationPresentation: "held" }), false);
+  assert.equal(canDismissPendingCard({ reservationPresentation: "none" }), false);
+  assert.equal(canDismissPendingCard({ reservationPresentation: "ended" }), true);
 });

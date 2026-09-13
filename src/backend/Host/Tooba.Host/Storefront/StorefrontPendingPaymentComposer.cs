@@ -2,10 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Tooba.Catalog.Domain;
 using Tooba.Catalog.Infrastructure.Persistence;
+using Tooba.Fulfillment.Application;
+using Tooba.Host.Admin;
 using Tooba.Order.Application;
 using Tooba.Order.Domain;
 using Tooba.Order.Infrastructure.Persistence;
+using Tooba.Payment.Application;
+using Tooba.Payment.Domain;
 using Tooba.Payment.Infrastructure.Persistence;
+using Tooba.Settlement.Application;
 
 namespace Tooba.Host.Storefront;
 
@@ -21,6 +26,10 @@ public sealed class StorefrontPendingPaymentComposer
     private readonly CatalogDbContext _catalog;
     private readonly StorefrontCartComposer _carts;
     private readonly IReservationCycleDirectory _cycles;
+    private readonly ICheckoutDirectory _checkout;
+    private readonly IFulfillmentDirectory _fulfillment;
+    private readonly IPaymentAdminDirectory _paymentOps;
+    private readonly ISettlementDirectory _settlement;
     private readonly CurrentAuthenticatedSession _session;
     private readonly IHostEnvironment _environment;
     private readonly IHttpContextAccessor _http;
@@ -32,6 +41,10 @@ public sealed class StorefrontPendingPaymentComposer
         CatalogDbContext catalog,
         StorefrontCartComposer carts,
         IReservationCycleDirectory cycles,
+        ICheckoutDirectory checkout,
+        IFulfillmentDirectory fulfillment,
+        IPaymentAdminDirectory paymentOps,
+        ISettlementDirectory settlement,
         CurrentAuthenticatedSession session,
         IHostEnvironment environment,
         IHttpContextAccessor http)
@@ -41,6 +54,10 @@ public sealed class StorefrontPendingPaymentComposer
         _catalog = catalog;
         _carts = carts;
         _cycles = cycles;
+        _checkout = checkout;
+        _fulfillment = fulfillment;
+        _paymentOps = paymentOps;
+        _settlement = settlement;
         _session = session;
         _environment = environment;
         _http = http;
@@ -106,7 +123,172 @@ public sealed class StorefrontPendingPaymentComposer
                         line.Quantity,
                         catalog.MediaAssetId);
                 }).ToArray())).ToArray())).ToArray();
-        return StorefrontPendingPaymentProjector.Project(inputs, latestPayments, cycleMap, now);
+        var page = StorefrontPendingPaymentProjector.Project(inputs, latestPayments, cycleMap, now);
+        var hidden = await LoadHiddenCheckoutIdsAsync(groups, cancellationToken);
+        if (hidden.Count == 0)
+        {
+            return page;
+        }
+
+        return new StorefrontPendingPaymentPage(
+            page.ServerTime,
+            page.Items.Where(x => !hidden.Contains(x.CheckoutId)).ToList());
+    }
+
+    /// <summary>
+    /// پنهان‌کردن کارت pending فقط ترجیح نمایش است؛ سفارش/پرداخت/رزرو را تغییر نمی‌دهد.
+    /// </summary>
+    public async Task<object> HidePendingCardAsync(
+        Guid checkoutId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var group = await ResolveOwnedGroupForCancelAsync(checkoutId, cartId, guestSecret, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var cycle = (await _cycles.GetProjectionsAsync([group.CheckoutId], now, null, cancellationToken))
+            .GetValueOrDefault(group.CheckoutId);
+        if (cycle is { CurrentStatus: ReservationCycleStatus.Active, SecondsRemaining: > 0 })
+        {
+            throw new InvalidOperationException(
+                "pending.hide.active_hold: تا پایان مهلت رزرو نمی‌توان کارت را پنهان کرد.");
+        }
+
+        var actor = ResolveListActor();
+        var ownerUserId = actor;
+        var guestCartId = actor is null ? group.CartId : (Guid?)null;
+        var exists = await _orders.PendingPaymentCardHides.AsNoTracking()
+            .AnyAsync(
+                x => x.CheckoutId == group.CheckoutId
+                    && (ownerUserId != null
+                        ? x.OwnerUserId == ownerUserId
+                        : x.GuestCartId == guestCartId),
+                cancellationToken);
+        if (!exists)
+        {
+            _orders.PendingPaymentCardHides.Add(
+                PendingPaymentCardHide.Create(group.CheckoutId, ownerUserId, guestCartId, now));
+            await _orders.SaveChangesAsync(cancellationToken);
+        }
+
+        return new { ok = true, checkoutId = group.CheckoutId, hidden = true };
+    }
+
+    /// <summary>
+    /// لغو سفارش unpaid توسط مشتری/مهمان مالک. رزرو را آزاد می‌کند و سفارش را Cancelled می‌کند.
+    /// </summary>
+    public async Task<object> CancelAsync(
+        Guid checkoutId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var group = await ResolveOwnedGroupForCancelAsync(checkoutId, cartId, guestSecret, cancellationToken);
+        if (group.SellerOrders.Count == 0)
+        {
+            throw new InvalidOperationException("سفارش پیدا نشد.");
+        }
+
+        if (AdminOrderOperationsComposer.IsCheckoutCancelled(group))
+        {
+            return new { ok = true, checkoutId = group.CheckoutId, alreadyCancelled = true };
+        }
+
+        if (group.SellerOrders.Any(x => x.Status == SellerOrderStatus.Paid))
+        {
+            throw new InvalidOperationException(
+                "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
+        }
+
+        var payment = await _paymentOps.GetLatestOperationalForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (payment is not null
+            && payment.Status is PaymentStatus.Succeeded
+                or PaymentStatus.RefundPending
+                or PaymentStatus.Refunded
+                or PaymentStatus.RefundFailed)
+        {
+            throw new InvalidOperationException(
+                "order.cancel.unpaid_only: لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.");
+        }
+
+        var fulfillments = await _fulfillment.ListForCheckoutAsync(group.CheckoutId, cancellationToken);
+        if (AdminOrderOperationsComposer.HasDispatchedOrDelivered(fulfillments))
+        {
+            throw new InvalidOperationException(
+                $"order.cancel.forbidden: {AdminOrderOperationsComposer.WholeOrderCancelBlockedAfterDispatchFa}");
+        }
+
+        await _fulfillment.AbortForCheckoutCancelAsync(group.CheckoutId, cancellationToken);
+
+        var access = new OrderAccess(group.BuyerPartyId, group.PlacedByUserId);
+        var cancelled = new List<Guid>();
+        foreach (var order in group.SellerOrders)
+        {
+            if (order.Status == SellerOrderStatus.Cancelled)
+            {
+                continue;
+            }
+
+            await _checkout.CancelSellerOrderAsync(order.SellerOrderId, access, cancellationToken);
+            cancelled.Add(order.SellerOrderId);
+        }
+
+        if (cancelled.Count == 0)
+        {
+            throw new InvalidOperationException("order.cancel.forbidden: لغو در وضعیت فعلی سفارش مجاز نیست.");
+        }
+
+        if (payment is not null)
+        {
+            await _settlement.NeutralizeUnpaidAccrualForCancelAsync(
+                payment.PaymentId,
+                group.SellerOrders.Select(x => x.SellerOrderId).ToList(),
+                cancellationToken);
+        }
+
+        await _paymentOps.CloseOrStartRefundForOrderCancelAsync(group.CheckoutId, cancellationToken);
+        return new { ok = true, checkoutId = group.CheckoutId, alreadyCancelled = false };
+    }
+
+    private async Task<CheckoutGroup> ResolveOwnedGroupForCancelAsync(
+        Guid checkoutId,
+        Guid cartId,
+        string? guestSecret,
+        CancellationToken cancellationToken)
+    {
+        var group = await _orders.Checkouts.AsNoTracking()
+            .Include(x => x.SellerOrders)
+            .SingleOrDefaultAsync(x => x.CheckoutId == checkoutId, cancellationToken)
+            ?? throw new InvalidOperationException("سفارش پیدا نشد.");
+
+        var actor = ResolveListActor();
+        if (actor is Guid userId)
+        {
+            if (group.PlacedByUserId != userId)
+            {
+                throw new InvalidOperationException("checkout.access.denied");
+            }
+
+            if (cartId != Guid.Empty && cartId != group.CartId)
+            {
+                throw new InvalidOperationException("checkout.access.denied");
+            }
+
+            return group;
+        }
+
+        if (cartId == Guid.Empty || cartId != group.CartId)
+        {
+            throw new InvalidOperationException("checkout.access.denied");
+        }
+
+        var owned = await _carts.TryGetForOwnershipAsync(group.CartId, guestSecret, cancellationToken);
+        if (owned is null)
+        {
+            throw new InvalidOperationException("checkout.access.denied");
+        }
+
+        return group;
     }
 
     private async Task<IReadOnlyList<CheckoutGroup>> ResolveOwnedGroupsAsync(
@@ -159,6 +341,34 @@ public sealed class StorefrontPendingPaymentComposer
         }
 
         return allowed;
+    }
+
+    private async Task<HashSet<Guid>> LoadHiddenCheckoutIdsAsync(
+        IReadOnlyList<CheckoutGroup> groups,
+        CancellationToken cancellationToken)
+    {
+        if (groups.Count == 0)
+        {
+            return [];
+        }
+
+        var checkoutIds = groups.Select(x => x.CheckoutId).ToArray();
+        var actor = ResolveListActor();
+        if (actor is Guid userId)
+        {
+            var rows = await _orders.PendingPaymentCardHides.AsNoTracking()
+                .Where(x => x.OwnerUserId == userId && checkoutIds.Contains(x.CheckoutId))
+                .Select(x => x.CheckoutId)
+                .ToListAsync(cancellationToken);
+            return [.. rows];
+        }
+
+        var cartIds = groups.Select(x => x.CartId).Distinct().ToArray();
+        var guestRows = await _orders.PendingPaymentCardHides.AsNoTracking()
+            .Where(x => x.GuestCartId != null && cartIds.Contains(x.GuestCartId.Value) && checkoutIds.Contains(x.CheckoutId))
+            .Select(x => x.CheckoutId)
+            .ToListAsync(cancellationToken);
+        return [.. guestRows];
     }
 
     private Guid? ResolveListActor()

@@ -11,7 +11,7 @@ import {
   loadCustomerOrders,
 } from "../customer-api";
 
-const filters = ["همه", "پرداخت‌شده", "در انتظار پرداخت", "پرداخت ناموفق"] as const;
+const filters = ["همه", "پرداخت‌شده", "در انتظار پرداخت", "پرداخت ناموفق", "لغو شده"] as const;
 
 /**
  * فهرست سفارش Shopeiva با تب‌ها و ردیف‌های جمع‌شوندهٔ متصل به Host.

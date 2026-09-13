@@ -30,6 +30,8 @@ public static class StorefrontEndpoints
         group.MapPatch("/cart/{cartId:guid}/lines/{lineId:guid}", ChangeCartLineAsync);
         group.MapDelete("/cart/{cartId:guid}/lines/{lineId:guid}", RemoveCartLineAsync);
         group.MapPost("/pending-payments", ListPendingPaymentsAsync);
+        group.MapPost("/checkout/{checkoutId:guid}/cancel", CancelPendingCheckoutAsync);
+        group.MapPost("/checkout/{checkoutId:guid}/hide-pending-card", HidePendingCardAsync);
         group.MapPost("/checkout/preview", PreviewCheckoutAsync);
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
@@ -273,6 +275,81 @@ public static class StorefrontEndpoints
             return Results.Json(
                 new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
                 statusCode: mapped.Status);
+        }
+    }
+
+    private static async Task<IResult> CancelPendingCheckoutAsync(
+        Guid checkoutId,
+        HttpRequest request,
+        StorefrontPendingPaymentComposer composer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Results.Json(await composer.CancelAsync(
+                checkoutId,
+                await ReadOptionalCartIdAsync(request, cancellationToken),
+                ReadGuestSecret(request),
+                cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapPaymentException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
+
+    private static async Task<IResult> HidePendingCardAsync(
+        Guid checkoutId,
+        HttpRequest request,
+        StorefrontPendingPaymentComposer composer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Results.Json(await composer.HidePendingCardAsync(
+                checkoutId,
+                await ReadOptionalCartIdAsync(request, cancellationToken),
+                ReadGuestSecret(request),
+                cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapPaymentException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
+
+    private static async Task<Guid> ReadOptionalCartIdAsync(HttpRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Query.TryGetValue("cartId", out var query)
+            && Guid.TryParse(query.ToString(), out var fromQuery)
+            && fromQuery != Guid.Empty)
+        {
+            return fromQuery;
+        }
+
+        try
+        {
+            if (!request.HasJsonContentType() || request.ContentLength is 0)
+            {
+                return Guid.Empty;
+            }
+
+            var body = await request.ReadFromJsonAsync<StorefrontPaymentCartRequest>(cancellationToken);
+            return body?.CartId ?? Guid.Empty;
+        }
+        catch (BadHttpRequestException)
+        {
+            return Guid.Empty;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return Guid.Empty;
         }
     }
 
@@ -608,6 +685,22 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status409Conflict, "Conflict", "payment.unpaid.retry.invalid");
         }
 
+        if (text.Contains("order.cancel.unpaid_only", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "order.cancel.unpaid_only");
+        }
+
+        if (text.Contains("order.cancel.forbidden", StringComparison.Ordinal)
+            || text.Contains("پس از ارسال کالا", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "order.cancel.forbidden");
+        }
+
+        if (text.Contains("pending.hide.active_hold", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status409Conflict, "Conflict", "pending.hide.active_hold");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "payment.rejected");
     }
 
@@ -629,6 +722,9 @@ public static class StorefrontEndpoints
         "inventory.reservation.retry_limit_reached" =>
             "تعداد دفعات مجاز رزرو مجدد موجودی برای این سفارش به پایان رسیده است.",
         "payment.unpaid.retry.invalid" => "مهلت پرداخت این سفارش به پایان رسیده است.",
+        "order.cancel.unpaid_only" => "لغو این سفارش از سبد فقط قبل از پرداخت موفق امکان‌پذیر است.",
+        "order.cancel.forbidden" => "پس از ارسال کالا، لغو کامل سفارش امکان‌پذیر نیست.",
+        "pending.hide.active_hold" => "تا پایان مهلت رزرو نمی‌توان این کارت را پنهان کرد.",
         _ => "امکان شروع پرداخت در حال حاضر وجود ندارد.",
     };
 

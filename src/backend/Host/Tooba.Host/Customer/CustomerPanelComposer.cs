@@ -81,7 +81,9 @@ public sealed class CustomerPanelComposer
             actorUserId,
             displayName,
             orders.Count,
-            orders.Count(x => !string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
+            orders.Count(x =>
+                !string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)
+                && !string.Equals(x.PaymentState, "Cancelled", StringComparison.Ordinal)),
             orders.Count(x => string.Equals(x.PaymentState, "Paid", StringComparison.Ordinal)),
             WishlistAvailable: true,
             WishlistCount: wishlistCount,
@@ -357,6 +359,9 @@ public sealed class CustomerPanelComposer
         var orders = group.SellerOrders;
         var statuses = orders.Select(x => x.Status).Distinct().ToList();
         var status = statuses.Count == 1 ? statuses[0].ToString() : "Mixed";
+        var paymentState = orders.Count > 0 && orders.All(x => x.Status == SellerOrderStatus.Cancelled)
+            ? "Cancelled"
+            : payment;
         var references = orders.Select(x => x.OrderNumber).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         return new CustomerOrderListItem(
             group.CheckoutId,
@@ -366,7 +371,7 @@ public sealed class CustomerPanelComposer
             orders.Sum(x => x.TotalItemCount),
             orders.Sum(x => x.GrandTotalSnapshot),
             orders.Select(x => x.Currency).FirstOrDefault() ?? "IRR",
-            payment,
+            paymentState,
             status);
     }
 

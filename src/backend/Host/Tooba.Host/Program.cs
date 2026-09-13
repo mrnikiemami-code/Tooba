@@ -174,6 +174,10 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentCompose
         sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
         sp.GetRequiredService<Tooba.Host.Storefront.StorefrontCartComposer>(),
         sp.GetRequiredService<Tooba.Order.Application.IReservationCycleDirectory>(),
+        sp.GetRequiredService<Tooba.Order.Application.ICheckoutDirectory>(),
+        sp.GetRequiredService<Tooba.Fulfillment.Application.IFulfillmentDirectory>(),
+        sp.GetRequiredService<Tooba.Payment.Application.IPaymentAdminDirectory>(),
+        sp.GetRequiredService<Tooba.Settlement.Application.ISettlementDirectory>(),
         sp.GetRequiredService<CurrentAuthenticatedSession>(),
         sp.GetRequiredService<IHostEnvironment>(),
         sp.GetRequiredService<IHttpContextAccessor>()));

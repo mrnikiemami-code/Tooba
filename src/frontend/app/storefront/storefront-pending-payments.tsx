@@ -1,11 +1,15 @@
 "use client";
 
-import { Clock, CreditCard, EyeOff } from "lucide-react";
+import { Ban, Clock, CreditCard, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { useLocale, useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import {
+  canDismissPendingCard,
+  cancelStorefrontPendingCheckout,
+  hideStorefrontPendingCard,
   dismissPendingCheckout,
   excludeDismissedPendingItems,
   listDismissedPendingCheckoutIds,
@@ -22,9 +26,7 @@ function copy(locale: "fa" | "en") {
   const fa = locale === "fa";
   return {
     title: fa ? "در انتظار پرداخت" : "Awaiting payment",
-    hold: fa
-      ? "موجودی این سفارش تا پایان این زمان برای شما نگه داشته می‌شود."
-      : "Inventory for this order is held until this time ends.",
+    hold: fa ? "مهلت رزرو" : "Hold remaining",
     retryHold: fa ? "مهلت رزرو مجدد" : "Retry hold",
     expired: fa ? "مهلت رزرو موجودی پایان یافته است." : "The inventory hold for this order has ended.",
     pay: fa ? "پرداخت" : "Pay",
@@ -38,6 +40,11 @@ function copy(locale: "fa" | "en") {
       : "No more inventory reservation retries remain for this order.",
     unavailable: fa ? "این سفارش در حال حاضر قابل تأمین نیست." : "This order cannot be supplied right now.",
     hide: fa ? "دیگر نمایش نده" : "Don't show again",
+    cancel: fa ? "لغو سفارش" : "Cancel order",
+    cancelConfirm: fa
+      ? "با لغو این سفارش، رزرو موجودی آزاد می‌شود و سفارش به لغو‌شده‌ها منتقل می‌شود. آیا مطمئن هستید؟"
+      : "Cancelling this order releases the inventory hold and moves it to cancelled orders. Continue?",
+    cancelDone: fa ? "سفارش شما لغو گردید" : "Your order has been cancelled",
     cycle: (n: number) => (fa ? `رزرو ${n}` : `Hold ${n}`),
   };
 }
@@ -94,9 +101,11 @@ function ReservationCountdown({
 export function StorefrontPendingPayments({
   items,
   onRefresh,
+  onRemoved,
 }: {
   items: StorefrontPendingPaymentItem[];
   onRefresh: () => void;
+  onRemoved?: (checkoutId: string) => void;
 }) {
   const locale = useLocale();
   const labels = copy(locale);
@@ -142,9 +151,48 @@ export function StorefrontPendingPayments({
     }
   }
 
-  function onHide(item: StorefrontPendingPaymentItem) {
-    dismissPendingCheckout(item.checkoutId);
-    setHiddenIds((current) => (current.includes(item.checkoutId) ? current : [...current, item.checkoutId]));
+  async function onHide(item: StorefrontPendingPaymentItem) {
+    setBusyId(item.checkoutId);
+    try {
+      await hideStorefrontPendingCard(item);
+      dismissPendingCheckout(item.checkoutId);
+      setHiddenIds((current) => (current.includes(item.checkoutId) ? current : [...current, item.checkoutId]));
+      onRemoved?.(item.checkoutId);
+      onRefresh();
+    } catch (cause) {
+      setMessages((current) => ({
+        ...current,
+        [item.checkoutId]: toCustomerPendingPaymentMessage(cause, locale),
+      }));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function onCancel(item: StorefrontPendingPaymentItem) {
+    if (!window.confirm(labels.cancelConfirm)) {
+      return;
+    }
+    setMessages((current) => {
+      const next = { ...current };
+      delete next[item.checkoutId];
+      return next;
+    });
+    setBusyId(item.checkoutId);
+    try {
+      await cancelStorefrontPendingCheckout(item);
+      onRemoved?.(item.checkoutId);
+      toast.success(labels.cancelDone, { autoClose: 2800 });
+      onRefresh();
+    } catch (cause) {
+      setMessages((current) => ({
+        ...current,
+        [item.checkoutId]: toCustomerPendingPaymentMessage(cause, locale),
+      }));
+      onRefresh();
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -165,13 +213,14 @@ export function StorefrontPendingPayments({
               ?? (item.paymentPresentation === "retryLimit" || item.hasReachedRetryLimit ? labels.retryLimit : null)
               ?? (item.paymentPresentation === "failedRetryable" ? labels.failed : null)
               ?? (item.reservationPresentation === "ended" ? labels.expired : null);
+          const canHide = canDismissPendingCard(item);
           return (
             <article
               key={item.checkoutId}
-              className="bg-white rounded-2xl border border-gray-200 p-3 md:p-4 shadow-sm"
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
               data-testid="pending-payment-card"
             >
-              <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+              <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4">
                 <div className="flex -space-x-2 rtl:space-x-reverse shrink-0">
                   {item.items.slice(0, 3).map((line, index) => (
                     <div
@@ -193,47 +242,60 @@ export function StorefrontPendingPayments({
                   </p>
                   {statusCopy ? <p className="text-xs text-gray-600 mt-2 leading-6">{statusCopy}</p> : null}
                 </div>
-                <div className="shrink-0 text-center md:text-end min-w-[7.5rem]">
-                  {item.reservationPresentation === "held" ? (
-                    <>
-                      <ReservationCountdown item={item} onExpire={onRefresh} />
-                      <p className="text-[10px] md:text-xs text-gray-500 mt-1 max-w-[14rem] leading-5">
-                        {item.cycleNumber && item.cycleNumber > 1 ? labels.retryHold : labels.hold}
-                      </p>
-                    </>
-                  ) : null}
-                  {item.primaryAction === "pay" ? (
-                    <button
-                      type="button"
-                      data-testid="pending-payment-pay"
-                      className="mt-2 inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs md:text-sm font-black hover:bg-[#1d4ed8] whitespace-nowrap"
-                      onClick={() => void onAction(item)}
-                    >
-                      <CreditCard className="w-3.5 h-3.5" />
-                      {labels.pay}
-                    </button>
-                  ) : null}
-                  {item.primaryAction === "retryAfterExpiry" ? (
-                    <button
-                      type="button"
-                      data-testid="pending-payment-retry"
-                      disabled={busyId === item.checkoutId}
-                      className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs md:text-sm font-black hover:bg-[#1d4ed8] disabled:opacity-60 whitespace-nowrap"
-                      onClick={() => void onAction(item)}
-                    >
-                      {labels.retry}
-                    </button>
-                  ) : null}
+                {item.reservationPresentation === "held" ? (
+                  <div className="shrink-0 text-center rounded-xl bg-[#EFF6FF] px-3 py-2 min-w-[6.5rem]">
+                    <ReservationCountdown item={item} onExpire={onRefresh} />
+                    <p className="text-[10px] text-gray-500 mt-1 leading-4">
+                      {item.cycleNumber && item.cycleNumber > 1 ? labels.retryHold : labels.hold}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 bg-gray-50/80 px-3 md:px-4 py-2.5">
+                {item.primaryAction === "pay" ? (
+                  <button
+                    type="button"
+                    data-testid="pending-payment-pay"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 px-4 rounded-lg bg-[#2563EB] text-white text-sm font-bold hover:bg-[#1d4ed8]"
+                    onClick={() => void onAction(item)}
+                  >
+                    <CreditCard className="w-3.5 h-3.5" />
+                    {labels.pay}
+                  </button>
+                ) : null}
+                {item.primaryAction === "retryAfterExpiry" ? (
+                  <button
+                    type="button"
+                    data-testid="pending-payment-retry"
+                    disabled={busyId === item.checkoutId}
+                    className="inline-flex h-9 items-center justify-center px-4 rounded-lg bg-[#2563EB] text-white text-sm font-bold hover:bg-[#1d4ed8] disabled:opacity-60"
+                    onClick={() => void onAction(item)}
+                  >
+                    {labels.retry}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  data-testid="pending-payment-cancel"
+                  disabled={busyId === item.checkoutId}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+                  onClick={() => void onCancel(item)}
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  {labels.cancel}
+                </button>
+                {canHide ? (
                   <button
                     type="button"
                     data-testid="pending-payment-hide"
-                    className="mt-2 inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs md:text-sm font-black hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 whitespace-nowrap"
-                    onClick={() => onHide(item)}
+                    className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"
+                    disabled={busyId === item.checkoutId}
+                    onClick={() => void onHide(item)}
                   >
                     <EyeOff className="w-3.5 h-3.5" />
                     {labels.hide}
                   </button>
-                </div>
+                ) : null}
               </div>
             </article>
           );

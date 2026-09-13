@@ -1,7 +1,7 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -58,11 +58,19 @@ export function StorefrontShopeivaCart({
   const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
   const [pendingItems, setPendingItems] = useState<StorefrontPendingPaymentItem[]>([]);
+  const removedPendingIds = useRef(new Set<string>());
   const locale = useLocale();
+  const applyPendingItems = useCallback((items: StorefrontPendingPaymentItem[]) => {
+    setPendingItems(items.filter((item) => !removedPendingIds.current.has(item.checkoutId)));
+  }, []);
   const refreshPending = useCallback(() => {
     void loadStorefrontPendingPayments()
-      .then((page) => setPendingItems(page.items))
+      .then((page) => applyPendingItems(page.items))
       .catch(() => undefined);
+  }, [applyPendingItems]);
+  const removePendingFromCart = useCallback((checkoutId: string) => {
+    removedPendingIds.current.add(checkoutId);
+    setPendingItems((current) => current.filter((item) => item.checkoutId !== checkoutId));
   }, []);
 
   useEffect(() => {
@@ -78,7 +86,7 @@ export function StorefrontShopeivaCart({
       })
       .finally(() => setLoading(false));
     void loadStorefrontPendingPayments()
-      .then((page) => setPendingItems(page.items))
+      .then((page) => applyPendingItems(page.items))
       .catch(() => setPendingItems([]));
   }, []);
 
@@ -188,7 +196,11 @@ export function StorefrontShopeivaCart({
 
       <CartHero itemCount={itemCount} subtotalLabel={formatOfferAmount(subtotal, currency)} discountPercent={discountPercent} />
 
-      <StorefrontPendingPayments items={pendingItems} onRefresh={refreshPending} />
+      <StorefrontPendingPayments
+        items={pendingItems}
+        onRefresh={refreshPending}
+        onRemoved={removePendingFromCart}
+      />
 
       {!cart || cart.lines.length === 0 ? (
         <CartEmpty error={error} hasPending={pendingItems.length > 0} locale={locale} />

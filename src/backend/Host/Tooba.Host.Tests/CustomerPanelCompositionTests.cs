@@ -64,6 +64,7 @@ public sealed class CustomerPanelCompositionTests
         Assert.DoesNotContain("Lines.Sum(line => line.Quantity)", source, StringComparison.Ordinal);
         Assert.Contains("GetLatestForCheckoutAsync", source, StringComparison.Ordinal);
         Assert.Contains("PaymentStatus.Failed", source, StringComparison.Ordinal);
+        Assert.Contains("SellerOrderStatus.Cancelled", source, StringComparison.Ordinal);
         Assert.DoesNotContain("PaymentState(sellerOrder.Status)", source, StringComparison.Ordinal);
     }
 
