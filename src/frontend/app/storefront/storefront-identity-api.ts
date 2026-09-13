@@ -17,6 +17,15 @@ export async function loadCheckoutIdentityPolicy(): Promise<CheckoutIdentityPoli
   };
 }
 
+export const AUTH_CHANGED_EVENT = "tooba-auth-changed";
+
+export function notifyAuthChanged(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+}
+
 export async function loadStorefrontSession(): Promise<{ authenticated: boolean; userId: string | null }> {
   const response = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
   if (!response.ok) {

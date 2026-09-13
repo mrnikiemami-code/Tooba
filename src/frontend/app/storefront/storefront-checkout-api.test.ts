@@ -93,6 +93,8 @@ test("customer checkout message hides technical tax codes", () => {
 
 test("checkout shipping body includes savedAddressId only when selected", () => {
   const shipping = {
+    firstName: "علی",
+    lastName: "رضایی",
     recipientName: "علی",
     contactMobile: "09120000000",
     provinceName: "تهران",
@@ -104,7 +106,9 @@ test("checkout shipping body includes savedAddressId only when selected", () => 
   assert.equal("savedAddressId" in guest, false);
   const saved = toCheckoutShippingBody(shipping, "addr-1");
   assert.equal(saved.savedAddressId, "addr-1");
-  assert.equal(saved.recipientName, "علی");
+  assert.equal(saved.recipientName, "علی رضایی");
+  assert.equal(saved.firstName, "علی");
+  assert.equal(saved.lastName, "رضایی");
 });
 
 test("checkout submit sends savedAddressId for actor and omits it on guest inline path", async () => {
@@ -124,6 +128,8 @@ test("checkout submit sends savedAddressId for actor and omits it on guest inlin
   }) as typeof fetch;
   try {
     const shipping = {
+      firstName: "علی",
+      lastName: "رضایی",
       recipientName: "علی",
       contactMobile: "09120000000",
       provinceName: "تهران",

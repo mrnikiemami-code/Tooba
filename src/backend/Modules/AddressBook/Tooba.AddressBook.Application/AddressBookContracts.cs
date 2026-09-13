@@ -14,7 +14,9 @@ public sealed record CustomerAddressRecord(
     string? Label,
     bool IsDefault,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string FirstName = "",
+    string LastName = "");
 
 /// <summary>ورودی نوشتن دفترچه؛ OwnerUserId ندارد و هویت از Host می‌آید.</summary>
 public sealed record CustomerAddressWrite(
@@ -27,7 +29,9 @@ public sealed record CustomerAddressWrite(
     string PostalAddress,
     string? BuildingUnit,
     string? Label,
-    bool IsDefault);
+    bool IsDefault,
+    string FirstName = "",
+    string LastName = "");
 
 /// <summary>
 /// قرارداد کاربردی دفترچهٔ آدرس مشتری. تمام عملیات با Actor تأمین‌شده از Host محدود می‌شوند

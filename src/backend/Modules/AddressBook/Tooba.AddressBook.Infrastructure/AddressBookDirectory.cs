@@ -24,9 +24,10 @@ public sealed class AddressBookDirectory : IAddressBookDirectory
     {
         EnsureActor(actorUserId);
         await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+        var composedRecipient = ComposeRecipient(input);
         var address = CustomerAddress.Create(
             actorUserId,
-            input.RecipientName,
+            composedRecipient,
             input.ContactMobile,
             input.Country,
             input.ProvinceName,
@@ -37,6 +38,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory
             input.Label,
             input.IsDefault,
             DateTimeOffset.UtcNow);
+        address.ApplyRecipientNames(input.FirstName, input.LastName);
         if (address.IsDefault)
         {
             await ClearOtherDefaultsAsync(actorUserId, address.AddressId, address.UpdatedAt, cancellationToken);
@@ -84,7 +86,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory
         await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
         var address = await RequireOwnAsync(actorUserId, addressId, cancellationToken);
         address.Update(
-            input.RecipientName,
+            ComposeRecipient(input),
             input.ContactMobile,
             input.Country,
             input.ProvinceName,
@@ -95,6 +97,7 @@ public sealed class AddressBookDirectory : IAddressBookDirectory
             input.Label,
             input.IsDefault,
             DateTimeOffset.UtcNow);
+        address.ApplyRecipientNames(input.FirstName, input.LastName);
         if (address.IsDefault)
         {
             await ClearOtherDefaultsAsync(actorUserId, address.AddressId, address.UpdatedAt, cancellationToken);
@@ -192,7 +195,16 @@ public sealed class AddressBookDirectory : IAddressBookDirectory
             address.Label,
             address.IsDefault,
             address.CreatedAt,
-            address.UpdatedAt);
+            address.UpdatedAt,
+            address.FirstName,
+            address.LastName);
+
+    private static string ComposeRecipient(CustomerAddressWrite input)
+    {
+        var first = input.FirstName?.Trim() ?? string.Empty;
+        var last = input.LastName?.Trim() ?? string.Empty;
+        return first.Length > 0 && last.Length > 0 ? $"{first} {last}" : input.RecipientName;
+    }
 
     private static void EnsureActor(Guid actorUserId)
     {

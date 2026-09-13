@@ -27,6 +27,8 @@ import {
 } from "../customer-address-api";
 
 const emptyForm: CustomerAddressWriteInput = {
+  firstName: "",
+  lastName: "",
   recipientName: "",
   contactMobile: "",
   country: "IR",
@@ -41,6 +43,8 @@ const emptyForm: CustomerAddressWriteInput = {
 
 function toForm(address: CustomerAddress): CustomerAddressWriteInput {
   return {
+    firstName: address.firstName,
+    lastName: address.lastName,
     recipientName: address.recipientName,
     contactMobile: address.contactMobile,
     country: address.country,
@@ -220,7 +224,7 @@ export default function CustomerAddressesPage() {
                 <div className="p-3 space-y-2">
                   <p className="text-xs text-gray-600 leading-relaxed">{addr.postalAddress}</p>
                   <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
-                    <span className="flex items-center gap-0.5"><User className="w-3 h-3" />{addr.recipientName}</span>
+                    <span className="flex items-center gap-0.5"><User className="w-3 h-3" />{addr.firstName && addr.lastName ? `${addr.firstName} ${addr.lastName}` : addr.recipientName}</span>
                     <span className="w-px h-3 bg-gray-300" />
                     <span className="flex items-center gap-0.5"><Phone className="w-3 h-3" />{addr.contactMobile}</span>
                   </div>
@@ -301,7 +305,8 @@ export default function CustomerAddressesPage() {
                 <Field label="شهر" value={form.cityName} onChange={(cityName) => setForm({ ...form, cityName })} />
                 <Field label="کد پستی" value={form.postalCode} onChange={(postalCode) => setForm({ ...form, postalCode })} ltr />
                 <Field label="واحد / پلاک" value={form.buildingUnit ?? ""} onChange={(buildingUnit) => setForm({ ...form, buildingUnit })} required={false} />
-                <Field label="نام گیرنده" value={form.recipientName} onChange={(recipientName) => setForm({ ...form, recipientName })} />
+                <Field label="نام" value={form.firstName ?? ""} onChange={(firstName) => setForm({ ...form, firstName })} />
+                <Field label="نام خانوادگی" value={form.lastName ?? ""} onChange={(lastName) => setForm({ ...form, lastName })} />
                 <Field label="شماره تماس" value={form.contactMobile} onChange={(contactMobile) => setForm({ ...form, contactMobile })} ltr />
               </div>
               <div className="flex items-center gap-2">

@@ -27,6 +27,7 @@ public static class StorefrontEndpoints
         group.MapGet("/media/{assetId:guid}", GetPresentationMediaAsync);
         group.MapGet("/checkout-identity-policy", GetCheckoutIdentityPolicyAsync);
         group.MapPost("/cart", CreateGuestCartAsync);
+        group.MapGet("/cart/current", GetCurrentAuthenticatedCartAsync);
         group.MapGet("/cart/{cartId:guid}", GetCartAsync);
         group.MapPost("/cart/merge", MergeCartAfterLoginAsync);
         group.MapPost("/cart/{cartId:guid}/lines", AddCartLineAsync);
@@ -199,6 +200,15 @@ public static class StorefrontEndpoints
 
     private static Task<IResult> CreateGuestCartAsync(StorefrontCartComposer composer, CancellationToken cancellationToken)
         => ExecuteCartAsync(() => composer.CreateGuestAsync(cancellationToken));
+
+    private static Task<IResult> GetCurrentAuthenticatedCartAsync(
+        StorefrontCartComposer composer,
+        CancellationToken cancellationToken)
+        => ExecuteCartAsync(async () =>
+        {
+            var page = await composer.GetCurrentAuthenticatedAsync(cancellationToken);
+            return page ?? throw new InvalidOperationException("سبد پیدا نشد.");
+        });
 
     private static async Task<IResult> GetCartAsync(
         Guid cartId,
@@ -922,6 +932,16 @@ public static class StorefrontEndpoints
             return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.selection.required");
         }
 
+        if (text.Contains("shipping.firstname.required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.firstname.required");
+        }
+
+        if (text.Contains("shipping.lastname.required", StringComparison.Ordinal))
+        {
+            return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.lastname.required");
+        }
+
         return (StatusCodes.Status400BadRequest, "Bad Request", "shipping.rejected");
     }
 
@@ -936,6 +956,8 @@ public static class StorefrontEndpoints
         "shipping.delivery.slot_unavailable" => "بازهٔ زمانی تحویل دیگر در دسترس نیست.",
         "shipping.note.too_long" => "توضیحات سفارش بیش از حد طولانی است.",
         "shipping.selection.required" => "ابتدا اطلاعات ارسال را تکمیل کنید.",
+        "shipping.firstname.required" => "نام الزامی است.",
+        "shipping.lastname.required" => "نام خانوادگی الزامی است.",
         "checkout.authentication_required" => "برای ادامه فرایند خرید وارد حساب خود شوید.",
         "checkout.open_unpaid_limit_reached" =>
             "شما به حداکثر تعداد سفارش‌های در انتظار پرداخت رسیده‌اید. ابتدا یکی از سفارش‌های قبلی را پرداخت یا لغو کنید.",

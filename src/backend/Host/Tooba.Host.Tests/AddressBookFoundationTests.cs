@@ -26,7 +26,7 @@ public sealed class AddressBookFoundationTests
         var names = typeof(CustomerAddress).GetProperties().Select(x => x.Name).ToArray();
         Assert.Equal(
             [
-                "AddressId", "OwnerUserId", "RecipientName", "ContactMobile", "Country", "ProvinceName",
+                "AddressId", "OwnerUserId", "RecipientName", "FirstName", "LastName", "ContactMobile", "Country", "ProvinceName",
                 "CityName", "PostalCode", "PostalAddress", "BuildingUnit", "Label", "IsDefault", "CreatedAt", "UpdatedAt",
             ],
             names);

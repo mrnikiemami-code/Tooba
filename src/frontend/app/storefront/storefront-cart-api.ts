@@ -513,11 +513,36 @@ export async function mergeStorefrontCartAfterLogin(): Promise<StorefrontCartPag
     return null;
   }
   const cart = mapStorefrontCart(await response.json().catch(() => null));
-  if (!cart) {
+  if (!cart || !isActiveShoppingCartStatus(cart.status)) {
     return null;
   }
   writeCartSession(cart.cartId, null);
   notifyCartChanged();
+  return cart;
+}
+
+async function isStorefrontAuthenticated(): Promise<boolean> {
+  const me = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
+  return me.ok;
+}
+
+async function loadAuthenticatedCurrentCart(): Promise<StorefrontCartPage | null> {
+  const response = await fetch("/v1/storefront/cart/current", {
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    return null;
+  }
+  const cart = mapStorefrontCart(await response.json().catch(() => null));
+  if (!cart || !isActiveShoppingCartStatus(cart.status)) {
+    return null;
+  }
+  const guestPending = Boolean(readCartSession().guestSecret);
+  if (guestPending && cart.lines.length === 0) {
+    return cart;
+  }
+  writeCartSession(cart.cartId, null);
   return cart;
 }
 
@@ -560,8 +585,22 @@ function shouldRotateActiveCart(status: number): boolean {
  * فقط سبد Active را برای خرید برمی‌گرداند. Converted/غیرقابل‌دسترسی rotate می‌شود.
  */
 export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
+  const authenticated = await isStorefrontAuthenticated();
+  if (authenticated) {
+    const current = await loadAuthenticatedCurrentCart();
+    const guestPending = Boolean(readCartSession().guestSecret);
+    if (guestPending && (!current || current.lines.length === 0)) {
+      const merged = await mergeStorefrontCartAfterLogin();
+      if (merged) {
+        return merged;
+      }
+    }
+    if (current) {
+      return current;
+    }
+  }
   const session = readCartSession();
-  if (session.cartId && (session.guestSecret || (await fetch("/api/auth/me", { credentials: "include", cache: "no-store" })).ok)) {
+  if (session.cartId && (session.guestSecret || authenticated)) {
     const existing = await fetch(`/v1/storefront/cart/${session.cartId}`, {
       cache: "no-store",
       credentials: "include",
@@ -581,6 +620,13 @@ export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
       return parseCartResponse(existing);
     }
   }
+  if (authenticated) {
+    const merged = await mergeStorefrontCartAfterLogin();
+    if (merged) {
+      return merged;
+    }
+    throw new StorefrontCartApiError(401, "checkout.authentication_required", "سبد احرازشده پیدا نشد.");
+  }
   return createFreshActiveCart();
 }
 
@@ -588,6 +634,19 @@ export async function ensureStorefrontCart(): Promise<StorefrontCartPage> {
  * سبد جاری را می‌خواند. بدون نشست یا سبد غیر Active مقدار null است.
  */
 export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
+  if (await isStorefrontAuthenticated()) {
+    const current = await loadAuthenticatedCurrentCart();
+    const guestPending = Boolean(readCartSession().guestSecret);
+    if (guestPending && (!current || current.lines.length === 0)) {
+      const merged = await mergeStorefrontCartAfterLogin();
+      if (merged) {
+        return merged;
+      }
+    }
+    if (current) {
+      return current;
+    }
+  }
   const session = readCartSession();
   if (!session.cartId) {
     return null;

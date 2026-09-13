@@ -139,15 +139,27 @@ public sealed class StorefrontShippingComposer
             throw new InvalidOperationException("shipping.cart.stale");
         }
 
+        var names = StorefrontRecipientNames.Resolve(request.FirstName, request.LastName, request.RecipientName);
+        if (request.SavedAddressId is null || request.SavedAddressId == Guid.Empty)
+        {
+            StorefrontRecipientNames.EnsureNewAddressNames(names.First, names.Last);
+        }
+        else if (names.First.Length == 0 && names.Last.Length == 0 && names.Recipient.Length == 0)
+        {
+            throw new InvalidOperationException("shipping.firstname.required");
+        }
+
         var prepared = await _checkouts.PrepareShippingAsync(
             new StorefrontCheckoutShippingInput(
-                request.RecipientName,
+                names.Recipient,
                 request.ContactMobile,
                 request.ProvinceName,
                 request.CityName,
                 request.PostalAddress,
                 request.PostalCode,
-                request.SavedAddressId),
+                request.SavedAddressId,
+                names.First,
+                names.Last),
             cancellationToken);
 
         var methods = await LoadEligibleMethodsAsync(
@@ -207,6 +219,12 @@ public sealed class StorefrontShippingComposer
                 request.SelectedDeliveryTimeWindow,
                 request.CustomerNote,
                 now);
+            existing.ApplyRecipientNames(names.First, names.Last);
+            if (_session.IsAuthenticated)
+            {
+                existing.ClearGuestSecret();
+            }
+
             _orders.ShippingDrafts.Add(existing);
         }
         else
@@ -230,6 +248,11 @@ public sealed class StorefrontShippingComposer
                 request.SelectedDeliveryTimeWindow,
                 request.CustomerNote,
                 now);
+            existing.ApplyRecipientNames(names.First, names.Last);
+            if (_session.IsAuthenticated)
+            {
+                existing.ClearGuestSecret();
+            }
         }
 
         await _orders.SaveChangesAsync(cancellationToken);
@@ -265,7 +288,9 @@ public sealed class StorefrontShippingComposer
                 draft.ShippingMethodCode,
                 draft.SelectedDeliveryDate?.ToString("yyyy-MM-dd") ?? string.Empty,
                 draft.SelectedDeliveryTimeWindow ?? string.Empty,
-                draft.CustomerNote),
+                draft.CustomerNote,
+                draft.FirstName,
+                draft.LastName),
             guestSecret,
             cancellationToken);
 
@@ -284,7 +309,9 @@ public sealed class StorefrontShippingComposer
                 draft.CityName,
                 draft.PostalAddress,
                 draft.PostalCode,
-                draft.SavedAddressId),
+                draft.SavedAddressId,
+                draft.FirstName,
+                draft.LastName),
             couponCode,
             cancellationToken,
             draft.ShippingMethodCode,
@@ -432,14 +459,18 @@ public sealed class StorefrontShippingComposer
     private void EnsureDraftOwnership(CartShippingDraft draft, string? guestSecret)
     {
         var hash = HashGuestSecret(guestSecret);
-        if (!string.Equals(draft.GuestSecretHash, hash, StringComparison.Ordinal))
+        if (string.Equals(draft.GuestSecretHash, hash, StringComparison.Ordinal))
         {
-            // سبد احرازشده با draft مهمان یا برعکس
-            if (!(string.IsNullOrEmpty(draft.GuestSecretHash) && string.IsNullOrEmpty(hash) && _session.IsAuthenticated))
-            {
-                throw new InvalidOperationException("shipping.cart.forbidden");
-            }
+            return;
         }
+
+        // پس از ادغام ورود، راز مهمان از نشست حذف می‌شود اما پیش‌نویس همان سبد مالک باقی می‌ماند.
+        if (_session.IsAuthenticated && string.IsNullOrEmpty(hash))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException("shipping.cart.forbidden");
     }
 
     private async Task<Guid> ResolveLanguageIdAsync(string? language, CancellationToken cancellationToken)
@@ -492,5 +523,7 @@ public sealed class StorefrontShippingComposer
             draft.MinimumDeliveryDate.ToString("yyyy-MM-dd"),
             draft.SelectedDeliveryDate?.ToString("yyyy-MM-dd"),
             draft.SelectedDeliveryTimeWindow,
-            draft.CustomerNote);
+            draft.CustomerNote,
+            draft.FirstName,
+            draft.LastName);
 }

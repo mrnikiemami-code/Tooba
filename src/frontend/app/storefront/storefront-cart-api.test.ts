@@ -288,6 +288,55 @@ test("addOfferToCart rotates when Host omits status and rejects Converted mutati
   }
 });
 
+test("authenticated ensure prefers current cart and does not POST a guest cart", async () => {
+  const { writeCartSession, ensureStorefrontCart, readCartSession } = await import("./storefront-cart-api.ts");
+  mockSession();
+  writeCartSession("guest-cart", "guest-secret");
+  const calls: string[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    const method = (init?.method ?? "GET").toUpperCase();
+    calls.push(`${method} ${url}`);
+    if (url.includes("/api/auth/me")) {
+      return new Response(JSON.stringify({ userId: "user-1" }), { status: 200 });
+    }
+    if (url.includes("/cart/current")) {
+      return new Response(
+        JSON.stringify({
+          cartId: "leftover-empty",
+          version: 1,
+          status: "Active",
+          lines: [],
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/merge")) {
+      return new Response(
+        JSON.stringify({
+          cartId: "guest-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 2 }],
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response(JSON.stringify({ errorCode: "cart.rejected" }), { status: 400 });
+  }) as typeof fetch;
+  try {
+    const cart = await ensureStorefrontCart();
+    assert.equal(cart.cartId, "guest-cart");
+    assert.equal(cart.lines.length, 1);
+    assert.deepEqual(readCartSession(), { cartId: "guest-cart", guestSecret: null });
+    assert.equal(calls.some((row) => row.startsWith("POST /v1/storefront/cart") && !row.includes("merge")), false);
+    assert.equal(calls.some((row) => row.includes("/cart/merge")), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("cart mapper keeps quantity policy fields for mini-cart and /cart", () => {
   const cart = mapStorefrontCart({
     cartId: "cart-2",

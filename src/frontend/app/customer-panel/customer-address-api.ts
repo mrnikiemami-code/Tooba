@@ -6,6 +6,8 @@ import { ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
  */
 export interface CustomerAddress {
   addressId: string;
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   country: string;
@@ -24,6 +26,8 @@ export interface CustomerAddress {
  * بدنهٔ ایجاد/ویرایش دفترچه. فیلدهای اختیاری خالی به Host فرستاده نمی‌شوند.
  */
 export interface CustomerAddressWriteInput {
+  firstName?: string;
+  lastName?: string;
   recipientName: string;
   contactMobile: string;
   country: string;
@@ -74,6 +78,8 @@ export function mapCustomerAddress(value: unknown): CustomerAddress | null {
   if (!addressId) return null;
   return {
     addressId,
+    firstName: text(prop(item, "firstName", "FirstName")),
+    lastName: text(prop(item, "lastName", "LastName")),
     recipientName: text(prop(item, "recipientName", "RecipientName")),
     contactMobile: text(prop(item, "contactMobile", "ContactMobile")),
     country: text(prop(item, "country", "Country")),
@@ -110,8 +116,12 @@ export function mapCustomerAddressList(value: unknown): CustomerAddress[] {
  * کشور/شهر/نشانی اجباری‌اند؛ واحد و برچسب فقط با مقدار واقعی می‌روند.
  */
 export function toCustomerAddressWritePayload(input: CustomerAddressWriteInput): Record<string, unknown> {
+  const firstName = input.firstName?.trim() ?? "";
+  const lastName = input.lastName?.trim() ?? "";
   const payload: Record<string, unknown> = {
-    recipientName: input.recipientName.trim(),
+    firstName,
+    lastName,
+    recipientName: firstName && lastName ? `${firstName} ${lastName}` : input.recipientName.trim(),
     contactMobile: input.contactMobile.trim(),
     country: input.country.trim(),
     provinceName: input.provinceName.trim(),
@@ -237,8 +247,20 @@ export async function setDefaultCustomerAddress(addressId: string): Promise<void
   ensureOk(response, "تنظیم آدرس پیش‌فرض انجام نشد.");
 }
 
+/** نمایش گیرنده: نام+نام‌خانوادگی اگر هر دو موجود باشند؛ وگرنه RecipientName قدیمی بدون حدس شکستن. */
+export function recipientDisplayName(address: { firstName?: string; lastName?: string; recipientName: string }): string {
+  const first = address.firstName?.trim() ?? "";
+  const last = address.lastName?.trim() ?? "";
+  if (first && last) {
+    return `${first} ${last}`;
+  }
+  return address.recipientName;
+}
+
 /** فیلدهای ارسال تسویه را از نشانی ذخیره‌شده پر می‌کند؛ ژئوکد ساخته نمی‌شود. */
 export function shippingFromCustomerAddress(address: CustomerAddress): {
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   provinceName: string;
@@ -247,7 +269,9 @@ export function shippingFromCustomerAddress(address: CustomerAddress): {
   postalCode: string;
 } {
   return {
-    recipientName: address.recipientName,
+    firstName: address.firstName,
+    lastName: address.lastName,
+    recipientName: recipientDisplayName(address),
     contactMobile: address.contactMobile,
     provinceName: address.provinceName,
     cityName: address.cityName,

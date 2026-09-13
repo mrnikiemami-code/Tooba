@@ -268,6 +268,20 @@ public sealed class StorefrontCartComposer
     }
 
     /// <summary>
+    /// سبد Active احرازشده را بدون ساخت سبد مهمان خالی برمی‌گرداند.
+    /// </summary>
+    public async Task<StorefrontCartPage?> GetCurrentAuthenticatedAsync(CancellationToken cancellationToken)
+    {
+        if (!_session.IsAuthenticated || _session.UserId is not Guid userId || userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("checkout.authentication_required");
+        }
+
+        var snapshot = await _carts.FindActiveAuthenticatedAsync(userId, cancellationToken);
+        return snapshot is null ? null : await PresentAsync(snapshot, guestSecret: null, cancellationToken);
+    }
+
+    /// <summary>
     /// ادغام سبد مهمان اثبات‌شده پس از ورود. رزرو/سفارش/پرداخت ساخته نمی‌شود.
     /// </summary>
     public async Task<StorefrontCartPage> MergeAfterLoginAsync(

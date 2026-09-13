@@ -94,6 +94,8 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.Mode).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.Channel).HasConversion<string>().HasMaxLength(32);
             entity.Property(x => x.RecipientName).HasMaxLength(128);
+            entity.Property(x => x.RecipientFirstName).HasMaxLength(64);
+            entity.Property(x => x.RecipientLastName).HasMaxLength(64);
             entity.Property(x => x.ContactMobile).HasMaxLength(32);
             entity.Property(x => x.ProvinceName).HasMaxLength(64);
             entity.Property(x => x.CityName).HasMaxLength(64);
@@ -116,6 +118,8 @@ public sealed class OrderDbContext : DbContext
             entity.Property(x => x.CartId).ValueGeneratedNever();
             entity.Property(x => x.GuestSecretHash).HasMaxLength(128);
             entity.Property(x => x.RecipientName).HasMaxLength(128);
+            entity.Property(x => x.FirstName).HasMaxLength(64);
+            entity.Property(x => x.LastName).HasMaxLength(64);
             entity.Property(x => x.ContactMobile).HasMaxLength(32);
             entity.Property(x => x.ProvinceName).HasMaxLength(64);
             entity.Property(x => x.CityName).HasMaxLength(64);

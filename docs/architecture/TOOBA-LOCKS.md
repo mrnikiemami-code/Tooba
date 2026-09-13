@@ -511,3 +511,18 @@ Every new successful checkout that creates Reservation Cycle #1 writes one immut
 
 ### LOCK-SF-116 — Limits are backend and concurrency-safe
 Open-unpaid and reservation-churn limits are enforced on the backend before inventory reservation and Order creation. Concurrent last-slot submissions cannot both succeed.
+
+### LOCK-SF-117 — Active Cart is server commerce state
+The Active Cart is persistent server-side commerce state. Auth Session carries customer identity only and must not store Cart line data.
+
+### LOCK-SF-118 — Login merge preserves Active Cart until atomic COMMIT
+Login and anonymous-to-authenticated cart merge must keep the authenticated Active Cart populated until the final atomic checkout COMMIT converts it. Empty leftover authenticated carts must not shadow a guest cart that has lines.
+
+### LOCK-SF-119 — Canonical storefront header/account state
+Authenticated storefront header/account state is canonical and shared across all storefront routes through one header/account menu. Logged-out shows ورود; logged-in must not.
+
+### LOCK-SF-120 — Logout is always visible when authenticated
+Customer logout is always available when authenticated, uses the canonical session logout endpoint, and must not leak the authenticated Cart pointer to the next anonymous browser.
+
+### LOCK-SF-121 — New addresses store FirstName and LastName separately
+New shipping addresses persist FirstName and LastName independently. Committed order recipient snapshots keep both. Historical RecipientName-only rows remain readable without guessing a split.

@@ -79,7 +79,9 @@ public sealed record CheckoutSnapshot(
     DateOnly? MinimumDeliveryDate = null,
     DateOnly? RequestedDeliveryDate = null,
     string RequestedDeliveryTimeWindow = "",
-    string CustomerNote = "");
+    string CustomerNote = "",
+    string RecipientFirstName = "",
+    string RecipientLastName = "");
 
 /// <summary>
 /// فرمان ارسال checkout از روی سبد فعال.
@@ -107,7 +109,9 @@ public sealed record SubmitCheckoutCommand(
     DateOnly? MinimumDeliveryDate = null,
     DateOnly? RequestedDeliveryDate = null,
     string RequestedDeliveryTimeWindow = "",
-    string CustomerNote = "");
+    string CustomerNote = "",
+    string RecipientFirstName = "",
+    string RecipientLastName = "");
 
 /// <summary>
 /// هویت مجاز برای خواندن سفارش. شمارهٔ سفارش به‌تنهایی Bearer نیست.

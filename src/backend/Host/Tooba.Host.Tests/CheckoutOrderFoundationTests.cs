@@ -617,6 +617,9 @@ public sealed class CheckoutOrderFoundationTests : IAsyncLifetime
             CancellationToken cancellationToken) =>
             _inner.MergeAnonymousAfterLoginAsync(userId, anonymousCartId, guestSecret, cancellationToken);
 
+        public Task<CartSnapshot?> FindActiveAuthenticatedAsync(Guid userId, CancellationToken cancellationToken) =>
+            _inner.FindActiveAuthenticatedAsync(userId, cancellationToken);
+
         public Task<CartSnapshot> ConvertAsync(Guid cartId, CartAccess access, int expectedVersion, CartConversionIntent intent, CancellationToken cancellationToken)
         {
             if (Interlocked.Increment(ref _converts) == 1)

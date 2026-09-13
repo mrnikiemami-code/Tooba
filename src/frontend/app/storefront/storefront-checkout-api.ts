@@ -23,6 +23,8 @@ export function writeStoredCouponCode(code: string | null): void {
 }
 
 export interface StorefrontCheckoutShipping {
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   provinceName: string;
@@ -39,8 +41,16 @@ export function toCheckoutShippingBody(
   shipping: StorefrontCheckoutShipping,
   savedAddressId?: string | null,
 ): StorefrontCheckoutShipping & { savedAddressId?: string } {
-  if (!savedAddressId) return { ...shipping };
-  return { ...shipping, savedAddressId };
+  const firstName = shipping.firstName.trim();
+  const lastName = shipping.lastName.trim();
+  const body = {
+    ...shipping,
+    firstName,
+    lastName,
+    recipientName: firstName && lastName ? `${firstName} ${lastName}` : shipping.recipientName.trim(),
+  };
+  if (!savedAddressId) return body;
+  return { ...body, savedAddressId };
 }
 
 export interface StorefrontCheckoutLine {
@@ -81,6 +91,8 @@ export interface StorefrontCheckoutPage {
   shippingMethodCode: string;
   shippingMethodLabel: string;
   recipientName: string;
+  firstName: string;
+  lastName: string;
   contactMobile: string;
   provinceName: string;
   cityName: string;
@@ -158,6 +170,8 @@ export function mapStorefrontCheckout(payload: unknown): StorefrontCheckoutPage 
     shippingMethodCode: asString(readProp(item, "shippingMethodCode", "ShippingMethodCode")),
     shippingMethodLabel: asString(readProp(item, "shippingMethodLabel", "ShippingMethodLabel")),
     recipientName: asString(readProp(item, "recipientName", "RecipientName")),
+    firstName: asString(readProp(item, "firstName", "FirstName")),
+    lastName: asString(readProp(item, "lastName", "LastName")),
     contactMobile: asString(readProp(item, "contactMobile", "ContactMobile", "contactMobile")),
     provinceName: asString(readProp(item, "provinceName", "ProvinceName")),
     cityName: asString(readProp(item, "cityName", "CityName")),

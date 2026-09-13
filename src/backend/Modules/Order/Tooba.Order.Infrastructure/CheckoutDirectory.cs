@@ -180,7 +180,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
                 command.MinimumDeliveryDate,
                 command.RequestedDeliveryDate,
                 command.RequestedDeliveryTimeWindow,
-                command.CustomerNote);
+                command.CustomerNote,
+                command.RecipientFirstName,
+                command.RecipientLastName);
             BindReservationsToOrders(group, cart, reservations);
             _db.Checkouts.Add(group);
             await PrepareInitialCycleAsync(group, command.Mode, reservations.Values, now, cancellationToken);
@@ -298,7 +300,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             command.MinimumDeliveryDate,
             command.RequestedDeliveryDate,
             command.RequestedDeliveryTimeWindow,
-            command.CustomerNote);
+            command.CustomerNote,
+            command.RecipientFirstName,
+            command.RecipientLastName);
         return ToSnapshot(group);
     }
 
@@ -1016,7 +1020,9 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
             group.MinimumDeliveryDate,
             group.RequestedDeliveryDate,
             group.RequestedDeliveryTimeWindow,
-            group.CustomerNote);
+            group.CustomerNote,
+            group.RecipientFirstName,
+            group.RecipientLastName);
 
     private static SellerOrderSnapshot ToSellerSnapshot(SellerOrder order) =>
         new(

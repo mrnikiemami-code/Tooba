@@ -28,6 +28,20 @@ test("header opens mini-cart drawer instead of bare /cart link", () => {
   assert.match(headerSource, /data-testid="header-cart-badge"/);
   assert.match(headerSource, /setCartOpen\(true\)/);
   assert.match(headerSource, /loadStorefrontCart/);
+  assert.match(headerSource, /StorefrontAccountMenu/);
+  assert.doesNotMatch(headerSource, /data-testid="header-login-link"/);
+});
+
+test("canonical account menu reuses Shopeiva dropdown and logout", () => {
+  const menu = fs.readFileSync(path.join(root, "app/storefront/storefront-account-menu.tsx"), "utf8");
+  assert.match(menu, /header-login-link/);
+  assert.match(menu, /header-account-menu/);
+  assert.match(menu, /\/customer-panel\/orders/);
+  assert.match(menu, /\/customer-panel/);
+  assert.match(menu, /\/api\/auth\/logout/);
+  assert.match(menu, /clearCartSession/);
+  assert.match(menu, /notifyAuthChanged/);
+  assert.doesNotMatch(menu, /#E53935/);
 });
 
 test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {

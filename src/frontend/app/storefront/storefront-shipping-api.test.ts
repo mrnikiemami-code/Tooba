@@ -61,6 +61,9 @@ test("shipping UI source has no hardcoded Shopeiva template method list", () => 
   assert.match(source, /loadShippingProjection/);
   assert.match(source, /commitShippingToPayment/);
   assert.match(source, /\/payment/);
+  assert.match(source, /shipping-first-name/);
+  assert.match(source, /shipping-last-name/);
+  assert.doesNotMatch(source, /نام و نام خانوادگی/);
 });
 
 test("cart CTA routes to /shipping", () => {

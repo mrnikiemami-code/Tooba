@@ -32,6 +32,8 @@ public sealed class AddressBookDbContext : DbContext
             entity.HasKey(x => x.AddressId);
             entity.Property(x => x.AddressId).ValueGeneratedNever();
             entity.Property(x => x.RecipientName).HasMaxLength(CustomerAddress.RecipientNameMaxLength).IsRequired();
+            entity.Property(x => x.FirstName).HasMaxLength(64);
+            entity.Property(x => x.LastName).HasMaxLength(64);
             entity.Property(x => x.ContactMobile).HasMaxLength(CustomerAddress.ContactMobileMaxLength).IsRequired();
             entity.Property(x => x.Country).HasMaxLength(CustomerAddress.CountryMaxLength).IsRequired();
             entity.Property(x => x.ProvinceName).HasMaxLength(CustomerAddress.ProvinceNameMaxLength);

@@ -173,7 +173,9 @@ public sealed record CustomerAddressWriteRequest(
     string PostalAddress,
     string? BuildingUnit,
     string? Label,
-    bool IsDefault);
+    bool IsDefault,
+    string? FirstName = null,
+    string? LastName = null);
 
 /// <summary>تبدیل بدنهٔ HTTP به فرمان ماژول بدون انتقال هویت مالک.</summary>
 public static class CustomerAddressWriteRequestExtensions
@@ -190,5 +192,7 @@ public static class CustomerAddressWriteRequestExtensions
             body.PostalAddress,
             body.BuildingUnit,
             body.Label,
-            body.IsDefault);
+            body.IsDefault,
+            body.FirstName ?? string.Empty,
+            body.LastName ?? string.Empty);
 }

@@ -311,8 +311,13 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
             return new CartMergeResult(empty, false, empty.Lines);
         }
 
-        if (authenticated is null)
+        if (authenticated is null || (authenticated.Lines.Count == 0 && guest.Lines.Count > 0))
         {
+            if (authenticated is not null && authenticated.CartId != guest.CartId)
+            {
+                authenticated.Abandon(DateTimeOffset.UtcNow);
+            }
+
             guest.AdoptAuthenticatedOwner(userId, DateTimeOffset.UtcNow);
             await SaveCartAsync(cancellationToken);
             var adopted = await ToSnapshotAsync(guest, cancellationToken);
@@ -333,6 +338,22 @@ public sealed class CartDirectory : ICartDirectory, ICartQueryGateway
         await SaveCartAsync(cancellationToken);
         var merged = await ToSnapshotAsync(authenticated, cancellationToken);
         return new CartMergeResult(merged, false, merged.Lines);
+    }
+
+    /// <inheritdoc />
+    public async Task<CartSnapshot?> FindActiveAuthenticatedAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var cart = await _db.Carts
+            .Include(x => x.Lines)
+            .Where(x => x.OwnerUserId == userId && x.Status == CartStatus.Active && x.AccessKind == CartAccessKind.Authenticated)
+            .OrderByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        return cart is null ? null : await ToSnapshotAsync(cart, cancellationToken);
     }
 
     /// <inheritdoc />

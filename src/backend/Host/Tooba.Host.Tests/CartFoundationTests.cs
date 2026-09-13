@@ -111,6 +111,17 @@ public sealed class CartFoundationTests : IAsyncLifetime
         Assert.DoesNotContain("MassTransit", typeof(ICartDirectory).Assembly.GetReferencedAssemblies().Select(a => a.Name));
     }
 
+    [Fact]
+    public void Login_merge_adopts_guest_when_leftover_authenticated_cart_is_empty()
+    {
+        var root = FindRepoRoot();
+        var directory = File.ReadAllText(Path.Combine(root, "src", "backend", "Modules", "Cart", "Tooba.Cart.Infrastructure", "CartDirectory.cs"));
+        Assert.Contains("authenticated.Lines.Count == 0 && guest.Lines.Count > 0", directory, StringComparison.Ordinal);
+        Assert.Contains("authenticated.Abandon", directory, StringComparison.Ordinal);
+        Assert.Contains("AdoptAuthenticatedOwner", directory, StringComparison.Ordinal);
+        Assert.Contains("FindActiveAuthenticatedAsync", directory, StringComparison.Ordinal);
+    }
+
     [SkippableFact]
     public async Task Cart_offer_lines_guest_hash_reservations_concurrency_and_tenant_isolation_on_postgres()
     {

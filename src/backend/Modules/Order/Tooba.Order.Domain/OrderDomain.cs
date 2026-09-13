@@ -664,6 +664,12 @@ public sealed class CheckoutGroup : IHasDomainEvents
     /// </summary>
     public string RecipientName { get; init; } = string.Empty;
 
+    /// <summary>نام کوچک گیرنده در تصویر سفارش؛ رکورد قدیمی ممکن است خالی باشد.</summary>
+    public string RecipientFirstName { get; init; } = string.Empty;
+
+    /// <summary>نام خانوادگی گیرنده در تصویر سفارش؛ رکورد قدیمی ممکن است خالی باشد.</summary>
+    public string RecipientLastName { get; init; } = string.Empty;
+
     /// <summary>
     /// تماس گیرنده در تصویر checkout.
     /// </summary>
@@ -762,7 +768,9 @@ public sealed class CheckoutGroup : IHasDomainEvents
         DateOnly? minimumDeliveryDate = null,
         DateOnly? requestedDeliveryDate = null,
         string requestedDeliveryTimeWindow = "",
-        string customerNote = "")
+        string customerNote = "",
+        string recipientFirstName = "",
+        string recipientLastName = "")
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
@@ -793,6 +801,8 @@ public sealed class CheckoutGroup : IHasDomainEvents
             CreatedAt = now,
             SubmittedAt = now,
             RecipientName = recipientName.Trim(),
+            RecipientFirstName = recipientFirstName.Trim(),
+            RecipientLastName = recipientLastName.Trim(),
             ContactMobile = contactMobile.Trim(),
             ProvinceName = provinceName.Trim(),
             CityName = cityName.Trim(),

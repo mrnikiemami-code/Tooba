@@ -38,6 +38,8 @@ export interface StorefrontProvinceOption {
 export interface StorefrontShippingDraft {
   cartId: string;
   cartVersion: number;
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   provinceName: string;
@@ -74,6 +76,8 @@ export interface StorefrontShippingProjection {
 }
 
 export interface StorefrontShippingSelectionInput {
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   provinceName: string;
@@ -154,6 +158,8 @@ function mapDraft(value: unknown): StorefrontShippingDraft | null {
   return {
     cartId,
     cartVersion: asNumber(prop(item, "cartVersion", "CartVersion")),
+    firstName: asString(prop(item, "firstName", "FirstName")),
+    lastName: asString(prop(item, "lastName", "LastName")),
     recipientName: asString(prop(item, "recipientName", "RecipientName")),
     contactMobile: asString(prop(item, "contactMobile", "ContactMobile")),
     provinceName: asString(prop(item, "provinceName", "ProvinceName")),
@@ -238,6 +244,12 @@ export function toCustomerShippingMessage(cause: unknown): string {
     ) {
       return toCustomerCheckoutMessage(cause);
     }
+    if (cause.errorCode === "shipping.firstname.required") {
+      return "نام الزامی است.";
+    }
+    if (cause.errorCode === "shipping.lastname.required") {
+      return "نام خانوادگی الزامی است.";
+    }
     return cause.message;
   }
   if (cause instanceof Error && cause.message) return cause.message;
@@ -286,6 +298,8 @@ export async function saveShippingSelection(
     body: JSON.stringify({
       cartId,
       expectedCartVersion,
+      firstName: selection.firstName,
+      lastName: selection.lastName,
       recipientName: selection.recipientName,
       contactMobile: selection.contactMobile,
       provinceName: selection.provinceName,

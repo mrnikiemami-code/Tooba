@@ -46,6 +46,12 @@ public sealed class CustomerAddress
     /// <summary>نام گیرندهٔ تحویل.</summary>
     public string RecipientName { get; private set; } = string.Empty;
 
+    /// <summary>نام کوچک گیرنده؛ ردیف قدیمی ممکن است خالی باشد.</summary>
+    public string FirstName { get; private set; } = string.Empty;
+
+    /// <summary>نام خانوادگی گیرنده؛ ردیف قدیمی ممکن است خالی باشد.</summary>
+    public string LastName { get; private set; } = string.Empty;
+
     /// <summary>شمارهٔ تماس گیرنده با محدودیت طول عمومی.</summary>
     public string ContactMobile { get; private set; } = string.Empty;
 
@@ -200,6 +206,26 @@ public sealed class CustomerAddress
         Label = OptionalBounded(label, LabelMaxLength, "برچسب نشانی بیش از حد بلند است.");
         IsDefault = isDefault;
         UpdatedAt = now;
+    }
+
+    /// <summary>نام و نام خانوادگی را جدا نگه می‌دارد؛ اگر هر دو خالی باشند RecipientName قدیمی دست نخورده می‌ماند.</summary>
+    public void ApplyRecipientNames(string? firstName, string? lastName)
+    {
+        var first = firstName?.Trim() ?? string.Empty;
+        var last = lastName?.Trim() ?? string.Empty;
+        if (first.Length == 0 && last.Length == 0)
+        {
+            return;
+        }
+
+        if (first.Length == 0 || last.Length == 0)
+        {
+            throw new InvalidOperationException("نام و نام خانوادگی هر دو الزامی‌اند.");
+        }
+
+        FirstName = first;
+        LastName = last;
+        RecipientName = $"{first} {last}";
     }
 
     private static string RequireBounded(string? value, int min, int max, string message)

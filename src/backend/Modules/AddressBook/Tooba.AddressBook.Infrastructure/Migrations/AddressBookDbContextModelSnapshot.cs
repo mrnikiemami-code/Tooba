@@ -86,6 +86,18 @@ namespace Tooba.AddressBook.Infrastructure.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("province_name");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("last_name");
+
                     b.Property<string>("RecipientName")
                         .IsRequired()
                         .HasMaxLength(128)

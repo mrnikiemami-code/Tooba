@@ -285,7 +285,9 @@ public sealed record StorefrontCheckoutShippingInput(
     string CityName,
     string PostalAddress,
     string PostalCode,
-    Guid? SavedAddressId = null);
+    Guid? SavedAddressId = null,
+    string FirstName = "",
+    string LastName = "");
 
 /// <summary>
 /// ورودی ارسال checkout از سبد زنده.
@@ -347,6 +349,8 @@ public sealed record StorefrontCheckoutPage(
     string CityName,
     string PostalAddress,
     string PostalCode,
+    string FirstName,
+    string LastName,
     decimal SubtotalExclusiveOfTax,
     decimal DiscountAmount,
     decimal TaxAmount,
@@ -396,7 +400,9 @@ public sealed record StorefrontShippingDraftView(
     string MinimumDeliveryDate,
     string? SelectedDeliveryDate,
     string? SelectedDeliveryTimeWindow,
-    string? CustomerNote);
+    string? CustomerNote,
+    string FirstName = "",
+    string LastName = "");
 
 /// <summary>تصویر یکپارچهٔ مرحلهٔ ارسال.</summary>
 public sealed record StorefrontShippingProjection(
@@ -438,7 +444,9 @@ public sealed record StorefrontShippingSelectionRequest(
     string ShippingMethodCode,
     string SelectedDeliveryDate,
     string SelectedDeliveryTimeWindow,
-    string? CustomerNote);
+    string? CustomerNote,
+    string FirstName = "",
+    string LastName = "");
 
 /// <summary>ثبت نهایی ارسال و ساخت checkout برای پرداخت.</summary>
 public sealed record StorefrontShippingCommitRequest(

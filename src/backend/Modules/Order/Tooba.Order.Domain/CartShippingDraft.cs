@@ -25,6 +25,12 @@ public sealed class CartShippingDraft
     /// <summary>نام گیرنده.</summary>
     public string RecipientName { get; private set; } = string.Empty;
 
+    /// <summary>نام کوچک گیرنده؛ رکورد قدیمی ممکن است خالی باشد.</summary>
+    public string FirstName { get; private set; } = string.Empty;
+
+    /// <summary>نام خانوادگی گیرنده؛ رکورد قدیمی ممکن است خالی باشد.</summary>
+    public string LastName { get; private set; } = string.Empty;
+
     /// <summary>موبایل گیرنده.</summary>
     public string ContactMobile { get; private set; } = string.Empty;
 
@@ -155,5 +161,23 @@ public sealed class CartShippingDraft
 
         CustomerNote = note;
         UpdatedAt = now;
+    }
+
+    /// <summary>پس از ورود، راز مهمان را از پیش‌نویس سبد احرازشده برمی‌دارد.</summary>
+    public void ClearGuestSecret()
+    {
+        GuestSecretHash = string.Empty;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>نام و نام خانوادگی را جداگانه نگه می‌دارد و نام نمایشی را فقط وقتی هر دو موجودند می‌سازد.</summary>
+    public void ApplyRecipientNames(string? firstName, string? lastName)
+    {
+        FirstName = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim();
+        LastName = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim();
+        if (FirstName.Length > 0 && LastName.Length > 0)
+        {
+            RecipientName = $"{FirstName} {LastName}";
+        }
     }
 }

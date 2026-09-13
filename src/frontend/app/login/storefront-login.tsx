@@ -7,6 +7,7 @@ import { useLocale } from "../../lib/i18n/locale-context.tsx";
 import { sanitizeReturnTo } from "../../lib/auth/login-return-to.ts";
 import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
 import { mergeStorefrontCartAfterLogin } from "../storefront/storefront-cart-api.ts";
+import { notifyAuthChanged } from "../storefront/storefront-identity-api.ts";
 
 type Step = "mobile" | "otp";
 
@@ -101,6 +102,7 @@ export function StorefrontCustomerLogin() {
         return;
       }
       await mergeStorefrontCartAfterLogin();
+      notifyAuthChanged();
       router.replace(returnTo);
     } catch {
       setError(copy.failed);
@@ -121,6 +123,7 @@ export function StorefrontCustomerLogin() {
       });
       const { clearCartSession } = await import("../storefront/storefront-cart-api.ts");
       clearCartSession();
+      notifyAuthChanged();
       setStep("mobile");
       setOtp("");
       setChallengeId("");

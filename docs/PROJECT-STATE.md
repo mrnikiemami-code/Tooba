@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T004-R23
+TB-P10-T004-R24
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T004-R24
+TB-P10-T004-R24-R1
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T004-R24-R1 — Authenticated storefront continuity repair (cart through login/shipping + canonical account header + FirstName/LastName); USER_VISUAL_ACCEPTED=NO
 TB-P10-T004-R24 — Final identity + limits + atomic checkout integration gate; USER_VISUAL_ACCEPTED=YES
 TB-P10-T004-R23 — Max open unpaid orders + reservation churn anti-abuse + Admin Settings; USER_VISUAL_ACCEPTED=YES
 TB-P10-T004-R22-R1 — First canonical Login + checkout identity policy + cart merge; USER_VISUAL_ACCEPTED=YES
@@ -192,7 +193,7 @@ TB-P10-T004-R5
 USER_VISUAL_ACCEPTED:
 
 ```text
-YES
+NO
 ```
 
 Worker Next State:

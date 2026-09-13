@@ -214,13 +214,17 @@ public sealed class StorefrontCheckoutComposer
             throw new InvalidOperationException("نشانی ذخیره‌شده متعلق به این مشتری نیست یا پیدا نشد.");
         }
 
+        var names = StorefrontRecipientNames.Resolve(saved.FirstName, saved.LastName, saved.RecipientName);
         var snapshot = new StorefrontCheckoutShippingInput(
-            saved.RecipientName,
+            names.Recipient,
             saved.ContactMobile,
             saved.ProvinceName ?? string.Empty,
             saved.CityName,
             saved.PostalAddress,
-            saved.PostalCode);
+            saved.PostalCode,
+            shipping.SavedAddressId,
+            names.First,
+            names.Last);
         return new StorefrontCheckoutPlacement(actor, snapshot);
     }
 
@@ -303,7 +307,9 @@ public sealed class StorefrontCheckoutComposer
             minimumDeliveryDate,
             requestedDeliveryDate,
             requestedDeliveryTimeWindow ?? string.Empty,
-            customerNote ?? string.Empty);
+            customerNote ?? string.Empty,
+            shipping?.FirstName ?? string.Empty,
+            shipping?.LastName ?? string.Empty);
 
     private static StorefrontCheckoutPage MapPage(CheckoutSnapshot snapshot, StorefrontCartPage cart, bool persisted)
     {
@@ -362,6 +368,8 @@ public sealed class StorefrontCheckoutComposer
             snapshot.CityName,
             snapshot.PostalAddress,
             snapshot.PostalCode,
+            snapshot.RecipientFirstName,
+            snapshot.RecipientLastName,
             sellers.Sum(x => x.SubtotalExclusiveOfTax),
             sellers.Sum(x => x.DiscountAmount),
             sellers.Sum(x => x.TaxAmount),
@@ -373,14 +381,19 @@ public sealed class StorefrontCheckoutComposer
 
     private static void ValidateShipping(StorefrontCheckoutShippingInput shipping)
     {
-        if (string.IsNullOrWhiteSpace(shipping.RecipientName)
-            || string.IsNullOrWhiteSpace(shipping.ContactMobile)
+        if (string.IsNullOrWhiteSpace(shipping.ContactMobile)
             || string.IsNullOrWhiteSpace(shipping.ProvinceName)
             || string.IsNullOrWhiteSpace(shipping.CityName)
             || string.IsNullOrWhiteSpace(shipping.PostalAddress)
             || string.IsNullOrWhiteSpace(shipping.PostalCode))
         {
             throw new InvalidOperationException("اطلاعات ارسال کامل نیست.");
+        }
+
+        var names = StorefrontRecipientNames.Resolve(shipping.FirstName, shipping.LastName, shipping.RecipientName);
+        if (names.Recipient.Length == 0)
+        {
+            StorefrontRecipientNames.EnsureNewAddressNames(names.First, names.Last);
         }
     }
 }

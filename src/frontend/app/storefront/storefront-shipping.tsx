@@ -26,11 +26,12 @@ import {
 } from "lucide-react";
 import { formatJalaliDate, isoToJalaliDisplay } from "../../design-system/app-data-grid/jalali.ts";
 import { formatOfferAmount } from "./storefront-api.ts";
-import { readCartSession, StorefrontCartApiError } from "./storefront-cart-api.ts";
+import { loadStorefrontCart, StorefrontCartApiError } from "./storefront-cart-api.ts";
 import { StorefrontCheckoutLimitNotice } from "./storefront-checkout-limit-notice.tsx";
 import {
   createCustomerAddress,
   listCheckoutSavedAddresses,
+  recipientDisplayName,
   shippingFromCustomerAddress,
   type CustomerAddress,
 } from "../customer-panel/customer-address-api.ts";
@@ -47,6 +48,8 @@ import {
 import { useCheckoutAuthGate } from "./use-checkout-auth-gate.ts";
 
 type AddressForm = {
+  firstName: string;
+  lastName: string;
   recipientName: string;
   contactMobile: string;
   provinceName: string;
@@ -56,6 +59,8 @@ type AddressForm = {
 };
 
 const emptyAddress: AddressForm = {
+  firstName: "",
+  lastName: "",
   recipientName: "",
   contactMobile: "",
   provinceName: "",
@@ -63,6 +68,15 @@ const emptyAddress: AddressForm = {
   postalAddress: "",
   postalCode: "",
 };
+
+function composeRecipient(form: Pick<AddressForm, "firstName" | "lastName" | "recipientName">): string {
+  const first = form.firstName.trim();
+  const last = form.lastName.trim();
+  if (first && last) {
+    return `${first} ${last}`;
+  }
+  return form.recipientName.trim();
+}
 
 function toPersianDigits(n: string | number): string {
   return String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]!);
@@ -126,14 +140,14 @@ export function StorefrontShopeivaShipping() {
   const [newAddress, setNewAddress] = useState<AddressForm>(emptyAddress);
 
   const refreshProjection = useCallback(async (province?: string, method?: string | null) => {
-    const session = readCartSession();
-    if (!session.cartId) {
+    const cart = await loadStorefrontCart();
+    if (!cart?.cartId) {
       setError("سبد خرید پیدا نشد.");
       setProjection(null);
       return;
     }
     const page = await loadShippingProjection({
-      cartId: session.cartId,
+      cartId: cart.cartId,
       provinceName: province || undefined,
       methodCode: method || undefined,
     });
@@ -151,6 +165,8 @@ export function StorefrontShopeivaShipping() {
 
     if (page.draft) {
       setAddress({
+        firstName: page.draft.firstName,
+        lastName: page.draft.lastName,
         recipientName: page.draft.recipientName,
         contactMobile: page.draft.contactMobile,
         provinceName: page.draft.provinceName,
@@ -192,7 +208,8 @@ export function StorefrontShopeivaShipping() {
   const payable = (projection?.subtotalExclusiveOfTax ?? 0) + shippingAmount;
 
   const isValid =
-    Boolean(address.recipientName.trim()) &&
+    (Boolean(address.firstName.trim() && address.lastName.trim())
+      || Boolean(savedAddressId && address.recipientName.trim())) &&
     Boolean(address.contactMobile.trim()) &&
     Boolean(address.provinceName.trim()) &&
     Boolean(address.cityName.trim()) &&
@@ -206,6 +223,8 @@ export function StorefrontShopeivaShipping() {
   function selectSaved(row: CustomerAddress) {
     const mapped = shippingFromCustomerAddress(row);
     setAddress({
+      firstName: mapped.firstName,
+      lastName: mapped.lastName,
       recipientName: mapped.recipientName,
       contactMobile: mapped.contactMobile,
       provinceName: mapped.provinceName,
@@ -238,7 +257,9 @@ export function StorefrontShopeivaShipping() {
     setLimitCode(null);
     try {
       await saveShippingSelection(projection.cartId, projection.cartVersion, {
-        recipientName: address.recipientName,
+        firstName: address.firstName,
+        lastName: address.lastName,
+        recipientName: composeRecipient(address),
         contactMobile: address.contactMobile,
         provinceName: address.provinceName,
         cityName: address.cityName,
@@ -268,8 +289,13 @@ export function StorefrontShopeivaShipping() {
     setError(null);
     try {
       if (savedAddresses) {
+        if (!newAddress.firstName.trim() || !newAddress.lastName.trim()) {
+          throw new Error("نام و نام‌خانوادگی هر دو الزامی است.");
+        }
         const created = await createCustomerAddress({
-          recipientName: newAddress.recipientName,
+          firstName: newAddress.firstName,
+          lastName: newAddress.lastName,
+          recipientName: composeRecipient(newAddress),
           contactMobile: newAddress.contactMobile,
           country: "IR",
           provinceName: newAddress.provinceName,
@@ -381,7 +407,7 @@ export function StorefrontShopeivaShipping() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-xs md:text-sm font-bold text-gray-900">{saved.recipientName}</p>
+                              <p className="text-xs md:text-sm font-bold text-gray-900">{recipientDisplayName(saved)}</p>
                               <p className="text-[10px] md:text-xs text-gray-500">
                                 {saved.provinceName}، {saved.cityName}، {saved.postalAddress}
                               </p>
@@ -407,15 +433,24 @@ export function StorefrontShopeivaShipping() {
                   اطلاعات تحویل گیرنده
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="نام و نام خانوادگی">
+                  <Field label="نام">
                     <div className="relative">
                       <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
-                        value={address.recipientName}
-                        onChange={(e) => setAddress((a) => ({ ...a, recipientName: e.target.value }))}
+                        value={address.firstName}
+                        onChange={(e) => setAddress((a) => ({ ...a, firstName: e.target.value }))}
+                        data-testid="shipping-first-name"
                         className="w-full pr-10 pl-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
                       />
                     </div>
+                  </Field>
+                  <Field label="نام خانوادگی">
+                    <input
+                      value={address.lastName}
+                      onChange={(e) => setAddress((a) => ({ ...a, lastName: e.target.value }))}
+                      data-testid="shipping-last-name"
+                      className="w-full px-3 py-3 rounded-2xl text-sm bg-gray-50 border border-gray-200 outline-none focus:ring-2 focus:ring-[#E53935]"
+                    />
                   </Field>
                   <Field label="شماره موبایل">
                     <div className="relative">
@@ -728,9 +763,17 @@ export function StorefrontShopeivaShipping() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-xl space-y-3">
             <h4 className="font-black text-gray-900">آدرس جدید</h4>
             <input
-              placeholder="نام و نام خانوادگی"
-              value={newAddress.recipientName}
-              onChange={(e) => setNewAddress((a) => ({ ...a, recipientName: e.target.value }))}
+              placeholder="نام"
+              value={newAddress.firstName}
+              onChange={(e) => setNewAddress((a) => ({ ...a, firstName: e.target.value }))}
+              data-testid="shipping-new-first-name"
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
+            />
+            <input
+              placeholder="نام خانوادگی"
+              value={newAddress.lastName}
+              onChange={(e) => setNewAddress((a) => ({ ...a, lastName: e.target.value }))}
+              data-testid="shipping-new-last-name"
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm"
             />
             <input

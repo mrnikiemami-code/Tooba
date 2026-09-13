@@ -166,6 +166,11 @@ public interface ICartDirectory
         Guid? anonymousCartId,
         string? guestSecret,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// سبد Active احرازشدهٔ مشتری را برمی‌گرداند؛ سبد خالی سایه‌ای مهمان نمی‌سازد.
+    /// </summary>
+    Task<CartSnapshot?> FindActiveAuthenticatedAsync(Guid userId, CancellationToken cancellationToken);
 }
 
 /// <summary>

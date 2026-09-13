@@ -19,6 +19,7 @@ import { formatOfferAmount } from "./storefront-api.ts";
 import { readCartSession } from "./storefront-cart-api.ts";
 import {
   listCheckoutSavedAddresses,
+  recipientDisplayName,
   shippingFromCustomerAddress,
   type CustomerAddress,
 } from "../customer-panel/customer-address-api.ts";
@@ -33,6 +34,8 @@ import {
 } from "./storefront-checkout-api.ts";
 
 const emptyShipping: StorefrontCheckoutShipping = {
+  firstName: "",
+  lastName: "",
   recipientName: "",
   contactMobile: "",
   provinceName: "",
@@ -223,7 +226,7 @@ export function StorefrontShopeivaCheckout() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-xs md:text-sm font-bold">{saved.recipientName}</p>
+                              <p className="text-xs md:text-sm font-bold">{recipientDisplayName(saved)}</p>
                               <p className="text-[10px] md:text-xs text-gray-500">
                                 {saved.provinceName}، {saved.cityName}، {saved.postalAddress}
                               </p>
@@ -250,7 +253,8 @@ export function StorefrontShopeivaCheckout() {
                 اطلاعات گیرنده
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="نام و نام خانوادگی" value={shipping.recipientName} onChange={(value) => changeShipping("recipientName", value)} />
+                <Field label="نام" value={shipping.firstName} onChange={(value) => changeShipping("firstName", value)} />
+                <Field label="نام خانوادگی" value={shipping.lastName} onChange={(value) => changeShipping("lastName", value)} />
                 <Field label="موبایل" value={shipping.contactMobile} ltr onChange={(value) => changeShipping("contactMobile", value)} />
                 <Field label="استان" value={shipping.provinceName} onChange={(value) => changeShipping("provinceName", value)} />
                 <Field label="شهر" value={shipping.cityName} onChange={(value) => changeShipping("cityName", value)} />
