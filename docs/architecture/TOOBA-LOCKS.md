@@ -414,4 +414,22 @@ The Order takes the minimum Initial/Retry minutes and the minimum MaxReservation
 With Max=3 the Order may have #1 initial plus two retries. A further reacquire is `inventory.reservation.retry_limit_reached`.
 
 ### LOCK-SF-084 — Frontend countdown is presentation only
-Server `ExpiresAt` and server now are authoritative. The client must not expire, extend, or release inventory. R15 does not add a lifecycle `setInterval`.
+Server `ExpiresAt` and server now are authoritative. The client must not expire, extend, or release inventory. A local display timer is allowed; it must not decide reservation lifecycle.
+
+### LOCK-SF-085 — Pending-payment Orders are independent from Active Cart
+Committed unpaid Orders appear under در انتظار پرداخت regardless of the current Active Cart. A new Active Cart cannot hide, replace, or authorize a pending Order.
+
+### LOCK-SF-086 — Failed payment inside an active cycle never resets the customer countdown
+The pending-payment card keeps the original server `ExpiresAt` after a failed attempt. The UI must not restart or extend the displayed hold.
+
+### LOCK-SF-087 — Expired retry creates a new cycle only after backend reacquire
+`بررسی موجودی و پرداخت مجدد` calls backend `EnsureRetryAfterExpiryAsync` / `EnsureOrderSupply`. A new numbered cycle exists only after authoritative reacquire succeeds on the same Order.
+
+### LOCK-SF-088 — Pending-payment UI is capability-driven
+Pay / retry / none come from server `canInitiatePayment`, `canRetryPayment`, and `primaryAction`. Manual AwaitingAdmin is informational unless the capability permits a customer action.
+
+### LOCK-SF-089 — Multiple pending Orders are independently scoped
+Each card uses its own committed proof or authenticated ownership, countdown, and actions. Proofs are keyed by checkoutId and must not overwrite each other.
+
+### LOCK-SF-090 — No polling maintains or decides reservation state
+Per-second or 1.5s API loops for reservation/expiry are forbidden. One refresh at local 00:00, user action, or navigation is allowed.

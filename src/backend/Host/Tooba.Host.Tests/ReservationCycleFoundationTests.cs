@@ -224,6 +224,26 @@ public sealed class ReservationCycleFoundationTests
     }
 
     [Fact]
+    public async Task Directory_batches_projections_without_changing_semantics()
+    {
+        await using var db = CreateOrderDb();
+        var dir = new ReservationCycleDirectory(db);
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        var policy = new ReservationCyclePolicySnapshot(10, 5, 3, "platform");
+        var t0 = DateTimeOffset.Parse("2026-09-13T10:00:00Z");
+        await dir.StartAsync(first, ReservationCycleReason.InitialPayment, t0, t0.AddMinutes(10), policy, [Guid.NewGuid()], "commit", null, null, CancellationToken.None);
+        await dir.StartAsync(second, ReservationCycleReason.InitialPayment, t0, t0.AddMinutes(5), policy, [Guid.NewGuid()], "commit", null, null, CancellationToken.None);
+        var map = await dir.GetProjectionsAsync([first, second], t0.AddMinutes(1), null, CancellationToken.None);
+        Assert.Equal(2, map.Count);
+        Assert.Equal(1, map[first].CurrentCycleNumber);
+        Assert.Equal(540, map[first].SecondsRemaining);
+        Assert.Equal(240, map[second].SecondsRemaining);
+        var single = await dir.GetProjectionAsync(first, t0.AddMinutes(1), null, CancellationToken.None);
+        Assert.Equal(map[first].SecondsRemaining, single.SecondsRemaining);
+    }
+
+    [Fact]
     public void Coordinator_and_locks_are_wired()
     {
         Assert.Contains("ReservationCycleCoordinator", Read("src/backend/Host/Tooba.Host/Program.cs"), StringComparison.Ordinal);

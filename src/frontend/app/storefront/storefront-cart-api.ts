@@ -177,6 +177,18 @@ export function writeCommittedCheckoutProof(proof: StorefrontCommittedCheckoutPr
   window.sessionStorage.setItem(COMMITTED_CHECKOUT_PROOFS_KEY, JSON.stringify(next));
 }
 
+export function listCommittedCheckoutProofs(): StorefrontCommittedCheckoutProof[] {
+  return Object.values(readCommittedCheckoutProofMap()).filter((proof) => {
+    if (!proof?.checkoutId || !proof.cartId) {
+      return false;
+    }
+    if (proof.storeKey && proof.storeKey !== COMMITTED_PROOF_STORE_KEY) {
+      return false;
+    }
+    return true;
+  });
+}
+
 export function readCommittedCheckoutProof(checkoutId: string): StorefrontCommittedCheckoutProof | null {
   const id = checkoutId?.trim();
   if (!id) {

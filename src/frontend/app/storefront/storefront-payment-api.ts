@@ -595,8 +595,10 @@ export async function retryStorefrontManualPayment(paymentId: string): Promise<S
   return mappedRetry;
 }
 
-export async function retryStorefrontUnpaidPayment(paymentId: string): Promise<StorefrontPaymentPage> {
-  const access = resolvePaymentResultAccess(paymentId);
+export async function retryStorefrontUnpaidPayment(paymentId: string, checkoutId?: string | null): Promise<StorefrontPaymentPage> {
+  const access = checkoutId
+    ? resolveCommittedCheckoutAccess(checkoutId, paymentId)
+    : resolvePaymentResultAccess(paymentId);
   if (!access.cartId) {
     throw new StorefrontCartApiError(403, "payment.access.denied", PAYMENT_ACCESS_DENIED);
   }
@@ -612,6 +614,7 @@ export async function retryStorefrontUnpaidPayment(paymentId: string): Promise<S
   if (!mappedRetry) {
     throw new StorefrontCartApiError(500, "payment.rejected", "پاسخ تلاش مجدد نامعتبر بود.");
   }
+  persistPaymentResultProofFromAccess(mappedRetry, access);
   return mappedRetry;
 }
 

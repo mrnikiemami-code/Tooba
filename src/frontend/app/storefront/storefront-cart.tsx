@@ -1,7 +1,7 @@
 "use client";
 
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -28,6 +28,9 @@ import {
   toCustomerCartMessage,
   type StorefrontCartPage,
 } from "./storefront-cart-api.ts";
+import { loadStorefrontPendingPayments, type StorefrontPendingPaymentItem } from "./storefront-pending-payment-api.ts";
+import { StorefrontPendingPayments } from "./storefront-pending-payments.tsx";
+import { useLocale } from "../../lib/i18n/locale-context.tsx";
 import {
   previewStorefrontCheckout,
   readStoredCouponCode,
@@ -54,6 +57,13 @@ export function StorefrontShopeivaCart({
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [couponDiscount, setCouponDiscount] = useState<number | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
+  const [pendingItems, setPendingItems] = useState<StorefrontPendingPaymentItem[]>([]);
+  const locale = useLocale();
+  const refreshPending = useCallback(() => {
+    void loadStorefrontPendingPayments()
+      .then((page) => setPendingItems(page.items))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     setCouponInput(readStoredCouponCode() ?? "");
@@ -67,6 +77,9 @@ export function StorefrontShopeivaCart({
         setCart(null);
       })
       .finally(() => setLoading(false));
+    void loadStorefrontPendingPayments()
+      .then((page) => setPendingItems(page.items))
+      .catch(() => setPendingItems([]));
   }, []);
 
   useEffect(() => {
@@ -175,8 +188,10 @@ export function StorefrontShopeivaCart({
 
       <CartHero itemCount={itemCount} subtotalLabel={formatOfferAmount(subtotal, currency)} discountPercent={discountPercent} />
 
+      <StorefrontPendingPayments items={pendingItems} onRefresh={refreshPending} />
+
       {!cart || cart.lines.length === 0 ? (
-        <CartEmpty error={error} />
+        <CartEmpty error={error} hasPending={pendingItems.length > 0} locale={locale} />
       ) : (
         <section className="pt-8 md:pt-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -531,15 +546,38 @@ function MetricCard({
   );
 }
 
-function CartEmpty({ error }: { error: string | null }) {
+function CartEmpty({
+  error,
+  hasPending = false,
+  locale = "fa",
+}: {
+  error: string | null;
+  hasPending?: boolean;
+  locale?: "fa" | "en";
+}) {
+  const fa = locale === "fa";
+  const title = hasPending
+    ? fa
+      ? "سبد فعال شما خالی است"
+      : "Your active cart is empty"
+    : fa
+      ? "سبد خرید شما خالی است"
+      : "Your cart is empty";
+  const body = hasPending
+    ? fa
+      ? "سفارش‌های در انتظار پرداخت بالاتر نمایش داده شده‌اند. می‌توانید خرید جدید را از فروشگاه شروع کنید."
+      : "Unpaid orders are shown above. You can start a new purchase from the store."
+    : fa
+      ? "هنوز کالایی به سبد اضافه نشده است. برای شروع خرید به فروشگاه بروید."
+      : "No items have been added yet. Visit the store to start shopping.";
   return (
-    <div className="py-16 md:py-24 text-center" data-testid="cart-empty">
+    <div className="py-16 md:py-24 text-center" data-testid="cart-empty" data-has-pending={hasPending ? "true" : "false"}>
       <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
         <ShoppingBag className="w-14 h-14 md:w-20 md:h-20 text-gray-300" />
       </div>
-      <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-2">سبد خرید شما خالی است</h2>
+      <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-2">{title}</h2>
       <p className="text-sm md:text-base text-gray-500 mb-8 max-w-md mx-auto">
-        هنوز کالایی به سبد اضافه نشده است. برای شروع خرید به فروشگاه بروید.
+        {body}
       </p>
       {error ? <p className="text-sm text-red-600 mb-6">{error}</p> : null}
       <Link

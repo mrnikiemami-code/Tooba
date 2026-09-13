@@ -167,6 +167,16 @@ builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontShippingComposer>(sp 
 builder.Services.AddScoped<Tooba.Host.Fulfillment.FulfillmentPanelComposer>();
 builder.Services.AddScoped<ReturnPanelComposer>();
 builder.Services.AddScoped<Tooba.Host.Settlement.SettlementPanelComposer>();
+builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPendingPaymentComposer>(sp =>
+    new Tooba.Host.Storefront.StorefrontPendingPaymentComposer(
+        sp.GetRequiredService<Tooba.Order.Infrastructure.Persistence.OrderDbContext>(),
+        sp.GetRequiredService<Tooba.Payment.Infrastructure.Persistence.PaymentDbContext>(),
+        sp.GetRequiredService<Tooba.Catalog.Infrastructure.Persistence.CatalogDbContext>(),
+        sp.GetRequiredService<Tooba.Host.Storefront.StorefrontCartComposer>(),
+        sp.GetRequiredService<Tooba.Order.Application.IReservationCycleDirectory>(),
+        sp.GetRequiredService<CurrentAuthenticatedSession>(),
+        sp.GetRequiredService<IHostEnvironment>(),
+        sp.GetRequiredService<IHttpContextAccessor>()));
 builder.Services.AddScoped<Tooba.Host.Storefront.StorefrontPaymentComposer>(sp =>
     new Tooba.Host.Storefront.StorefrontPaymentComposer(
         sp.GetRequiredService<StorefrontCheckoutComposer>(),

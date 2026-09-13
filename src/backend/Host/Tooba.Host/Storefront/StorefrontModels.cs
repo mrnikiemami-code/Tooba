@@ -621,3 +621,41 @@ public sealed record StorefrontAppliedFilterChip(string Code, string Label, stri
 
 /// <summary>فیلتر تایپ‌شدهٔ ورودی PLP.</summary>
 public sealed record StorefrontPlpFilterInput(string Code, string Kind, IReadOnlyList<string> Values, decimal? Min, decimal? Max);
+
+/// <summary>اثبات مهمان برای یک سفارش متعهد؛ سبد فعال مجاز نیست.</summary>
+public sealed record StorefrontPendingPaymentProofRequest(Guid CheckoutId, Guid CartId, string? GuestSecret);
+
+/// <summary>درخواست تصویر دسته‌ای در انتظار پرداخت. مهمان فقط با proofs.</summary>
+public sealed record StorefrontPendingPaymentQueryRequest(IReadOnlyList<StorefrontPendingPaymentProofRequest>? Proofs);
+
+/// <summary>قلم فشرده برای کارت در انتظار پرداخت.</summary>
+public sealed record StorefrontPendingPaymentLineView(string Title, decimal Quantity, Guid? MediaAssetId);
+
+/// <summary>یک سفارش متعهد unpaid برای بخش در انتظار پرداخت.</summary>
+public sealed record StorefrontPendingPaymentItemView(
+    Guid CheckoutId,
+    Guid CartId,
+    string OrderReference,
+    decimal PayableAmount,
+    string Currency,
+    IReadOnlyList<StorefrontPendingPaymentLineView> Items,
+    string PaymentPresentation,
+    bool CanInitiatePayment,
+    bool CanRetryPayment,
+    bool IsManualAwaitingReview,
+    string PrimaryAction,
+    string ReservationPresentation,
+    int? CycleNumber,
+    int SecondsRemaining,
+    DateTimeOffset ServerTime,
+    DateTimeOffset? HoldEndsAt,
+    int MaxCycles,
+    int RetryCountRemaining,
+    string? SupplyStatus,
+    Guid? PaymentId,
+    bool HasReachedRetryLimit);
+
+/// <summary>پاسخ دسته‌ای در انتظار پرداخت.</summary>
+public sealed record StorefrontPendingPaymentPage(
+    DateTimeOffset ServerTime,
+    IReadOnlyList<StorefrontPendingPaymentItemView> Items);

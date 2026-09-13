@@ -275,10 +275,49 @@ public sealed class ReservationCycleDirectory : IReservationCycleDirectory
         string? supplyStatus,
         CancellationToken cancellationToken)
     {
+        var map = await GetProjectionsAsync(
+            [checkoutId],
+            serverNow,
+            supplyStatus is null ? null : new Dictionary<Guid, string?> { [checkoutId] = supplyStatus },
+            cancellationToken);
+        return map[checkoutId];
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, ReservationCycleProjection>> GetProjectionsAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        DateTimeOffset serverNow,
+        IReadOnlyDictionary<Guid, string?>? supplyByCheckout,
+        CancellationToken cancellationToken)
+    {
+        var ids = checkoutIds.Where(x => x != Guid.Empty).Distinct().ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, ReservationCycleProjection>();
+        }
+
         var history = await _db.ReservationCycles.AsNoTracking()
-            .Where(x => x.CheckoutId == checkoutId)
-            .OrderBy(x => x.CycleNumber)
+            .Where(x => ids.Contains(x.CheckoutId))
+            .OrderBy(x => x.CheckoutId)
+            .ThenBy(x => x.CycleNumber)
             .ToListAsync(cancellationToken);
+        var grouped = history.GroupBy(x => x.CheckoutId).ToDictionary(g => g.Key, g => g.ToList());
+        var result = new Dictionary<Guid, ReservationCycleProjection>(ids.Length);
+        foreach (var id in ids)
+        {
+            grouped.TryGetValue(id, out var rows);
+            result[id] = ProjectRows(id, rows ?? [], serverNow, supplyByCheckout?.GetValueOrDefault(id));
+        }
+
+        return result;
+    }
+
+    private static ReservationCycleProjection ProjectRows(
+        Guid checkoutId,
+        IReadOnlyList<ReservationCycle> history,
+        DateTimeOffset serverNow,
+        string? supplyStatus)
+    {
         var current = history.LastOrDefault(x => x.Status == ReservationCycleStatus.Active)
             ?? history.LastOrDefault();
         var created = history.Count;

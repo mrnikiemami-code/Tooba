@@ -29,6 +29,7 @@ public static class StorefrontEndpoints
         group.MapPost("/cart/{cartId:guid}/lines", AddCartLineAsync);
         group.MapPatch("/cart/{cartId:guid}/lines/{lineId:guid}", ChangeCartLineAsync);
         group.MapDelete("/cart/{cartId:guid}/lines/{lineId:guid}", RemoveCartLineAsync);
+        group.MapPost("/pending-payments", ListPendingPaymentsAsync);
         group.MapPost("/checkout/preview", PreviewCheckoutAsync);
         group.MapPost("/checkout", SubmitCheckoutAsync);
         group.MapGet("/checkout/{checkoutId:guid}", GetCheckoutAsync);
@@ -256,6 +257,24 @@ public static class StorefrontEndpoints
             ReadExpectedVersion(request, expectedVersion),
             lineId,
             cancellationToken));
+
+    private static async Task<IResult> ListPendingPaymentsAsync(
+        StorefrontPendingPaymentQueryRequest? body,
+        StorefrontPendingPaymentComposer composer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Results.Json(await composer.ListAsync(body, cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            var mapped = MapPaymentException(exception);
+            return Results.Json(
+                new { title = mapped.Title, errorCode = mapped.Code, detail = MapPaymentCustomerDetail(mapped.Code) },
+                statusCode: mapped.Status);
+        }
+    }
 
     private static Task<IResult> PreviewCheckoutAsync(
         Guid cartId,

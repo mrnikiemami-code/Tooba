@@ -148,6 +148,13 @@ public interface IReservationCycleDirectory
         string? supplyStatus,
         CancellationToken cancellationToken);
 
+    /// <summary>تصویر دسته‌ای بدون N+1.</summary>
+    Task<IReadOnlyDictionary<Guid, ReservationCycleProjection>> GetProjectionsAsync(
+        IReadOnlyList<Guid> checkoutIds,
+        DateTimeOffset serverNow,
+        IReadOnlyDictionary<Guid, string?>? supplyByCheckout,
+        CancellationToken cancellationToken);
+
     /// <summary>رویدادهای ممیزی به ترتیب زمان.</summary>
     Task<IReadOnlyList<ReservationCycleEventSnapshot>> ListEventsAsync(
         Guid checkoutId,

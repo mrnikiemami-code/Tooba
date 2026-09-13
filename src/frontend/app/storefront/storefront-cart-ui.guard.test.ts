@@ -53,4 +53,6 @@ test("cart page recommendations use live feed cards with working ATC reuse", () 
   assert.match(cartSource, /ارسال رایگان یا نرخ چندحامل جعلی/);
   assert.match(cartSource, /CART_CHANGED_EVENT/);
   assert.match(cartSource, /addEventListener\(CART_CHANGED_EVENT/);
+  assert.match(cartSource, /StorefrontPendingPayments/);
+  assert.match(cartSource, /سبد فعال شما خالی است/);
 });
