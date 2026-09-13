@@ -1,0 +1,66 @@
+{
+  "checkoutId": "01a09ac4-0a4e-7000-bb69-b03547125a1b",
+  "historical": "01a09a9b-3880-7000-af7a-0a21d7de6ac7",
+  "log": {
+    "prep-login": {
+      "ok": true,
+      "detail": "01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "prep-legacy": {
+      "ok": true,
+      "detail": "01a09a72-0fd0-7000-b93f-907016579c4a"
+    },
+    "prep-offer": {
+      "ok": true,
+      "detail": "47801c5c-7490-4782-912f-5c6cd5f3f879"
+    },
+    "prep-historical": {
+      "ok": true,
+      "detail": "01a09a9b-3880-7000-af7a-0a21d7de6ac7"
+    },
+    "contexts": {
+      "ok": true,
+      "detail": "isolated customer + admin (no shared cookies)"
+    },
+    "browser-customer-login": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "browser-atc": {
+      "ok": true,
+      "detail": "{\"status\":200,\"cartId\":\"01a09ac3-e555-7000-a755-b1590d1e113c\",\"lines\":1}"
+    },
+    "shipping-select-legacy": {
+      "ok": true,
+      "detail": "محمد لمامی"
+    },
+    "checkout-id": {
+      "ok": true,
+      "detail": "01a09ac4-0a4e-7000-bb69-b03547125a1b"
+    },
+    "payment-canonical": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/payment?checkoutId=01a09ac4-0a4e-7000-bb69-b03547125a1b"
+    },
+    "customer-canonical": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/customer-panel/orders/01a09ac4-0a4e-7000-bb69-b03547125a1b"
+    },
+    "admin-canonical": {
+      "ok": true,
+      "detail": "مرکز عملیات توبا پنل مدیریت · سفارش‌ها و پرداخت دسترسی مدیر عملیات داشبورد سفارش‌ها و پرداخت ارسال و تحویل سرویس ارسال مرجوعی‌ها و بازگشت وجه استوری‌ها ترکیب صفحهٔ خانه محتوا مقالات دسته‌بندی مقالات نویسندگان راهنمای محت"
+    },
+    "historical-legacy": {
+      "ok": true,
+      "detail": "01a09a9b-3880-7000-af7a-0a21d7de6ac7"
+    },
+    "fa-rtl": {
+      "ok": true,
+      "detail": "200"
+    },
+    "en-smoke": {
+      "ok": true,
+      "detail": "200"
+    }
+  }
+}
