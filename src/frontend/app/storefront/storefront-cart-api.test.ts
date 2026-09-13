@@ -79,6 +79,12 @@ test("customer cart message hides Held reservation wording", () => {
   assert.match(hidden, /موجودی/);
 });
 
+test("customer cart message hides raw exception type names", () => {
+  const hidden = toCustomerCartMessage(new StorefrontCartApiError(500, null, "PostgresException"));
+  assert.equal(hidden.includes("Postgres"), false);
+  assert.match(hidden, /سبد/);
+});
+
 test("cart mapper defaults missing status to Active", () => {
   const cart = mapStorefrontCart({
     cartId: "cart-status",

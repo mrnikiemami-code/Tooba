@@ -120,7 +120,7 @@ export function ReservationPolicyEditor({
             <p className="mt-2 text-xs text-gray-500" data-testid={`reservation-policy-effective-${key}`}>
               {locale === "en"
                 ? `Effective: ${field.effectiveValue} ${unitEn} — ${field.overridden ? "overridden" : `inherited from ${field.sourceLabelEn}`}`
-                : `مؤثر: ${field.effectiveValue} ${unitFa} — ${field.overridden ? "overridden" : `inherited from ${field.sourceLabelEn}`}`}
+                : `مؤثر: ${field.effectiveValue} ${unitFa} — ${field.overridden ? "بازنویسی‌شده" : `ارث از ${field.sourceLabelFa}`}`}
             </p>
           </div>
         );

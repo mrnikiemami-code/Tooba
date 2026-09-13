@@ -57,10 +57,20 @@ internal static class ProductWorkspaceDevelopmentBootstrap
     internal const string SeedSlug = "workspace-live-shirt";
 
     /// <summary>
+    /// فقط schema Tenant Development را اعمال می‌کند و دانهٔ Catalog را نمی‌نویسد.
+    /// وقتی RunLegacyBootstraps=false است باید صدا زده شود تا مهاجرت‌های رزرو اعمال شوند.
+    /// </summary>
+    public static Task MigrateSchemaOnlyAsync(IServiceProvider services)
+        => ApplyCoreAsync(services, seedCatalog: false);
+
+    /// <summary>
     /// schemaها را روی Tenant Development اعمال می‌کند و در صورت نبودن نمونه، Catalog/Offer/Price/Tax/Inventory را از دایرکتوری می‌نویسد.
     /// در Production صدا زده نمی‌شود. SQL بین‌ماژولی نوشته نمی‌شود.
     /// </summary>
-    public static async Task ApplyAsync(IServiceProvider services)
+    public static Task ApplyAsync(IServiceProvider services)
+        => ApplyCoreAsync(services, seedCatalog: true);
+
+    private static async Task ApplyCoreAsync(IServiceProvider services, bool seedCatalog)
     {
         await using var scope = services.CreateAsyncScope();
         var provider = scope.ServiceProvider;
@@ -83,7 +93,7 @@ internal static class ProductWorkspaceDevelopmentBootstrap
                 tenant.Hosts[0],
                 tenant.PrimaryDomain),
             tenant.ConnectionReference,
-            "workspace-dev-seed"));
+            seedCatalog ? "workspace-dev-seed" : "workspace-dev-schema"));
 
         await MigrateAsync(provider.GetRequiredService<CatalogDbContext>());
         await MigrateAsync(provider.GetRequiredService<OfferDbContext>());
@@ -113,6 +123,11 @@ internal static class ProductWorkspaceDevelopmentBootstrap
         await MigrateAsync(provider.GetRequiredService<NotificationDbContext>());
         await MigrateAsync(provider.GetRequiredService<AccessControlDbContext>());
         await MigrateAsync(provider.GetRequiredService<Tooba.Support.Infrastructure.Persistence.SupportDbContext>());
+
+        if (!seedCatalog)
+        {
+            return;
+        }
 
         var catalogDb = provider.GetRequiredService<CatalogDbContext>();
         var partyDb = provider.GetRequiredService<PartyDbContext>();

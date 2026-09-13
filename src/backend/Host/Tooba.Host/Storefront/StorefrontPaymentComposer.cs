@@ -586,13 +586,17 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("پرداخت این سفارش قبلاً با موفقیت انجام شده است.");
         }
 
-        await RetryUnpaidCoreAsync(paymentId, page.CheckoutId, cancellationToken);
+        await RetryUnpaidCoreAsync(paymentId, page.CheckoutId, page.Status, cancellationToken);
         return await GetAsync(paymentId, cartId, guestSecret, cancellationToken)
             ?? throw new InvalidOperationException("پرداخت پیدا نشد.");
     }
 
     /// <summary>EnsureOrderSupply + reopen روی همان PaymentId.</summary>
-    public async Task RetryUnpaidCoreAsync(Guid paymentId, Guid checkoutId, CancellationToken cancellationToken)
+    public async Task RetryUnpaidCoreAsync(
+        Guid paymentId,
+        Guid checkoutId,
+        string? paymentStatus,
+        CancellationToken cancellationToken)
     {
         if (_supply is null || _expiry is null)
         {
@@ -613,6 +617,10 @@ public sealed class StorefrontPaymentComposer
             throw new InvalidOperationException("این سفارش در حال حاضر قابل تأمین نیست.");
         }
 
-        await _expiry.ReopenExpiredForRetryAsync(paymentId, ResolvePaymentActor(), null, cancellationToken);
+        // رزرو مجدد ممکن است پس از Failed باشد؛ reopen فقط برای Expired معنا دارد.
+        if (string.Equals(paymentStatus, "Expired", StringComparison.OrdinalIgnoreCase))
+        {
+            await _expiry.ReopenExpiredForRetryAsync(paymentId, ResolvePaymentActor(), null, cancellationToken);
+        }
     }
 }

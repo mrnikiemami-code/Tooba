@@ -174,7 +174,7 @@ export function sourceCaption(field: ReservationPolicyFieldView): string {
 
 export function sourceCaptionFa(field: ReservationPolicyFieldView): string {
   if (field.overridden) {
-    return `${field.effectiveValue} دقیقه — overridden`;
+    return `${field.effectiveValue} دقیقه — بازنویسی‌شده`;
   }
-  return `${field.effectiveValue} — inherited from ${field.sourceLabelEn}`;
+  return `${field.effectiveValue} — ارث از ${field.sourceLabelFa}`;
 }

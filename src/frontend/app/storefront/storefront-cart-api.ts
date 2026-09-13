@@ -415,13 +415,18 @@ export class StorefrontCartApiError extends Error {
 }
 
 const TECHNICAL_CART_ERROR = /Held|reservation|رزرو|آزادسازی/i;
+const RAW_TECHNICAL_DETAIL = /Exception|Npgsql|Postgres|Microsoft\.|System\.|Tooba\.|\bat\s/i;
 
 /**
- * پیام قابل‌نمایش مشتری. واژگان فنی رزرو موجودی را پنهان می‌کند.
+ * پیام قابل‌نمایش مشتری. واژگان فنی رزرو موجودی و نام استثنای سرویس را پنهان می‌کند.
  */
 export function toCustomerCartMessage(error: unknown): string {
   if (error instanceof StorefrontCartApiError) {
-    if (error.detail && !TECHNICAL_CART_ERROR.test(error.detail)) {
+    if (
+      error.detail
+      && !TECHNICAL_CART_ERROR.test(error.detail)
+      && !RAW_TECHNICAL_DETAIL.test(error.detail)
+    ) {
       return error.detail;
     }
     switch (error.errorCode) {
@@ -438,9 +443,13 @@ export function toCustomerCartMessage(error: unknown): string {
     }
   }
   if (error instanceof Error) {
-    return TECHNICAL_CART_ERROR.test(error.message)
-      ? "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید."
-      : error.message;
+    if (TECHNICAL_CART_ERROR.test(error.message)) {
+      return "موجودی این کالا تغییر کرده است. لطفاً تعداد را دوباره بررسی کنید.";
+    }
+    if (RAW_TECHNICAL_DETAIL.test(error.message)) {
+      return "عملیات سبد انجام نشد. لطفاً دوباره تلاش کنید.";
+    }
+    return error.message;
   }
   return "عملیات سبد شکست خورد.";
 }

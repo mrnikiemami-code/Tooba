@@ -42,6 +42,8 @@ test("offer inherit/override/effective preview and flash-sale copy", () => {
   assert.match(product, /OfferReservationPanel/);
   assert.match(editor, /overridden/);
   assert.match(editor, /inherited from/);
+  assert.match(editor, /بازنویسی‌شده/);
+  assert.match(editor, /ارث از \$\{field.sourceLabelFa\}/);
   assert.match(editor, /flashSaleHelpFa/);
   assert.match(editor, /stricterNoteFa/);
   assert.match(editor, /longHoldNoteFa/);

@@ -134,13 +134,15 @@ export function StorefrontPendingPayments({
       <div className="space-y-3">
         {items.map((item) => {
           const localMessage = messages[item.checkoutId];
-          const statusCopy =
-            localMessage
-            ?? (item.supplyStatus && /unavail/i.test(item.supplyStatus) ? labels.unavailable : null)
-            ?? (item.paymentPresentation === "awaitingReview" ? labels.review : null)
-            ?? (item.paymentPresentation === "retryLimit" || item.hasReachedRetryLimit ? labels.retryLimit : null)
-            ?? (item.paymentPresentation === "failedRetryable" ? labels.failed : null)
-            ?? (item.reservationPresentation === "ended" ? labels.expired : null);
+          const heldPay = item.reservationPresentation === "held" && item.primaryAction === "pay";
+          const statusCopy = heldPay
+            ? (item.paymentPresentation === "failedRetryable" ? labels.failed : null)
+            : localMessage
+              ?? (item.supplyStatus && /unavail/i.test(item.supplyStatus) ? labels.unavailable : null)
+              ?? (item.paymentPresentation === "awaitingReview" ? labels.review : null)
+              ?? (item.paymentPresentation === "retryLimit" || item.hasReachedRetryLimit ? labels.retryLimit : null)
+              ?? (item.paymentPresentation === "failedRetryable" ? labels.failed : null)
+              ?? (item.reservationPresentation === "ended" ? labels.expired : null);
           return (
             <article
               key={item.checkoutId}

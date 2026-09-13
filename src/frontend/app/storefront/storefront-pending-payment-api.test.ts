@@ -101,4 +101,6 @@ test("pending UX source keeps FA RTL EN LTR and no raw cycle enums", () => {
   assert.doesNotMatch(ui, /inventory\.reservation/);
   assert.match(ui, /setInterval/);
   assert.doesNotMatch(ui, /setInterval\(\(\) => fetch/);
+  assert.match(ui, /heldPay/);
+  assert.match(ui, /failedRetryable/);
 });

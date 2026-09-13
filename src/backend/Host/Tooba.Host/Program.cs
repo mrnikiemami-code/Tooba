@@ -350,6 +350,7 @@ if (app.Environment.IsDevelopment())
         {
             app.Logger.LogInformation(
                 "Legacy Catalog Development bootstraps skipped (Tooba:CatalogDemo:RunLegacyBootstraps=false). Use POST /v1/admin/catalog/demo/reset-and-seed.");
+            await ProductWorkspaceDevelopmentBootstrap.MigrateSchemaOnlyAsync(app.Services);
             // TB-P08-T009: Content demo بدون Catalog legacy.
             try
             {
