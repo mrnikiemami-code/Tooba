@@ -1,0 +1,79 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R21-R1
+
+Parent-Task:
+TB-P10-T004-R21
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=YES
+
+Summary:
+Accepted cancel/hide divergence reconciled and committed. Hide SoT is order.pending_payment_card_hides (not localStorage); hide denied while hold Active; cancelled Orders leave pending via canonical CancelSellerOrderAsync. Checkout SubmitAsync now commits reserve + Order + Cycle #1 + Cart Convert inside one TransactionScope; FE persist/detach only after HTTP success; payment initiate stays post-commit. Focused Host 20 + FE 20 + critical-storefront 16 + recovery 4 PASS. Runtime R1–R5 PASS on Host :5088. No TB-P10-T005. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…102 preserved. Added LOCK-SF-103 (atomic checkout), LOCK-SF-104 (hide presentation-only), LOCK-SF-105 (canonical customer cancel).
+
+Recovery-Reconciliation:
+Start HEAD 9bec2e62 (accepted hide commit) plus tracked cancel-order work, user-accepted. No stash/reset. Hide repaired to backend table. Single repair commit covers A+B on that baseline. Evidence r21-r1-recovery-reconciliation.md
+
+Cancel-Order:
+POST /v1/storefront/checkout/{id}/cancel. Unpaid-only; paid denied; dispatch forbidden; wrong owner denied; double cancel {alreadyCancelled:true}. Releases via AbortForCheckoutCancel + CancelSellerOrderAsync. Runtime checkout 01a0994e-9f80-7000-a615-710dc04b1f4f cancelled; pending card gone. Evidence r21-r1-cancel-order.md
+
+Hide-Pending:
+POST /v1/storefront/checkout/{id}/hide-pending-card. Denied 409 pending.hide.active_hold while Active. After release, hide writes customer-scoped row; no Order/Payment/Supply/Cycle mutation; unpaid counts still include hidden open Orders. Evidence r21-r1-hide-pending.md
+
+Transaction-Boundary:
+Quote outside tx; TransactionScope; reserve; barrier; Order+Cycle SaveChanges; barrier; ConvertAsync; barrier; Complete. Evidence r21-r1-transaction-boundary.md
+
+Fault-Injection:
+FailOnce convert rollback: Cart Active, zero checkout rows, retry commits. Reservation unique race maps to inventory.reservation.conflict then winner snapshot. Evidence r21-r1-fault-injection.md
+
+Payment-Boundary:
+InitiateAsync does not SubmitAsync. Runtime wallet initiate 400 after commit; Order stayed PendingPayment; Cart Converted. Evidence r21-r1-payment-boundary.md
+
+Concurrency:
+Foundation concurrent different-key and same-key submits: one Checkout, one conversion, one stock decrement. Evidence r21-r1-concurrency.md
+
+Focused-Validation:
+Host 20 PASS; FE pending/cart/customer 20 PASS; critical-storefront 16 PASS; recovery 4 PASS; git diff --check clean. Evidence r21-r1-focused-validation.md
+
+Runtime:
+R1–R5 PASS Host :5088 + FE :3000. Evidence r21-r1-runtime.md
+
+AntiPattern-Scan:
+CLEAN. Evidence r21-r1-antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-103, LOCK-SF-104, LOCK-SF-105 added in docs/architecture/TOOBA-LOCKS.md.
+
+Recovery-SoT:
+Phase P10; Last Architect-accepted before review TB-P10-T004-R20-R1; Last Implementation TB-P10-T004-R21-R1; Issued/Repair none; USER_VISUAL_ACCEPTED=YES; Worker IDLE; no TB-P10-T005. Evidence r21-r1-recovery-sot.md
+
+Git:
+impl 471eea9b2eba1f7ed68e5a5e683f7f7fb2929688 feat(storefront): reconcile cancel/hide and make checkout commit atomic.
+ending HEAD 471eea9b2eba1f7ed68e5a5e683f7f7fb2929688
+HEAD==origin/main after push
+task-owned worktree clean (historical .tmp-* ignored)
+
+Architectural-Concerns:
+Ambient TransactionScope spans Order/Cart/Inventory DbContexts on one Postgres; reservation unique abort must not continue queries on the failed SQL transaction (mapped to checkout.conflict + fresh connection). Next planned tasks (Login Gate / MaxOpenUnpaidOrders) not started.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=YES. Home/PDP critical-storefront guards green. Cancel/hide live on cart/pending surfaces, not Home/PDP chrome.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
