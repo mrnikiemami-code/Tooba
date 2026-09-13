@@ -694,8 +694,13 @@ public sealed class CheckoutDirectory : ICheckoutDirectory
     {
         if (_cyclePolicy is not null)
         {
+            var categoryByVariant = await _catalog.GetPrimaryCategoryIdsByVariantIdsAsync(
+                cart.Lines.Select(x => x.CatalogVariantId).Distinct().ToArray(),
+                cancellationToken);
             var policy = await ResolveCyclePolicyAsync(
-                cart.Lines.Select(x => new ReservationCyclePolicyLine(x.OfferId, null)).ToArray(),
+                cart.Lines.Select(x => new ReservationCyclePolicyLine(
+                    x.OfferId,
+                    categoryByVariant.GetValueOrDefault(x.CatalogVariantId))).ToArray(),
                 cancellationToken);
             return now.AddMinutes(policy.InitialHoldMinutes);
         }
