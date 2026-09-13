@@ -1,0 +1,88 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T004-R15
+
+Parent-Task:
+TB-P10-T004-R14
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Order-level Reservation Cycle is a distinct auditable lifetime from Payment Attempt. Cycle #1 starts at committed Order reserve with InitialReservationHoldMinutes. Failed attempts inside Active never change ExpiresAt. A new numbered cycle starts only after the previous cycle ended and EnsureOrderSupply succeeds. Failed reacquire is audit-visible without consuming CycleNumber. MaxReservationCycles includes the initial cycle and returns inventory.reservation.retry_limit_reached. Offer>Category>Store>Platform then MIN across lines. Manual review is a same-cycle transition; review expiry then reacquire is a new cycle. Runtime A–J ok=true. HEAD==origin/main. Worker IDLE. No TB-P10-T005.
+
+Applicable-Locks:
+LOCK-SF-001…075 preserved. Added LOCK-SF-076…084 (cycle≠attempt; no timer reset; new cycle only after ended+Ensure; immutable monotonic history; distinct initial/retry TTL; Offer>Category>Store>Platform; multi-line MIN; max includes initial; server ExpiresAt authoritative).
+
+Recovery-Start:
+docs/evidence/TB-P10-T004/r15-recovery-start.md
+
+Discovery:
+docs/evidence/TB-P10-T004/r15-reservation-cycle-discovery.md
+
+Reservation-Cycle-Domain:
+docs/evidence/TB-P10-T004/r15-reservation-cycle-domain.md
+
+Reservation-Policy:
+docs/evidence/TB-P10-T004/r15-reservation-policy.md
+
+Policy-Snapshot:
+docs/evidence/TB-P10-T004/r15-policy-snapshot.md
+
+Retry-Semantics:
+docs/evidence/TB-P10-T004/r15-retry-semantics.md
+
+Manual-Interaction:
+docs/evidence/TB-P10-T004/r15-manual-interaction.md
+
+Audit-History:
+docs/evidence/TB-P10-T004/r15-audit-history.md
+
+Query-Projection:
+docs/evidence/TB-P10-T004/r15-query-projection.md
+
+Concurrency:
+docs/evidence/TB-P10-T004/r15-concurrency.md
+
+MultiLine-Policy:
+docs/evidence/TB-P10-T004/r15-multiline-policy.md
+
+Focused-Validation:
+docs/evidence/TB-P10-T004/r15-focused-validation.md — ReservationCycleFoundationTests 9/9; related hold/supply 20/20; recovery guard 4/4; git diff --check clean
+
+Runtime:
+docs/evidence/TB-P10-T004/r15-runtime.md + r15-runtime-raw.json — A–J PASS
+
+AntiPattern-Scan:
+docs/evidence/TB-P10-T004/r15-antipattern-scan.md — CLEAN
+
+Lock-Registry:
+docs/architecture/TOOBA-LOCKS.md LOCK-SF-076…084
+
+Recovery-SoT:
+docs/evidence/TB-P10-T004/r15-recovery-sot.md — Architect R14; Impl R15; Issued/Repair none; USER_VISUAL_ACCEPTED=NO
+
+Git:
+branch main; HEAD fd8b75f005a8cea314bad9d7c7eb82140bfaf6a0; HEAD==origin/main after push yes; task-owned worktree clean
+
+Architectural-Concerns:
+none
+
+Visual-Concerns:
+none — USER_VISUAL_ACCEPTED=NO; Home/PDP not redesigned; no countdown UI
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT
