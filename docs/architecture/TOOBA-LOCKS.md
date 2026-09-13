@@ -529,3 +529,12 @@ New shipping addresses persist FirstName and LastName independently. Committed o
 
 ### LOCK-SF-122 — Explicit FirstName/LastName are canonical
 For new or updated checkout recipient data and committed Order snapshots, FirstName and LastName are the canonical source. Display is `FirstName + " " + LastName` when both are non-empty. Legacy RecipientName is a fallback only when those split fields are absent. Legacy names are never guessed-split, and RecipientName must not override non-empty FirstName/LastName.
+
+### LOCK-SF-123 — Logout hides Cart, never deletes it
+Logout terminates authentication and must not delete, convert, cancel, or abandon the customer-owned Active Cart. The Cart is hidden from the anonymous browser context and restored or merged on the same customer's re-login.
+
+### LOCK-SF-124 — Authenticated header shows canonical customer identity
+Authenticated Storefront header displays canonical customer identity — profile name when available, otherwise mobile — through one shared account menu on all Storefront routes. Shipping recipient is not account identity.
+
+### LOCK-SF-125 — Cart conversion is visible only after atomic COMMIT
+Header badge and cart lines must not be optimistically cleared on the final checkout click. Conversion becomes visible only after the authoritative atomic checkout COMMIT succeeds.

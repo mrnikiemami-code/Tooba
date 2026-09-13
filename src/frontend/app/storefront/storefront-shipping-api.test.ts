@@ -52,6 +52,15 @@ test("shipping date chips use Host weekday/date once and do not duplicate Jalali
   assert.match(source, /overflow-x-auto/);
 });
 
+test("shipping continue commits before navigation and does not pre-clear cart", () => {
+  const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
+  const commitIndex = source.indexOf("commitShippingToPayment");
+  const pushIndex = source.indexOf("router.push(localizePath(`/payment");
+  const persistFn = source.slice(source.indexOf("async function persistAndContinue"), source.indexOf("async function submitNewAddress"));
+  assert.ok(commitIndex > 0 && pushIndex > commitIndex);
+  assert.doesNotMatch(persistFn, /clearCartSession|notifyCartChanged|setCartCount\(0\)/);
+});
+
 test("shipping UI source has no hardcoded Shopeiva template method list", () => {
   const source = fs.readFileSync(path.join(root, "src/frontend/app/storefront/storefront-shipping.tsx"), "utf8");
   assert.doesNotMatch(source, /shippingMethodsList/);

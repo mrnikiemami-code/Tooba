@@ -19,6 +19,16 @@ export async function loadCheckoutIdentityPolicy(): Promise<CheckoutIdentityPoli
 
 export const AUTH_CHANGED_EVENT = "tooba-auth-changed";
 
+export type StorefrontSession = {
+  authenticated: boolean;
+  userId: string | null;
+  displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  mobile: string | null;
+  label: string;
+};
+
 export function notifyAuthChanged(): void {
   if (typeof window === "undefined") {
     return;
@@ -26,13 +36,60 @@ export function notifyAuthChanged(): void {
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
-export async function loadStorefrontSession(): Promise<{ authenticated: boolean; userId: string | null }> {
+export function storefrontAccountLabel(
+  input: { displayName?: string | null; firstName?: string | null; lastName?: string | null; mobile?: string | null },
+  fallback: string,
+): string {
+  const display = (input.displayName ?? "").trim();
+  if (display) {
+    return display;
+  }
+  const first = (input.firstName ?? "").trim();
+  const last = (input.lastName ?? "").trim();
+  if (first && last) {
+    return `${first} ${last}`;
+  }
+  const mobile = (input.mobile ?? "").trim();
+  if (mobile) {
+    return mobile;
+  }
+  return fallback;
+}
+
+const anonymousSession = (fallback: string): StorefrontSession => ({
+  authenticated: false,
+  userId: null,
+  displayName: null,
+  firstName: null,
+  lastName: null,
+  mobile: null,
+  label: fallback,
+});
+
+export async function loadStorefrontSession(fallback = "حساب کاربری"): Promise<StorefrontSession> {
   const response = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
   if (!response.ok) {
-    return { authenticated: false, userId: null };
+    return anonymousSession(fallback);
   }
-  const payload = await response.json().catch(() => null) as { userId?: string } | null;
-  return { authenticated: Boolean(payload?.userId), userId: payload?.userId ?? null };
+  const payload = await response.json().catch(() => null) as {
+    userId?: string;
+    displayName?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    mobile?: string | null;
+  } | null;
+  if (!payload?.userId) {
+    return anonymousSession(fallback);
+  }
+  return {
+    authenticated: true,
+    userId: payload.userId,
+    displayName: payload.displayName ?? null,
+    firstName: payload.firstName ?? null,
+    lastName: payload.lastName ?? null,
+    mobile: payload.mobile ?? null,
+    label: storefrontAccountLabel(payload, fallback),
+  };
 }
 
 export async function requiresCheckoutLogin(): Promise<boolean> {

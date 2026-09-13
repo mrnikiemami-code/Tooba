@@ -1,0 +1,184 @@
+{
+  "accountCartId": "01a09b32-787c-7000-91b9-0be7d96bf8c4",
+  "label": "09111111111",
+  "net": {
+    "authMe": 96,
+    "merge": 3,
+    "logout": 1,
+    "commit": 2,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    ],
+    "status401": [
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me",
+      "http://127.0.0.1:3000/api/auth/me"
+    ]
+  },
+  "timeline": {
+    "t3": 1789310235839,
+    "t4": 1789310235892,
+    "t8": 1789310235973,
+    "t9": 1789310237948
+  },
+  "log": {
+    "prep-login": {
+      "ok": true,
+      "detail": "01a0996c-b8d9-7000-9854-80b3f59e8d7c"
+    },
+    "A-me-identity": {
+      "ok": true,
+      "detail": "{\"mobile\":\"09111111111\"}"
+    },
+    "prep-cancel-open-unpaid": {
+      "ok": true,
+      "detail": "[{\"checkoutId\":\"01a09b32-6bfd-7000-b20d-edc05c2fdac0\",\"status\":200}]"
+    },
+    "prep-offers": {
+      "ok": true,
+      "detail": "cbf5684a-12d2-4366-86b5-991c52b87d4f,c15009a3-f05b-46ca-a21b-6a7c4e04ccbb"
+    },
+    "A-login": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "B-header-identity": {
+      "ok": true,
+      "detail": "09111111111"
+    },
+    "dropdown": {
+      "ok": true,
+      "detail": "panel/orders/logout"
+    },
+    "C-atc-2": {
+      "ok": true,
+      "detail": "{\"status\":200,\"cartId\":\"01a09b32-787c-7000-91b9-0be7d96bf8c4\",\"lines\":2,\"itemCount\":2,\"reused\":true}"
+    },
+    "D-cart-2": {
+      "ok": true,
+      "detail": "badge=۲"
+    },
+    "E-logout-ui": {
+      "ok": true,
+      "detail": "ورود visible"
+    },
+    "F-anon-hidden": {
+      "ok": true,
+      "detail": "badge=۰"
+    },
+    "G-db-still-active": {
+      "ok": true,
+      "detail": "Active|01a0996c-b8d9-7000-9854-80b3f59e8d7c|2"
+    },
+    "F-anon-api": {
+      "ok": true,
+      "detail": "400"
+    },
+    "H-relogin": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/cart"
+    },
+    "I-restored-2": {
+      "ok": true,
+      "detail": "badge=۲"
+    },
+    "J-identity-/fa": {
+      "ok": true,
+      "detail": "09111111111"
+    },
+    "J-identity-/fa/cart": {
+      "ok": true,
+      "detail": "09111111111"
+    },
+    "J-identity-/fa/shipping": {
+      "ok": true,
+      "detail": "09111111111"
+    },
+    "K-address-cart-2": {
+      "ok": true,
+      "detail": "badge=۲"
+    },
+    "L-before-continue": {
+      "ok": true,
+      "detail": "badge=۲"
+    },
+    "M-order": {
+      "ok": true,
+      "detail": "{\"t3\":1789310235839,\"t4\":1789310235892,\"t8\":1789310235973,\"t9\":1789310237948}"
+    },
+    "O-payment": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/payment?checkoutId=01a09b33-751e-7000-9977-1ad5999c8e35"
+    },
+    "P-badge-after-commit": {
+      "ok": true,
+      "detail": "badge=۰"
+    },
+    "N-converted": {
+      "ok": true,
+      "detail": "Converted"
+    },
+    "N-cycle": {
+      "ok": true,
+      "detail": "7"
+    },
+    "Q-prep-fault-cart": {
+      "ok": true,
+      "detail": "{\"status\":200,\"cartId\":\"01a09b33-819c-7000-a3b6-2479c63c653f\",\"lines\":2,\"itemCount\":2,\"guestSecret\":\"[redacted]\",\"errors\":[]}"
+    },
+    "Q-no-payment": {
+      "ok": true,
+      "detail": "http://127.0.0.1:3000/fa/shipping"
+    },
+    "Q-cart-intact": {
+      "ok": true,
+      "detail": "badge=۲"
+    },
+    "R-mobile-menu": {
+      "ok": true,
+      "detail": "logout=1"
+    },
+    "net-no-401-storm": {
+      "ok": true,
+      "detail": "{\"authMeHits\":96,\"max401PerUrl\":{\"http://127.0.0.1:3000/api/auth/me\":14},\"console401\":14}"
+    },
+    "net-merge-not-loop": {
+      "ok": true,
+      "detail": "3"
+    },
+    "net-logout-not-dup-storm": {
+      "ok": true,
+      "detail": "1"
+    }
+  }
+}

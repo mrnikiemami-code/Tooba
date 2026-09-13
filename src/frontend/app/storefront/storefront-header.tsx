@@ -31,6 +31,7 @@ import {
 import type { StorefrontBrandItem, StorefrontCategoryItem } from "./storefront-model.ts";
 import { loadStorefrontMegaMenu, type StorefrontMegaMenuItem } from "../admin/catalog-mega-menu-api.ts";
 import { CART_CHANGED_EVENT, loadStorefrontCart } from "./storefront-cart-api.ts";
+import { AUTH_CHANGED_EVENT } from "./storefront-identity-api.ts";
 import { StorefrontMiniCartDrawer } from "./storefront-mini-cart.tsx";
 import { StorefrontAccountMenu } from "./storefront-account-menu.tsx";
 import { LocaleSwitcher } from "../../lib/i18n/LocaleSwitcher.tsx";
@@ -85,14 +86,35 @@ export function StorefrontShopeivaHeader({
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let generation = 0;
     const refreshBadge = () => {
+      const mine = ++generation;
       void loadStorefrontCart()
-        .then((cart) => setCartCount(cart?.itemCount ?? 0))
-        .catch(() => setCartCount(0));
+        .then((cart) => {
+          if (mine !== generation) {
+            return;
+          }
+          setCartCount(cart?.itemCount ?? 0);
+        })
+        .catch(() => {
+          if (mine !== generation) {
+            return;
+          }
+          setCartCount(0);
+        });
+    };
+    const onAuthChanged = () => {
+      setCartCount(0);
+      refreshBadge();
     };
     refreshBadge();
     window.addEventListener(CART_CHANGED_EVENT, refreshBadge);
-    return () => window.removeEventListener(CART_CHANGED_EVENT, refreshBadge);
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    return () => {
+      generation += 1;
+      window.removeEventListener(CART_CHANGED_EVENT, refreshBadge);
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    };
   }, []);
 
   useEffect(() => {

@@ -2,9 +2,11 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using Tooba.CustomerProfile.Application;
 using Tooba.Identity.Application;
 using Tooba.Identity.Domain;
 using Tooba.Identity.Infrastructure;
+using Tooba.Host.Storefront;
 
 namespace Tooba.Host;
 
@@ -297,8 +299,16 @@ internal static class AuthenticationHttpModels
     /// <summary>پاسخ عمومی بازنشانی بدون ChallengeId تا enumeration رخ ندهد.</summary>
     internal sealed record AcceptedResponse(bool Accepted);
 
-    /// <summary>اصل جاری بدون راز، هش، یا SecurityStamp.</summary>
-    internal sealed record MeResponse(Guid UserId, Guid SessionId, string Edition, string? TenantId);
+    /// <summary>اصل جاری بدون راز، هش، یا SecurityStamp. نام/موبایل برای هدر ویترین است نه هویت ارسال.</summary>
+    internal sealed record MeResponse(
+        Guid UserId,
+        Guid SessionId,
+        string Edition,
+        string? TenantId,
+        string? DisplayName,
+        string? FirstName,
+        string? LastName,
+        string? Mobile);
 }
 
 /// <summary>
@@ -687,19 +697,38 @@ internal static class AuthenticationEndpointMapper
         }
     }
 
-    private static IResult MeAsync(HttpContext http, CurrentAuthenticatedSession current)
+    private static async Task<IResult> MeAsync(
+        HttpContext http,
+        CurrentAuthenticatedSession current,
+        ICustomerProfileDirectory profiles,
+        IIdentityContactLookup contacts,
+        CancellationToken cancellationToken)
     {
         if (!current.IsAuthenticated)
         {
             return AuthProblem(http, StatusCodes.Status401Unauthorized, "Unauthorized", "identity.session.invalid");
         }
 
+        var userId = current.UserId!.Value;
+        var profile = await profiles.GetAsync(userId, cancellationToken);
+        var contact = await contacts.GetContactAsync(userId, cancellationToken);
+        var displayName = StorefrontAccountIdentity.CanonicalName(
+            profile?.DisplayName,
+            profile?.FirstName,
+            profile?.LastName);
         return Results.Json(new AuthenticationHttpModels.MeResponse(
-            current.UserId!.Value,
+            userId,
             current.SessionId!.Value,
             current.Edition ?? "",
-            current.TenantId));
+            current.TenantId,
+            displayName,
+            BlankToNull(profile?.FirstName),
+            BlankToNull(profile?.LastName),
+            BlankToNull(contact.Mobile)));
     }
+
+    private static string? BlankToNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static AuthenticationHttpModels.SessionResponse ToSessionResponse(AuthenticationTicket ticket) =>
         new(ticket.UserId, ticket.SessionHandle, ticket.SessionHandle.ToString("D"), ticket.RefreshToken!);

@@ -14,6 +14,7 @@ import { AUTH_CHANGED_EVENT, loadStorefrontSession, notifyAuthChanged } from "./
 export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }) {
   const locale = useLocale();
   const [authenticated, setAuthenticated] = useState(false);
+  const [accountLabel, setAccountLabel] = useState("");
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const copy = locale === "en"
@@ -22,12 +23,15 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
 
   useEffect(() => {
     const refresh = () => {
-      void loadStorefrontSession().then((session) => setAuthenticated(session.authenticated));
+      void loadStorefrontSession(copy.account).then((session) => {
+        setAuthenticated(session.authenticated);
+        setAccountLabel(session.label);
+      });
     };
     refresh();
     window.addEventListener(AUTH_CHANGED_EVENT, refresh);
     return () => window.removeEventListener(AUTH_CHANGED_EVENT, refresh);
-  }, []);
+  }, [copy.account]);
 
   useEffect(() => {
     if (!open) {
@@ -87,8 +91,8 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
           <span className="w-7 h-7 bg-gradient-to-br from-[#2563EB] to-[#1d4ed8] rounded-full flex items-center justify-center">
             <User className="w-3.5 h-3.5 text-white" />
           </span>
-          <span className={compact ? "text-sm font-medium" : "hidden md:block text-sm font-medium text-gray-700"}>
-            {copy.account}
+          <span className={compact ? "text-sm font-medium" : "hidden md:block text-sm font-medium text-gray-700"} data-testid="header-account-label">
+            {accountLabel || copy.account}
           </span>
         </span>
         <ChevronDown className="w-3 h-3 text-gray-400" />

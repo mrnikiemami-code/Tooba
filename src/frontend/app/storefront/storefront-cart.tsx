@@ -28,6 +28,7 @@ import {
   toCustomerCartMessage,
   type StorefrontCartPage,
 } from "./storefront-cart-api.ts";
+import { AUTH_CHANGED_EVENT } from "./storefront-identity-api.ts";
 import { loadStorefrontPendingPayments, type StorefrontPendingPaymentItem } from "./storefront-pending-payment-api.ts";
 import { StorefrontPendingPayments } from "./storefront-pending-payments.tsx";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
@@ -97,34 +98,35 @@ export function StorefrontShopeivaCart({
   }, [locale]);
 
   useEffect(() => {
-    let cancelled = false;
-    let inflight = false;
+    let generation = 0;
     const refresh = () => {
-      if (inflight) {
-        return;
-      }
-      inflight = true;
+      const mine = ++generation;
       void loadStorefrontCart()
         .then((page) => {
-          if (!cancelled) {
-            setCart(page);
-            setError(null);
-            setCouponDiscount(null);
+          if (mine !== generation) {
+            return;
           }
+          setCart(page);
+          setError(null);
+          setCouponDiscount(null);
         })
         .catch((cause: unknown) => {
-          if (!cancelled) {
-            setError(toCustomerCartMessage(cause));
+          if (mine !== generation) {
+            return;
           }
-        })
-        .finally(() => {
-          inflight = false;
+          setError(toCustomerCartMessage(cause));
         });
     };
+    const onAuthChanged = () => {
+      setCart(null);
+      refresh();
+    };
     window.addEventListener(CART_CHANGED_EVENT, refresh);
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     return () => {
-      cancelled = true;
+      generation += 1;
       window.removeEventListener(CART_CHANGED_EVENT, refresh);
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     };
   }, []);
 

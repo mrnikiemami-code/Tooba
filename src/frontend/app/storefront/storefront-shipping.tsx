@@ -3,6 +3,7 @@
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useLocalizedPath } from "../../lib/i18n/locale-context.tsx";
 import {
   Calendar,
   Check,
@@ -123,6 +124,7 @@ function iconFor(method: StorefrontShippingMethod) {
 export function StorefrontShopeivaShipping() {
   useCheckoutAuthGate("/shipping");
   const router = useRouter();
+  const localizePath = useLocalizedPath();
   const [projection, setProjection] = useState<StorefrontShippingProjection | null>(null);
   const [address, setAddress] = useState<AddressForm>(emptyAddress);
   const [savedAddresses, setSavedAddresses] = useState<CustomerAddress[] | null>(null);
@@ -275,7 +277,7 @@ export function StorefrontShopeivaShipping() {
       if (!committed.checkoutId) {
         throw new Error("شناسهٔ سفارش برنگشت.");
       }
-      router.push(`/payment?checkoutId=${encodeURIComponent(committed.checkoutId)}`);
+      router.push(localizePath(`/payment?checkoutId=${encodeURIComponent(committed.checkoutId)}`));
     } catch (cause) {
       setError(toCustomerShippingMessage(cause));
       setLimitCode(cause instanceof StorefrontCartApiError ? cause.errorCode : null);

@@ -28,6 +28,7 @@ test("header opens mini-cart drawer instead of bare /cart link", () => {
   assert.match(headerSource, /data-testid="header-cart-badge"/);
   assert.match(headerSource, /setCartOpen\(true\)/);
   assert.match(headerSource, /loadStorefrontCart/);
+  assert.match(headerSource, /AUTH_CHANGED_EVENT/);
   assert.match(headerSource, /StorefrontAccountMenu/);
   assert.doesNotMatch(headerSource, /data-testid="header-login-link"/);
 });
@@ -41,6 +42,8 @@ test("canonical account menu reuses Shopeiva dropdown and logout", () => {
   assert.match(menu, /\/api\/auth\/logout/);
   assert.match(menu, /clearCartSession/);
   assert.match(menu, /notifyAuthChanged/);
+  assert.match(menu, /header-account-label/);
+  assert.match(menu, /storefrontAccountLabel|session\.label/);
   assert.doesNotMatch(menu, /#E53935/);
 });
 
@@ -66,7 +69,9 @@ test("cart page recommendations use live feed cards with working ATC reuse", () 
   assert.match(cartSource, /cart-shipping-honest/);
   assert.match(cartSource, /ارسال رایگان یا نرخ چندحامل جعلی/);
   assert.match(cartSource, /CART_CHANGED_EVENT/);
+  assert.match(cartSource, /AUTH_CHANGED_EVENT/);
   assert.match(cartSource, /addEventListener\(CART_CHANGED_EVENT/);
+  assert.match(cartSource, /addEventListener\(AUTH_CHANGED_EVENT/);
   assert.match(cartSource, /StorefrontPendingPayments/);
   assert.match(cartSource, /onRemoved=\{removePendingFromCart\}/);
   assert.match(cartSource, /سبد فعال شما خالی است/);
