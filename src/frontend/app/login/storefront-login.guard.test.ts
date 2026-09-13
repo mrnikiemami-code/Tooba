@@ -18,5 +18,8 @@ test("canonical login page is locale-routed mobile+OTP without password UI", () 
   assert.doesNotMatch(ui, /type="password"/);
   assert.doesNotMatch(ui, /identifierKind/);
   assert.match(ui, /mergeStorefrontCartAfterLogin/);
+  assert.match(ui, /invalidateStorefrontSession/);
+  assert.match(ui, /markStorefrontSessionAnonymous/);
   assert.match(ui, /notifyAuthChanged/);
+  assert.doesNotMatch(ui, /setInterval/);
 });

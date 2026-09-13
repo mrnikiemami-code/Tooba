@@ -44,7 +44,12 @@ test("canonical account menu reuses Shopeiva dropdown and logout", () => {
   assert.match(menu, /notifyAuthChanged/);
   assert.match(menu, /header-account-label/);
   assert.match(menu, /storefrontAccountLabel|session\.label/);
+  assert.match(menu, /markStorefrontSessionAnonymous/);
+  assert.match(menu, /resetStorefrontMergeTransition/);
   assert.doesNotMatch(menu, /#E53935/);
+  assert.doesNotMatch(menu, /setInterval/);
+  assert.doesNotMatch(headerSource, /setInterval/);
+  assert.doesNotMatch(cartSource, /setInterval/);
 });
 
 test("mini-cart drawer preserves Shopeiva structure on Host cart APIs", () => {

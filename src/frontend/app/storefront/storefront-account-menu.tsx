@@ -5,8 +5,8 @@ import { ChevronDown, LogOut, Package, User } from "lucide-react";
 import { LocalizedLink as Link } from "../../lib/i18n/LocalizedLink.tsx";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
 import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
-import { clearCartSession, notifyCartChanged } from "./storefront-cart-api.ts";
-import { AUTH_CHANGED_EVENT, loadStorefrontSession, notifyAuthChanged } from "./storefront-identity-api.ts";
+import { clearCartSession, notifyCartChanged, resetStorefrontMergeTransition } from "./storefront-cart-api.ts";
+import { AUTH_CHANGED_EVENT, loadStorefrontSession, markStorefrontSessionAnonymous, notifyAuthChanged } from "./storefront-identity-api.ts";
 
 /**
  * منوی حساب Shopeiva: ورود وقتی ناشناس؛ پروفایل / سفارش‌ها / خروج وقتی وارد شده.
@@ -54,6 +54,8 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
       cache: "no-store",
       headers: bffFetchHeaders(true),
     });
+    markStorefrontSessionAnonymous(copy.account);
+    resetStorefrontMergeTransition();
     clearCartSession();
     notifyCartChanged();
     notifyAuthChanged();

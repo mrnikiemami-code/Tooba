@@ -29,8 +29,101 @@ export type StorefrontSession = {
   label: string;
 };
 
+type SessionCache = {
+  session: StorefrontSession | null;
+  inFlight: Promise<StorefrontSession> | null;
+  knownAnonymous: boolean;
+};
+
+const sessionCache: SessionCache = {
+  session: null,
+  inFlight: null,
+  knownAnonymous: false,
+};
+
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
+function applyFallback(session: StorefrontSession, fallback: string): StorefrontSession {
+  if (!session.authenticated) {
+    return { ...session, label: fallback };
+  }
+  return {
+    ...session,
+    label: storefrontAccountLabel(session, fallback),
+  };
+}
+
+function fetchStorefrontSession(fallback: string): Promise<StorefrontSession> {
+  return fetch("/api/auth/me", { credentials: "include", cache: "no-store" }).then(async (response) => {
+    if (response.status === 401) {
+      const anonymous = anonymousSession(fallback);
+      if (isBrowser()) {
+        sessionCache.session = anonymous;
+        sessionCache.knownAnonymous = true;
+      }
+      return anonymous;
+    }
+    if (!response.ok) {
+      return anonymousSession(fallback);
+    }
+    const payload = await response.json().catch(() => null) as {
+      userId?: string;
+      displayName?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      mobile?: string | null;
+    } | null;
+    if (!payload?.userId) {
+      const anonymous = anonymousSession(fallback);
+      if (isBrowser()) {
+        sessionCache.session = anonymous;
+        sessionCache.knownAnonymous = true;
+      }
+      return anonymous;
+    }
+    const session: StorefrontSession = {
+      authenticated: true,
+      userId: payload.userId,
+      displayName: payload.displayName ?? null,
+      firstName: payload.firstName ?? null,
+      lastName: payload.lastName ?? null,
+      mobile: payload.mobile ?? null,
+      label: storefrontAccountLabel(payload, fallback),
+    };
+    if (isBrowser()) {
+      sessionCache.session = session;
+      sessionCache.knownAnonymous = false;
+    }
+    return session;
+  });
+}
+
+/**
+ * Clears the browser session cache so the next load resolves /api/auth/me once.
+ */
+export function invalidateStorefrontSession(): void {
+  sessionCache.session = null;
+  sessionCache.inFlight = null;
+  sessionCache.knownAnonymous = false;
+}
+
+/**
+ * After canonical logout, anonymous state is known. Do not probe /api/auth/me again.
+ */
+export function markStorefrontSessionAnonymous(fallback = "حساب کاربری"): void {
+  sessionCache.session = anonymousSession(fallback);
+  sessionCache.inFlight = null;
+  sessionCache.knownAnonymous = true;
+}
+
+export function resetStorefrontSessionCacheForTests(): void {
+  invalidateStorefrontSession();
+}
+
 export function notifyAuthChanged(): void {
-  if (typeof window === "undefined") {
+  if (!isBrowser()) {
     return;
   }
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
@@ -67,29 +160,22 @@ const anonymousSession = (fallback: string): StorefrontSession => ({
 });
 
 export async function loadStorefrontSession(fallback = "حساب کاربری"): Promise<StorefrontSession> {
-  const response = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
-  if (!response.ok) {
+  if (!isBrowser()) {
+    return fetchStorefrontSession(fallback);
+  }
+  if (sessionCache.session) {
+    return applyFallback(sessionCache.session, fallback);
+  }
+  if (sessionCache.knownAnonymous) {
     return anonymousSession(fallback);
   }
-  const payload = await response.json().catch(() => null) as {
-    userId?: string;
-    displayName?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    mobile?: string | null;
-  } | null;
-  if (!payload?.userId) {
-    return anonymousSession(fallback);
+  if (sessionCache.inFlight) {
+    return sessionCache.inFlight.then((session) => applyFallback(session, fallback));
   }
-  return {
-    authenticated: true,
-    userId: payload.userId,
-    displayName: payload.displayName ?? null,
-    firstName: payload.firstName ?? null,
-    lastName: payload.lastName ?? null,
-    mobile: payload.mobile ?? null,
-    label: storefrontAccountLabel(payload, fallback),
-  };
+  sessionCache.inFlight = fetchStorefrontSession(fallback).finally(() => {
+    sessionCache.inFlight = null;
+  });
+  return sessionCache.inFlight.then((session) => applyFallback(session, fallback));
 }
 
 export async function requiresCheckoutLogin(): Promise<boolean> {

@@ -538,3 +538,6 @@ Authenticated Storefront header displays canonical customer identity — profile
 
 ### LOCK-SF-125 — Cart conversion is visible only after atomic COMMIT
 Header badge and cart lines must not be optimistically cleared on the final checkout click. Conversion becomes visible only after the authoritative atomic checkout COMMIT succeeds.
+
+### LOCK-SF-126 — Canonical storefront session resolution
+Storefront account state is resolved through one in-memory session cache with in-flight dedupe. Desktop and mobile header copies reuse that cache. Expected anonymous 401 after logout is cached and must not be retried. Cart merge is one logical POST per login transition. No auth/cart interval polling.

@@ -1,3 +1,5 @@
+import { loadStorefrontSession } from "./storefront-identity-api.ts";
+
 /**
  * نشست انتقال هویت مهمان سبد. حقیقت مبلغ/تعداد در sessionStorage نیست.
  */
@@ -500,7 +502,33 @@ async function parseCartResponse(response: Response): Promise<StorefrontCartPage
   return cart;
 }
 
+let mergeInFlight: Promise<StorefrontCartPage | null> | null = null;
+let lastMergedAuthUserId: string | null = null;
+
+/**
+ * Clears the login-transition merge lock so the next login can merge once.
+ */
+export function resetStorefrontMergeTransition(): void {
+  mergeInFlight = null;
+  lastMergedAuthUserId = null;
+}
+
 export async function mergeStorefrontCartAfterLogin(): Promise<StorefrontCartPage | null> {
+  if (mergeInFlight) {
+    return mergeInFlight;
+  }
+  mergeInFlight = runMergeAfterLogin().finally(() => {
+    mergeInFlight = null;
+  });
+  return mergeInFlight;
+}
+
+async function runMergeAfterLogin(): Promise<StorefrontCartPage | null> {
+  const identity = await loadStorefrontSession();
+  const guestPending = Boolean(readCartSession().guestSecret);
+  if (identity.authenticated && identity.userId && lastMergedAuthUserId === identity.userId && !guestPending) {
+    return null;
+  }
   const session = readCartSession();
   const response = await fetch("/v1/storefront/cart/merge", {
     method: "POST",
@@ -517,13 +545,16 @@ export async function mergeStorefrontCartAfterLogin(): Promise<StorefrontCartPag
     return null;
   }
   writeCartSession(cart.cartId, null);
+  if (identity.authenticated && identity.userId) {
+    lastMergedAuthUserId = identity.userId;
+  }
   notifyCartChanged();
   return cart;
 }
 
 async function isStorefrontAuthenticated(): Promise<boolean> {
-  const me = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
-  return me.ok;
+  const session = await loadStorefrontSession();
+  return session.authenticated;
 }
 
 async function loadAuthenticatedCurrentCart(): Promise<StorefrontCartPage | null> {
@@ -652,8 +683,8 @@ export async function loadStorefrontCart(): Promise<StorefrontCartPage | null> {
     return null;
   }
   if (!session.guestSecret) {
-    const me = await fetch("/api/auth/me", { credentials: "include", cache: "no-store" });
-    if (!me.ok) {
+    const me = await loadStorefrontSession();
+    if (!me.authenticated) {
       return null;
     }
   }

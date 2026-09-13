@@ -6,8 +6,8 @@ import { Smartphone } from "lucide-react";
 import { useLocale } from "../../lib/i18n/locale-context.tsx";
 import { sanitizeReturnTo } from "../../lib/auth/login-return-to.ts";
 import { bffFetchHeaders, ensureCsrfCookie } from "../../lib/auth/browser-session.ts";
-import { mergeStorefrontCartAfterLogin } from "../storefront/storefront-cart-api.ts";
-import { notifyAuthChanged } from "../storefront/storefront-identity-api.ts";
+import { mergeStorefrontCartAfterLogin, resetStorefrontMergeTransition } from "../storefront/storefront-cart-api.ts";
+import { invalidateStorefrontSession, markStorefrontSessionAnonymous, notifyAuthChanged } from "../storefront/storefront-identity-api.ts";
 
 type Step = "mobile" | "otp";
 
@@ -101,6 +101,7 @@ export function StorefrontCustomerLogin() {
         setError(copy.failed);
         return;
       }
+      invalidateStorefrontSession();
       await mergeStorefrontCartAfterLogin();
       notifyAuthChanged();
       router.replace(returnTo);
@@ -122,6 +123,8 @@ export function StorefrontCustomerLogin() {
         headers: bffFetchHeaders(true),
       });
       const { clearCartSession } = await import("../storefront/storefront-cart-api.ts");
+      markStorefrontSessionAnonymous();
+      resetStorefrontMergeTransition();
       clearCartSession();
       notifyAuthChanged();
       setStep("mobile");

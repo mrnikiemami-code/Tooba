@@ -289,8 +289,11 @@ test("addOfferToCart rotates when Host omits status and rejects Converted mutati
 });
 
 test("authenticated ensure prefers current cart and does not POST a guest cart", async () => {
-  const { writeCartSession, ensureStorefrontCart, readCartSession } = await import("./storefront-cart-api.ts");
+  const { writeCartSession, ensureStorefrontCart, readCartSession, resetStorefrontMergeTransition } = await import("./storefront-cart-api.ts");
+  const { resetStorefrontSessionCacheForTests } = await import("./storefront-identity-api.ts");
   mockSession();
+  resetStorefrontSessionCacheForTests();
+  resetStorefrontMergeTransition();
   writeCartSession("guest-cart", "guest-secret");
   const calls: string[] = [];
   const originalFetch = globalThis.fetch;
@@ -369,4 +372,105 @@ test("cart mapper keeps quantity policy fields for mini-cart and /cart", () => {
   assert.equal(cart?.lines[0]?.quantityDecimalPlaces, 2);
   assert.equal(cart?.lines[0]?.quantityStep, 0.5);
   assert.equal(cart?.lines[0]?.unitDisplayName, "کیلوگرم");
+});
+
+test("one login transition posts merge at most once even when callers race", async () => {
+  const { writeCartSession, mergeStorefrontCartAfterLogin, resetStorefrontMergeTransition } = await import("./storefront-cart-api.ts");
+  const { resetStorefrontSessionCacheForTests } = await import("./storefront-identity-api.ts");
+  mockSession();
+  resetStorefrontSessionCacheForTests();
+  resetStorefrontMergeTransition();
+  writeCartSession("guest-cart", "guest-secret");
+  let merges = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    if (url.includes("/api/auth/me")) {
+      return new Response(JSON.stringify({ userId: "user-1", mobile: "09111111111" }), { status: 200 });
+    }
+    if (url.includes("/cart/merge")) {
+      merges += 1;
+      return new Response(
+        JSON.stringify({
+          cartId: "account-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 2 }],
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response("no", { status: 404 });
+  }) as typeof fetch;
+  try {
+    const [a, b, c] = await Promise.all([
+      mergeStorefrontCartAfterLogin(),
+      mergeStorefrontCartAfterLogin(),
+      mergeStorefrontCartAfterLogin(),
+    ]);
+    assert.equal(merges, 1);
+    assert.equal(a?.cartId, "account-cart");
+    assert.equal(b?.cartId, "account-cart");
+    assert.equal(c?.cartId, "account-cart");
+    const again = await mergeStorefrontCartAfterLogin();
+    assert.equal(again, null);
+    assert.equal(merges, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    resetStorefrontMergeTransition();
+    resetStorefrontSessionCacheForTests();
+  }
+});
+
+test("refresh and navigation after merge do not post a second merge", async () => {
+  const { writeCartSession, mergeStorefrontCartAfterLogin, loadStorefrontCart, resetStorefrontMergeTransition } = await import("./storefront-cart-api.ts");
+  const { resetStorefrontSessionCacheForTests } = await import("./storefront-identity-api.ts");
+  mockSession();
+  resetStorefrontSessionCacheForTests();
+  resetStorefrontMergeTransition();
+  writeCartSession("guest-cart", "guest-secret");
+  let merges = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("/api/auth/me")) {
+      return new Response(JSON.stringify({ userId: "user-1" }), { status: 200 });
+    }
+    if (url.includes("/cart/merge")) {
+      merges += 1;
+      return new Response(
+        JSON.stringify({
+          cartId: "account-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 1 }],
+        }),
+        { status: 200 },
+      );
+    }
+    if (url.includes("/cart/current")) {
+      return new Response(
+        JSON.stringify({
+          cartId: "account-cart",
+          version: 2,
+          status: "Active",
+          lines: [{ lineId: "l1", offerId: "o1", quantity: 1 }],
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response("no", { status: 404 });
+  }) as typeof fetch;
+  try {
+    await mergeStorefrontCartAfterLogin();
+    const refreshed = await loadStorefrontCart();
+    const navigated = await loadStorefrontCart();
+    assert.equal(merges, 1);
+    assert.equal(refreshed?.cartId, "account-cart");
+    assert.equal(navigated?.lines[0]?.quantity, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    resetStorefrontMergeTransition();
+    resetStorefrontSessionCacheForTests();
+  }
 });
