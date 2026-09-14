@@ -25,7 +25,7 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("29 78 216", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryStrongRgb);
         Assert.Equal("59 115 237", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryOnDarkRgb);
         Assert.Equal("189 91 118", StoreAppearancePaletteRegistry.ResolveTokens("wine-burgundy").PrimaryOnDarkRgb);
-        Assert.Equal("236 241 250", StoreAppearancePaletteRegistry.ToobaBlueTint.PageBackgroundRgb);
+        Assert.Equal("228 236 248", StoreAppearancePaletteRegistry.ToobaBlueTint.PageBackgroundRgb);
         Assert.NotEqual(
             StoreAppearancePaletteRegistry.ToobaBlueTint.PageBackgroundRgb,
             StoreAppearancePaletteRegistry.ToobaBlueTint.SectionAlternateRgb);
@@ -60,7 +60,7 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("classic", projection.ProductCardSkin);
         Assert.Equal("Neutral", projection.BackgroundStyle);
         Assert.Equal("37 99 235", projection.PrimaryRgb);
-        Assert.Equal("236 241 250", projection.PageBackgroundRgb);
+        Assert.Equal("228 236 248", projection.PageBackgroundRgb);
         Assert.NotEqual(projection.SectionAlternateRgb, projection.PageBackgroundRgb);
         Assert.NotEqual(projection.SectionAccentRgb, projection.PrimaryRgb);
         Assert.NotEqual(projection.PrimaryRgb, projection.PageBackgroundRgb);

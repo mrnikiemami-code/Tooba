@@ -1,0 +1,613 @@
+{
+  "ok": true,
+  "steps": [
+    {
+      "name": "landing-campaign-id",
+      "pass": true,
+      "data": {
+        "campaignId": "01a09e5e-d0dc-7000-bf4e-d7604c9e693b",
+        "count": 4
+      }
+    },
+    {
+      "name": "pdp-slug",
+      "pass": true,
+      "data": {
+        "slug": "demo-prod-fashion-men-men-pants-1"
+      }
+    },
+    {
+      "name": "neutral-set",
+      "pass": true
+    },
+    {
+      "name": "neutral-home",
+      "pass": true
+    },
+    {
+      "name": "file:neutral-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 503582
+      }
+    },
+    {
+      "name": "neutral-pdp",
+      "pass": true
+    },
+    {
+      "name": "file:neutral-pdp.png",
+      "pass": true,
+      "data": {
+        "bytes": 250048
+      }
+    },
+    {
+      "name": "tint-set",
+      "pass": true
+    },
+    {
+      "name": "tinted-home",
+      "pass": true
+    },
+    {
+      "name": "roles-sampled",
+      "pass": true,
+      "data": {
+        "page": "rgb(228, 236, 248)",
+        "section": "rgb(247, 250, 253)",
+        "alternate": "rgb(216, 228, 244)",
+        "accent": null,
+        "card": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "name": "roles-distinct",
+      "pass": true,
+      "data": {
+        "page": "rgb(228, 236, 248)",
+        "section": "rgb(247, 250, 253)",
+        "alternate": "rgb(216, 228, 244)",
+        "accent": null,
+        "card": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "name": "file:tinted-home.png",
+      "pass": true,
+      "data": {
+        "bytes": 505613
+      }
+    },
+    {
+      "name": "file:01-home-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 505613
+      }
+    },
+    {
+      "name": "02-plp",
+      "pass": true
+    },
+    {
+      "name": "file:02-plp-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 118504
+      }
+    },
+    {
+      "name": "03-pdp",
+      "pass": true
+    },
+    {
+      "name": "file:03-pdp-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 249987
+      }
+    },
+    {
+      "name": "file:tinted-pdp.png",
+      "pass": true,
+      "data": {
+        "bytes": 249987
+      }
+    },
+    {
+      "name": "04-content",
+      "pass": true
+    },
+    {
+      "name": "file:04-content-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 322285
+      }
+    },
+    {
+      "name": "05-cart",
+      "pass": true
+    },
+    {
+      "name": "file:05-cart-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 151340
+      }
+    },
+    {
+      "name": "06-checkout",
+      "pass": true
+    },
+    {
+      "name": "file:06-checkout-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 164103
+      }
+    },
+    {
+      "name": "07-account",
+      "pass": true
+    },
+    {
+      "name": "07-wishlist",
+      "pass": true
+    },
+    {
+      "name": "file:07-account-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 39176
+      }
+    },
+    {
+      "name": "08-landing",
+      "pass": true
+    },
+    {
+      "name": "file:08-landing-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 472106
+      }
+    },
+    {
+      "name": "custom-home-set",
+      "pass": true,
+      "data": {
+        "status": 200
+      }
+    },
+    {
+      "name": "09-custom-home",
+      "pass": true
+    },
+    {
+      "name": "file:09-custom-home-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 470187
+      }
+    },
+    {
+      "name": "custom-home-clear",
+      "pass": true
+    },
+    {
+      "name": "palette-tooba-blue",
+      "pass": true
+    },
+    {
+      "name": "palette-tooba-blue-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-tooba-blue.png",
+      "pass": true,
+      "data": {
+        "bytes": 504426
+      }
+    },
+    {
+      "name": "palette-forest-green",
+      "pass": true
+    },
+    {
+      "name": "palette-forest-green-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-forest-green.png",
+      "pass": true,
+      "data": {
+        "bytes": 505875
+      }
+    },
+    {
+      "name": "palette-wine-burgundy",
+      "pass": true
+    },
+    {
+      "name": "palette-wine-burgundy-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-wine-burgundy.png",
+      "pass": true,
+      "data": {
+        "bytes": 505405
+      }
+    },
+    {
+      "name": "palette-slate-navy",
+      "pass": true
+    },
+    {
+      "name": "palette-slate-navy-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-slate-navy.png",
+      "pass": true,
+      "data": {
+        "bytes": 505832
+      }
+    },
+    {
+      "name": "palette-amber-gold",
+      "pass": true
+    },
+    {
+      "name": "palette-amber-gold-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-amber-gold.png",
+      "pass": true,
+      "data": {
+        "bytes": 505589
+      }
+    },
+    {
+      "name": "palette-teal-lagoon",
+      "pass": true
+    },
+    {
+      "name": "palette-teal-lagoon-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-teal-lagoon.png",
+      "pass": true,
+      "data": {
+        "bytes": 505628
+      }
+    },
+    {
+      "name": "palette-violet-royal",
+      "pass": true
+    },
+    {
+      "name": "palette-violet-royal-home",
+      "pass": true
+    },
+    {
+      "name": "file:palette-violet-royal.png",
+      "pass": true,
+      "data": {
+        "bytes": 505406
+      }
+    },
+    {
+      "name": "dark-blue",
+      "pass": true
+    },
+    {
+      "name": "dark-home",
+      "pass": true
+    },
+    {
+      "name": "dark-class-home",
+      "pass": true
+    },
+    {
+      "name": "file:dark-home-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 505475
+      }
+    },
+    {
+      "name": "dark-class-pdp",
+      "pass": true
+    },
+    {
+      "name": "file:dark-pdp-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 250005
+      }
+    },
+    {
+      "name": "dark-landing",
+      "pass": true
+    },
+    {
+      "name": "file:dark-landing-tinted.png",
+      "pass": true,
+      "data": {
+        "bytes": 468962
+      }
+    },
+    {
+      "name": "dark-forest",
+      "pass": true
+    },
+    {
+      "name": "dark-forest-home",
+      "pass": true
+    },
+    {
+      "name": "admin-form",
+      "pass": true
+    },
+    {
+      "name": "admin-persian-roles",
+      "pass": true
+    },
+    {
+      "name": "file:admin-appearance-final.png",
+      "pass": true,
+      "data": {
+        "bytes": 73096
+      }
+    },
+    {
+      "name": "restore",
+      "pass": true
+    },
+    {
+      "name": "restore-home",
+      "pass": true
+    },
+    {
+      "name": "no-console-loop",
+      "pass": true,
+      "data": {
+        "loops": []
+      }
+    }
+  ],
+  "files": {
+    "neutral-home.png": {
+      "bytes": 503582
+    },
+    "neutral-pdp.png": {
+      "bytes": 250048
+    },
+    "tinted-home.png": {
+      "bytes": 505613
+    },
+    "01-home-tinted.png": {
+      "bytes": 505613
+    },
+    "02-plp-tinted.png": {
+      "bytes": 118504
+    },
+    "03-pdp-tinted.png": {
+      "bytes": 249987
+    },
+    "tinted-pdp.png": {
+      "bytes": 249987
+    },
+    "04-content-tinted.png": {
+      "bytes": 322285
+    },
+    "05-cart-tinted.png": {
+      "bytes": 151340
+    },
+    "06-checkout-tinted.png": {
+      "bytes": 164103
+    },
+    "07-account-tinted.png": {
+      "bytes": 39176
+    },
+    "08-landing-tinted.png": {
+      "bytes": 472106
+    },
+    "09-custom-home-tinted.png": {
+      "bytes": 470187
+    },
+    "palette-tooba-blue.png": {
+      "bytes": 504426
+    },
+    "palette-forest-green.png": {
+      "bytes": 505875
+    },
+    "palette-wine-burgundy.png": {
+      "bytes": 505405
+    },
+    "palette-slate-navy.png": {
+      "bytes": 505832
+    },
+    "palette-amber-gold.png": {
+      "bytes": 505589
+    },
+    "palette-teal-lagoon.png": {
+      "bytes": 505628
+    },
+    "palette-violet-royal.png": {
+      "bytes": 505406
+    },
+    "dark-home-tinted.png": {
+      "bytes": 505475
+    },
+    "dark-pdp-tinted.png": {
+      "bytes": 250005
+    },
+    "dark-landing-tinted.png": {
+      "bytes": 468962
+    },
+    "admin-appearance-final.png": {
+      "bytes": 73096
+    }
+  },
+  "errors": [],
+  "console": [
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "pageerror",
+      "text": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== '"
+    },
+    {
+      "type": "pageerror",
+      "text": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== '"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`."
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "type": "console-error",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    }
+  ],
+  "appearance": {
+    "paletteKey": "tooba-blue",
+    "themeMode": "LightOnly",
+    "productCardSkin": "classic",
+    "backgroundStyle": "Neutral"
+  },
+  "roles": {
+    "page": "rgb(228, 236, 248)",
+    "section": "rgb(247, 250, 253)",
+    "alternate": "rgb(216, 228, 244)",
+    "accent": null,
+    "card": "rgb(255, 255, 255)"
+  },
+  "pages": [],
+  "status500": [
+    {
+      "url": "http://127.0.0.1:3000/fa/products/demo-prod-fashion-men-men-pants-1",
+      "status": 500
+    },
+    {
+      "path": "/fa/products/demo-prod-fashion-men-men-pants-1",
+      "status": 500
+    }
+  ]
+}

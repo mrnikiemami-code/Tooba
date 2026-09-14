@@ -159,7 +159,7 @@ public sealed class StoreAppearanceAdminTests
         Assert.Equal("DarkOnly", view.ThemeMode);
         Assert.Equal("clean", view.ProductCardSkin);
         Assert.Equal("PaletteTint", view.BackgroundStyle);
-        Assert.Equal("236 244 238", view.Tint.PageBackgroundRgb);
+        Assert.Equal("228 242 232", view.Tint.PageBackgroundRgb);
         var row = await catalog.StoreAppearanceSettings.SingleAsync();
         Assert.Equal(StoreAppearanceBackgroundStyle.PaletteTint, row.BackgroundStyle);
     }
@@ -194,7 +194,7 @@ public sealed class StoreAppearanceAdminTests
         var projector = CreateProjector(catalog, OutboxTestContextFactory.SingleStore("store-a", "conn-a"), new MemoryCache(new MemoryCacheOptions()));
         var projection = await projector.GetEffectiveAsync(CancellationToken.None);
         Assert.Equal("Neutral", projection.BackgroundStyle);
-        Assert.Equal("236 241 250", projection.PageBackgroundRgb);
+        Assert.Equal("228 236 248", projection.PageBackgroundRgb);
         Assert.NotEqual(projection.PrimaryRgb, projection.PageBackgroundRgb);
     }
 

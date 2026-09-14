@@ -28,7 +28,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T015
+TB-P10-T016
 ```
 
 Prior accepted catalog wave:
@@ -50,7 +50,7 @@ TB-P07-T043
 Last Implementation Task:
 
 ```text
-TB-P10-T016
+TB-P10-T017
 ```
 
 Current Issued Task:
@@ -68,6 +68,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T017 — Final Surface Theme Visual Acceptance Refresh (four-role demo pack across Storefront pages); USER_VISUAL_ACCEPTED=NO
 TB-P10-T016 — Storefront Semantic Surface Architecture (PageBackground/SectionSurface/SectionAlternate/SectionAccent, Neutral+PaletteTint, Admin four-role preview); USER_VISUAL_ACCEPTED=NO
 TB-P10-T015 — Storefront Background Tint Option (Neutral/PaletteTint, curated tint tokens, Admin UX, Home/Landing inherit); USER_VISUAL_ACCEPTED=NO
 TB-P10-T014 — Appearance + Landing Final Demo & Visual Acceptance Pack (seeded palettes/pages/menu, inspection guide, screenshot pack); USER_VISUAL_ACCEPTED=NO
@@ -201,7 +202,7 @@ NO
 Worker Next State:
 
 ```text
-IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T017)
+IDLE — waits for Bridge Task (no invented next task; do NOT invent TB-P10-T018)
 ```
 
 Issued but not accepted:

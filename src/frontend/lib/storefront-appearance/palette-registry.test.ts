@@ -72,7 +72,7 @@ test("appearance CSS vars set brand tokens only", () => {
   assert.equal(Object.hasOwn(vars, "--color-danger"), false);
   assert.equal(Object.hasOwn(vars, "--color-success"), false);
   assert.equal(Object.hasOwn(vars, "--color-warning"), false);
-  assert.equal(vars["--color-page-tint"], "236 241 250");
+  assert.equal(vars["--color-page-tint"], "228 236 248");
   assert.notEqual(vars["--color-page-tint"], vars["--color-primary"]);
   assert.equal(vars["--color-section-alternate-tint"], resolveTintTokens("tooba-blue").sectionAlternateRgb);
   assert.equal(vars["--color-section-accent-tint"], resolveTintTokens("tooba-blue").sectionAccentRgb);
