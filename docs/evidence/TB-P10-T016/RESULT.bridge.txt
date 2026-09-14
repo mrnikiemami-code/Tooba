@@ -1,0 +1,58 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T016
+Parent-Task: TB-P10-T015
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Storefront semantic surface architecture is four global roles across page families: PageBackground / SectionSurface / SectionAlternate / SectionAccent. Neutral keeps the accepted white/gray hierarchy. PaletteTint supplies curated distinct light/dark values for all 7 palettes (not primary-alpha, not status). Admin preview shows زمینه صفحه / بخش اصلی / بخش جایگزین / بخش برجسته. Cards/header/footer/status stay independent. Canonical default restored to tooba-blue / LightOnly / classic / Neutral / canonical Home. USER_VISUAL_ACCEPTED remains NO. No T017.
+
+Applicable-Locks:
+LOCK-SF-001…196 preserved. Added LOCK-SF-197…202 (one surface hierarchy; no page-local theme families; PaletteTint four-role values; Landing SectionType code-owned roles; future custom theme = global roles only; status/card/elevated independent).
+
+Recovery-Start:
+branch=main HEAD-at-claim=9c797c5174932c4b015786651608ec01319d64a7 leftover login/account UX preserved. docs/evidence/TB-P10-T016/recovery-start.md
+
+Surface-Inventory:
+Home/Landing/PLP/PDP/blogs/Cart/Checkout/Account/Wishlist/Header/Footer classified. docs/evidence/TB-P10-T016/surface-inventory.md
+
+Four-Role-Token-Contract:
+`--color-page-background` `--color-section-surface` `--color-section-alternate` `--color-section-accent` with T015 `--color-section-background` alias. docs/evidence/TB-P10-T016/four-role-token-contract.md
+
+Page-Wide-Mapping:
+Wrappers mapped; cards remain CardSurface; Header/Footer not forced into section roles. docs/evidence/TB-P10-T016/page-wide-mapping.md
+
+Section-Role-Map:
+landingSectionSurfaceRole: Hero/PromoBanner=accent; ProductCollection/ArticleList=alternate; others=section. docs/evidence/TB-P10-T016/section-role-map.md
+
+Admin-Preview:
+Persian four-band preview. docs/evidence/TB-P10-T016/admin-preview.md
+
+Focused-Validation:
+Host StoreAppearance 20/20. FE appearance/palette/surface-role/theme 23/23. recovery-staleness 4/4. critical-storefront 18/18. Invalid PUT 400 appearance.background.invalid. docs/evidence/TB-P10-T016/focused-validation.md
+
+Runtime:
+A–L PASS. Screenshots under docs/evidence/TB-P10-T016/screenshots/. Restored canonical default. docs/evidence/TB-P10-T016/runtime.md runtime-report.json ok=true.
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T016/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…202. New 197–202 after 196. No duplicates.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T015 Impl TB-P10-T016 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T017. docs/evidence/TB-P10-T016/recovery-sot.md
+
+Git:
+SHA=60062abdd3a4192e570e9567be794efb9aeddae8 HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+T015 canvas still uses [data-storefront-canvas] plus data-storefront-surface-role CSS so Tailwind-only classes are not the sole paint path. Unrelated leftover login/account UX remains uncommitted. Flash sales inner from-primary chrome is brand promo, not SectionAccent wash.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user review of Neutral vs four-role PaletteTint. Pre-existing storefront theme SSR hydration warnings and anonymous 401 /api/auth/me were observed and are not surface-role-owned new loops. PLP/Landing product-card media wells can appear empty in 1440×1200 clips while price/ATC chrome remains (same class of capture as T015 landing-tinted); Home category media is visible. Cards stay elevated white/dark-surface vs page/section tints.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
