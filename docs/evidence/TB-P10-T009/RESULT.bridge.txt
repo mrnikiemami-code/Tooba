@@ -68,9 +68,10 @@ Recovery-SoT:
 Architect TB-P10-T008-R1; Impl TB-P10-T009; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T010. Evidence recovery-sot.md
 
 Git:
-ending HEAD pending-pin
-origin/main pending-pin
-HEAD==origin/main yes
+implementation HEAD a6b707706840a6f8ac9efa9121be01947207d3e4
+ending HEAD a6b707706840a6f8ac9efa9121be01947207d3e4
+origin/main pending-push
+HEAD==origin/main pending-push
 unrelated login/account UX preserved unstaged
 
 Architectural-Concerns:
