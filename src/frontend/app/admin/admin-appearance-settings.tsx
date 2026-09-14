@@ -185,8 +185,32 @@ export function AdminAppearanceSettingsForm(props: {
             <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
               دکمه اصلی
             </button>
-            <div className="rounded-lg bg-white border border-gray-100 shadow-sm p-3">
+            <div
+              className="rounded-lg border border-gray-100 shadow-sm p-3"
+              style={{ backgroundColor: "rgb(var(--color-surface))" }}
+              data-storefront-surface-role="card"
+              data-testid="admin-settings-appearance-preview-card"
+            >
+              <p className="text-[11px] text-gray-500 mb-2">کارت مشتق‌شده (تنظیم جدا ندارد)</p>
               <AdminProductCardSkinPreview skin={draftSkin} testId="admin-settings-appearance-card-preview" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div
+                className="rounded-lg border border-gray-100 p-2"
+                style={{ backgroundColor: "rgb(var(--color-surface-elevated))" }}
+                data-storefront-surface-role="elevated"
+                data-testid="admin-settings-appearance-preview-elevated"
+              >
+                <p className="text-[11px] text-gray-600">سطح برجسته</p>
+              </div>
+              <div
+                className="rounded-lg border border-gray-100 px-2 py-2 text-[11px] text-gray-600"
+                style={{ backgroundColor: "rgb(var(--color-surface))" }}
+                data-storefront-surface-role="input"
+                data-testid="admin-settings-appearance-preview-input"
+              >
+                نمونه ورودی
+              </div>
             </div>
           </div>
           <div className="rounded-lg p-3" style={{ backgroundColor: "rgb(var(--color-section-alternate))" }} data-storefront-surface-role="alternate" data-testid="admin-settings-appearance-preview-alternate">

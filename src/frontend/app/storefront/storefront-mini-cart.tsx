@@ -122,7 +122,7 @@ export function StorefrontMiniCartDrawer({
         aria-modal="true"
         aria-label="سبد خرید"
         data-testid="mini-cart-drawer"
-        className="absolute left-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
+        className="absolute left-0 top-0 bottom-0 w-full max-w-sm bg-surface shadow-2xl flex flex-col animate-in slide-in-from-left duration-300"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
@@ -163,7 +163,7 @@ export function StorefrontMiniCartDrawer({
                   className="flex gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100"
                   data-testid="mini-cart-line"
                 >
-                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-16 h-16 bg-surface rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={storefrontMediaUrl(line.mediaAssetId)}
@@ -185,7 +185,7 @@ export function StorefrontMiniCartDrawer({
                         onClick={() =>
                           void mutate(() => changeCartLineQuantity(line.lineId, Math.max(1, line.quantity - 1)))
                         }
-                        className="p-1 bg-white rounded-md text-gray-700 hover:bg-gray-100 transition disabled:opacity-40"
+                        className="p-1 bg-surface rounded-md text-gray-700 hover:bg-gray-100 transition disabled:opacity-40"
                         aria-label="کاهش"
                       >
                         <Minus className="w-3 h-3" />
@@ -197,7 +197,7 @@ export function StorefrontMiniCartDrawer({
                         type="button"
                         disabled={busy}
                         onClick={() => void mutate(() => changeCartLineQuantity(line.lineId, line.quantity + 1))}
-                        className="p-1 bg-white rounded-md text-gray-700 hover:bg-gray-100 transition"
+                        className="p-1 bg-surface rounded-md text-gray-700 hover:bg-gray-100 transition"
                         aria-label="افزایش"
                       >
                         <Plus className="w-3 h-3" />

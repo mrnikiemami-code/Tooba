@@ -1,3 +1,5 @@
+import { derivedSurfaceCssVars } from "./derived-surface.ts";
+
 export const DEFAULT_PALETTE_KEY = "tooba-blue";
 export const DEFAULT_PRIMARY_HEX = "#2563EB";
 export const DEFAULT_PRIMARY_STRONG_HEX = "#1d4ed8";
@@ -141,5 +143,6 @@ export function appearanceCssVars(tokens: StorefrontBrandTokens, tint: Storefron
     "--color-section-surface-tint-dark": tint.sectionBackgroundDarkRgb,
     "--color-section-alternate-tint-dark": tint.sectionAlternateDarkRgb,
     "--color-section-accent-tint-dark": tint.sectionAccentDarkRgb,
+    ...derivedSurfaceCssVars(tint),
   };
 }

@@ -171,7 +171,7 @@ function LandingCategoryGrid({
             <Link
               key={category.categoryId}
               href={`/products?categoryId=${category.categoryId}`}
-              className="w-[160px] shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-white"
+              className="w-[160px] shrink-0 overflow-hidden rounded-2xl border border-gray-100 bg-surface"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/images/categories/${imageIndex}.png`} alt="" className="aspect-square w-full object-contain p-4" />

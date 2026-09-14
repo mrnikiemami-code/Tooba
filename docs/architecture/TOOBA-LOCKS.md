@@ -787,3 +787,22 @@ Dynamic routes require representative runtime coverage. Customer navigation dest
 
 ### LOCK-SF-208 — Coverage is enforced by shared wrappers and guards
 Theme coverage is enforced by shared wrappers/primitives and generalized guards, not manual screenshot-by-screenshot patching.
+
+### LOCK-SF-209 — Customer-facing components consume semantic surfaces
+Customer-facing components consume semantic or centrally derived surfaces. Structural backgrounds cannot bypass Store Appearance.
+
+### LOCK-SF-210 — Only global surface roles are user-configurable
+Only the four global surface roles are user-configurable Store settings. Card, Elevated, Input, Interactive, Media, Overlay, and Border are centrally derived and must not gain DB, API, or Admin color fields.
+
+### LOCK-SF-211 — Component compliance uses shared primitives
+Component-level theme compliance uses shared primitives and guards, not page- or component-specific color settings.
+
+### LOCK-SF-212 — Shared semantic system across customer surfaces
+PDP, Home, Commerce, Auth, Content, and Customer Panel components share the same semantic surface system.
+
+### LOCK-SF-213 — New customer-facing components pass surface compliance
+New customer-facing components must pass component-level surface compliance before acceptance.
+
+### LOCK-SF-214 — Raw structural white/gray/hex is classified or forbidden
+Raw structural white, gray, or hex backgrounds are forbidden on customer-facing components unless centrally classified as Media, Status, Decorative, or another semantic exception.
+

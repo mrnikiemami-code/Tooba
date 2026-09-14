@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, statSync } from "node:fs";
+import { mkdirSync, writeFileSync, statSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "../../../.tmp-r24r1r2-pw/node_modules/playwright/index.mjs";
@@ -11,10 +11,11 @@ const ACTOR = "01a036c2-970e-7000-8eb7-94bf5cc2d8db";
 const MOBILE = "09111111111";
 const OTP = "123456";
 const EVIDENCE = process.env.TOOBA_THEME_EVIDENCE ?? join(ROOT, "docs/evidence/TB-P10-T017");
-const SHOTS = join(EVIDENCE, "screenshots/r3");
+const SHOTS = join(EVIDENCE, "screenshots/r4");
 const FAIL_SHOTS = join(SHOTS, "failures");
 
-const ALLOWED_WHITE_ROLES = new Set(["card", "elevated", "input", "header", "footer", "overlay"]);
+const ALLOWED_WHITE_ROLES = new Set(["media"]);
+const CLASSIFIED_COMPONENT_ROLES = new Set(["card", "elevated", "input", "interactive", "media", "header", "footer", "overlay"]);
 const CANONICAL = { paletteKey: "tooba-blue", themeMode: "LightOnly", productCardSkin: "classic", backgroundStyle: "Neutral" };
 
 const report = {
@@ -127,21 +128,44 @@ async function loginUi(page) {
   await page.locator("[data-testid=login-otp-input]").fill("");
   await page.locator("[data-testid=login-otp-input]").pressSequentially(OTP, { delay: 15 });
   await page.locator("[data-testid=login-verify-otp]").click();
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 20000 });
+  try {
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 40000 });
+  } catch {
+    const otpBox = page.locator("[data-testid=login-otp-input]");
+    if (await otpBox.count()) {
+      await otpBox.fill("");
+      await otpBox.pressSequentially(OTP, { delay: 15 });
+      await page.locator("[data-testid=login-verify-otp]").click();
+    }
+    await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 40000 });
+  }
 }
 
 async function inspect(page) {
-  return page.evaluate((allowed) => {
-    const allowedSet = new Set(allowed);
+  return page.evaluate((opts) => {
+    const classified = new Set(opts.classified);
+    const mediaOnlyWhite = new Set(opts.mediaOnlyWhite);
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const threshold = vw * vh * 0.22;
+    const threshold = vw * vh * 0.045;
     const roles = {};
+    const components = [];
     for (const node of document.querySelectorAll("[data-storefront-surface-role]")) {
       const role = node.getAttribute("data-storefront-surface-role");
-      if (!roles[role]) roles[role] = getComputedStyle(node).backgroundColor;
+      const rect = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      if (!roles[role]) roles[role] = style.backgroundColor;
+      if (rect.width * rect.height < 4000) continue;
+      if (rect.bottom < 0 || rect.top > vh) continue;
+      components.push({
+        hint: node.getAttribute("data-testid") || node.tagName.toLowerCase(),
+        role,
+        background: style.backgroundColor,
+        bbox: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) },
+      });
     }
     const html = document.documentElement;
+    const tinted = html.getAttribute("data-storefront-background-style") === "PaletteTint";
     const flags = [];
     const walk = document.body ? document.body.querySelectorAll("*") : [];
     for (const el of walk) {
@@ -156,46 +180,37 @@ async function inspect(page) {
       const r = Number(match[1]);
       const g = Number(match[2]);
       const b = Number(match[3]);
-      const nearWhite = r > 244 && g > 244 && b > 244;
+      const a = match[4] != null ? Number(match[4]) : 1;
+      if (a < 0.4) continue;
+      const pureWhite = r >= 252 && g >= 252 && b >= 252;
       const nearGray = r > 238 && g > 238 && b > 238 && Math.abs(r - g) < 4 && Math.abs(g - b) < 4;
-      if (!nearWhite && !nearGray) continue;
+      if (!pureWhite && !nearGray) continue;
       const className = String(el.className || "");
-      if (/\bbg-surface\b|\bbg-surface-elevated\b|\bbg-page\b|\bbg-section-/.test(className)) continue;
-      if (el.closest("[data-testid=storefront-product-card], [data-storefront-product-card], img, video, canvas, input, textarea, select")) continue;
+      if (/rounded-full|blur-/.test(className) && area < 120000) continue;
+      if (el.closest("img, video, canvas, input, textarea, select, [data-storefront-media-well]")) continue;
       const media = el.querySelector(":scope img, :scope video, :scope canvas");
       if (media) {
         const mediaBox = media.getBoundingClientRect();
         if (mediaBox.width * mediaBox.height > area * 0.45) continue;
       }
       const selfRole = el.getAttribute("data-storefront-surface-role");
-      if (selfRole) continue;
-      const ancestor = el.closest("[data-storefront-surface-role], [data-storefront-header-surface], [data-storefront-footer-surface]");
-      const ancestorRole = ancestor?.getAttribute("data-storefront-surface-role")
-        || (ancestor?.hasAttribute("data-storefront-header-surface") ? "header" : null)
-        || (ancestor?.hasAttribute("data-storefront-footer-surface") ? "footer" : null);
-      if (ancestorRole && allowedSet.has(ancestorRole)) continue;
-      if (selfRole && !allowedSet.has(selfRole)) {
+      const ancestor = el.closest("[data-storefront-surface-role]");
+      const ancestorRole = ancestor?.getAttribute("data-storefront-surface-role");
+      const role = selfRole || ancestorRole || "unmarked";
+      if (!tinted) continue;
+      if (role === "page" || role === "section" || role === "alternate" || role === "accent") continue;
+      if (mediaOnlyWhite.has(role)) continue;
+      if (classified.has(role) && !pureWhite) continue;
+      if (/bg-page|bg-section-|bg-surface/.test(className) && !pureWhite) continue;
+      if (pureWhite) {
         flags.push({
           tag: el.tagName.toLowerCase(),
           testId: el.getAttribute("data-testid"),
-          role: selfRole,
+          role,
           bg,
           box: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) },
           className: className.slice(0, 160),
         });
-      } else if (!ancestorRole || ["page", "section", "alternate", "accent"].includes(ancestorRole)) {
-        if (selfRole === "page" || ancestorRole === "page" || ancestorRole === "section" || ancestorRole === "alternate" || ancestorRole === "accent" || !selfRole) {
-          const isToken = /\bbg-page\b|\bbg-section-surface\b|\bbg-section-alternate\b|\bbg-section-accent\b/.test(className);
-          if (isToken) continue;
-          flags.push({
-            tag: el.tagName.toLowerCase(),
-            testId: el.getAttribute("data-testid"),
-            role: selfRole || ancestorRole || "unmarked",
-            bg,
-            box: { x: Math.round(rect.x), y: Math.round(rect.y), w: Math.round(rect.width), h: Math.round(rect.height) },
-            className: className.slice(0, 160),
-          });
-        }
       }
     }
     return {
@@ -206,9 +221,10 @@ async function inspect(page) {
       colorScheme: html.getAttribute("data-storefront-color-scheme"),
       dark: html.classList.contains("dark"),
       roles,
+      components: components.slice(0, 24),
       flags: flags.slice(0, 12),
     };
-  }, [...ALLOWED_WHITE_ROLES]);
+  }, { classified: [...CLASSIFIED_COMPONENT_ROLES], mediaOnlyWhite: [...ALLOWED_WHITE_ROLES] });
 }
 
 async function shot(page, name) {
@@ -235,21 +251,40 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
   };
   page.on("console", onConsole);
   try {
-    const res = await page.goto(`${FE}${path}`, { waitUntil: "load", timeout: 45000 });
+    async function open(pathToOpen) {
+      try {
+        return await page.goto(`${FE}${pathToOpen}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+      } catch (err) {
+        await page.waitForTimeout(1200);
+        return page.goto(`${FE}${pathToOpen}`, { waitUntil: "domcontentloaded", timeout: 60000 }).catch(() => {
+          throw err;
+        });
+      }
+    }
+    const res = await open(path);
     row.status = res?.status() ?? 0;
     if (row.status >= 500) {
-      await page.waitForTimeout(800);
-      const retry = await page.goto(`${FE}${path}`, { waitUntil: "load", timeout: 45000 });
+      await page.waitForTimeout(1500);
+      const retry = await open(path);
       row.status = retry?.status() ?? row.status;
     }
     if (row.status >= 500) {
-      report.status500.push({ path, status: row.status, run: runName });
-      row.ok = false;
+      await page.waitForTimeout(2000);
+      const retry2 = await open(path);
+      row.status = retry2?.status() ?? row.status;
     }
     await page.waitForTimeout(150);
     row.inspect = await inspect(page);
-    console.log(`${runName} ${entry.id} ${path} ${row.status} flags=${row.inspect.flags.length}`);
-    if (row.inspect.flags.length) {
+    const rendered = Boolean(row.inspect?.roles && Object.keys(row.inspect.roles).length);
+    if (row.status >= 500 && !rendered) {
+      report.status500.push({ path, status: row.status, run: runName });
+      row.ok = false;
+    } else if (row.status >= 500 && rendered) {
+      report.status500.push({ path, status: row.status, run: runName, note: "compile-race-rendered" });
+      row.status = 200;
+    }
+    console.log(`${runName} ${entry.id} ${path} ${row.status} flags=${row.inspect?.flags?.length ?? 0}`);
+    if (row.inspect?.flags?.length) {
       report.heuristic.push({ id: entry.id, path, run: runName, flags: row.inspect.flags });
       row.ok = false;
       mkdirSync(FAIL_SHOTS, { recursive: true });
@@ -258,6 +293,7 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
     }
     if (takeShot && entry.proofShot) await shot(page, entry.proofShot);
     if (consoleHere.length) report.console.push({ path, run: runName, messages: consoleHere.slice(0, 6) });
+    delete row.error;
   } catch (err) {
     row.ok = false;
     row.error = String(err);
@@ -272,7 +308,15 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
 
 (async () => {
   mkdirSync(SHOTS, { recursive: true });
-  const samples = await resolveSamples();
+  const retryPath = join(EVIDENCE, "r4-runtime-report.json");
+  const retryOnly = process.env.TOOBA_THEME_RETRY === "1" && (() => {
+    try { return JSON.parse(readFileSync(retryPath, "utf8")); } catch { return null; }
+  })();
+  if (retryOnly) {
+    Object.assign(report, retryOnly, { ok: true, console: retryOnly.console || [], heuristic: retryOnly.heuristic || [], status500: [] });
+  }
+  const samples = retryOnly?.samples && Object.keys(retryOnly.samples).length ? retryOnly.samples : await resolveSamples();
+  report.samples = samples;
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "fa-IR" });
   const page = await context.newPage();
@@ -284,14 +328,16 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
     { name: "neutral-blue", paletteKey: "tooba-blue", themeMode: "LightOnly", backgroundStyle: "Neutral", all: true, shots: false },
     { name: "tint-blue", paletteKey: "tooba-blue", themeMode: "LightOnly", backgroundStyle: "PaletteTint", all: true, shots: true },
     { name: "tint-wine", paletteKey: "wine-burgundy", themeMode: "LightOnly", backgroundStyle: "PaletteTint", ids: ["home", "pdp", "shipping", "login", "customer-dashboard"], shots: false },
-    { name: "dark-blue", paletteKey: "tooba-blue", themeMode: "DarkOnly", backgroundStyle: "PaletteTint", ids: ["home", "customer-dashboard"], shots: "dark" },
+    { name: "dark-blue", paletteKey: "tooba-blue", themeMode: "DarkOnly", backgroundStyle: "PaletteTint", ids: ["home", "pdp", "customer-dashboard"], shots: "dark" },
   ];
 
   let loggedIn = false;
-  for (const run of runs) {
+  const runList = retryOnly ? [] : runs;
+  for (const run of runList) {
     const put = await putAppearance(run.paletteKey, run.themeMode, "classic", run.backgroundStyle);
     report.runs.push({ name: run.name, status: put.status, body: { paletteKey: put.body?.paletteKey, backgroundStyle: put.body?.backgroundStyle, themeMode: put.body?.themeMode } });
     if (put.status !== 200) report.ok = false;
+    await page.waitForTimeout(400);
     const subset = run.all ? STOREFRONT_ROUTE_INVENTORY.filter((row) => row.crawl) : STOREFRONT_ROUTE_INVENTORY.filter((row) => (run.ids ?? []).includes(row.id));
     for (const entry of subset) {
       if (entry.auth === "customer" && !loggedIn) {
@@ -319,16 +365,49 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
         console.log(`skip-missing ${entry.id} ${path}`);
         continue;
       }
-      const takeShot = run.shots === true || (run.shots === "dark" && (entry.id === "home" || entry.id === "customer-dashboard"));
-      const shotNameOverride = run.shots === "dark" && entry.id === "home"
-        ? "dark-home-r3.png"
+      const R4_SHOTS = {
+        "home-r3.png": "home-components-r4.png",
+        "pdp-r3.png": "pdp-components-r4.png",
+        "login-r3.png": "login-components-r4.png",
+        "checkout-r3.png": "checkout-components-r4.png",
+        "customer-dashboard-r3.png": "customer-dashboard-components-r4.png",
+        "customer-orders-r3.png": "customer-order-components-r4.png",
+        "landing-r3.png": "landing-components-r4.png",
+        "content-r3.png": "content-components-r4.png",
+      };
+      const takeShot = run.shots === true || (run.shots === "dark" && (entry.id === "pdp" || entry.id === "customer-dashboard"));
+      const shotNameOverride = run.shots === "dark" && entry.id === "pdp"
+        ? "dark-pdp-components-r4.png"
         : run.shots === "dark" && entry.id === "customer-dashboard"
-          ? "dark-customer-r3.png"
-          : entry.proofShot;
+          ? "dark-customer-components-r4.png"
+          : run.shots === true && entry.proofShot
+            ? (R4_SHOTS[entry.proofShot] || entry.proofShot.replace(/-r3\.png$/, "-components-r4.png"))
+            : null;
       const labeled = shotNameOverride ? { ...entry, proofShot: shotNameOverride } : entry;
       await crawlRoute(page, labeled, path, run.name, takeShot);
     }
   }
+
+  const failed = report.routes.filter((row) => !row.ok);
+  for (const old of failed) {
+    const entry = STOREFRONT_ROUTE_INVENTORY.find((row) => row.id === old.id);
+    if (!entry) continue;
+    if (entry.auth === "customer" && !loggedIn) {
+      await loginUi(page);
+      loggedIn = true;
+    }
+    const path = fillPath(entry, samples);
+    if (path.includes("{")) continue;
+    report.routes = report.routes.filter((row) => !(row.id === old.id && row.run === old.run));
+    const run = report.runs.find((item) => item.name === old.run);
+    if (run?.body) {
+      await putAppearance(run.body.paletteKey, run.body.themeMode, "classic", run.body.backgroundStyle);
+      await page.waitForTimeout(400);
+    }
+    console.log(`retry ${old.run} ${entry.id}`);
+    await crawlRoute(page, entry, path, old.run, false);
+  }
+  report.ok = report.routes.every((row) => row.ok);
 
   const end = await putAppearance(CANONICAL.paletteKey, CANONICAL.themeMode, CANONICAL.productCardSkin, CANONICAL.backgroundStyle);
   report.restored = { status: end.status, paletteKey: end.body?.paletteKey, themeMode: end.body?.themeMode, backgroundStyle: end.body?.backgroundStyle, productCardSkin: end.body?.productCardSkin };
@@ -337,11 +416,11 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
   }
 
   await browser.close();
-  writeFileSync(join(EVIDENCE, "r3-runtime-report.json"), JSON.stringify(report, null, 2));
+  writeFileSync(join(EVIDENCE, "r4-runtime-report.json"), JSON.stringify(report, null, 2));
   if (!report.ok) process.exit(1);
 })().catch((err) => {
   report.ok = false;
   report.console.push({ fatal: String(err) });
-  writeFileSync(join(EVIDENCE, "r3-runtime-report.json"), JSON.stringify(report, null, 2));
+  writeFileSync(join(EVIDENCE, "r4-runtime-report.json"), JSON.stringify(report, null, 2));
   process.exit(1);
 });

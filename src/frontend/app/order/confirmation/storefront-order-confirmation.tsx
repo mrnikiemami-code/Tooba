@@ -251,7 +251,7 @@ function ConfirmationBody() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 text-sm space-y-2 text-right shadow-sm">
+        <div className="bg-surface rounded-2xl border border-gray-200 p-5 text-sm space-y-2 text-right shadow-sm">
           <p>
             گیرنده: {page.recipientName} — {page.contactMobile}
           </p>

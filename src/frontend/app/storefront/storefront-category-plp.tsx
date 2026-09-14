@@ -227,7 +227,7 @@ export function StorefrontCategoryPlpView({
         ))}
       </nav>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
+      <div className="bg-surface rounded-2xl border border-gray-100 p-5 mb-4">
         <h1 className="text-xl sm:text-2xl font-black text-gray-900" data-testid="category-plp-title">
           {page.name}
         </h1>
@@ -260,7 +260,7 @@ export function StorefrontCategoryPlpView({
       <div className="lg:hidden mb-3">
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-surface px-3 py-2 text-sm font-semibold"
           onClick={() => setMobileFiltersOpen(true)}
           data-testid="category-plp-open-filters"
         >
@@ -270,12 +270,12 @@ export function StorefrontCategoryPlpView({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-4">
-        <aside className="hidden lg:block bg-white rounded-2xl border border-gray-100 p-4 h-fit sticky top-24">
+        <aside className="hidden lg:block bg-surface rounded-2xl border border-gray-100 p-4 h-fit sticky top-24">
           {filterPanel}
         </aside>
 
         <section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white rounded-2xl border border-gray-100 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-surface rounded-2xl border border-gray-100 px-4 py-3">
             <div className="text-xs text-gray-500">مرتب‌سازی</div>
             <div className="flex flex-wrap gap-2">
               {sortOptions.map((option) => (
@@ -298,7 +298,7 @@ export function StorefrontCategoryPlpView({
           </div>
 
           {page.products.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 py-16 text-center text-sm text-gray-500">
+            <div className="bg-surface rounded-2xl border border-dashed border-gray-200 py-16 text-center text-sm text-gray-500">
               <Package className="w-8 h-8 mx-auto mb-2 opacity-40" />
               کالایی با این فیلترها یافت نشد.
             </div>
@@ -315,7 +315,7 @@ export function StorefrontCategoryPlpView({
               {page.page > 1 ? (
                 <Link
                   href={hrefFor({ page: String(page.page - 1) })}
-                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold"
+                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-surface px-3 py-2 text-xs font-semibold"
                 >
                   <ChevronRight className="w-3 h-3" />
                   قبلی
@@ -327,7 +327,7 @@ export function StorefrontCategoryPlpView({
               {page.page < pageCount ? (
                 <Link
                   href={hrefFor({ page: String(page.page + 1) })}
-                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold"
+                  className="inline-flex items-center gap-1 rounded-xl border border-gray-200 bg-surface px-3 py-2 text-xs font-semibold"
                 >
                   بعدی
                   <ChevronLeft className="w-3 h-3" />
@@ -346,7 +346,7 @@ export function StorefrontCategoryPlpView({
             aria-label="بستن فیلترها"
             onClick={() => setMobileFiltersOpen(false)}
           />
-          <div className="absolute inset-y-0 right-0 w-[min(100%,320px)] bg-white shadow-xl p-4 overflow-y-auto">
+          <div className="absolute inset-y-0 right-0 w-[min(100%,320px)] bg-surface shadow-xl p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <span className="font-bold text-sm">فیلترها</span>
               <button type="button" onClick={() => setMobileFiltersOpen(false)} aria-label="بستن">

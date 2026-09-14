@@ -23,7 +23,9 @@ New Storefront or customer pages must:
 | بخش جایگزین / SectionAlternate | `--color-section-alternate` | Alternate band |
 | بخش برجسته / SectionAccent | `--color-section-accent` | Promo/highlight band |
 
-CardSurface, ElevatedSurface, Input, HeaderSurface, FooterSurface, OverlaySurface, and status colors stay independent of the four page/section roles.
+CardSurface, ElevatedSurface, Input, Interactive, Media, Header, Footer, Overlay, and Border are **system-derived** from PaletteKey + ThemeMode + BackgroundStyle + the four global roles. They are not independent Store settings.
+
+See `docs/architecture/storefront-component-surface-derivation.md`.
 
 ## Shared wrappers
 

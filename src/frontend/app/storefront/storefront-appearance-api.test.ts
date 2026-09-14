@@ -35,6 +35,7 @@ test("appearance style is brand-token only", () => {
   assert.equal(style["--color-primary"], "37 99 235");
   assert.equal(style["--color-primary-on-dark"], "59 115 237");
   assert.equal(style["--color-page-tint"], resolveTintTokens("tooba-blue").pageBackgroundRgb);
+  assert.ok(Object.hasOwn(style, "--color-card-derived"));
   assert.equal(Object.hasOwn(style, "--color-danger"), false);
   const vars = appearanceCssVars(resolveBrandTokens("unknown"));
   assert.equal(vars["--color-primary"], "37 99 235");

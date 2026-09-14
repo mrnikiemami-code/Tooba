@@ -11,6 +11,7 @@ const storefrontLayout = fs.readFileSync(path.join(root, "app/layout.tsx"), "utf
 
 test("customer panel inherits store appearance through shared shell tokens", () => {
   assert.match(layout, /CustomerPanelShell/);
+  assert.match(shell, /data-customer-panel-canvas/);
   assert.match(shell, /data-storefront-surface-role="page"/);
   assert.match(shell, /data-storefront-surface-role="header"/);
   assert.match(shell, /data-storefront-surface-role="section"/);

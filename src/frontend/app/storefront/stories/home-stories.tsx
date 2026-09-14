@@ -82,7 +82,7 @@ export function HomeStoriesSection() {
                       onMouseLeave={() => setHoveredId(null)}
                     >
                       <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full p-[3px] group-hover:scale-105 transition-transform duration-300 bg-gradient-to-tr from-primary via-purple-500 to-pink-500">
-                        <div className="w-full h-full rounded-full p-[2px] bg-white dark:bg-zinc-950">
+                        <div className="w-full h-full rounded-full p-[2px] bg-surface dark:bg-zinc-950">
                           <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 dark:bg-zinc-800">
                             {isVideo ? (
                               // eslint-disable-next-line jsx-a11y/media-has-caption

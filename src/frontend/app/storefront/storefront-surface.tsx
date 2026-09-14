@@ -45,6 +45,8 @@ export function StorefrontSectionSurface({
 export function StorefrontPanelSurface({
   surface = "card",
   ...props
-}: Omit<StorefrontSurfaceProps, "surface"> & { surface?: Extract<StorefrontAllowedSurface, "card" | "elevated" | "overlay"> }) {
+}: Omit<StorefrontSurfaceProps, "surface"> & {
+  surface?: Extract<StorefrontAllowedSurface, "card" | "elevated" | "overlay" | "input" | "interactive" | "media">;
+}) {
   return <StorefrontSurface surface={surface} {...props} />;
 }

@@ -98,7 +98,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
       <div className="bg-surface rounded-2xl border border-gray-200 shadow-sm" data-storefront-surface-role="card" data-testid="pdp-primary-card">
         <div className="grid grid-cols-1 lg:grid-cols-12">
           <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-l border-gray-200 p-4">
-            <div className="relative aspect-square bg-gray-50 rounded-2xl overflow-hidden">
+            <div className="relative aspect-square bg-background rounded-2xl overflow-hidden" data-storefront-surface-role="media" data-testid="pdp-gallery">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={storefrontMediaUrl(images[active])} alt={currentDetail.title} className="w-full h-full object-contain p-6" />
             </div>
@@ -157,7 +157,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                           selected
                             ? "border-primary bg-blue-50 text-primary"
                             : shoppable
-                              ? "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                              ? "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
                               : "border-dashed border-gray-200 bg-gray-50 text-gray-400"
                         }`}
                         onClick={() => {
@@ -344,13 +344,13 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                       className={`w-full rounded-xl border p-2.5 text-right transition-colors ${
                         selected
                           ? "border-primary bg-blue-50 ring-1 ring-primary/15"
-                          : "border-gray-200 bg-white hover:border-gray-300"
+                          : "border-gray-200 bg-surface hover:border-gray-300"
                       }`}
                     >
                       <div className="flex items-start gap-2">
                         <span
                           className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border ${
-                            selected ? "border-primary bg-primary text-white" : "border-gray-300 bg-white"
+                            selected ? "border-primary bg-primary text-white" : "border-gray-300 bg-surface"
                           }`}
                         >
                           {selected ? <Check className="size-2.5" strokeWidth={3} /> : null}

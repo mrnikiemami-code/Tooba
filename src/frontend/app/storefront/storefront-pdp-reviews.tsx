@@ -59,7 +59,7 @@ export function StorefrontPdpReviews({ detail }: { detail: StorefrontProductDeta
     {!showForm ? <button type="button" onClick={() => { setShowForm(true); setMessage(null); }} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white">
       <Edit3 className="size-4" /> نوشتن نظر
     </button> : (
-      <form className="space-y-4 rounded-xl border border-gray-200 bg-white p-4" onSubmit={(event) => {
+      <form className="space-y-4 rounded-xl border border-gray-200 bg-surface p-4" onSubmit={(event) => {
         event.preventDefault();
         if (rating < 1 || rating > 5) return setMessage("لطفاً امتیاز ۱ تا ۵ را انتخاب کنید.");
         if (body.trim().length < 10) return setMessage("متن نظر باید حداقل ۱۰ کاراکتر باشد.");

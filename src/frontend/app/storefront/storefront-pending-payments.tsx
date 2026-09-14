@@ -217,7 +217,7 @@ export function StorefrontPendingPayments({
           return (
             <article
               key={item.checkoutId}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+              className="bg-surface rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
               data-testid="pending-payment-card"
             >
               <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4">

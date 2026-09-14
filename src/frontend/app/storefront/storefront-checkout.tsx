@@ -291,7 +291,7 @@ export function StorefrontShopeivaCheckout() {
                 <CreditCard className="w-4 h-4 text-primary" />
                 پرداخت
               </h2>
-              <div className="rounded-xl border-2 border-primary bg-white p-4 space-y-3">
+              <div className="rounded-xl border-2 border-primary bg-surface p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-5 h-5 text-primary" />
@@ -392,12 +392,12 @@ function CheckoutHero({
     <section className="w-full bg-section-surface" data-testid="checkout-hero" data-storefront-surface-role="section">
       <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[200px] md:min-h-[220px]">
         <div className="absolute inset-0 opacity-[0.08]">
-          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white" />
-          <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-white" />
-          <div className="absolute top-10 left-1/4 w-20 h-20 rounded-full bg-white" />
+          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-surface" />
+          <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-surface" />
+          <div className="absolute top-10 left-1/4 w-20 h-20 rounded-full bg-surface" />
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 pt-8 md:p-10 md:pt-12">
-          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+          <span className="inline-flex items-center gap-1.5 bg-surface/15 backdrop-blur-sm text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-4">
             <Truck className="w-3.5 h-3.5" />
             {badge}
           </span>

@@ -199,7 +199,7 @@ function HomeCategoryGridSection({ homeCategories }: { homeCategories: Storefron
             <Link
               key={category.categoryId}
               href={`/products?categoryId=${category.categoryId}`}
-              className="snap-start shrink-0 w-[160px] md:w-[180px] bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md"
+              className="snap-start shrink-0 w-[160px] md:w-[180px] bg-surface rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md" data-storefront-surface-role="card"
               data-testid="home-category-card"
             >
               <div className="aspect-square bg-gray-50">
@@ -307,7 +307,7 @@ function ProductRailSection({
               <Flame className="w-5 h-5" />
               {title}
             </h2>
-            <Link href={href} className="text-xs font-bold bg-white text-primary px-3 py-1 rounded-lg">
+            <Link href={href} className="text-xs font-bold bg-surface text-primary px-3 py-1 rounded-lg">
               {linkLabel}
             </Link>
           </div>

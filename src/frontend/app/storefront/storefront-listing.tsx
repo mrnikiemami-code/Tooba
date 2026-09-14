@@ -270,7 +270,7 @@ export function StorefrontShopeivaListing({
                 <select
                   id="listing-sort"
                   name="sort"
-                  className="px-3 py-2.5 bg-white rounded-xl text-sm text-gray-700 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-3 py-2.5 bg-surface rounded-xl text-sm text-gray-700 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
                   defaultValue={sort}
                   aria-label="مرتب‌سازی"
                   data-testid="listing-sort-select"

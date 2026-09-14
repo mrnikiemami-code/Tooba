@@ -20,9 +20,10 @@ test("landing SectionTypes map to four global roles not page-local tokens", () =
   assert.equal(landingSectionSurfaceRole("NavigationMenu"), "section");
   assert.equal(landingSectionSurfaceRole("Unknown"), "section");
   assert.deepEqual([...STOREFRONT_SURFACE_ROLES], ["page", "section", "alternate", "accent"]);
-  assert.equal(surfaceRoleClass("card"), "bg-surface");
-  assert.equal(surfaceRoleClass("header"), "bg-surface");
-  assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("elevated"));
+  assert.equal(surfaceRoleClass("interactive"), "bg-secondary");
+  assert.equal(surfaceRoleClass("media"), "bg-background");
+  assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("interactive"));
+  assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("media"));
 });
 
 test("PaletteTint four roles are distinct and not primary or status", () => {

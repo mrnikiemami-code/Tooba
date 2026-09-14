@@ -128,7 +128,7 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
     ? createPortal(
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" data-testid="logout-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title">
         <button type="button" className="absolute inset-0 bg-black/40" aria-label={copy.cancel} data-testid="logout-confirm-overlay" onClick={() => setConfirmOpen(false)} />
-        <div className="relative w-full max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-2xl">
+        <div className="relative w-full max-w-lg rounded-2xl bg-surface p-5 sm:p-6 shadow-2xl">
           <button type="button" className="absolute top-3 left-3 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100" aria-label={copy.cancel} data-testid="logout-confirm-close" onClick={() => setConfirmOpen(false)}>
             <X className="w-5 h-5" />
           </button>
@@ -207,7 +207,7 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
 
   if (compact) {
     return (
-      <div className="w-full rounded-2xl border border-gray-100 bg-white py-1" ref={root} data-testid="header-account-menu">
+      <div className="w-full rounded-2xl border border-gray-100 bg-surface py-1" ref={root} data-testid="header-account-menu">
         {menuRows}
         {confirmDialog}
       </div>
@@ -234,7 +234,7 @@ export function StorefrontAccountMenu({ compact = false }: { compact?: boolean }
       </button>
       {open ? (
         <div
-          className="absolute left-0 mt-1 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200 py-1 z-50 overflow-hidden"
+          className="absolute left-0 mt-1 w-64 bg-surface rounded-2xl shadow-2xl border border-gray-200 py-1 z-50 overflow-hidden"
           data-testid="header-account-dropdown"
         >
           {menuRows}

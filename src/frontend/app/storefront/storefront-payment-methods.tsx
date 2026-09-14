@@ -40,7 +40,7 @@ export function StorefrontPaymentMethodPicker({
 
   return (
     <section
-      className="bg-white border border-gray-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3"
+      className="bg-surface border border-gray-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3"
       data-testid="payment-method-picker"
       dir="rtl"
     >

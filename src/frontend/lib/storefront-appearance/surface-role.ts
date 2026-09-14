@@ -6,13 +6,24 @@ export const STOREFRONT_ALLOWED_SURFACES = [
   "card",
   "elevated",
   "input",
+  "interactive",
+  "media",
   "header",
   "footer",
   "overlay",
 ] as const;
 export type StorefrontAllowedSurface = (typeof STOREFRONT_ALLOWED_SURFACES)[number];
 
-export const INTENTIONAL_FIXED_SURFACE_ROLES = ["card", "elevated", "input", "header", "footer", "overlay"] as const;
+export const INTENTIONAL_FIXED_SURFACE_ROLES = [
+  "card",
+  "elevated",
+  "input",
+  "interactive",
+  "media",
+  "header",
+  "footer",
+  "overlay",
+] as const;
 
 const ROLE_CLASS: Record<StorefrontAllowedSurface, string> = {
   page: "bg-page",
@@ -22,6 +33,8 @@ const ROLE_CLASS: Record<StorefrontAllowedSurface, string> = {
   card: "bg-surface",
   elevated: "bg-surface-elevated",
   input: "bg-surface",
+  interactive: "bg-secondary",
+  media: "bg-background",
   header: "bg-surface",
   footer: "bg-surface",
   overlay: "bg-surface-elevated",

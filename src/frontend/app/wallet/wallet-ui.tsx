@@ -97,7 +97,7 @@ export function GiftCardRedeemForm({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-gray-200 p-4"
+      className="bg-surface rounded-2xl border border-gray-200 p-4"
       data-testid="wallet-gift-redeem"
     >
       <p className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-1">
@@ -150,8 +150,8 @@ function BalanceHero({
       data-testid="wallet-balance-hero"
     >
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-surface rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-surface rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
       </div>
       <div className="relative z-10">
         <div className="flex items-center gap-2 text-white/80 mb-4">
@@ -170,19 +170,19 @@ function BalanceHero({
 function StatsRow({ summary }: { summary: WalletSummary }) {
   return (
     <div className="grid grid-cols-3 gap-3" data-testid="wallet-stats">
-      <div className="bg-white rounded-2xl p-4 border border-gray-200 text-center">
+      <div className="bg-surface rounded-2xl p-4 border border-gray-200 text-center">
         <p className="text-xs text-gray-500 whitespace-nowrap">کل واریز</p>
         <p className="text-base md:text-lg font-black text-emerald-500 truncate">
           {formatWalletMoney(summary.totalCredits)}
         </p>
       </div>
-      <div className="bg-white rounded-2xl p-4 border border-gray-200 text-center">
+      <div className="bg-surface rounded-2xl p-4 border border-gray-200 text-center">
         <p className="text-xs text-gray-500 whitespace-nowrap">کل برداشت</p>
         <p className="text-base md:text-lg font-black text-red-500 truncate">
           {formatWalletMoney(summary.totalDebits)}
         </p>
       </div>
-      <div className="bg-white rounded-2xl p-4 border border-gray-200 text-center">
+      <div className="bg-surface rounded-2xl p-4 border border-gray-200 text-center">
         <p className="text-xs text-gray-500 whitespace-nowrap">تعداد تراکنش</p>
         <p className="text-base md:text-lg font-black text-[#E53935] truncate">
           {toPersianDigits(summary.entryCount)}
@@ -196,7 +196,7 @@ function LedgerList({ entries, emptyHint }: { entries: WalletLedgerEntry[]; empt
   if (entries.length === 0) {
     return (
       <div
-        className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-500"
+        className="bg-surface rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-500"
         data-testid="wallet-ledger-empty"
       >
         {emptyHint}
@@ -319,7 +319,7 @@ export function CustomerWalletPanel() {
         <button
           type="button"
           onClick={refresh}
-          className="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-700 text-xs font-bold"
+          className="px-4 py-2 rounded-xl bg-surface border border-red-200 text-red-700 text-xs font-bold"
         >
           تلاش مجدد
         </button>
@@ -433,14 +433,14 @@ export function CustomerGiftCardsPanel() {
       <div className="space-y-3" data-testid="gift-card-credit-history">
         <h2 className="text-sm font-bold text-gray-900">اعتبارهای ثبت‌شده از کارت هدیه</h2>
         {giftCredits.length === 0 ? (
-          <p className="text-xs text-gray-500 bg-white rounded-2xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 bg-surface rounded-2xl border border-gray-200 p-4">
             هنوز کارت هدیه‌ای بازخرید نشده است.
           </p>
         ) : (
           giftCredits.map((entry) => (
             <div
               key={entry.entryId}
-              className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between"
+              className="bg-surface rounded-2xl border border-gray-200 p-4 flex items-center justify-between"
             >
               <div>
                 <p className="text-sm font-medium text-gray-900">{formatLedgerEntryLabel(entry)}</p>
@@ -648,12 +648,12 @@ export function AdminGiftCardsScreen() {
       </div>
 
       {demoNote ? (
-        <p className="text-[11px] text-gray-500 bg-white border border-gray-200 rounded-xl px-3 py-2" data-testid="admin-wallet-demo-note">
+        <p className="text-[11px] text-gray-500 bg-surface border border-gray-200 rounded-xl px-3 py-2" data-testid="admin-wallet-demo-note">
           {demoNote}
         </p>
       ) : null}
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3" data-testid="admin-gift-issue">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-4 space-y-3" data-testid="admin-gift-issue">
         <h2 className="text-sm font-bold text-gray-900">صدور کارت جدید</h2>
         <div className="flex flex-wrap gap-2">
           <input
@@ -695,12 +695,12 @@ export function AdminGiftCardsScreen() {
           value={qDraft}
           onChange={(e) => setQDraft(e.target.value)}
           placeholder="جستجو (شناسه)…"
-          className="flex-1 min-w-[200px] px-4 py-2.5 bg-white rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+          className="flex-1 min-w-[200px] px-4 py-2.5 bg-surface rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
         />
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="px-3 py-2.5 bg-white rounded-xl text-sm border border-gray-200"
+          className="px-3 py-2.5 bg-surface rounded-xl text-sm border border-gray-200"
         >
           <option value="">همه وضعیت‌ها</option>
           <option value="Active">Active</option>
@@ -728,11 +728,11 @@ export function AdminGiftCardsScreen() {
           </button>
         </div>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-gray-500 bg-white rounded-2xl border border-gray-200 p-6">
+        <p className="text-sm text-gray-500 bg-surface rounded-2xl border border-gray-200 p-6">
           کارتی یافت نشد.
         </p>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden p-2" data-testid="admin-gift-cards-grid">
+        <div className="bg-surface rounded-2xl border border-gray-200 overflow-hidden p-2" data-testid="admin-gift-cards-grid">
           <AppDataGrid<GiftCardSummary & { id: string }> {...giftCardGridProps} />
         </div>
       )}
@@ -838,7 +838,7 @@ export function AdminGiftCardDetailScreen({ cardId }: { cardId: string }) {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-2 text-sm">
+        <div className="bg-surface rounded-2xl border border-gray-200 p-4 space-y-2 text-sm">
           <p>
             <span className="text-gray-500">وضعیت: </span>
             <strong>{formatGiftCardStatus(detail.status)}</strong>
@@ -860,7 +860,7 @@ export function AdminGiftCardDetailScreen({ cardId }: { cardId: string }) {
             {detail.expiresAt ? formatLedgerDate(detail.expiresAt) : "—"}
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-2 text-sm">
+        <div className="bg-surface rounded-2xl border border-gray-200 p-4 space-y-2 text-sm">
           <p className="font-bold text-gray-900 mb-2">تاریخچه بازخرید</p>
           {detail.redemptions.length === 0 ? (
             <p className="text-gray-500 text-xs">بازخریدی ثبت نشده</p>
@@ -986,12 +986,12 @@ export function AdminWalletInspectScreen() {
           value={actorDraft}
           onChange={(e) => setActorDraft(e.target.value)}
           placeholder="Customer ActorUserId (GUID)"
-          className="flex-1 min-w-[260px] px-4 py-2.5 bg-white rounded-xl text-sm border border-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+          className="flex-1 min-w-[260px] px-4 py-2.5 bg-surface rounded-xl text-sm border border-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
           data-testid="admin-wallet-actor-input"
         />
         <button
           type="submit"
-          className="px-4 py-2.5 bg-[#2563EB] text-white rounded-xl text-sm font-bold"
+          className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold"
         >
           بارگذاری
         </button>
@@ -1006,7 +1006,7 @@ export function AdminWalletInspectScreen() {
         <>
           <BalanceHero balance={summary.balance} subtitle="موجودی مشتق‌شده از دفتر" />
           <StatsRow summary={summary} />
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3" data-testid="admin-wallet-adjust">
+          <div className="bg-surface rounded-2xl border border-gray-200 p-4 space-y-3" data-testid="admin-wallet-adjust">
             <h2 className="text-sm font-bold">تعدیل ممیزی‌شده (دفتر immutable)</h2>
             <div className="flex flex-wrap gap-2">
               <select

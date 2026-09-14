@@ -159,7 +159,7 @@ export function SupportTicketsList({
     <div className="space-y-4" data-testid={`${audience}-tickets-list`} dir="rtl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-[#E53935]/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Ticket className="w-5 h-5 text-[#E53935]" />
           </div>
           <div>
@@ -173,7 +173,7 @@ export function SupportTicketsList({
         {audience !== "admin" ? (
           <Link
             href={`${basePath}/new`}
-            className="px-4 py-2 bg-[#E53935] text-white rounded-xl text-xs font-bold hover:bg-[#c62828] transition-colors shadow-lg shadow-[#E53935]/30 flex items-center gap-1"
+            className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-strong transition-colors shadow-lg shadow-[#E53935]/30 flex items-center gap-1"
             data-testid={`${audience}-ticket-new`}
           >
             <Plus className="w-4 h-4" />
@@ -194,7 +194,7 @@ export function SupportTicketsList({
                 setPage(0);
               }}
               placeholder="جستجو در تیکت‌ها (عنوان، شناسه، وضعیت، اولویت)..."
-              className="w-full pr-10 px-4 py-2.5 bg-white rounded-xl text-sm text-gray-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
+              className="w-full pr-10 px-4 py-2.5 bg-surface rounded-xl text-sm text-gray-900 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#E53935]"
             />
             {searchTerm ? (
               <button
@@ -213,8 +213,8 @@ export function SupportTicketsList({
               onClick={() => setShowFilters((v) => !v)}
               className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                 filter !== "all"
-                  ? "bg-[#E53935] text-white shadow-lg shadow-[#E53935]/30"
-                  : "bg-white text-gray-700 border border-gray-200 hover:border-[#E53935]/50"
+                  ? "bg-primary text-white shadow-lg shadow-[#E53935]/30"
+                  : "bg-surface text-gray-700 border border-gray-200 hover:border-[#E53935]/50"
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -222,7 +222,7 @@ export function SupportTicketsList({
               <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
             </button>
             {showFilters ? (
-              <div className="absolute top-full left-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 min-w-[160px]">
+              <div className="absolute top-full left-0 mt-1 bg-surface rounded-xl border border-gray-200 shadow-lg z-10 min-w-[160px]">
                 {statusOptions.map((opt) => (
                   <button
                     key={opt.value}
@@ -498,7 +498,7 @@ export function SupportTicketForm({
             <button
               type="submit"
               disabled={loading}
-              className={`flex-1 py-2.5 bg-[#E53935] text-white rounded-xl text-sm font-bold hover:bg-[#c62828] transition-colors shadow-lg shadow-[#E53935]/30 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-strong transition-colors shadow-lg shadow-[#E53935]/30 flex items-center justify-center gap-2 ${
                 loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
@@ -627,7 +627,7 @@ export function SupportTicketThread({
         بازگشت به لیست تیکت‌ها
       </Link>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-6">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -673,7 +673,7 @@ export function SupportTicketThread({
               <button
                 type="button"
                 onClick={() => void onReopen?.()}
-                className="px-3 py-1.5 text-xs rounded-xl bg-[#E53935] text-white hover:bg-[#c62828]"
+                className="px-3 py-1.5 text-xs rounded-xl bg-primary text-white hover:bg-primary-strong"
               >
                 بازگشایی تیکت
               </button>
@@ -703,7 +703,7 @@ export function SupportTicketThread({
                     note
                       ? "bg-amber-50 text-amber-900 border border-amber-200 rounded-bl-none"
                       : self
-                        ? "bg-[#E53935] text-white rounded-br-none"
+                        ? "bg-primary text-white rounded-br-none"
                         : "bg-gray-100 text-gray-900 rounded-bl-none"
                   }`}
                 >
@@ -768,7 +768,7 @@ export function SupportTicketThread({
                 type="button"
                 onClick={() => void sendReply()}
                 disabled={sending || !reply.trim()}
-                className={`px-6 py-2 bg-[#E53935] text-white rounded-xl text-sm font-bold hover:bg-[#c62828] transition-colors shadow-lg shadow-[#E53935]/30 flex items-center gap-2 ${
+                className={`px-6 py-2 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-strong transition-colors shadow-lg shadow-[#E53935]/30 flex items-center gap-2 ${
                   sending || !reply.trim() ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >

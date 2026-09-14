@@ -97,10 +97,12 @@ export function StorefrontProductCardView({
       className={chrome.article}
       data-testid="storefront-product-card"
       data-product-card-skin={effectiveSkin}
+      data-storefront-surface-role="card"
+      data-storefront-product-card
     >
       <Link href={productHref} className="flex flex-1 flex-col">
         {/* Media well: product photo on semantic background; not UI chrome. */}
-        <div className={`${chrome.media} aspect-[4/5]`} data-storefront-media-well="true">
+        <div className={`${chrome.media} aspect-[4/5]`} data-storefront-media-well="true" data-storefront-surface-role="media">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={storefrontMediaUrl(card.mediaAssetId)}

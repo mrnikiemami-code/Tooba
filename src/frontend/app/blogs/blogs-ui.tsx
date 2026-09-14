@@ -104,7 +104,7 @@ function PostCard({
 }) {
   const ReadMoreChevron = locale === "en" ? ChevronRight : ChevronLeft;
   return (
-    <article className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
+    <article className="group relative bg-surface rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col" data-storefront-surface-role="card">
       <div className="relative overflow-hidden aspect-[16/10] bg-gray-100">
         <Link href={`/blogs/${post.slug}`} className="absolute inset-0 z-0" aria-label={post.title}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -114,13 +114,13 @@ function PostCard({
           post.categorySlug ? (
             <Link
               href={blogsCategoryPath(post.categorySlug)}
-              className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-medium bg-white/95 rounded-lg shadow-sm border"
+              className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-medium bg-surface/95 rounded-lg shadow-sm border"
               style={{ color: ACCENT }}
             >
               {post.category}
             </Link>
           ) : (
-            <span className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-medium bg-white/95 rounded-lg shadow-sm border" style={{ color: ACCENT }}>
+            <span className="absolute top-2 left-2 z-10 px-2 py-0.5 text-[9px] font-medium bg-surface/95 rounded-lg shadow-sm border" style={{ color: ACCENT }}>
               {post.category}
             </span>
           )
@@ -200,7 +200,7 @@ export function BlogsListingClient() {
       ) : null}
       {loading ? <p className="text-sm text-gray-500">{copy.loading}</p> : null}
       {!loading && items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-surface p-10 text-center text-sm text-gray-500">
           {copy.empty}
         </div>
       ) : (

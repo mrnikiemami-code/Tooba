@@ -76,7 +76,7 @@ function SandboxBody() {
         <p className="text-xs font-black tracking-wide text-amber-800">SANDBOX / TEST</p>
         <p className="text-sm text-amber-900 mt-2">این صفحه بانک واقعی نیست. نتیجه فقط پس از تأیید سرور ثبت می‌شود.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3 text-sm">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-6 space-y-3 text-sm">
         <h1 className="text-lg font-black text-center">درگاه آزمایشی پرداخت</h1>
         {context ? (
           <dl className="space-y-1 text-gray-700">

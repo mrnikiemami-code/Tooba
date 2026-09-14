@@ -64,7 +64,7 @@ export default function CustomerDashboard() {
             </p>
           </div>
         </div>
-        <span className="inline-flex mt-4 items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold shadow-sm">
+        <span className="inline-flex mt-4 items-center gap-2 bg-surface border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold shadow-sm">
           <Star className="w-4 h-4 text-amber-500" />
           مشتری Tooba
         </span>

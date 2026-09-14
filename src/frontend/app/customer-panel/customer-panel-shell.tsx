@@ -80,7 +80,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-page flex flex-col overflow-x-hidden" dir="rtl" data-testid="customer-panel-shell" data-storefront-surface-role="page">
+    <div className="min-h-screen bg-page flex flex-col overflow-x-hidden" dir="rtl" data-testid="customer-panel-shell" data-storefront-surface-role="page" data-customer-panel-canvas>
       <header className="sticky top-0 z-40 bg-surface border-b border-gray-200 h-[65px] flex items-center" data-testid="customer-panel-header" data-storefront-surface-role="header">
         <div className="flex items-center justify-between w-full px-4 lg:px-6">
           <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ export function CustomerPanelShell({ children }: { children: ReactNode }) {
                 <NavLink key={item.id} item={item} pathname={pathname} onNavigate={() => setMobileOpen(false)} dense />
               ))}
             </nav>
-            <div className="p-4 border-t border-gray-200 shrink-0 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 shrink-0 bg-background">
               <button
                 type="button"
                 onClick={leavePanel}

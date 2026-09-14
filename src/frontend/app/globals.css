@@ -103,6 +103,52 @@ html.dark[data-storefront-background-style="PaletteTint"] {
   --color-section-accent: var(--color-section-accent-tint-dark);
 }
 
+/*
+  Derived component surfaces apply only on customer-facing canvases.
+  Admin/seller shells keep Neutral card paper even when Store PaletteTint is on.
+*/
+html[data-storefront-background-style="PaletteTint"] [data-storefront-canvas],
+html[data-storefront-background-style="PaletteTint"] [data-customer-panel-canvas] {
+  --color-surface: var(--color-card-derived);
+  --color-surface-elevated: var(--color-elevated-derived);
+  --color-border: var(--color-border-derived);
+  --color-secondary: var(--color-interactive-derived);
+  --color-background: var(--color-media-derived);
+}
+
+html.dark[data-storefront-background-style="PaletteTint"] [data-storefront-canvas],
+html.dark[data-storefront-background-style="PaletteTint"] [data-customer-panel-canvas] {
+  --color-surface: var(--color-card-derived-dark);
+  --color-surface-elevated: var(--color-elevated-derived-dark);
+  --color-border: var(--color-border-derived-dark);
+  --color-secondary: var(--color-interactive-derived-dark);
+  --color-background: var(--color-media-derived-dark);
+}
+
+[data-storefront-canvas] .bg-white,
+[data-customer-panel-canvas] .bg-white {
+  background-color: rgb(var(--color-surface));
+}
+
+[data-storefront-canvas] .bg-white\/90,
+[data-storefront-canvas] .bg-white\/95,
+[data-storefront-canvas] .bg-white\/80,
+[data-customer-panel-canvas] .bg-white\/90,
+[data-customer-panel-canvas] .bg-white\/95,
+[data-customer-panel-canvas] .bg-white\/80 {
+  background-color: rgb(var(--color-surface-elevated) / 0.92);
+}
+
+[data-storefront-canvas] .bg-gray-50,
+[data-customer-panel-canvas] .bg-gray-50 {
+  background-color: rgb(var(--color-background));
+}
+
+[data-storefront-canvas] .bg-gray-100,
+[data-customer-panel-canvas] .bg-gray-100 {
+  background-color: rgb(var(--color-secondary));
+}
+
 [data-storefront-canvas] {
   background-color: rgb(var(--color-page-background));
 }

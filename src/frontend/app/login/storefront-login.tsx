@@ -139,7 +139,7 @@ export function StorefrontCustomerLogin() {
     <section className="max-w-md mx-auto px-4 py-10 md:py-16" data-testid="storefront-login-page" data-storefront-surface-role="section" dir={locale === "en" ? "ltr" : "rtl"}>
       <div className="bg-surface-elevated rounded-2xl border border-gray-200 shadow-sm p-5 md:p-7" data-storefront-surface-role="elevated">
         <div className="flex items-center gap-2 mb-2">
-          <Smartphone className="w-5 h-5 text-[#2563EB]" />
+          <Smartphone className="w-5 h-5 text-primary" />
           <h1 className="text-lg font-black text-gray-900">{copy.title}</h1>
         </div>
         <p className="text-sm text-gray-500 leading-7 mb-5">{copy.lead}</p>
@@ -160,13 +160,13 @@ export function StorefrontCustomerLogin() {
               autoComplete="tel"
               value={mobile}
               onChange={(event) => setMobile(event.target.value)}
-              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB]"
+              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
               data-testid="login-mobile-input"
             />
             <button
               type="submit"
               disabled={busy || mobile.trim().length < 8}
-              className="w-full py-3 rounded-2xl font-black text-sm bg-[#2563EB] text-white hover:bg-[#1d4ed8] disabled:opacity-60"
+              className="w-full py-3 rounded-2xl font-black text-sm bg-primary text-white hover:bg-primary-strong disabled:opacity-60"
               data-testid="login-send-otp"
             >
               {busy ? copy.sending : copy.send}
@@ -189,13 +189,13 @@ export function StorefrontCustomerLogin() {
               autoComplete="one-time-code"
               value={otp}
               onChange={(event) => setOtp(event.target.value)}
-              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-[#2563EB] tracking-[0.3em]"
+              className="w-full px-3.5 py-3 rounded-xl text-sm bg-surface border border-gray-200 outline-none focus:ring-2 focus:ring-primary"
               data-testid="login-otp-input"
             />
             <button
               type="submit"
               disabled={busy || otp.trim().length < 4}
-              className="w-full py-3 rounded-2xl font-black text-sm bg-[#2563EB] text-white hover:bg-[#1d4ed8] disabled:opacity-60"
+              className="w-full py-3 rounded-2xl font-black text-sm bg-primary text-white hover:bg-primary-strong disabled:opacity-60"
               data-testid="login-verify-otp"
             >
               {busy ? copy.verifying : copy.verify}

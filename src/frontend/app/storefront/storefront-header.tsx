@@ -350,7 +350,7 @@ export function StorefrontShopeivaHeader({
                 id="storefront-mega-menu"
                 onMouseEnter={openMegaMenu}
                 onMouseLeave={scheduleMegaClose}
-                className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border-t border-gray-200"
+                className="absolute left-0 right-0 top-full z-50 bg-surface shadow-2xl border-t border-gray-200"
               >
                 <style>{`
                   .mm-scroll::-webkit-scrollbar { width: 5px; }
@@ -388,7 +388,7 @@ export function StorefrontShopeivaHeader({
                               }`}
                             >
                               <span className="flex items-center gap-2.5">
-                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${selected ? "bg-white/20" : "bg-gray-100 text-gray-500"}`}>
+                                <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${selected ? "bg-surface/20" : "bg-gray-100 text-gray-500"}`}>
                                   <Icon className="w-4 h-4" />
                                 </span>
                                 <span className="text-xs">{cat.name}</span>
@@ -464,12 +464,12 @@ export function StorefrontShopeivaHeader({
                     <div className="col-span-3 space-y-3 max-h-[460px]">
                       <div className="bg-gradient-to-br from-primary via-primary-strong to-[#1e40af] rounded-2xl p-4 text-white text-center shadow-lg shadow-primary/20 relative overflow-hidden">
                         <div className="relative z-10">
-                          <div className="w-10 h-10 mx-auto mb-2.5 rounded-xl bg-white/15 flex items-center justify-center">
+                          <div className="w-10 h-10 mx-auto mb-2.5 rounded-xl bg-surface/15 flex items-center justify-center">
                             <Gift className="w-5 h-5 text-amber-300" />
                           </div>
                           <h4 className="font-bold text-sm">پیشنهادهای فروشگاه</h4>
                           <p className="text-[11px] mt-1 opacity-80">کالاهای دارای پیشنهاد فعال</p>
-                          <Link href="/offers" onClick={closeMegaMenu} className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-white text-primary rounded-xl text-[11px] font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
+                          <Link href="/offers" onClick={closeMegaMenu} className="mt-3 inline-flex items-center gap-1 px-4 py-1.5 bg-surface text-primary rounded-xl text-[11px] font-bold hover:bg-blue-50 transition-all shadow-lg shadow-black/10">
                             مشاهده <ChevronLeft className="w-3 h-3" />
                           </Link>
                         </div>
@@ -486,7 +486,7 @@ export function StorefrontShopeivaHeader({
                                 key={brand.brandId}
                                 href={`/brand/${brand.slug}`}
                                 onClick={closeMegaMenu}
-                                className="px-2.5 py-1 bg-white text-gray-500 rounded-lg text-[10px] font-medium hover:bg-primary hover:text-white transition-all border border-gray-100"
+                                className="px-2.5 py-1 bg-surface text-gray-500 rounded-lg text-[10px] font-medium hover:bg-primary hover:text-white transition-all border border-gray-100"
                               >
                                 {brand.name}
                               </Link>
@@ -513,7 +513,7 @@ export function StorefrontShopeivaHeader({
 
       <div className={`fixed inset-0 z-[150] transition-all lg:hidden ${mobileOpen ? "visible" : "invisible"}`}>
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-        <div className={`absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl transform transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "translate-x-full"} flex flex-col`}>
+        <div className={`absolute right-0 top-0 bottom-0 w-80 bg-surface shadow-2xl transform transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "translate-x-full"} flex flex-col`}>
           <div className="flex pr-3 justify-between items-center border-b border-gray-200">
             <div className="relative w-24 h-16 flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}

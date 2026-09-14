@@ -75,7 +75,7 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="ایمیل خود را وارد کنید..."
-                className="w-full px-4 py-2.5 bg-white/95 text-gray-900 rounded-xl text-sm"
+                className="w-full px-4 py-2.5 bg-surface/95 text-gray-900 rounded-xl text-sm"
               />
               <button type="submit" className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-bold min-w-[100px]">
                 {subscribed ? (
@@ -162,9 +162,9 @@ export function StorefrontShopeivaFooter({ categories }: { categories: Storefron
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200 pt-6">
           <div className="flex gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/badges/enamad.png" alt="نماد اعتماد" className="h-12 w-auto bg-white rounded-lg border p-1" />
+            <img src="/images/badges/enamad.png" alt="نماد اعتماد" className="h-12 w-auto bg-surface rounded-lg border p-1" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/badges/namad-01.png" alt="ساماندهی" className="h-12 w-auto bg-white rounded-lg border p-1" />
+            <img src="/images/badges/namad-01.png" alt="ساماندهی" className="h-12 w-auto bg-surface rounded-lg border p-1" />
           </div>
           <p className="text-xs text-gray-500">ویترین Tooba روی قالب خریداری‌شدهٔ Shopeiva · دادهٔ زنده Catalog/Offer</p>
         </div>

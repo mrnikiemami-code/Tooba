@@ -1,4 +1,5 @@
 import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey, resolveTintTokens, NEUTRAL_PAGE_BACKGROUND_RGB, NEUTRAL_SECTION_SURFACE_RGB, NEUTRAL_SECTION_ALTERNATE_RGB, NEUTRAL_SECTION_ACCENT_RGB, NEUTRAL_PAGE_BACKGROUND_DARK_RGB, NEUTRAL_SECTION_SURFACE_DARK_RGB, NEUTRAL_SECTION_ALTERNATE_DARK_RGB, NEUTRAL_SECTION_ACCENT_DARK_RGB } from "../../lib/storefront-appearance/palette-registry.ts";
+import { deriveComponentSurfaces } from "../../lib/storefront-appearance/derived-surface.ts";
 import { resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode, type StorefrontThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 import { resolveBackgroundStyle, type StorefrontBackgroundStyle } from "../../lib/storefront-appearance/background-style.ts";
@@ -36,6 +37,7 @@ export function appearancePreviewStyle(
   const vars = appearanceCssVars(tokens, tint);
   const style = resolveBackgroundStyle(backgroundStyle);
   const dark = resolveThemeMode(themeMode) === "DarkOnly";
+  const derived = deriveComponentSurfaces(tint, style, dark);
   const page = style === "PaletteTint"
     ? (dark ? tint.pageBackgroundDarkRgb : tint.pageBackgroundRgb)
     : (dark ? NEUTRAL_PAGE_BACKGROUND_DARK_RGB : NEUTRAL_PAGE_BACKGROUND_RGB);
@@ -55,6 +57,11 @@ export function appearancePreviewStyle(
     "--color-section-surface": section,
     "--color-section-alternate": alternate,
     "--color-section-accent": accent,
+    "--color-surface": derived.card,
+    "--color-surface-elevated": derived.elevated,
+    "--color-border": derived.border,
+    "--color-secondary": derived.interactive,
+    "--color-background": derived.media,
   };
 }
 
@@ -67,5 +74,5 @@ export const THEME_MODE_OPTIONS: { key: StorefrontThemeMode; title: string; body
 
 export const BACKGROUND_STYLE_OPTIONS: { key: StorefrontBackgroundStyle; title: string; body: string }[] = [
   { key: "Neutral", title: "خنثی", body: "پس‌زمینهٔ خاکستری روشن فعلی. پالت فقط روی دکمه‌ها و پیوندها دیده می‌شود." },
-  { key: "PaletteTint", title: "رنگی ملایم", body: "ته‌رنگ خیلی کم از خانوادهٔ پالت انتخاب‌شده. کارت‌ها سفید می‌مانند." },
+  { key: "PaletteTint", title: "رنگی ملایم", body: "ته‌رنگ خیلی کم از خانوادهٔ پالت انتخاب‌شده. کارت و فرم را سیستم از همان رنگ‌ها می‌سازد." },
 ];

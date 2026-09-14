@@ -562,7 +562,7 @@ export function StorefrontShopeivaShipping() {
                         >
                           <div
                             className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                              selected ? "bg-primary/10" : "bg-white"
+                              selected ? "bg-primary/10" : "bg-surface"
                             }`}
                           >
                             <Icon className={`w-5 h-5 ${selected ? "text-primary" : "text-gray-400"}`} />
@@ -632,7 +632,7 @@ export function StorefrontShopeivaShipping() {
                                 className={`w-[4.75rem] shrink-0 rounded-2xl border-2 px-2 py-3 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                                   selected
                                     ? "border-primary bg-primary/5 text-primary shadow-sm"
-                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                                    : "border-gray-200 bg-surface text-gray-700 hover:border-gray-300"
                                 }`}
                                 data-testid={`shipping-date-${d.value}`}
                               >
@@ -883,7 +883,7 @@ function ShippingHero({
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[220px] md:min-h-[240px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 pt-8 md:p-10 md:pt-12">
-            <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+            <span className="inline-flex items-center gap-1.5 bg-surface/15 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-4">
               <Truck className="w-3.5 h-3.5" />
               اطلاعات ارسال و تحویل
             </span>

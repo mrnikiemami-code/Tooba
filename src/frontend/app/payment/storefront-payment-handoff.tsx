@@ -132,7 +132,7 @@ export function StorefrontPaymentHandoff() {
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 pt-4 md:pt-6">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[180px]">
           <div className="relative z-10 flex flex-col items-center justify-center text-center p-8">
-            <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
+            <span className="inline-flex items-center gap-1.5 bg-surface/15 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-3">
               <CreditCard className="w-3.5 h-3.5" />
               پرداخت
             </span>

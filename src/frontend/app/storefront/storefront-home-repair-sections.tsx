@@ -91,7 +91,7 @@ export function HomeBestSellersSection({ columns }: { columns: StorefrontBestSel
         {columns.map((column) => (
           <div
             key={`${column.categoryId}-${column.categoryName}`}
-            className="bg-white mb-4 rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group/col"
+            className="bg-surface mb-4 rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group/col"
           >
             <div className="p-4 pb-3 border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white">
               <div className="flex items-center justify-between">
@@ -203,7 +203,7 @@ export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] })
   if (brands.length === 0) {
     return (
       <section aria-labelledby="home-brands-heading" className="w-full px-2 sm:px-4 py-8 md:py-10" data-testid="home-brands">
-        <p className="text-sm text-gray-500 bg-white rounded-2xl border border-gray-100 p-4">برند منتشرشده‌ای در Catalog نیست.</p>
+        <p className="text-sm text-gray-500 bg-surface rounded-2xl border border-gray-100 p-4">برند منتشرشده‌ای در Catalog نیست.</p>
       </section>
     );
   }
@@ -243,7 +243,7 @@ export function HomeBrandsSection({ brands }: { brands: StorefrontBrandItem[] })
                     </div>
                   </div>
                   <div className="absolute inset-0 z-10 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 hover:scale-110 transition-all duration-300 shadow-lg" style={{ borderColor: undefined }}>
+                    <div className="bg-surface/20 backdrop-blur-md rounded-full p-2.5 border border-white/30 hover:scale-110 transition-all duration-300 shadow-lg" style={{ borderColor: undefined }}>
                       <Eye className="w-5 h-5 text-white" />
                     </div>
                   </div>
@@ -358,7 +358,7 @@ export function HomeTestimonialsSection({ reviews }: { reviews: StorefrontFeatur
         >
           {reviews.map((item) => (
             <SwiperSlide key={item.publicId} className="!h-auto">
-              <article className="bg-white rounded-2xl p-4 md:p-5 border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-400 h-full flex flex-col group relative overflow-hidden">
+              <article className="bg-surface rounded-2xl p-4 md:p-5 border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-400 h-full flex flex-col group relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundImage: "linear-gradient(to right, rgb(var(--color-primary)), #fbbf24, rgb(var(--color-primary)))" }} />
                 <Quote className="absolute bottom-3 right-3 w-10 h-10 rotate-180 group-hover:scale-110 transition-all duration-500" style={{ color: "rgb(var(--color-primary) / 0.05)" }} />
                 <div className="flex items-center gap-3 mb-3">
@@ -462,7 +462,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
           {articles.map((post) => (
             <SwiperSlide key={post.articleId} className="!w-[260px] sm:!w-[280px] md:!w-[300px] lg:!w-[320px] !h-auto">
               <Link href={`/blogs/${post.slug}`} className="group block h-full">
-                <article className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
+                <article className="bg-surface rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 h-full flex flex-col">
                   <div className="relative overflow-hidden aspect-[16/10] bg-gray-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -472,7 +472,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
                     />
                     {post.tags[0] ? (
                       <div className="absolute top-2 left-2">
-                        <span className="px-2 py-0.5 text-[9px] font-medium bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200" style={{ color: STOREFRONT_ACCENT }}>
+                        <span className="px-2 py-0.5 text-[9px] font-medium bg-surface/95 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200" style={{ color: STOREFRONT_ACCENT }}>
                           {post.tags[0]}
                         </span>
                       </div>
@@ -487,7 +487,7 @@ export function HomeArticlesSection({ articles }: { articles: StorefrontArticleI
                     ) : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       <div className="absolute bottom-2 left-2 right-2">
-                        <span className="block w-full py-1.5 bg-white text-gray-900 rounded-lg text-[10px] font-medium text-center group-hover:text-white transition-colors duration-200 group-hover:bg-primary">
+                        <span className="block w-full py-1.5 bg-surface text-gray-900 rounded-lg text-[10px] font-medium text-center group-hover:text-white transition-colors duration-200 group-hover:bg-primary">
                           مطالعه مقاله
                         </span>
                       </div>

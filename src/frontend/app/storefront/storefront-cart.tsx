@@ -468,7 +468,7 @@ function CartLineQuantityInput({
           <Minus className="w-3.5 h-3.5" />
         </button>
         <input
-          className="w-16 h-8 text-center text-sm font-bold border-x border-gray-200 bg-white tabular-nums"
+          className="w-16 h-8 text-center text-sm font-bold border-x border-gray-200 bg-surface tabular-nums"
           value={text}
           disabled={busy}
           inputMode="decimal"
@@ -512,12 +512,12 @@ function CartHero({
     <section className="w-full" data-testid="cart-hero">
       <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[160px] md:min-h-[180px]">
         <div className="absolute inset-0 opacity-[0.08]">
-          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white" />
-          <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-white" />
-          <div className="absolute top-10 left-1/4 w-20 h-20 rounded-full bg-white" />
+          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-surface" />
+          <div className="absolute -bottom-16 -left-16 w-40 h-40 rounded-full bg-surface" />
+          <div className="absolute top-10 left-1/4 w-20 h-20 rounded-full bg-surface" />
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 md:p-10">
-          <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-3">
+          <span className="inline-flex items-center gap-1.5 bg-surface/15 backdrop-blur-sm text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full mb-3">
             <ShoppingBag className="w-3.5 h-3.5" />
             {itemCount.toLocaleString("fa-IR")} کالا در سبد خرید
           </span>

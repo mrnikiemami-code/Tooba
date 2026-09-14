@@ -309,9 +309,9 @@ export function StoryModal({
       >
         <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
           {items.map((item, index) => (
-            <div key={item.storyItemId} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div key={item.storyItemId} className="flex-1 h-1 bg-surface/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-white transition-all duration-100 rounded-full"
+                className="h-full bg-surface transition-all duration-100 rounded-full"
                 style={{
                   width: index === currentItemIndex ? `${progress}%` : index < currentItemIndex ? "100%" : "0%",
                 }}
@@ -419,7 +419,7 @@ export function StoryModal({
               className="absolute top-20 left-4 right-4 z-30 bg-black/80 backdrop-blur-md rounded-xl p-3 border border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
-              <button type="button" className="flex items-center gap-3 w-full p-2 text-white hover:bg-white/10 rounded-lg transition-colors">
+              <button type="button" className="flex items-center gap-3 w-full p-2 text-white hover:bg-surface/10 rounded-lg transition-colors">
                 <Flag className="w-4 h-4 text-danger" />
                 <span className="text-sm">گزارش مشکل</span>
               </button>
@@ -546,7 +546,7 @@ export function StoryModal({
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="نظرت چیه؟..."
-                  className="flex-1 bg-white/10 text-white placeholder-white/40 text-sm rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 bg-surface/10 text-white placeholder-white/40 text-sm rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-primary"
                 />
                 <button
                   type="submit"

@@ -52,7 +52,7 @@ export function StorefrontPdpQa({ detail }: { detail: StorefrontProductDetailPag
             rows={3}
             maxLength={2000}
             placeholder="سوال خود را بنویسید..."
-            className="w-full mt-1 px-4 py-2 bg-white rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            className="w-full mt-1 px-4 py-2 bg-surface rounded-xl text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           />
           <div className="flex gap-2">
             <button
