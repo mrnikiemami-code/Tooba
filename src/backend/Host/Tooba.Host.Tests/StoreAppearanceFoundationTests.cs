@@ -18,6 +18,9 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("tooba-blue", StoreAppearancePaletteRegistry.ResolveKey("not-a-palette"));
         Assert.False(StoreAppearancePaletteRegistry.IsKnown("not-a-palette"));
         Assert.True(StoreAppearancePaletteRegistry.IsKnown("tooba-blue"));
+        Assert.True(StoreAppearancePaletteRegistry.IsKnown("forest-green"));
+        Assert.Equal("forest-green", StoreAppearancePaletteRegistry.ResolveKey("forest-green"));
+        Assert.InRange(StoreAppearancePaletteRegistry.All.Count, 6, 8);
         Assert.Equal("37 99 235", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryRgb);
         Assert.Equal("29 78 216", StoreAppearancePaletteRegistry.ToobaBlue.PrimaryStrongRgb);
     }

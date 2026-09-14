@@ -577,3 +577,21 @@ Dynamic Store+Locale+Slug page resolution cannot shadow reserved system, product
 
 ### LOCK-SF-138 — Free-form page-builder execution is forbidden
 Free-form page-builder HTML/CSS/JS execution is forbidden by this architecture.
+
+### LOCK-SF-139 — Admin appearance persists PaletteKey only
+Store Admin appearance palette selection persists only approved PaletteKey values. Raw colors are not stored by this preset feature.
+
+### LOCK-SF-140 — Palette registry is code-owned
+Palette preset registry is code-owned and typed. The database references stable keys only.
+
+### LOCK-SF-141 — Appearance save invalidates one Store cache
+Appearance save invalidates only the affected Store cache and must not require a TTL wait, process restart, or frontend redeploy.
+
+### LOCK-SF-142 — Admin preview and Storefront share one registry
+Admin preview and live Storefront consume the same canonical palette token definitions.
+
+### LOCK-SF-143 — Brand palettes do not redefine status colors
+Brand palette changes must not redefine danger, success, or warning semantic colors.
+
+### LOCK-SF-144 — Appearance write is backend-authoritative
+Appearance write authorization and Store isolation are backend-authoritative. The frontend cannot grant cross-store writes.

@@ -6,6 +6,7 @@ import {
   DEFAULT_PRIMARY_STRONG_HEX,
   appearanceCssVars,
   hexToRgbTriple,
+  listStorefrontPalettes,
   resolveBrandTokens,
   resolvePaletteKey,
 } from "./palette-registry.ts";
@@ -18,6 +19,13 @@ test("default palette is visually equivalent to #2563EB", () => {
   const tokens = resolveBrandTokens(DEFAULT_PALETTE_KEY);
   assert.equal(tokens.primaryRgb, hexToRgbTriple(DEFAULT_PRIMARY_HEX));
   assert.equal(tokens.primaryStrongRgb, hexToRgbTriple(DEFAULT_PRIMARY_STRONG_HEX));
+});
+
+test("curated registry has six to eight production palettes including tooba-blue", () => {
+  const keys = listStorefrontPalettes().map((item) => item.key);
+  assert.ok(keys.length >= 6 && keys.length <= 8);
+  assert.ok(keys.includes(DEFAULT_PALETTE_KEY));
+  assert.equal(new Set(keys).size, keys.length);
 });
 
 test("unknown PaletteKey falls back to tooba-blue", () => {

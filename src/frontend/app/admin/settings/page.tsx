@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Globe2, Hash, Save, Settings, ShieldAlert, ShieldCheck, User } from "lucide-react";
+import { Clock, Globe2, Hash, Palette, Save, Settings, ShieldAlert, ShieldCheck, User } from "lucide-react";
 import { ErrorState, faWorkspaceMessages } from "../../../design-system";
 import { type Locale } from "../../../lib/i18n/locale.ts";
 import { readBrowserLocaleCookie, writeBrowserLocaleCookie } from "../../../lib/i18n/locale-cookie.ts";
@@ -40,8 +40,14 @@ import {
   saveCheckoutAbuseSettings,
   type CheckoutAbuseSettingsView,
 } from "../checkout-abuse-settings-api.ts";
+import {
+  loadAppearanceSettings,
+  saveAppearanceSettings,
+  type AppearanceSettingsView,
+} from "../appearance-settings-api.ts";
+import { AdminAppearanceSettingsForm } from "../admin-appearance-settings.tsx";
 
-type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds" | "identity" | "limits";
+type AdminSettingsTab = "profile" | "locale" | "quantity" | "holds" | "identity" | "limits" | "appearance";
 
 /**
  * تنظیمات اپراتور Admin — پروفایل شخصی + locale؛ بدون سوئیچ سراسری جعلی.
@@ -77,6 +83,8 @@ export default function AdminSettingsPage() {
     reservationCommitWindowMinutes: "30",
     maxCheckoutCommitsPerCustomerInWindow: "3",
   });
+  const [appearance, setAppearance] = useState<AppearanceSettingsView | null>(null);
+  const [appearanceDraft, setAppearanceDraft] = useState("tooba-blue");
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -91,13 +99,14 @@ export default function AdminSettingsPage() {
     setLoadError(null);
     setProfile(undefined);
     await prepareAdminDevActor();
-    const [profileResult, prefsResult, roundingResult, holdResult, identityResult, limitsResult] = await Promise.all([
+    const [profileResult, prefsResult, roundingResult, holdResult, identityResult, limitsResult, appearanceResult] = await Promise.all([
       loadOperatorProfile(),
       loadOperatorPreferences(),
       loadStoreQuantitySettings(),
       loadHoldPolicySettings(),
       loadCheckoutIdentitySettings(),
       loadCheckoutAbuseSettings(),
+      loadAppearanceSettings(),
     ]);
     if (profileResult.state === "denied") {
       setDenied(true);
@@ -137,6 +146,10 @@ export default function AdminSettingsPage() {
         reservationCommitWindowMinutes: String(limitsResult.data.reservationCommitWindowMinutes),
         maxCheckoutCommitsPerCustomerInWindow: String(limitsResult.data.maxCheckoutCommitsPerCustomerInWindow),
       });
+    }
+    if (appearanceResult.ok) {
+      setAppearance(appearanceResult.data);
+      setAppearanceDraft(appearanceResult.data.paletteKey);
     }
   }
 
@@ -328,6 +341,33 @@ export default function AdminSettingsPage() {
     setBusy(false);
   }
 
+  async function onSaveAppearance() {
+    setBusy(true);
+    setError(null);
+    setSuccess(null);
+    const result = await saveAppearanceSettings(appearanceDraft);
+    if (result.denied) {
+      setDenied(true);
+      setBusy(false);
+      return;
+    }
+    if (!result.ok) {
+      setError(result.message ?? "ذخیرهٔ ظاهر فروشگاه انجام نشد.");
+      setBusy(false);
+      return;
+    }
+    setAppearance(result.data);
+    setAppearanceDraft(result.data.paletteKey);
+    setSuccess("ظاهر فروشگاه ذخیره شد.");
+    setBusy(false);
+  }
+
+  function onCancelAppearance() {
+    setAppearanceDraft(appearance?.paletteKey ?? "tooba-blue");
+    setError(null);
+    setSuccess(null);
+  }
+
   function onCancelHolds() {
     if (holds) applyHoldView(holds);
     setError(null);
@@ -378,7 +418,7 @@ export default function AdminSettingsPage() {
             <Settings className="w-5 h-5 text-[#2563EB]" />
             <h1 className="text-lg font-bold text-gray-900">تنظیمات اپراتور</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">پروفایل، زبان، و یک گرد کردن سراسری مقدار</p>
+          <p className="text-sm text-gray-500 mt-1">پروفایل، زبان، ظاهر فروشگاه، و یک گرد کردن سراسری مقدار</p>
         </div>
 
         <div className="flex overflow-x-auto border-b border-gray-200 scrollbar-hide">
@@ -390,6 +430,7 @@ export default function AdminSettingsPage() {
               { id: "holds" as const, label: "مهلت‌ها", icon: Clock },
               { id: "identity" as const, label: "هویت خرید", icon: ShieldCheck },
               { id: "limits" as const, label: "سفارش باز", icon: ShieldAlert },
+              { id: "appearance" as const, label: "ظاهر", icon: Palette },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -413,7 +454,18 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="p-4 md:p-6">
-          {activeTab === "limits" ? (
+          {activeTab === "appearance" ? (
+            <AdminAppearanceSettingsForm
+              view={appearance}
+              draftKey={appearanceDraft}
+              busy={busy}
+              readOnly={readOnly}
+              error={error}
+              onSelect={setAppearanceDraft}
+              onSave={() => void onSaveAppearance()}
+              onCancel={onCancelAppearance}
+            />
+          ) : activeTab === "limits" ? (
             <form
               className="space-y-5"
               onSubmit={(event) => {
