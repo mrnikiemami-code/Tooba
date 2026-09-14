@@ -13,6 +13,8 @@ import {
 } from "../lib/i18n/locale";
 import { LOCALE_HEADER_NAME } from "../lib/i18n/routing";
 import { loadStorefrontAppearance, storefrontAppearanceStyle } from "./storefront/storefront-appearance-api.ts";
+import { StorefrontProductCardSkinProvider } from "../lib/storefront-appearance/product-card-skin-context.tsx";
+import { resolveProductCardSkin } from "../lib/storefront-appearance/product-card-skin.ts";
 import {
   THEME_BOOTSTRAP_SCRIPT,
   USER_COLOR_SCHEME_COOKIE,
@@ -45,6 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const themeMode = resolveThemeMode(appearance.themeMode);
   const userScheme = parseUserColorScheme(jar.get(USER_COLOR_SCHEME_COOKIE)?.value);
   const colorScheme = resolveEffectiveColorScheme(themeMode, userScheme, false);
+  const productCardSkin = resolveProductCardSkin(appearance.productCardSkin);
 
   return (
     <html
@@ -56,6 +59,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-storefront-scope={appearance.storeScope}
       data-storefront-theme-mode={themeMode}
       data-storefront-color-scheme={colorScheme}
+      data-storefront-product-card-skin={productCardSkin}
       style={storefrontAppearanceStyle(appearance)}
     >
       <head>
@@ -63,7 +67,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       </head>
       <body className="bg-background text-foreground">
         <AppProviders>
-          <LocaleProvider locale={locale}>{children}</LocaleProvider>
+          <StorefrontProductCardSkinProvider skin={productCardSkin}>
+            <LocaleProvider locale={locale}>{children}</LocaleProvider>
+          </StorefrontProductCardSkinProvider>
         </AppProviders>
       </body>
     </html>

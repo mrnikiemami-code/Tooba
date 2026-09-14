@@ -40,6 +40,7 @@ public sealed class StoreAppearanceFoundationTests
         Assert.Equal("tooba-blue", projection.PaletteKey);
         Assert.True(projection.PaletteKeyWasKnown);
         Assert.Equal("LightOnly", projection.ThemeMode);
+        Assert.Equal("classic", projection.ProductCardSkin);
         Assert.Equal("37 99 235", projection.PrimaryRgb);
         Assert.Equal("tenant:store-a", projection.StoreScope);
         Assert.DoesNotContain("danger", projection.PaletteKey, StringComparison.OrdinalIgnoreCase);

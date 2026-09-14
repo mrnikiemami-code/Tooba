@@ -391,6 +391,7 @@ public static class StorefrontEndpoints
             paletteKey = appearance.PaletteKey,
             paletteKeyWasKnown = appearance.PaletteKeyWasKnown,
             themeMode = appearance.ThemeMode,
+            productCardSkin = appearance.ProductCardSkin,
             tokens = new
             {
                 primaryRgb = appearance.PrimaryRgb,

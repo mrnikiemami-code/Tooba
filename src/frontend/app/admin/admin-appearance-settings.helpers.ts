@@ -1,4 +1,5 @@
 import { appearanceCssVars, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
+import { resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode, type StorefrontThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 
 export function appearanceIsDirty(
@@ -6,12 +7,17 @@ export function appearanceIsDirty(
   draftKey: string,
   savedTheme?: string,
   draftTheme?: string,
+  savedSkin?: string,
+  draftSkin?: string,
 ): boolean {
   const paletteDirty = resolvePaletteKey(savedKey) !== resolvePaletteKey(draftKey);
-  if (savedTheme == null && draftTheme == null) {
-    return paletteDirty;
-  }
-  return paletteDirty || resolveThemeMode(savedTheme) !== resolveThemeMode(draftTheme);
+  const themeDirty = savedTheme == null && draftTheme == null
+    ? false
+    : resolveThemeMode(savedTheme) !== resolveThemeMode(draftTheme);
+  const skinDirty = savedSkin == null && draftSkin == null
+    ? false
+    : resolveProductCardSkin(savedSkin) !== resolveProductCardSkin(draftSkin);
+  return paletteDirty || themeDirty || skinDirty;
 }
 
 export function appearancePreviewStyle(paletteKey: string): Record<string, string> {

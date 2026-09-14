@@ -7,6 +7,13 @@ import {
   type StorefrontBrandTokens,
   type StorefrontPaletteDefinition,
 } from "../../lib/storefront-appearance/palette-registry.ts";
+import {
+  DEFAULT_PRODUCT_CARD_SKIN,
+  isKnownProductCardSkin,
+  listProductCardSkins,
+  resolveProductCardSkin,
+  type ProductCardSkinDefinition,
+} from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 
 export interface AppearanceSettingsView {
@@ -14,8 +21,10 @@ export interface AppearanceSettingsView {
   paletteKey: string;
   paletteKeyWasKnown: boolean;
   themeMode: string;
+  productCardSkin: string;
   tokens: StorefrontBrandTokens;
   presets: StorefrontPaletteDefinition[];
+  skins: ProductCardSkinDefinition[];
 }
 
 function mapTokens(raw: unknown): StorefrontBrandTokens {
@@ -56,13 +65,35 @@ function mapView(payload: unknown): AppearanceSettingsView | null {
       })
       .filter((item): item is StorefrontPaletteDefinition => item !== null)
     : [...listStorefrontPalettes()];
+  const skins = Array.isArray(row.skins)
+    ? row.skins
+      .map((item) => {
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+        const skin = item as Record<string, unknown>;
+        const key = typeof skin.key === "string" ? skin.key : "";
+        if (!isKnownProductCardSkin(key)) {
+          return null;
+        }
+        return {
+          key: resolveProductCardSkin(key),
+          nameFa: String(skin.nameFa ?? key),
+          nameEn: String(skin.nameEn ?? key),
+          chrome: listProductCardSkins().find((known) => known.key === resolveProductCardSkin(key))!.chrome,
+        } satisfies ProductCardSkinDefinition;
+      })
+      .filter((item): item is ProductCardSkinDefinition => item !== null)
+    : [...listProductCardSkins()];
   return {
     storeScope: String(row.storeScope ?? "default"),
     paletteKey,
     paletteKeyWasKnown: row.paletteKeyWasKnown !== false,
     themeMode: resolveThemeMode(typeof row.themeMode === "string" ? row.themeMode : null),
+    productCardSkin: resolveProductCardSkin(typeof row.productCardSkin === "string" ? row.productCardSkin : DEFAULT_PRODUCT_CARD_SKIN),
     tokens: mapTokens(row.tokens),
     presets: presets.length > 0 ? presets : [...listStorefrontPalettes()],
+    skins: skins.length > 0 ? skins : [...listProductCardSkins()],
   };
 }
 
@@ -83,11 +114,12 @@ export async function loadAppearanceSettings(): Promise<
 export async function saveAppearanceSettings(
   paletteKey: string,
   themeMode: string,
+  productCardSkin: string,
 ): Promise<{ ok: true; data: AppearanceSettingsView } | { ok: false; denied?: boolean; message?: string }> {
   const response = await fetch("/v1/admin/settings/appearance", {
     method: "PUT",
     headers: { ...adminHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ paletteKey, themeMode }),
+    body: JSON.stringify({ paletteKey, themeMode, productCardSkin }),
   });
   if (response.status === 401 || response.status === 403) {
     return { ok: false, denied: true };
@@ -100,7 +132,9 @@ export async function saveAppearanceSettings(
         ? "پالت انتخاب‌شده مجاز نیست."
         : payload?.errorCode === "appearance.theme.invalid"
           ? "حالت تم انتخاب‌شده مجاز نیست."
-          : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
+          : payload?.errorCode === "appearance.skin.invalid"
+            ? "پوستهٔ کارت انتخاب‌شده مجاز نیست."
+            : "ذخیرهٔ ظاهر فروشگاه انجام نشد.",
     };
   }
   const data = mapView(await response.json().catch(() => null));

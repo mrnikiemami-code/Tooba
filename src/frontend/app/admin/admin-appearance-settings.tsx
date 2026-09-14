@@ -1,6 +1,7 @@
 "use client";
 
 import { listStorefrontPalettes, resolveBrandTokens, resolvePaletteKey } from "../../lib/storefront-appearance/palette-registry.ts";
+import { listProductCardSkins, resolveProductCardSkin, resolveProductCardSkinChrome } from "../../lib/storefront-appearance/product-card-skin.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
 import { THEME_MODE_OPTIONS, appearanceIsDirty, appearancePreviewStyle } from "./admin-appearance-settings.helpers.ts";
 import type { AppearanceSettingsView } from "./appearance-settings-api.ts";
@@ -13,20 +14,26 @@ export function AdminAppearanceSettingsForm(props: {
   view: AppearanceSettingsView | null;
   draftKey: string;
   draftTheme: string;
+  draftSkin: string;
   busy: boolean;
   readOnly: boolean;
   error: string | null;
   onSelect: (key: string) => void;
   onSelectTheme: (mode: string) => void;
+  onSelectSkin: (skin: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
   const presets = props.view?.presets?.length ? props.view.presets : [...listStorefrontPalettes()];
+  const skins = props.view?.skins?.length ? props.view.skins : [...listProductCardSkins()];
   const preview = resolveBrandTokens(props.draftKey);
   const savedKey = props.view?.paletteKey ?? "tooba-blue";
   const savedTheme = props.view?.themeMode ?? "LightOnly";
+  const savedSkin = props.view?.productCardSkin ?? "classic";
   const draftTheme = resolveThemeMode(props.draftTheme);
-  const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme);
+  const draftSkin = resolveProductCardSkin(props.draftSkin);
+  const dirty = appearanceIsDirty(savedKey, props.draftKey, savedTheme, draftTheme, savedSkin, draftSkin);
+  const chrome = resolveProductCardSkinChrome(draftSkin);
   const previewDark = draftTheme === "DarkOnly";
   const unknown = props.view != null && !props.view.paletteKeyWasKnown;
 
@@ -42,7 +49,7 @@ export function AdminAppearanceSettingsForm(props: {
       <div>
         <h2 className="text-sm font-bold text-gray-900">ظاهر فروشگاه</h2>
         <p className="text-sm text-gray-500 leading-7 mt-1">
-          پالت برند و حالت تم را انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) به پالت وابسته نیستند.
+          پالت برند، حالت تم و پوستهٔ کارت کالا را انتخاب کنید. رنگ‌های وضعیت (موفقیت، هشدار، خطر) به پالت وابسته نیستند.
         </p>
       </div>
       {unknown ? (
@@ -99,18 +106,53 @@ export function AdminAppearanceSettingsForm(props: {
           );
         })}
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="admin-settings-appearance-skins">
+        {skins.map((skin) => {
+          const selected = draftSkin === skin.key;
+          const optionChrome = resolveProductCardSkinChrome(skin.key);
+          return (
+            <button
+              key={skin.key}
+              type="button"
+              disabled={props.readOnly || props.busy}
+              onClick={() => props.onSelectSkin(skin.key)}
+              className={`text-right rounded-xl border p-3 transition-all ${
+                selected ? "border-[#2563EB] ring-2 ring-[#2563EB]/20" : "border-gray-200 hover:border-gray-300"
+              }`}
+              data-testid={`admin-settings-appearance-skin-${skin.key}`}
+              data-selected={selected ? "true" : "false"}
+            >
+              <span className="block text-sm font-bold text-gray-900">{skin.nameFa}</span>
+              <span className="block text-[11px] text-gray-400 mt-1" dir="ltr">{skin.key}</span>
+              <span
+                className={`${optionChrome.article} mt-3 pointer-events-none max-w-[140px]`}
+                data-preview-skin-chrome={skin.key}
+              >
+                <span className={optionChrome.media} />
+              </span>
+            </button>
+          );
+        })}
+      </div>
       <div
         className={`rounded-xl border border-gray-200 p-4 space-y-3 ${previewDark ? "dark bg-background text-foreground" : ""}`}
         style={appearancePreviewStyle(props.draftKey)}
         data-testid="admin-settings-appearance-preview"
         data-preview-theme={draftTheme}
+        data-preview-skin={draftSkin}
       >
         <p className="text-xs text-gray-500">پیش‌نمایش ذخیره‌نشده</p>
         <button type="button" className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold">
           دکمه اصلی
         </button>
         <a className="block text-sm text-primary underline" href="#preview">پیوند تأکیدی</a>
-        <div className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">کارت نمونه با متن عادی</div>
+        <article className={chrome.article} data-testid="admin-settings-appearance-card-preview">
+          <div className={chrome.media} />
+          <div className="flex-1 flex flex-col p-3 gap-1.5">
+            <p className="text-xs font-bold text-foreground">کارت نمونه</p>
+            <span className={chrome.badge}>٪۲۰</span>
+          </div>
+        </article>
         <p className="text-xs text-gray-500">متن کم‌رنگ</p>
         <div className="flex gap-2 text-[11px]">
           <span className="px-2 py-1 rounded bg-success/15 text-success">موفقیت</span>

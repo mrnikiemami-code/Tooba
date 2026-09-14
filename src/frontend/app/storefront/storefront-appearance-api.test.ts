@@ -13,6 +13,8 @@ test("SSR root applies appearance CSS variables", () => {
   assert.match(layout, /loadStorefrontAppearance/);
   assert.match(layout, /data-storefront-palette/);
   assert.match(layout, /data-storefront-scope/);
+  assert.match(layout, /data-storefront-product-card-skin/);
+  assert.match(layout, /StorefrontProductCardSkinProvider/);
   assert.match(layout, /storefrontAppearanceStyle/);
   assert.match(layout, /THEME_BOOTSTRAP_SCRIPT/);
   assert.doesNotMatch(layout, /dangerouslySetInnerHTML=\{[^}]*payload/);
@@ -24,6 +26,7 @@ test("appearance style is brand-token only", () => {
     paletteKey: "tooba-blue",
     paletteKeyWasKnown: true,
     themeMode: "Light",
+    productCardSkin: "classic",
     tokens: resolveBrandTokens("tooba-blue"),
   });
   assert.equal(style["--color-primary"], "37 99 235");

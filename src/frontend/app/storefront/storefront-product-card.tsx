@@ -10,6 +10,8 @@ import { formatOfferAmount, storefrontMediaUrl } from "./storefront-api.ts";
 import { addOfferToCart, toCustomerCartMessage } from "./storefront-cart-api.ts";
 import type { StorefrontProductCard } from "./storefront-model.ts";
 import { useStorefrontWishlist } from "./storefront-wishlist-provider.tsx";
+import { resolveProductCardSkin, resolveProductCardSkinChrome } from "../../lib/storefront-appearance/product-card-skin.ts";
+import { useProductCardSkin } from "../../lib/storefront-appearance/product-card-skin-context.tsx";
 
 export const STOREFRONT_ACCENT = "rgb(var(--color-primary))";
 
@@ -27,11 +29,16 @@ export function StorefrontProductCardView({
   card,
   showNew = false,
   showHoverActions = true,
+  skin,
 }: {
   card: StorefrontProductCard;
   showNew?: boolean;
   showHoverActions?: boolean;
+  skin?: string | null;
 }) {
+  const storeSkin = useProductCardSkin();
+  const effectiveSkin = resolveProductCardSkin(skin ?? storeSkin);
+  const chrome = resolveProductCardSkinChrome(effectiveSkin);
   const wishlist = useStorefrontWishlist();
   const register = wishlist.register;
   const router = useRouter();
@@ -87,12 +94,13 @@ export function StorefrontProductCardView({
 
   return (
     <article
-      className="group relative flex flex-col rounded-2xl overflow-hidden bg-surface border border-border hover:shadow-xl hover:shadow-black/40 hover:-translate-y-1 transition-all duration-300"
+      className={chrome.article}
       data-testid="storefront-product-card"
+      data-product-card-skin={effectiveSkin}
     >
       <Link href={productHref} className="flex flex-1 flex-col">
         {/* Media well: product photo on semantic background; not UI chrome. */}
-        <div className="relative aspect-[4/5] bg-background overflow-hidden" data-storefront-media-well="true">
+        <div className={chrome.media} data-storefront-media-well="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={storefrontMediaUrl(card.mediaAssetId)}
@@ -101,7 +109,7 @@ export function StorefrontProductCardView({
           />
           <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-start">
             {discount !== null ? (
-              <span className="bg-primary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-lg shadow-lg shadow-primary/30 flex items-center gap-1">
+              <span className={chrome.badge}>
                 <Zap className="w-3 h-3" />
                 {discount.toLocaleString("fa-IR")}%
               </span>
@@ -125,7 +133,7 @@ export function StorefrontProductCardView({
                 disabled={busy}
                 aria-pressed={saved}
                 aria-label={saved ? `حذف ${card.title} از علاقه‌مندی` : `افزودن ${card.title} به علاقه‌مندی`}
-                className={`w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform disabled:opacity-60 ${saved ? "text-rose-600" : "text-muted"}`}
+                className={`${chrome.action} disabled:opacity-60 ${saved ? "text-rose-600" : "text-muted"}`}
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -137,7 +145,7 @@ export function StorefrontProductCardView({
               <button
                 type="button"
                 aria-label={`اشتراک‌گذاری ${card.title}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-muted"
+                className={`${chrome.action} text-muted`}
                 onClick={handleShare}
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -145,7 +153,7 @@ export function StorefrontProductCardView({
               <button
                 type="button"
                 aria-label={`مشاهده ${card.title}`}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-surface-elevated/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform text-muted"
+                className={`${chrome.action} text-muted`}
                 onClick={handleViewProduct}
               >
                 <Eye className="w-3.5 h-3.5" />

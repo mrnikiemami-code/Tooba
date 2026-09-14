@@ -36,7 +36,11 @@ public sealed class StoreAppearanceSettingsComposer
         => SaveAsync(paletteKey, themeMode: null, cancellationToken);
 
     /// <summary>PaletteKey و ThemeMode را اتمیک می‌نویسد.</summary>
-    public async Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, CancellationToken cancellationToken)
+    public Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, CancellationToken cancellationToken)
+        => SaveAsync(paletteKey, themeMode, productCardSkin: null, cancellationToken);
+
+    /// <summary>PaletteKey و ThemeMode و پوستهٔ کارت را اتمیک می‌نویسد.</summary>
+    public async Task<StoreAppearanceAdminView> SaveAsync(string? paletteKey, string? themeMode, string? productCardSkin, CancellationToken cancellationToken)
     {
         if (!StoreAppearancePaletteRegistry.IsKnown(paletteKey))
         {
@@ -54,6 +58,17 @@ public sealed class StoreAppearanceSettingsComposer
             parsedTheme = parsed;
         }
 
+        string? canonicalSkin = null;
+        if (productCardSkin is not null)
+        {
+            if (!StoreAppearanceProductCardSkinRegistry.IsKnown(productCardSkin))
+            {
+                throw new PlatformHttpException(400, "پوستهٔ کارت انتخاب‌شده مجاز نیست.", "appearance.skin.invalid");
+            }
+
+            canonicalSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin);
+        }
+
         var canonical = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
         var now = DateTimeOffset.UtcNow;
         var row = await _catalog.StoreAppearanceSettings
@@ -64,7 +79,7 @@ public sealed class StoreAppearanceSettingsComposer
             _catalog.StoreAppearanceSettings.Add(row);
         }
 
-        row.Replace(canonical, parsedTheme ?? row.ThemeMode, now);
+        row.Replace(canonical, parsedTheme ?? row.ThemeMode, canonicalSkin, now);
         await _catalog.SaveChangesAsync(cancellationToken);
         _projector.Invalidate(_commerce.Current);
         return ToView(await _projector.GetEffectiveAsync(cancellationToken));
@@ -82,6 +97,7 @@ public sealed class StoreAppearanceSettingsComposer
                 current.OnPrimaryRgb,
                 current.FocusRgb,
                 current.PrimaryOnDarkRgb),
+            current.ProductCardSkin,
             StoreAppearancePaletteRegistry.All
                 .Select(item => new StoreAppearancePresetView(
                     item.Key,
@@ -93,6 +109,9 @@ public sealed class StoreAppearanceSettingsComposer
                         item.Tokens.OnPrimaryRgb,
                         item.Tokens.FocusRgb,
                         item.Tokens.PrimaryOnDarkRgb)))
+                .ToArray(),
+            StoreAppearanceProductCardSkinRegistry.All
+                .Select(item => new StoreAppearanceSkinView(item.Key, item.NameFa, item.NameEn))
                 .ToArray());
 }
 
@@ -103,7 +122,15 @@ public sealed record StoreAppearanceAdminView(
     bool PaletteKeyWasKnown,
     string ThemeMode,
     StoreAppearanceTokenView Tokens,
-    IReadOnlyList<StoreAppearancePresetView> Presets);
+    string ProductCardSkin,
+    IReadOnlyList<StoreAppearancePresetView> Presets,
+    IReadOnlyList<StoreAppearanceSkinView> Skins);
+
+/// <summary>یک پوستهٔ curated برای کارت انتخاب.</summary>
+public sealed record StoreAppearanceSkinView(
+    string Key,
+    string NameFa,
+    string NameEn);
 
 /// <summary>یک پالت curated برای کارت انتخاب.</summary>
 public sealed record StoreAppearancePresetView(
@@ -121,4 +148,4 @@ public sealed record StoreAppearanceTokenView(
     string PrimaryOnDarkRgb);
 
 /// <summary>بدنه ذخیره ظاهر؛ PaletteKey الزامی و ThemeMode اختیاری.</summary>
-public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey, string? ThemeMode = null);
+public sealed record StoreAppearanceSettingsWriteRequest(string? PaletteKey, string? ThemeMode = null, string? ProductCardSkin = null);

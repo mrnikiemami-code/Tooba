@@ -86,6 +86,7 @@ export default function AdminSettingsPage() {
   const [appearance, setAppearance] = useState<AppearanceSettingsView | null>(null);
   const [appearanceDraft, setAppearanceDraft] = useState("tooba-blue");
   const [appearanceThemeDraft, setAppearanceThemeDraft] = useState("LightOnly");
+  const [appearanceSkinDraft, setAppearanceSkinDraft] = useState("classic");
   const [reservationDraft, setReservationDraft] = useState<ReservationPolicyDraft>({
     initial: "",
     retry: "",
@@ -152,6 +153,7 @@ export default function AdminSettingsPage() {
       setAppearance(appearanceResult.data);
       setAppearanceDraft(appearanceResult.data.paletteKey);
       setAppearanceThemeDraft(appearanceResult.data.themeMode);
+      setAppearanceSkinDraft(appearanceResult.data.productCardSkin);
     }
   }
 
@@ -347,7 +349,7 @@ export default function AdminSettingsPage() {
     setBusy(true);
     setError(null);
     setSuccess(null);
-    const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft);
+    const result = await saveAppearanceSettings(appearanceDraft, appearanceThemeDraft, appearanceSkinDraft);
     if (result.denied) {
       setDenied(true);
       setBusy(false);
@@ -361,6 +363,7 @@ export default function AdminSettingsPage() {
     setAppearance(result.data);
     setAppearanceDraft(result.data.paletteKey);
     setAppearanceThemeDraft(result.data.themeMode);
+    setAppearanceSkinDraft(result.data.productCardSkin);
     setSuccess("ظاهر فروشگاه ذخیره شد.");
     setBusy(false);
   }
@@ -368,6 +371,7 @@ export default function AdminSettingsPage() {
   function onCancelAppearance() {
     setAppearanceDraft(appearance?.paletteKey ?? "tooba-blue");
     setAppearanceThemeDraft(appearance?.themeMode ?? "LightOnly");
+    setAppearanceSkinDraft(appearance?.productCardSkin ?? "classic");
     setError(null);
     setSuccess(null);
   }
@@ -463,11 +467,13 @@ export default function AdminSettingsPage() {
               view={appearance}
               draftKey={appearanceDraft}
               draftTheme={appearanceThemeDraft}
+              draftSkin={appearanceSkinDraft}
               busy={busy}
               readOnly={readOnly}
               error={error}
               onSelect={setAppearanceDraft}
               onSelectTheme={setAppearanceThemeDraft}
+              onSelectSkin={setAppearanceSkinDraft}
               onSave={() => void onSaveAppearance()}
               onCancel={onCancelAppearance}
             />

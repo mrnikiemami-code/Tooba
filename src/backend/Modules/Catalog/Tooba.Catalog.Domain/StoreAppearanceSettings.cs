@@ -37,6 +37,9 @@ public sealed class StoreAppearanceSettings
     /// <summary>حالت تم ذخیره‌شده.</summary>
     public StoreAppearanceThemeMode ThemeMode { get; private set; } = StoreAppearanceThemeMode.Light;
 
+    /// <summary>پوستهٔ کنترل‌شدهٔ کارت کالا.</summary>
+    public string ProductCardSkin { get; private set; } = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey;
+
     /// <summary>زمان به‌روزرسانی.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -46,14 +49,20 @@ public sealed class StoreAppearanceSettings
         SettingsId = SingletonId,
         PaletteKey = StoreAppearancePaletteRegistry.DefaultPaletteKey,
         ThemeMode = StoreAppearanceThemeMode.Light,
+        ProductCardSkin = StoreAppearanceProductCardSkinRegistry.DefaultSkinKey,
         UpdatedAt = now,
     };
 
     /// <summary>پالت و حالت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
     public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, DateTimeOffset now)
+        => Replace(paletteKey, themeMode, productCardSkin: null, now);
+
+    /// <summary>پالت، تم و پوستهٔ کارت را با fallback کلید ناشناخته جایگزین می‌کند.</summary>
+    public void Replace(string? paletteKey, StoreAppearanceThemeMode themeMode, string? productCardSkin, DateTimeOffset now)
     {
         PaletteKey = StoreAppearancePaletteRegistry.ResolveKey(paletteKey);
         ThemeMode = NormalizeThemeMode(themeMode);
+        ProductCardSkin = StoreAppearanceProductCardSkinRegistry.ResolveKey(productCardSkin ?? ProductCardSkin);
         UpdatedAt = now;
     }
 

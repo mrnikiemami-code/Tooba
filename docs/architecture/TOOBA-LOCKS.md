@@ -637,3 +637,21 @@ Home/PDP dark implementation may change color/surface only; locked geometry/inte
 
 ### LOCK-SF-158 — Dark brand-emphasis is a canonical token
 Meaningful brand text/links/focus on dark surfaces resolve from a canonical per-palette on-dark brand-emphasis token. CTA fill stays primary/on-primary. No page-local or per-palette component color branches.
+
+### LOCK-SF-159 — ProductCardSkin is a controlled Store appearance key
+ProductCardSkin is a Store-scoped curated appearance key. Arbitrary style payloads, raw HTML/CSS/JS from the database, and custom color builders are forbidden.
+
+### LOCK-SF-160 — Skins are presentation-only on one canonical card
+Product card skins change presentation only. There is one canonical StorefrontProductCardView behavior/component; no duplicate business card per skin.
+
+### LOCK-SF-161 — Skin may not alter commerce semantics
+A skin may not alter product data, pricing, stock, cart, navigation, analytics, or accessibility semantics.
+
+### LOCK-SF-162 — Card geometry and grid density stay canonical
+Card width, image aspect, title/price structure, action positions, hover-action semantics, and listing grid density stay canonical. Radical layouts require a future ProductCardLayout, not a skin.
+
+### LOCK-SF-163 — All storefront cards consume the Store skin
+All storefront card usages consume the same effective Store ProductCardSkin unless a future page override is architected.
+
+### LOCK-SF-164 — Skins compose with PaletteKey and ThemeMode
+Skins compose with every PaletteKey × ThemeMode through semantic tokens. No per-palette or per-dark component branches.

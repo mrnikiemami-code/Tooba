@@ -19,8 +19,11 @@ public sealed class StoreAppearanceAdminTests
         var view = await composer.GetAsync(CancellationToken.None);
         Assert.Equal("tooba-blue", view.PaletteKey);
         Assert.True(view.PaletteKeyWasKnown);
+        Assert.Equal("classic", view.ProductCardSkin);
         Assert.InRange(view.Presets.Count, 6, 8);
+        Assert.Equal(4, view.Skins.Count);
         Assert.Contains(view.Presets, item => item.Key == "tooba-blue");
+        Assert.Contains(view.Skins, item => item.Key == "classic");
     }
 
     [Fact]
@@ -116,6 +119,58 @@ public sealed class StoreAppearanceAdminTests
         Assert.Contains("/v1/admin/settings/appearance", source, StringComparison.Ordinal);
         Assert.Contains("AdminPanelAccess.RequireAuthorizedAsync", source, StringComparison.Ordinal);
         Assert.Contains("body.ThemeMode", source, StringComparison.Ordinal);
+        Assert.Contains("body.ProductCardSkin", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Valid_skin_updates_and_preserves_palette_and_theme()
+    {
+        var composer = CreateComposer(out var catalog);
+        await composer.SaveAsync("forest-green", "DarkOnly", CancellationToken.None);
+        var view = await composer.SaveAsync("forest-green", "DarkOnly", "clean", CancellationToken.None);
+        Assert.Equal("forest-green", view.PaletteKey);
+        Assert.Equal("DarkOnly", view.ThemeMode);
+        Assert.Equal("clean", view.ProductCardSkin);
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        Assert.Equal("clean", row.ProductCardSkin);
+    }
+
+    [Fact]
+    public async Task Missing_skin_preserves_existing_or_classic()
+    {
+        var composer = CreateComposer(out var catalog);
+        var first = await composer.SaveAsync("tooba-blue", "LightOnly", CancellationToken.None);
+        Assert.Equal("classic", first.ProductCardSkin);
+        var second = await composer.SaveAsync("tooba-blue", "LightOnly", null, CancellationToken.None);
+        Assert.Equal("classic", second.ProductCardSkin);
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        Assert.Equal("classic", row.ProductCardSkin);
+    }
+
+    [Fact]
+    public async Task Invalid_skin_is_rejected()
+    {
+        var composer = CreateComposer(out var catalog);
+        var error = await Assert.ThrowsAsync<PlatformHttpException>(
+            () => composer.SaveAsync("tooba-blue", "LightOnly", "custom-html", CancellationToken.None));
+        Assert.Equal(400, error.StatusCode);
+        Assert.Equal("appearance.skin.invalid", error.ErrorCode);
+        Assert.Empty(catalog.StoreAppearanceSettings);
+    }
+
+    [Fact]
+    public async Task Unknown_persisted_skin_reads_as_classic()
+    {
+        await using var catalog = CreateCatalog();
+        catalog.StoreAppearanceSettings.Add(StoreAppearanceSettings.CreateDefault(DateTimeOffset.UtcNow));
+        await catalog.SaveChangesAsync();
+        var row = await catalog.StoreAppearanceSettings.SingleAsync();
+        typeof(StoreAppearanceSettings).GetProperty(nameof(StoreAppearanceSettings.ProductCardSkin))!
+            .SetValue(row, "legacy-skin");
+        await catalog.SaveChangesAsync();
+        var projector = CreateProjector(catalog, OutboxTestContextFactory.SingleStore("store-a", "conn-a"), new MemoryCache(new MemoryCacheOptions()));
+        var projection = await projector.GetEffectiveAsync(CancellationToken.None);
+        Assert.Equal("classic", projection.ProductCardSkin);
     }
 
     private static StoreAppearanceSettingsComposer CreateComposer(out CatalogDbContext catalog)

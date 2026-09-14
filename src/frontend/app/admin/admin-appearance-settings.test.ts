@@ -16,6 +16,8 @@ test("settings page has appearance tab on existing shell", () => {
   assert.match(page, /id: "appearance"/);
   assert.match(page, /AdminAppearanceSettingsForm/);
   assert.match(page, /loadAppearanceSettings/);
+  assert.match(page, /appearanceSkinDraft/);
+  assert.match(page, /onSelectSkin/);
   assert.doesNotMatch(page, /type=\"color\"/);
 });
 
@@ -27,10 +29,16 @@ test("current palette dirty cancel save states are wired", () => {
   assert.match(form, /admin-settings-appearance-error/);
   assert.match(form, /admin-settings-appearance-unknown/);
   assert.match(form, /admin-settings-appearance-themes/);
+  assert.match(form, /admin-settings-appearance-skins/);
+  assert.match(form, /admin-settings-appearance-skin-\$\{skin\.key\}/);
+  assert.match(form, /resolveProductCardSkinChrome/);
+  assert.match(form, /admin-settings-appearance-card-preview/);
   assert.equal(appearanceIsDirty("tooba-blue", "forest-green"), true);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue"), false);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "DarkOnly"), true);
   assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "Light", "LightOnly"), false);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "clean"), true);
+  assert.equal(appearanceIsDirty("tooba-blue", "tooba-blue", "LightOnly", "LightOnly", "classic", "classic"), false);
 });
 
 test("preview uses canonical registry tokens and leaves status colors", () => {
@@ -46,7 +54,7 @@ test("preview uses canonical registry tokens and leaves status colors", () => {
 
 test("save posts paletteKey only once per helper", () => {
   assert.match(api, /method: \"PUT\"/);
-  assert.match(api, /JSON\.stringify\(\{ paletteKey, themeMode \}\)/);
+  assert.match(api, /JSON\.stringify\(\{ paletteKey, themeMode, productCardSkin \}\)/);
   assert.doesNotMatch(api, /JSON\.stringify\(\{[^}]*primaryRgb/);
   assert.doesNotMatch(api, /localStorage/);
   assert.equal(listStorefrontPalettes().length >= 6, true);

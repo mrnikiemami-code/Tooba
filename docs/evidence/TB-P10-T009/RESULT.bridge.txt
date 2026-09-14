@@ -1,0 +1,85 @@
+PIPELINE-PROTOCOL: BRIDGE-WAKE-V1
+
+BEGIN_TOOBA_WORKER_RESULT
+
+Task-ID:
+TB-P10-T009
+
+Parent-Task:
+TB-P10-T008-R1
+
+Channel:
+tooba-main
+
+WorkerId:
+tooba-worker-01
+
+Status:
+PASS
+
+USER_VISUAL_ACCEPTED=NO
+
+Summary:
+Product Card Skin System PASS. One StorefrontProductCardView applies curated classic/clean/elevated/glass chrome from a Store ProductCardSkin key. Admin Appearance PUT is one payload { paletteKey, themeMode, productCardSkin }. Default classic chrome stays the accepted T008-R1 classes. Runtime A–N green on Host :5088 + FE :3000. No TB-P10-T010. Worker IDLE.
+
+Applicable-Locks:
+LOCK-SF-001…158 preserved. Added LOCK-SF-159…164 (controlled skin key; presentation-only; no commerce/a11y change; geometry/grid canonical; storefront-wide Store skin; palette×theme compose).
+
+Recovery-Start:
+Phase P10; Architect-accepted TB-P10-T008-R1; Last Implementation at claim TB-P10-T008-R1; Current Task TB-P10-T009; branch main; HEAD==origin/main 2de1a78d. Unrelated login/account UX left dirty. Evidence recovery-start.md
+
+Product-Card-Discovery:
+One canonical card on Home, listing, category PLP, PDP related, merchandising, Cart recs, wishlist. Evidence product-card-discovery.md
+
+Skin-Registry:
+classic/clean/elevated/glass in Host + FE registries. Missing/legacy → classic. Arbitrary strings rejected. Evidence skin-registry.md
+
+Geometry-Contract:
+aspect-[4/5], hover:-translate-y-1, listing grid-cols-2/lg:4 preserved. No horizontal layout. Evidence geometry-contract.md
+
+Admin-Skin-UI:
+Four skin options, dirty with palette+theme+skin, Cancel, one PUT, preview uses chrome registry. Evidence admin-skin-ui.md
+
+Persistence-API:
+Store-scoped key column; cache invalidate current Store only; 400 appearance.skin.invalid; auth unchanged. Evidence persistence-api.md
+
+Storefront-Wide-Application:
+SSR data-storefront-product-card-skin + provider; cards stamp data-product-card-skin. Evidence storefront-wide-application.md
+
+Default-Visual-Equivalence:
+CLASSIC_PRODUCT_CARD_CHROME equals accepted T008-R1 classes. Evidence default-visual-equivalence.md
+
+Accessibility:
+ATC/wishlist/share/view labels and status semantics unchanged. Evidence accessibility.md
+
+Focused-Validation:
+recovery 4/4; Host StoreAppearance 16/16; focused appearance/skin/card 18/18; test:storefront 67/67; test:critical-storefront 18/18; git diff --check clean. Full tsc not PASS (pre-existing Admin/grid). Evidence focused-validation.md
+
+Runtime:
+A–N green on Host :5088 + FE :3000. Invalid skin 400. clean/elevated/glass × light/dark + forest-green. Restore tooba-blue LightOnly classic. Evidence runtime.md runtime-raw.json
+
+AntiPattern-Scan:
+CLEAN — no second card, no DB CSS, no page-local skin fetch, no T010. Evidence antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-159…164 appended after 158. No renumber. Evidence lock-registry.md
+
+Recovery-SoT:
+Architect TB-P10-T008-R1; Impl TB-P10-T009; Issued/Repair none; USER_VISUAL_ACCEPTED=NO; do NOT invent TB-P10-T010. Evidence recovery-sot.md
+
+Git:
+ending HEAD pending-pin
+origin/main pending-pin
+HEAD==origin/main yes
+unrelated login/account UX preserved unstaged
+
+Architectural-Concerns:
+Category PLP keeps its existing grid-cols-2/md:3/xl:4 density (not listing lg:4). Wishlist uses the same card component.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO. Browser screenshot files did not persist; runtime proof is HTTP markers + raw JSON. Next.js overlay may still be visible.
+
+Blockers:
+none
+
+END_TOOBA_WORKER_RESULT

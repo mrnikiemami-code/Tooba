@@ -6,12 +6,14 @@ import {
   type StorefrontBrandTokens,
 } from "../../lib/storefront-appearance/palette-registry.ts";
 import { resolveThemeMode } from "../../lib/storefront-appearance/theme-mode.ts";
+import { DEFAULT_PRODUCT_CARD_SKIN, resolveProductCardSkin } from "../../lib/storefront-appearance/product-card-skin.ts";
 
 export interface StorefrontAppearanceProjection {
   storeScope: string;
   paletteKey: string;
   paletteKeyWasKnown: boolean;
   themeMode: string;
+  productCardSkin: string;
   tokens: StorefrontBrandTokens;
 }
 
@@ -20,6 +22,7 @@ const FALLBACK: StorefrontAppearanceProjection = {
   paletteKey: "tooba-blue",
   paletteKeyWasKnown: true,
   themeMode: "LightOnly",
+  productCardSkin: DEFAULT_PRODUCT_CARD_SKIN,
   tokens: resolveBrandTokens("tooba-blue"),
 };
 
@@ -38,6 +41,7 @@ export async function loadStorefrontAppearance(): Promise<StorefrontAppearancePr
       paletteKey?: string;
       paletteKeyWasKnown?: boolean;
       themeMode?: string;
+      productCardSkin?: string;
       tokens?: Partial<StorefrontBrandTokens>;
     };
     const paletteKey = resolvePaletteKey(payload.paletteKey);
@@ -47,6 +51,7 @@ export async function loadStorefrontAppearance(): Promise<StorefrontAppearancePr
       paletteKey,
       paletteKeyWasKnown: payload.paletteKeyWasKnown !== false,
       themeMode: resolveThemeMode(payload.themeMode),
+      productCardSkin: resolveProductCardSkin(payload.productCardSkin),
       tokens: {
         primaryRgb: payload.tokens?.primaryRgb ?? defaults.primaryRgb,
         primaryStrongRgb: payload.tokens?.primaryStrongRgb ?? defaults.primaryStrongRgb,
