@@ -1,0 +1,64 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T017
+Parent-Task: TB-P10-T016
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Final four-role visual acceptance pack refreshed across real Storefront pages. PaletteTint Page/Section/Alternate/Accent are inspectable (central tint steps only), Neutral vs tinted Home/PDP compared, all 7 palettes have representative Home shots, dark Home/PDP/Landing captured, Admin four-role Persian preview captured, user inspection guide updated. Canonical default restored to tooba-blue / LightOnly / classic / Neutral / canonical Home. USER_VISUAL_ACCEPTED remains NO. No T018.
+
+Applicable-Locks:
+LOCK-SF-001…202 preserved. No new locks.
+
+Recovery-Start:
+branch=main HEAD-at-claim=87ebe82a2862f9310da5ad39ade1ea838005c386 leftover login/account UX preserved. docs/evidence/TB-P10-T017/recovery-start.md
+
+Role-Visual-Verification:
+Home PaletteTint tooba-blue pixels: page rgb(228,236,248) / section rgb(247,250,253) / alternate rgb(216,228,244) / card rgb(255,255,255). Accent on Landing promo. docs/evidence/TB-P10-T017/role-visual-verification.md
+
+Page-Coverage:
+01-home through 09-custom-home plus content/cart/checkout/account/landing. docs/evidence/TB-P10-T017/screenshots/
+
+Palette-Comparison:
+palette-tooba-blue.png … palette-violet-royal.png (7).
+
+Neutral-vs-Tint:
+neutral-home.png / tinted-home.png / neutral-pdp.png / tinted-pdp.png.
+
+Dark-Mode-Check:
+dark-home-tinted.png dark-pdp-tinted.png dark-landing-tinted.png plus forest-green DarkOnly spot-check.
+
+Admin-Appearance-Inspection:
+admin-appearance-final.png — palettes, ThemeMode, ProductCardSkin, BackgroundStyle, Persian four-role preview.
+
+User-Inspection-Guide:
+docs/evidence/TB-P10-T017/user-inspection-guide.md
+
+Focused-Validation:
+Host StoreAppearance 20/20. FE 23/23. recovery-staleness 4/4. critical-storefront 18/18. docs/evidence/TB-P10-T017/focused-validation.md
+
+Runtime:
+ok=true. Restored canonical default. docs/evidence/TB-P10-T017/runtime.md runtime-report.json
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T017/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…202. No duplicates. No new locks.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T016 Impl TB-P10-T017 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T018. docs/evidence/TB-P10-T017/recovery-sot.md
+
+Git:
+SHA=602499395ae352721ceb1bf8d21451c3e11ef58f HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Smallest central PaletteTint token step only; no page-local colors. Unrelated leftover login/account UX remains uncommitted.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user review. Pre-existing anonymous 401 /api/auth/me and SSR hydration warnings. First-paint PDP 500 observed then page rendered. PLP/Landing product-card media wells can appear empty in 1440×1200 clips; Home category media is visible. Home first viewport does not include SectionAccent (below fold); Landing promo/hero carries accent.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
