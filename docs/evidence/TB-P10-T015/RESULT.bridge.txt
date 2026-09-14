@@ -1,0 +1,52 @@
+BEGIN_TOOBA_WORKER_RESULT
+Task-ID: TB-P10-T015
+Parent-Task: TB-P10-T014
+Status: PASS
+WorkerId: tooba-worker-01
+Channel: tooba-main
+
+Summary:
+Storefront BackgroundStyle Neutral | PaletteTint is inspectable: backend-validated store appearance option (default Neutral), Admin «پس‌زمینه فروشگاه» خنثی / رنگی ملایم, curated palette tint tokens (not primary-alpha), Home and Landing inherit one store canvas tint, cards/header/modals remain elevated, light/dark coherent, canonical default restored to tooba-blue / LightOnly / classic / Neutral / canonical Home. USER_VISUAL_ACCEPTED remains NO. No T016.
+
+Applicable-Locks:
+LOCK-SF-001…192 preserved. Added LOCK-SF-193…196 (controlled Appearance background; Neutral|PaletteTint; curated tint tokens; one Store style for Home/Landing).
+
+Recovery-Start:
+branch=main HEAD-at-claim=acf454412eee7ea90d06bd66da01cf20cc9790eb leftover login/account UX preserved. docs/evidence/TB-P10-T015/recovery-start.md
+
+Background-Discovery:
+Storefront canvas was hardcoded bg-[#f3f5f8]; palettes had brand tokens only. Tintable: page canvas. Elevated cards/inputs/header/mini-cart/modals stay surface. docs/evidence/TB-P10-T015/background-discovery.md
+
+Tint-Token-Mapping:
+Curated page/section RGB per palette light+dark; Neutral 243 245 248. PaletteTint maps --color-page-tint. docs/evidence/TB-P10-T015/tint-token-mapping.md
+
+Appearance-UX:
+Admin Settings ظاهر فروشگاه «پس‌زمینه فروشگاه» خنثی / رنگی ملایم; dirty/save/cancel; preview uses --color-page-background. docs/evidence/TB-P10-T015/appearance-ux.md
+
+Focused-Validation:
+Host StoreAppearance 20/20. FE appearance/palette/theme 20/20. recovery-staleness 4/4. critical-storefront 18/18. Invalid PUT 400 appearance.background.invalid. docs/evidence/TB-P10-T015/focused-validation.md
+
+Runtime:
+A–J PASS. Distinct Neutral vs tinted Home screenshots. Landing inherits. Restored canonical default. docs/evidence/TB-P10-T015/runtime.md runtime-report.json ok=true. Screenshots under docs/evidence/TB-P10-T015/screenshots/.
+
+AntiPattern-Scan:
+CLEAN. docs/evidence/TB-P10-T015/antipattern-scan.md
+
+Lock-Registry:
+LOCK-SF-001…196. New 193–196 after 192. No duplicates.
+
+Recovery-SoT:
+Phase P10 Architect TB-P10-T014 Impl TB-P10-T015 Issued/Repair none USER_VISUAL_ACCEPTED=NO Worker IDLE do NOT invent TB-P10-T016. docs/evidence/TB-P10-T015/recovery-sot.md
+
+Git:
+SHA=361eaddc1be9587fe5527cbe7079fcaddf5cd711 HEAD==origin/main after push. Unrelated login leftovers not committed.
+
+Architectural-Concerns:
+Storefront canvas required [data-storefront-canvas] { background-color: rgb(var(--color-page-background)); } because Tailwind bg-page alone did not change pixels. Unrelated leftover login/account UX remains uncommitted.
+
+Visual-Concerns:
+USER_VISUAL_ACCEPTED=NO pending actual user review of Neutral vs PaletteTint. Pre-existing storefront theme SSR hydration warnings and anonymous 401 /api/auth/me were observed and are not BackgroundStyle-owned new loops.
+
+Blockers:
+none
+END_TOOBA_WORKER_RESULT
