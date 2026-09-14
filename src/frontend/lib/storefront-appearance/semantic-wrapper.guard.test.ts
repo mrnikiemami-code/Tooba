@@ -35,8 +35,9 @@ test("major storefront wrappers use semantic surface roles instead of page-level
   assert.doesNotMatch(login, /bg-white rounded-2xl border border-gray-200 shadow-sm p-5/);
 
   assert.match(pdp, /data-testid="pdp-primary-card"/);
-  assert.match(pdp, /data-storefront-surface-role="card"/);
+  assert.match(pdp, /data-storefront-surface-role="inherit"/);
   assert.match(pdp, /data-storefront-surface-role="alternate"/);
+  assert.doesNotMatch(pdp, /data-testid="pdp-primary-card"[^>]*data-storefront-surface-role="card"/);
   assert.doesNotMatch(pdp, /<div className="bg-white rounded-2xl border border-gray-200 shadow-sm">/);
 
   assert.doesNotMatch(shipping, /section className="w-full bg-white"/);

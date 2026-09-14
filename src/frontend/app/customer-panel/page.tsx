@@ -52,7 +52,7 @@ export default function CustomerDashboard() {
 
   return (
     <div className="space-y-6" data-testid="customer-dashboard">
-      <section className="rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/10 to-white p-5 md:p-7">
+      <section className="rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/10 to-transparent p-5 md:p-7" data-storefront-surface-role="inherit">
         <div className="flex items-start gap-3">
           <Sparkles className="w-6 h-6 text-amber-500 shrink-0 mt-1" />
           <div>
@@ -89,6 +89,7 @@ export default function CustomerDashboard() {
             key={action.href}
             href={action.href}
             className="bg-surface rounded-2xl border border-gray-200 p-4 text-center shadow-sm hover:border-primary/40 hover:shadow-md transition-all"
+            data-storefront-surface-role="card"
           >
             <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <action.icon className="w-5 h-5" />
@@ -99,7 +100,7 @@ export default function CustomerDashboard() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        <section className="lg:col-span-2 bg-surface rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm">
+        <section className="lg:col-span-2 space-y-3" data-storefront-surface-role="inherit">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-black text-lg">آخرین سفارش‌ها</h2>
             <Link href="/customer-panel/orders" className="text-xs font-bold text-primary">
@@ -120,7 +121,8 @@ export default function CustomerDashboard() {
                 <Link
                   key={order.checkoutId}
                   href={`/customer-panel/orders/${order.checkoutId}`}
-                  className="flex flex-wrap items-center gap-3 border border-gray-100 rounded-xl px-4 py-3 hover:border-blue-200"
+                  className="flex flex-wrap items-center gap-3 border border-gray-200 bg-surface rounded-xl px-4 py-3 hover:border-blue-200"
+                  data-storefront-surface-role="card"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold truncate">سفارش {order.reference}</p>
@@ -139,7 +141,7 @@ export default function CustomerDashboard() {
           )}
         </section>
 
-        <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm space-y-4">
+        <section className="bg-surface-elevated rounded-2xl border border-gray-200 p-4 md:p-6 shadow-sm space-y-4" data-storefront-surface-role="elevated">
           <h2 className="font-black text-lg">خلاصه حساب</h2>
           <SummaryRow
             label="آدرس‌ها"
@@ -218,7 +220,7 @@ function Metric({
     pink: "bg-pink-500",
   };
   return (
-    <article className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm min-h-28">
+    <article className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm min-h-28" data-storefront-surface-role="card">
       <div className={`w-10 h-10 ${tones[tone]} text-white rounded-xl flex items-center justify-center mb-3`}>
         <Icon className="w-5 h-5" />
       </div>

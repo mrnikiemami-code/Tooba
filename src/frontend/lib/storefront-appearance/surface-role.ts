@@ -3,6 +3,7 @@ export type StorefrontSurfaceRole = (typeof STOREFRONT_SURFACE_ROLES)[number];
 
 export const STOREFRONT_ALLOWED_SURFACES = [
   ...STOREFRONT_SURFACE_ROLES,
+  "inherit",
   "card",
   "elevated",
   "input",
@@ -30,6 +31,7 @@ const ROLE_CLASS: Record<StorefrontAllowedSurface, string> = {
   section: "bg-section-surface",
   alternate: "bg-section-alternate",
   accent: "bg-section-accent",
+  inherit: "bg-transparent",
   card: "bg-surface",
   elevated: "bg-surface-elevated",
   input: "bg-surface",

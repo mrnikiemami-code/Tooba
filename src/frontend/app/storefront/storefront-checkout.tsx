@@ -247,7 +247,7 @@ export function StorefrontShopeivaCheckout() {
               </section>
             ) : null}
 
-            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3" data-testid="checkout-recipient">
+              <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm space-y-3" data-testid="checkout-recipient" data-storefront-surface-role="input">
               <h2 className="text-base font-black flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
                 اطلاعات گیرنده
@@ -275,7 +275,7 @@ export function StorefrontShopeivaCheckout() {
               </p>
             </section>
 
-            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-shipping-method">
+            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-shipping-method" data-storefront-surface-role="input">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
                 روش ارسال
@@ -286,7 +286,7 @@ export function StorefrontShopeivaCheckout() {
               </div>
             </section>
 
-            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-payment">
+            <section className="bg-surface rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm" data-testid="checkout-payment" data-storefront-surface-role="input">
               <h2 className="text-base font-black flex items-center gap-2 mb-3">
                 <CreditCard className="w-4 h-4 text-primary" />
                 پرداخت

@@ -24,6 +24,8 @@ test("landing SectionTypes map to four global roles not page-local tokens", () =
   assert.equal(surfaceRoleClass("media"), "bg-background");
   assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("interactive"));
   assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("media"));
+  assert.ok(STOREFRONT_ALLOWED_SURFACES.includes("inherit"));
+  assert.equal(surfaceRoleClass("inherit"), "bg-transparent");
 });
 
 test("PaletteTint four roles are distinct and not primary or status", () => {

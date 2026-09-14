@@ -34,7 +34,7 @@ Channel: tooba-main
 Last Architect Accepted Task:
 
 ```text
-TB-P10-T017-R3
+TB-P10-T017-R4
 ```
 
 Prior accepted catalog wave:
@@ -62,7 +62,7 @@ TB-P05-GATE
 Last Implementation Task:
 
 ```text
-TB-P10-T017-R4
+TB-P10-T017-R5
 ```
 
 Current Issued Task:
@@ -80,6 +80,7 @@ Current Repair Task:
 Implemented Under Review:
 
 ```text
+TB-P10-T017-R5 — Section-context composition (inherit-by-default, local derived surfaces, card-area guard); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R4 — Component-level theme compliance (derived Card/Elevated/Input; shared primitives; crawler); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R3 — Storefront-wide theme coverage (route inventory + shared surfaces + crawler); USER_VISUAL_ACCEPTED=NO
 TB-P10-T017-R2 — PLP/Landing product-card media well height (Tailwind aspect-[4/5] emitted); USER_VISUAL_ACCEPTED=NO

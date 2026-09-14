@@ -217,7 +217,7 @@ export function StorefrontShopeivaCart({
       ) : (
         <section className="pt-8 md:pt-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-            <div className="lg:col-span-2 space-y-3" data-testid="cart-items">
+            <div className="lg:col-span-2 space-y-3" data-testid="cart-items" data-storefront-surface-role="inherit">
               {error ? (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl p-3" role="alert">
                   {error}
@@ -509,7 +509,7 @@ function CartHero({
   discountPercent: number;
 }) {
   return (
-    <section className="w-full" data-testid="cart-hero">
+    <section className="w-full bg-section-accent rounded-2xl md:rounded-3xl" data-testid="cart-hero" data-storefront-surface-role="accent">
       <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary to-primary-strong min-h-[160px] md:min-h-[180px]">
         <div className="absolute inset-0 opacity-[0.08]">
           <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-surface" />
@@ -628,13 +628,14 @@ function CartBenefits() {
     { icon: HeadphonesIcon, title: "پشتیبانی", desc: "پیگیری از پنل مشتری" },
   ];
   return (
-    <section className="pt-8 md:pt-10" data-testid="cart-benefits">
+    <section className="pt-8 md:pt-10 bg-section-alternate rounded-2xl px-1" data-testid="cart-benefits" data-storefront-surface-role="alternate">
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-8" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {benefits.map((item) => (
           <div
             key={item.title}
-            className="flex items-center gap-3 p-4 md:p-5 rounded-2xl bg-surface border border-gray-200 shadow-sm" data-storefront-surface-role="card"
+            className="flex items-center gap-3 p-4 md:p-5 rounded-2xl bg-transparent"
+            data-storefront-surface-role="inherit"
           >
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
               <item.icon className="w-4 h-4 md:w-5 md:h-5 text-primary" />

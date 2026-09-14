@@ -42,11 +42,15 @@ export function StorefrontSectionSurface({
   return <StorefrontSurface surface={surface} {...props} />;
 }
 
+export function StorefrontInheritSurface(props: Omit<StorefrontSurfaceProps, "surface">) {
+  return <StorefrontSurface surface="inherit" {...props} />;
+}
+
 export function StorefrontPanelSurface({
-  surface = "card",
+  surface = "inherit",
   ...props
 }: Omit<StorefrontSurfaceProps, "surface"> & {
-  surface?: Extract<StorefrontAllowedSurface, "card" | "elevated" | "overlay" | "input" | "interactive" | "media">;
+  surface?: Extract<StorefrontAllowedSurface, "inherit" | "card" | "elevated" | "overlay" | "input" | "interactive" | "media">;
 }) {
   return <StorefrontSurface surface={surface} {...props} />;
 }

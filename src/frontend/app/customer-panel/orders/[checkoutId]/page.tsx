@@ -83,7 +83,7 @@ export default function CustomerOrderDetail() {
         <strong className="truncate">{page.reference}</strong>
       </div>
 
-      <section className="bg-surface rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
+      <section className="bg-surface rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm" data-storefront-surface-role="elevated">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-gray-100">
           <div>
             <p className="text-xs text-gray-400">شماره سفارش</p>
@@ -137,7 +137,7 @@ export default function CustomerOrderDetail() {
 
         <div className="space-y-4">
           {page.sellerOrders.map((seller) => (
-            <article key={seller.sellerOrderId} className="rounded-2xl border border-gray-100 overflow-hidden">
+            <article key={seller.sellerOrderId} className="rounded-2xl border border-gray-100 overflow-hidden bg-surface" data-storefront-surface-role="card">
               <div className="bg-gray-50 px-4 py-3 flex flex-wrap items-center gap-3">
                 <Store className="w-5 h-5 text-primary" />
                 <strong className="text-sm">{seller.sellerDisplayName}</strong>

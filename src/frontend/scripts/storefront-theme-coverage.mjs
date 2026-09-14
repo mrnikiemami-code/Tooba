@@ -11,7 +11,7 @@ const ACTOR = "01a036c2-970e-7000-8eb7-94bf5cc2d8db";
 const MOBILE = "09111111111";
 const OTP = "123456";
 const EVIDENCE = process.env.TOOBA_THEME_EVIDENCE ?? join(ROOT, "docs/evidence/TB-P10-T017");
-const SHOTS = join(EVIDENCE, "screenshots/r4");
+const SHOTS = join(EVIDENCE, "screenshots/r5");
 const FAIL_SHOTS = join(SHOTS, "failures");
 
 const ALLOWED_WHITE_ROLES = new Set(["media"]);
@@ -198,7 +198,7 @@ async function inspect(page) {
       const ancestorRole = ancestor?.getAttribute("data-storefront-surface-role");
       const role = selfRole || ancestorRole || "unmarked";
       if (!tinted) continue;
-      if (role === "page" || role === "section" || role === "alternate" || role === "accent") continue;
+      if (role === "page" || role === "section" || role === "alternate" || role === "accent" || role === "inherit") continue;
       if (mediaOnlyWhite.has(role)) continue;
       if (classified.has(role) && !pureWhite) continue;
       if (/bg-page|bg-section-|bg-surface/.test(className) && !pureWhite) continue;
@@ -213,6 +213,33 @@ async function inspect(page) {
         });
       }
     }
+    const viewport = vw * vh;
+    const areaTotals = {};
+    const giantCards = [];
+    for (const node of document.querySelectorAll("[data-storefront-surface-role]")) {
+      const role = node.getAttribute("data-storefront-surface-role") || "unknown";
+      const rect = node.getBoundingClientRect();
+      const visW = Math.min(rect.right, vw) - Math.max(rect.left, 0);
+      const visH = Math.min(rect.bottom, vh) - Math.max(rect.top, 0);
+      const vis = Math.max(0, visW) * Math.max(0, visH);
+      if (vis < 800) continue;
+      areaTotals[role] = (areaTotals[role] || 0) + vis;
+      if ((role === "card" || role === "elevated") && vis / viewport >= 0.45) {
+        giantCards.push({
+          hint: node.getAttribute("data-testid") || node.tagName.toLowerCase(),
+          role,
+          ratio: Number((vis / viewport).toFixed(3)),
+        });
+      }
+    }
+    const sectionArea = (areaTotals.section || 0) + (areaTotals.alternate || 0) + (areaTotals.accent || 0);
+    const cardArea = (areaTotals.card || 0) + (areaTotals.elevated || 0);
+    const composition = {
+      areaTotals,
+      cardOfViewport: Number((cardArea / viewport).toFixed(3)),
+      cardOfSection: sectionArea > 0 ? Number((cardArea / sectionArea).toFixed(3)) : 0,
+      giantCards,
+    };
     return {
       title: document.title,
       palette: html.getAttribute("data-storefront-palette"),
@@ -223,6 +250,7 @@ async function inspect(page) {
       roles,
       components: components.slice(0, 24),
       flags: flags.slice(0, 12),
+      composition,
     };
   }, { classified: [...CLASSIFIED_COMPONENT_ROLES], mediaOnlyWhite: [...ALLOWED_WHITE_ROLES] });
 }
@@ -283,6 +311,18 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
       report.status500.push({ path, status: row.status, run: runName, note: "compile-race-rendered" });
       row.status = 200;
     }
+    const tintedRun = String(runName).startsWith("tint") || String(runName).startsWith("dark");
+    const compositionIds = new Set(["home", "pdp", "cart", "shipping", "checkout-redirect", "customer-dashboard", "customer-order-detail", "landing"]);
+    if (tintedRun && compositionIds.has(entry.id) && row.inspect?.composition) {
+      const giantLimit = entry.id === "home" || entry.id === "landing" ? 0.58 : 0.45;
+      const giants = (row.inspect.composition.giantCards || []).filter((item) => item.ratio >= giantLimit);
+      const viewportLimit = entry.id === "home" || entry.id === "landing" ? 1 : entry.id === "cart" ? 0.82 : 0.72;
+      if (giants.length) {
+        row.inspect.flags = [...(row.inspect.flags || []), { type: "giant-card", giants }];
+      } else if (row.inspect.composition.cardOfViewport > viewportLimit) {
+        row.inspect.flags = [...(row.inspect.flags || []), { type: "card-viewport", ratio: row.inspect.composition.cardOfViewport }];
+      }
+    }
     console.log(`${runName} ${entry.id} ${path} ${row.status} flags=${row.inspect?.flags?.length ?? 0}`);
     if (row.inspect?.flags?.length) {
       report.heuristic.push({ id: entry.id, path, run: runName, flags: row.inspect.flags });
@@ -308,7 +348,7 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
 
 (async () => {
   mkdirSync(SHOTS, { recursive: true });
-  const retryPath = join(EVIDENCE, "r4-runtime-report.json");
+  const retryPath = join(EVIDENCE, "r5-runtime-report.json");
   const retryOnly = process.env.TOOBA_THEME_RETRY === "1" && (() => {
     try { return JSON.parse(readFileSync(retryPath, "utf8")); } catch { return null; }
   })();
@@ -365,24 +405,27 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
         console.log(`skip-missing ${entry.id} ${path}`);
         continue;
       }
-      const R4_SHOTS = {
-        "home-r3.png": "home-components-r4.png",
-        "pdp-r3.png": "pdp-components-r4.png",
-        "login-r3.png": "login-components-r4.png",
-        "checkout-r3.png": "checkout-components-r4.png",
-        "customer-dashboard-r3.png": "customer-dashboard-components-r4.png",
-        "customer-orders-r3.png": "customer-order-components-r4.png",
-        "landing-r3.png": "landing-components-r4.png",
-        "content-r3.png": "content-components-r4.png",
+      const R5_SHOTS = {
+        "home-r3.png": "home-composition-r5.png",
+        "pdp-r3.png": "pdp-composition-r5.png",
+        "login-r3.png": "login-composition-r5.png",
+        "checkout-r3.png": "checkout-composition-r5.png",
+        "customer-dashboard-r3.png": "customer-dashboard-composition-r5.png",
+        "customer-orders-r3.png": "customer-order-composition-r5.png",
+        "landing-r3.png": "landing-composition-r5.png",
+        "content-r3.png": "content-composition-r5.png",
+        "cart-r3.png": "cart-composition-r5.png",
       };
       const takeShot = run.shots === true || (run.shots === "dark" && (entry.id === "pdp" || entry.id === "customer-dashboard"));
       const shotNameOverride = run.shots === "dark" && entry.id === "pdp"
-        ? "dark-pdp-components-r4.png"
+        ? "dark-pdp-composition-r5.png"
         : run.shots === "dark" && entry.id === "customer-dashboard"
-          ? "dark-customer-components-r4.png"
+          ? "dark-customer-composition-r5.png"
           : run.shots === true && entry.proofShot
-            ? (R4_SHOTS[entry.proofShot] || entry.proofShot.replace(/-r3\.png$/, "-components-r4.png"))
-            : null;
+            ? (R5_SHOTS[entry.proofShot] || entry.proofShot.replace(/-r3\.png$/, "-composition-r5.png").replace(/-components-r4\.png$/, "-composition-r5.png"))
+            : run.shots === true && entry.id === "cart"
+              ? "cart-composition-r5.png"
+              : null;
       const labeled = shotNameOverride ? { ...entry, proofShot: shotNameOverride } : entry;
       await crawlRoute(page, labeled, path, run.name, takeShot);
     }
@@ -416,11 +459,11 @@ async function crawlRoute(page, entry, path, runName, takeShot) {
   }
 
   await browser.close();
-  writeFileSync(join(EVIDENCE, "r4-runtime-report.json"), JSON.stringify(report, null, 2));
+  writeFileSync(join(EVIDENCE, "r5-runtime-report.json"), JSON.stringify(report, null, 2));
   if (!report.ok) process.exit(1);
 })().catch((err) => {
   report.ok = false;
   report.console.push({ fatal: String(err) });
-  writeFileSync(join(EVIDENCE, "r4-runtime-report.json"), JSON.stringify(report, null, 2));
+  writeFileSync(join(EVIDENCE, "r5-runtime-report.json"), JSON.stringify(report, null, 2));
   process.exit(1);
 });

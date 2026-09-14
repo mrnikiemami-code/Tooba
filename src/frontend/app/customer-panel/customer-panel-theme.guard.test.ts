@@ -18,6 +18,7 @@ test("customer panel inherits store appearance through shared shell tokens", () 
   assert.match(shell, /bg-page/);
   assert.match(shell, /bg-section-surface/);
   assert.match(shell, /bg-surface/);
+  assert.match(shell, /data-testid="customer-panel-main"[^>]*data-storefront-surface-role="section"/);
   assert.doesNotMatch(shell, /loadStorefrontAppearance/);
   assert.doesNotMatch(shell, /\/v1\/storefront\/appearance/);
   assert.doesNotMatch(shell, /paletteKey/);

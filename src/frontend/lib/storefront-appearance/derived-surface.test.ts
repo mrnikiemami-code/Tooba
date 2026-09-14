@@ -4,9 +4,11 @@ import { listStorefrontPalettes, resolveTintTokens } from "./palette-registry.ts
 import {
   NEUTRAL_CARD_RGB,
   deriveComponentSurfaces,
+  deriveLocalSurfacesFromContext,
   derivedSurfaceCssVars,
   isPureWhiteRgb,
   mixRgb,
+  sectionContextCssVars,
 } from "./derived-surface.ts";
 
 test("Neutral light keeps accepted white cards and gray media", () => {
@@ -38,4 +40,20 @@ test("PaletteTint derived cards are not pure white and stay off primary", () => 
 
 test("mixRgb interpolates channels", () => {
   assert.equal(mixRgb("0 0 0", "100 0 0", 0.5), "50 0 0");
+});
+
+test("local surfaces derive from section context and stay off paper-white under PaletteTint", () => {
+  for (const palette of listStorefrontPalettes()) {
+    const tint = resolveTintTokens(palette.key);
+    for (const context of ["section", "alternate", "accent"] as const) {
+      const local = deriveLocalSurfacesFromContext(tint, context, "PaletteTint", false);
+      const neutral = deriveLocalSurfacesFromContext(tint, context, "Neutral", false);
+      assert.equal(neutral.card, NEUTRAL_CARD_RGB);
+      assert.equal(isPureWhiteRgb(local.card), false, `${palette.key} ${context} local-card`);
+      assert.notEqual(local.card, palette.tokens.primaryRgb);
+    }
+    const vars = sectionContextCssVars(tint);
+    assert.equal(vars["--color-local-card-section"], deriveLocalSurfacesFromContext(tint, "section", "PaletteTint", false).card);
+    assert.ok(vars["--color-local-card-alternate-dark"]);
+  }
 });

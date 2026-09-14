@@ -806,3 +806,21 @@ New customer-facing components must pass component-level surface compliance befo
 ### LOCK-SF-214 — Raw structural white/gray/hex is classified or forbidden
 Raw structural white, gray, or hex backgrounds are forbidden on customer-facing components unless centrally classified as Media, Status, Decorative, or another semantic exception.
 
+### LOCK-SF-215 — Structural children inherit section context
+Structural and content children inherit the parent section context by default. Independent Card, Elevated, Input, Interactive, Media, and Overlay surfaces are explicit semantic opt-ins.
+
+### LOCK-SF-216 — Local surfaces derive from section context
+SectionSurface, SectionAlternate, and SectionAccent establish local derived card, elevated, input, interactive, media, and border relationships. Those local surfaces are not Store settings.
+
+### LOCK-SF-217 — Card/Elevated are not generic wrappers
+Card and Elevated semantics may not be used as generic wrappers for whole sections or page regions.
+
+### LOCK-SF-218 — PaletteTint acceptance includes composition
+PaletteTint acceptance includes section-context visibility and surface-area composition, not token compliance alone.
+
+### LOCK-SF-219 — New components declare inherit vs local surface
+New customer-facing components must declare inherit versus an explicit local surface.
+
+### LOCK-SF-220 — User-configurable colors remain four global roles
+User-configurable colors remain the four global surface roles. All local surfaces are automatic.
+

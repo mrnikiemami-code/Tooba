@@ -95,7 +95,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         <span className="text-gray-800">{currentDetail.title}</span>
       </nav>
 
-      <div className="bg-surface rounded-2xl border border-gray-200 shadow-sm" data-storefront-surface-role="card" data-testid="pdp-primary-card">
+      <div className="rounded-2xl" data-storefront-surface-role="inherit" data-testid="pdp-primary-card">
         <div className="grid grid-cols-1 lg:grid-cols-12">
           <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-l border-gray-200 p-4">
             <div className="relative aspect-square bg-background rounded-2xl overflow-hidden" data-storefront-surface-role="media" data-testid="pdp-gallery">
@@ -117,7 +117,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             </div>
           </div>
 
-          <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-gray-200 p-4 lg:p-5 space-y-4">
+          <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-l border-gray-200 p-4 lg:p-5 space-y-4" data-storefront-surface-role="inherit" data-testid="pdp-product-info">
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Link href="/products" className="text-primary font-medium hover:underline">
                 {currentDetail.categoryName}
@@ -189,7 +189,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             ) : null}
           </div>
 
-          <div className="lg:col-span-3 p-4 lg:p-5 space-y-3">
+          <div className="lg:col-span-3 p-4 lg:p-5 space-y-3" data-storefront-surface-role="inherit" data-testid="pdp-buy-column">
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 bg-gray-50 rounded-xl">
                 <p className="text-[9px] text-gray-500">دسته</p>
@@ -382,10 +382,11 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
         </div>
       </div>
 
-      <div className="bg-surface rounded-2xl border border-gray-200" data-testid="pdp-tabs-card" data-storefront-surface-role="card">
+      <div className="bg-section-alternate rounded-2xl" data-testid="pdp-tabs-card" data-storefront-surface-role="alternate">
         <div
-          className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-surface rounded-t-2xl"
+          className="sticky top-0 z-20 flex border-b border-gray-200 overflow-x-auto bg-transparent rounded-t-2xl"
           data-testid="pdp-sticky-tabs"
+          data-storefront-surface-role="inherit"
         >
           {tabs.map((item) => (
             <button
@@ -410,7 +411,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
             </button>
           ))}
         </div>
-        <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700 overflow-hidden rounded-b-2xl">
+        <div className="p-5 lg:p-6 text-sm leading-8 text-gray-700 overflow-hidden rounded-b-2xl" data-storefront-surface-role="inherit">
           {tab === "specs" ? (
             currentDetail.specifications.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="pdp-specs">
@@ -459,7 +460,7 @@ export function StorefrontShopeivaPdp({ detail }: { detail: StorefrontProductDet
                   { icon: Award, title: "فروشندهٔ ثبت‌شده", desc: "هویت Party" },
                   { icon: Package, title: "کالای Catalog", desc: "بدون قیمت روی Product" },
                 ].map((item) => (
-                  <div key={item.title} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                  <div key={item.title} className="flex items-center gap-2 p-3 rounded-xl bg-surface" data-storefront-surface-role="card">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <item.icon className="w-4 h-4 text-primary" />
                     </div>

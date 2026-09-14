@@ -23,9 +23,9 @@ New Storefront or customer pages must:
 | بخش جایگزین / SectionAlternate | `--color-section-alternate` | Alternate band |
 | بخش برجسته / SectionAccent | `--color-section-accent` | Promo/highlight band |
 
-CardSurface, ElevatedSurface, Input, Interactive, Media, Header, Footer, Overlay, and Border are **system-derived** from PaletteKey + ThemeMode + BackgroundStyle + the four global roles. They are not independent Store settings.
+CardSurface, ElevatedSurface, Input, Interactive, Media, Header, Footer, Overlay, and Border are **system-derived** from the **active section context** (PaletteKey + ThemeMode + BackgroundStyle + the four global roles). They are not independent Store settings.
 
-See `docs/architecture/storefront-component-surface-derivation.md`.
+See `docs/architecture/storefront-component-surface-derivation.md` and `docs/architecture/storefront-section-context-composition.md`. Structural children inherit the parent section by default.
 
 ## Shared wrappers
 

@@ -125,6 +125,58 @@ html.dark[data-storefront-background-style="PaletteTint"] [data-customer-panel-c
   --color-background: var(--color-media-derived-dark);
 }
 
+[data-storefront-surface-role="inherit"] {
+  background-color: transparent;
+}
+
+html[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="section"] {
+  --color-surface: var(--color-local-card-section);
+  --color-surface-elevated: var(--color-local-elevated-section);
+  --color-border: var(--color-local-border-section);
+  --color-secondary: var(--color-local-interactive-section);
+  --color-background: var(--color-local-media-section);
+}
+
+html[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="alternate"] {
+  --color-surface: var(--color-local-card-alternate);
+  --color-surface-elevated: var(--color-local-elevated-alternate);
+  --color-border: var(--color-local-border-alternate);
+  --color-secondary: var(--color-local-interactive-alternate);
+  --color-background: var(--color-local-media-alternate);
+}
+
+html[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="accent"] {
+  --color-surface: var(--color-local-card-accent);
+  --color-surface-elevated: var(--color-local-elevated-accent);
+  --color-border: var(--color-local-border-accent);
+  --color-secondary: var(--color-local-interactive-accent);
+  --color-background: var(--color-local-media-accent);
+}
+
+html.dark[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="section"] {
+  --color-surface: var(--color-local-card-section-dark);
+  --color-surface-elevated: var(--color-local-elevated-section-dark);
+  --color-border: var(--color-local-border-section-dark);
+  --color-secondary: var(--color-local-interactive-section-dark);
+  --color-background: var(--color-local-media-section-dark);
+}
+
+html.dark[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="alternate"] {
+  --color-surface: var(--color-local-card-alternate-dark);
+  --color-surface-elevated: var(--color-local-elevated-alternate-dark);
+  --color-border: var(--color-local-border-alternate-dark);
+  --color-secondary: var(--color-local-interactive-alternate-dark);
+  --color-background: var(--color-local-media-alternate-dark);
+}
+
+html.dark[data-storefront-background-style="PaletteTint"] [data-storefront-surface-role="accent"] {
+  --color-surface: var(--color-local-card-accent-dark);
+  --color-surface-elevated: var(--color-local-elevated-accent-dark);
+  --color-border: var(--color-local-border-accent-dark);
+  --color-secondary: var(--color-local-interactive-accent-dark);
+  --color-background: var(--color-local-media-accent-dark);
+}
+
 [data-storefront-canvas] .bg-white,
 [data-customer-panel-canvas] .bg-white {
   background-color: rgb(var(--color-surface));

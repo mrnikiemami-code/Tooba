@@ -93,6 +93,79 @@ export function deriveComponentSurfaces(
   };
 }
 
+export const SECTION_CONTEXTS = ["section", "alternate", "accent"] as const;
+export type SectionContextKind = (typeof SECTION_CONTEXTS)[number];
+
+export type LocalSectionSurfaces = DerivedComponentSurface & { background: string };
+
+export function sectionContextRgb(
+  tint: StorefrontTintTokens,
+  context: SectionContextKind,
+  dark: boolean,
+): string {
+  if (context === "alternate") {
+    return dark ? tint.sectionAlternateDarkRgb : tint.sectionAlternateRgb;
+  }
+  if (context === "accent") {
+    return dark ? tint.sectionAccentDarkRgb : tint.sectionAccentRgb;
+  }
+  return dark ? tint.sectionBackgroundDarkRgb : tint.sectionBackgroundRgb;
+}
+
+/**
+ * Local card/elevated/input/interactive/media/border derive from the active section context.
+ * Not Store settings. Neutral keeps accepted paper cards.
+ */
+export function deriveLocalSurfacesFromContext(
+  tint: StorefrontTintTokens,
+  context: SectionContextKind,
+  backgroundStyle: StorefrontBackgroundStyle,
+  dark: boolean,
+): LocalSectionSurfaces {
+  const background = sectionContextRgb(tint, context, dark);
+  if (backgroundStyle === "Neutral") {
+    return { background, ...deriveComponentSurfaces(tint, "Neutral", dark) };
+  }
+  const page = dark ? tint.pageBackgroundDarkRgb : tint.pageBackgroundRgb;
+  const paper = dark ? NEUTRAL_ELEVATED_DARK_RGB : NEUTRAL_CARD_RGB;
+  let card = mixRgb(background, paper, dark ? 0.18 : 0.14);
+  if (isPureWhiteRgb(card)) {
+    card = mixRgb(background, page, 0.22);
+  }
+  const accent = dark ? tint.sectionAccentDarkRgb : tint.sectionAccentRgb;
+  return {
+    background,
+    card,
+    elevated: mixRgb(card, paper, dark ? 0.2 : 0.12),
+    input: mixRgb(card, paper, dark ? 0.1 : 0.2),
+    interactive: mixRgb(background, accent, 0.28),
+    media: mixRgb(background, page, 0.35),
+    overlay: mixRgb(card, paper, 0.08),
+    border: mixRgb(background, dark ? NEUTRAL_BORDER_DARK_RGB : NEUTRAL_BORDER_RGB, 0.45),
+  };
+}
+
+export function sectionContextCssVars(tint: StorefrontTintTokens): Record<string, string> {
+  const vars: Record<string, string> = {};
+  for (const context of SECTION_CONTEXTS) {
+    const light = deriveLocalSurfacesFromContext(tint, context, "PaletteTint", false);
+    const dark = deriveLocalSurfacesFromContext(tint, context, "PaletteTint", true);
+    vars[`--color-local-card-${context}`] = light.card;
+    vars[`--color-local-elevated-${context}`] = light.elevated;
+    vars[`--color-local-input-${context}`] = light.input;
+    vars[`--color-local-interactive-${context}`] = light.interactive;
+    vars[`--color-local-media-${context}`] = light.media;
+    vars[`--color-local-border-${context}`] = light.border;
+    vars[`--color-local-card-${context}-dark`] = dark.card;
+    vars[`--color-local-elevated-${context}-dark`] = dark.elevated;
+    vars[`--color-local-input-${context}-dark`] = dark.input;
+    vars[`--color-local-interactive-${context}-dark`] = dark.interactive;
+    vars[`--color-local-media-${context}-dark`] = dark.media;
+    vars[`--color-local-border-${context}-dark`] = dark.border;
+  }
+  return vars;
+}
+
 export function derivedSurfaceCssVars(tint: StorefrontTintTokens): Record<string, string> {
   const light = deriveComponentSurfaces(tint, "PaletteTint", false);
   const dark = deriveComponentSurfaces(tint, "PaletteTint", true);
